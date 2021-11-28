@@ -1,0 +1,19 @@
+[package]
+name = "vector-tile"
+version = "0.1.0"
+description = "A library decoding vector tiles"
+readme = "README.md"
+categories = ["encoding"]
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+log = "0.4"
+num-traits = "0.2"
+pointy = "0.3"
+protobuf = "2.25"
+
+[build-dependencies]
+protobuf-codegen-pure = "2.25"
+
+
