@@ -1,0 +1,27 @@
+[package]
+name = "mvt"
+version = "0.7.0"
+description = "A library for encoding mapbox vector tiles"
+license = "MIT OR Apache-2.0"
+documentation = "https://docs.rs/mvt"
+repository = "https://github.com/DougLau/mvt"
+readme = "README.md"
+keywords = ["cartography", "gis", "vector", "tile", "mapbox"]
+categories = ["encoding"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+num-traits = "0.2"
+pointy = "0.3"
+protobuf = "~2.25"
+protobuf-codegen-pure = { version = "2.25", optional = true }
+thiserror = "1"
+
+[features]
+update = ["protobuf-codegen-pure"]
+
+[[bin]]
+# `cargo run --features=update` when updating to a new protobuf version
+name = "mvt"
+required-features = ["update"]
