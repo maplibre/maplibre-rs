@@ -1,0 +1,3 @@
+[toolchain]
+channel = "1.56.1"
+targets = [ "x86_64-unknown-linux-gnu" ]

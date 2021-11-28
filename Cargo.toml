@@ -1,0 +1,37 @@
+[package]
+name = "mapr"
+version = "0.1.0"
+authors = ["Maximilian Ammann <max@maxammann.org>"]
+edition = "2021"
+resolver = "2"
+
+[features]
+
+[dependencies]
+
+# Rendering
+winit = "0.25"
+wgpu = "0.11"
+pollster = "0.2"
+
+# Logging
+log = "0.4"
+env_logger = "0.9"
+
+# Utils
+hexdump = "0.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+criterion = "0.3"
+# Support logging in tests
+test-env-log = "0.2"
+env_logger = "0.8" # Used for test-env-log
+
+
+[[bin]]
+name = "mapr"
+path = "src/main.rs"
