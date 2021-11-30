@@ -9,14 +9,21 @@ resolver = "2"
 
 [dependencies]
 
+# Wanted by lyon experiment
+futures = "0.3.5"
+bytemuck = "1.2.0"
+
 # Vector riles
 mvt = { path = "libs/mvt" }
 vector-tile = { path = "libs/vector_tile" }
+geo = "0.18.0"
+geo-types = "0.7"
 
 # Rendering
 winit = "0.25"
 wgpu = "0.11"
 pollster = "0.2"
+lyon = { version = "0.17", features = ["extra"] }
 # https://docs.rs/euclid/0.22.6/euclid/index.html
 
 # Logging
@@ -40,3 +47,8 @@ env_logger = "0.8" # Used for test-env-log
 [[bin]]
 name = "mapr"
 path = "src/main.rs"
+
+
+[[bin]]
+name = "lyon_test"
+path = "src/lyon_test/main.rs"
