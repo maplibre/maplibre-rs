@@ -12,6 +12,8 @@ log = "0.4"
 num-traits = "0.2"
 pointy = "0.3"
 protobuf = "2.25"
+tile-grid = "0.3"
+
 
 [build-dependencies]
 protobuf-codegen-pure = "2.25"

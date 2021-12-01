@@ -20,38 +20,35 @@ pub struct Point {
     y: Number,
 }
 
+/// Contains relative coordinates to which the cursor is moved
 #[derive(Debug)]
-pub enum GeometryLineString {
-    LineString(LineString),
-    MultiLineString(MultiLineString),
-    Unknown,
+pub struct MoveTo {
+    pub x: Number,
+    pub y: Number,
+}
+
+/// Contains relative coordinates to which a line is drawn
+#[derive(Debug)]
+pub struct LineTo {
+    pub x: Number,
+    pub y: Number,
 }
 
 #[derive(Debug)]
-pub struct MultiLineString {
-    lines: Vec<LineString>,
+pub enum Command {
+    MoveTo(MoveTo),
+    LineTo(LineTo),
+    Close,
 }
 
 #[derive(Debug)]
-pub struct LineString {
-    points: Vec<Point>,
+pub struct GeometryLineString {
+    pub commands: Vec<Command>,
 }
 
 #[derive(Debug)]
-pub enum GeometryPolygon {
-    Polygon(Polygon),
-    MultiLineString(MultiPolygon),
-    Unknown,
-}
-
-#[derive(Debug)]
-pub struct Polygon {
-    points: Vec<Point>,
-}
-
-#[derive(Debug)]
-pub struct MultiPolygon {
-    polygons: Vec<Polygon>,
+pub struct GeometryPolygon {
+    pub commands: Vec<Command>,
 }
 
 #[derive(Debug)]
@@ -71,29 +68,5 @@ impl Point {
 impl MultiPoint {
     pub(crate) fn new(points: Vec<Point>) -> Self {
         Self { points }
-    }
-}
-
-impl LineString {
-    pub(crate) fn new(points: Vec<Point>) -> Self {
-        Self { points }
-    }
-}
-
-impl MultiLineString {
-    pub(crate) fn new(lines: Vec<LineString>) -> Self {
-        Self { lines }
-    }
-}
-
-impl Polygon {
-    pub(crate) fn new(points: Vec<Point>) -> Self {
-        Self { points }
-    }
-}
-
-impl MultiPolygon {
-    pub(crate) fn new(polygons: Vec<Polygon>) -> Self {
-        Self { polygons }
     }
 }

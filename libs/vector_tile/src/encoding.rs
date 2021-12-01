@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use crate::geometry::{
-    Geometry, GeometryLineString, GeometryPoint, GeometryPolygon, MultiPoint, Point,
+    Command, Geometry, GeometryLineString, GeometryPoint, GeometryPolygon, LineTo, MoveTo,
+    MultiPoint, Point,
 };
 use crate::protos::vector_tile::{
     Tile as ProtoTile, Tile_Feature as ProtoFeature, Tile_GeomType as ProtoGeomType, Tile_GeomType,
@@ -52,19 +53,13 @@ const CMD_LINE_TO_PARAMETERS: usize = 2;
 const CMD_CLOSE_PATH_PARAMETERS: usize = 0;
 
 trait ZigZag {
-    /// Encodes a value to zigzag
-    fn zigzag(self) -> i32;
     /// Decodes a value from zigzag encoding
     fn zagzig(self) -> i32;
 }
 
 impl ZigZag for u32 {
-    fn zigzag(self) -> i32 {
-        ((self << 1) ^ (self >> 31)) as i32
-    }
-
     fn zagzig(self) -> i32 {
-        ((self >> 1) as i32 ^ (-((self & 1) as i32)))
+        ((self >> 1) as i32) ^ (-((self & 1) as i32))
     }
 }
 
@@ -84,7 +79,10 @@ impl Decode<GeometryPoint> for Vec<u32> {
             i += 1;
 
             for parameter in 0..count {
-                points.push(Point::new(self[i + parameter].zagzig(), self[i + parameter + 1].zagzig()));
+                points.push(Point::new(
+                    self[i + parameter].zagzig(),
+                    self[i + parameter + 1].zagzig(),
+                ));
             }
 
             i += count * CMD_MOVE_TO_PARAMETERS;
@@ -95,27 +93,104 @@ impl Decode<GeometryPoint> for Vec<u32> {
         } else if points.len() > 1 {
             GeometryPoint::MultiPoint(MultiPoint::new(points))
         } else {
-            GeometryPoint::Point(Point::new(0, 0)); // point is at the origin
+            GeometryPoint::Point(Point::new(0, 0)) // point is at the origin
         }
     }
 }
 
 impl Decode<GeometryLineString> for Vec<u32> {
     fn decode(self) -> GeometryLineString {
+        let mut commands = vec![];
+        let mut i = 0;
 
+        while i < self.len() - 1 {
+            let command = self[i] & 0x7;
 
-        i += count * match command {
-            CMD_MOVE_TO => CMD_MOVE_TO_PARAMETERS,
-            CMD_LINE_TO => CMD_LINE_TO_PARAMETERS,
-            CMD_CLOSE_PATH => CMD_CLOSE_PATH_PARAMETERS,
-            _ => 0,
-        };
+            let count = (self[i] >> 3) as usize;
+            i += 1;
+
+            for parameter in 0..count {
+                match command {
+                    CMD_MOVE_TO => {
+                        commands.push(Command::MoveTo(MoveTo {
+                            x: self[i + parameter].zagzig(),
+                            y: self[i + parameter + 1].zagzig(),
+                        }));
+                    }
+                    CMD_LINE_TO => {
+                        commands.push(Command::LineTo(LineTo {
+                            x: self[i + parameter].zagzig(),
+                            y: self[i + parameter + 1].zagzig(),
+                        }));
+                    }
+                    CMD_CLOSE_PATH => {
+                        commands.push(Command::Close);
+                    }
+                    _ => {}
+                }
+            }
+
+            i += count
+                * match command {
+                    CMD_MOVE_TO => CMD_MOVE_TO_PARAMETERS,
+                    CMD_LINE_TO => CMD_LINE_TO_PARAMETERS,
+                    CMD_CLOSE_PATH => CMD_CLOSE_PATH_PARAMETERS,
+                    _ => 0,
+                };
+        }
+
+        GeometryLineString { commands }
     }
 }
 
 impl Decode<GeometryPolygon> for Vec<u32> {
     fn decode(self) -> GeometryPolygon {
-        GeometryPolygon::Unknown
+        let mut commands = vec![];
+        let mut i = 0;
+
+        while i < self.len() {
+            let command = self[i] & 0x7;
+            let count = (self[i] >> 3) as usize;
+
+            // parsed command and count => +1
+            i += 1;
+
+            match command {
+                CMD_MOVE_TO => {
+                    for parameter in 0..count {
+                        let x_index = i;
+                        commands.push(Command::MoveTo(MoveTo {
+                            x: self[x_index].zagzig(),
+                            y: self[x_index + 1].zagzig(),
+                        }));
+                        i += CMD_MOVE_TO_PARAMETERS;
+                    }
+                }
+                CMD_LINE_TO => {
+                    for parameter in 0..count {
+                        let x_index = i;
+                        commands.push(Command::LineTo(LineTo {
+                            x: self[x_index].zagzig(),
+                            y: self[x_index + 1].zagzig(),
+                        }));
+                        i += CMD_MOVE_TO_PARAMETERS;
+                    }
+                }
+                CMD_CLOSE_PATH => {
+                    for _ in 0..count {
+                        commands.push(Command::Close);
+                        i += CMD_CLOSE_PATH_PARAMETERS;
+                    }
+                }
+                _ => {
+                    panic!("error")
+                }
+            }
+
+
+        }
+
+        GeometryPolygon { commands }
     }
 }
 

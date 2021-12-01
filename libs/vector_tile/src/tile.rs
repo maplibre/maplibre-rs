@@ -52,6 +52,14 @@ impl Feature {
     pub fn id(&self) -> u64 {
         self.internal.get_id()
     }
+
+
+    pub fn geometry(&self) -> &Geometry {
+        &self.geometry
+    }
+    pub fn properties(&self) -> &HashMap<String, PropertyValue> {
+        &self.properties
+    }
 }
 
 impl Layer {
@@ -70,10 +78,18 @@ impl Layer {
     pub fn name(&self) -> &str {
         self.internal.get_name()
     }
+
+    pub fn features(&self) -> &Vec<Feature> {
+        &self.features
+    }
 }
 
 impl Tile {
     pub(crate) fn new(internal: ProtoTile, layers: Vec<Layer>) -> Self {
         Tile { internal, layers }
+    }
+
+    pub fn layers(&self) -> &Vec<Layer> {
+        &self.layers
     }
 }
