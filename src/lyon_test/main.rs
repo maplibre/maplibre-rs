@@ -1,14 +1,8 @@
-use std::ops::Rem;
 use std::time::{Duration, Instant};
 
 use futures::executor::block_on;
-use lyon::extra::rust_logo::build_logo_path;
-use lyon::math::*;
-use lyon::path::Path;
-use lyon::tessellation;
-use lyon::tessellation::geometry_builder::*;
-use lyon::tessellation::{FillOptions, FillTessellator};
-use lyon::tessellation::{StrokeOptions, StrokeTessellator};
+use lyon::tessellation::VertexBuffers;
+use vector_tile::parse_tile;
 use wgpu::util::DeviceExt;
 use winit::event_loop::EventLoop;
 use winit::window::Window;
@@ -20,11 +14,14 @@ use crate::shader::{
     create_vertex_module_descriptor,
 };
 use crate::shader_ffi::*;
+use crate::tesselation::{RustLogo, Tesselated};
 
 mod piplines;
 mod scene;
 mod shader;
 mod shader_ffi;
+mod tesselation;
+mod tile_downloader;
 
 const PRIM_BUFFER_LEN: usize = 256;
 
@@ -69,102 +66,50 @@ fn main() {
     let sample_count = 4;
 
     let num_instances: u32 = 1;
-    let tolerance = 0.02;
 
     let stroke_prim_id = 0;
     let fill_prim_id = 1;
-    let arrows_prim_id = num_instances + 1;
 
     let mut geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
 
-    let mut fill_tess = FillTessellator::new();
-    let mut stroke_tess = StrokeTessellator::new();
-
-    // Build a Path for the rust logo.
-    let mut builder = Path::builder().with_svg();
-    build_logo_path(&mut builder);
-    let path = builder.build();
-
-    // Build a Path for the arrow.
-    let mut builder = Path::builder();
-    builder.begin(point(-1.0, -0.3));
-    builder.line_to(point(0.0, -0.3));
-    builder.line_to(point(0.0, -1.0));
-    builder.line_to(point(1.5, 0.0));
-    builder.line_to(point(0.0, 1.0));
-    builder.line_to(point(0.0, 0.3));
-    builder.line_to(point(-1.0, 0.3));
-    builder.close();
-    let arrow_path = builder.build();
-
-    fill_tess
-        .tessellate_path(
-            &path,
-            &FillOptions::tolerance(tolerance).with_fill_rule(tessellation::FillRule::NonZero),
-            &mut BuffersBuilder::new(&mut geometry, WithId(fill_prim_id as u32)),
+    let (stroke_range, fill_range) = if true {
+        let tile =
+            parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
+        (
+            0..tile.tesselate_stroke(&mut geometry, stroke_prim_id),
+            0..0,
         )
-        .unwrap();
-
-    let fill_range = 0..(geometry.indices.len() as u32);
-
-    stroke_tess
-        .tessellate_path(
-            &path,
-            &StrokeOptions::tolerance(tolerance),
-            &mut BuffersBuilder::new(&mut geometry, WithId(stroke_prim_id as u32)),
+    } else {
+        let logo = RustLogo();
+        let max_index = logo.tesselate_stroke(&mut geometry, stroke_prim_id);
+        (
+            0..max_index,
+            max_index..max_index + logo.tesselate_fill(&mut geometry, fill_prim_id),
         )
-        .unwrap();
+    };
 
-    let stroke_range = fill_range.end..(geometry.indices.len() as u32);
-
-    fill_tess
-        .tessellate_path(
-            &arrow_path,
-            &FillOptions::tolerance(tolerance),
-            &mut BuffersBuilder::new(&mut geometry, WithId(arrows_prim_id as u32)),
-        )
-        .unwrap();
-
-    let mut cpu_primitives = Vec::with_capacity(PRIM_BUFFER_LEN);
-    for _ in 0..PRIM_BUFFER_LEN {
-        cpu_primitives.push(Primitive {
-            color: [1.0, 0.0, 0.0, 1.0],
-            z_index: 0,
-            width: 0.0,
-            translate: [0.0, 0.0],
-            angle: 0.0,
-            ..Primitive::DEFAULT
-        });
-    }
+    let mut cpu_primitives = [Primitive {
+        color: [1.0, 0.0, 0.0, 1.0],
+        z_index: 0,
+        width: 0.0,
+        translate: [0.0, 0.0],
+        angle: 0.0,
+        ..Primitive::DEFAULT
+    }; PRIM_BUFFER_LEN];
 
     // Stroke primitive
-    cpu_primitives[stroke_prim_id] = Primitive {
+    cpu_primitives[stroke_prim_id as usize] = Primitive {
         color: [0.0, 0.0, 0.0, 1.0],
         z_index: num_instances as i32 + 2,
         width: 1.0,
         ..Primitive::DEFAULT
     };
     // Main fill primitive
-    cpu_primitives[fill_prim_id] = Primitive {
+    cpu_primitives[fill_prim_id as usize] = Primitive {
         color: [1.0, 1.0, 1.0, 1.0],
         z_index: num_instances as i32 + 1,
         ..Primitive::DEFAULT
     };
-    // Instance primitives
-    for (idx, cpu_prim) in cpu_primitives
-        .iter_mut()
-        .enumerate()
-        .skip(fill_prim_id + 1)
-        .take(num_instances as usize - 1)
-    {
-        cpu_prim.z_index = (idx as u32 + 1) as i32;
-        cpu_prim.color = [
-            (0.1 * idx as f32).rem(1.0),
-            (0.5 * idx as f32).rem(1.0),
-            (0.9 * idx as f32).rem(1.0),
-            1.0,
-        ];
-    }
 
     let mut scene = SceneParams::DEFAULT;
 
@@ -195,13 +140,13 @@ fn main() {
     ))
     .unwrap();
 
-    let vbo = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    let vertex_uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: None,
         contents: bytemuck::cast_slice(&geometry.vertices),
         usage: wgpu::BufferUsages::VERTEX,
     });
 
-    let ibo = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    let indices_uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: None,
         contents: bytemuck::cast_slice(&geometry.indices),
         usage: wgpu::BufferUsages::INDEX,
@@ -210,14 +155,14 @@ fn main() {
     let prim_buffer_byte_size = (PRIM_BUFFER_LEN * std::mem::size_of::<Primitive>()) as u64;
     let globals_buffer_byte_size = std::mem::size_of::<Globals>() as u64;
 
-    let prims_ubo = device.create_buffer(&wgpu::BufferDescriptor {
+    let prims_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("Prims ubo"),
         size: prim_buffer_byte_size,
         usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
 
-    let globals_ubo = device.create_buffer(&wgpu::BufferDescriptor {
+    let globals_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("Globals ubo"),
         size: globals_buffer_byte_size,
         usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
@@ -255,11 +200,15 @@ fn main() {
         entries: &[
             wgpu::BindGroupEntry {
                 binding: 0,
-                resource: wgpu::BindingResource::Buffer(globals_ubo.as_entire_buffer_binding()),
+                resource: wgpu::BindingResource::Buffer(
+                    globals_uniform_buffer.as_entire_buffer_binding(),
+                ),
             },
             wgpu::BindGroupEntry {
                 binding: 1,
-                resource: wgpu::BindingResource::Buffer(prims_ubo.as_entire_buffer_binding()),
+                resource: wgpu::BindingResource::Buffer(
+                    prims_uniform_buffer.as_entire_buffer_binding(),
+                ),
             },
         ],
     });
@@ -371,6 +320,13 @@ fn main() {
             label: Some("Encoder"),
         });
 
+        /*        cpu_primitives[fill_prim_id as usize].color = [
+            (time_secs * 0.8 - 1.6).sin() * -0.1 + 0.1,
+            (time_secs * 0.5 - 1.6).sin() * -0.1 + 0.1,
+            (time_secs - 1.6).sin() * -0.1 + 0.1,
+            1.0,
+        ];*/
+
         cpu_primitives[stroke_prim_id as usize].width = scene.stroke_width;
         cpu_primitives[stroke_prim_id as usize].color = [
             (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
@@ -387,7 +343,7 @@ fn main() {
         }
 
         queue.write_buffer(
-            &globals_ubo,
+            &globals_uniform_buffer,
             0,
             bytemuck::cast_slice(&[Globals {
                 resolution: [
@@ -400,7 +356,11 @@ fn main() {
             }]),
         );
 
-        queue.write_buffer(&prims_ubo, 0, bytemuck::cast_slice(&cpu_primitives));
+        queue.write_buffer(
+            &prims_uniform_buffer,
+            0,
+            bytemuck::cast_slice(&cpu_primitives),
+        );
 
         {
             // A resolve target is only supported if the attachment actually uses anti-aliasing
@@ -443,8 +403,8 @@ fn main() {
 
             pass.set_pipeline(&render_pipeline);
             pass.set_bind_group(0, &bind_group, &[]);
-            pass.set_index_buffer(ibo.slice(..), wgpu::IndexFormat::Uint16);
-            pass.set_vertex_buffer(0, vbo.slice(..));
+            pass.set_index_buffer(indices_uniform_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            pass.set_vertex_buffer(0, vertex_uniform_buffer.slice(..));
 
             pass.draw_indexed(fill_range.clone(), 0, 0..(num_instances as u32));
             pass.draw_indexed(stroke_range.clone(), 0, 0..1);
@@ -462,28 +422,4 @@ fn main() {
             next_report = now + Duration::from_secs(1);
         }
     });
-}
-
-/// This vertex constructor forwards the positions and normals provided by the
-/// tessellators and add a shape id.
-pub struct WithId(pub u32);
-
-impl FillVertexConstructor<GpuVertex> for WithId {
-    fn new_vertex(&mut self, vertex: tessellation::FillVertex) -> GpuVertex {
-        GpuVertex {
-            position: vertex.position().to_array(),
-            normal: [0.0, 0.0],
-            prim_id: self.0,
-        }
-    }
-}
-
-impl StrokeVertexConstructor<GpuVertex> for WithId {
-    fn new_vertex(&mut self, vertex: tessellation::StrokeVertex) -> GpuVertex {
-        GpuVertex {
-            position: vertex.position_on_path().to_array(),
-            normal: vertex.normal().to_array(),
-            prim_id: self.0,
-        }
-    }
 }

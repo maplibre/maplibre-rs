@@ -9,21 +9,27 @@ resolver = "2"
 
 [dependencies]
 
-# Wanted by lyon experiment
+# Futures
+tokio = { version = "1", features = ["full"] }
 futures = "0.3.5"
-bytemuck = "1.2.0"
+pollster = "0.2"
+
+# Wanted by lyon experiment
+
 
 # Vector riles
 mvt = { path = "libs/mvt" }
 vector-tile = { path = "libs/vector_tile" }
 geo = "0.18.0"
 geo-types = "0.7"
+proj = "0.24"
+mbutiles = "0.1.1"
 
 # Rendering
 winit = "0.25"
 wgpu = "0.11"
-pollster = "0.2"
 lyon = { version = "0.17", features = ["extra"] }
+lyon_path = "0.17"
 # https://docs.rs/euclid/0.22.6/euclid/index.html
 
 # Logging
@@ -32,6 +38,10 @@ env_logger = "0.9"
 
 # Utils
 hexdump = "0.1"
+bytemuck = "1.2.0"
+
+# Network
+reqwest = { version = "0.11", features = ["gzip"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -52,3 +62,7 @@ path = "src/main.rs"
 [[bin]]
 name = "lyon_test"
 path = "src/lyon_test/main.rs"
+
+[[bin]]
+name = "download_tiles"
+path = "src/lyon_test/tile_downloader.rs"
