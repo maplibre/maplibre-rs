@@ -1,6 +1,6 @@
 use wgpu::{ColorTargetState, FragmentState, ShaderModule, ShaderModuleDescriptor, VertexAttribute, VertexBufferLayout, VertexState};
 
-use crate::GpuVertex;
+use crate::shader_ffi::GpuVertex;
 
 const MAP_VERTEX_SHADER_ARGUMENTS: [VertexAttribute; 3] = [
     wgpu::VertexAttribute {

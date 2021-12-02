@@ -5,7 +5,7 @@ use std::path::Path;
 use vector_tile::grid::*;
 
 pub async fn download_tiles() {
-    for (z, x, y) in get_tile_coordinates_tutzing() {
+    for (z, x, y) in tile_coordinates_bavaria(&google_mercator(), 6) {
         let target = format!(
             "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
             z = z,

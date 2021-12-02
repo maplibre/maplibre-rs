@@ -1,4 +1,5 @@
 use wgpu::{FragmentState, PipelineLayout, RenderPipelineDescriptor, VertexState};
+use crate::texture::Texture;
 
 pub fn create_map_render_pipeline_description<'a>(
     pipeline_layout: &'a PipelineLayout,
@@ -6,19 +7,6 @@ pub fn create_map_render_pipeline_description<'a>(
     fragment_state: FragmentState<'a>,
     sample_count: u32,
 ) -> RenderPipelineDescriptor<'a> {
-    let depth_stencil_state = wgpu::DepthStencilState {
-        format: wgpu::TextureFormat::Depth32Float,
-        depth_write_enabled: true,
-        depth_compare: wgpu::CompareFunction::Greater,
-        stencil: wgpu::StencilState {
-            front: wgpu::StencilFaceState::IGNORE,
-            back: wgpu::StencilFaceState::IGNORE,
-            read_mask: 0,
-            write_mask: 0,
-        },
-        bias: wgpu::DepthBiasState::default(),
-    };
-
     let descriptor = wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(&pipeline_layout),
@@ -33,7 +21,19 @@ pub fn create_map_render_pipeline_description<'a>(
             clamp_depth: false,
             conservative: false,
         },
-        depth_stencil: Some(depth_stencil_state),
+        /*depth_stencil: None,*/
+        depth_stencil: Some(wgpu::DepthStencilState {
+            format: wgpu::TextureFormat::Depth32Float,
+            depth_write_enabled: true,
+            depth_compare: wgpu::CompareFunction::Greater,
+            stencil: wgpu::StencilState {
+                front: wgpu::StencilFaceState::IGNORE,
+                back: wgpu::StencilFaceState::IGNORE,
+                read_mask: 0,
+                write_mask: 0,
+            },
+            bias: wgpu::DepthBiasState::default(),
+        }),
         multisample: wgpu::MultisampleState {
             count: sample_count,
             mask: !0,
