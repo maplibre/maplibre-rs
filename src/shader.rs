@@ -1,4 +1,5 @@
 use wgpu::{ColorTargetState, FragmentState, ShaderModule, ShaderModuleDescriptor, VertexAttribute, VertexBufferLayout, VertexState};
+use crate::platform_constants::COLOR_TEXTURE_FORMAT;
 
 use crate::shader_ffi::GpuVertex;
 
@@ -27,7 +28,7 @@ const MAP_VERTEX_SHADER_BUFFERS: [VertexBufferLayout; 1] = [wgpu::VertexBufferLa
 }];
 
 const MAP_VERTEX_COLOR_TARGETS: [ColorTargetState; 1] = [wgpu::ColorTargetState {
-    format: wgpu::TextureFormat::Bgra8UnormSrgb,
+    format: COLOR_TEXTURE_FORMAT,
     blend: None,
     write_mask: wgpu::ColorWrites::ALL,
 }];

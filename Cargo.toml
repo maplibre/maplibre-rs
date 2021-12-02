@@ -7,25 +7,30 @@ resolver = "2"
 
 [features]
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1"
+winit = { version = "0.25", features = ["web-sys"] }
+web-sys = "0.3"
+js-sys = "0.3"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+console_log = { version = "0.2", features = ["color"] }
+
 [dependencies]
 
 # Futures
-tokio = { version = "1", features = ["full"] }
 futures = "0.3.5"
 pollster = "0.2"
-
-# Wanted by lyon experiment
-
 
 # Vector riles
 vector-tile = { path = "libs/vector_tile" }
 geo = "0.18.0"
 geo-types = "0.7"
-proj = "0.24"
-mbutiles = "0.1.1"
+# proj = "0.24" FIXME: Incompatible with wasm
+# mbutiles = "0.1.1" FIXME: Incompatible with wasm
 
 # Rendering
-winit = "0.25"
+winit = { version = "0.25" }
 wgpu = "0.11"
 lyon = { version = "0.17", features = ["extra"] }
 lyon_path = "0.17"
@@ -40,7 +45,7 @@ hexdump = "0.1"
 bytemuck = "1.2.0"
 
 # Network
-reqwest = { version = "0.11", features = ["gzip"] }
+# reqwest = { version = "0.11", features = ["gzip"] } FIXME: Incompatible with wasm
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

@@ -1,6 +1,7 @@
+use log::info;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::Window;
+use winit::window::{WindowBuilder};
 
 use crate::state::State;
 
@@ -11,20 +12,42 @@ mod shader;
 mod shader_ffi;
 mod state;
 mod tesselation;
-mod tile_downloader;
 mod texture;
 
-fn main() {
-    env_logger::init();
-    println!("== wgpu example ==");
-    println!("Controls:");
-    println!("  Arrow keys: scrolling");
-    println!("  PgUp/PgDown: zoom in/out");
-    println!("  a/z: increase/decrease the stroke width");
+#[cfg(target_arch = "wasm32")]
+mod web;
+mod platform_constants;
+
+async fn setup() {
+    info!("== mapr ==");
+    info!("Controls:");
+    info!("  Arrow keys: scrolling");
+    info!("  PgUp/PgDown: zoom in/out");
+    info!("  a/z: increase/decrease the stroke width");
 
     let event_loop = EventLoop::new();
-    let window = Window::new(&event_loop).unwrap();
-    let mut state = pollster::block_on(State::new(&window));
+
+    let window = WindowBuilder::new()
+        .with_title("A fantastic window!")
+        .build(&event_loop)
+        .unwrap();
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        use winit::platform::web::WindowExtWebSys;
+
+        let canvas = window.canvas();
+
+        let window = web_sys::window().unwrap();
+        let document = window.document().unwrap();
+        let body = document.body().unwrap();
+
+        body.append_child(&canvas)
+            .expect("Append canvas to HTML body");
+    }
+
+    //let mut state = pollster::block_on(State::new(&window));
+    let mut state = State::new(&window).await;
 
     window.request_redraw();
 
@@ -77,4 +100,10 @@ fn main() {
             _ => {}
         }
     });
+}
+
+fn main() {
+    env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
+
+    pollster::block_on(setup());
 }

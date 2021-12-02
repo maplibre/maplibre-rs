@@ -1,8 +1,9 @@
+use std::io::Cursor;
 use std::ops::Range;
 
 use lyon::math::Vector;
 use lyon::tessellation::VertexBuffers;
-use vector_tile::parse_tile;
+use vector_tile::{parse_tile, parse_tile_reader};
 use wgpu::util::DeviceExt;
 use winit::dpi::PhysicalSize;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
@@ -12,6 +13,7 @@ use winit::window::Window;
 use crate::fps_meter::FPSMeter;
 use crate::multisampling::create_multisampled_framebuffer;
 use crate::piplines::*;
+use crate::platform_constants::COLOR_TEXTURE_FORMAT;
 use crate::shader::*;
 use crate::shader_ffi::*;
 use crate::tesselation::{RustLogo, Tesselated};
@@ -72,6 +74,8 @@ pub struct State {
     scene: SceneParams,
 }
 
+const TEST_TILES: &[u8] = include_bytes!("../test-data/12-2176-1425.pbf");
+
 impl State {
     pub async fn new(window: &Window) -> Self {
         let sample_count = 4;
@@ -83,7 +87,8 @@ impl State {
         let mut geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
 
         let (stroke_range, fill_range) = if true {
-            let tile = parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
+            //let tile = parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
+            let tile = parse_tile_reader(&mut Cursor::new(TEST_TILES));
             (
                 0..tile.tesselate_stroke(&mut geometry, stroke_prim_id),
                 0..0,
@@ -247,7 +252,7 @@ impl State {
 
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: wgpu::TextureFormat::Bgra8UnormSrgb,
+            format: COLOR_TEXTURE_FORMAT,
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Mailbox,
@@ -255,7 +260,8 @@ impl State {
 
         surface.configure(&device, &surface_config);
 
-        let depth_texture = Texture::create_depth_texture(&device, &surface_config, "depth_texture", sample_count);
+        let depth_texture =
+            Texture::create_depth_texture(&device, &surface_config, "depth_texture", sample_count);
 
         let multisampled_render_target = if sample_count > 1 {
             Some(create_multisampled_framebuffer(
@@ -289,7 +295,7 @@ impl State {
             indices_uniform_buffer,
             fps_meter: FPSMeter::new(),
             stroke_range,
-            cpu_primitives
+            cpu_primitives,
         }
     }
 
@@ -301,7 +307,12 @@ impl State {
             self.surface.configure(&self.device, &self.surface_config);
 
             // Re-configure depth buffer
-            self.depth_texture = Texture::create_depth_texture(&self.device, &self.surface_config, "depth_texture", self.sample_count);
+            self.depth_texture = Texture::create_depth_texture(
+                &self.device,
+                &self.surface_config,
+                "depth_texture",
+                self.sample_count,
+            );
 
             // Re-configure multi-sampling buffer
             self.multisampled_render_target = if self.sample_count > 1 {
@@ -364,9 +375,9 @@ impl State {
                     scene.target_stroke_width *= 0.8;
                     true
                 }
-                _key => false
+                _key => false,
             },
-            _evt => false
+            _evt => false,
         };
 
         found
@@ -390,10 +401,7 @@ impl State {
             &self.globals_uniform_buffer,
             0,
             bytemuck::cast_slice(&[Globals {
-                resolution: [
-                    self.size.width as f32,
-                    self.size.height as f32,
-                ],
+                resolution: [self.size.width as f32, self.size.height as f32],
                 zoom: scene.zoom,
                 scroll_offset: scene.scroll.to_array(),
                 _pad: 0.0,
@@ -465,8 +473,7 @@ impl State {
 
     pub fn update(&mut self) {
         let scene = &mut self.scene;
-        let time_secs = self.fps_meter.time_secs;
-
+        let time_secs = self.fps_meter.time_secs as f32;
 
         scene.zoom += (scene.target_zoom - scene.zoom) / 3.0;
         scene.scroll = scene.scroll + (scene.target_scroll - scene.scroll) / 3.0;
