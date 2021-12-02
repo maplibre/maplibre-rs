@@ -249,11 +249,12 @@ impl State {
             create_map_fragment_state(&fragment_module),
             sample_count,
         );
+
         let render_pipeline = device.create_render_pipeline(&render_pipeline_descriptor);
 
         // TODO: this isn't what we want: we'd need the equivalent of VK_POLYGON_MODE_LINE,
         // but it doesn't seem to be exposed by wgpu?
-        render_pipeline_descriptor.primitive.topology = wgpu::PrimitiveTopology::LineList;
+        //render_pipeline_descriptor.primitive.topology = wgpu::PrimitiveTopology::LineList;
 
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
