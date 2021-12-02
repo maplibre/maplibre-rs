@@ -1,6 +1,6 @@
 use tile_grid::{extent_wgs84_to_merc, Extent, Grid, GridIterator, Origin, Unit};
 
-fn web_mercator() -> Grid {
+pub fn google_mercator() -> Grid {
     Grid::new(
         256,
         256,
@@ -12,7 +12,6 @@ fn web_mercator() -> Grid {
         },
         3857,
         Unit::Meters,
-        // for calculation see fn test_resolutions
         vec![
             156543.0339280410,
             78271.5169640205,
@@ -42,45 +41,27 @@ fn web_mercator() -> Grid {
     )
 }
 
-/// z, x, z
-pub fn get_tile_coordinates_bavaria() -> Vec<(u8, u32, u32)> {
-    let grid = web_mercator();
+///
+/// Returns coordinates for tiles within bavaria according to the specified grid.
+/// The grid is responsible for defining the coordinate system. For example whether
+/// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames) (also known as
+/// XYZ) or [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#TileMap_Diagram) is
+/// used.
+///
+/// ## Additional Resources:
+///
+/// * https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection
+/// * https://gist.github.com/maptiler/fddb5ce33ba995d5523de9afdf8ef118
+pub fn tile_coordinates_bavaria(grid: &Grid, zoom: u8) -> Vec<(u8, u32, u32)> {
     let tile_limits = grid.tile_limits(
         extent_wgs84_to_merc(&Extent {
-            minx: 10.0,
-            miny: 48.0,
-            maxx: 12.0,
-            maxy: 50.0,
+            minx: 8.9771580802,
+            miny: 47.2703623267,
+            maxx: 13.8350427083,
+            maxy: 50.5644529365,
         }),
         0,
     );
 
-    println!("{:?}", grid.tile_extent(0, 0, 0));
-    println!("{:?}", grid.tile_extent(33, 21, 6));
-    println!("{:?}", grid.tile_extent_xyz(0, 0, 0));
-
-    let z = 6;
-    let griditer = GridIterator::new(z, z, tile_limits);
-    griditer.collect()
-}
-
-pub fn get_tile_coordinates_tutzing() -> Vec<(u8, u32, u32)> {
-    let grid = web_mercator();
-    let tile_limits = grid.tile_limits(
-        extent_wgs84_to_merc(&Extent {
-            minx: 11.2772666,
-            miny: 47.9125117,
-            maxx: 11.2772666,
-            maxy: 47.9125117,
-        }),
-        1,
-    );
-
-    println!("{:?}", grid.tile_extent(0, 0, 0));
-    println!("{:?}", grid.tile_extent(33, 21, 6));
-    println!("{:?}", grid.tile_extent_xyz(0, 0, 0));
-
-    let z = 12;
-    let griditer = GridIterator::new(z, z, tile_limits);
-    griditer.collect()
+    GridIterator::new(zoom, zoom, tile_limits).collect()
 }

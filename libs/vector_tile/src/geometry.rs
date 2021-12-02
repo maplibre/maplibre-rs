@@ -1,5 +1,3 @@
-use num_traits::Num;
-
 type Number = i32;
 
 #[derive(Debug)]

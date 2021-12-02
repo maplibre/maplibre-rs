@@ -72,20 +72,18 @@ impl Decode<GeometryPoint> for Vec<u32> {
             let command = self[i] & 0x7;
 
             if command != CMD_MOVE_TO {
-                // FIXME: ERROR
+                // FIXME: Not allowed in Points
+                panic!("error")
             }
 
             let count = (self[i] >> 3) as usize;
             i += 1;
 
-            for parameter in 0..count {
-                points.push(Point::new(
-                    self[i + parameter].zagzig(),
-                    self[i + parameter + 1].zagzig(),
-                ));
-            }
+            for _ in 0..count {
+                points.push(Point::new(self[i].zagzig(), self[i + 1].zagzig()));
 
-            i += count * CMD_MOVE_TO_PARAMETERS;
+                i += CMD_MOVE_TO_PARAMETERS;
+            }
         }
 
         if points.len() == 1 {
@@ -109,34 +107,35 @@ impl Decode<GeometryLineString> for Vec<u32> {
             let count = (self[i] >> 3) as usize;
             i += 1;
 
-            for parameter in 0..count {
-                match command {
-                    CMD_MOVE_TO => {
+            match command {
+                CMD_MOVE_TO => {
+                    for _ in 0..count {
+                        let x_index = i;
                         commands.push(Command::MoveTo(MoveTo {
-                            x: self[i + parameter].zagzig(),
-                            y: self[i + parameter + 1].zagzig(),
+                            x: self[x_index].zagzig(),
+                            y: self[x_index + 1].zagzig(),
                         }));
+                        i += CMD_MOVE_TO_PARAMETERS;
                     }
-                    CMD_LINE_TO => {
+                }
+                CMD_LINE_TO => {
+                    for _ in 0..count {
+                        let x_index = i;
                         commands.push(Command::LineTo(LineTo {
-                            x: self[i + parameter].zagzig(),
-                            y: self[i + parameter + 1].zagzig(),
+                            x: self[x_index].zagzig(),
+                            y: self[x_index + 1].zagzig(),
                         }));
+                        i += CMD_MOVE_TO_PARAMETERS;
                     }
-                    CMD_CLOSE_PATH => {
-                        commands.push(Command::Close);
-                    }
-                    _ => {}
+                }
+                CMD_CLOSE_PATH => {
+                    // FIXME: Not allowed in LineStrings
+                    panic!("error")
+                }
+                _ => {
+                    panic!("error")
                 }
             }
-
-            i += count
-                * match command {
-                    CMD_MOVE_TO => CMD_MOVE_TO_PARAMETERS,
-                    CMD_LINE_TO => CMD_LINE_TO_PARAMETERS,
-                    CMD_CLOSE_PATH => CMD_CLOSE_PATH_PARAMETERS,
-                    _ => 0,
-                };
         }
 
         GeometryLineString { commands }
@@ -157,7 +156,7 @@ impl Decode<GeometryPolygon> for Vec<u32> {
 
             match command {
                 CMD_MOVE_TO => {
-                    for parameter in 0..count {
+                    for _ in 0..count {
                         let x_index = i;
                         commands.push(Command::MoveTo(MoveTo {
                             x: self[x_index].zagzig(),
@@ -167,7 +166,7 @@ impl Decode<GeometryPolygon> for Vec<u32> {
                     }
                 }
                 CMD_LINE_TO => {
-                    for parameter in 0..count {
+                    for _ in 0..count {
                         let x_index = i;
                         commands.push(Command::LineTo(LineTo {
                             x: self[x_index].zagzig(),
@@ -186,8 +185,6 @@ impl Decode<GeometryPolygon> for Vec<u32> {
                     panic!("error")
                 }
             }
-
-
         }
 
         GeometryPolygon { commands }
