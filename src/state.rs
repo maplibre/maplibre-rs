@@ -145,12 +145,17 @@ impl State {
             .unwrap();
 
         // create a device and a queue
+        #[cfg(feature = "web-webgl")]
+        let limits = wgpu::Limits::downlevel_webgl2_defaults();
+        #[cfg(not(feature = "web-webgl"))]
+        let limits = wgpu::Limits::default();
+
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
                     features: wgpu::Features::default(),
-                    limits: wgpu::Limits::default(),
+                    limits
                 },
                 None,
             )
@@ -475,11 +480,13 @@ impl State {
         let scene = &mut self.scene;
         let time_secs = self.fps_meter.time_secs as f32;
 
+        // Animate the zoom to match target_zoom
         scene.zoom += (scene.target_zoom - scene.zoom) / 3.0;
         scene.scroll = scene.scroll + (scene.target_scroll - scene.scroll) / 3.0;
         scene.stroke_width =
             scene.stroke_width + (scene.target_stroke_width - scene.stroke_width) / 5.0;
 
+        // Animate the strokes of primitive
         self.cpu_primitives[self.stroke_prim_id as usize].width = scene.stroke_width;
         self.cpu_primitives[self.stroke_prim_id as usize].color = [
             (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
@@ -487,13 +494,6 @@ impl State {
             (time_secs - 1.6).sin() * 0.1 + 0.1,
             1.0,
         ];
-
-        for idx in 2..(self.num_instances + 1) {
-            self.cpu_primitives[idx as usize].translate = [
-                (time_secs * 0.05 * idx as f32).sin() * (100.0 + idx as f32 * 10.0),
-                (time_secs * 0.1 * idx as f32).sin() * (100.0 + idx as f32 * 10.0),
-            ];
-        }
 
         self.fps_meter.update_and_print()
     }
