@@ -7,6 +7,8 @@ resolver = "2"
 
 [features]
 
+web-webgl = [ "wgpu/webgl" ]
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1"
 winit = { version = "0.25", features = ["web-sys"] }
