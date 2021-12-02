@@ -1525,7 +1525,6 @@ dependencies = [
  "lyon",
  "lyon_path",
  "mbutiles",
- "mvt",
  "pollster",
  "proj",
  "reqwest",
@@ -1671,17 +1670,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9f1c5b025cda876f66ef43a113f91ebc9f4ccef34843000e0adf6ebbab84e21"
 dependencies = [
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "mvt"
-version = "0.7.0"
-dependencies = [
- "log 0.4.14",
- "num-traits",
- "pointy",
- "protobuf",
- "thiserror",
 ]
 
 [[package]]
@@ -2010,15 +1998,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "521fa9638fa597e1dc53e9412a4f9cefb01187ee1f7413076f9e6749e2885ba9"
 dependencies = [
  "plotters-backend",
-]
-
-[[package]]
-name = "pointy"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "139bf0e592367a743213257b5d7d2b4b899ebdd7377441e8901d38e9c6994901"
-dependencies = [
- "num-traits",
 ]
 
 [[package]]
@@ -2980,8 +2959,6 @@ name = "vector-tile"
 version = "0.1.0"
 dependencies = [
  "log 0.4.14",
- "num-traits",
- "pointy",
  "protobuf",
  "protobuf-codegen-pure",
  "tile-grid",

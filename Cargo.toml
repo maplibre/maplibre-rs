@@ -18,7 +18,6 @@ pollster = "0.2"
 
 
 # Vector riles
-mvt = { path = "libs/mvt" }
 vector-tile = { path = "libs/vector_tile" }
 geo = "0.18.0"
 geo-types = "0.7"
@@ -53,16 +52,10 @@ criterion = "0.3"
 test-env-log = "0.2"
 env_logger = "0.8" # Used for test-env-log
 
-
 [[bin]]
 name = "mapr"
 path = "src/main.rs"
 
-
-[[bin]]
-name = "lyon_test"
-path = "src/lyon_test/main.rs"
-
 [[bin]]
 name = "download_tiles"
-path = "src/lyon_test/tile_downloader.rs"
+path = "src/tile_downloader.rs"
