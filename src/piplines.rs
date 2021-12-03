@@ -21,7 +21,6 @@ pub fn create_map_render_pipeline_description<'a>(
             clamp_depth: false,
             conservative: false,
         },
-        /*depth_stencil: None,*/
         depth_stencil: Some(wgpu::DepthStencilState {
             format: wgpu::TextureFormat::Depth32Float,
             depth_write_enabled: true,

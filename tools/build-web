@@ -1,0 +1,21 @@
+#!/bin/bash
+
+webgl_flag=""
+
+TEMP=$(getopt --long -o "g" "$@")
+eval set -- "$TEMP"
+while true; do
+  case "$1" in
+  -g)
+    webgl_flag="--features web-webgl"
+    shift 2
+    ;;
+  *)
+    break
+    ;;
+  esac
+done
+
+# shellcheck disable=SC2086
+RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build $webgl_flag --target wasm32-unknown-unknown --bin mapr
+wasm-bindgen --out-dir web --web target/wasm32-unknown-unknown/debug/mapr.wasm

@@ -25,21 +25,17 @@ pub struct WithId(pub u32);
 
 impl FillVertexConstructor<GpuVertex> for WithId {
     fn new_vertex(&mut self, vertex: tessellation::FillVertex) -> GpuVertex {
-        GpuVertex {
-            position: vertex.position().to_array(),
-            normal: [0.0, 0.0],
-            prim_id: self.0,
-        }
+        GpuVertex::new(vertex.position().to_array(), [0.0, 0.0], self.0)
     }
 }
 
 impl StrokeVertexConstructor<GpuVertex> for WithId {
     fn new_vertex(&mut self, vertex: tessellation::StrokeVertex) -> GpuVertex {
-        GpuVertex {
-            position: vertex.position_on_path().to_array(),
-            normal: vertex.normal().to_array(),
-            prim_id: self.0,
-        }
+        GpuVertex::new(
+            vertex.position_on_path().to_array(),
+            vertex.normal().to_array(),
+            self.0,
+        )
     }
 }
 

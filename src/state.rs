@@ -1,3 +1,4 @@
+use std::cmp;
 use std::io::Cursor;
 use std::ops::Range;
 
@@ -13,7 +14,7 @@ use winit::window::Window;
 use crate::fps_meter::FPSMeter;
 use crate::multisampling::create_multisampled_framebuffer;
 use crate::piplines::*;
-use crate::platform_constants::COLOR_TEXTURE_FORMAT;
+use crate::platform_constants::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::shader::*;
 use crate::shader_ffi::*;
 use crate::tesselation::{RustLogo, Tesselated};
@@ -104,29 +105,22 @@ impl State {
 
         let mut cpu_primitives = Vec::with_capacity(PRIM_BUFFER_LEN);
         for _ in 0..PRIM_BUFFER_LEN {
-            cpu_primitives.push(Primitive {
-                color: [1.0, 0.0, 0.0, 1.0],
-                z_index: 0,
-                width: 0.0,
-                translate: [0.0, 0.0],
-                angle: 0.0,
-                ..Primitive::DEFAULT
-            });
+            cpu_primitives.push(Primitive::new(
+                [1.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0],
+                0,
+                0.0,
+                0.0,
+                1.0,
+            ));
         }
 
         // Stroke primitive
-        cpu_primitives[stroke_prim_id as usize] = Primitive {
-            color: [0.0, 0.0, 0.0, 1.0],
-            z_index: 3,
-            width: 1.0,
-            ..Primitive::DEFAULT
-        };
+        cpu_primitives[stroke_prim_id as usize] =
+            Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 3, 1.0, 0.0, 1.0);
         // Main fill primitive
-        cpu_primitives[fill_prim_id as usize] = Primitive {
-            color: [1.0, 1.0, 1.0, 1.0],
-            z_index: 1,
-            ..Primitive::DEFAULT
-        };
+        cpu_primitives[fill_prim_id as usize] =
+            Primitive::new([1.0, 1.0, 1.0, 1.0], [0.0, 0.0], 1, 0.0, 0.0, 1.0);
 
         // create an instance
         let instance = wgpu::Instance::new(wgpu::Backends::all());
@@ -155,7 +149,7 @@ impl State {
                 &wgpu::DeviceDescriptor {
                     label: None,
                     features: wgpu::Features::default(),
-                    limits
+                    limits,
                 },
                 None,
             )
@@ -174,8 +168,12 @@ impl State {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let prim_buffer_byte_size = (PRIM_BUFFER_LEN * std::mem::size_of::<Primitive>()) as u64;
-        let globals_buffer_byte_size = std::mem::size_of::<Globals>() as u64;
+        let prim_buffer_byte_size = cmp::max(
+            MIN_BUFFER_SIZE,
+            (PRIM_BUFFER_LEN * std::mem::size_of::<Primitive>()) as u64,
+        );
+        let globals_buffer_byte_size =
+            cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<Globals>() as u64);
 
         let prims_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Prims ubo"),
@@ -243,7 +241,7 @@ impl State {
 
         let vertex_module = device.create_shader_module(&create_vertex_module_descriptor());
         let fragment_module = device.create_shader_module(&create_fragment_module_descriptor());
-        let mut render_pipeline_descriptor = create_map_render_pipeline_description(
+        let render_pipeline_descriptor = create_map_render_pipeline_description(
             &pipeline_layout,
             create_map_vertex_state(&vertex_module),
             create_map_fragment_state(&fragment_module),
@@ -406,12 +404,11 @@ impl State {
         self.queue.write_buffer(
             &self.globals_uniform_buffer,
             0,
-            bytemuck::cast_slice(&[Globals {
-                resolution: [self.size.width as f32, self.size.height as f32],
-                zoom: scene.zoom,
-                scroll_offset: scene.scroll.to_array(),
-                _pad: 0.0,
-            }]),
+            bytemuck::cast_slice(&[Globals::new(
+                 [self.size.width as f32, self.size.height as f32],
+                 scene.scroll.to_array(),
+                 scene.zoom,
+            )]),
         );
 
         self.queue.write_buffer(

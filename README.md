@@ -57,11 +57,32 @@ TODO
 
 ## Building
 
-Now, to build the project:
+Now, to clone the project:
 
 ```bash
 git clone git@github.com/maxammann/mapr
+```
+
+and then build it for running on a desktop:
+
+```bash
 cargo build
+```
+
+### Target: WebGPU
+
+```bash
+tools/build-web
+cd web
+python3 -m http.server
+```
+
+### Target: WebGL
+
+```bash
+tools/build-web -g
+cd web
+python3 -m http.server
 ```
 
 ## Running on Linux
