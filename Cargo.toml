@@ -53,7 +53,7 @@ serde_json = "1.0"
 criterion = "0.3"
 # Support logging in tests
 test-env-log = "0.2"
-env_logger = "0.8" # Used for test-env-log
+
 
 [[bin]]
 name = "mapr"
