@@ -28,7 +28,7 @@ pub async fn download_tiles() {
         }
     }
 }
-#[tokio::main]
-async fn main() {
-    download_tiles().await;
+
+fn main() {
+    pollster::block_on(download_tiles());
 }

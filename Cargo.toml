@@ -65,4 +65,4 @@ path = "src/main.rs"
 
 [[bin]]
 name = "download_tiles"
-path = "src/tile_downloader.rs"
+path = "src/utils/tile_downloader.rs"
