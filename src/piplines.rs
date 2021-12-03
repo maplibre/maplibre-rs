@@ -1,5 +1,5 @@
 use wgpu::{FragmentState, PipelineLayout, RenderPipelineDescriptor, VertexState};
-use crate::texture::Texture;
+
 
 pub fn create_map_render_pipeline_description<'a>(
     pipeline_layout: &'a PipelineLayout,

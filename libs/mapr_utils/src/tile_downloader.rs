@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::copy;
 use std::path::Path;
+use reqwest::Client;
 
 use vector_tile::grid::*;
 
@@ -13,7 +14,7 @@ pub async fn download_tiles() {
             y = y,
         );
         println!("{}", target);
-        let client = reqwest::Client::builder()
+        let client = Client::builder()
             .gzip(true)
             .build().unwrap();
 
@@ -29,6 +30,7 @@ pub async fn download_tiles() {
     }
 }
 
-fn main() {
-    pollster::block_on(download_tiles());
+#[tokio::main]
+async fn main() {
+    download_tiles().await
 }

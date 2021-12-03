@@ -19,7 +19,6 @@ wasm-bindgen-futures = "0.4"
 console_log = { version = "0.2", features = ["color"] }
 
 [dependencies]
-
 # Futures
 futures = "0.3.5"
 pollster = "0.2"
@@ -46,9 +45,6 @@ env_logger = "0.9"
 hexdump = "0.1"
 bytemuck = "1.2.0"
 
-# Network
-# reqwest = { version = "0.11", features = ["gzip"] } FIXME: Incompatible with wasm
-
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -62,7 +58,3 @@ env_logger = "0.8" # Used for test-env-log
 [[bin]]
 name = "mapr"
 path = "src/main.rs"
-
-[[bin]]
-name = "download_tiles"
-path = "src/utils/tile_downloader.rs"

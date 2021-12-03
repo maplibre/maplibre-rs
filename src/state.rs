@@ -4,11 +4,11 @@ use std::ops::Range;
 
 use lyon::math::Vector;
 use lyon::tessellation::VertexBuffers;
-use vector_tile::{parse_tile, parse_tile_reader};
+use vector_tile::{parse_tile_reader};
 use wgpu::util::DeviceExt;
-use winit::dpi::PhysicalSize;
-use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use winit::event_loop::ControlFlow;
+
+use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
+
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
