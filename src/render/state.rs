@@ -12,13 +12,13 @@ use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
-use crate::multisampling::create_multisampled_framebuffer;
-use crate::piplines::*;
-use crate::platform_constants::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
-use crate::shader::*;
-use crate::shader_ffi::*;
-use crate::tesselation::{RustLogo, Tesselated};
-use crate::texture::Texture;
+use super::multisampling::create_multisampled_framebuffer;
+use super::piplines::*;
+use super::platform_constants::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
+use super::shader::*;
+use super::shader_ffi::*;
+use super::tesselation::{RustLogo, Tesselated};
+use super::texture::Texture;
 
 pub struct SceneParams {
     pub target_zoom: f32,
@@ -75,7 +75,7 @@ pub struct State {
     scene: SceneParams,
 }
 
-const TEST_TILES: &[u8] = include_bytes!("../test-data/12-2176-1425.pbf");
+const TEST_TILES: &[u8] = include_bytes!("../../test-data/12-2176-1425.pbf");
 
 impl State {
     pub async fn new(window: &Window) -> Self {

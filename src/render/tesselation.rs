@@ -10,7 +10,7 @@ use lyon_path::Path;
 use vector_tile::geometry::{Command, Geometry};
 use vector_tile::tile::Tile;
 
-use crate::shader_ffi::GpuVertex;
+use super::shader_ffi::GpuVertex;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 

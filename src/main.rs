@@ -3,20 +3,13 @@ use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEve
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::{Window, WindowBuilder};
 
-use crate::state::State;
+use crate::render::state::State;
 
 mod fps_meter;
-mod multisampling;
-mod piplines;
-mod shader;
-mod shader_ffi;
-mod state;
-mod tesselation;
-mod texture;
 
-mod platform_constants;
 #[cfg(target_arch = "wasm32")]
 mod web;
+mod render;
 
 async fn setup(window: Window, event_loop: EventLoop<()>) {
     info!("== mapr ==");
