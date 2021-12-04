@@ -1,5 +1,6 @@
 use wgpu::{FragmentState, PipelineLayout, RenderPipelineDescriptor, VertexState};
 
+use super::texture::DEPTH_TEXTURE_FORMAT;
 
 pub fn create_map_render_pipeline_description<'a>(
     pipeline_layout: &'a PipelineLayout,
@@ -22,13 +23,23 @@ pub fn create_map_render_pipeline_description<'a>(
             conservative: false,
         },
         depth_stencil: Some(wgpu::DepthStencilState {
-            format: wgpu::TextureFormat::Depth32Float,
+            format: DEPTH_TEXTURE_FORMAT,
             depth_write_enabled: true,
             depth_compare: wgpu::CompareFunction::Greater,
             stencil: wgpu::StencilState {
-                front: wgpu::StencilFaceState::IGNORE,
-                back: wgpu::StencilFaceState::IGNORE,
-                read_mask: 0,
+                front: wgpu::StencilFaceState {
+                    compare: wgpu::CompareFunction::Equal,
+                    fail_op: wgpu::StencilOperation::Keep,
+                    depth_fail_op: wgpu::StencilOperation::Keep,
+                    pass_op: wgpu::StencilOperation::IncrementClamp,
+                },
+                back: wgpu::StencilFaceState {
+                    compare: wgpu::CompareFunction::Equal,
+                    fail_op: wgpu::StencilOperation::Keep,
+                    depth_fail_op: wgpu::StencilOperation::Keep,
+                    pass_op: wgpu::StencilOperation::IncrementClamp,
+                },
+                read_mask: 1,
                 write_mask: 0,
             },
             bias: wgpu::DepthBiasState::default(),

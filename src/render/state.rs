@@ -1,17 +1,18 @@
 use std::cmp;
 use std::io::Cursor;
+use std::num::NonZeroU32;
 use std::ops::Range;
 
 use lyon::math::Vector;
 use lyon::tessellation::VertexBuffers;
-use vector_tile::{parse_tile_reader};
+use vector_tile::parse_tile_reader;
+use wgpu::Extent3d;
 use wgpu::util::DeviceExt;
-
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
-
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
+
 use super::multisampling::create_multisampled_framebuffer;
 use super::piplines::*;
 use super::platform_constants::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
@@ -71,6 +72,7 @@ pub struct State {
     cpu_primitives: Vec<Primitive>,
     fill_range: Range<u32>,
     stroke_range: Range<u32>,
+    mask_fill_range: Range<u32>,
 
     scene: SceneParams,
 }
@@ -87,19 +89,31 @@ impl State {
 
         let mut geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
 
-        let (stroke_range, fill_range) = if true {
+        let (stroke_range, fill_range) = {
             //let tile = parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
             let tile = parse_tile_reader(&mut Cursor::new(TEST_TILES));
+            let count_stroke = tile.tesselate_stroke(&mut geometry, stroke_prim_id);
+            let count_fill = 0;
+
+            let start_stroke = 0;
+            let start_fill = start_stroke + count_stroke;
             (
-                0..tile.tesselate_stroke(&mut geometry, stroke_prim_id),
-                0..0,
+                start_stroke..start_fill,
+                start_fill..start_fill + count_fill,
             )
-        } else {
+        };
+
+        let (_, mask_fill_range) = {
             let logo = RustLogo();
-            let max_index = logo.tesselate_stroke(&mut geometry, stroke_prim_id);
+            //let count_stroke = logo.tesselate_stroke(&mut geometry, stroke_prim_id);
+            //let start_stroke = fill_range.end;
+            let count_stroke = 0;
+            let start_stroke = fill_range.end;
+            let start_fill = start_stroke + count_stroke;
+            let count_fill = logo.tesselate_fill(&mut geometry, fill_prim_id);
             (
-                0..max_index,
-                max_index..max_index + logo.tesselate_fill(&mut geometry, fill_prim_id),
+                start_stroke..start_fill,
+                start_fill..start_fill + count_fill,
             )
         };
 
@@ -120,7 +134,7 @@ impl State {
             Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 3, 1.0, 0.0, 1.0);
         // Main fill primitive
         cpu_primitives[fill_prim_id as usize] =
-            Primitive::new([1.0, 1.0, 1.0, 1.0], [0.0, 0.0], 1, 0.0, 0.0, 1.0);
+            Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 1, 0.0, 0.0, 1.0);
 
         // create an instance
         let instance = wgpu::Instance::new(wgpu::Backends::all());
@@ -138,12 +152,14 @@ impl State {
             .await
             .unwrap();
 
-        // create a device and a queue
-        #[cfg(feature = "web-webgl")]
-        let limits = wgpu::Limits::downlevel_webgl2_defaults();
-        #[cfg(not(feature = "web-webgl"))]
-        let limits = wgpu::Limits::default();
 
+        let limits = if cfg!(feature = "web-webgl") {
+            wgpu::Limits::downlevel_webgl2_defaults()
+        } else {
+            wgpu::Limits::default()
+        };
+
+        // create a device and a queue
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
@@ -259,13 +275,36 @@ impl State {
             format: COLOR_TEXTURE_FORMAT,
             width: size.width,
             height: size.height,
-            present_mode: wgpu::PresentMode::Mailbox,
+            // present_mode: wgpu::PresentMode::Mailbox,
+            present_mode: wgpu::PresentMode::Fifo, // VSync
         };
 
         surface.configure(&device, &surface_config);
 
         let depth_texture =
             Texture::create_depth_texture(&device, &surface_config, "depth_texture", sample_count);
+/*
+        let data = [1; 512 * 512] ;
+
+        queue.write_texture(
+            wgpu::ImageCopyTexture {
+                aspect: wgpu::TextureAspect::StencilOnly,
+                texture: &depth_texture.texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+            },
+            &data,
+            wgpu::ImageDataLayout {
+                offset: 0,
+                bytes_per_row: NonZeroU32::new(512),
+                rows_per_image: None,
+            },
+            Extent3d {
+                width: 10,
+                height: 10,
+                depth_or_array_layers: 1,
+            }
+        );*/
 
         let multisampled_render_target = if sample_count > 1 {
             Some(create_multisampled_framebuffer(
@@ -300,6 +339,7 @@ impl State {
             fps_meter: FPSMeter::new(),
             stroke_range,
             cpu_primitives,
+            mask_fill_range
         }
     }
 
@@ -464,8 +504,11 @@ impl State {
             );
             pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
 
-            pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
+            //pass.set_stencil_reference(1);
+            //pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
             pass.draw_indexed(self.stroke_range.clone(), 0, 0..1);
+
+            pass.draw_indexed(self.mask_fill_range.clone(), 0, 0..1);
         }
 
         self.queue.submit(Some(encoder.finish()));

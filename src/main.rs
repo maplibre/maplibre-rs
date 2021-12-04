@@ -20,6 +20,9 @@ async fn setup(window: Window, event_loop: EventLoop<()>) {
 
     let mut state = State::new(&window).await;
 
+    // Important: This kick-starts the rendering loop
+    // window.request_redraw();
+
     event_loop.run(move |event, _, control_flow| {
         match event {
             Event::WindowEvent {

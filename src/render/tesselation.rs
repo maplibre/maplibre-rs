@@ -44,6 +44,8 @@ impl Tesselated for Tile {
         let mut stroke_tess = StrokeTessellator::new();
         let mut tile_builder = Path::builder().with_svg();
 
+        let initial_indices_count = buffer.indices.len();
+
         for layer in self.layers() {
             if layer.name() != "water" {
                 continue;
@@ -112,7 +114,7 @@ impl Tesselated for Tile {
             )
             .unwrap();
 
-        buffer.indices.len() as u32
+        (buffer.indices.len() - initial_indices_count) as u32
     }
 
     fn tesselate_fill(&self, _buffer: &mut VertexBuffers<GpuVertex, u16>, _prim_id: u32) -> u32 {
@@ -125,6 +127,8 @@ pub struct RustLogo();
 impl Tesselated for RustLogo {
     fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> u32 {
         let mut stroke_tess = StrokeTessellator::new();
+
+        let initial_indices_count = buffer.indices.len();
 
         // Build a Path for the rust logo.
         let mut rust_logo_builder = Path::builder().with_svg();
@@ -139,11 +143,13 @@ impl Tesselated for RustLogo {
             )
             .unwrap();
 
-        buffer.indices.len() as u32
+        (buffer.indices.len() - initial_indices_count) as u32
     }
 
     fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> u32 {
         let mut fill_tess = FillTessellator::new();
+
+        let initial_indices_count = buffer.indices.len();
 
         // Build a Path for the rust logo.
         let mut rust_logo_builder = Path::builder().with_svg();
@@ -159,6 +165,6 @@ impl Tesselated for RustLogo {
             )
             .unwrap();
 
-        buffer.indices.len() as u32
+        (buffer.indices.len() - initial_indices_count) as u32
     }
 }

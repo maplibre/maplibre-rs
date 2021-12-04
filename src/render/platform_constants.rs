@@ -9,5 +9,5 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
 
 // FIXME: This limit is enforced by WebGL. Actually this makes sense!
-// This is usually achieved by _pad attributes in shader_ffi.rs
+// FIXME: This can also be achieved by _pad attributes in shader_ffi.rs
 pub const MIN_BUFFER_SIZE: u64 = 32;

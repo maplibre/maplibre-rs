@@ -6,7 +6,6 @@ edition = "2021"
 resolver = "2"
 
 [features]
-
 web-webgl = [ "wgpu/webgl" ]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

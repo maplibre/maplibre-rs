@@ -3,8 +3,9 @@ pub struct Texture {
     pub view: wgpu::TextureView,
 }
 
+pub const DEPTH_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth24PlusStencil8;
+
 impl Texture {
-    pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
     pub fn create_depth_texture(
         device: &wgpu::Device,
@@ -23,7 +24,7 @@ impl Texture {
             mip_level_count: 1,
             sample_count,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Depth32Float,
+            format: DEPTH_TEXTURE_FORMAT,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
         });
         let view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
