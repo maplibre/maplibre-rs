@@ -1,7 +1,7 @@
 [[block]]
 struct Globals {
-    view_position: vec4<f32>;
     view_proj: mat4x4<f32>;
+    view_position: vec4<f32>;
     resolution: vec2<f32>;
     scroll_offset: vec2<f32>;
     zoom: f32;
@@ -42,20 +42,10 @@ fn main(
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
     var prim: Primitive = u_primitives.primitives[a_prim_id + instance_idx];
+    var z = 0.0;
+    var world_pos = a_position;
 
-    var invert_y = vec2<f32>(1.0, -1.0);
-
-    var rotation = mat2x2<f32>(
-        vec2<f32>(cos(prim.angle), -sin(prim.angle)),
-        vec2<f32>(sin(prim.angle), cos(prim.angle))
-    );
-
-    var local_pos = (a_position * prim.scale + a_normal * prim.width) * rotation;
-    var world_pos = local_pos - globals.scroll_offset + prim.translate;
-    var transformed_pos = world_pos * globals.zoom / (0.5 * globals.resolution) * invert_y;
-
-    var z = f32(prim.z_index) / 4096.0;
-    var position = vec4<f32>(transformed_pos.x, transformed_pos.y, z, 1.0);
+    var position = globals.view_proj * vec4<f32>(world_pos, z, 1.0);
 
     return VertexOutput(prim.color, position);
 }
