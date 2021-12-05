@@ -1,23 +1,41 @@
+use crate::render::camera;
+use crate::render::camera::Camera;
+
 type Vec2f32 = [f32; 2];
 type Vec4f32 = [f32; 4];
+type Mat4f32 = [Vec4f32; 4];
 
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Globals {
-    pub resolution: Vec2f32,
-    pub scroll_offset: Vec2f32,
-    pub zoom: f32,
-    _pad1: u32, // _padX aligns it to 8 bytes = AlignOf(Vec2f32=vec2<f32>):
-                // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
+    pub view_proj: Mat4f32, // 64 bytes
+    pub view_position: Vec4f32, // 16 bytes
+    pub resolution: Vec2f32, // 8 bytes
+    pub scroll_offset: Vec2f32, // 8 bytes
+    pub zoom: f32, // 4 bytes
+    _pad1: i32, // _padX aligns it to 8 bytes = AlignOf(Vec2f32=vec2<f32>):
+    // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
+    _pad2: i32,
+    _pad3: i32,
 }
 
 impl Globals {
-    pub fn new(resolution: Vec2f32, scroll_offset: Vec2f32, zoom: f32) -> Self {
+    pub fn new(
+        view_proj: Mat4f32,
+        view_position: Vec4f32,
+        resolution: Vec2f32,
+        scroll_offset: Vec2f32,
+        zoom: f32,
+    ) -> Self {
         Self {
+            view_proj,
+            view_position,
             resolution,
             scroll_offset,
             zoom,
             _pad1: Default::default(),
+            _pad2: Default::default(),
+            _pad3: Default::default(),
         }
     }
 }
@@ -31,7 +49,7 @@ pub struct GpuVertex {
     pub position: Vec2f32,
     pub normal: Vec2f32,
     pub prim_id: u32,
-    _pad1: u32, // _padX aligns it to 8 bytes = AlignOf(Vec2f32=vec2<f32>):
+    _pad1: i32, // _padX aligns it to 8 bytes = AlignOf(Vec2f32=vec2<f32>):
                 // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
 }
 
@@ -41,7 +59,7 @@ impl GpuVertex {
             position,
             normal,
             prim_id,
-            _pad1: Default::default(),
+            _pad1: Default::default()
         }
     }
 }
@@ -58,8 +76,8 @@ pub struct Primitive {
     pub width: f32,
     pub angle: f32,
     pub scale: f32,
-    _pad1: u32, // _padX aligns it to 16 bytes = AlignOf(Vec4f32/vec4<f32>):
-    _pad2: u32, // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
+    _pad1: i32, // _padX aligns it to 16 bytes = AlignOf(Vec4f32/vec4<f32>):
+    _pad2: i32, // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
 }
 
 impl Default for Primitive {
@@ -91,12 +109,3 @@ impl Primitive {
 
 unsafe impl bytemuck::Pod for Primitive {}
 unsafe impl bytemuck::Zeroable for Primitive {}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct BgPoint {
-    pub point: [f32; 2],
-}
-
-unsafe impl bytemuck::Pod for BgPoint {}
-unsafe impl bytemuck::Zeroable for BgPoint {}

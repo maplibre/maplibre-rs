@@ -6,10 +6,11 @@ use lyon::math::Vector;
 use lyon::tessellation::VertexBuffers;
 use vector_tile::parse_tile_reader;
 use wgpu::util::DeviceExt;
-use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event::{DeviceEvent, ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
+use crate::render::camera;
 use crate::render::tesselation::TileMask;
 
 use super::piplines::*;
@@ -78,6 +79,11 @@ pub struct State {
     tile_mask_vertex_uniform_buffer: wgpu::Buffer,
     tile_mask_indices_uniform_buffer: wgpu::Buffer,
     tile_mask_range: Range<u32>,
+
+    camera: camera::Camera,                      // UPDATED!
+    projection: camera::Projection,              // NEW!
+    camera_controller: camera::CameraController, // UPDATED!
+    camera_uniform: camera::CameraUniform,       // UPDATED!
 
     scene: SceneParams,
 }
@@ -333,6 +339,19 @@ impl State {
             None
         };
 
+        let camera = camera::Camera::new((0.0, 5.0, 10.0), cgmath::Deg(-90.0), cgmath::Deg(-20.0));
+        let projection = camera::Projection::new(
+            surface_config.width,
+            surface_config.height,
+            cgmath::Deg(45.0),
+            0.1,
+            100.0,
+        );
+        let camera_controller = camera::CameraController::new(4.0, 0.4);
+        let mut camera_uniform = camera::CameraUniform::new();
+
+        camera_uniform.update_view_proj(&camera, &projection);
+
         Self {
             surface,
             device,
@@ -356,6 +375,10 @@ impl State {
             tile_stroke_range,
             tile_mask_indices_uniform_buffer,
             tile_mask_range,
+            camera,
+            projection,
+            camera_controller,
+            camera_uniform,
         }
     }
 
@@ -365,6 +388,8 @@ impl State {
             self.surface_config.width = new_size.width;
             self.surface_config.height = new_size.height;
             self.surface.configure(&self.device, &self.surface_config);
+
+            self.projection.resize(new_size.width, new_size.height);
 
             // Re-configure depth buffer
             self.depth_texture = Texture::create_depth_texture(
@@ -387,23 +412,21 @@ impl State {
         }
     }
 
-    pub fn input(&mut self, event: &WindowEvent) -> bool {
+    pub fn input(&mut self, event: &DeviceEvent) -> bool {
         let scene = &mut self.scene;
-        let found = match event {
-            WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        state: ElementState::Pressed,
-                        virtual_keycode: Some(key),
-                        ..
-                    },
+        match event {
+            DeviceEvent::Key(KeyboardInput {
+                virtual_keycode: Some(key),
+                state,
                 ..
-            } => match key {
+            }) => match key {
                 VirtualKeyCode::PageDown => {
+                    println!("PageDown");
                     scene.target_zoom *= 0.8;
                     true
                 }
                 VirtualKeyCode::PageUp => {
+                    println!("PageUp");
                     scene.target_zoom *= 1.25;
                     true
                 }
@@ -431,12 +454,27 @@ impl State {
                     scene.target_stroke_width *= 0.8;
                     true
                 }
-                _key => false,
+                _key => self.camera_controller.process_keyboard(*key, *state),
             },
-            _evt => false,
-        };
-
-        found
+            DeviceEvent::MouseWheel { delta, .. } => {
+                self.camera_controller.process_scroll(delta);
+                true
+            }
+            DeviceEvent::Button {
+                button: 1, // Left Mouse Button
+                state,
+            } => {
+                //self.mouse_pressed = *state == ElementState::Pressed;
+                true
+            }
+            DeviceEvent::MouseMotion { delta } => {
+                //if self.mouse_pressed {
+                //    self.camera_controller.process_mouse(delta.0, delta.1);
+                //}
+                true
+            }
+            _ => false,
+        }
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -451,6 +489,8 @@ impl State {
                 &self.globals_uniform_buffer,
                 0,
                 bytemuck::cast_slice(&[Globals::new(
+                    self.camera_uniform.view_proj,
+                    self.camera_uniform.view_position,
                     [self.size.width as f32, self.size.height as f32],
                     scene.scroll.to_array(),
                     scene.zoom,
@@ -539,9 +579,13 @@ impl State {
         Ok(())
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, dt: std::time::Duration) {
         let scene = &mut self.scene;
         let time_secs = self.fps_meter.time_secs as f32;
+
+        self.camera_controller.update_camera(&mut self.camera, dt);
+        self.camera_uniform
+            .update_view_proj(&self.camera, &self.projection);
 
         // Animate the zoom to match target_zoom
         scene.zoom += (scene.target_zoom - scene.zoom) / 3.0;

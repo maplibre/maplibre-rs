@@ -23,13 +23,20 @@ async fn setup(window: Window, event_loop: EventLoop<()>) {
     // Important: This kick-starts the rendering loop
     // window.request_redraw();
 
+    let mut last_render_time = std::time::Instant::now();
+
     event_loop.run(move |event, _, control_flow| {
         match event {
+            Event::DeviceEvent {
+                ref event,
+                .. // We're not using device_id currently
+            } => {
+                state.input(event);
+            }
             Event::WindowEvent {
                 ref event,
                 window_id,
             } if window_id == window.id() => {
-                if !state.input(event) {
                     match event {
                         WindowEvent::CloseRequested
                         | WindowEvent::KeyboardInput {
@@ -50,10 +57,13 @@ async fn setup(window: Window, event_loop: EventLoop<()>) {
                         }
                         _ => {}
                     }
-                }
+
             }
             Event::RedrawRequested(_) => {
-                state.update();
+                let now = std::time::Instant::now();
+                let dt = now - last_render_time;
+                last_render_time = now;
+                state.update(dt);
                 match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if lost

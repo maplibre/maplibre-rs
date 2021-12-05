@@ -1,8 +1,13 @@
 [[block]]
 struct Globals {
+    view_position: vec4<f32>;
+    view_proj: mat4x4<f32>;
     resolution: vec2<f32>;
     scroll_offset: vec2<f32>;
     zoom: f32;
+    pad1: i32;
+    pad2: i32;
+    pad3: i32;
 };
 
 struct Primitive {

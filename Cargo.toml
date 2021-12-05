@@ -28,6 +28,7 @@ geo = "0.18.0"
 geo-types = "0.7"
 # proj = "0.24" FIXME: Incompatible with wasm
 # mbutiles = "0.1.1" FIXME: Incompatible with wasm
+cgmath = "0.18"
 
 # Rendering
 winit = { version = "0.25" }
