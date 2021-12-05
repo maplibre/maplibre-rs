@@ -60,14 +60,14 @@ impl Tesselated for Tile {
                             match command {
                                 Command::MoveTo(cmd) => {
                                     tile_builder.relative_move_to(lyon_path::math::vector(
-                                        cmd.x as f32 / 10.0,
-                                        cmd.y as f32 / 10.0,
+                                        cmd.x as f32,
+                                        cmd.y as f32,
                                     ));
                                 }
                                 Command::LineTo(cmd) => {
                                     tile_builder.relative_line_to(lyon_path::math::vector(
-                                        cmd.x as f32 / 10.0,
-                                        cmd.y as f32 / 10.0,
+                                        cmd.x as f32,
+                                        cmd.y as f32,
                                     ));
                                 }
                                 Command::Close => {
@@ -81,14 +81,14 @@ impl Tesselated for Tile {
                             match command {
                                 Command::MoveTo(cmd) => {
                                     tile_builder.relative_move_to(lyon_path::math::vector(
-                                        cmd.x as f32 / 10.0,
-                                        cmd.y as f32 / 10.0,
+                                        cmd.x as f32,
+                                        cmd.y as f32,
                                     ));
                                 }
                                 Command::LineTo(cmd) => {
                                     tile_builder.relative_line_to(lyon_path::math::vector(
-                                        cmd.x as f32 / 10.0,
-                                        cmd.y as f32 / 10.0,
+                                        cmd.x as f32,
+                                        cmd.y as f32,
                                     ));
                                 }
                                 Command::Close => {

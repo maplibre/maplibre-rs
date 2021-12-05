@@ -34,7 +34,7 @@ fn main(
     [[location(0)]] a_position: vec2<f32>,
     [[location(1)]] a_normal: vec2<f32>,
     [[location(2)]] a_prim_id: u32,
-    [[builtin(instance_index)]] instance_idx: u32
+    [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
     var prim: Primitive = u_primitives.primitives[a_prim_id + instance_idx];
 

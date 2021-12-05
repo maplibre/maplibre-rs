@@ -56,7 +56,6 @@ pub struct State {
 
     render_pipeline: wgpu::RenderPipeline,
     mask_pipeline: wgpu::RenderPipeline,
-    mask_pipeline2: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
 
     sample_count: u32,
@@ -68,13 +67,15 @@ pub struct State {
     vertex_uniform_buffer: wgpu::Buffer,
     indices_uniform_buffer: wgpu::Buffer,
 
+    mask_vertex_uniform_buffer: wgpu::Buffer,
+    mask_indices_uniform_buffer: wgpu::Buffer,
+
     num_instances: u32,
     stroke_prim_id: u32,
     fill_prim_id: u32,
     cpu_primitives: Vec<Primitive>,
     fill_range: Range<u32>,
     stroke_range: Range<u32>,
-    mask_fill_range: Range<u32>,
 
     scene: SceneParams,
 }
@@ -97,22 +98,8 @@ impl State {
             let count_stroke = tile.tesselate_stroke(&mut geometry, stroke_prim_id);
             let count_fill = 0;
 
-            let start_stroke = 0;
+            let start_stroke = tile.tesselate_fill(&mut geometry, fill_prim_id);
             let start_fill = start_stroke + count_stroke;
-            (
-                start_stroke..start_fill,
-                start_fill..start_fill + count_fill,
-            )
-        };
-
-        let (_, mask_fill_range) = {
-            let logo = RustLogo();
-            //let count_stroke = logo.tesselate_stroke(&mut geometry, stroke_prim_id);
-            //let start_stroke = fill_range.end;
-            let count_stroke = 0;
-            let start_stroke = fill_range.end;
-            let start_fill = start_stroke + count_stroke;
-            let count_fill = logo.tesselate_fill(&mut geometry, fill_prim_id);
             (
                 start_stroke..start_fill,
                 start_fill..start_fill + count_fill,
@@ -184,6 +171,29 @@ impl State {
             contents: bytemuck::cast_slice(&geometry.indices),
             usage: wgpu::BufferUsages::INDEX,
         });
+
+        const EXTENT: f32 = 4096.0;
+        let mask_vertex_data = [
+            GpuVertex::new([0.0, 0.0], [0.0, 0.0], stroke_prim_id),
+            GpuVertex::new([EXTENT, 0.0], [0.0, 0.0], stroke_prim_id),
+            GpuVertex::new([0.0, EXTENT], [0.0, 0.0], stroke_prim_id),
+            GpuVertex::new([EXTENT, EXTENT], [0.0, 0.0], stroke_prim_id),
+        ];
+        let mask_index_data: &[u16] = &[0, 2, 1, 1, 2, 3];
+
+        let mask_vertex_uniform_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: None,
+                contents: bytemuck::cast_slice(&mask_vertex_data),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+
+        let mask_indices_uniform_buffer =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: None,
+                contents: bytemuck::cast_slice(&mask_index_data),
+                usage: wgpu::BufferUsages::INDEX,
+            });
 
         let prim_buffer_byte_size = cmp::max(
             MIN_BUFFER_SIZE,
@@ -269,20 +279,14 @@ impl State {
         let mask_pipeline_descriptor = create_map_render_pipeline_description(
             &pipeline_layout,
             create_map_vertex_state(&vertex_module),
-            create_map_fragment_state(&fragment_module, false),
-            sample_count,
-            true,
-        );        let mask_pipeline_descriptor2 = create_map_render_pipeline_description(
-            &pipeline_layout,
-            create_map_vertex_state(&vertex_module),
-            create_map_fragment_state(&fragment_module, false),
+            create_map_fragment_state(&fragment_module, true),
             sample_count,
             true,
         );
 
+
         let render_pipeline = device.create_render_pipeline(&render_pipeline_descriptor);
         let mask_pipeline = device.create_render_pipeline(&mask_pipeline_descriptor);
-        let mask_pipeline2 = device.create_render_pipeline(&mask_pipeline_descriptor2);
 
         // TODO: this isn't what we want: we'd need the equivalent of VK_POLYGON_MODE_LINE,
         // but it doesn't seem to be exposed by wgpu?
@@ -342,7 +346,6 @@ impl State {
             surface_config,
             render_pipeline,
             mask_pipeline,
-            mask_pipeline2,
             bind_group,
             multisampled_render_target,
             depth_texture,
@@ -356,10 +359,11 @@ impl State {
             globals_uniform_buffer,
             prims_uniform_buffer,
             indices_uniform_buffer,
+            mask_vertex_uniform_buffer,
             fps_meter: FPSMeter::new(),
             stroke_range,
             cpu_primitives,
-            mask_fill_range,
+            mask_indices_uniform_buffer,
         }
     }
 
@@ -517,42 +521,29 @@ impl State {
             });
 
             pass.set_bind_group(0, &self.bind_group, &[]);
-            pass.set_index_buffer(
-                self.indices_uniform_buffer.slice(..),
-                wgpu::IndexFormat::Uint16,
-            );
-            pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
-            //compare: wgpu::CompareFunction::Equal
+
             {
                 // Increment stencil
                 pass.set_pipeline(&self.mask_pipeline);
-                pass.set_stencil_reference(0); // Must be 0, else this does nothing?
-                pass.draw_indexed(self.mask_fill_range.clone(), 0, 0..1);
-
-                pass.set_pipeline(&self.mask_pipeline2);
-                pass.set_stencil_reference(0); // Must be 0, else this does nothing?
-                pass.draw_indexed(self.mask_fill_range.clone(), 0, 0..1);
-
+                //pass.set_stencil_reference(0);
+                pass.set_index_buffer(
+                    self.mask_indices_uniform_buffer.slice(..),
+                    wgpu::IndexFormat::Uint16,
+                );
+                pass.set_vertex_buffer(0, self.mask_vertex_uniform_buffer.slice(..));
+                pass.draw_indexed(0..6, 0, 0..1);
+            }
+                        {
                 pass.set_pipeline(&self.render_pipeline);
-                pass.set_stencil_reference(2);
+                pass.set_stencil_reference(1);
+                pass.set_index_buffer(
+                    self.indices_uniform_buffer.slice(..),
+                    wgpu::IndexFormat::Uint16,
+                );
+                pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
                 //pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
                 pass.draw_indexed(self.stroke_range.clone(), 0, 0..1);
             }
-
-            //compare: wgpu::CompareFunction::Always
-/*            {
-                // Increment stencil
-                pass.set_pipeline(&self.mask_pipeline);
-                pass.set_stencil_reference(5);
-                pass.draw_indexed(self.mask_fill_range.clone(), 0, 0..1);
-
-                pass.set_pipeline(&self.render_pipeline);
-                pass.set_stencil_reference(5);
-                //pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
-                pass.draw_indexed(self.stroke_range.clone(), 0, 0..1);
-
-            }*/
-
         }
 
         self.queue.submit(Some(encoder.finish()));
