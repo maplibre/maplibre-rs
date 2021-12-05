@@ -43,7 +43,7 @@ fn main(
 ) -> VertexOutput {
     var prim: Primitive = u_primitives.primitives[a_prim_id + instance_idx];
     var z = 0.0;
-    var world_pos = a_position;
+    var world_pos = a_position + a_normal * prim.width;
 
     var position = globals.view_proj * vec4<f32>(world_pos, z, 1.0);
 

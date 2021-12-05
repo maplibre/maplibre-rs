@@ -194,7 +194,7 @@ impl Tesselated for TileMask {
             GpuVertex::new([EXTENT, EXTENT], [0.0, 0.0], prim_id),
         ];
 
-        buffer.indices = vec![0, 2, 1, 1, 2, 3];
+        buffer.indices = vec![0, 2, 1, 3,2,1];
 
         initial_indices_count as u32.. buffer.indices.len() as u32
     }

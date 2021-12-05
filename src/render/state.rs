@@ -11,7 +11,7 @@ use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
 use crate::render::camera;
-use crate::render::camera::Camera;
+use crate::render::camera::{Camera, CameraUniform};
 use crate::render::tesselation::TileMask;
 
 use super::piplines::*;
@@ -81,9 +81,10 @@ pub struct State {
     tile_mask_indices_uniform_buffer: wgpu::Buffer,
     tile_mask_range: Range<u32>,
 
-    camera: camera::Camera,                      // UPDATED!
-    camera_controller: camera::CameraController, // UPDATED!
-    camera_uniform: camera::CameraUniform,       // UPDATED!
+    camera: camera::Camera, // UPDATED!
+    projection: camera::Projection, // NEW!
+    camera_controller: camera::CameraController, // UPDAT
+    camera_uniform: camera::CameraUniform, // UPDAT
     mouse_pressed: bool,
 
     scene: SceneParams,
@@ -340,19 +341,12 @@ impl State {
             None
         };
 
-        let camera = Camera {
-            eye: (0.0, 1.0, 2.0).into(),
-            target: (0.0, 0.0, 0.0).into(),
-            up: cgmath::Vector3::unit_y(),
-            aspect: surface_config.width as f32 / surface_config.height as f32,
-            fovy: 45.0,
-            znear: 0.1,
-            zfar: 100.0,
-        };
-        let camera_controller = camera::CameraController::new(4.0);
-        let mut camera_uniform = camera::CameraUniform::new();
+        let camera = camera::Camera::new((0.0, 5.0, 5000.0), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
+        let projection = camera::Projection::new(surface_config.width, surface_config.height, cgmath::Deg(45.0), 0.1, 10000.0);
+        let camera_controller = camera::CameraController::new(4000.0, 0.4);
 
-        camera_uniform.update_view_proj(&camera);
+        let mut camera_uniform = CameraUniform::new();
+        camera_uniform.update_view_proj(&camera, &projection); // UPDATED!
 
         Self {
             surface,
@@ -378,6 +372,7 @@ impl State {
             tile_mask_indices_uniform_buffer,
             tile_mask_range,
             camera,
+            projection,
             camera_controller,
             camera_uniform,
             mouse_pressed: false
@@ -391,7 +386,7 @@ impl State {
             self.surface_config.height = new_size.height;
             self.surface.configure(&self.device, &self.surface_config);
 
-            self.camera.aspect = self.surface_config.width as f32 / self.surface_config.height as f32;
+            self.projection.resize(new_size.width, new_size.height);
 
             // Re-configure depth buffer
             self.depth_texture = Texture::create_depth_texture(
@@ -421,9 +416,9 @@ impl State {
                 virtual_keycode: Some(key),
                 state,
                 ..
-            }) => self.camera_controller.process_events(*key, *state),
+            }) => self.camera_controller.process_keyboard(*key, *state),
             DeviceEvent::MouseWheel { delta, .. } => {
-
+                self.camera_controller.process_scroll(delta);
                 true
             }
             DeviceEvent::Button {
@@ -435,7 +430,7 @@ impl State {
             }
             DeviceEvent::MouseMotion { delta } => {
                 if self.mouse_pressed {
-                    //self.camera_controller.process_mouse(delta.0, delta.1);
+                    self.camera_controller.process_mouse(delta.0, delta.1);
                 }
                 true
             }
@@ -463,7 +458,6 @@ impl State {
                     scene.zoom,
                 )]),
             );
-            println!("{:?}", &self.camera_uniform.view_proj);
 
             self.queue.write_buffer(
                 &self.prims_uniform_buffer,
@@ -517,7 +511,7 @@ impl State {
 
             pass.set_bind_group(0, &self.bind_group, &[]);
 
-/*            {
+            {
                 // Increment stencil
                 pass.set_pipeline(&self.mask_pipeline);
                 //pass.set_stencil_reference(0);
@@ -527,23 +521,17 @@ impl State {
                 );
                 pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
                 pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..1);
-            }*/
+            }
             {
                 pass.set_pipeline(&self.render_pipeline);
-                //pass.set_stencil_reference(1);
-                /*pass.set_index_buffer(
+                pass.set_stencil_reference(1);
+                pass.set_index_buffer(
                     self.indices_uniform_buffer.slice(..),
                     wgpu::IndexFormat::Uint16,
                 );
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
                 //pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
-                pass.draw_indexed(self.tile_stroke_range.clone(), 0, 0..1);*/
-                pass.set_index_buffer(
-                    self.tile_mask_indices_uniform_buffer.slice(..),
-                    wgpu::IndexFormat::Uint16,
-                );
-                pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
-                pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..1);
+                pass.draw_indexed(self.tile_stroke_range.clone(), 0, 0..1);
             }
         }
 
@@ -557,11 +545,8 @@ impl State {
         let scene = &mut self.scene;
         let time_secs = self.fps_meter.time_secs as f32;
 
-        //self.camera_controller.update_camera(&mut self.camera, dt);
-        //self.camera_uniform.update_view_proj(&self.camera, &self.projection);
-
-        self.camera_controller.update_camera(&mut self.camera);
-        self.camera_uniform.update_view_proj(&self.camera);
+        self.camera_controller.update_camera(&mut self.camera, dt);
+        self.camera_uniform.update_view_proj(&self.camera, &self.projection);
 
 
         // Animate the zoom to match target_zoom

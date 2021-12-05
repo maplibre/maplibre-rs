@@ -37,7 +37,7 @@ pub fn create_map_render_pipeline_description<'a>(
         }
     } else {
         wgpu::StencilFaceState {
-            compare: wgpu::CompareFunction::Always,
+            compare: wgpu::CompareFunction::Equal,
             fail_op: wgpu::StencilOperation::Keep,
             depth_fail_op: wgpu::StencilOperation::Keep,
             pass_op: wgpu::StencilOperation::Keep,
@@ -53,7 +53,7 @@ pub fn create_map_render_pipeline_description<'a>(
             polygon_mode: wgpu::PolygonMode::Fill,
             front_face: wgpu::FrontFace::Ccw,
             strip_index_format: None,
-            cull_mode: None, // Maps look the same from he bottom and above
+            cull_mode: None, // TODO Maps look the same from he bottom and above
             clamp_depth: false,
             conservative: false,
         },
