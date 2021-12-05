@@ -99,10 +99,10 @@ impl SceneParams {
 
         // Stroke primitive
         cpu_primitives[STROKE_PRIM_ID as usize] =
-            Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 3, 1.0, 0.0, 1.0);
+            Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
         // Main fill primitive
         cpu_primitives[FILL_PRIM_ID as usize] =
-            Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 1, 0.0, 0.0, 1.0);
+            Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 0, 0.0, 0.0, 1.0);
 
         Self {
             cpu_primitives,
