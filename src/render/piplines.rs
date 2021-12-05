@@ -7,7 +7,23 @@ pub fn create_map_render_pipeline_description<'a>(
     vertex_state: VertexState<'a>,
     fragment_state: FragmentState<'a>,
     sample_count: u32,
+    draw_mask: bool,
 ) -> RenderPipelineDescriptor<'a> {
+    let stencil_state = if draw_mask {
+        wgpu::StencilFaceState {
+            compare: wgpu::CompareFunction::Always,
+            fail_op: wgpu::StencilOperation::Keep,
+            depth_fail_op: wgpu::StencilOperation::Keep,
+            pass_op: wgpu::StencilOperation::IncrementClamp,
+        }
+    } else {
+        wgpu::StencilFaceState {
+            compare: wgpu::CompareFunction::Equal,
+            fail_op: wgpu::StencilOperation::Keep,
+            depth_fail_op: wgpu::StencilOperation::Keep,
+            pass_op: wgpu::StencilOperation::Keep
+        }
+    };
     let descriptor = wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(&pipeline_layout),
@@ -25,22 +41,12 @@ pub fn create_map_render_pipeline_description<'a>(
         depth_stencil: Some(wgpu::DepthStencilState {
             format: DEPTH_TEXTURE_FORMAT,
             depth_write_enabled: true,
-            depth_compare: wgpu::CompareFunction::Greater,
+            depth_compare: wgpu::CompareFunction::Always,
             stencil: wgpu::StencilState {
-                front: wgpu::StencilFaceState {
-                    compare: wgpu::CompareFunction::Equal,
-                    fail_op: wgpu::StencilOperation::Keep,
-                    depth_fail_op: wgpu::StencilOperation::Keep,
-                    pass_op: wgpu::StencilOperation::IncrementClamp,
-                },
-                back: wgpu::StencilFaceState {
-                    compare: wgpu::CompareFunction::Equal,
-                    fail_op: wgpu::StencilOperation::Keep,
-                    depth_fail_op: wgpu::StencilOperation::Keep,
-                    pass_op: wgpu::StencilOperation::IncrementClamp,
-                },
-                read_mask: 1,
-                write_mask: 0,
+                front: stencil_state,
+                back: stencil_state,
+                read_mask: 0xff,
+                write_mask: 0xff,
             },
             bias: wgpu::DepthBiasState::default(),
         }),

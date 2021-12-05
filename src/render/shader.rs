@@ -1,6 +1,9 @@
-use wgpu::{ColorTargetState, FragmentState, ShaderModule, ShaderModuleDescriptor, VertexAttribute, VertexBufferLayout, VertexState};
-use super::platform_constants::COLOR_TEXTURE_FORMAT;
+use wgpu::{
+    ColorTargetState, FragmentState, ShaderModule, ShaderModuleDescriptor, VertexAttribute,
+    VertexBufferLayout, VertexState,
+};
 
+use super::platform_constants::COLOR_TEXTURE_FORMAT;
 use super::shader_ffi::GpuVertex;
 
 const MAP_VERTEX_SHADER_ARGUMENTS: [VertexAttribute; 3] = [
@@ -33,6 +36,12 @@ const MAP_VERTEX_COLOR_TARGETS: [ColorTargetState; 1] = [wgpu::ColorTargetState 
     write_mask: wgpu::ColorWrites::ALL,
 }];
 
+const MASK_MAP_VERTEX_COLOR_TARGETS: [ColorTargetState; 1] = [wgpu::ColorTargetState {
+    format: COLOR_TEXTURE_FORMAT,
+    blend: None,
+    write_mask: wgpu::ColorWrites::empty(),
+}];
+
 pub fn create_vertex_module_descriptor<'a>() -> ShaderModuleDescriptor<'a> {
     wgpu::ShaderModuleDescriptor {
         label: Some("Geometry vs"),
@@ -55,10 +64,17 @@ pub fn create_map_vertex_state(vertex_shader_module: &ShaderModule) -> VertexSta
     }
 }
 
-pub fn create_map_fragment_state(fragment_shader_module: &ShaderModule) -> FragmentState {
+pub fn create_map_fragment_state(
+    fragment_shader_module: &ShaderModule,
+    mask: bool,
+) -> FragmentState {
     wgpu::FragmentState {
         module: fragment_shader_module,
         entry_point: "main",
-        targets: &MAP_VERTEX_COLOR_TARGETS,
+        targets: if mask {
+            &MASK_MAP_VERTEX_COLOR_TARGETS
+        } else {
+            &MAP_VERTEX_COLOR_TARGETS
+        },
     }
 }

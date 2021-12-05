@@ -6,8 +6,8 @@ use std::ops::Range;
 use lyon::math::Vector;
 use lyon::tessellation::VertexBuffers;
 use vector_tile::parse_tile_reader;
-use wgpu::Extent3d;
 use wgpu::util::DeviceExt;
+use wgpu::Extent3d;
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::window::Window;
 
@@ -55,6 +55,8 @@ pub struct State {
     pub size: winit::dpi::PhysicalSize<u32>,
 
     render_pipeline: wgpu::RenderPipeline,
+    mask_pipeline: wgpu::RenderPipeline,
+    mask_pipeline2: wgpu::RenderPipeline,
     bind_group: wgpu::BindGroup,
 
     sample_count: u32,
@@ -151,7 +153,6 @@ impl State {
             })
             .await
             .unwrap();
-
 
         let limits = if cfg!(feature = "web-webgl") {
             wgpu::Limits::downlevel_webgl2_defaults()
@@ -260,11 +261,28 @@ impl State {
         let render_pipeline_descriptor = create_map_render_pipeline_description(
             &pipeline_layout,
             create_map_vertex_state(&vertex_module),
-            create_map_fragment_state(&fragment_module),
+            create_map_fragment_state(&fragment_module, false),
             sample_count,
+            false,
+        );
+
+        let mask_pipeline_descriptor = create_map_render_pipeline_description(
+            &pipeline_layout,
+            create_map_vertex_state(&vertex_module),
+            create_map_fragment_state(&fragment_module, false),
+            sample_count,
+            true,
+        );        let mask_pipeline_descriptor2 = create_map_render_pipeline_description(
+            &pipeline_layout,
+            create_map_vertex_state(&vertex_module),
+            create_map_fragment_state(&fragment_module, false),
+            sample_count,
+            true,
         );
 
         let render_pipeline = device.create_render_pipeline(&render_pipeline_descriptor);
+        let mask_pipeline = device.create_render_pipeline(&mask_pipeline_descriptor);
+        let mask_pipeline2 = device.create_render_pipeline(&mask_pipeline_descriptor2);
 
         // TODO: this isn't what we want: we'd need the equivalent of VK_POLYGON_MODE_LINE,
         // but it doesn't seem to be exposed by wgpu?
@@ -283,7 +301,7 @@ impl State {
 
         let depth_texture =
             Texture::create_depth_texture(&device, &surface_config, "depth_texture", sample_count);
-/*
+        /*
         let data = [1; 512 * 512] ;
 
         queue.write_texture(
@@ -323,6 +341,8 @@ impl State {
             size,
             surface_config,
             render_pipeline,
+            mask_pipeline,
+            mask_pipeline2,
             bind_group,
             multisampled_render_target,
             depth_texture,
@@ -339,7 +359,7 @@ impl State {
             fps_meter: FPSMeter::new(),
             stroke_range,
             cpu_primitives,
-            mask_fill_range
+            mask_fill_range,
         }
     }
 
@@ -445,9 +465,9 @@ impl State {
             &self.globals_uniform_buffer,
             0,
             bytemuck::cast_slice(&[Globals::new(
-                 [self.size.width as f32, self.size.height as f32],
-                 scene.scroll.to_array(),
-                 scene.zoom,
+                [self.size.width as f32, self.size.height as f32],
+                scene.scroll.to_array(),
+                scene.zoom,
             )]),
         );
 
@@ -496,19 +516,43 @@ impl State {
                 }),
             });
 
-            pass.set_pipeline(&self.render_pipeline);
             pass.set_bind_group(0, &self.bind_group, &[]);
             pass.set_index_buffer(
                 self.indices_uniform_buffer.slice(..),
                 wgpu::IndexFormat::Uint16,
             );
             pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
+            //compare: wgpu::CompareFunction::Equal
+            {
+                // Increment stencil
+                pass.set_pipeline(&self.mask_pipeline);
+                pass.set_stencil_reference(0); // Must be 0, else this does nothing?
+                pass.draw_indexed(self.mask_fill_range.clone(), 0, 0..1);
 
-            //pass.set_stencil_reference(1);
-            //pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
-            pass.draw_indexed(self.stroke_range.clone(), 0, 0..1);
+                pass.set_pipeline(&self.mask_pipeline2);
+                pass.set_stencil_reference(0); // Must be 0, else this does nothing?
+                pass.draw_indexed(self.mask_fill_range.clone(), 0, 0..1);
 
-            pass.draw_indexed(self.mask_fill_range.clone(), 0, 0..1);
+                pass.set_pipeline(&self.render_pipeline);
+                pass.set_stencil_reference(2);
+                //pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
+                pass.draw_indexed(self.stroke_range.clone(), 0, 0..1);
+            }
+
+            //compare: wgpu::CompareFunction::Always
+/*            {
+                // Increment stencil
+                pass.set_pipeline(&self.mask_pipeline);
+                pass.set_stencil_reference(5);
+                pass.draw_indexed(self.mask_fill_range.clone(), 0, 0..1);
+
+                pass.set_pipeline(&self.render_pipeline);
+                pass.set_stencil_reference(5);
+                //pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
+                pass.draw_indexed(self.stroke_range.clone(), 0, 0..1);
+
+            }*/
+
         }
 
         self.queue.submit(Some(encoder.finish()));
