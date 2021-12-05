@@ -1,24 +1,22 @@
 use std::cmp;
 use std::io::Cursor;
-use std::num::NonZeroU32;
 use std::ops::Range;
 
 use lyon::math::Vector;
 use lyon::tessellation::VertexBuffers;
 use vector_tile::parse_tile_reader;
 use wgpu::util::DeviceExt;
-use wgpu::Extent3d;
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
+use crate::render::tesselation::TileMask;
 
-use super::multisampling::create_multisampled_framebuffer;
 use super::piplines::*;
 use super::platform_constants::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use super::shader::*;
 use super::shader_ffi::*;
-use super::tesselation::{RustLogo, Tesselated};
+use super::tesselation::Tesselated;
 use super::texture::Texture;
 
 pub struct SceneParams {
@@ -26,22 +24,28 @@ pub struct SceneParams {
     pub zoom: f32,
     pub target_scroll: Vector,
     pub scroll: Vector,
-    pub show_points: bool,
     pub stroke_width: f32,
     pub target_stroke_width: f32,
+    cpu_primitives: Vec<Primitive>,
+}
+
+impl Default for SceneParams {
+    fn default() -> Self {
+        SceneParams {
+            target_zoom: 5.0,
+            zoom: 5.0,
+            target_scroll: Vector::new(70.0, 70.0),
+            scroll: Vector::new(70.0, 70.0),
+            stroke_width: 1.0,
+            target_stroke_width: 1.0,
+            cpu_primitives: vec![],
+        }
+    }
 }
 
 const PRIM_BUFFER_LEN: usize = 256;
-
-pub const DEFAULT_SCENE: SceneParams = SceneParams {
-    target_zoom: 5.0,
-    zoom: 5.0,
-    target_scroll: Vector::new(70.0, 70.0),
-    scroll: Vector::new(70.0, 70.0),
-    show_points: false,
-    stroke_width: 1.0,
-    target_stroke_width: 1.0,
-};
+const STROKE_PRIM_ID: u32 = 0;
+const FILL_PRIM_ID: u32 = 1;
 
 pub struct State {
     device: wgpu::Device,
@@ -59,53 +63,28 @@ pub struct State {
     bind_group: wgpu::BindGroup,
 
     sample_count: u32,
-    multisampled_render_target: Option<wgpu::TextureView>,
+    multisampling_texture: Option<Texture>,
+
     depth_texture: Texture,
 
     prims_uniform_buffer: wgpu::Buffer,
     globals_uniform_buffer: wgpu::Buffer,
+
     vertex_uniform_buffer: wgpu::Buffer,
     indices_uniform_buffer: wgpu::Buffer,
+    tile_fill_range: Range<u32>,
+    tile_stroke_range: Range<u32>,
 
-    mask_vertex_uniform_buffer: wgpu::Buffer,
-    mask_indices_uniform_buffer: wgpu::Buffer,
-
-    num_instances: u32,
-    stroke_prim_id: u32,
-    fill_prim_id: u32,
-    cpu_primitives: Vec<Primitive>,
-    fill_range: Range<u32>,
-    stroke_range: Range<u32>,
+    tile_mask_vertex_uniform_buffer: wgpu::Buffer,
+    tile_mask_indices_uniform_buffer: wgpu::Buffer,
+    tile_mask_range: Range<u32>,
 
     scene: SceneParams,
 }
 
 const TEST_TILES: &[u8] = include_bytes!("../../test-data/12-2176-1425.pbf");
-
-impl State {
-    pub async fn new(window: &Window) -> Self {
-        let sample_count = 4;
-        let stroke_prim_id = 0;
-        let fill_prim_id = 1;
-
-        let size = window.inner_size();
-
-        let mut geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
-
-        let (stroke_range, fill_range) = {
-            //let tile = parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
-            let tile = parse_tile_reader(&mut Cursor::new(TEST_TILES));
-            let count_stroke = tile.tesselate_stroke(&mut geometry, stroke_prim_id);
-            let count_fill = 0;
-
-            let start_stroke = tile.tesselate_fill(&mut geometry, fill_prim_id);
-            let start_fill = start_stroke + count_stroke;
-            (
-                start_stroke..start_fill,
-                start_fill..start_fill + count_fill,
-            )
-        };
-
+impl SceneParams {
+    pub fn new() -> Self {
         let mut cpu_primitives = Vec::with_capacity(PRIM_BUFFER_LEN);
         for _ in 0..PRIM_BUFFER_LEN {
             cpu_primitives.push(Primitive::new(
@@ -119,11 +98,33 @@ impl State {
         }
 
         // Stroke primitive
-        cpu_primitives[stroke_prim_id as usize] =
+        cpu_primitives[STROKE_PRIM_ID as usize] =
             Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 3, 1.0, 0.0, 1.0);
         // Main fill primitive
-        cpu_primitives[fill_prim_id as usize] =
+        cpu_primitives[FILL_PRIM_ID as usize] =
             Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 1, 0.0, 0.0, 1.0);
+
+        Self {
+            cpu_primitives,
+            ..SceneParams::default()
+        }
+    }
+}
+
+impl State {
+    pub async fn new(window: &Window) -> Self {
+        let sample_count = 4;
+
+        let size = window.inner_size();
+
+        let mut geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
+        //let tile = parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
+
+        let tile = parse_tile_reader(&mut Cursor::new(TEST_TILES));
+        let (tile_stroke_range, tile_fill_range) = (
+            tile.tesselate_stroke(&mut geometry, STROKE_PRIM_ID),
+            tile.tesselate_fill(&mut geometry, FILL_PRIM_ID),
+        );
 
         // create an instance
         let instance = wgpu::Instance::new(wgpu::Backends::all());
@@ -172,26 +173,20 @@ impl State {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        const EXTENT: f32 = 4096.0;
-        let mask_vertex_data = [
-            GpuVertex::new([0.0, 0.0], [0.0, 0.0], stroke_prim_id),
-            GpuVertex::new([EXTENT, 0.0], [0.0, 0.0], stroke_prim_id),
-            GpuVertex::new([0.0, EXTENT], [0.0, 0.0], stroke_prim_id),
-            GpuVertex::new([EXTENT, EXTENT], [0.0, 0.0], stroke_prim_id),
-        ];
-        let mask_index_data: &[u16] = &[0, 2, 1, 1, 2, 3];
-
-        let mask_vertex_uniform_buffer =
+        let mut tile_mask_geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
+        let tile_mask = TileMask();
+        let tile_mask_range = tile_mask.tesselate_fill(&mut tile_mask_geometry, FILL_PRIM_ID);
+        let tile_mask_vertex_uniform_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(&mask_vertex_data),
+                contents: bytemuck::cast_slice(&tile_mask_geometry.vertices),
                 usage: wgpu::BufferUsages::VERTEX,
             });
 
-        let mask_indices_uniform_buffer =
+        let tile_mask_indices_uniform_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
-                contents: bytemuck::cast_slice(&mask_index_data),
+                contents: bytemuck::cast_slice(&tile_mask_geometry.indices),
                 usage: wgpu::BufferUsages::INDEX,
             });
 
@@ -241,6 +236,7 @@ impl State {
                 },
             ],
         });
+
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("Bind group"),
             layout: &bind_group_layout,
@@ -270,20 +266,19 @@ impl State {
         let fragment_module = device.create_shader_module(&create_fragment_module_descriptor());
         let render_pipeline_descriptor = create_map_render_pipeline_description(
             &pipeline_layout,
-            create_map_vertex_state(&vertex_module),
-            create_map_fragment_state(&fragment_module, false),
+            create_vertex_state(&vertex_module),
+            create_fragment_state(&fragment_module, false),
             sample_count,
             false,
         );
 
         let mask_pipeline_descriptor = create_map_render_pipeline_description(
             &pipeline_layout,
-            create_map_vertex_state(&vertex_module),
-            create_map_fragment_state(&fragment_module, true),
+            create_vertex_state(&vertex_module),
+            create_fragment_state(&fragment_module, true),
             sample_count,
             true,
         );
-
 
         let render_pipeline = device.create_render_pipeline(&render_pipeline_descriptor);
         let mask_pipeline = device.create_render_pipeline(&mask_pipeline_descriptor);
@@ -328,8 +323,8 @@ impl State {
             }
         );*/
 
-        let multisampled_render_target = if sample_count > 1 {
-            Some(create_multisampled_framebuffer(
+        let multisampling_texture = if sample_count > 1 {
+            Some(Texture::create_multisampling_texture(
                 &device,
                 &surface_config,
                 sample_count,
@@ -347,23 +342,20 @@ impl State {
             render_pipeline,
             mask_pipeline,
             bind_group,
-            multisampled_render_target,
+            multisampling_texture,
             depth_texture,
             sample_count,
-            fill_range,
-            num_instances: 1,
-            stroke_prim_id: 0,
-            fill_prim_id: 1,
-            scene: DEFAULT_SCENE,
+            tile_fill_range,
+            scene: SceneParams::new(),
             vertex_uniform_buffer,
             globals_uniform_buffer,
             prims_uniform_buffer,
             indices_uniform_buffer,
-            mask_vertex_uniform_buffer,
+            tile_mask_vertex_uniform_buffer,
             fps_meter: FPSMeter::new(),
-            stroke_range,
-            cpu_primitives,
-            mask_indices_uniform_buffer,
+            tile_stroke_range,
+            tile_mask_indices_uniform_buffer,
+            tile_mask_range,
         }
     }
 
@@ -383,8 +375,8 @@ impl State {
             );
 
             // Re-configure multi-sampling buffer
-            self.multisampled_render_target = if self.sample_count > 1 {
-                Some(create_multisampled_framebuffer(
+            self.multisampling_texture = if self.sample_count > 1 {
+                Some(Texture::create_multisampling_texture(
                     &self.device,
                     &self.surface_config,
                     self.sample_count,
@@ -431,10 +423,6 @@ impl State {
                     scene.target_scroll.y += 50.0 / scene.target_zoom;
                     true
                 }
-                VirtualKeyCode::P => {
-                    scene.show_points = !scene.show_points;
-                    true
-                }
                 VirtualKeyCode::A => {
                     scene.target_stroke_width /= 0.8;
                     true
@@ -454,10 +442,27 @@ impl State {
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let frame = self.surface.get_current_texture()?;
         let scene = &mut self.scene;
-
         let frame_view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
+
+        {
+            self.queue.write_buffer(
+                &self.globals_uniform_buffer,
+                0,
+                bytemuck::cast_slice(&[Globals::new(
+                    [self.size.width as f32, self.size.height as f32],
+                    scene.scroll.to_array(),
+                    scene.zoom,
+                )]),
+            );
+
+            self.queue.write_buffer(
+                &self.prims_uniform_buffer,
+                0,
+                bytemuck::cast_slice(&scene.cpu_primitives),
+            );
+        }
 
         let mut encoder = self
             .device
@@ -465,28 +470,10 @@ impl State {
                 label: Some("Encoder"),
             });
 
-        self.queue.write_buffer(
-            &self.globals_uniform_buffer,
-            0,
-            bytemuck::cast_slice(&[Globals::new(
-                [self.size.width as f32, self.size.height as f32],
-                scene.scroll.to_array(),
-                scene.zoom,
-            )]),
-        );
-
-        self.queue.write_buffer(
-            &self.prims_uniform_buffer,
-            0,
-            bytemuck::cast_slice(&self.cpu_primitives),
-        );
-
         {
-            // A resolve target is only supported if the attachment actually uses anti-aliasing
-            // So if sample_count == 1 then we must render directly to the surface's buffer
-            let color_attachment = if let Some(msaa_target) = &self.multisampled_render_target {
+            let color_attachment = if let Some(multisampling_target) = &self.multisampling_texture {
                 wgpu::RenderPassColorAttachment {
-                    view: msaa_target,
+                    view: &multisampling_target.view,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
                         store: true,
@@ -527,13 +514,13 @@ impl State {
                 pass.set_pipeline(&self.mask_pipeline);
                 //pass.set_stencil_reference(0);
                 pass.set_index_buffer(
-                    self.mask_indices_uniform_buffer.slice(..),
+                    self.tile_mask_indices_uniform_buffer.slice(..),
                     wgpu::IndexFormat::Uint16,
                 );
-                pass.set_vertex_buffer(0, self.mask_vertex_uniform_buffer.slice(..));
-                pass.draw_indexed(0..6, 0, 0..1);
+                pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
+                pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..1);
             }
-                        {
+            {
                 pass.set_pipeline(&self.render_pipeline);
                 pass.set_stencil_reference(1);
                 pass.set_index_buffer(
@@ -542,7 +529,7 @@ impl State {
                 );
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
                 //pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
-                pass.draw_indexed(self.stroke_range.clone(), 0, 0..1);
+                pass.draw_indexed(self.tile_stroke_range.clone(), 0, 0..1);
             }
         }
 
@@ -563,8 +550,8 @@ impl State {
             scene.stroke_width + (scene.target_stroke_width - scene.stroke_width) / 5.0;
 
         // Animate the strokes of primitive
-        self.cpu_primitives[self.stroke_prim_id as usize].width = scene.stroke_width;
-        self.cpu_primitives[self.stroke_prim_id as usize].color = [
+        scene.cpu_primitives[STROKE_PRIM_ID as usize].width = scene.stroke_width;
+        scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
             (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
             (time_secs * 0.5 - 1.6).sin() * 0.1 + 0.1,
             (time_secs - 1.6).sin() * 0.1 + 0.1,

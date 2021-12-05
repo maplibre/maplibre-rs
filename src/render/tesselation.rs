@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use lyon::extra::rust_logo::build_logo_path;
 use lyon::lyon_tessellation::{FillTessellator, StrokeTessellator};
 use lyon::tessellation;
@@ -15,8 +17,8 @@ use super::shader_ffi::GpuVertex;
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
 pub trait Tesselated {
-    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> u32;
-    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> u32;
+    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32>;
+    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32>;
 }
 
 /// This vertex constructor forwards the positions and normals provided by the
@@ -40,7 +42,11 @@ impl StrokeVertexConstructor<GpuVertex> for WithId {
 }
 
 impl Tesselated for Tile {
-    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> u32 {
+    fn tesselate_stroke(
+        &self,
+        buffer: &mut VertexBuffers<GpuVertex, u16>,
+        prim_id: u32,
+    ) -> Range<u32> {
         let mut stroke_tess = StrokeTessellator::new();
         let mut tile_builder = Path::builder().with_svg();
 
@@ -92,14 +98,13 @@ impl Tesselated for Tile {
                                     ));
                                 }
                                 Command::Close => {
-                                    tile_builder.close();
+                                    panic!("error")
                                 }
                             };
                         }
                     }
                     _ => {}
                 };
-                //tile_builder.close();
                 tile_builder.move_to(lyon_path::math::point(0.0, 0.0));
             }
         }
@@ -114,18 +119,18 @@ impl Tesselated for Tile {
             )
             .unwrap();
 
-        (buffer.indices.len() - initial_indices_count) as u32
+        initial_indices_count as u32..buffer.indices.len() as u32
     }
 
-    fn tesselate_fill(&self, _buffer: &mut VertexBuffers<GpuVertex, u16>, _prim_id: u32) -> u32 {
-        return 0;
+    fn tesselate_fill(&self, _buffer: &mut VertexBuffers<GpuVertex, u16>, _prim_id: u32) -> Range<u32> {
+        return 0..0;
     }
 }
 
 pub struct RustLogo();
 
 impl Tesselated for RustLogo {
-    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> u32 {
+    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32> {
         let mut stroke_tess = StrokeTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -143,10 +148,10 @@ impl Tesselated for RustLogo {
             )
             .unwrap();
 
-        (buffer.indices.len() - initial_indices_count) as u32
+        initial_indices_count as u32..buffer.indices.len() as u32
     }
 
-    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> u32 {
+    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32> {
         let mut fill_tess = FillTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -165,6 +170,32 @@ impl Tesselated for RustLogo {
             )
             .unwrap();
 
-        (buffer.indices.len() - initial_indices_count) as u32
+        initial_indices_count as u32..buffer.indices.len() as u32
+    }
+}
+
+
+const EXTENT: f32 = 4096.0;
+
+pub struct TileMask();
+
+impl Tesselated for TileMask {
+    fn tesselate_stroke(&self, _buffer: &mut VertexBuffers<GpuVertex, u16>, _prim_id: u32) -> Range<u32> {
+        0..0
+    }
+
+    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32> {
+        let initial_indices_count = buffer.indices.len();
+
+        buffer.vertices = vec![
+            GpuVertex::new([0.0, 0.0], [0.0, 0.0], prim_id),
+            GpuVertex::new([EXTENT, 0.0], [0.0, 0.0], prim_id),
+            GpuVertex::new([0.0, EXTENT], [0.0, 0.0], prim_id),
+            GpuVertex::new([EXTENT, EXTENT], [0.0, 0.0], prim_id),
+        ];
+
+        buffer.indices = vec![0, 2, 1, 1, 2, 3];
+
+        initial_indices_count as u32.. buffer.indices.len() as u32
     }
 }

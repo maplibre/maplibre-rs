@@ -1,4 +1,3 @@
-mod multisampling;
 mod piplines;
 mod shader;
 mod shader_ffi;
