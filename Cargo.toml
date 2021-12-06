@@ -16,6 +16,7 @@ js-sys = "0.3"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 console_log = { version = "0.2", features = ["color"] }
+instant = { version = "0.1", features = [ "stdweb" ] }
 
 [dependencies]
 # Futures
