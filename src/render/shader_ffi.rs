@@ -10,32 +10,16 @@ type Mat4f32 = [Vec4f32; 4];
 pub struct Globals {
     pub view_proj: Mat4f32, // 64 bytes
     pub view_position: Vec4f32, // 16 bytes
-    pub resolution: Vec2f32, // 8 bytes
-    pub scroll_offset: Vec2f32, // 8 bytes
-    pub zoom: f32, // 4 bytes
-    _pad1: i32, // _padX aligns it to 8 bytes = AlignOf(Vec2f32=vec2<f32>):
-    // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
-    _pad2: i32,
-    _pad3: i32,
 }
 
 impl Globals {
     pub fn new(
         view_proj: Mat4f32,
         view_position: Vec4f32,
-        resolution: Vec2f32,
-        scroll_offset: Vec2f32,
-        zoom: f32,
     ) -> Self {
         Self {
             view_proj,
             view_position,
-            resolution,
-            scroll_offset,
-            zoom,
-            _pad1: Default::default(),
-            _pad2: Default::default(),
-            _pad3: Default::default(),
         }
     }
 }

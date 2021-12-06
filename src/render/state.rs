@@ -2,16 +2,15 @@ use std::cmp;
 use std::io::Cursor;
 use std::ops::Range;
 
-use lyon::math::Vector;
 use lyon::tessellation::VertexBuffers;
 use vector_tile::parse_tile_reader;
 use wgpu::util::DeviceExt;
-use winit::event::{DeviceEvent, ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
+use winit::event::{DeviceEvent, ElementState, KeyboardInput, WindowEvent};
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
 use crate::render::camera;
-use crate::render::camera::{Camera, CameraUniform};
+use crate::render::camera::{CameraUniform};
 use crate::render::tesselation::TileMask;
 
 use super::piplines::*;
@@ -22,22 +21,14 @@ use super::tesselation::Tesselated;
 use super::texture::Texture;
 
 pub struct SceneParams {
-    pub target_zoom: f32,
-    pub zoom: f32,
-    pub target_scroll: Vector,
-    pub scroll: Vector,
-    pub stroke_width: f32,
-    pub target_stroke_width: f32,
+    stroke_width: f32,
+    target_stroke_width: f32,
     cpu_primitives: Vec<Primitive>,
 }
 
 impl Default for SceneParams {
     fn default() -> Self {
         SceneParams {
-            target_zoom: 5.0,
-            zoom: 5.0,
-            target_scroll: Vector::new(70.0, 70.0),
-            scroll: Vector::new(70.0, 70.0),
             stroke_width: 1.0,
             target_stroke_width: 1.0,
             cpu_primitives: vec![],
@@ -81,16 +72,17 @@ pub struct State {
     tile_mask_indices_uniform_buffer: wgpu::Buffer,
     tile_mask_range: Range<u32>,
 
-    camera: camera::Camera, // UPDATED!
-    projection: camera::Projection, // NEW!
-    camera_controller: camera::CameraController, // UPDAT
-    camera_uniform: camera::CameraUniform, // UPDAT
+    camera: camera::Camera,
+    projection: camera::Projection,
+    camera_controller: camera::CameraController,
+    camera_uniform: camera::CameraUniform,
     mouse_pressed: bool,
 
     scene: SceneParams,
 }
 
 const TEST_TILES: &[u8] = include_bytes!("../../test-data/12-2176-1425.pbf");
+
 impl SceneParams {
     pub fn new() -> Self {
         let mut cpu_primitives = Vec::with_capacity(PRIM_BUFFER_LEN);
@@ -410,7 +402,6 @@ impl State {
     }
 
     pub fn input(&mut self, event: &DeviceEvent) -> bool {
-        let scene = &mut self.scene;
         match event {
             DeviceEvent::Key(KeyboardInput {
                 virtual_keycode: Some(key),
@@ -446,16 +437,12 @@ impl State {
             .create_view(&wgpu::TextureViewDescriptor::default());
 
         {
-            let position: [f32; 4] = [0., 0., 0., 0.];
             self.queue.write_buffer(
                 &self.globals_uniform_buffer,
                 0,
                 bytemuck::cast_slice(&[Globals::new(
                     self.camera_uniform.view_proj,
-                    position,
-                    [self.size.width as f32, self.size.height as f32],
-                    scene.scroll.to_array(),
-                    scene.zoom,
+                    self.camera_uniform.view_position,
                 )]),
             );
 
@@ -549,9 +536,7 @@ impl State {
         self.camera_uniform.update_view_proj(&self.camera, &self.projection);
 
 
-        // Animate the zoom to match target_zoom
-        scene.zoom += (scene.target_zoom - scene.zoom) / 3.0;
-        scene.scroll = scene.scroll + (scene.target_scroll - scene.scroll) / 3.0;
+        // Animate the stroke_width to match target_stroke_width
         scene.stroke_width =
             scene.stroke_width + (scene.target_stroke_width - scene.stroke_width) / 5.0;
 
