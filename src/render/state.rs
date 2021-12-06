@@ -5,12 +5,12 @@ use std::ops::Range;
 use lyon::tessellation::VertexBuffers;
 use vector_tile::parse_tile_reader;
 use wgpu::util::DeviceExt;
-use winit::event::{DeviceEvent, ElementState, KeyboardInput, WindowEvent};
+use winit::event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, WindowEvent};
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
 use crate::render::camera;
-use crate::render::camera::{CameraUniform};
+use crate::render::camera::CameraUniform;
 use crate::render::tesselation::TileMask;
 
 use super::piplines::*;
@@ -334,7 +334,13 @@ impl State {
         };
 
         let camera = camera::Camera::new((0.0, 5.0, 5000.0), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
-        let projection = camera::Projection::new(surface_config.width, surface_config.height, cgmath::Deg(45.0), 0.1, 10000.0);
+        let projection = camera::Projection::new(
+            surface_config.width,
+            surface_config.height,
+            cgmath::Deg(45.0),
+            0.1,
+            10000.0,
+        );
         let camera_controller = camera::CameraController::new(4000.0, 0.4);
 
         let mut camera_uniform = CameraUniform::new();
@@ -367,7 +373,7 @@ impl State {
             projection,
             camera_controller,
             camera_uniform,
-            mouse_pressed: false
+            mouse_pressed: false,
         }
     }
 
@@ -401,28 +407,39 @@ impl State {
         }
     }
 
-    pub fn input(&mut self, event: &DeviceEvent) -> bool {
+    pub fn device_input(&mut self, event: &DeviceEvent) -> bool {
         match event {
-            DeviceEvent::Key(KeyboardInput {
-                virtual_keycode: Some(key),
-                state,
-                ..
-            }) => self.camera_controller.process_keyboard(*key, *state),
-            DeviceEvent::MouseWheel { delta, .. } => {
-                self.camera_controller.process_scroll(delta);
-                true
-            }
-            DeviceEvent::Button {
-                button: 1, // Left Mouse Button
-                state,
-            } => {
-                self.mouse_pressed = *state == ElementState::Pressed;
-                true
-            }
             DeviceEvent::MouseMotion { delta } => {
                 if self.mouse_pressed {
                     self.camera_controller.process_mouse(delta.0, delta.1);
                 }
+                true
+            }
+            _ => false,
+        }
+    }
+
+    pub fn window_input(&mut self, event: &WindowEvent) -> bool {
+        match event {
+            WindowEvent::KeyboardInput {
+                input:
+                    KeyboardInput {
+                        state,
+                        virtual_keycode: Some(key),
+                        ..
+                    },
+                ..
+            } => self.camera_controller.process_keyboard(*key, *state),
+            WindowEvent::MouseWheel { delta, .. } => {
+                self.camera_controller.process_scroll(delta);
+                true
+            }
+            WindowEvent::MouseInput {
+                button: MouseButton::Left, // Left Mouse Button
+                state,
+                ..
+            } => {
+                self.mouse_pressed = *state == ElementState::Pressed;
                 true
             }
             _ => false,
@@ -533,8 +550,8 @@ impl State {
         let time_secs = self.fps_meter.time_secs as f32;
 
         self.camera_controller.update_camera(&mut self.camera, dt);
-        self.camera_uniform.update_view_proj(&self.camera, &self.projection);
-
+        self.camera_uniform
+            .update_view_proj(&self.camera, &self.projection);
 
         // Animate the stroke_width to match target_stroke_width
         scene.stroke_width =

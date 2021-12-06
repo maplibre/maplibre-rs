@@ -1,6 +1,7 @@
 use std::f32::consts::FRAC_PI_2;
 
 use cgmath::prelude::*;
+use log::info;
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
@@ -122,6 +123,7 @@ impl CameraController {
         };
         match key {
             winit::event::VirtualKeyCode::W | winit::event::VirtualKeyCode::Up => {
+                info!("W/Up Pressed");
                 self.amount_forward = amount;
                 true
             }

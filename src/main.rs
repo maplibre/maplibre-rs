@@ -1,15 +1,17 @@
-use log::info;
+use log::{info, trace};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::{Window, WindowBuilder};
 
+use crate::platform::Instant;
 use crate::render::state::State;
 
 mod fps_meter;
 
+mod platform;
+mod render;
 #[cfg(target_arch = "wasm32")]
 mod web;
-mod render;
 
 async fn setup(window: Window, event_loop: EventLoop<()>) {
     info!("== mapr ==");
@@ -20,10 +22,7 @@ async fn setup(window: Window, event_loop: EventLoop<()>) {
 
     let mut state = State::new(&window).await;
 
-    // Important: This kick-starts the rendering loop
-    // window.request_redraw();
-
-    let mut last_render_time = std::time::Instant::now();
+    let mut last_render_time = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -31,21 +30,24 @@ async fn setup(window: Window, event_loop: EventLoop<()>) {
                 ref event,
                 .. // We're not using device_id currently
             } => {
-                state.input(event);
+                trace!("{:?}", event);
+                state.device_input(event);
             }
+
             Event::WindowEvent {
                 ref event,
                 window_id,
             } if window_id == window.id() => {
+                if !state.window_input(event) {
                     match event {
                         WindowEvent::CloseRequested
                         | WindowEvent::KeyboardInput {
                             input:
-                                KeyboardInput {
-                                    state: ElementState::Pressed,
-                                    virtual_keycode: Some(VirtualKeyCode::Escape),
-                                    ..
-                                },
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                ..
+                            },
                             ..
                         } => *control_flow = ControlFlow::Exit,
                         WindowEvent::Resized(physical_size) => {
@@ -57,10 +59,10 @@ async fn setup(window: Window, event_loop: EventLoop<()>) {
                         }
                         _ => {}
                     }
-
+                }
             }
             Event::RedrawRequested(_) => {
-                let now = std::time::Instant::now();
+                let now = Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
                 state.update(dt);
