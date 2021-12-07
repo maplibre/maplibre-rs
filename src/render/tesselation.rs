@@ -12,28 +12,28 @@ use lyon_path::Path;
 use vector_tile::geometry::{Command, Geometry};
 use vector_tile::tile::Tile;
 
-use super::shader_ffi::GpuVertex;
+use super::shader_ffi::GpuVertexUniform;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
 pub trait Tesselated {
-    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32>;
-    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32>;
+    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertexUniform, u16>, prim_id: u32) -> Range<u32>;
+    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertexUniform, u16>, prim_id: u32) -> Range<u32>;
 }
 
 /// This vertex constructor forwards the positions and normals provided by the
 /// tessellators and add a shape id.
 pub struct WithId(pub u32);
 
-impl FillVertexConstructor<GpuVertex> for WithId {
-    fn new_vertex(&mut self, vertex: tessellation::FillVertex) -> GpuVertex {
-        GpuVertex::new(vertex.position().to_array(), [0.0, 0.0], self.0)
+impl FillVertexConstructor<GpuVertexUniform> for WithId {
+    fn new_vertex(&mut self, vertex: tessellation::FillVertex) -> GpuVertexUniform {
+        GpuVertexUniform::new(vertex.position().to_array(), [0.0, 0.0], self.0)
     }
 }
 
-impl StrokeVertexConstructor<GpuVertex> for WithId {
-    fn new_vertex(&mut self, vertex: tessellation::StrokeVertex) -> GpuVertex {
-        GpuVertex::new(
+impl StrokeVertexConstructor<GpuVertexUniform> for WithId {
+    fn new_vertex(&mut self, vertex: tessellation::StrokeVertex) -> GpuVertexUniform {
+        GpuVertexUniform::new(
             vertex.position_on_path().to_array(),
             vertex.normal().to_array(),
             self.0,
@@ -44,7 +44,7 @@ impl StrokeVertexConstructor<GpuVertex> for WithId {
 impl Tesselated for Tile {
     fn tesselate_stroke(
         &self,
-        buffer: &mut VertexBuffers<GpuVertex, u16>,
+        buffer: &mut VertexBuffers<GpuVertexUniform, u16>,
         prim_id: u32,
     ) -> Range<u32> {
         let mut stroke_tess = StrokeTessellator::new();
@@ -122,7 +122,7 @@ impl Tesselated for Tile {
         initial_indices_count as u32..buffer.indices.len() as u32
     }
 
-    fn tesselate_fill(&self, _buffer: &mut VertexBuffers<GpuVertex, u16>, _prim_id: u32) -> Range<u32> {
+    fn tesselate_fill(&self, _buffer: &mut VertexBuffers<GpuVertexUniform, u16>, _prim_id: u32) -> Range<u32> {
         return 0..0;
     }
 }
@@ -130,7 +130,7 @@ impl Tesselated for Tile {
 pub struct RustLogo();
 
 impl Tesselated for RustLogo {
-    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32> {
+    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertexUniform, u16>, prim_id: u32) -> Range<u32> {
         let mut stroke_tess = StrokeTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -151,7 +151,7 @@ impl Tesselated for RustLogo {
         initial_indices_count as u32..buffer.indices.len() as u32
     }
 
-    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32> {
+    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertexUniform, u16>, prim_id: u32) -> Range<u32> {
         let mut fill_tess = FillTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -180,18 +180,18 @@ const EXTENT: f32 = 4096.0;
 pub struct TileMask();
 
 impl Tesselated for TileMask {
-    fn tesselate_stroke(&self, _buffer: &mut VertexBuffers<GpuVertex, u16>, _prim_id: u32) -> Range<u32> {
+    fn tesselate_stroke(&self, _buffer: &mut VertexBuffers<GpuVertexUniform, u16>, _prim_id: u32) -> Range<u32> {
         0..0
     }
 
-    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertex, u16>, prim_id: u32) -> Range<u32> {
+    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertexUniform, u16>, prim_id: u32) -> Range<u32> {
         let initial_indices_count = buffer.indices.len();
 
         buffer.vertices = vec![
-            GpuVertex::new([0.0, 0.0], [0.0, 0.0], prim_id),
-            GpuVertex::new([EXTENT, 0.0], [0.0, 0.0], prim_id),
-            GpuVertex::new([0.0, EXTENT], [0.0, 0.0], prim_id),
-            GpuVertex::new([EXTENT, EXTENT], [0.0, 0.0], prim_id),
+            GpuVertexUniform::new([0.0, 0.0], [0.0, 0.0], prim_id),
+            GpuVertexUniform::new([EXTENT, 0.0], [0.0, 0.0], prim_id),
+            GpuVertexUniform::new([0.0, EXTENT], [0.0, 0.0], prim_id),
+            GpuVertexUniform::new([EXTENT, EXTENT], [0.0, 0.0], prim_id),
         ];
 
         buffer.indices = vec![0, 2, 1, 3,2,1];

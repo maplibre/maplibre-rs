@@ -1,10 +1,15 @@
-[[block]]
-struct Globals {
+struct CameraUniform {
     view_proj: mat4x4<f32>;
     view_position: vec4<f32>;
 };
 
-struct Primitive {
+
+[[block]]
+struct GlobalsUniform {
+    camera: CameraUniform;
+};
+
+struct PrimitiveUniform {
     color: vec4<f32>;
     translate: vec2<f32>;
     z_index: i32;
@@ -17,10 +22,10 @@ struct Primitive {
 
 [[block]]
 struct Primitives {
-    primitives: [[stride(48)]] array<Primitive, 256>;
+    primitives: [[stride(48)]] array<PrimitiveUniform, 256>;
 };
 
-[[group(0), binding(0)]] var<uniform> globals: Globals;
+[[group(0), binding(0)]] var<uniform> globals: GlobalsUniform;
 [[group(0), binding(1)]] var<uniform> u_primitives: Primitives;
 
 struct VertexOutput {
@@ -35,11 +40,11 @@ fn main(
     [[location(2)]] a_prim_id: u32,
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
-    var prim: Primitive = u_primitives.primitives[a_prim_id + instance_idx];
+    var prim: PrimitiveUniform = u_primitives.primitives[a_prim_id + instance_idx];
     var z = 0.0;
     var world_pos = a_position + a_normal * prim.width;
 
-    var position = globals.view_proj * vec4<f32>(world_pos, z, 1.0);
+    var position = globals.camera.view_proj * vec4<f32>(world_pos, z, 1.0);
 
     return VertexOutput(prim.color, position);
 }

@@ -3,6 +3,8 @@ use std::f32::consts::FRAC_PI_2;
 use cgmath::prelude::*;
 use log::info;
 
+use crate::render::shader_ffi::CameraUniform;
+
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
     1.0, 0.0, 0.0, 0.0,
@@ -123,7 +125,6 @@ impl CameraController {
         };
         match key {
             winit::event::VirtualKeyCode::W | winit::event::VirtualKeyCode::Up => {
-                info!("W/Up Pressed");
                 self.amount_forward = amount;
                 true
             }
@@ -161,9 +162,9 @@ impl CameraController {
             // I'm assuming a line is about 100 pixels
             winit::event::MouseScrollDelta::LineDelta(_, scroll) => scroll * 100.0,
             winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
-                                                           y: scroll,
-                                                           ..
-                                                       }) => *scroll as f32,
+                y: scroll,
+                ..
+            }) => *scroll as f32,
         };
     }
 
@@ -208,29 +209,11 @@ impl CameraController {
             camera.pitch = cgmath::Rad(SAFE_FRAC_PI_2);
         }
     }
-}
 
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct CameraUniform {
-    pub view_position: [f32; 4],
-    pub view_proj: [[f32; 4]; 4],
-}
-
-unsafe impl bytemuck::Pod for CameraUniform {}
-unsafe impl bytemuck::Zeroable for CameraUniform {}
-
-impl CameraUniform {
-    pub fn new() -> Self {
-        Self {
-            view_position: [0.0; 4],
-            view_proj: cgmath::Matrix4::identity().into(),
-        }
-    }
-
-    // UPDATED!
-    pub(crate) fn update_view_proj(&mut self, camera: &Camera, projection: &Projection) {
-        self.view_position = camera.position.to_homogeneous().into();
-        self.view_proj = (projection.calc_matrix() * camera.calc_matrix()).into()
+    pub fn create_camera_uniform(camera: &Camera, projection: &Projection) -> CameraUniform {
+        CameraUniform::new(
+            (projection.calc_matrix() * camera.calc_matrix()).into(),
+            camera.position.to_homogeneous().into(),
+        )
     }
 }

@@ -10,7 +10,7 @@ use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
 use crate::render::camera;
-use crate::render::camera::CameraUniform;
+use crate::render::camera::CameraController;
 use crate::render::tesselation::TileMask;
 
 use super::piplines::*;
@@ -23,7 +23,7 @@ use super::texture::Texture;
 pub struct SceneParams {
     stroke_width: f32,
     target_stroke_width: f32,
-    cpu_primitives: Vec<Primitive>,
+    cpu_primitives: Vec<PrimitiveUniform>,
 }
 
 impl Default for SceneParams {
@@ -75,7 +75,6 @@ pub struct State {
     camera: camera::Camera,
     projection: camera::Projection,
     camera_controller: camera::CameraController,
-    camera_uniform: camera::CameraUniform,
     mouse_pressed: bool,
 
     scene: SceneParams,
@@ -87,7 +86,7 @@ impl SceneParams {
     pub fn new() -> Self {
         let mut cpu_primitives = Vec::with_capacity(PRIM_BUFFER_LEN);
         for _ in 0..PRIM_BUFFER_LEN {
-            cpu_primitives.push(Primitive::new(
+            cpu_primitives.push(PrimitiveUniform::new(
                 [1.0, 0.0, 0.0, 1.0],
                 [0.0, 0.0],
                 0,
@@ -99,10 +98,10 @@ impl SceneParams {
 
         // Stroke primitive
         cpu_primitives[STROKE_PRIM_ID as usize] =
-            Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
+            PrimitiveUniform::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
         // Main fill primitive
         cpu_primitives[FILL_PRIM_ID as usize] =
-            Primitive::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 0, 0.0, 0.0, 1.0);
+            PrimitiveUniform::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 0, 0.0, 0.0, 1.0);
 
         Self {
             cpu_primitives,
@@ -117,7 +116,7 @@ impl State {
 
         let size = window.inner_size();
 
-        let mut geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
+        let mut geometry: VertexBuffers<GpuVertexUniform, u16> = VertexBuffers::new();
         //let tile = parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
 
         let tile = parse_tile_reader(&mut Cursor::new(TEST_TILES));
@@ -173,7 +172,7 @@ impl State {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let mut tile_mask_geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
+        let mut tile_mask_geometry: VertexBuffers<GpuVertexUniform, u16> = VertexBuffers::new();
         let tile_mask = TileMask();
         let tile_mask_range = tile_mask.tesselate_fill(&mut tile_mask_geometry, FILL_PRIM_ID);
         let tile_mask_vertex_uniform_buffer =
@@ -192,10 +191,10 @@ impl State {
 
         let prim_buffer_byte_size = cmp::max(
             MIN_BUFFER_SIZE,
-            (PRIM_BUFFER_LEN * std::mem::size_of::<Primitive>()) as u64,
+            (PRIM_BUFFER_LEN * std::mem::size_of::<PrimitiveUniform>()) as u64,
         );
         let globals_buffer_byte_size =
-            cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<Globals>() as u64);
+            cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<GlobalsUniform>() as u64);
 
         let prims_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Prims ubo"),
@@ -343,9 +342,6 @@ impl State {
         );
         let camera_controller = camera::CameraController::new(4000.0, 0.4);
 
-        let mut camera_uniform = CameraUniform::new();
-        camera_uniform.update_view_proj(&camera, &projection); // UPDATED!
-
         Self {
             surface,
             device,
@@ -372,7 +368,6 @@ impl State {
             camera,
             projection,
             camera_controller,
-            camera_uniform,
             mouse_pressed: false,
         }
     }
@@ -457,10 +452,10 @@ impl State {
             self.queue.write_buffer(
                 &self.globals_uniform_buffer,
                 0,
-                bytemuck::cast_slice(&[Globals::new(
-                    self.camera_uniform.view_proj,
-                    self.camera_uniform.view_position,
-                )]),
+                bytemuck::cast_slice(&[GlobalsUniform::new(CameraController::create_camera_uniform(
+                    &self.camera,
+                    &self.projection,
+                ))]),
             );
 
             self.queue.write_buffer(
@@ -550,8 +545,6 @@ impl State {
         let time_secs = self.fps_meter.time_secs as f32;
 
         self.camera_controller.update_camera(&mut self.camera, dt);
-        self.camera_uniform
-            .update_view_proj(&self.camera, &self.projection);
 
         // Animate the stroke_width to match target_stroke_width
         scene.stroke_width =

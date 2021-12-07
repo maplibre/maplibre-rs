@@ -4,7 +4,7 @@ use wgpu::{
 };
 
 use super::platform_constants::COLOR_TEXTURE_FORMAT;
-use super::shader_ffi::GpuVertex;
+use super::shader_ffi::GpuVertexUniform;
 
 const VERTEX_SHADER_ARGUMENTS: [VertexAttribute; 3] = [
     wgpu::VertexAttribute {
@@ -25,7 +25,7 @@ const VERTEX_SHADER_ARGUMENTS: [VertexAttribute; 3] = [
 ];
 
 const VERTEX_SHADER_BUFFERS: [VertexBufferLayout; 1] = [wgpu::VertexBufferLayout {
-    array_stride: std::mem::size_of::<GpuVertex>() as u64,
+    array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
     step_mode: wgpu::VertexStepMode::Vertex,
     attributes: &VERTEX_SHADER_ARGUMENTS,
 }];

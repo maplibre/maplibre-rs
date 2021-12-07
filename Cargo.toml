@@ -45,6 +45,7 @@ env_logger = "0.9"
 # Utils
 hexdump = "0.1"
 bytemuck = "1.2.0"
+bytemuck_derive = "1.0"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
