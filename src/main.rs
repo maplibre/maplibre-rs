@@ -1,4 +1,4 @@
-use log::{info, trace};
+use log::{info, trace, warn};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::{Window, WindowBuilder};
@@ -12,8 +12,11 @@ mod platform;
 mod render;
 #[cfg(target_arch = "wasm32")]
 mod web;
+mod io;
 
-async fn setup(window: Window, event_loop: EventLoop<()>) {
+use js_sys;
+
+async fn setup(window: Window, event_loop: EventLoop<()>, u8sab: Option<js_sys::Uint8Array>) {
     info!("== mapr ==");
     info!("Controls:");
     info!("  Arrow keys: scrolling");
@@ -62,6 +65,8 @@ async fn setup(window: Window, event_loop: EventLoop<()>) {
                 }
             }
             Event::RedrawRequested(_) => {
+                warn!("{}", u8sab.as_ref().unwrap().get_index(1));
+
                 let now = Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
@@ -95,5 +100,5 @@ fn main() {
         .build(&event_loop)
         .unwrap();
 
-    pollster::block_on(setup(window, event_loop));
+    pollster::block_on(setup(window, event_loop, None));
 }
