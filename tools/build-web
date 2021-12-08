@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 webgl_flag=""
 
@@ -18,4 +19,7 @@ done
 
 # shellcheck disable=SC2086
 RUSTFLAGS=--cfg=web_sys_unstable_apis cargo build $webgl_flag --target wasm32-unknown-unknown --bin mapr
-wasm-bindgen --out-dir web --web target/wasm32-unknown-unknown/debug/mapr.wasm
+wasm-bindgen --target web --out-dir web target/wasm32-unknown-unknown/debug/mapr.wasm
+
+xdg-open "https://localhost:5555/web/mapr.html"
+python3 tools/tls-http-server.py
