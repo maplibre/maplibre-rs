@@ -1,0 +1,18 @@
+[package]
+name = "style-spec"
+version = "0.1.0"
+description = "A library for decoding style specs"
+readme = "README.md"
+categories = ["encoding"]
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+log = "0.4"
+
+
+
+[build-dependencies]
+serde_json = "1.0"
+
+
