@@ -4,9 +4,10 @@ version = "0.1.0"
 authors = ["Maximilian Ammann <max@maxammann.org>"]
 edition = "2021"
 resolver = "2"
+build = "build.rs"
 
 [features]
-web-webgl = [ "wgpu/webgl" ]
+web-webgl = ["wgpu/webgl"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1"
@@ -16,7 +17,7 @@ js-sys = "0.3"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 console_log = { version = "0.2", features = ["color"] }
-instant = { version = "0.1", features = [ "stdweb" ] }
+instant = { version = "0.1", features = ["stdweb"] }
 
 [dependencies]
 # Futures
@@ -25,6 +26,7 @@ pollster = "0.2"
 
 # Vector riles
 vector-tile = { path = "libs/vector_tile" }
+style-spec = { path = "libs/style_spec" }
 geo = "0.18.0"
 geo-types = "0.7"
 # proj = "0.24" FIXME: Incompatible with wasm
@@ -57,9 +59,7 @@ criterion = "0.3"
 test-env-log = "0.2"
 
 [build-dependencies]
-naga = { version = "0.7", features = ["wgsl-in"] }
-walkdir = "2.3"
-
+wgsl-validate = { path = "libs/wgsl_validate" }
 
 [[bin]]
 name = "mapr"

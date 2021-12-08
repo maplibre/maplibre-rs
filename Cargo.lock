@@ -1217,17 +1217,17 @@ dependencies = [
  "log",
  "lyon",
  "lyon_path",
- "naga",
  "pollster",
  "serde",
  "serde_json",
+ "style-spec",
  "test-env-log",
  "vector-tile",
- "walkdir",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
  "wgpu",
+ "wgsl-validate",
  "winit",
 ]
 
@@ -2022,6 +2022,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6446ced80d6c486436db5c078dde11a9f73d42b57fb273121e160b84f63d894c"
 
 [[package]]
+name = "style-spec"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde_json",
+]
+
+[[package]]
 name = "svgtypes"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2409,6 +2417,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e15e44ba88ec415466e18e91881319e7c9e96cb905dc623305168aea65b85ccc"
 dependencies = [
  "bitflags",
+]
+
+[[package]]
+name = "wgsl-validate"
+version = "0.1.0"
+dependencies = [
+ "naga",
+ "walkdir",
 ]
 
 [[package]]

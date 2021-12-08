@@ -1,0 +1,11 @@
+[package]
+name = "wgsl-validate"
+version = "0.1.0"
+description = "A library for validating WGSL shaders"
+readme = "README.md"
+categories = ["encoding"]
+edition = "2021"
+
+[dependencies]
+naga = { version = "0.7", features = ["wgsl-in"] }
+walkdir = "2.3"
