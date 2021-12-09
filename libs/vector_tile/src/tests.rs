@@ -1,11 +1,11 @@
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Cursor};
 
 use protobuf::Message;
 
 use crate::encoding::Decode;
-use crate::grid::{GOOGLE_MERCATOR, tile_coordinates_bavaria};
-use crate::parse_tile;
+use crate::grid::{google_mercator, tile_coordinates_bavaria};
+use crate::{parse_tile, parse_tile_reader};
 use crate::protos::vector_tile::Tile;
 
 #[test]
@@ -15,5 +15,10 @@ fn test_parsing_europe_pbf() {
 
 #[test]
 fn test_tile_coordinates_bavaria() {
-    println!("{:?}", tile_coordinates_bavaria(&GOOGLE_MERCATOR, 6));
+    println!("{:?}", tile_coordinates_bavaria(&google_mercator(), 6));
+}
+
+#[test]
+fn test_empty_fail() {
+    assert!(parse_tile_reader(&mut Cursor::new(&[])).is_err())
 }
