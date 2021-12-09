@@ -1,0 +1,6 @@
+[book]
+authors = ["Maximilian Ammann"]
+language = "en"
+multilingual = false
+src = "src"
+title = "mapr documentation"

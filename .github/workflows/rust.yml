@@ -44,3 +44,26 @@ jobs:
           chmod 600 id_rsa
           ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org "rm -f ~/public_html/mapr/*"
           rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/." max@maxammann.org:~/public_html/mapr/
+
+  book:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Install mdbook
+        run: |
+          cargo install mdbook --no-default-features --features output --vers "^0.1.0"
+      - name: Build
+        run: mdbook build docs
+      - name: Deploy to maxammann.org
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+        run: |
+          echo "$SSH_KEY" > id_rsa
+          chmod 600 id_rsa
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org "rm -f ~/public_html/mapr-docs/*"
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "docs/build/." max@maxammann.org:~/public_html/mapr-docs/
