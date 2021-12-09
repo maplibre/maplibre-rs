@@ -6,6 +6,28 @@
 * [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames) (also known as XYZ) 
 * [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#TileMap_Diagram)
 
+## WebAssembly and WebWorkers
+
+Projects:
+
+* [Experiment with shared memory](https://github.com/Ciantic/rust-shared-wasm-experiments) and [the idea behind it](https://github.com/rustwasm/wasm-bindgen/issues/2225)
+* [Shared channel](https://github.com/wasm-rs/shared-channel)
+* [Bridge for async executors](https://docs.rs/async_executors/latest/async_executors/)
+* [Rayon for WebAssembly](https://github.com/GoogleChromeLabs/wasm-bindgen-rayon)
+* [wasm-mt: postMessage message passing](https://github.com/w3reality/wasm-mt)
+* 
+Articles:
+
+* [WebAssembly Threads (official)](https://web.dev/webassembly-threads/)
+* [Multithreading Rust and Wasm 2018](https://rustwasm.github.io/2018/10/24/multithreading-rust-and-wasm.html)
+* [postMessage Performance](https://surma.dev/things/is-postmessage-slow/)
+* [A practical guide to WebAssembly memory](https://radu-matei.com/blog/practical-guide-to-wasm-memory/)
+
+Examples:
+* [WASM in a WebWorker](https://rustwasm.github.io/wasm-bindgen/examples/wasm-in-web-worker.html)
+* [Building for Shared Memory](https://github.com/rustwasm/wasm-bindgen/blob/main/examples/raytrace-parallel/build.sh)
+* [Parallel Raytracing](https://rustwasm.github.io/docs/wasm-bindgen/examples/raytrace.html)
+* 
 ## Rendering
 
 Specs:
