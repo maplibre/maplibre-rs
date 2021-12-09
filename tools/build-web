@@ -20,12 +20,12 @@ done
 function plain_build() {
   cargo +nightly build --features "$webgl_flag" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
   # TODO: Untested: --reference-types
-  wasm-bindgen --target web --out-dir web/libs/mapr-pain-bindgen target/wasm32-unknown-unknown/debug/mapr.wasm
+  wasm-bindgen --target web --out-dir dist/mapr-pain-bindgen target/wasm32-unknown-unknown/debug/mapr.wasm
 }
 
 function wasm_pack_build() {
   rustup run nightly ~/Downloads/wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
-        --dev --target web --out-dir web/libs/mapr -- \
+        --release --target web --out-dir dist/mapr -- \
         --features "$webgl_flag" -Z build-std=std,panic_abort
 }
 
