@@ -1,6 +1,6 @@
 name: Rust
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -37,10 +37,13 @@ jobs:
       - name: Build
         run: npm run build
       - name: Prepare for deployment
-        run: mv dist public
-      - name: Deploy to gh-pages 🚀
-        uses: JamesIves/github-pages-deploy-action@4.1.5
+        run: |
+          mv dist public
+          cp ../vercel.json public/
+      - uses: amondnet/vercel-action@v20
         with:
-          branch: gh-pages
-          folder: web/public
-
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID}}
+          vercel-project-id: ${{ secrets.PROJECT_ID}}
+          working-directory: web/public
+          vercel-args: '--prod'
