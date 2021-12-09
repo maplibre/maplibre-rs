@@ -1,0 +1,33 @@
+{
+  "name": "web",
+  "version": "0.0.1",
+  "description": "A mapr demo",
+  "main": "index.js",
+  "scripts": {
+    "start": "RUSTUP_TOOLCHAIN=nightly webpack-dev-server",
+    "build": "RUSTUP_TOOLCHAIN=nightly webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxammann/mapr"
+  },
+  "dependencies": {
+    "mapr": "file:libs/mapr",
+    "wasm-pack": "^0.10.1"
+  },
+  "devDependencies": {
+    "@wasm-tool/wasm-pack-plugin": "^1.6.0",
+    "copy-webpack-plugin": "^10.0.0",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.6.0",
+    "wasm-pack": "^0.10.1"
+  },
+  "keywords": [
+    "wasm",
+    "webgpu",
+    "maps"
+  ],
+  "author": "",
+  "license": "MIT"
+}

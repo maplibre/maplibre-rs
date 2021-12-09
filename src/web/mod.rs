@@ -47,6 +47,6 @@ pub async fn run() {
         height: body.client_height(),
     });
 
-    super::setup(window, event_loop, None).await;
+    super::setup::setup(window, event_loop).await;
 }
 

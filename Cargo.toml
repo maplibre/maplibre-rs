@@ -6,6 +6,15 @@ edition = "2021"
 resolver = "2"
 build = "build.rs"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [features]
 web-webgl = ["wgpu/webgl"]
 

@@ -1,14 +1,10 @@
-<html lang="en-US">
-<head>
-    <title>mapr Demo</title>
-</head>
-<body style="margin: 0; padding: 0;">
-<script type="module">
-    import init from "./mapr.js";
+import init from "mapr";
+
+const start = async () => {
     const memory = new WebAssembly.Memory({initial: 1024, maximum: 10 * 1024, shared: true});
     const init_output = await init(undefined, memory);
 
-    const fetch_worker = new Worker("./fetch-worker.js", {
+    const fetch_worker = new Worker(new URL('./fetch-worker.js', import.meta.url), {
         type: "module",
     });
 
@@ -18,8 +14,7 @@
         console.log(e)
     }
 
-    //await init_output.run();
-</script>
-<canvas id="mapr"></canvas>
-</body>
-</html>
+    await init_output.run();
+}
+
+start();

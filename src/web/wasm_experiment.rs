@@ -10,7 +10,7 @@ pub fn test_fetch(web_window: &Window) {
     let cb: Closure<dyn FnMut(JsValue) + 'static> = Closure::wrap(Box::new(|value: JsValue| {
         info!("interval elapsed!");
     }) as Box<dyn FnMut(JsValue)>);
-    web_window.fetch_with_str("http://localhost:5555/web/mapr.html").then(&cb);
+    web_window.fetch_with_str("http://localhost:5555/web/index.html").then(&cb);
 
     cb.forget();
 }
@@ -51,7 +51,7 @@ pub fn test_shared_mem(memory: &JsValue) {
 pub fn test_alloc() -> *mut u8 {
     let mut buf: Vec<u8> = Vec::with_capacity(100);
 
-    buf.push(54);
+    buf.push(56);
     let ptr = buf.as_mut_ptr();
     std::mem::forget(buf);
     return ptr;

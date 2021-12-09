@@ -1,3 +1,5 @@
-*.ts
-mapr*.js
-*.wasm
+node_modules
+
+libs/mapr*
+
+dist
