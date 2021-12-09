@@ -4,8 +4,8 @@
   "description": "A mapr demo",
   "main": "index.js",
   "scripts": {
-    "start": "RUSTUP_TOOLCHAIN=nightly webpack-dev-server",
-    "build": "RUSTUP_TOOLCHAIN=nightly webpack"
+    "start": "RUSTUP_TOOLCHAIN=nightly-2021-12-07-x86_64-unknown-linux-gnu webpack-dev-server",
+    "build": "RUSTUP_TOOLCHAIN=nightly-2021-12-07-x86_64-unknown-linux-gnu webpack"
   },
   "repository": {
     "type": "git",
