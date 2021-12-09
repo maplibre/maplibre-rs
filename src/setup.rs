@@ -7,10 +7,6 @@ use crate::render::state::State;
 
 pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>) {
     info!("== mapr ==");
-    info!("Controls:");
-    info!("  Arrow keys: scrolling");
-    info!("  PgUp/PgDown: zoom in/out");
-    info!("  a/z: increase/decrease the stroke width");
 
     let mut state = State::new(&window).await;
 
