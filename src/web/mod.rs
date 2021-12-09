@@ -19,9 +19,10 @@ mod wasm_experiment;
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    //console_log::init_with_level(Level::Info).expect("error initializing log");
+    if let Err(_) = console_log::init_with_level(Level::Info) {
+        // Failed to initialize logging. No need to log a message.
+    }
     panic::set_hook(Box::new(console_error_panic_hook::hook));
-    //wasm_bindgen_futures::spawn_local(run());
 }
 
 #[wasm_bindgen]
