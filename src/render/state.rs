@@ -119,7 +119,7 @@ impl State {
         let mut geometry: VertexBuffers<GpuVertexUniform, u16> = VertexBuffers::new();
         //let tile = parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
 
-        let tile = parse_tile_reader(&mut Cursor::new(TEST_TILES));
+        let tile = parse_tile_reader(&mut Cursor::new(TEST_TILES)).expect("failed to load tile");
         let (tile_stroke_range, tile_fill_range) = (
             tile.tesselate_stroke(&mut geometry, STROKE_PRIM_ID),
             tile.tesselate_fill(&mut geometry, FILL_PRIM_ID),
