@@ -424,7 +424,19 @@ impl State {
                         ..
                     },
                 ..
-            } => self.camera_controller.process_keyboard(*key, *state),
+            } => {
+                match key {
+                    winit::event::VirtualKeyCode::Z => {
+                        self.scene.target_stroke_width *= 1.2;
+                        true
+                    }
+                    winit::event::VirtualKeyCode::H => {
+                        self.scene.target_stroke_width *= 0.8;
+                        true
+                    }
+                    _ => self.camera_controller.process_keyboard(*key, *state)
+                }
+            },
             WindowEvent::MouseWheel { delta, .. } => {
                 self.camera_controller.process_scroll(delta);
                 true
