@@ -12,5 +12,5 @@ class Handler(SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(('0.0.0.0', 5555), Handler) as httpd:
-        httpd.socket = ssl.wrap_socket(httpd.socket, certfile='tools/server.pem', server_side=True)
+        #httpd.socket = ssl.wrap_socket(httpd.socket, certfile='tools/server.pem', server_side=True)
         httpd.serve_forever()

@@ -1,0 +1,9 @@
+[target.wasm32-unknown-unknown]
+rustflags = [
+    # Enabled unstable APIs from web_sys
+    "--cfg=web_sys_unstable_apis",
+    # Enables features which are required for shared-memory
+    "-C", "target-feature=+atomics,+bulk-memory,+mutable-globals",
+    # Enables the possibility to import memory into wasm. shared-memory option is required.
+    "-C", "link-args=--shared-memory --import-memory",
+]

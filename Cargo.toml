@@ -12,7 +12,7 @@ web-webgl = ["wgpu/webgl"]
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1"
 winit = { version = "0.25", features = ["web-sys"] }
-web-sys = { version = "0.3", features = ["Worker", "MessageEvent"]}
+web-sys = { version = "0.3", features = ["Worker", "WorkerOptions", "WorkerType", "MessageEvent"] }
 js-sys = "0.3"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"

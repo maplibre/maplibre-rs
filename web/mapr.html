@@ -5,10 +5,20 @@
 <body style="margin: 0; padding: 0;">
 <script type="module">
     import init from "./mapr.js";
+    const memory = new WebAssembly.Memory({initial: 1024, maximum: 10 * 1024, shared: true});
+    const init_output = await init(undefined, memory);
 
-    const init_output = await init();
+    const fetch_worker = new Worker("./fetch-worker.js", {
+        type: "module",
+    });
 
-    await init_output.run();
+    fetch_worker.postMessage({type: "init", memory, address: init_output.test_alloc()});
+
+    fetch_worker.onmessage = (e) => {
+        console.log(e)
+    }
+
+    //await init_output.run();
 </script>
 <canvas id="mapr"></canvas>
 </body>
