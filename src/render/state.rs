@@ -5,6 +5,7 @@ use std::ops::Range;
 use lyon::tessellation::VertexBuffers;
 use vector_tile::parse_tile_reader;
 use wgpu::util::DeviceExt;
+use wgpu::Limits;
 use winit::event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, WindowEvent};
 use winit::window::Window;
 
@@ -142,7 +143,11 @@ impl State {
             .unwrap();
 
         let limits = if cfg!(feature = "web-webgl") {
-            wgpu::Limits::downlevel_webgl2_defaults()
+            Limits {
+                max_texture_dimension_2d: 4096,
+                // Most of the values should be the same as the downlevel defaults
+                ..wgpu::Limits::downlevel_webgl2_defaults()
+            }
         } else {
             wgpu::Limits::default()
         };
@@ -193,8 +198,10 @@ impl State {
             MIN_BUFFER_SIZE,
             (PRIM_BUFFER_LEN * std::mem::size_of::<PrimitiveUniform>()) as u64,
         );
-        let globals_buffer_byte_size =
-            cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<GlobalsUniform>() as u64);
+        let globals_buffer_byte_size = cmp::max(
+            MIN_BUFFER_SIZE,
+            std::mem::size_of::<GlobalsUniform>() as u64,
+        );
 
         let prims_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Prims ubo"),
@@ -424,18 +431,16 @@ impl State {
                         ..
                     },
                 ..
-            } => {
-                match key {
-                    winit::event::VirtualKeyCode::Z => {
-                        self.scene.target_stroke_width *= 1.2;
-                        true
-                    }
-                    winit::event::VirtualKeyCode::H => {
-                        self.scene.target_stroke_width *= 0.8;
-                        true
-                    }
-                    _ => self.camera_controller.process_keyboard(*key, *state)
+            } => match key {
+                winit::event::VirtualKeyCode::Z => {
+                    self.scene.target_stroke_width *= 1.2;
+                    true
                 }
+                winit::event::VirtualKeyCode::H => {
+                    self.scene.target_stroke_width *= 0.8;
+                    true
+                }
+                _ => self.camera_controller.process_keyboard(*key, *state),
             },
             WindowEvent::MouseWheel { delta, .. } => {
                 self.camera_controller.process_scroll(delta);
@@ -464,10 +469,9 @@ impl State {
             self.queue.write_buffer(
                 &self.globals_uniform_buffer,
                 0,
-                bytemuck::cast_slice(&[GlobalsUniform::new(CameraController::create_camera_uniform(
-                    &self.camera,
-                    &self.projection,
-                ))]),
+                bytemuck::cast_slice(&[GlobalsUniform::new(
+                    CameraController::create_camera_uniform(&self.camera, &self.projection),
+                )]),
             );
 
             self.queue.write_buffer(
