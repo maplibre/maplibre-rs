@@ -50,6 +50,7 @@ jobs:
     defaults:
       run:
         shell: bash
+        working-directory: docs
     steps:
       - uses: actions/checkout@v2
         with:
@@ -58,7 +59,7 @@ jobs:
         run: |
           cargo install mdbook --no-default-features --features output --vers "^0.1.0"
       - name: Build
-        run: mdbook build docs
+        run: mdbook build
       - name: Deploy to maxammann.org
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
@@ -66,4 +67,4 @@ jobs:
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
           ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org "rm -f ~/public_html/mapr-docs/*"
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "docs/build/." max@maxammann.org:~/public_html/mapr-docs/
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "book/." max@maxammann.org:~/public_html/mapr-docs/
