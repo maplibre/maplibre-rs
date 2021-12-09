@@ -20,6 +20,9 @@ module.exports = {
         filename: "[name].js"
     },
     devServer: {
+        https: true,
+        allowedHosts: 'all',
+        host: '0.0.0.0',
         static: {
             directory: dist,
         },
