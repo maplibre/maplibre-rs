@@ -2,7 +2,7 @@ const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
-let dist = path.join(__dirname, 'dist');
+let dist = path.join(__dirname, 'dist/demo');
 module.exports = {
     mode: "development",
     entry: {
@@ -56,7 +56,7 @@ module.exports = {
             // ],
 
             // The same as the `--out-dir` option for `wasm-pack`
-            outDir: path.resolve(__dirname, './libs/mapr'),
+            outDir: path.resolve(__dirname, 'dist/libs/mapr'),
 
             // The same as the `--out-name` option for `wasm-pack`
             // outName: "index",
@@ -74,7 +74,7 @@ module.exports = {
             //
             // the mode `development` makes `wasm-pack` build in `debug` mode.
             // the mode `production` makes `wasm-pack` build in `release` mode.
-            forceMode: "production",
+            // forceMode: "production",
 
             // Controls plugin output verbosity, either 'info' or 'error'.
             // Defaults to 'info'.

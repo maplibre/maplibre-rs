@@ -35,7 +35,7 @@ jobs:
       - name: NPM Install
         run: npm install
       - name: Build
-        run: npm run build
+        run: npm run production-build
       - name: Deploy to maxammann.org
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
@@ -43,7 +43,7 @@ jobs:
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
           ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org "rm -f ~/public_html/mapr/*"
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/." max@maxammann.org:~/public_html/mapr/
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/
 
   book:
     runs-on: ubuntu-latest

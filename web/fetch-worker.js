@@ -1,4 +1,4 @@
-import init from "mapr";
+import init from "./dist/libs/mapr";
 
 onmessage = async m => {
     let msg = m.data;

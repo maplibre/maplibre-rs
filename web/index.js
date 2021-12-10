@@ -1,4 +1,4 @@
-import init from "mapr";
+import init from "./dist/libs/mapr";
 
 const start = async () => {
     const memory = new WebAssembly.Memory({initial: 1024, maximum: 10 * 1024, shared: true});
