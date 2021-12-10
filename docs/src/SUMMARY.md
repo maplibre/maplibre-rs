@@ -1,6 +1,7 @@
 # mapr documentation
 
 [Introduction](./introduction.md)
+[Supported Platforms](./supported-platforms.md)
 
 ## Developer Log
 
