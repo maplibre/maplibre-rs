@@ -12,12 +12,18 @@ crate-type = ["cdylib", "rlib"]
 #[package.metadata.wasm-pack.profile.release]
 #wasm-opt = false
 
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 's'
+panic = "abort"
+
 [features]
 web-webgl = ["wgpu/webgl"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1"
-winit = { version = "0.25", features = ["web-sys"] }
+winit = { version = "0.25", default-features = true, features = ["web-sys"] }
 web-sys = { version = "0.3", features = ["Worker", "WorkerOptions", "WorkerType", "MessageEvent"] }
 js-sys = "0.3"
 wasm-bindgen = "0.2"
@@ -25,39 +31,42 @@ wasm-bindgen-futures = "0.4"
 console_log = { version = "0.2", features = ["color"] }
 instant = { version = "0.1", features = ["stdweb"] }
 
-[dependencies]
+[target.'cfg(target_arch = "x86_64")'.dependencies]
 # Futures
 futures = "0.3.5"
 pollster = "0.2"
+env_logger = "0.9"
+
+winit = { version = "0.25", default-features = true, features = ["x11", "wayland"] }
+
+[dependencies]
 
 # Vector riles
 vector-tile = { path = "libs/vector_tile" }
 style-spec = { path = "libs/style_spec" }
-geo = "0.18.0"
-geo-types = "0.7"
+#geo = "0.18.0"
+#geo-types = "0.7"
 # proj = "0.24" FIXME: Incompatible with wasm
 # mbutiles = "0.1.1" FIXME: Incompatible with wasm
 cgmath = "0.18"
 
 # Rendering
-winit = { version = "0.25" }
-wgpu = "0.11"
-lyon = { version = "0.17", features = ["extra"] }
+wgpu = { version = "0.11" }
+lyon = { version = "0.17", features = ["extra"] } # extra for rust logo
 lyon_path = "0.17"
 # https://docs.rs/euclid/0.22.6/euclid/index.html
 
 # Logging
 log = "0.4"
-env_logger = "0.9"
 
 # Utils
-hexdump = "0.1"
+#hexdump = "0.1"
 bytemuck = "1.2.0"
 bytemuck_derive = "1.0"
 
 # Serialization
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+#serde = { version = "1.0", features = ["derive"] }
+#serde_json = "1.0"
 
 [dev-dependencies]
 criterion = "0.3"
