@@ -1,3 +1,4 @@
 [toolchain]
 channel = "1.57"
 targets = [ "wasm32-unknown-unknown", "x86_64-unknown-linux-gnu" ]
+components = [ "rust-src" ] # rust-src is required for WASM builds which recompile the stdlib

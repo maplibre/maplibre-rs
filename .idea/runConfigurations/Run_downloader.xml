@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run downloader" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --bin download_tiles" />
+    <option name="command" value="run -p mapr-utils --bin download_tiles" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$/libs/mapr_utils" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />
