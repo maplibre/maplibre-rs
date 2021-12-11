@@ -10,8 +10,6 @@ build = "build.rs"
 [dependencies]
 log = "0.4"
 
-
-
 [build-dependencies]
 serde_json = "1.0"
 

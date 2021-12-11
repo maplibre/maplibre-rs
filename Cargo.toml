@@ -1,3 +1,12 @@
+[workspace]
+
+members = [
+    "libs/vector_tile",
+    "libs/style_spec",
+    "libs/wgsl_validate",
+    "libs/mapr_utils",
+]
+
 [package]
 name = "mapr"
 version = "0.1.0"
@@ -42,8 +51,8 @@ winit = { version = "0.25", default-features = true, features = ["x11", "wayland
 [dependencies]
 
 # Vector riles
-vector-tile = { path = "libs/vector_tile" }
-style-spec = { path = "libs/style_spec" }
+vector-tile = { path = "./libs/vector_tile" }
+style-spec = { path = "./libs/style_spec" }
 #geo = "0.18.0"
 #geo-types = "0.7"
 # proj = "0.24" FIXME: Incompatible with wasm
@@ -74,7 +83,7 @@ criterion = "0.3"
 test-env-log = "0.2"
 
 [build-dependencies]
-wgsl-validate = { path = "libs/wgsl_validate" }
+wgsl-validate = { path = "./libs/wgsl_validate" }
 
 [[bin]]
 name = "mapr"

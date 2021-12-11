@@ -1,9 +1,9 @@
-use std::fs::File;
+/*use std::fs::File;
 use std::io::BufReader;
-use serde_json::Value;
+use serde_json::Value;*/
 
 fn generate_type_def() -> Option<u32> {
-    let mut f = File::open("style-spec-v8.json").unwrap();
+/*    let f = File::open("style-spec-v8.json").unwrap();
     let mut reader = BufReader::new(f);
     let result = serde_json::from_reader::<_, Value>(&mut reader).unwrap();
 
@@ -15,7 +15,7 @@ fn generate_type_def() -> Option<u32> {
 
     }
 
-    println!("cargo:warning={:?}", version);
+    println!("cargo:warning={:?}", version);*/
 
     Some(5)
 }
