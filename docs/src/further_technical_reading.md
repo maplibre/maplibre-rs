@@ -27,7 +27,7 @@ Examples:
 * [WASM in a WebWorker](https://rustwasm.github.io/wasm-bindgen/examples/wasm-in-web-worker.html)
 * [Building for Shared Memory](https://github.com/rustwasm/wasm-bindgen/blob/main/examples/raytrace-parallel/build.sh)
 * [Parallel Raytracing](https://rustwasm.github.io/docs/wasm-bindgen/examples/raytrace.html)
-* 
+
 ## Rendering
 
 Specs:
@@ -51,3 +51,21 @@ Examples:
 
 * [Stencil Mask Example](https://github.com/ruffle-rs/ruffle/blob/master/render/wgpu/src/pipelines.rs#L330)
 * [WGPU Examples](https://github.com/gfx-rs/wgpu/blob/ad0c8d4f781aaf9907b5f3a90bc7d00a13c51153/wgpu/examples/README.md)
+
+## Font Rendering
+
+Specs:
+
+* [MapBox Glyphs Spec](https://github.com/mapbox/node-fontnik/blob/master/proto/glyphs.proto)
+
+Articles:
+
+* [Signed distance function](https://en.wikipedia.org/wiki/Signed_distance_function)
+
+Projects:
+
+* [Mapbox fontnik](https://github.com/mapbox/node-fontnik/)
+* [TinySDK (JS)](https://github.com/mapbox/tiny-sdf)
+* [RustType](https://github.com/redox-os/rusttype)
+* [SDF Render](https://docs.rs/sdf_glyph_renderer/latest/sdf_glyph_renderer/)
+* [pbf_font_tools](https://github.com/stadiamaps/pbf_font_tools)
