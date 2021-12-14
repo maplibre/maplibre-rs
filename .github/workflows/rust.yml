@@ -42,7 +42,7 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org "rm -rf ~/public_html/mapr/*"
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'find ~/public_html/mapr -type f -not -name ".htaccess" -delete'
           rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/
 
   book:
@@ -66,5 +66,5 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org "rm -rf ~/public_html/mapr-docs/*"
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'find ~/public_html/mapr-docs -type f -not -name ".htaccess" -delete'
           rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "book/." max@maxammann.org:~/public_html/mapr-docs/
