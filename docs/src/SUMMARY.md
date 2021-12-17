@@ -2,6 +2,7 @@
 
 [Introduction](./introduction.md)
 [Supported Platforms](./supported-platforms.md)
+[Architecture](./architecture.md)
 
 ## Developer Log
 

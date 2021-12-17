@@ -8,6 +8,10 @@
 
 ## WebAssembly and WebWorkers
 
+Specs:
+
+* [Thread/Atomics Proposal for WASM](https://webassembly.github.io/threads/core/bikeshed/#atomic-memory-instructions%E2%91%A2)
+
 Projects:
 
 * [Experiment with shared memory](https://github.com/Ciantic/rust-shared-wasm-experiments) and [the idea behind it](https://github.com/rustwasm/wasm-bindgen/issues/2225)
