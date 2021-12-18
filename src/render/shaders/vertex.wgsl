@@ -40,9 +40,11 @@ fn main(
     [[location(2)]] a_prim_id: u32,
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
-    var prim: PrimitiveUniform = u_primitives.primitives[a_prim_id + instance_idx];
+    var prim: PrimitiveUniform = u_primitives.primitives[a_prim_id];
     var z = 0.0;
-    var world_pos = a_position + a_normal * prim.width;
+
+    var mask_offset = vec2<f32>(f32(instance_idx) * 4096.0, 0.0);
+    var world_pos = a_position + mask_offset + prim.translate + a_normal * prim.width;
 
     var position = globals.camera.view_proj * vec4<f32>(world_pos, z, 1.0);
 

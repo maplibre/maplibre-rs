@@ -38,9 +38,15 @@ impl Default for SceneParams {
     }
 }
 
+const INDEX_FORMAT:  wgpu::IndexFormat = wgpu::IndexFormat::Uint32;
+type IndexDataType = u32; // Must match INDEX_FORMAT
+
 const PRIM_BUFFER_LEN: usize = 256;
 const STROKE_PRIM_ID: u32 = 0;
 const FILL_PRIM_ID: u32 = 1;
+const SECOND_TILE_FILL_PRIM_ID: u32 = 2;
+const MASK_FILL_PRIM_ID: u32 = 3;
+const SECOND_TILE_STROKE_PRIM_ID: u32 = 5;
 
 pub struct State {
     device: wgpu::Device,
@@ -69,6 +75,8 @@ pub struct State {
     indices_uniform_buffer: wgpu::Buffer,
     tile_fill_range: Range<u32>,
     tile_stroke_range: Range<u32>,
+    tile2_fill_range: Range<u32>,
+    tile2_stroke_range: Range<u32>,
 
     tile_mask_vertex_uniform_buffer: wgpu::Buffer,
     tile_mask_indices_uniform_buffer: wgpu::Buffer,
@@ -98,10 +106,18 @@ impl SceneParams {
 
         // Stroke primitive
         cpu_primitives[STROKE_PRIM_ID as usize] =
-            PrimitiveUniform::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
+            PrimitiveUniform::new([1.0, 0.0, 1.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
+        cpu_primitives[SECOND_TILE_STROKE_PRIM_ID as usize] =
+            PrimitiveUniform::new([0.5, 0.8, 0.1, 1.0], [4096.0, 0.0], 0, 1.0, 0.0, 1.0);
         // Main fill primitive
         cpu_primitives[FILL_PRIM_ID as usize] =
             PrimitiveUniform::new([0.0, 0.0, 1.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
+        cpu_primitives[SECOND_TILE_FILL_PRIM_ID as usize] =
+            PrimitiveUniform::new([0.0, 1.0, 1.0, 1.0], [4096.0, 0.0], 0, 1.0, 0.0, 1.0);
+
+        cpu_primitives[MASK_FILL_PRIM_ID as usize] =
+            PrimitiveUniform::new([0.0, 0.0, 1.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
+
 
         Self {
             cpu_primitives,
@@ -116,14 +132,23 @@ impl State {
 
         let size = window.inner_size();
 
-        let mut geometry: VertexBuffers<GpuVertexUniform, u16> = VertexBuffers::new();
+        let mut geometry: VertexBuffers<GpuVertexUniform, IndexDataType> = VertexBuffers::new();
 
         println!("Using static database from {}", static_database::get_source_path());
 
         let tile = parse_tile_reader(&mut Cursor::new(static_database::get_tile(2179, 1421,12).unwrap().contents())).expect("failed to load tile");
         let (tile_stroke_range, tile_fill_range) = (
             tile.tesselate_stroke(&mut geometry, STROKE_PRIM_ID),
+            //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
             tile.tesselate_fill(&mut geometry, FILL_PRIM_ID),
+        );
+
+        // tile right to it
+        let tile = parse_tile_reader(&mut Cursor::new(static_database::get_tile(2180, 1421,12).unwrap().contents())).expect("failed to load tile");
+        let (tile2_stroke_range, tile2_fill_range) = (
+            tile.tesselate_stroke(&mut geometry, SECOND_TILE_STROKE_PRIM_ID),
+            //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
+            tile.tesselate_fill(&mut geometry, SECOND_TILE_FILL_PRIM_ID),
         );
 
         // create an instance
@@ -177,9 +202,9 @@ impl State {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let mut tile_mask_geometry: VertexBuffers<GpuVertexUniform, u16> = VertexBuffers::new();
+        let mut tile_mask_geometry: VertexBuffers<GpuVertexUniform, IndexDataType> = VertexBuffers::new();
         let tile_mask = TileMask();
-        let tile_mask_range = tile_mask.tesselate_fill(&mut tile_mask_geometry, FILL_PRIM_ID);
+        let tile_mask_range = tile_mask.tesselate_fill(&mut tile_mask_geometry, MASK_FILL_PRIM_ID);
         let tile_mask_vertex_uniform_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
@@ -370,12 +395,14 @@ impl State {
             tile_mask_vertex_uniform_buffer,
             fps_meter: FPSMeter::new(),
             tile_stroke_range,
+            tile2_fill_range,
             tile_mask_indices_uniform_buffer,
             tile_mask_range,
             camera,
             projection,
             camera_controller,
             mouse_pressed: false,
+            tile2_stroke_range
         }
     }
 
@@ -529,10 +556,10 @@ impl State {
             {
                 // Increment stencil
                 pass.set_pipeline(&self.mask_pipeline);
-                //pass.set_stencil_reference(0);
+                pass.set_stencil_reference(1);
                 pass.set_index_buffer(
                     self.tile_mask_indices_uniform_buffer.slice(..),
-                    wgpu::IndexFormat::Uint16,
+                    INDEX_FORMAT,
                 );
                 pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
                 pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..1);
@@ -542,11 +569,33 @@ impl State {
                 pass.set_stencil_reference(1);
                 pass.set_index_buffer(
                     self.indices_uniform_buffer.slice(..),
-                    wgpu::IndexFormat::Uint16,
+                    INDEX_FORMAT,
                 );
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
                 pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
                 pass.draw_indexed(self.tile_stroke_range.clone(), 0, 0..1);
+            }
+            {
+                // Increment stencil
+                pass.set_pipeline(&self.mask_pipeline);
+                pass.set_stencil_reference(2);
+                pass.set_index_buffer(
+                    self.tile_mask_indices_uniform_buffer.slice(..),
+                    INDEX_FORMAT,
+                );
+                pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
+                pass.draw_indexed(self.tile_mask_range.clone(), 0, 1..2);
+            }
+            {
+                pass.set_pipeline(&self.render_pipeline);
+                pass.set_stencil_reference(2);
+                pass.set_index_buffer(
+                    self.indices_uniform_buffer.slice(..),
+                    INDEX_FORMAT,
+                );
+                pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
+                pass.draw_indexed(self.tile2_fill_range.clone(), 0, 0..1);
+                pass.draw_indexed(self.tile2_stroke_range.clone(), 0, 0..1);
             }
         }
 
@@ -568,13 +617,13 @@ impl State {
 
         // Animate the strokes of primitive
         scene.cpu_primitives[STROKE_PRIM_ID as usize].width = scene.stroke_width;
-        scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
+/*        scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
             (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
             (time_secs * 0.5 - 1.6).sin() * 0.1 + 0.1,
             (time_secs - 1.6).sin() * 0.1 + 0.1,
             1.0,
         ];
-
+*/
         self.fps_meter.update_and_print()
     }
 }

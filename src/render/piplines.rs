@@ -33,7 +33,7 @@ pub fn create_map_render_pipeline_description<'a>(
             compare: wgpu::CompareFunction::Always, // Allow ALL values to update the stencil
             fail_op: wgpu::StencilOperation::Keep,
             depth_fail_op: wgpu::StencilOperation::Keep, // This is used when the depth test already failed
-            pass_op: wgpu::StencilOperation::IncrementClamp,
+            pass_op: wgpu::StencilOperation::Replace,
         }
     } else {
         wgpu::StencilFaceState {
