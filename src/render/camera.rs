@@ -1,7 +1,6 @@
 use std::f32::consts::FRAC_PI_2;
 
 use cgmath::prelude::*;
-use log::info;
 
 use crate::render::shader_ffi::CameraUniform;
 

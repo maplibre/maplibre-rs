@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader};
 use std::path::{Path};
 
 use protobuf::Message;
@@ -21,7 +21,7 @@ pub mod grid;
 pub mod error;
 
 pub fn parse_tile<P: AsRef<Path>>(path: P) -> Result<Tile, Error> {
-    let mut f = File::open(path)?;
+    let f = File::open(path)?;
     let mut reader = BufReader::new(f);
     parse_tile_reader(&mut reader).into()
 }

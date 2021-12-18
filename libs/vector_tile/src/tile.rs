@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::geometry::Geometry;
 use crate::protos::vector_tile::{
-    Tile as ProtoTile, Tile_Feature, Tile_Feature as ProtoFeature, Tile_Layer as ProtoLayer,
+    Tile as ProtoTile, Tile_Feature as ProtoFeature, Tile_Layer as ProtoLayer,
 };
 
 #[derive(Debug)]

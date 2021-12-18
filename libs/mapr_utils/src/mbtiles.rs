@@ -1,11 +1,12 @@
 use std::{fs, io};
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
-use std::path::{Path};
+use std::ops::Range;
+use std::path::Path;
 
 use flate2::bufread::GzDecoder;
-use rusqlite::{Connection, Row};
+use rusqlite::{Connection, params, Row};
 
 #[derive(Debug)]
 pub enum Error {
@@ -32,8 +33,10 @@ impl From<rusqlite::Error> for Error {
 }
 
 pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(input_mbtiles: P,
-                                               output_dir: R)
-                                               -> Result<(), Error> {
+                                               output_dir: R,
+                                               z: u32,
+                                               x_range: Range<u32>,
+                                               y_range: Range<u32>) -> Result<(), Error> {
     let input_path = input_mbtiles.as_ref().to_path_buf();
     if !input_path.is_file() {
         return Err(Error::IO(format!("Input file {:?} is not a file", input_path)));
@@ -51,14 +54,28 @@ pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(input_mbtiles: P,
 
     // language=SQL
     let mut prepared_statement = connection
-        .prepare("SELECT zoom_level, tile_column, tile_row, tile_data FROM tiles;")?;
-    let mut tiles_rows = prepared_statement.query([])?;
+        .prepare("SELECT zoom_level, tile_column, tile_row, tile_data
+                        FROM tiles
+                        WHERE   (zoom_level = ?1) AND
+                                (tile_column BETWEEN ?2 AND ?3) AND
+                                (tile_row BETWEEN ?4 AND ?5);")?;
+
+    let mut tiles_rows = prepared_statement.query(params![
+        z,
+        x_range.start, x_range.end,
+        flip_vertical_axis(z, y_range.end), flip_vertical_axis(z, y_range.start) // in mbtiles it is stored flipped
+    ])?;
 
     while let Ok(Some(tile)) = tiles_rows.next() {
         extract_tile(&tile, &output_path)?;
     }
 
     Ok(())
+}
+
+
+fn flip_vertical_axis(zoom: u32, value: u32)-> u32 {
+    2u32.pow(zoom) - 1 - value
 }
 
 fn extract_tile(tile: &Row,
@@ -69,7 +86,7 @@ fn extract_tile(tile: &Row,
                                           tile.get::<_, u32>(2)?);
 
     // Flip vertical axis
-    y = 2u32.pow(z) - 1 - y;
+    y = flip_vertical_axis(z, y);
 
     let tile_dir = output_path.join(format!("{}/{}", z, x));
 

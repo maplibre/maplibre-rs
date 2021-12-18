@@ -215,10 +215,10 @@ impl Decode<Feature> for (&ProtoLayer, ProtoFeature) {
             let value = chunk[1];
 
             let keys = &layer.keys;
-            if let Some(actualKey) = keys.get(key as usize) {
+            if let Some(actual_key) = keys.get(key as usize) {
                 let values = &layer.values;
-                if let Some(actualValue) = values.get(value as usize) {
-                    properties.insert(actualKey.clone(), actualValue.clone().decode());
+                if let Some(actual_value) = values.get(value as usize) {
+                    properties.insert(actual_key.clone(), actual_value.clone().decode());
                 }
             }
         }
