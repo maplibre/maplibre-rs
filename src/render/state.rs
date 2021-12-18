@@ -10,6 +10,7 @@ use winit::event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, Window
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
+use crate::io::static_database;
 use crate::render::camera;
 use crate::render::camera::CameraController;
 use crate::render::tesselation::TileMask;
@@ -81,8 +82,6 @@ pub struct State {
     scene: SceneParams,
 }
 
-const TEST_TILES: &[u8] = include_bytes!("../../test-data/12-2176-1425.pbf");
-
 impl SceneParams {
     pub fn new() -> Self {
         let mut cpu_primitives = Vec::with_capacity(PRIM_BUFFER_LEN);
@@ -120,7 +119,9 @@ impl State {
         let mut geometry: VertexBuffers<GpuVertexUniform, u16> = VertexBuffers::new();
         //let tile = parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
 
-        let tile = parse_tile_reader(&mut Cursor::new(TEST_TILES)).expect("failed to load tile");
+        println!("Using static database from {}", static_database::get_source_path());
+
+        let tile = parse_tile_reader(&mut Cursor::new(static_database::get_tile(2179, 1421,12).unwrap().contents())).expect("failed to load tile");
         let (tile_stroke_range, tile_fill_range) = (
             tile.tesselate_stroke(&mut geometry, STROKE_PRIM_ID),
             tile.tesselate_fill(&mut geometry, FILL_PRIM_ID),

@@ -1,2 +1,2 @@
-mod static_database;
+pub mod static_database;
 
