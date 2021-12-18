@@ -101,7 +101,7 @@ impl SceneParams {
             PrimitiveUniform::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
         // Main fill primitive
         cpu_primitives[FILL_PRIM_ID as usize] =
-            PrimitiveUniform::new([0.0, 0.0, 0.0, 1.0], [0.0, 0.0], 0, 0.0, 0.0, 1.0);
+            PrimitiveUniform::new([0.0, 0.0, 1.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
 
         Self {
             cpu_primitives,
@@ -117,7 +117,6 @@ impl State {
         let size = window.inner_size();
 
         let mut geometry: VertexBuffers<GpuVertexUniform, u16> = VertexBuffers::new();
-        //let tile = parse_tile("test-data/12-2176-1425.pbf").expect("failed loading tile");
 
         println!("Using static database from {}", static_database::get_source_path());
 
@@ -546,7 +545,7 @@ impl State {
                     wgpu::IndexFormat::Uint16,
                 );
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
-                //pass.draw_indexed(self.fill_range.clone(), 0, 0..(self.num_instances as u32));
+                pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
                 pass.draw_indexed(self.tile_stroke_range.clone(), 0, 0..1);
             }
         }

@@ -9,6 +9,7 @@ use lyon::tessellation::{
 };
 use lyon_path::builder::SvgPathBuilder;
 use lyon_path::Path;
+
 use vector_tile::geometry::{Command, Geometry};
 use vector_tile::tile::Tile;
 
@@ -41,77 +42,86 @@ impl StrokeVertexConstructor<GpuVertexUniform> for WithId {
     }
 }
 
+
+fn build_path(
+    tile: &Tile,
+) -> Path {
+    let mut tile_builder = Path::builder().with_svg();
+
+    for layer in tile.layers() {
+        if layer.name() != "water" {
+            continue;
+        }
+
+        for feature in layer.features() {
+            let geo = feature.geometry();
+
+            match geo {
+                Geometry::GeometryPolygon(polygon) => {
+                    for command in &polygon.commands {
+                        match command {
+                            Command::MoveTo(cmd) => {
+                                tile_builder.relative_move_to(lyon_path::math::vector(
+                                    cmd.x as f32,
+                                    cmd.y as f32,
+                                ));
+                            }
+                            Command::LineTo(cmd) => {
+                                tile_builder.relative_line_to(lyon_path::math::vector(
+                                    cmd.x as f32,
+                                    cmd.y as f32,
+                                ));
+                            }
+                            Command::Close => {
+                                tile_builder.close();
+                            }
+                        };
+                    }
+                }
+                Geometry::GeometryLineString(polygon) => {
+                    for command in &polygon.commands {
+                        match command {
+                            Command::MoveTo(cmd) => {
+                                tile_builder.relative_move_to(lyon_path::math::vector(
+                                    cmd.x as f32,
+                                    cmd.y as f32,
+                                ));
+                            }
+                            Command::LineTo(cmd) => {
+                                tile_builder.relative_line_to(lyon_path::math::vector(
+                                    cmd.x as f32,
+                                    cmd.y as f32,
+                                ));
+                            }
+                            Command::Close => {
+                                panic!("error")
+                            }
+                        };
+                    }
+                }
+                _ => {}
+            };
+            tile_builder.move_to(lyon_path::math::point(0.0, 0.0));
+        }
+    }
+
+    tile_builder.build()
+}
+
+
 impl Tesselated for Tile {
     fn tesselate_stroke(
         &self,
         buffer: &mut VertexBuffers<GpuVertexUniform, u16>,
         prim_id: u32,
     ) -> Range<u32> {
-        let mut stroke_tess = StrokeTessellator::new();
-        let mut tile_builder = Path::builder().with_svg();
+        let mut tesselator = StrokeTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
 
-        for layer in self.layers() {
-            if layer.name() != "water" {
-                continue;
-            }
+        let tile_path = build_path(self);
 
-            for feature in layer.features() {
-                let geo = feature.geometry();
-
-                match geo {
-                    Geometry::GeometryPolygon(polygon) => {
-                        for command in &polygon.commands {
-                            match command {
-                                Command::MoveTo(cmd) => {
-                                    tile_builder.relative_move_to(lyon_path::math::vector(
-                                        cmd.x as f32,
-                                        cmd.y as f32,
-                                    ));
-                                }
-                                Command::LineTo(cmd) => {
-                                    tile_builder.relative_line_to(lyon_path::math::vector(
-                                        cmd.x as f32,
-                                        cmd.y as f32,
-                                    ));
-                                }
-                                Command::Close => {
-                                    tile_builder.close();
-                                }
-                            };
-                        }
-                    }
-                    Geometry::GeometryLineString(polygon) => {
-                        for command in &polygon.commands {
-                            match command {
-                                Command::MoveTo(cmd) => {
-                                    tile_builder.relative_move_to(lyon_path::math::vector(
-                                        cmd.x as f32,
-                                        cmd.y as f32,
-                                    ));
-                                }
-                                Command::LineTo(cmd) => {
-                                    tile_builder.relative_line_to(lyon_path::math::vector(
-                                        cmd.x as f32,
-                                        cmd.y as f32,
-                                    ));
-                                }
-                                Command::Close => {
-                                    panic!("error")
-                                }
-                            };
-                        }
-                    }
-                    _ => {}
-                };
-                tile_builder.move_to(lyon_path::math::point(0.0, 0.0));
-            }
-        }
-
-        let tile_path = tile_builder.build();
-
-        stroke_tess
+        tesselator
             .tessellate_path(
                 &tile_path,
                 &StrokeOptions::tolerance(DEFAULT_TOLERANCE),
@@ -122,8 +132,22 @@ impl Tesselated for Tile {
         initial_indices_count as u32..buffer.indices.len() as u32
     }
 
-    fn tesselate_fill(&self, _buffer: &mut VertexBuffers<GpuVertexUniform, u16>, _prim_id: u32) -> Range<u32> {
-        return 0..0;
+    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertexUniform, u16>, prim_id: u32) -> Range<u32> {
+        let mut tesselator = FillTessellator::new();
+
+        let initial_indices_count = buffer.indices.len();
+
+        let tile_path = build_path(self);
+
+        tesselator
+            .tessellate_path(
+                &tile_path,
+                &FillOptions::tolerance(DEFAULT_TOLERANCE),
+                &mut BuffersBuilder::new(buffer, WithId(prim_id)),
+            )
+            .unwrap();
+
+        initial_indices_count as u32..buffer.indices.len() as u32
     }
 }
 
@@ -194,8 +218,8 @@ impl Tesselated for TileMask {
             GpuVertexUniform::new([EXTENT, EXTENT], [0.0, 0.0], prim_id),
         ];
 
-        buffer.indices = vec![0, 2, 1, 3,2,1];
+        buffer.indices = vec![0, 2, 1, 3, 2, 1];
 
-        initial_indices_count as u32.. buffer.indices.len() as u32
+        initial_indices_count as u32..buffer.indices.len() as u32
     }
 }
