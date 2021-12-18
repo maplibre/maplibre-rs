@@ -1,11 +1,13 @@
 use std::{fs, io};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{HashMap};
 use std::fs::File;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 
+use flate2::bufread::GzDecoder;
 use rusqlite::{Connection, Row};
 
+#[derive(Debug)]
 pub enum Error {
     IO(String)
 }
@@ -45,12 +47,12 @@ pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(input_mbtiles: P,
 
     fs::create_dir_all(&output_path)?;
 
-    extract_metadata(&connection, &output_path);
+    extract_metadata(&connection, &output_path)?;
 
     // language=SQL
-    let mut tiles_rows = connection
-        .prepare("SELECT zoom_level, tile_column, tile_row, tile_data FROM tiles;")?
-        .query([])?;
+    let mut prepared_statement = connection
+        .prepare("SELECT zoom_level, tile_column, tile_row, tile_data FROM tiles;")?;
+    let mut tiles_rows = prepared_statement.query([])?;
 
     while let Ok(Some(tile)) = tiles_rows.next() {
         extract_tile(&tile, &output_path)?;
@@ -73,9 +75,12 @@ fn extract_tile(tile: &Row,
 
     fs::create_dir_all(&tile_dir)?;
 
-    let tile_path = output_path.join(format!("{}.{}", y, "pbf"));
+    let tile_path = tile_dir.join(format!("{}.{}", y, "pbf"));
+    let tile_data = tile.get::<_, Vec<u8>>(3)?;
+    let mut decoder = GzDecoder::new(tile_data.as_ref());
+
     let mut tile_file = File::create(tile_path)?;
-    tile_file.write_all(&tile.get::<_, Vec<u8>>(3)?)?;
+    io::copy(&mut decoder, &mut tile_file)?;
     Ok(())
 }
 
@@ -83,11 +88,12 @@ fn extract_metadata(connection: &Connection,
                     output_path: &Path)
                     -> Result<(), Error> {
     // language=SQL
-    let mut metadata = connection
-        .prepare("SELECT name, value FROM metadata;")?
+    let mut prepared_statement = connection
+        .prepare("SELECT name, value FROM metadata;")?;
+    let metadata = prepared_statement
         .query_map([], |row| {
             Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-        })?;;
+        })?;
 
     let metadata_map: HashMap<String, String> = metadata.filter_map(|result| {
         match result {

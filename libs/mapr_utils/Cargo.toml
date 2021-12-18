@@ -12,6 +12,7 @@ vector-tile = { path = "../vector_tile" }
 tokio = { version = "1.14", features = ["full"] }
 rusqlite = "0.26"
 serde_json = "1.0"
+flate2 = "1.0"
 
 [[bin]]
 name = "download_tiles"
