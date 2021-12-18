@@ -18,8 +18,8 @@ build = "build.rs"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-#[package.metadata.wasm-pack.profile.release]
-#wasm-opt = false
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = true
 
 [profile.release]
 lto = true
@@ -45,7 +45,6 @@ instant = { version = "0.1", features = ["stdweb"] }
 futures = "0.3.5"
 pollster = "0.2"
 env_logger = "0.9"
-
 winit = { version = "0.25", default-features = true, features = ["x11", "wayland"] }
 
 [dependencies]
@@ -53,17 +52,20 @@ winit = { version = "0.25", default-features = true, features = ["x11", "wayland
 # Vector riles
 vector-tile = { path = "./libs/vector_tile" }
 style-spec = { path = "./libs/style_spec" }
+
+# Math and geo
+# https://docs.rs/euclid/0.22.6/euclid/index.html
 #geo = "0.18.0"
 #geo-types = "0.7"
 # proj = "0.24" FIXME: Incompatible with wasm
-# mbutiles = "0.1.1" FIXME: Incompatible with wasm
+
 cgmath = "0.18"
 
 # Rendering
 wgpu = { version = "0.11" }
 lyon = { version = "0.17", features = ["extra"] } # extra for rust logo
 lyon_path = "0.17"
-# https://docs.rs/euclid/0.22.6/euclid/index.html
+
 
 # Logging
 log = "0.4"
@@ -73,9 +75,8 @@ log = "0.4"
 bytemuck = "1.2.0"
 bytemuck_derive = "1.0"
 
-# Serialization
-#serde = { version = "1.0", features = ["derive"] }
-#serde_json = "1.0"
+include_dir = "0.7.2"
+
 
 [dev-dependencies]
 criterion = "0.3"
@@ -84,6 +85,7 @@ test-env-log = "0.2"
 
 [build-dependencies]
 wgsl-validate = { path = "./libs/wgsl_validate" }
+mapr-utils = { path = "./libs/mapr_utils" }
 
 [[bin]]
 name = "mapr"
