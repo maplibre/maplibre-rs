@@ -7,7 +7,7 @@ env:
 
 jobs:
   build-x86:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     defaults:
       run:
         shell: bash
@@ -18,8 +18,20 @@ jobs:
       - name: Build
         run: cargo build --bin mapr
 
+  build-aarch64-android:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Build
+        run: tools/build-android
+
   build-wasm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     defaults:
       run:
         shell: bash
@@ -46,7 +58,7 @@ jobs:
           rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/
 
   book:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     defaults:
       run:
         shell: bash

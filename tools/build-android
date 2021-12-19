@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-webgl_flag=""
+run=false
 
 TEMP=$(getopt --long -o "g" "$@")
 eval set -- "$TEMP"
 while true; do
   case "$1" in
   -g)
-    webgl_flag="web-webgl,"
+    run=true
     shift 2
     ;;
   *)
@@ -18,4 +18,9 @@ while true; do
 done
 
 cargo install cargo-apk
-cargo apk run --lib
+
+if [ "$run" = true ] ; then
+  cargo apk run --lib
+else
+  cargo apk build --lib
+fi
