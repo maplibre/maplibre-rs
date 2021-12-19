@@ -157,8 +157,8 @@ impl CameraController {
     }
 
     pub fn process_touch(&mut self, touch_dx: f64, touch_dy: f64) {
-        self.rotate_horizontal = touch_dx as f32;
-        self.rotate_vertical = touch_dy as f32;
+        self.amount_right += touch_dx as f32;
+        self.amount_up += touch_dy as f32;
     }
 
     pub fn process_scroll(&mut self, delta: &winit::event::MouseScrollDelta) {
@@ -166,9 +166,9 @@ impl CameraController {
             // I'm assuming a line is about 100 pixels
             winit::event::MouseScrollDelta::LineDelta(_, scroll) => scroll * 100.0,
             winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
-                y: scroll,
-                ..
-            }) => *scroll as f32,
+                                                           y: scroll,
+                                                           ..
+                                                       }) => *scroll as f32,
         };
     }
 

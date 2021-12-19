@@ -1,15 +1,16 @@
 use std::cmp;
 use std::io::Cursor;
 use std::ops::Range;
-use log::warn;
 
+use log::warn;
 use lyon::tessellation::VertexBuffers;
-use vector_tile::parse_tile_reader;
-use wgpu::util::DeviceExt;
 use wgpu::{Extent3d, Limits};
+use wgpu::util::DeviceExt;
 use winit::dpi::PhysicalSize;
 use winit::event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent};
 use winit::window::Window;
+
+use vector_tile::parse_tile_reader;
 
 use crate::fps_meter::FPSMeter;
 use crate::io::static_database;
@@ -44,7 +45,7 @@ impl Default for SceneParams {
     }
 }
 
-const INDEX_FORMAT:  wgpu::IndexFormat = wgpu::IndexFormat::Uint32;
+const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32;
 type IndexDataType = u32; // Must match INDEX_FORMAT
 
 const PRIM_BUFFER_LEN: usize = 256;
@@ -55,7 +56,6 @@ const MASK_FILL_PRIM_ID: u32 = 3;
 const SECOND_TILE_STROKE_PRIM_ID: u32 = 5;
 
 pub struct State {
-
     instance: wgpu::Instance,
 
     device: wgpu::Device,
@@ -151,7 +151,7 @@ impl State {
 
         println!("Using static database from {}", static_database::get_source_path());
 
-        let tile = parse_tile_reader(&mut Cursor::new(static_database::get_tile(2179, 1421,12).unwrap().contents())).expect("failed to load tile");
+        let tile = parse_tile_reader(&mut Cursor::new(static_database::get_tile(2179, 1421, 12).unwrap().contents())).expect("failed to load tile");
         let (tile_stroke_range, tile_fill_range) = (
             tile.tesselate_stroke(&mut geometry, STROKE_PRIM_ID),
             //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
@@ -159,7 +159,7 @@ impl State {
         );
 
         // tile right to it
-        let tile = parse_tile_reader(&mut Cursor::new(static_database::get_tile(2180, 1421,12).unwrap().contents())).expect("failed to load tile");
+        let tile = parse_tile_reader(&mut Cursor::new(static_database::get_tile(2180, 1421, 12).unwrap().contents())).expect("failed to load tile");
         let (tile2_stroke_range, tile2_fill_range) = (
             tile.tesselate_stroke(&mut geometry, SECOND_TILE_STROKE_PRIM_ID),
             //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
@@ -191,7 +191,6 @@ impl State {
                 max_storage_textures_per_shader_stage: 4,
                 ..wgpu::Limits::default()
             }
-
         } else {
             Limits {
                 ..wgpu::Limits::default()
@@ -391,9 +390,9 @@ impl State {
             surface_config.height,
             cgmath::Deg(45.0),
             0.1,
-            10000.0,
+            100000.0,
         );
-        let camera_controller = camera::CameraController::new(4000.0, 0.4);
+        let camera_controller = camera::CameraController::new(3000.0, 0.2);
 
         Self {
             instance,
@@ -425,7 +424,7 @@ impl State {
             camera_controller,
             mouse_pressed: false,
             tile2_stroke_range,
-            suspended: false // Initially the app is not suspended
+            suspended: false, // Initially the app is not suspended
         }
     }
 
@@ -474,12 +473,12 @@ impl State {
         }
     }
 
-    pub fn device_input(&mut self, event: &DeviceEvent) -> bool {
+    pub fn device_input(&mut self, event: &DeviceEvent, window: &Window) -> bool {
         match event {
             DeviceEvent::MouseMotion { delta } => {
                 if self.mouse_pressed {
                     warn!("mouse {}", delta.0);
-                    self.camera_controller.process_mouse(delta.0, delta.1);
+                    self.camera_controller.process_mouse(delta.0 / window.scale_factor(), delta.1 / window.scale_factor());
                 }
                 true
             }
@@ -487,15 +486,15 @@ impl State {
         }
     }
 
-    pub fn window_input(&mut self, event: &WindowEvent) -> bool {
+    pub fn window_input(&mut self, event: &WindowEvent, window: &Window) -> bool {
         match event {
             WindowEvent::KeyboardInput {
                 input:
-                    KeyboardInput {
-                        state,
-                        virtual_keycode: Some(key),
-                        ..
-                    },
+                KeyboardInput {
+                    state,
+                    virtual_keycode: Some(key),
+                    ..
+                },
                 ..
             } => match key {
                 winit::event::VirtualKeyCode::Z => {
@@ -509,7 +508,6 @@ impl State {
                 _ => self.camera_controller.process_keyboard(*key, *state),
             },
             WindowEvent::Touch(touch) => {
-
                 match touch.phase {
                     TouchPhase::Started => {
                         self.scene.last_touch = Some((touch.location.x, touch.location.y))
@@ -518,8 +516,8 @@ impl State {
                         if let Some(start) = self.scene.last_touch {
                             let delta_x = start.0 - touch.location.x;
                             let delta_y = start.1 - touch.location.y;
-                            warn!("touch {} {}", delta_x, delta_y);
-                            self.camera_controller.process_touch(delta_x, delta_y);
+                            warn!("touch {} {} {}", delta_x, delta_y, window.scale_factor());
+                            self.camera_controller.process_touch(delta_x / window.scale_factor(), delta_y / window.scale_factor());
                         }
 
                         self.scene.last_touch = Some((touch.location.x, touch.location.y))
@@ -678,13 +676,13 @@ impl State {
 
         // Animate the strokes of primitive
         scene.cpu_primitives[STROKE_PRIM_ID as usize].width = scene.stroke_width;
-/*        scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
-            (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
-            (time_secs * 0.5 - 1.6).sin() * 0.1 + 0.1,
-            (time_secs - 1.6).sin() * 0.1 + 0.1,
-            1.0,
-        ];
-*/
+        /*        scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
+                    (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
+                    (time_secs * 0.5 - 1.6).sin() * 0.1 + 0.1,
+                    (time_secs - 1.6).sin() * 0.1 + 0.1,
+                    1.0,
+                ];
+        */
         self.fps_meter.update_and_print()
     }
 

@@ -19,14 +19,14 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>) {
                 .. // We're not using device_id currently
             } => {
                 trace!("{:?}", event);
-                state.device_input(event);
+                state.device_input(event, &window);
             }
 
             Event::WindowEvent {
                 ref event,
                 window_id,
             } if window_id == window.id() => {
-                if !state.window_input(event) {
+                if !state.window_input(event, &window) {
                     match event {
                         WindowEvent::CloseRequested
                         | WindowEvent::KeyboardInput {
