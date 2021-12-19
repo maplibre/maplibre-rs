@@ -7,5 +7,5 @@ categories = ["encoding"]
 edition = "2021"
 
 [dependencies]
-naga = { version = "0.7", features = ["wgsl-in"] }
+naga = { version = "0.8", features = ["wgsl-in"] }
 walkdir = "2.3"

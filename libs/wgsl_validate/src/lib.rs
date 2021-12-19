@@ -37,7 +37,7 @@ fn validate_wgsl(validator: &mut Validator, path: &Path) -> Result<(), WgslError
     let module = wgsl::parse_str(&shader).map_err(|err| WgslError::from_parse_err(err, &shader))?;
 
     if let Err(err) = validator.validate(&module) {
-        Err(WgslError::ValidationErr(err))
+        Err(WgslError::ValidationErr(err.into_inner()))
     } else {
         Ok(())
     }
