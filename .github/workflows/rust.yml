@@ -15,8 +15,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: 'recursive'
+      - name: Install Dependencies
+        run: apt install -y libwayland-client++0
       - name: Build
         run: cargo build --bin mapr
+      - uses: actions/upload-artifact@v2
+        with:
+          name: mapr
+          path: target/debug/mapr
 
   build-aarch64-android:
     runs-on: ubuntu-20.04
@@ -29,6 +35,10 @@ jobs:
           submodules: 'recursive'
       - name: Build
         run: tools/build-android
+      - uses: actions/upload-artifact@v2
+        with:
+          name: mapr.apk
+          path: target/debug/apk/mapr.apk
 
   build-wasm:
     runs-on: ubuntu-20.04

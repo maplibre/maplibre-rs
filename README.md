@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/stability-experimental-orange.svg?style=flat-square" 
       alt="Stability" />
   <a href="https://github.com/maxammann/mapr/actions/workflows/rust.yml">    
-    <img src="https://img.shields.io/github/workflow/status/maxammann/mapr/Rust?style=flat-square"
+    <img src="https://github.com/maxammann/mapr/actions/workflows/rust.yml/badge.svg"
         alt="Build status" />
   </a>
 </div>
