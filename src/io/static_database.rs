@@ -3,12 +3,12 @@ use std::env;
 
 use include_dir::{Dir, File, include_dir};
 
-static TILES: Dir = include_dir!("$OUT_DIR/munich-tiles");
+static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 
 static mut TEST: u32 = 0;
 
 pub fn get_source_path() -> &'static str {
-    concat!(env!("OUT_DIR"), "/munich-tiles")
+    concat!(env!("OUT_DIR"), "/extracted-tiles")
 }
 
 pub fn get_tile(x: u32, y: u32, z: u32) -> Option<&'static File<'static>> {

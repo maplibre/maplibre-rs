@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Bounds copied from https://boundingbox.klokantech.com/
+
+if ! command -v tilelive-copy &> /dev/null
+then
+    echo "tilelive-copy could not be found. Install it with 'yarn global add @mapbox/tilelive @mapbox/mbtiles'"
+    exit 1
+fi
+
+
+tilelive-copy \
+    --minzoom=12 --maxzoom=12 \
+    --bounds="11.417441,48.036758,11.77999,48.217795" \
+    test-data/europe_germany-2020-02-13-openmaptiles-v3.12.1.mbtiles test-data/munich-12.mbtiles
+

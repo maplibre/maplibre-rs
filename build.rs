@@ -10,12 +10,11 @@ fn main() {
     let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let out_dir = env::var("OUT_DIR").unwrap();
 
-    let out = PathBuf::from(Path::new(&out_dir).join("munich-tiles"));
+    let out = PathBuf::from(Path::new(&out_dir).join("extracted-tiles"));
     if out.exists() && out.is_dir() {
         fs::remove_dir_all(&out).unwrap()
     }
-    //let out = PathBuf::from(Path::new(&root_dir).join("test-data/munich-tiles"));
-    let source = Path::new(&root_dir).join("test-data/maptiler-osm-2017-07-03-v3.6.1-germany_munich.mbtiles");
+    let source = Path::new(&root_dir).join("test-data/munich-12.mbtiles");
 
     // Pack tiles around Maxvorstadt (100 tiles in each direction)
     extract(source,
