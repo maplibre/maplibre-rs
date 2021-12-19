@@ -62,7 +62,7 @@ style-spec = { path = "./libs/style_spec" }
 cgmath = "0.18"
 
 # Rendering
-wgpu = { version = "0.11" }
+wgpu = { version = "0.12" }
 lyon = { version = "0.17", features = ["extra"] } # extra for rust logo
 lyon_path = "0.17"
 

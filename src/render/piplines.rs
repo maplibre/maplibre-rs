@@ -54,8 +54,8 @@ pub fn create_map_render_pipeline_description<'a>(
             front_face: wgpu::FrontFace::Ccw,
             strip_index_format: None,
             cull_mode: None, // TODO Maps look the same from he bottom and above
-            clamp_depth: false,
             conservative: false,
+            unclipped_depth: false
         },
         depth_stencil: Some(wgpu::DepthStencilState {
             format: DEPTH_TEXTURE_FORMAT,
@@ -74,6 +74,7 @@ pub fn create_map_render_pipeline_description<'a>(
             mask: !0,
             alpha_to_coverage_enabled: false,
         },
+        multiview: None
     };
     descriptor
 }

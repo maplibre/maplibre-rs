@@ -4,7 +4,6 @@ struct CameraUniform {
 };
 
 
-[[block]]
 struct GlobalsUniform {
     camera: CameraUniform;
 };
@@ -20,7 +19,6 @@ struct PrimitiveUniform {
     pad2: i32;
 };
 
-[[block]]
 struct Primitives {
     primitives: [[stride(48)]] array<PrimitiveUniform, 256>;
 };
