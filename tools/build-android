@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+webgl_flag=""
+
+TEMP=$(getopt --long -o "g" "$@")
+eval set -- "$TEMP"
+while true; do
+  case "$1" in
+  -g)
+    webgl_flag="web-webgl,"
+    shift 2
+    ;;
+  *)
+    break
+    ;;
+  esac
+done
+
+cargo install cargo-apk
+cargo apk run --lib

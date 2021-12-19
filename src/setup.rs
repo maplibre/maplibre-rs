@@ -64,6 +64,14 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>) {
                     Err(e) => eprintln!("{:?}", e),
                 }
             }
+            Event::Suspended => {
+                state.suspend();
+            }
+            Event::Resumed => {
+                state.recreate_surface(&window);
+                state.resize(window.inner_size()); // FIXME: Resumed is also called when the app launches for the first time. Instead of first using a "fake" inner_size() in State::new we should initialize with a proper size from the beginning
+                state.resume();
+            }
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
                 // request it.

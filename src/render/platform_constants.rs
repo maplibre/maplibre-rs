@@ -5,8 +5,11 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 #[cfg(all(target_arch = "wasm32", feature = "web-webgl"))]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
 // Vulkan/Metal/OpenGL
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(target_os = "linux")]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
+
+#[cfg(target_os = "android")]
+pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm;
 
 // FIXME: This limit is enforced by WebGL. Actually this makes sense!
 // FIXME: This can also be achieved by _pad attributes in shader_ffi.rs

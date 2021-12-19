@@ -1,12 +1,14 @@
 use std::cmp;
 use std::io::Cursor;
 use std::ops::Range;
+use log::warn;
 
 use lyon::tessellation::VertexBuffers;
 use vector_tile::parse_tile_reader;
 use wgpu::util::DeviceExt;
-use wgpu::Limits;
-use winit::event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, WindowEvent};
+use wgpu::{Extent3d, Limits};
+use winit::dpi::PhysicalSize;
+use winit::event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent};
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
@@ -25,6 +27,9 @@ use super::texture::Texture;
 pub struct SceneParams {
     stroke_width: f32,
     target_stroke_width: f32,
+
+    last_touch: Option<(f64, f64)>,
+
     cpu_primitives: Vec<PrimitiveUniform>,
 }
 
@@ -33,6 +38,7 @@ impl Default for SceneParams {
         SceneParams {
             stroke_width: 1.0,
             target_stroke_width: 1.0,
+            last_touch: None,
             cpu_primitives: vec![],
         }
     }
@@ -49,6 +55,9 @@ const MASK_FILL_PRIM_ID: u32 = 3;
 const SECOND_TILE_STROKE_PRIM_ID: u32 = 5;
 
 pub struct State {
+
+    instance: wgpu::Instance,
+
     device: wgpu::Device,
     queue: wgpu::Queue,
 
@@ -56,6 +65,7 @@ pub struct State {
 
     surface: wgpu::Surface,
     surface_config: wgpu::SurfaceConfiguration,
+    suspended: bool,
 
     pub size: winit::dpi::PhysicalSize<u32>,
 
@@ -130,7 +140,12 @@ impl State {
     pub async fn new(window: &Window) -> Self {
         let sample_count = 4;
 
-        let size = window.inner_size();
+        let size = if cfg!(target_os = "android") {
+            // FIXME: inner_size() is only working AFTER Event::Resumed on Android
+            PhysicalSize::new(500, 500)
+        } else {
+            window.inner_size()
+        };
 
         let mut geometry: VertexBuffers<GpuVertexUniform, IndexDataType> = VertexBuffers::new();
 
@@ -169,12 +184,18 @@ impl State {
 
         let limits = if cfg!(feature = "web-webgl") {
             Limits {
-                max_texture_dimension_2d: 4096,
-                // Most of the values should be the same as the downlevel defaults
                 ..wgpu::Limits::downlevel_webgl2_defaults()
             }
+        } else if cfg!(target_os = "android") {
+            Limits {
+                max_storage_textures_per_shader_stage: 4,
+                ..wgpu::Limits::default()
+            }
+
         } else {
-            wgpu::Limits::default()
+            Limits {
+                ..wgpu::Limits::default()
+            }
         };
 
         // create a device and a queue
@@ -375,6 +396,7 @@ impl State {
         let camera_controller = camera::CameraController::new(4000.0, 0.4);
 
         Self {
+            instance,
             surface,
             device,
             queue,
@@ -402,11 +424,27 @@ impl State {
             projection,
             camera_controller,
             mouse_pressed: false,
-            tile2_stroke_range
+            tile2_stroke_range,
+            suspended: false // Initially the app is not suspended
+        }
+    }
+
+    pub fn recreate_surface(&mut self, window: &winit::window::Window) {
+        // We only create a new surface if we are currently suspended. On Android (and probably iOS)
+        // the surface gets invalid after the app has been suspended.
+        if self.suspended {
+            let surface = unsafe { self.instance.create_surface(window) };
+            surface.configure(&self.device, &self.surface_config);
+            self.surface = surface;
         }
     }
 
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+        // While the app is suspended we can not re-configure a surface
+        if self.suspended {
+            return;
+        }
+
         if new_size.width > 0 && new_size.height > 0 {
             self.size = new_size;
             self.surface_config.width = new_size.width;
@@ -440,6 +478,7 @@ impl State {
         match event {
             DeviceEvent::MouseMotion { delta } => {
                 if self.mouse_pressed {
+                    warn!("mouse {}", delta.0);
                     self.camera_controller.process_mouse(delta.0, delta.1);
                 }
                 true
@@ -469,6 +508,28 @@ impl State {
                 }
                 _ => self.camera_controller.process_keyboard(*key, *state),
             },
+            WindowEvent::Touch(touch) => {
+
+                match touch.phase {
+                    TouchPhase::Started => {
+                        self.scene.last_touch = Some((touch.location.x, touch.location.y))
+                    }
+                    TouchPhase::Moved | TouchPhase::Ended => {
+                        if let Some(start) = self.scene.last_touch {
+                            let delta_x = start.0 - touch.location.x;
+                            let delta_y = start.1 - touch.location.y;
+                            warn!("touch {} {}", delta_x, delta_y);
+                            self.camera_controller.process_touch(delta_x, delta_y);
+                        }
+
+                        self.scene.last_touch = Some((touch.location.x, touch.location.y))
+                    }
+                    TouchPhase::Cancelled => {}
+                }
+
+
+                true
+            }
             WindowEvent::MouseWheel { delta, .. } => {
                 self.camera_controller.process_scroll(delta);
                 true
@@ -625,5 +686,17 @@ impl State {
         ];
 */
         self.fps_meter.update_and_print()
+    }
+
+    pub fn is_suspended(&self) -> bool {
+        self.suspended
+    }
+
+    pub fn suspend(&mut self) {
+        self.suspended = true;
+    }
+
+    pub fn resume(&mut self) {
+        self.suspended = false;
     }
 }
