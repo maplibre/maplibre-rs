@@ -4,7 +4,7 @@ on: [ push, pull_request ]
 
 jobs:
   build-x86:
-    runs-on: macOS-11
+    runs-on: ubuntu-20.04
     defaults:
       run:
         shell: bash
@@ -49,10 +49,10 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build
-        run: xcodebuild -scheme "mapr (macOS)" -arch arm64 build
+        run: cd apple/mapr && xcodebuild -scheme "mapr (macOS)" -arch arm64 build
 
   build-iphonesimulator:
-    runs-on: ubuntu-20.04
+    runs-on: macOS-11
     defaults:
       run:
         shell: bash
@@ -70,7 +70,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build
-        run: xcodebuild -scheme "mapr (iOS)" -arch arm64 -sdk iphonesimulator build
+        run: cd apple/mapr && xcodebuild -scheme "mapr (iOS)" -arch arm64 -sdk iphonesimulator build
 
   build-aarch64-android:
     runs-on: ubuntu-20.04
