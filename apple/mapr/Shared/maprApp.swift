@@ -1,10 +1,8 @@
 import SwiftUI
 
 @main
-struct maprApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+struct App {
+    static func main() {
+        mapr_apple_main();
     }
 }
