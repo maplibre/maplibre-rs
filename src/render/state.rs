@@ -631,10 +631,12 @@ impl State {
                     INDEX_FORMAT,
                 );
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
-                pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
+                if (self.tile_fill_range.len() > 0) {
+                    pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
+                }
                 pass.draw_indexed(self.tile_stroke_range.clone(), 0, 0..1);
             }
-            {
+            /*{
                 // Increment stencil
                 pass.set_pipeline(&self.mask_pipeline);
                 pass.set_stencil_reference(2);
@@ -655,7 +657,7 @@ impl State {
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
                 pass.draw_indexed(self.tile2_fill_range.clone(), 0, 0..1);
                 pass.draw_indexed(self.tile2_stroke_range.clone(), 0, 0..1);
-            }
+            }*/
         }
 
         self.queue.submit(Some(encoder.finish()));
