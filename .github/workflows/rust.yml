@@ -22,7 +22,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install Dependencies
-        run: sudo apt-get install -y libwayland-client++0 libwayland-client
+        run: sudo apt-get install -y libwayland-client++0 libwayland-client0
       - name: Build
         run: cargo build --bin mapr
       - uses: actions/upload-artifact@v2
