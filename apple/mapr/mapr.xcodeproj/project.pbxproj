@@ -146,6 +146,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0BC888552770FD64004AAD56 /* Build configuration list for PBXNativeTarget "mapr (iOS)" */;
 			buildPhases = (
+				0BC888A4277103A3004AAD56 /* Cargo Build */,
 				0BC888282770FD64004AAD56 /* Sources */,
 				0BC888292770FD64004AAD56 /* Frameworks */,
 				0BC8882A2770FD64004AAD56 /* Resources */,
@@ -163,6 +164,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0BC888582770FD64004AAD56 /* Build configuration list for PBXNativeTarget "mapr (macOS)" */;
 			buildPhases = (
+				0BC888A52771056B004AAD56 /* Cargo Build */,
 				0BC8882E2770FD64004AAD56 /* Sources */,
 				0BC8882F2770FD64004AAD56 /* Frameworks */,
 				0BC888302770FD64004AAD56 /* Resources */,
@@ -291,6 +293,45 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0BC888A4277103A3004AAD56 /* Cargo Build */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Cargo Build";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = ". \"$HOME/.cargo/env\"\n\nif [[ $SDK_NAME == *\"simulator\"* ]]\nthen\necho \"Building for Simulator\"\ncargo build --target aarch64-apple-ios-sim --lib\nelse\necho \"Building for Device\"\ncargo build --target aarch64-apple-ios --lib\nfi\n";
+		};
+		0BC888A52771056B004AAD56 /* Cargo Build */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Cargo Build";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = ". \"$HOME/.cargo/env\"\n\necho \"Building for Darwin\"\ncargo build --target aarch64-apple-darwin --lib\n\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0BC888282770FD64004AAD56 /* Sources */ = {
@@ -468,7 +509,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KM8X78T35K;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -497,7 +538,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KM8X78T35K;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -526,11 +567,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KM8X78T35K;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -555,11 +596,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KM8X78T35K;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
