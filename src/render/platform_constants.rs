@@ -4,11 +4,12 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 // WebGL
 #[cfg(all(target_arch = "wasm32", feature = "web-webgl"))]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
-// Vulkan/Metal/OpenGL
+// Vulkan/OpenGL
 #[cfg(target_os = "linux")]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
 
-#[cfg(target_arch = "aarch64")]
+// macOS and iOS (Metal)
+#[cfg(all(target_arch = "aarch64", not(target_os = "android")))]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
 
 #[cfg(target_os = "android")]
