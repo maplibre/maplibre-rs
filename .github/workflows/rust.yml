@@ -70,7 +70,10 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build
-        run: cd apple/mapr && xcodebuild -scheme "mapr (iOS)" -arch arm64 -sdk iphonesimulator build
+        run: |
+          export SDKROOT=$(xcrun -sdk iphonesimulator15.2 --show-sdk-path)
+          echo $SDKROOT
+          cd apple/mapr && xcodebuild -scheme "mapr (iOS)" -arch arm64 -sdk iphonesimulator15.2 build
 
   build-aarch64-android:
     runs-on: ubuntu-20.04
