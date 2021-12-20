@@ -51,7 +51,7 @@ jobs:
       - name: Build
         run: cd apple/mapr && xcodebuild -scheme "mapr (macOS)" -arch arm64 build
 
-  build-iphonesimulator:
+  build-iphoneos:
     runs-on: macOS-11
     defaults:
       run:
@@ -70,10 +70,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Build
-        run: |
-          export SDKROOT=$(xcrun -sdk iphonesimulator15.0 --show-sdk-path)
-          echo $SDKROOT
-          cd apple/mapr && xcodebuild -scheme "mapr (iOS)" -arch arm64 -sdk iphonesimulator15.0 build
+        run: cd apple/mapr && xcodebuild -scheme "mapr (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
 
   build-aarch64-android:
     runs-on: ubuntu-20.04
