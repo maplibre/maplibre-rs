@@ -1,7 +1,10 @@
 <h1 align="center">mapr</h1>
 <p align="center">
-  <img width=200px alt="Logo" src="https://">
+  <img width="200px" alt="Logo" src="https://">
 </p>
+<div align="center">
+  <img width="300px" src="docs/src/figures/mapr-ios.png" alt="preview">
+</div>
 <div align="center">
   <strong>Native Maps for Web, Mobile and Linux</strong>
 </div>
