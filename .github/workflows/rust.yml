@@ -48,7 +48,9 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Build
+      - name: Cargo Build
+        run: cargo build --target aarch64-apple-darwin --lib
+      - name: XCode Build
         run: cd apple/mapr && xcodebuild -scheme "mapr (macOS)" -arch arm64 build
 
   build-iphoneos:
@@ -69,7 +71,9 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Build
+      - name: Cargo Build
+        run: cargo build --target aarch64-apple-ios --lib
+      - name: XCode Build
         run: cd apple/mapr && xcodebuild -scheme "mapr (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
 
   build-aarch64-android:
