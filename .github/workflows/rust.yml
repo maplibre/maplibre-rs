@@ -72,7 +72,10 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Cargo Build
-        run: cargo build --target aarch64-apple-ios --lib
+        run: cargo build --target aarch64-apple-ios --lib # First running `cargo build` before `xcodebuild` is REQUIRED!
+                                                          # Else the rust compilation fails during linking. This is
+                                                          # probably due to some weird environment variables set during
+                                                          # xcodebuild execution
       - name: XCode Build
         run: cd apple/mapr && xcodebuild -scheme "mapr (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
 
