@@ -6,7 +6,9 @@
   "scripts": {
     "start": "RUSTUP_TOOLCHAIN=nightly-2021-12-07-x86_64-unknown-linux-gnu webpack-dev-server --mode=development",
     "build": "RUSTUP_TOOLCHAIN=nightly-2021-12-07-x86_64-unknown-linux-gnu webpack --mode=development",
-    "production-build": "RUSTUP_TOOLCHAIN=nightly-2021-12-07-x86_64-unknown-linux-gnu webpack --mode=production"
+    "production-build": "RUSTUP_TOOLCHAIN=nightly-2021-12-07-x86_64-unknown-linux-gnu webpack --mode=production",
+    "webgl-build": "npm run build -- --env webgl",
+    "webgl-production-build": "npm run production-build -- --env webgl"
   },
   "repository": {
     "type": "git",

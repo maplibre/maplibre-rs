@@ -3,7 +3,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 let dist = path.join(__dirname, 'dist/demo');
-module.exports = {
+module.exports = (env) => ({
     mode: "development",
     entry: {
         index: "./index.js"
@@ -47,7 +47,7 @@ module.exports = {
             // command. Default arguments are `--verbose`.
             //args: '--log-level warn',
             // Default arguments are `--typescript --target browser --mode normal`.
-            extraArgs: '--target web -- --features web-webgl -Z build-std=std,panic_abort',
+            extraArgs: `--target web -- ${env.webgl ? '--features web-webgl' : ''} -Z build-std=std,panic_abort`,
 
             // Optional array of absolute paths to directories, changes to which
             // will trigger the build.
@@ -81,4 +81,4 @@ module.exports = {
             // pluginLogLevel: 'info'
         }),
     ]
-};
+});

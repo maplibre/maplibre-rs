@@ -104,7 +104,43 @@ jobs:
           name: mapr.apk
           path: target/debug/apk/mapr.apk
 
-  build-wasm:
+  build-wasm-webgl:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Prepare Rust Toolchain # This is required because we are recompiling the stdlib
+        run: |
+          rustup install nightly-2021-12-07-x86_64-unknown-linux-gnu
+          rustup component add rust-src --toolchain nightly-2021-12-07-x86_64-unknown-linux-gnu
+      - name: NPM Install
+        run: npm install
+      - name: Build
+        run: npm run webgl-production-build
+      - name: Deploy to maxammann.org
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+        run: |
+          echo "$SSH_KEY" > id_rsa
+          chmod 600 id_rsa
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr && find ~/public_html/mapr -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/
+
+  build-wasm-webgpu:
     runs-on: ubuntu-20.04
     defaults:
       run:
@@ -137,8 +173,8 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'find ~/public_html/mapr -type f -not -name ".htaccess" -delete'
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr-webgpu && find ~/public_html/mapr-webgpu -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr-webgpu/
 
   book:
     runs-on: ubuntu-20.04
@@ -171,5 +207,5 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'find ~/public_html/mapr-docs -type f -not -name ".htaccess" -delete'
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr-docs && find ~/public_html/mapr-docs -type f -not -name ".htaccess" -delete'
           rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "book/." max@maxammann.org:~/public_html/mapr-docs/
