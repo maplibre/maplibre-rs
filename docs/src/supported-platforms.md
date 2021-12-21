@@ -1,8 +1,35 @@
 # Supported Platforms
 
+For development the following platforms are recommended:
+
+* Linux X11/Wayland
+* MacOS
+* Firefox Nightly/Chrome Canary with WebGPU (Because WebGPU is a living spec, sometimes a bleeding-edge browser release
+  is required)
+
+## Short-term Obstacles
+
+| Platform       | Obstacles                                                                                                                                                |
+|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Linux X11      |                                                                                                                                                          |
+| Linux Wayland  |                                                                                                                                                          |
+| Windows        |                                                                                                                                                          |
+| MacOS          |                                                                                                                                                          |
+| Android        | * Unable to get window size before resume                                                                                                                |
+| iOS            | * Touches are crashing the app on real devices <br/> * Instanced indices drawing is not supported <br/> * Drawing zero-length indices is prohibited<br/> |
+| Firefox        | * \[\[block\]\] is still present (WebGPU) <br/> * 2D Texture initialisation not working (WebGL)                                                          |
+| Chrome         | * \[\[block\]\] is still present (WebGPU) <br/> * 2D Texture initialisation not working (WebGL)                                                          |
+| Safari         |                                                                                                                                                          |
+| Mobile Firefox |                                                                                                                                                          |
+| Mobile Chrome  |                                                                                                                                                          |
+| Mobile Safari  |                                                                                                                                                          |
+
+## Long-term Goals
+
 [WebGPU](https://caniuse.com/webgpu) is not enabled by default for all platforms.
 
 WebGPU Status:
+
 * [Firefox](https://github.com/gpuweb/gpuweb/wiki/Implementation-Status#firefox-and-servo)
 * [Chrome](https://chromestatus.com/feature/6213121689518080)
 * [WebKit](https://webkit.org/status/#specification-webgpu)
