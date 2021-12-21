@@ -17,6 +17,10 @@
       alt="Stability" />
   <a href="https://github.com/maxammann/mapr/actions/workflows/rust.yml">    
     <img src="https://github.com/maxammann/mapr/actions/workflows/rust.yml/badge.svg"
+        alt="Build status" /> 
+  </a>
+  <a href="https://matrix.to/#/#mapr:matrix.org">    
+    <img src="https://img.shields.io/static/v1?label=Space&message=%23mapr&color=blue&logo=matrix"
         alt="Build status" />
   </a>
 </div>
@@ -29,36 +33,53 @@
     <span> | </span>
     <a href="https://maxammann.github.io/mapr">
       Documentation
+    </a> | </span>
+    <a href="https://matrix.to/#/#mapr:matrix.org">
+      Chat in Matrix Space
     </a>
   </h3>
 </div>
 
-
 ## Description
 
-TODO
+mapr is a portable and performant vector maps renderer. We aim to support the web, mobile and desktop applications. This
+is achieved by the novel [WebGPU](https://www.w3.org/TR/webgpu/) specification. Plenty of native implementations are
+already implementing this specification. On the web it is implemented by Firefox, Chrome and Safari. There are also
+standalone implementations which directly use Vulkan, OpenGL or Metal as a backend. Those backends allow mapr to run on
+mobile and desktop applications.
 
+Rust is used as a Lingua-franka on all platforms. This is made possible by WebAssembly which allows us to use Rust for
+web development.
 
-## Features
+The goal of mapr is to render maps in order to visualize data. Right now the goal of mapr is not to replace existing
+vector map renderers like Google Maps, Apple Maps or MapLibre. The current implementation serves as a proof-of-concept
+of the used technology stack. It is unclear whether the high-performance requirements of rendering maps using vector
+graphics are achievable using the current stack.
 
-* None so far
+## Current Features
 
-## Goals
+* [x] Render single vector tiles
+* [x] Render multiple vector tiles
+* [x] Runs on Linux, Android, iOS, MacOS, Firefox and Chrome
+* [ ] Simple navigations by translating the camera
+* [ ] Load and tessellate vector tiles on demand
+* [ ] Navigation which "feels good"
+
+### Goals
 
 * Renders [vector tiles](https://docs.mapbox.com/vector-tiles/specification/).
 * Runs on:
-  * Web via WebAssembly and WebGPU,
-  * Linux (Xorg/Wayland) via Vulkan,
-  * Android via OpenGL,
-  * iOS via Metal.
+    * Web via WebAssembly and WebGPU,
+    * Linux (Xorg/Wayland) via Vulkan,
+    * Android via OpenGL,
+    * iOS via Metal.
 * Supports the [TileJSON](https://docs.mapbox.com/help/glossary/tilejson/) standard
-* Pimarily 
 
-## Non-Goals
+### Non-Goals
 
 * Rendering any kind of rasterized data
 
-## Building
+## Building & Running
 
 Now, to clone the project:
 
@@ -72,41 +93,21 @@ and then build it for running on a desktop:
 cargo build
 ```
 
-### Target: WebGPU
-
-```bash
-tools/build-web
-cd web
-python3 -m http.server
-```
-
-### Target: WebGL
-
-```bash
-tools/build-web -g
-cd web
-python3 -m http.server
-```
-
-## Running on Linux
-
-Fuzz using three clients:
+After that you can run it on your desktop:
 
 ```bash
 cargo run --bin mapr --
 ```
 
-## Testing
-
-```bash
-cargo test
-```
+More information about building for different platforms can be
+found [here](https://maxammann.org/mapr-docs/building.html).
 
 ## Rust Setup
 
-Install [rustup](https://rustup.rs/).
+Install [rustup](https://rustup.rs/) because this is the recommended way of setting up Rust toolchains.
 
-The toolchain will be automatically downloaded when building this project. See [./rust-toolchain.toml](./rust-toolchain.toml) for more details about the toolchain.
+The toolchain will be automatically downloaded when building this project.
+See [./rust-toolchain.toml](./rust-toolchain.toml) for more details about the toolchain.
 
 ## Documentation
 
