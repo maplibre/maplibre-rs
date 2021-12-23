@@ -5,7 +5,7 @@
 The setup normal desktop is very simple. You just have to run the following:
 
 ```bash
-cargo run --bin mapr --
+cargo run --example desktop --
 ```
 
 ## Android

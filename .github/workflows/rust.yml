@@ -24,7 +24,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get install -y libwayland-dev libxkbcommon-dev
       - name: Build
-        run: cargo build --bin mapr
+        run: cargo build --example desktop
       - uses: actions/upload-artifact@v2
         with:
           name: mapr

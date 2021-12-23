@@ -15,9 +15,6 @@ edition = "2021"
 resolver = "2"
 build = "build.rs"
 
-[lib]
-crate-type = [ "rlib", "cdylib", "staticlib" ] # staticlib is used for apple
-
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = true
 
@@ -95,6 +92,9 @@ test-env-log = "0.2"
 wgsl-validate = { path = "./libs/wgsl_validate" }
 mapr-utils = { path = "./libs/mapr_utils" }
 
-[[bin]]
-name = "mapr"
-path = "src/main.rs"
+[lib]
+crate-type = [ "rlib", "cdylib", "staticlib" ] # staticlib is used for apple
+
+[[example]]
+name = "desktop"
+crate-type = ["bin"]

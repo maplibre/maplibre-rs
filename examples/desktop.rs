@@ -1,14 +1,6 @@
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
-
-mod fps_meter;
-mod platform;
-mod render;
-mod io;
-mod setup;
-
-#[cfg(target_arch = "wasm32")]
-mod web;
+use mapr::setup;
 
 fn main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));

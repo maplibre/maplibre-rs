@@ -96,7 +96,7 @@ cargo build
 After that you can run it on your desktop:
 
 ```bash
-cargo run --bin mapr --
+cargo run --example desktop --
 ```
 
 More information about building for different platforms can be
