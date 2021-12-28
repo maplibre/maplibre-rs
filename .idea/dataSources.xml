@@ -5,7 +5,7 @@
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/test-data/maptiler-osm-2017-07-03-v3.6.1-germany_munich.mbtiles</jdbc-url>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/test-data/munich-12.mbtiles</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
