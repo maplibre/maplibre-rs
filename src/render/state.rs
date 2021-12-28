@@ -368,28 +368,6 @@ impl State {
 
         let depth_texture =
             Texture::create_depth_texture(&device, &surface_config, "depth_texture", sample_count);
-        /*
-        let data = [1; 512 * 512] ;
-
-        queue.write_texture(
-            wgpu::ImageCopyTexture {
-                aspect: wgpu::TextureAspect::StencilOnly,
-                texture: &depth_texture.texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-            },
-            &data,
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: NonZeroU32::new(512),
-                rows_per_image: None,
-            },
-            Extent3d {
-                width: 10,
-                height: 10,
-                depth_or_array_layers: 1,
-            }
-        );*/
 
         let multisampling_texture = if sample_count > 1 {
             Some(Texture::create_multisampling_texture(

@@ -11,5 +11,5 @@ fn mapr_apple_main() {
         .build(&event_loop)
         .unwrap();
 
-    pollster::block_on(crate::setup::setup(window, event_loop));
+    pollster::block_on(crate::main_loop::setup(window, event_loop));
 }
