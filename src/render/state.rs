@@ -16,7 +16,7 @@ use vector_tile::parse_tile_reader;
 
 use crate::fps_meter::FPSMeter;
 use crate::io::static_database;
-use crate::render::camera::CameraController;
+use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::tesselation::TileMask;
 use crate::render::{camera, shaders};
 
@@ -24,23 +24,16 @@ use super::piplines::*;
 use super::shader_ffi::*;
 use super::tesselation::Tesselated;
 use super::texture::Texture;
-use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 
 pub struct SceneParams {
-    stroke_width: f32,
-    target_stroke_width: f32,
-
-    last_touch: Option<(f64, f64)>,
-
-    cpu_primitives: Vec<PrimitiveUniform>,
+    pub stroke_width: f32,
+    pub cpu_primitives: Vec<PrimitiveUniform>,
 }
 
 impl Default for SceneParams {
     fn default() -> Self {
         SceneParams {
             stroke_width: 1.0,
-            target_stroke_width: 1.0,
-            last_touch: None,
             cpu_primitives: vec![],
         }
     }
@@ -69,7 +62,7 @@ pub struct State {
     surface_config: wgpu::SurfaceConfiguration,
     suspended: bool,
 
-    pub size: winit::dpi::PhysicalSize<u32>,
+    size: winit::dpi::PhysicalSize<u32>,
 
     render_pipeline: wgpu::RenderPipeline,
     mask_pipeline: wgpu::RenderPipeline,
@@ -95,12 +88,10 @@ pub struct State {
     tile_mask_range: Range<u32>,
     tile_mask_instances: wgpu::Buffer,
 
-    camera: camera::Camera,
+    pub(crate) camera: camera::Camera,
     projection: camera::Projection,
-    camera_controller: camera::CameraController,
-    mouse_pressed: bool,
 
-    scene: SceneParams,
+    pub scene: SceneParams,
 }
 
 impl SceneParams {
@@ -401,7 +392,6 @@ impl State {
             0.1,
             100000.0,
         );
-        let camera_controller = camera::CameraController::new(3000.0, 0.2);
 
         Self {
             instance,
@@ -431,8 +421,6 @@ impl State {
             tile_mask_instances,
             camera,
             projection,
-            camera_controller,
-            mouse_pressed: false,
             tile2_stroke_range,
             suspended: false, // Initially the app is not suspended
         }
@@ -483,81 +471,6 @@ impl State {
         }
     }
 
-    pub fn device_input(&mut self, event: &DeviceEvent, window: &Window) -> bool {
-        match event {
-            DeviceEvent::MouseMotion { delta } => {
-                if self.mouse_pressed {
-                    warn!("mouse {}", delta.0);
-                    self.camera_controller.process_mouse(
-                        delta.0 / window.scale_factor(),
-                        delta.1 / window.scale_factor(),
-                    );
-                }
-                true
-            }
-            _ => false,
-        }
-    }
-
-    pub fn window_input(&mut self, event: &WindowEvent, window: &Window) -> bool {
-        match event {
-            WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        state,
-                        virtual_keycode: Some(key),
-                        ..
-                    },
-                ..
-            } => match key {
-                winit::event::VirtualKeyCode::Z => {
-                    self.scene.target_stroke_width *= 1.2;
-                    true
-                }
-                winit::event::VirtualKeyCode::H => {
-                    self.scene.target_stroke_width *= 0.8;
-                    true
-                }
-                _ => self.camera_controller.process_keyboard(*key, *state),
-            },
-            WindowEvent::Touch(touch) => {
-                match touch.phase {
-                    TouchPhase::Started => {
-                        self.scene.last_touch = Some((touch.location.x, touch.location.y))
-                    }
-                    TouchPhase::Moved | TouchPhase::Ended => {
-                        if let Some(start) = self.scene.last_touch {
-                            let delta_x = start.0 - touch.location.x;
-                            let delta_y = start.1 - touch.location.y;
-                            self.camera_controller.process_touch(
-                                delta_x / window.scale_factor(),
-                                delta_y / window.scale_factor(),
-                            );
-                        }
-
-                        self.scene.last_touch = Some((touch.location.x, touch.location.y))
-                    }
-                    TouchPhase::Cancelled => {}
-                }
-
-                true
-            }
-            WindowEvent::MouseWheel { delta, .. } => {
-                self.camera_controller.process_scroll(delta);
-                true
-            }
-            WindowEvent::MouseInput {
-                button: MouseButton::Left, // Left Mouse Button
-                state,
-                ..
-            } => {
-                self.mouse_pressed = *state == ElementState::Pressed;
-                true
-            }
-            _ => false,
-        }
-    }
-
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let frame = self.surface.get_current_texture()?;
         let scene = &mut self.scene;
@@ -570,7 +483,7 @@ impl State {
                 &self.globals_uniform_buffer,
                 0,
                 bytemuck::cast_slice(&[GlobalsUniform::new(
-                    CameraController::create_camera_uniform(&self.camera, &self.projection),
+                    self.camera.create_camera_uniform(&self.projection),
                 )]),
             );
 
@@ -662,29 +575,8 @@ impl State {
         self.queue.submit(Some(encoder.finish()));
         frame.present();
 
+        self.fps_meter.update_and_print();
         Ok(())
-    }
-
-    pub fn update(&mut self, dt: std::time::Duration) {
-        let scene = &mut self.scene;
-
-        self.camera_controller.update_camera(&mut self.camera, dt);
-
-        // Animate the stroke_width to match target_stroke_width
-        scene.stroke_width =
-            scene.stroke_width + (scene.target_stroke_width - scene.stroke_width) / 5.0;
-
-        // Animate the strokes of primitive
-        scene.cpu_primitives[STROKE_PRIM_ID as usize].width = scene.stroke_width;
-        /*
-        scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
-                    (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
-                    (time_secs * 0.5 - 1.6).sin() * 0.1 + 0.1,
-                    (time_secs - 1.6).sin() * 0.1 + 0.1,
-                    1.0,
-        ];
-        */
-        self.fps_meter.update_and_print()
     }
 
     pub fn is_suspended(&self) -> bool {

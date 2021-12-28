@@ -1,13 +1,15 @@
-use log::{info, trace};
+use log::{error, info, trace};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 
+use crate::input::InputHandler;
 use crate::platform::Instant;
 use crate::render::state::State;
 
 pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>) {
     info!("== mapr ==");
 
+    let mut input = InputHandler::new();
     let mut state = State::new(&window).await;
 
     let mut last_render_time = Instant::now();
@@ -19,14 +21,14 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>) {
                 .. // We're not using device_id currently
             } => {
                 trace!("{:?}", event);
-                state.device_input(event, &window);
+                input.device_input(event,&window);
             }
 
             Event::WindowEvent {
                 ref event,
                 window_id,
             } if window_id == window.id() => {
-                if !state.window_input(event, &window) {
+                if !input.window_input(event, &window) {
                     match event {
                         WindowEvent::CloseRequested
                         | WindowEvent::KeyboardInput {
@@ -53,13 +55,19 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>) {
                 let now = Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                state.update(dt);
+                input.update_state( &mut state, dt);
                 match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if lost
-                    Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
+                    Err(wgpu::SurfaceError::Lost) => {
+                        error!("Surface Lost");
+                        *control_flow = ControlFlow::Exit;
+                    },
                     // The system is out of memory, we should probably quit
-                    Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                    Err(wgpu::SurfaceError::OutOfMemory) => {
+                        error!("Out of Memory");
+                        *control_flow = ControlFlow::Exit;
+                    },
                     // All other errors (Outdated, Timeout) should be resolved by the next frame
                     Err(e) => eprintln!("{:?}", e),
                 }
