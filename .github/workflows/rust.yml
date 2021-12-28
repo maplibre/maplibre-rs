@@ -3,6 +3,19 @@ name: Rust
 on: [ push, pull_request ]
 
 jobs:
+  check:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Setup
+        run: rustup component add rustfmt
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --lib
+
   build-x86:
     runs-on: ubuntu-20.04
     defaults:
