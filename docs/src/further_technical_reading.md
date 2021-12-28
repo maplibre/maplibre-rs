@@ -1,10 +1,16 @@
 # Related Resources
 
+## Related Projects
+
+* [Tangram Renderer](https://github.com/tangrams/tangram/)
+* [Tilezen/Nextzen](https://www.nextzen.org/)
+
 ## GIS
 * [Google Maps Projection](https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection)
 * [Grid Calculation Examples](https://gist.github.com/maptiler/fddb5ce33ba995d5523de9afdf8ef118)
 * [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames) (also known as XYZ) 
 * [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#TileMap_Diagram)
+* [Mapbox Adaptive Projections](https://www.mapbox.com/blog/adaptive-projections)
 
 ## WebAssembly and WebWorkers
 
@@ -56,6 +62,12 @@ Examples:
 * [Stencil Mask Example](https://github.com/ruffle-rs/ruffle/blob/master/render/wgpu/src/pipelines.rs#L330)
 * [WGPU Examples](https://github.com/gfx-rs/wgpu/blob/ad0c8d4f781aaf9907b5f3a90bc7d00a13c51153/wgpu/examples/README.md)
 
+## Maths
+
+Examples:
+
+* [Dolly Camera](https://github.com/h3r2tic/dolly)
+
 ## Font Rendering
 
 Specs:
@@ -73,3 +85,12 @@ Projects:
 * [RustType](https://github.com/redox-os/rusttype)
 * [SDF Render](https://docs.rs/sdf_glyph_renderer/latest/sdf_glyph_renderer/)
 * [pbf_font_tools](https://github.com/stadiamaps/pbf_font_tools)
+
+## Render Graphs
+
+* https://github.com/metal-by-example/simple-instancing/blob/master/MetalSimpleInstancing/Renderer.swift
+
+* https://github.com/troughton/Substrate
+* https://de.slideshare.net/DICEStudio/framegraph-extensible-rendering-architecture-in-frostbite
+* http://themaister.net/blog/2017/08/15/render-graphs-and-vulkan-a-deep-dive/
+* http://themaister.net/blog/2017/08/15/render-graphs-and-vulkan-a-deep-dive/
