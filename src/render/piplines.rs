@@ -43,9 +43,10 @@ pub fn create_map_render_pipeline_description<'a>(
             pass_op: wgpu::StencilOperation::Keep,
         }
     };
-    let descriptor = wgpu::RenderPipelineDescriptor {
+    
+    wgpu::RenderPipelineDescriptor {
         label: None,
-        layout: Some(&pipeline_layout),
+        layout: Some(pipeline_layout),
         vertex: vertex_state,
         fragment: Some(fragment_state),
         primitive: wgpu::PrimitiveState {
@@ -75,6 +76,5 @@ pub fn create_map_render_pipeline_description<'a>(
             alpha_to_coverage_enabled: false,
         },
         multiview: None
-    };
-    descriptor
+    }
 }

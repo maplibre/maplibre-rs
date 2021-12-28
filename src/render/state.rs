@@ -4,7 +4,7 @@ use std::ops::Range;
 
 use log::warn;
 use lyon::tessellation::VertexBuffers;
-use wgpu::{Extent3d, Limits};
+use wgpu::{Limits};
 use wgpu::util::DeviceExt;
 use winit::dpi::PhysicalSize;
 use winit::event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent};
@@ -626,7 +626,7 @@ impl State {
                     INDEX_FORMAT,
                 );
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
-                if (self.tile_fill_range.len() > 0) {
+                if !self.tile_fill_range.is_empty() {
                     pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
                 }
                 pass.draw_indexed(self.tile_stroke_range.clone(), 0, 0..1);
@@ -639,7 +639,7 @@ impl State {
                     INDEX_FORMAT,
                 );
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
-                if (self.tile2_fill_range.len() > 0) {
+                if !self.tile2_fill_range.is_empty() {
                     pass.draw_indexed(self.tile2_fill_range.clone(), 0, 0..1);
                 }
                 pass.draw_indexed(self.tile2_stroke_range.clone(), 0, 0..1);

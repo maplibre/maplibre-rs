@@ -10,7 +10,7 @@ fn main() {
     let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let out_dir = env::var("OUT_DIR").unwrap();
 
-    let out = PathBuf::from(Path::new(&out_dir).join("extracted-tiles"));
+    let out = Path::new(&out_dir).join("extracted-tiles");
     if out.exists() && out.is_dir() {
         fs::remove_dir_all(&out).unwrap()
     }

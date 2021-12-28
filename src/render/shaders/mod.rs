@@ -1,4 +1,4 @@
-use wgpu::{BufferAddress, ColorTargetState, Device, FragmentState, ShaderModule, ShaderModuleDescriptor, VertexAttribute, VertexBufferLayout, VertexState, VertexStepMode};
+use wgpu::{ColorTargetState, Device, FragmentState, ShaderModule, VertexBufferLayout, VertexState};
 
 pub struct FragmentShaderState {
     source: &'static str,
@@ -66,7 +66,7 @@ pub mod tile {
     use crate::platform::COLOR_TEXTURE_FORMAT;
     use crate::render::shader_ffi::GpuVertexUniform;
 
-    use super::{VertexShaderState, ColorTargetState, FragmentShaderState};
+    use super::{VertexShaderState, FragmentShaderState};
 
     pub const VERTEX: VertexShaderState = VertexShaderState::new(
         include_str!("tile.vertex.wgsl"), &[wgpu::VertexBufferLayout {
@@ -105,7 +105,7 @@ pub mod tile {
 pub mod tile_mask {
     use crate::platform::COLOR_TEXTURE_FORMAT;
     use crate::render::shader_ffi::GpuVertexUniform;
-    use super::{VertexShaderState, ColorTargetState, FragmentShaderState};
+    use super::{VertexShaderState, FragmentShaderState};
 
     pub const VERTEX: VertexShaderState = VertexShaderState::new(
         include_str!("tile_mask.vertex.wgsl"), &[wgpu::VertexBufferLayout {
