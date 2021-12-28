@@ -1,7 +1,7 @@
 #[cfg(target_arch = "wasm32")]
 mod web;
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(all(target_arch = "aarch64", not(target_os = "android")))]
 mod apple;
 
 #[cfg(target_os = "android")]
@@ -10,7 +10,7 @@ mod android;
 
 #[cfg(not(any(
     target_os = "android",
-    target_arch = "aarch64",
+    all(target_arch = "aarch64", not(target_os = "android")),
     target_arch = "wasm32"
 )))]
 mod generic;
@@ -18,7 +18,7 @@ mod generic;
 #[cfg(target_arch = "wasm32")]
 pub use web::*;
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(all(target_arch = "aarch64", not(target_os = "android")))]
 pub use apple::*;
 
 #[cfg(target_os = "android")]
@@ -26,7 +26,7 @@ pub use android::*;
 
 #[cfg(not(any(
     target_os = "android",
-    target_arch = "aarch64",
+    all(target_arch = "aarch64", not(target_os = "android")),
     target_arch = "wasm32"
 )))]
 pub use generic::*;
