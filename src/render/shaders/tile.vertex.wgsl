@@ -41,8 +41,7 @@ fn main(
     var prim: PrimitiveUniform = u_primitives.primitives[a_prim_id];
     var z = 0.0;
 
-    var mask_offset = vec2<f32>(f32(instance_idx) * 4096.0, 0.0);
-    var world_pos = a_position + mask_offset + prim.translate + a_normal * prim.width;
+    var world_pos = a_position + prim.translate + a_normal * prim.width;
 
     var position = globals.camera.view_proj * vec4<f32>(world_pos, z, 1.0);
 

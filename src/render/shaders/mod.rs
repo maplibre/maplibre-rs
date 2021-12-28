@@ -1,0 +1,151 @@
+use wgpu::{BufferAddress, ColorTargetState, Device, FragmentState, ShaderModule, ShaderModuleDescriptor, VertexAttribute, VertexBufferLayout, VertexState, VertexStepMode};
+
+pub struct FragmentShaderState {
+    source: &'static str,
+    targets: &'static [ColorTargetState],
+    module: Option<ShaderModule>,
+}
+
+pub struct VertexShaderState {
+    source: &'static str,
+    buffers: &'static [VertexBufferLayout<'static>],
+    module: Option<ShaderModule>,
+}
+
+impl FragmentShaderState {
+    pub const fn new(source: &'static str, targets: &'static [ColorTargetState]) -> Self {
+        Self {
+            source,
+            targets,
+            module: None,
+        }
+    }
+
+    pub fn create_fragment_state(
+        &mut self, device: &Device,
+    ) -> FragmentState {
+        self.module = Some(device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: Some("fragment shader"),
+            source: wgpu::ShaderSource::Wgsl(self.source.into()),
+        }));
+
+
+        wgpu::FragmentState {
+            module: self.module.as_ref().unwrap(),
+            entry_point: "main",
+            targets: self.targets,
+        }
+    }
+}
+
+impl VertexShaderState {
+    pub const fn new(source: &'static str,
+                     buffers: &'static [VertexBufferLayout<'static>]) -> Self {
+        Self {
+            source,
+            buffers,
+            module: None,
+        }
+    }
+
+    pub fn create_vertex_state(&mut self, device: &Device) -> VertexState {
+        self.module = Some(device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: Some("vertex shader"),
+            source: wgpu::ShaderSource::Wgsl(self.source.into()),
+        }));
+
+        wgpu::VertexState {
+            module: self.module.as_ref().unwrap(),
+            entry_point: "main",
+            buffers: self.buffers,
+        }
+    }
+}
+
+pub mod tile {
+    use crate::render::platform_constants::COLOR_TEXTURE_FORMAT;
+    use crate::render::shader_ffi::GpuVertexUniform;
+
+    use super::{VertexShaderState, ColorTargetState, FragmentShaderState};
+
+    pub const VERTEX: VertexShaderState = VertexShaderState::new(
+        include_str!("tile.vertex.wgsl"), &[wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    format: wgpu::VertexFormat::Float32x2,
+                    shader_location: 0,
+                },
+                wgpu::VertexAttribute {
+                    offset: wgpu::VertexFormat::Float32x2.size(),
+                    format: wgpu::VertexFormat::Float32x2,
+                    shader_location: 1,
+                },
+                wgpu::VertexAttribute {
+                    offset: 2 * wgpu::VertexFormat::Float32x2.size(),
+                    format: wgpu::VertexFormat::Uint32,
+                    shader_location: 2,
+                },
+            ],
+        }],
+    );
+
+    pub const FRAGMENT: FragmentShaderState = FragmentShaderState::new(
+        include_str!("tile.fragment.wgsl"), &[wgpu::ColorTargetState {
+            format: COLOR_TEXTURE_FORMAT,
+            blend: None,
+            write_mask: wgpu::ColorWrites::ALL,
+        }],
+    );
+}
+
+
+pub mod tile_mask {
+    use crate::render::platform_constants::COLOR_TEXTURE_FORMAT;
+    use crate::render::shader_ffi::GpuVertexUniform;
+    use super::{VertexShaderState, ColorTargetState, FragmentShaderState};
+
+    pub const VERTEX: VertexShaderState = VertexShaderState::new(
+        include_str!("tile_mask.vertex.wgsl"), &[wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    format: wgpu::VertexFormat::Float32x2,
+                    shader_location: 0,
+                },
+                wgpu::VertexAttribute {
+                    offset: wgpu::VertexFormat::Float32x2.size(),
+                    format: wgpu::VertexFormat::Float32x2,
+                    shader_location: 1,
+                },
+                wgpu::VertexAttribute {
+                    offset: 2 * wgpu::VertexFormat::Float32x2.size(),
+                    format: wgpu::VertexFormat::Uint32,
+                    shader_location: 2,
+                },
+            ],
+        },
+            wgpu::VertexBufferLayout {
+                array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
+                step_mode: wgpu::VertexStepMode::Instance,
+                attributes: &[
+                    wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Float32x2,
+                        shader_location: 4,
+                    },
+                ],
+            }],
+    );
+
+    pub const FRAGMENT: FragmentShaderState = FragmentShaderState::new(
+        include_str!("tile_mask.fragment.wgsl"), &[wgpu::ColorTargetState {
+            format: COLOR_TEXTURE_FORMAT,
+            blend: None,
+            write_mask: wgpu::ColorWrites::ALL,
+        }]);
+}
