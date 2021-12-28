@@ -19,7 +19,7 @@ use crate::render::camera::CameraController;
 use crate::render::tesselation::TileMask;
 
 use super::piplines::*;
-use super::platform_constants::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
+use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use super::shader_ffi::*;
 use super::tesselation::Tesselated;
 use super::texture::Texture;
@@ -512,7 +512,6 @@ impl State {
                         if let Some(start) = self.scene.last_touch {
                             let delta_x = start.0 - touch.location.x;
                             let delta_y = start.1 - touch.location.y;
-                            warn!("touch {} {} {}", delta_x, delta_y, window.scale_factor());
                             self.camera_controller.process_touch(delta_x / window.scale_factor(), delta_y / window.scale_factor());
                         }
 
@@ -655,7 +654,6 @@ impl State {
 
     pub fn update(&mut self, dt: std::time::Duration) {
         let scene = &mut self.scene;
-        let time_secs = self.fps_meter.time_secs as f32;
 
         self.camera_controller.update_camera(&mut self.camera, dt);
 
@@ -665,12 +663,13 @@ impl State {
 
         // Animate the strokes of primitive
         scene.cpu_primitives[STROKE_PRIM_ID as usize].width = scene.stroke_width;
-        /*        scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
+        /*
+        scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
                     (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
                     (time_secs * 0.5 - 1.6).sin() * 0.1 + 0.1,
                     (time_secs - 1.6).sin() * 0.1 + 0.1,
                     1.0,
-                ];
+        ];
         */
         self.fps_meter.update_and_print()
     }

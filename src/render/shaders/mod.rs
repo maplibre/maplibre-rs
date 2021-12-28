@@ -63,7 +63,7 @@ impl VertexShaderState {
 }
 
 pub mod tile {
-    use crate::render::platform_constants::COLOR_TEXTURE_FORMAT;
+    use crate::platform::COLOR_TEXTURE_FORMAT;
     use crate::render::shader_ffi::GpuVertexUniform;
 
     use super::{VertexShaderState, ColorTargetState, FragmentShaderState};
@@ -103,7 +103,7 @@ pub mod tile {
 
 
 pub mod tile_mask {
-    use crate::render::platform_constants::COLOR_TEXTURE_FORMAT;
+    use crate::platform::COLOR_TEXTURE_FORMAT;
     use crate::render::shader_ffi::GpuVertexUniform;
     use super::{VertexShaderState, ColorTargetState, FragmentShaderState};
 

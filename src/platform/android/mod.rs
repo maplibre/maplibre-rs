@@ -1,5 +1,9 @@
+pub use std::time::Instant;
+
+pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm;
+
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
-fn main() {
+pub fn main() {
     use winit::event_loop::EventLoop;
     use winit::window::WindowBuilder;
 

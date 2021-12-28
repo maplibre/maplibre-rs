@@ -17,6 +17,16 @@ use winit::window::{Window, WindowBuilder};
 mod io;
 mod wasm_experiment;
 
+pub use instant::Instant;
+
+// WebGPU
+#[cfg(not(feature = "web-webgl"))]
+pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8Unorm;
+
+// WebGL
+#[cfg(feature = "web-webgl")]
+pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
+
 #[wasm_bindgen(start)]
 pub fn start() {
     if let Err(_) = console_log::init_with_level(Level::Info) {

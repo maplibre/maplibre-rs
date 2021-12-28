@@ -1,15 +1,37 @@
 #[cfg(target_arch = "wasm32")]
-pub mod web;
+mod web;
 
 #[cfg(target_arch = "aarch64")]
-pub mod apple;
+mod apple;
 
 #[cfg(target_os = "android")]
-pub mod android;
+mod android;
 
+
+#[cfg(not(any(
+    target_os = "android",
+    target_arch = "aarch64",
+    target_arch = "wasm32"
+)))]
+mod generic;
 
 #[cfg(target_arch = "wasm32")]
-pub use instant::Instant;
+pub use web::*;
 
-#[cfg(not(target_arch = "wasm32"))]
-pub use std::time::Instant;
+#[cfg(target_arch = "aarch64")]
+pub use apple::*;
+
+#[cfg(target_os = "android")]
+pub use android::*;
+
+#[cfg(not(any(
+    target_os = "android",
+    target_arch = "aarch64",
+    target_arch = "wasm32"
+)))]
+pub use generic::*;
+
+
+// FIXME: This limit is enforced by WebGL. Actually this makes sense!
+// FIXME: This can also be achieved by _pad attributes in shader_ffi.rs
+pub const MIN_BUFFER_SIZE: u64 = 32;
