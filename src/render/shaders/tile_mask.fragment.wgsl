@@ -1,9 +1,8 @@
-
 struct Output {
     [[location(0)]] out_color: vec4<f32>;
 };
 
 [[stage(fragment)]]
-fn main() -> Output {
-    return Output(vec4<f32>(1.0,1.0,1.0,1.0));
+fn main([[location(0)]] v_color: vec4<f32>) -> Output {
+    return Output(v_color);
 }

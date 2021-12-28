@@ -247,8 +247,22 @@ impl State {
             });
 
         let instances = [
-            GpuVertexUniform::new([0.0, 0.0], [0.0, 0.0], 0),
-            GpuVertexUniform::new([4096.0, 0.0], [0.0, 0.0], 0),
+            // Step 1
+            MaskInstanceUniform::new([0.0, 0.0], 4.0, 1.0, [1.0, 0.0, 0.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([0.0, 2.0 * 4096.0], 4.0, 1.0, [1.0, 0.0, 0.0, 1.0]), // vertical
+            // Step 2
+            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, 4.0, [0.0, 0.0, 1.0, 1.0]), // vertical
+            MaskInstanceUniform::new([0.0, 1.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, 4.0, [0.0, 0.0, 1.0, 1.0]), // vertical
+            MaskInstanceUniform::new([0.0, 3.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
+            // Step 3
+            MaskInstanceUniform::new([0.0, 1.0 * 4096.0], 4.0, 1.0, [0.0, 1.0, 0.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([0.0, 3.0 * 4096.0], 4.0, 1.0, [0.0, 1.0, 0.0, 1.0]), // horizontal
+            // Step 4
+            MaskInstanceUniform::new([0.0, 1.0 * 4096.0], 1.0, 1.0, [0.0, 1.0, 1.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([0.0, 3.0 * 4096.0], 1.0, 1.0, [0.0, 1.0, 1.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([2.0 * 4096.0, 1.0 * 4096.0], 1.0, 1.0, [0.0, 1.0, 1.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([2.0 * 4096.0, 3.0 * 4096.0], 1.0, 1.0, [0.0, 1.0, 1.0, 1.0]), // horizontal
         ];
 
         let tile_mask_instances = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -355,10 +369,6 @@ impl State {
 
         let render_pipeline = device.create_render_pipeline(&render_pipeline_descriptor);
         let mask_pipeline = device.create_render_pipeline(&mask_pipeline_descriptor);
-
-        // TODO: this isn't what we want: we'd need the equivalent of VK_POLYGON_MODE_LINE,
-        // but it doesn't seem to be exposed by wgpu?
-        //render_pipeline_descriptor.primitive.topology = wgpu::PrimitiveTopology::LineList;
 
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -540,7 +550,7 @@ impl State {
             pass.set_bind_group(0, &self.bind_group, &[]);
 
             {
-                // Increment stencil
+                // Draw Mask
                 pass.set_pipeline(&self.mask_pipeline);
                 pass.set_index_buffer(
                     self.tile_mask_indices_uniform_buffer.slice(..),
@@ -548,11 +558,11 @@ impl State {
                 );
                 pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
                 pass.set_vertex_buffer(1, self.tile_mask_instances.slice(..));
-                pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..2);
+                pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..12);
             }
             {
                 pass.set_pipeline(&self.render_pipeline);
-                pass.set_stencil_reference(2);
+                pass.set_stencil_reference(1);
                 pass.set_index_buffer(self.indices_uniform_buffer.slice(..), INDEX_FORMAT);
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
                 if !self.tile_fill_range.is_empty() {
@@ -562,7 +572,7 @@ impl State {
             }
             {
                 pass.set_pipeline(&self.render_pipeline);
-                pass.set_stencil_reference(1);
+                pass.set_stencil_reference(2);
                 pass.set_index_buffer(self.indices_uniform_buffer.slice(..), INDEX_FORMAT);
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
                 if !self.tile2_fill_range.is_empty() {

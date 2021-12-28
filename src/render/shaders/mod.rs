@@ -105,9 +105,10 @@ pub mod tile {
 }
 
 pub mod tile_mask {
-    use super::{FragmentShaderState, VertexShaderState};
     use crate::platform::COLOR_TEXTURE_FORMAT;
-    use crate::render::shader_ffi::GpuVertexUniform;
+    use crate::render::shader_ffi::{GpuVertexUniform, MaskInstanceUniform};
+
+    use super::{FragmentShaderState, VertexShaderState};
 
     pub const VERTEX: VertexShaderState = VertexShaderState::new(
         include_str!("tile_mask.vertex.wgsl"),
@@ -116,16 +117,19 @@ pub mod tile_mask {
                 array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
+                    // position
                     wgpu::VertexAttribute {
                         offset: 0,
                         format: wgpu::VertexFormat::Float32x2,
                         shader_location: 0,
                     },
+                    // normal
                     wgpu::VertexAttribute {
                         offset: wgpu::VertexFormat::Float32x2.size(),
                         format: wgpu::VertexFormat::Float32x2,
                         shader_location: 1,
                     },
+                    // ?
                     wgpu::VertexAttribute {
                         offset: 2 * wgpu::VertexFormat::Float32x2.size(),
                         format: wgpu::VertexFormat::Uint32,
@@ -134,13 +138,36 @@ pub mod tile_mask {
                 ],
             },
             wgpu::VertexBufferLayout {
-                array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
+                array_stride: std::mem::size_of::<MaskInstanceUniform>() as u64,
                 step_mode: wgpu::VertexStepMode::Instance,
-                attributes: &[wgpu::VertexAttribute {
-                    offset: 0,
-                    format: wgpu::VertexFormat::Float32x2,
-                    shader_location: 4,
-                }],
+                attributes: &[
+                    // offset position
+                    wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Float32x2,
+                        shader_location: 4,
+                    },
+                    // target_width
+                    wgpu::VertexAttribute {
+                        offset: 1 * wgpu::VertexFormat::Float32x2.size(),
+                        format: wgpu::VertexFormat::Float32,
+                        shader_location: 5,
+                    },
+                    // target_height
+                    wgpu::VertexAttribute {
+                        offset: 1 * wgpu::VertexFormat::Float32x2.size()
+                            + wgpu::VertexFormat::Float32.size(),
+                        format: wgpu::VertexFormat::Float32,
+                        shader_location: 6,
+                    },
+                    // debug_color
+                    wgpu::VertexAttribute {
+                        offset: 1 * wgpu::VertexFormat::Float32x2.size()
+                            + 2* wgpu::VertexFormat::Float32.size(),
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: 7,
+                    },
+                ],
             },
         ],
     );
