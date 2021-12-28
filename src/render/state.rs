@@ -14,13 +14,12 @@ use vector_tile::parse_tile_reader;
 
 use crate::fps_meter::FPSMeter;
 use crate::io::static_database;
-use crate::render::camera;
+use crate::render::{camera, shaders};
 use crate::render::camera::CameraController;
 use crate::render::tesselation::TileMask;
 
 use super::piplines::*;
 use super::platform_constants::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
-use super::shader::*;
 use super::shader_ffi::*;
 use super::tesselation::Tesselated;
 use super::texture::Texture;
@@ -46,6 +45,7 @@ impl Default for SceneParams {
 }
 
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32;
+
 type IndexDataType = u32; // Must match INDEX_FORMAT
 
 const PRIM_BUFFER_LEN: usize = 256;
@@ -91,6 +91,7 @@ pub struct State {
     tile_mask_vertex_uniform_buffer: wgpu::Buffer,
     tile_mask_indices_uniform_buffer: wgpu::Buffer,
     tile_mask_range: Range<u32>,
+    tile_mask_instances: wgpu::Buffer,
 
     camera: camera::Camera,
     projection: camera::Projection,
@@ -239,6 +240,18 @@ impl State {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
+        let instances = [
+            GpuVertexUniform::new([0.0, 0.0], [0.0, 0.0], 0),
+            GpuVertexUniform::new([4096.0, 0.0], [0.0, 0.0], 0),
+        ];
+
+        let tile_mask_instances =
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: None,
+                contents: bytemuck::cast_slice(&instances),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+
         let prim_buffer_byte_size = cmp::max(
             MIN_BUFFER_SIZE,
             (PRIM_BUFFER_LEN * std::mem::size_of::<PrimitiveUniform>()) as u64,
@@ -313,20 +326,24 @@ impl State {
             label: None,
         });
 
-        let vertex_module = device.create_shader_module(&create_vertex_module_descriptor());
-        let fragment_module = device.create_shader_module(&create_fragment_module_descriptor());
+        let mut vertex_shader = shaders::tile::VERTEX;
+        let mut fragment_shader = shaders::tile::FRAGMENT;
+
         let render_pipeline_descriptor = create_map_render_pipeline_description(
             &pipeline_layout,
-            create_vertex_state(&vertex_module),
-            create_fragment_state(&fragment_module, false),
+            vertex_shader.create_vertex_state(&device),
+            fragment_shader.create_fragment_state(&device),
             sample_count,
             false,
         );
 
+        let mut vertex_shader = shaders::tile_mask::VERTEX;
+        let mut fragment_shader = shaders::tile_mask::FRAGMENT;
+
         let mask_pipeline_descriptor = create_map_render_pipeline_description(
             &pipeline_layout,
-            create_vertex_state(&vertex_module),
-            create_fragment_state(&fragment_module, true),
+            vertex_shader.create_vertex_state(&device),
+            fragment_shader.create_fragment_state(&device),
             sample_count,
             true,
         );
@@ -419,6 +436,7 @@ impl State {
             tile2_fill_range,
             tile_mask_indices_uniform_buffer,
             tile_mask_range,
+            tile_mask_instances,
             camera,
             projection,
             camera_controller,
@@ -615,17 +633,17 @@ impl State {
             {
                 // Increment stencil
                 pass.set_pipeline(&self.mask_pipeline);
-                pass.set_stencil_reference(1);
                 pass.set_index_buffer(
                     self.tile_mask_indices_uniform_buffer.slice(..),
                     INDEX_FORMAT,
                 );
                 pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
-                pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..1);
+                pass.set_vertex_buffer(1, self.tile_mask_instances.slice(..));
+                pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..2);
             }
             {
                 pass.set_pipeline(&self.render_pipeline);
-                pass.set_stencil_reference(1);
+                pass.set_stencil_reference(2);
                 pass.set_index_buffer(
                     self.indices_uniform_buffer.slice(..),
                     INDEX_FORMAT,
@@ -636,28 +654,19 @@ impl State {
                 }
                 pass.draw_indexed(self.tile_stroke_range.clone(), 0, 0..1);
             }
-            /*{
-                // Increment stencil
-                pass.set_pipeline(&self.mask_pipeline);
-                pass.set_stencil_reference(2);
-                pass.set_index_buffer(
-                    self.tile_mask_indices_uniform_buffer.slice(..),
-                    INDEX_FORMAT,
-                );
-                pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
-                pass.draw_indexed(self.tile_mask_range.clone(), 0, 1..2);
-            }
             {
                 pass.set_pipeline(&self.render_pipeline);
-                pass.set_stencil_reference(2);
+                pass.set_stencil_reference(1);
                 pass.set_index_buffer(
                     self.indices_uniform_buffer.slice(..),
                     INDEX_FORMAT,
                 );
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
-                pass.draw_indexed(self.tile2_fill_range.clone(), 0, 0..1);
+                if (self.tile2_fill_range.len() > 0) {
+                    pass.draw_indexed(self.tile2_fill_range.clone(), 0, 0..1);
+                }
                 pass.draw_indexed(self.tile2_stroke_range.clone(), 0, 0..1);
-            }*/
+            }
         }
 
         self.queue.submit(Some(encoder.finish()));
