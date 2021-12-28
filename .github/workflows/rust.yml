@@ -9,6 +9,9 @@ jobs:
       run:
         shell: bash
     steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
       - name: Setup
         run: rustup component add rustfmt
       - name: Format
