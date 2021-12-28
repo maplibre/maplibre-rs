@@ -122,6 +122,6 @@ fn extract_metadata(connection: &Connection,
     let json_string = serde_json::to_string(&metadata_map)?;
     let metadata_path = output_path.join("metadata.json");
     let mut metadata_file = File::create(metadata_path)?;
-    metadata_file.write(json_string.as_bytes())?;
+    metadata_file.write_all(json_string.as_bytes())?;
     Ok(())
 }
