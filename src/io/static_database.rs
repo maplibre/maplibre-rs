@@ -1,7 +1,7 @@
 use std::concat;
 use std::env;
 
-use include_dir::{Dir, File, include_dir};
+use include_dir::{include_dir, Dir, File};
 
 static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 
@@ -21,7 +21,7 @@ mod tests {
 
     #[test]
     fn test_tiles_available() {
-        assert!(get_tile(0,0,0).is_none()); // World overview
-        assert!(get_tile(2179, 1421,12).is_some()); // Maxvorstadt Munich
+        assert!(get_tile(0, 0, 0).is_none()); // World overview
+        assert!(get_tile(2179, 1421, 12).is_some()); // Maxvorstadt Munich
     }
 }

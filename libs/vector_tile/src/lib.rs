@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::path::{Path};
+use std::path::Path;
 
 use protobuf::Message;
 
@@ -15,10 +15,10 @@ mod protos;
 #[cfg(test)]
 mod tests;
 
-pub mod geometry;
-pub mod tile;
-pub mod grid;
 pub mod error;
+pub mod geometry;
+pub mod grid;
+pub mod tile;
 
 pub fn parse_tile<P: AsRef<Path>>(path: P) -> Result<Tile, Error> {
     let f = File::open(path)?;
@@ -27,10 +27,9 @@ pub fn parse_tile<P: AsRef<Path>>(path: P) -> Result<Tile, Error> {
 }
 
 pub fn parse_tile_reader<B: BufRead>(reader: &mut B) -> Result<Tile, Error> {
-   if reader.fill_buf()?.is_empty() {
-       return Err(Error::Generic("input must not be empty".to_string()));
-   }
+    if reader.fill_buf()?.is_empty() {
+        return Err(Error::Generic("input must not be empty".to_string()));
+    }
     let proto_tile = TileProto::parse_from_reader(reader)?;
     Ok(proto_tile.decode())
 }
-

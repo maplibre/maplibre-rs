@@ -7,7 +7,6 @@ mod apple;
 #[cfg(target_os = "android")]
 mod android;
 
-
 #[cfg(not(any(
     target_os = "android",
     all(target_arch = "aarch64", not(target_os = "android")),
@@ -30,7 +29,6 @@ pub use android::*;
     target_arch = "wasm32"
 )))]
 pub use generic::*;
-
 
 // FIXME: This limit is enforced by WebGL. Actually this makes sense!
 // FIXME: This can also be achieved by _pad attributes in shader_ffi.rs

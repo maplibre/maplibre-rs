@@ -3,7 +3,7 @@ use std::io::BufReader;
 use serde_json::Value;*/
 
 fn generate_type_def() -> Option<u32> {
-/*    let f = File::open("style-spec-v8.json").unwrap();
+    /*    let f = File::open("style-spec-v8.json").unwrap();
     let mut reader = BufReader::new(f);
     let result = serde_json::from_reader::<_, Value>(&mut reader).unwrap();
 
@@ -19,7 +19,6 @@ fn generate_type_def() -> Option<u32> {
 
     Some(5)
 }
-
 
 fn main() {
     generate_type_def();

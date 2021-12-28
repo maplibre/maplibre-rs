@@ -1,6 +1,6 @@
+use mapr::main_loop;
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
-use mapr::main_loop;
 
 fn main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));

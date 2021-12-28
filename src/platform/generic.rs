@@ -1,4 +1,3 @@
-
 pub use std::time::Instant;
 
 // Vulkan/OpenGL

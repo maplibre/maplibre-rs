@@ -38,7 +38,9 @@ pub struct GlobalsUniform {
 
 impl GlobalsUniform {
     pub fn new(camera_uniform: CameraUniform) -> Self {
-        Self { camera: camera_uniform }
+        Self {
+            camera: camera_uniform,
+        }
     }
 }
 

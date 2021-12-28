@@ -166,9 +166,9 @@ impl CameraController {
             // I'm assuming a line is about 100 pixels
             winit::event::MouseScrollDelta::LineDelta(_, scroll) => scroll * 100.0,
             winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
-                                                           y: scroll,
-                                                           ..
-                                                       }) => *scroll as f32,
+                y: scroll,
+                ..
+            }) => *scroll as f32,
         };
     }
 

@@ -1,5 +1,5 @@
-use std::{env, fs};
 use std::path::{Path, PathBuf};
+use std::{env, fs};
 
 use mapr_utils::mbtiles::extract;
 use wgsl_validate::validate_project_wgsl;
@@ -17,10 +17,12 @@ fn main() {
     let source = Path::new(&root_dir).join("test-data/munich-12.mbtiles");
 
     // Pack tiles around Maxvorstadt (100 tiles in each direction)
-    extract(source,
-            out,
-            12,
-            (2179 - 100)..(2179 + 100),
-            (1421 - 100)..(1421 + 100),
-    ).unwrap();
+    extract(
+        source,
+        out,
+        12,
+        (2179 - 100)..(2179 + 100),
+        (1421 - 100)..(1421 + 100),
+    )
+    .unwrap();
 }

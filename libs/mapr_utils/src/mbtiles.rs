@@ -1,16 +1,16 @@
-use std::{fs, io};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
 use std::ops::Range;
 use std::path::Path;
+use std::{fs, io};
 
 use flate2::bufread::GzDecoder;
-use rusqlite::{Connection, params, Row};
+use rusqlite::{params, Connection, Row};
 
 #[derive(Debug)]
 pub enum Error {
-    IO(String)
+    IO(String),
 }
 
 impl From<serde_json::Error> for Error {
@@ -25,26 +25,33 @@ impl From<io::Error> for Error {
     }
 }
 
-
 impl From<rusqlite::Error> for Error {
     fn from(error: rusqlite::Error) -> Self {
         Error::IO(error.to_string())
     }
 }
 
-pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(input_mbtiles: P,
-                                               output_dir: R,
-                                               z: u32,
-                                               x_range: Range<u32>,
-                                               y_range: Range<u32>) -> Result<(), Error> {
+pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(
+    input_mbtiles: P,
+    output_dir: R,
+    z: u32,
+    x_range: Range<u32>,
+    y_range: Range<u32>,
+) -> Result<(), Error> {
     let input_path = input_mbtiles.as_ref().to_path_buf();
     if !input_path.is_file() {
-        return Err(Error::IO(format!("Input file {:?} is not a file", input_path)));
+        return Err(Error::IO(format!(
+            "Input file {:?} is not a file",
+            input_path
+        )));
     }
 
     let output_path = output_dir.as_ref().to_path_buf();
     if output_path.exists() {
-        return Err(Error::IO(format!("Output directory {:?} already exists", output_path)));
+        return Err(Error::IO(format!(
+            "Output directory {:?} already exists",
+            output_path
+        )));
     }
     let connection = Connection::open(input_path)?;
 
@@ -53,17 +60,20 @@ pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(input_mbtiles: P,
     extract_metadata(&connection, &output_path)?;
 
     // language=SQL
-    let mut prepared_statement = connection
-        .prepare("SELECT zoom_level, tile_column, tile_row, tile_data
+    let mut prepared_statement = connection.prepare(
+        "SELECT zoom_level, tile_column, tile_row, tile_data
                         FROM tiles
                         WHERE   (zoom_level = ?1) AND
                                 (tile_column BETWEEN ?2 AND ?3) AND
-                                (tile_row BETWEEN ?4 AND ?5);")?;
+                                (tile_row BETWEEN ?4 AND ?5);",
+    )?;
 
     let mut tiles_rows = prepared_statement.query(params![
         z,
-        x_range.start, x_range.end,
-        flip_vertical_axis(z, y_range.end), flip_vertical_axis(z, y_range.start) // in mbtiles it is stored flipped
+        x_range.start,
+        x_range.end,
+        flip_vertical_axis(z, y_range.end),
+        flip_vertical_axis(z, y_range.start) // in mbtiles it is stored flipped
     ])?;
 
     while let Ok(Some(tile)) = tiles_rows.next() {
@@ -73,17 +83,16 @@ pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(input_mbtiles: P,
     Ok(())
 }
 
-
-fn flip_vertical_axis(zoom: u32, value: u32)-> u32 {
+fn flip_vertical_axis(zoom: u32, value: u32) -> u32 {
     2u32.pow(zoom) - 1 - value
 }
 
-fn extract_tile(tile: &Row,
-                output_path: &Path)
-                -> Result<(), Error> {
-    let (z, x, mut y): (u32, u32, u32) = (tile.get::<_, u32>(0)?,
-                                          tile.get::<_, u32>(1)?,
-                                          tile.get::<_, u32>(2)?);
+fn extract_tile(tile: &Row, output_path: &Path) -> Result<(), Error> {
+    let (z, x, mut y): (u32, u32, u32) = (
+        tile.get::<_, u32>(0)?,
+        tile.get::<_, u32>(1)?,
+        tile.get::<_, u32>(2)?,
+    );
 
     // Flip vertical axis
     y = flip_vertical_axis(z, y);
@@ -101,23 +110,19 @@ fn extract_tile(tile: &Row,
     Ok(())
 }
 
-fn extract_metadata(connection: &Connection,
-                    output_path: &Path)
-                    -> Result<(), Error> {
+fn extract_metadata(connection: &Connection, output_path: &Path) -> Result<(), Error> {
     // language=SQL
-    let mut prepared_statement = connection
-        .prepare("SELECT name, value FROM metadata;")?;
-    let metadata = prepared_statement
-        .query_map([], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-        })?;
+    let mut prepared_statement = connection.prepare("SELECT name, value FROM metadata;")?;
+    let metadata = prepared_statement.query_map([], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+    })?;
 
-    let metadata_map: HashMap<String, String> = metadata.filter_map(|result| {
-        match result {
+    let metadata_map: HashMap<String, String> = metadata
+        .filter_map(|result| match result {
             Ok(tuple) => Some(tuple),
             Err(_) => None,
-        }
-    }).collect::<HashMap<String, String>>();
+        })
+        .collect::<HashMap<String, String>>();
 
     let json_string = serde_json::to_string(&metadata_map)?;
     let metadata_path = output_path.join("metadata.json");

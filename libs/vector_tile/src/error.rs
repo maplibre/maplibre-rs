@@ -1,5 +1,5 @@
-use std::io;
 use protobuf::ProtobufError;
+use std::io;
 
 #[derive(Debug)]
 pub enum Error {

@@ -60,4 +60,3 @@ pub async fn run() {
 
     super::setup::setup(window, event_loop).await;
 }
-

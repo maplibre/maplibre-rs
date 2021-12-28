@@ -5,8 +5,8 @@ use protobuf::Message;
 
 use crate::encoding::Decode;
 use crate::grid::{google_mercator, tile_coordinates_bavaria};
-use crate::{parse_tile, parse_tile_reader};
 use crate::protos::vector_tile::Tile;
+use crate::{parse_tile, parse_tile_reader};
 
 #[test]
 fn test_parsing_europe_pbf() {

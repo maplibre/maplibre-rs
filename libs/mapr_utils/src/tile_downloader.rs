@@ -1,7 +1,7 @@
+use reqwest::Client;
 use std::fs::File;
 use std::io::copy;
 use std::path::Path;
-use reqwest::Client;
 
 use vector_tile::grid::*;
 
@@ -14,9 +14,7 @@ pub async fn download_tiles() {
             y = y,
         );
         println!("{}", target);
-        let client = Client::builder()
-            .gzip(true)
-            .build().unwrap();
+        let client = Client::builder().gzip(true).build().unwrap();
 
         let response = client.get(target).send().await.unwrap();
         if response.status().is_success() {
@@ -25,7 +23,7 @@ pub async fn download_tiles() {
                     Path::new(".").join(format!("test-data/{z}-{x}-{y}.pbf", z = z, x = x, y = y,));
                 File::create(fname).unwrap()
             };
-            copy(&mut  response.bytes().await.unwrap().as_ref(), &mut dest).unwrap();
+            copy(&mut response.bytes().await.unwrap().as_ref(), &mut dest).unwrap();
         }
     }
 }

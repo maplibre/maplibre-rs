@@ -3,11 +3,11 @@ use std::ops::Range;
 use lyon::extra::rust_logo::build_logo_path;
 use lyon::lyon_tessellation::{FillTessellator, StrokeTessellator};
 use lyon::tessellation;
+use lyon::tessellation::geometry_builder::MaxIndex;
 use lyon::tessellation::{
     BuffersBuilder, FillOptions, FillVertexConstructor, StrokeOptions, StrokeVertexConstructor,
     VertexBuffers,
 };
-use lyon::tessellation::geometry_builder::MaxIndex;
 use lyon_path::builder::SvgPathBuilder;
 use lyon_path::Path;
 
@@ -19,11 +19,22 @@ use super::shader_ffi::GpuVertexUniform;
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
 pub trait Tesselated<OutputIndex: std::ops::Add> {
-    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>, prim_id: u32) -> Range<u32>;
-    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>, prim_id: u32) -> Range<u32>;
+    fn tesselate_stroke(
+        &self,
+        buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
+        prim_id: u32,
+    ) -> Range<u32>;
+    fn tesselate_fill(
+        &self,
+        buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
+        prim_id: u32,
+    ) -> Range<u32>;
 
-    fn empty_range(&self, buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
-                   _prim_id: u32) -> Range<u32> {
+    fn empty_range(
+        &self,
+        buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
+        _prim_id: u32,
+    ) -> Range<u32> {
         let initial_indices_count = buffer.indices.len() as u32;
         initial_indices_count..initial_indices_count
     }
@@ -49,11 +60,7 @@ impl StrokeVertexConstructor<GpuVertexUniform> for WithId {
     }
 }
 
-
-fn build_path(
-    tile: &Tile,
-    fill: bool
-) -> Path {
+fn build_path(tile: &Tile, fill: bool) -> Path {
     let mut tile_builder = Path::builder().with_svg();
 
     for layer in tile.layers() {
@@ -118,7 +125,10 @@ fn build_path(
     tile_builder.build()
 }
 
-impl<OutputIndex: std::ops::Add + std::convert::From<lyon::lyon_tessellation::VertexId> + MaxIndex> Tesselated<OutputIndex> for Tile {
+impl<
+        OutputIndex: std::ops::Add + std::convert::From<lyon::lyon_tessellation::VertexId> + MaxIndex,
+    > Tesselated<OutputIndex> for Tile
+{
     fn tesselate_stroke(
         &self,
         buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
@@ -141,7 +151,11 @@ impl<OutputIndex: std::ops::Add + std::convert::From<lyon::lyon_tessellation::Ve
         initial_indices_count as u32..buffer.indices.len() as u32
     }
 
-    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>, prim_id: u32) -> Range<u32> {
+    fn tesselate_fill(
+        &self,
+        buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
+        prim_id: u32,
+    ) -> Range<u32> {
         let mut tesselator = FillTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -162,8 +176,15 @@ impl<OutputIndex: std::ops::Add + std::convert::From<lyon::lyon_tessellation::Ve
 
 pub struct RustLogo();
 
-impl<OutputIndex: std::ops::Add + std::convert::From<lyon::lyon_tessellation::VertexId> + MaxIndex> Tesselated<OutputIndex> for RustLogo {
-    fn tesselate_stroke(&self, buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>, prim_id: u32) -> Range<u32> {
+impl<
+        OutputIndex: std::ops::Add + std::convert::From<lyon::lyon_tessellation::VertexId> + MaxIndex,
+    > Tesselated<OutputIndex> for RustLogo
+{
+    fn tesselate_stroke(
+        &self,
+        buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
+        prim_id: u32,
+    ) -> Range<u32> {
         let mut stroke_tess = StrokeTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -184,7 +205,11 @@ impl<OutputIndex: std::ops::Add + std::convert::From<lyon::lyon_tessellation::Ve
         initial_indices_count as u32..buffer.indices.len() as u32
     }
 
-    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>, prim_id: u32) -> Range<u32> {
+    fn tesselate_fill(
+        &self,
+        buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
+        prim_id: u32,
+    ) -> Range<u32> {
         let mut fill_tess = FillTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -207,17 +232,24 @@ impl<OutputIndex: std::ops::Add + std::convert::From<lyon::lyon_tessellation::Ve
     }
 }
 
-
 const EXTENT: f32 = 4096.0;
 
 pub struct TileMask();
 
 impl Tesselated<u32> for TileMask {
-    fn tesselate_stroke(&self, _buffer: &mut VertexBuffers<GpuVertexUniform, u32>, _prim_id: u32) -> Range<u32> {
+    fn tesselate_stroke(
+        &self,
+        _buffer: &mut VertexBuffers<GpuVertexUniform, u32>,
+        _prim_id: u32,
+    ) -> Range<u32> {
         0..0
     }
 
-    fn tesselate_fill(&self, buffer: &mut VertexBuffers<GpuVertexUniform, u32>, prim_id: u32) -> Range<u32> {
+    fn tesselate_fill(
+        &self,
+        buffer: &mut VertexBuffers<GpuVertexUniform, u32>,
+        prim_id: u32,
+    ) -> Range<u32> {
         let initial_indices_count = buffer.indices.len();
 
         buffer.vertices = vec![

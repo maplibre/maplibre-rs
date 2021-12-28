@@ -53,7 +53,6 @@ impl Feature {
         self.internal.get_id()
     }
 
-
     pub fn geometry(&self) -> &Geometry {
         &self.geometry
     }

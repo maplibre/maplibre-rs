@@ -4,25 +4,27 @@ use std::ops::Range;
 
 use log::warn;
 use lyon::tessellation::VertexBuffers;
-use wgpu::{Limits};
 use wgpu::util::DeviceExt;
+use wgpu::Limits;
 use winit::dpi::PhysicalSize;
-use winit::event::{DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent};
+use winit::event::{
+    DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent,
+};
 use winit::window::Window;
 
 use vector_tile::parse_tile_reader;
 
 use crate::fps_meter::FPSMeter;
 use crate::io::static_database;
-use crate::render::{camera, shaders};
 use crate::render::camera::CameraController;
 use crate::render::tesselation::TileMask;
+use crate::render::{camera, shaders};
 
 use super::piplines::*;
-use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use super::shader_ffi::*;
 use super::tesselation::Tesselated;
 use super::texture::Texture;
+use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 
 pub struct SceneParams {
     stroke_width: f32,
@@ -129,7 +131,6 @@ impl SceneParams {
         cpu_primitives[MASK_FILL_PRIM_ID as usize] =
             PrimitiveUniform::new([0.0, 0.0, 1.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
 
-
         Self {
             cpu_primitives,
             ..SceneParams::default()
@@ -150,9 +151,17 @@ impl State {
 
         let mut geometry: VertexBuffers<GpuVertexUniform, IndexDataType> = VertexBuffers::new();
 
-        println!("Using static database from {}", static_database::get_source_path());
+        println!(
+            "Using static database from {}",
+            static_database::get_source_path()
+        );
 
-        let tile = parse_tile_reader(&mut Cursor::new(static_database::get_tile(2179, 1421, 12).unwrap().contents())).expect("failed to load tile");
+        let tile = parse_tile_reader(&mut Cursor::new(
+            static_database::get_tile(2179, 1421, 12)
+                .unwrap()
+                .contents(),
+        ))
+        .expect("failed to load tile");
         let (tile_stroke_range, tile_fill_range) = (
             tile.tesselate_stroke(&mut geometry, STROKE_PRIM_ID),
             //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
@@ -160,7 +169,12 @@ impl State {
         );
 
         // tile right to it
-        let tile = parse_tile_reader(&mut Cursor::new(static_database::get_tile(2180, 1421, 12).unwrap().contents())).expect("failed to load tile");
+        let tile = parse_tile_reader(&mut Cursor::new(
+            static_database::get_tile(2180, 1421, 12)
+                .unwrap()
+                .contents(),
+        ))
+        .expect("failed to load tile");
         let (tile2_stroke_range, tile2_fill_range) = (
             tile.tesselate_stroke(&mut geometry, SECOND_TILE_STROKE_PRIM_ID),
             //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
@@ -223,7 +237,8 @@ impl State {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let mut tile_mask_geometry: VertexBuffers<GpuVertexUniform, IndexDataType> = VertexBuffers::new();
+        let mut tile_mask_geometry: VertexBuffers<GpuVertexUniform, IndexDataType> =
+            VertexBuffers::new();
         let tile_mask = TileMask();
         let tile_mask_range = tile_mask.tesselate_fill(&mut tile_mask_geometry, MASK_FILL_PRIM_ID);
         let tile_mask_vertex_uniform_buffer =
@@ -245,12 +260,11 @@ impl State {
             GpuVertexUniform::new([4096.0, 0.0], [0.0, 0.0], 0),
         ];
 
-        let tile_mask_instances =
-            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: None,
-                contents: bytemuck::cast_slice(&instances),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
+        let tile_mask_instances = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(&instances),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
 
         let prim_buffer_byte_size = cmp::max(
             MIN_BUFFER_SIZE,
@@ -474,7 +488,10 @@ impl State {
             DeviceEvent::MouseMotion { delta } => {
                 if self.mouse_pressed {
                     warn!("mouse {}", delta.0);
-                    self.camera_controller.process_mouse(delta.0 / window.scale_factor(), delta.1 / window.scale_factor());
+                    self.camera_controller.process_mouse(
+                        delta.0 / window.scale_factor(),
+                        delta.1 / window.scale_factor(),
+                    );
                 }
                 true
             }
@@ -486,11 +503,11 @@ impl State {
         match event {
             WindowEvent::KeyboardInput {
                 input:
-                KeyboardInput {
-                    state,
-                    virtual_keycode: Some(key),
-                    ..
-                },
+                    KeyboardInput {
+                        state,
+                        virtual_keycode: Some(key),
+                        ..
+                    },
                 ..
             } => match key {
                 winit::event::VirtualKeyCode::Z => {
@@ -512,14 +529,16 @@ impl State {
                         if let Some(start) = self.scene.last_touch {
                             let delta_x = start.0 - touch.location.x;
                             let delta_y = start.1 - touch.location.y;
-                            self.camera_controller.process_touch(delta_x / window.scale_factor(), delta_y / window.scale_factor());
+                            self.camera_controller.process_touch(
+                                delta_x / window.scale_factor(),
+                                delta_y / window.scale_factor(),
+                            );
                         }
 
                         self.scene.last_touch = Some((touch.location.x, touch.location.y))
                     }
                     TouchPhase::Cancelled => {}
                 }
-
 
                 true
             }
@@ -621,10 +640,7 @@ impl State {
             {
                 pass.set_pipeline(&self.render_pipeline);
                 pass.set_stencil_reference(2);
-                pass.set_index_buffer(
-                    self.indices_uniform_buffer.slice(..),
-                    INDEX_FORMAT,
-                );
+                pass.set_index_buffer(self.indices_uniform_buffer.slice(..), INDEX_FORMAT);
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
                 if !self.tile_fill_range.is_empty() {
                     pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
@@ -634,10 +650,7 @@ impl State {
             {
                 pass.set_pipeline(&self.render_pipeline);
                 pass.set_stencil_reference(1);
-                pass.set_index_buffer(
-                    self.indices_uniform_buffer.slice(..),
-                    INDEX_FORMAT,
-                );
+                pass.set_index_buffer(self.indices_uniform_buffer.slice(..), INDEX_FORMAT);
                 pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
                 if !self.tile2_fill_range.is_empty() {
                     pass.draw_indexed(self.tile2_fill_range.clone(), 0, 0..1);

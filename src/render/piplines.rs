@@ -43,7 +43,7 @@ pub fn create_map_render_pipeline_description<'a>(
             pass_op: wgpu::StencilOperation::Keep,
         }
     };
-    
+
     wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(pipeline_layout),
@@ -56,7 +56,7 @@ pub fn create_map_render_pipeline_description<'a>(
             strip_index_format: None,
             cull_mode: None, // TODO Maps look the same from he bottom and above
             conservative: false,
-            unclipped_depth: false
+            unclipped_depth: false,
         },
         depth_stencil: Some(wgpu::DepthStencilState {
             format: DEPTH_TEXTURE_FORMAT,
@@ -75,6 +75,6 @@ pub fn create_map_render_pipeline_description<'a>(
             mask: !0,
             alpha_to_coverage_enabled: false,
         },
-        multiview: None
+        multiview: None,
     }
 }
