@@ -15,7 +15,9 @@ pub fn get_tile(x: u32, y: u32, z: u32) -> Option<&'static File<'static>> {
     TILES.get_file(format!("{}/{}/{}.{}", z, x, y, "pbf"))
 }
 
+#[cfg(test)]
 mod tests {
+    use super::get_tile;
 
     #[test]
     fn test_tiles_available() {
