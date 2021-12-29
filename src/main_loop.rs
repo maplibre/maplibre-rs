@@ -10,7 +10,11 @@ use crate::render::state::State;
 pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, pool: Pool) {
     info!("== mapr ==");
 
-    pool.fetch((2179, 1421, 12).into());
+    for x in 0..10 {
+        for y in 0..10 {
+            pool.fetch((2179 + x, 1421 + y, 12).into())
+        }
+    }
 
     let mut input = InputHandler::new();
     let mut state = State::new(&window).await;
