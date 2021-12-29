@@ -42,13 +42,10 @@ impl Default for SceneParams {
 
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32;
 
-type IndexDataType = u32; // Must match INDEX_FORMAT
-
 const PRIM_BUFFER_LEN: usize = 256;
 const STROKE_PRIM_ID: u32 = 0;
 const FILL_PRIM_ID: u32 = 1;
 const SECOND_TILE_FILL_PRIM_ID: u32 = 2;
-const MASK_FILL_PRIM_ID: u32 = 3;
 const SECOND_TILE_STROKE_PRIM_ID: u32 = 5;
 
 pub struct State {
@@ -84,9 +81,6 @@ pub struct State {
     tile2_fill_range: Range<u32>,
     tile2_stroke_range: Range<u32>,
 
-    tile_mask_vertex_uniform_buffer: wgpu::Buffer,
-    tile_mask_indices_uniform_buffer: wgpu::Buffer,
-    tile_mask_range: Range<u32>,
     tile_mask_instances: wgpu::Buffer,
 
     pub camera: camera::Camera,
@@ -119,9 +113,6 @@ impl SceneParams {
             PrimitiveUniform::new([0.0, 0.0, 1.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
         cpu_primitives[SECOND_TILE_FILL_PRIM_ID as usize] =
             PrimitiveUniform::new([0.0, 1.0, 1.0, 1.0], [4096.0, 0.0], 0, 1.0, 0.0, 1.0);
-
-        cpu_primitives[MASK_FILL_PRIM_ID as usize] =
-            PrimitiveUniform::new([0.0, 0.0, 1.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
 
         Self {
             cpu_primitives,
@@ -242,24 +233,6 @@ impl State {
             contents: bytemuck::cast_slice(&geometry.indices),
             usage: wgpu::BufferUsages::INDEX,
         });
-
-        let mut tile_mask_geometry: VertexBuffers<GpuVertexUniform, IndexDataType> =
-            VertexBuffers::new();
-        let tile_mask = TileMask();
-        let tile_mask_range = tile_mask.tesselate_fill(&mut tile_mask_geometry, MASK_FILL_PRIM_ID);
-        let tile_mask_vertex_uniform_buffer =
-            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: None,
-                contents: bytemuck::cast_slice(&tile_mask_geometry.vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-
-        let tile_mask_indices_uniform_buffer =
-            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: None,
-                contents: bytemuck::cast_slice(&tile_mask_geometry.indices),
-                usage: wgpu::BufferUsages::INDEX,
-            });
 
         let instances = [
             // Step 1
@@ -439,12 +412,9 @@ impl State {
             globals_uniform_buffer,
             prims_uniform_buffer,
             indices_uniform_buffer,
-            tile_mask_vertex_uniform_buffer,
             fps_meter: FPSMeter::new(),
             tile_stroke_range,
             tile2_fill_range,
-            tile_mask_indices_uniform_buffer,
-            tile_mask_range,
             tile_mask_instances,
             camera,
             projection,
@@ -567,15 +537,11 @@ impl State {
             pass.set_bind_group(0, &self.bind_group, &[]);
 
             {
-                // Draw Mask
+                // Draw masks
                 pass.set_pipeline(&self.mask_pipeline);
-                pass.set_index_buffer(
-                    self.tile_mask_indices_uniform_buffer.slice(..),
-                    INDEX_FORMAT,
-                );
-                pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
-                pass.set_vertex_buffer(1, self.tile_mask_instances.slice(..));
-                pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..11);
+                pass.set_vertex_buffer(0, self.tile_mask_instances.slice(..));
+                // Draw 11 squares each out of 6 vertices
+                pass.draw(0..6, 0..11);
             }
             {
                 pass.set_pipeline(&self.render_pipeline);
