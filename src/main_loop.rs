@@ -3,11 +3,14 @@ use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEve
 use winit::event_loop::{ControlFlow, EventLoop};
 
 use crate::input::InputHandler;
+use crate::io::pool::Pool;
 use crate::platform::Instant;
 use crate::render::state::State;
 
-pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>) {
+pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, pool: Pool) {
     info!("== mapr ==");
+
+    pool.fetch((2179, 1421, 12).into());
 
     let mut input = InputHandler::new();
     let mut state = State::new(&window).await;
@@ -55,7 +58,7 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>) {
                 let now = Instant::now();
                 let dt = now - last_render_time;
                 last_render_time = now;
-                input.update_state( &mut state, dt);
+                input.update_state(&mut state, dt);
                 match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if lost

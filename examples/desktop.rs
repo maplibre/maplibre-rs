@@ -1,3 +1,4 @@
+use mapr::io::pool::Pool;
 use mapr::main_loop;
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
@@ -11,5 +12,12 @@ fn main() {
         .build(&event_loop)
         .unwrap();
 
-    pollster::block_on(main_loop::setup(window, event_loop));
+    let io_tile_pool = Pool::new();
+    let main_tile_pool = io_tile_pool.clone();
+
+    std::thread::spawn(move || {
+        io_tile_pool.run_loop();
+    });
+
+    pollster::block_on(main_loop::setup(window, event_loop, main_tile_pool));
 }

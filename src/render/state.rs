@@ -19,7 +19,7 @@ use crate::io::static_database;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::{camera, shaders};
 use crate::tesselation::tile_mask::TileMask;
-use crate::tesselation::Tesselated;
+use crate::tesselation::{IndexDataType, Tesselated};
 use crate::util::measure::Measure;
 
 use super::piplines::*;
@@ -89,7 +89,7 @@ pub struct State {
     tile_mask_range: Range<u32>,
     tile_mask_instances: wgpu::Buffer,
 
-    pub(crate) camera: camera::Camera,
+    pub camera: camera::Camera,
     projection: camera::Projection,
 
     pub scene: SceneParams,
@@ -153,7 +153,7 @@ impl State {
         );
 
         let tile = parse_tile_reader(&mut Cursor::new(
-            static_database::get_tile(2179, 1421, 12)
+            static_database::get_tile(&(2179, 1421, 12).into())
                 .unwrap()
                 .contents(),
         ))
@@ -172,7 +172,7 @@ impl State {
 
         // tile right to it
         let tile = parse_tile_reader(&mut Cursor::new(
-            static_database::get_tile(2180, 1421, 12)
+            static_database::get_tile(&(2180, 1421, 12).into())
                 .unwrap()
                 .contents(),
         ))

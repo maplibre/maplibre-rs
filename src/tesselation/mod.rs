@@ -10,6 +10,8 @@ use std::ops::Range;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
+pub type IndexDataType = u32; // Must match INDEX_FORMAT
+
 pub trait Tesselated<OutputIndex: std::ops::Add> {
     fn tesselate_stroke(
         &self,
