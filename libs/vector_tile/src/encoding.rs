@@ -204,6 +204,7 @@ impl Decode<Geometry> for ProtoFeature {
 }
 
 /// Decode a Feature
+// FIXME: Decoding is very slow right now on development builds of wasm: (Development: 15s, Production: 60ms)
 impl Decode<Feature> for (&mut ProtoLayer, ProtoFeature) {
     fn decode(mut self) -> Feature {
         let (layer, feature) = self;
