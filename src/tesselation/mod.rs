@@ -1,6 +1,5 @@
 mod misc;
 pub mod tile;
-pub mod tile_mask;
 
 use crate::render::shader_ffi::GpuVertexUniform;
 use lyon::tessellation::{

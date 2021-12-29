@@ -18,7 +18,6 @@ use crate::fps_meter::FPSMeter;
 use crate::io::static_database;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::{camera, shaders};
-use crate::tesselation::tile_mask::TileMask;
 use crate::tesselation::{IndexDataType, Tesselated};
 use crate::util::measure::Measure;
 
