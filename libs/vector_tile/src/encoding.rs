@@ -16,11 +16,11 @@ pub trait Decode<T> {
 
 /// Decode a PropertyValue
 impl Decode<PropertyValue> for ProtoValue {
-    fn decode(self) -> PropertyValue {
+    fn decode(mut self) -> PropertyValue {
         if self.has_bool_value() {
             PropertyValue::BoolValue(self.get_bool_value())
         } else if self.has_string_value() {
-            PropertyValue::StringValue(String::from(self.get_string_value()))
+            PropertyValue::StringValue(String::from(self.take_string_value()))
         } else if self.has_float_value() {
             PropertyValue::FloatValue(self.get_float_value())
         } else if self.has_int_value() {
@@ -98,7 +98,7 @@ impl Decode<GeometryPoint> for Vec<u32> {
 
 impl Decode<GeometryLineString> for Vec<u32> {
     fn decode(self) -> GeometryLineString {
-        let mut commands = vec![];
+        let mut commands = Vec::with_capacity(self.len()); // Create vec of maximum size
         let mut i = 0;
 
         while i < self.len() - 1 {
@@ -204,17 +204,18 @@ impl Decode<Geometry> for ProtoFeature {
 }
 
 /// Decode a Feature
-impl Decode<Feature> for (&ProtoLayer, ProtoFeature) {
-    fn decode(self) -> Feature {
+impl Decode<Feature> for (&mut ProtoLayer, ProtoFeature) {
+    fn decode(mut self) -> Feature {
         let (layer, feature) = self;
 
-        let mut properties = HashMap::new();
+        let mut properties = HashMap::with_capacity(feature.tags.len());
+
+        let keys = &mut layer.keys;
 
         for chunk in feature.tags.chunks(2) {
             let key = chunk[0];
             let value = chunk[1];
 
-            let keys = &layer.keys;
             if let Some(actual_key) = keys.get(key as usize) {
                 let values = &layer.values;
                 if let Some(actual_value) = values.get(value as usize) {
@@ -222,9 +223,11 @@ impl Decode<Feature> for (&ProtoLayer, ProtoFeature) {
                 }
             }
         }
-        let geometry = feature.clone().decode(); // FIXME: Inefficient clone
 
-        Feature::new(feature, geometry, properties)
+        let id = feature.get_id();
+        let geometry = feature.decode();
+
+        Feature::new(id, geometry, properties)
     }
 }
 
@@ -235,7 +238,7 @@ impl Decode<Layer> for ProtoLayer {
         let mut features = Vec::new();
 
         while let Some(feature) = self.features.pop() {
-            features.push((&self, feature).decode())
+            features.push((&mut self, feature).decode())
         }
 
         Layer::new(self, features)

@@ -19,7 +19,7 @@ pub struct Layer {
 
 #[derive(Debug)]
 pub struct Feature {
-    internal: ProtoFeature,
+    id: u64,
     geometry: Geometry,
     properties: HashMap<String, PropertyValue>,
 }
@@ -38,19 +38,19 @@ pub enum PropertyValue {
 
 impl Feature {
     pub(crate) fn new(
-        internal: ProtoFeature,
+        id: u64,
         geometry: Geometry,
         properties: HashMap<String, PropertyValue>,
     ) -> Self {
         Feature {
-            internal,
+            id,
             geometry,
             properties,
         }
     }
 
     pub fn id(&self) -> u64 {
-        self.internal.get_id()
+        self.id
     }
 
     pub fn geometry(&self) -> &Geometry {
