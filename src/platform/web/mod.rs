@@ -1,8 +1,7 @@
-extern crate console_error_panic_hook;
-
 use std::cell::RefCell;
 use std::panic;
 use std::rc::Rc;
+use console_error_panic_hook;
 
 use js_sys::Array;
 use log::{info, warn, Level};
@@ -58,5 +57,5 @@ pub async fn run() {
         height: body.client_height(),
     });
 
-    super::setup::setup(window, event_loop).await;
+    crate::main_loop::setup(window, event_loop).await;
 }
