@@ -248,8 +248,8 @@ impl State {
 
         let instances = [
             // Step 1
-            MaskInstanceUniform::new([0.0, 0.0], 4.0, 1.0, [1.0, 0.0, 0.0, 1.0]), // horizontal
-            MaskInstanceUniform::new([0.0, 2.0 * 4096.0], 4.0, 1.0, [1.0, 0.0, 0.0, 1.0]), // vertical
+            MaskInstanceUniform::new([0.0, 0.0], 4.0, 4.0, [1.0, 0.0, 0.0, 1.0]), // horizontal
+            //MaskInstanceUniform::new([0.0, 2.0 * 4096.0], 4.0, 1.0, [1.0, 0.0, 0.0, 1.0]), // vertical
             // Step 2
             MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, 4.0, [0.0, 0.0, 1.0, 1.0]), // vertical
             MaskInstanceUniform::new([0.0, 1.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
@@ -558,7 +558,7 @@ impl State {
                 );
                 pass.set_vertex_buffer(0, self.tile_mask_vertex_uniform_buffer.slice(..));
                 pass.set_vertex_buffer(1, self.tile_mask_instances.slice(..));
-                pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..12);
+                pass.draw_indexed(self.tile_mask_range.clone(), 0, 0..11);
             }
             {
                 pass.set_pipeline(&self.render_pipeline);
