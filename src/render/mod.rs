@@ -1,9 +1,8 @@
 mod piplines;
-mod shader_ffi;
-mod tesselation;
 mod texture;
 
 mod shaders;
 
 pub mod camera;
+pub mod shader_ffi;
 pub mod state;

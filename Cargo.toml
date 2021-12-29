@@ -98,3 +98,7 @@ crate-type = [ "rlib", "cdylib", "staticlib" ] # staticlib is used for apple
 [[example]]
 name = "desktop"
 crate-type = ["bin"]
+
+[[bench]]
+name = "tesselation"
+harness = false

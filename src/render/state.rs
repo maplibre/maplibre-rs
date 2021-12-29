@@ -17,12 +17,13 @@ use vector_tile::parse_tile_reader;
 use crate::fps_meter::FPSMeter;
 use crate::io::static_database;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
-use crate::render::tesselation::TileMask;
 use crate::render::{camera, shaders};
+use crate::tesselation::tile_mask::TileMask;
+use crate::tesselation::Tesselated;
+use crate::util::measure::Measure;
 
 use super::piplines::*;
 use super::shader_ffi::*;
-use super::tesselation::Tesselated;
 use super::texture::Texture;
 
 pub struct SceneParams {
@@ -131,6 +132,8 @@ impl SceneParams {
 
 impl State {
     pub async fn new(window: &Window) -> Self {
+        let mut measure = Measure::time();
+
         let sample_count = 4;
 
         let size = if cfg!(target_os = "android") {
@@ -141,6 +144,8 @@ impl State {
         };
 
         let mut geometry: VertexBuffers<GpuVertexUniform, IndexDataType> = VertexBuffers::new();
+
+        measure.breadcrumb("start tessellate");
 
         println!(
             "Using static database from {}",
@@ -153,11 +158,17 @@ impl State {
                 .contents(),
         ))
         .expect("failed to load tile");
-        let (tile_stroke_range, tile_fill_range) = (
-            tile.tesselate_stroke(&mut geometry, STROKE_PRIM_ID),
-            //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
-            tile.tesselate_fill(&mut geometry, FILL_PRIM_ID),
-        );
+
+        measure.breadcrumb("loaded tile");
+
+        let (tile_stroke_range, tile_fill_range) = {
+            (
+                tile.tesselate_stroke(&mut geometry, STROKE_PRIM_ID),
+                //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
+                tile.tesselate_fill(&mut geometry, FILL_PRIM_ID),
+            )
+        };
+        measure.breadcrumb("tessellated tile");
 
         // tile right to it
         let tile = parse_tile_reader(&mut Cursor::new(
@@ -166,11 +177,15 @@ impl State {
                 .contents(),
         ))
         .expect("failed to load tile");
+
+        measure.breadcrumb("loaded tile2");
+
         let (tile2_stroke_range, tile2_fill_range) = (
             tile.tesselate_stroke(&mut geometry, SECOND_TILE_STROKE_PRIM_ID),
             //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
             tile.tesselate_fill(&mut geometry, SECOND_TILE_FILL_PRIM_ID),
         );
+        measure.breadcrumb("tessellated tile2");
 
         // create an instance
         let instance = wgpu::Instance::new(wgpu::Backends::all());
@@ -402,6 +417,8 @@ impl State {
             0.1,
             100000.0,
         );
+
+        measure.breadcrumb("initialized");
 
         Self {
             instance,
