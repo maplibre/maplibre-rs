@@ -5,8 +5,6 @@ use include_dir::{include_dir, Dir, File};
 
 static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 
-static mut TEST: u32 = 0;
-
 pub fn get_source_path() -> &'static str {
     concat!(env!("OUT_DIR"), "/extracted-tiles")
 }
