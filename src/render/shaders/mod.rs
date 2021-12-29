@@ -163,7 +163,7 @@ pub mod tile_mask {
                     // debug_color
                     wgpu::VertexAttribute {
                         offset: 1 * wgpu::VertexFormat::Float32x2.size()
-                            + 2* wgpu::VertexFormat::Float32.size(),
+                            + 2 * wgpu::VertexFormat::Float32.size(),
                         format: wgpu::VertexFormat::Float32x4,
                         shader_location: 7,
                     },

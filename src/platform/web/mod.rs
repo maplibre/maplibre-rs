@@ -1,7 +1,7 @@
+use console_error_panic_hook;
 use std::cell::RefCell;
 use std::panic;
 use std::rc::Rc;
-use console_error_panic_hook;
 
 use js_sys::Array;
 use log::{info, warn, Level};

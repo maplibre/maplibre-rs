@@ -75,16 +75,20 @@ pub struct MaskInstanceUniform {
 }
 
 impl MaskInstanceUniform {
-    pub fn new(position: Vec2f32, target_width: f32, target_height: f32, debug_color: Vec4f32) -> Self {
+    pub fn new(
+        position: Vec2f32,
+        target_width: f32,
+        target_height: f32,
+        debug_color: Vec4f32,
+    ) -> Self {
         Self {
             position,
             target_width,
             target_height,
-            debug_color
+            debug_color,
         }
     }
 }
-
 
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
