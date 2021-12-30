@@ -17,6 +17,15 @@ struct VertexOutput {
 
 let EXTENT = 4096.0;
 
+var<private> VERTICES: array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+    vec2<f32>(0.0, 0.0),
+    vec2<f32>(0.0, EXTENT),
+    vec2<f32>(EXTENT, 0.0),
+    vec2<f32>(EXTENT, 0.0),
+    vec2<f32>(0.0, EXTENT),
+    vec2<f32>(EXTENT, EXTENT)
+);
+
 [[stage(vertex)]]
 fn main(
     [[location(4)]] mask_offset: vec2<f32>,
@@ -26,30 +35,7 @@ fn main(
     [[builtin(vertex_index)]] vertex_idx: u32,
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
-    var a_position: vec2<f32>;
-
-    // Encode a square within the shader
-    switch (vertex_idx) {
-        case 0: {
-            a_position = vec2<f32>(0.0, 0.0);
-        }
-        case 1: {
-            a_position = vec2<f32>(0.0, EXTENT);
-        }
-        case 2: {
-            a_position = vec2<f32>(EXTENT, 0.0);
-        }
-        case 3: {
-            a_position = vec2<f32>(EXTENT, 0.0);
-        }
-        case 4: {
-            a_position = vec2<f32>(0.0, EXTENT);
-        }
-        case 5: {
-            a_position = vec2<f32>(EXTENT, EXTENT);
-        }
-        default: { }
-    }
+    let a_position = VERTICES[vertex_idx];
 
     let scaling: mat3x3<f32> = mat3x3<f32>(
             vec3<f32>(target_width,   0.0,            0.0),
