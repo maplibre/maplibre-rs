@@ -14,8 +14,8 @@ use crate::tesselation::{IndexDataType, Tesselated};
 
 #[derive(Clone)]
 pub struct TesselatedTile {
-    coords: TileCoords,
-    geometry: VertexBuffers<GpuVertexUniform, IndexDataType>,
+    pub coords: TileCoords,
+    pub geometry: VertexBuffers<GpuVertexUniform, IndexDataType>,
 }
 
 #[derive(Clone)]
@@ -50,12 +50,7 @@ impl Pool {
                     let mut geometry: VertexBuffers<GpuVertexUniform, IndexDataType> =
                         VertexBuffers::new();
 
-                    let (_tile_stroke_range, _tile_fill_range) = {
-                        (
-                            tile.tesselate_stroke(&mut geometry, coords.hash()),
-                            tile.tesselate_fill(&mut geometry, coords.hash()),
-                        )
-                    };
+                    tile.tesselate_stroke(&mut geometry, 1);
                     self.responses.push(TesselatedTile { coords, geometry });
                     info!("tile ready: {:?}", &coords);
                 } else {

@@ -2,10 +2,10 @@ use std::cmp;
 use std::io::Cursor;
 use std::ops::Range;
 
-use log::warn;
+use log::{trace, warn};
 use lyon::tessellation::VertexBuffers;
 use wgpu::util::DeviceExt;
-use wgpu::Limits;
+use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::event::{
     DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent,
@@ -15,8 +15,10 @@ use winit::window::Window;
 use vector_tile::parse_tile_reader;
 
 use crate::fps_meter::FPSMeter;
+use crate::io::pool::Pool;
 use crate::io::static_database;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
+use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::{camera, shaders};
 use crate::tesselation::{IndexDataType, Tesselated};
 use crate::util::measure::Measure;
@@ -73,12 +75,7 @@ pub struct State {
     prims_uniform_buffer: wgpu::Buffer,
     globals_uniform_buffer: wgpu::Buffer,
 
-    vertex_uniform_buffer: wgpu::Buffer,
-    indices_uniform_buffer: wgpu::Buffer,
-    tile_fill_range: Range<u32>,
-    tile_stroke_range: Range<u32>,
-    tile2_fill_range: Range<u32>,
-    tile2_stroke_range: Range<u32>,
+    buffer_pool: BufferPool<Queue, Buffer, GpuVertexUniform, IndexDataType>,
 
     tile_mask_instances: wgpu::Buffer,
 
@@ -133,49 +130,10 @@ impl State {
             window.inner_size()
         };
 
-        let mut geometry: VertexBuffers<GpuVertexUniform, IndexDataType> = VertexBuffers::new();
-
-        measure.breadcrumb("start tessellate");
-
         println!(
             "Using static database from {}",
             static_database::get_source_path()
         );
-
-        let tile = parse_tile_reader(&mut Cursor::new(
-            static_database::get_tile(&(2179, 1421, 12).into())
-                .unwrap()
-                .contents(),
-        ))
-        .expect("failed to load tile");
-
-        measure.breadcrumb("loaded tile");
-
-        let (tile_stroke_range, tile_fill_range) = {
-            (
-                tile.tesselate_stroke(&mut geometry, STROKE_PRIM_ID),
-                //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
-                tile.tesselate_fill(&mut geometry, FILL_PRIM_ID),
-            )
-        };
-        measure.breadcrumb("tessellated tile");
-
-        // tile right to it
-        let tile = parse_tile_reader(&mut Cursor::new(
-            static_database::get_tile(&(2180, 1421, 12).into())
-                .unwrap()
-                .contents(),
-        ))
-        .expect("failed to load tile");
-
-        measure.breadcrumb("loaded tile2");
-
-        let (tile2_stroke_range, tile2_fill_range) = (
-            tile.tesselate_stroke(&mut geometry, SECOND_TILE_STROKE_PRIM_ID),
-            //tile.empty_range(&mut geometry, STROKE_PRIM_ID),
-            tile.tesselate_fill(&mut geometry, SECOND_TILE_FILL_PRIM_ID),
-        );
-        measure.breadcrumb("tessellated tile2");
 
         // create an instance
         let instance = wgpu::Instance::new(wgpu::Backends::all());
@@ -221,16 +179,18 @@ impl State {
             .await
             .unwrap();
 
-        let vertex_uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        let vertex_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
-            contents: bytemuck::cast_slice(&geometry.vertices),
-            usage: wgpu::BufferUsages::VERTEX,
+            size: 1024 * 1024 * 16,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
         });
 
-        let indices_uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        let indices_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
-            contents: bytemuck::cast_slice(&geometry.indices),
-            usage: wgpu::BufferUsages::INDEX,
+            size: 1024 * 1024 * 16,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
         });
 
         let instances = [
@@ -405,20 +365,18 @@ impl State {
             multisampling_texture,
             depth_texture,
             sample_count,
-            tile_fill_range,
             scene: SceneParams::new(),
-            vertex_uniform_buffer,
             globals_uniform_buffer,
             prims_uniform_buffer,
-            indices_uniform_buffer,
             fps_meter: FPSMeter::new(),
-            tile_stroke_range,
-            tile2_fill_range,
             tile_mask_instances,
             camera,
             projection,
-            tile2_stroke_range,
             suspended: false, // Initially the app is not suspended
+            buffer_pool: BufferPool::new(
+                BackingBufferDescriptor(vertex_uniform_buffer, 1024 * 1024 * 16),
+                BackingBufferDescriptor(indices_uniform_buffer, 1024 * 1024 * 16),
+            ),
         }
     }
 
@@ -467,6 +425,12 @@ impl State {
         }
     }
 
+    pub fn update(&mut self, pool: &Pool) {
+        for tile in pool.pop_all().iter() {
+            self.buffer_pool
+                .allocate_geometry(&self.queue, tile.coords, &tile.geometry);
+        }
+    }
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let frame = self.surface.get_current_texture()?;
         let scene = &mut self.scene;
@@ -543,24 +507,27 @@ impl State {
                 pass.draw(0..6, 0..11);
             }
             {
-                pass.set_pipeline(&self.render_pipeline);
-                pass.set_stencil_reference(1);
-                pass.set_index_buffer(self.indices_uniform_buffer.slice(..), INDEX_FORMAT);
-                pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
-                if !self.tile_fill_range.is_empty() {
-                    pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
+                for entry in self.buffer_pool.available_vertices() {
+                    pass.set_pipeline(&self.render_pipeline);
+                    pass.set_stencil_reference(1);
+                    pass.set_index_buffer(
+                        self.buffer_pool
+                            .indices()
+                            .slice(entry.indices_buffer_range()),
+                        INDEX_FORMAT,
+                    );
+                    pass.set_vertex_buffer(
+                        0,
+                        self.buffer_pool
+                            .vertices()
+                            .slice(entry.vertices_buffer_range()),
+                    );
+                    /* if !self.tile_fill_range.is_empty() {
+                        pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
+                    }*/
+                    trace!("current buffer_pool index {:?}", self.buffer_pool.index);
+                    pass.draw_indexed(entry.indices_range(), 0, 0..1);
                 }
-                pass.draw_indexed(self.tile_stroke_range.clone(), 0, 0..1);
-            }
-            {
-                pass.set_pipeline(&self.render_pipeline);
-                pass.set_stencil_reference(2);
-                pass.set_index_buffer(self.indices_uniform_buffer.slice(..), INDEX_FORMAT);
-                pass.set_vertex_buffer(0, self.vertex_uniform_buffer.slice(..));
-                if !self.tile2_fill_range.is_empty() {
-                    pass.draw_indexed(self.tile2_fill_range.clone(), 0, 0..1);
-                }
-                pass.draw_indexed(self.tile2_stroke_range.clone(), 0, 0..1);
             }
         }
 

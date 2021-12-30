@@ -10,8 +10,8 @@ use crate::render::state::State;
 pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, pool: Pool) {
     info!("== mapr ==");
 
-    for x in 0..10 {
-        for y in 0..10 {
+    for x in 0..2 {
+        for y in 0..2 {
             pool.fetch((2179 + x, 1421 + y, 12).into())
         }
     }
@@ -63,6 +63,7 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, poo
                 let dt = now - last_render_time;
                 last_render_time = now;
                 input.update_state(&mut state, dt);
+                state.update(&pool);
                 match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if lost
