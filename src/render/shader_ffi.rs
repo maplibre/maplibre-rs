@@ -65,6 +65,12 @@ impl GpuVertexUniform {
     }
 }
 
+impl Default for GpuVertexUniform {
+    fn default() -> Self {
+        GpuVertexUniform::new([0.0, 0.0], [0.0, 0.0], 0)
+    }
+}
+
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct MaskInstanceUniform {
