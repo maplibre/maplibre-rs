@@ -20,7 +20,7 @@ mod tests {
 
     #[test]
     fn test_tiles_available() {
-        assert!(get_tile((0, 0, 0).into()).is_none()); // World overview
-        assert!(get_tile((2179, 1421, 12).into()).is_some()); // Maxvorstadt Munich
+        assert!(get_tile(&(0, 0, 0).into()).is_none()); // World overview
+        assert!(get_tile(&(2179, 1421, 12).into()).is_some()); // Maxvorstadt Munich
     }
 }
