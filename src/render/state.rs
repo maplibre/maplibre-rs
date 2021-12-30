@@ -1,4 +1,5 @@
 use std::cmp;
+use std::default::Default;
 use std::io::Cursor;
 use std::ops::Range;
 
@@ -16,7 +17,7 @@ use vector_tile::parse_tile_reader;
 
 use crate::fps_meter::FPSMeter;
 use crate::io::cache::Cache;
-use crate::io::static_database;
+use crate::io::{static_database, TileCoords};
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::{camera, shaders};
@@ -29,25 +30,15 @@ use super::texture::Texture;
 
 pub struct SceneParams {
     pub stroke_width: f32,
-    pub cpu_primitives: Vec<PrimitiveUniform>,
 }
 
 impl Default for SceneParams {
     fn default() -> Self {
-        SceneParams {
-            stroke_width: 1.0,
-            cpu_primitives: vec![],
-        }
+        SceneParams { stroke_width: 1.0 }
     }
 }
 
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32;
-
-const PRIM_BUFFER_LEN: usize = 256;
-const STROKE_PRIM_ID: u32 = 0;
-const FILL_PRIM_ID: u32 = 1;
-const SECOND_TILE_FILL_PRIM_ID: u32 = 2;
-const SECOND_TILE_STROKE_PRIM_ID: u32 = 5;
 
 pub struct State {
     instance: wgpu::Instance,
@@ -72,7 +63,7 @@ pub struct State {
 
     depth_texture: Texture,
 
-    prims_uniform_buffer: wgpu::Buffer,
+    tiles_uniform_buffer: wgpu::Buffer,
     globals_uniform_buffer: wgpu::Buffer,
 
     buffer_pool: BufferPool<Queue, Buffer, GpuVertexUniform, IndexDataType>,
@@ -87,31 +78,7 @@ pub struct State {
 
 impl SceneParams {
     pub fn new() -> Self {
-        let mut cpu_primitives = Vec::with_capacity(PRIM_BUFFER_LEN);
-        for _ in 0..PRIM_BUFFER_LEN {
-            cpu_primitives.push(PrimitiveUniform::new(
-                [1.0, 0.0, 0.0, 1.0],
-                [0.0, 0.0],
-                0,
-                0.0,
-                0.0,
-                1.0,
-            ));
-        }
-
-        // Stroke primitive
-        cpu_primitives[STROKE_PRIM_ID as usize] =
-            PrimitiveUniform::new([1.0, 0.0, 1.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
-        cpu_primitives[SECOND_TILE_STROKE_PRIM_ID as usize] =
-            PrimitiveUniform::new([0.5, 0.8, 0.1, 1.0], [4096.0, 0.0], 0, 1.0, 0.0, 1.0);
-        // Main fill primitive
-        cpu_primitives[FILL_PRIM_ID as usize] =
-            PrimitiveUniform::new([0.0, 0.0, 1.0, 1.0], [0.0, 0.0], 0, 1.0, 0.0, 1.0);
-        cpu_primitives[SECOND_TILE_FILL_PRIM_ID as usize] =
-            PrimitiveUniform::new([0.0, 1.0, 1.0, 1.0], [4096.0, 0.0], 0, 1.0, 0.0, 1.0);
-
         Self {
-            cpu_primitives,
             ..SceneParams::default()
         }
     }
@@ -198,18 +165,14 @@ impl State {
             MaskInstanceUniform::new([0.0, 0.0], 4.0, 4.0, [1.0, 0.0, 0.0, 1.0]), // horizontal
             //MaskInstanceUniform::new([0.0, 2.0 * 4096.0], 4.0, 1.0, [1.0, 0.0, 0.0, 1.0]), // vertical
             // Step 2
-            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, 4.0, [0.0, 0.0, 1.0, 1.0]), // vertical
-            MaskInstanceUniform::new([0.0, 1.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
-            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, 4.0, [0.0, 0.0, 1.0, 1.0]), // vertical
-            MaskInstanceUniform::new([0.0, 3.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, 4.0, [0.0, 1.0, 0.0, 1.0]), // vertical
+            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, 4.0, [0.0, 1.0, 0.0, 1.0]), // vertical
             // Step 3
-            MaskInstanceUniform::new([0.0, 1.0 * 4096.0], 4.0, 1.0, [0.0, 1.0, 0.0, 1.0]), // horizontal
-            MaskInstanceUniform::new([0.0, 3.0 * 4096.0], 4.0, 1.0, [0.0, 1.0, 0.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([0.0, 1.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([0.0, 3.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
             // Step 4
-            MaskInstanceUniform::new([0.0, 1.0 * 4096.0], 1.0, 1.0, [0.0, 1.0, 1.0, 1.0]), // horizontal
-            MaskInstanceUniform::new([0.0, 3.0 * 4096.0], 1.0, 1.0, [0.0, 1.0, 1.0, 1.0]), // horizontal
-            MaskInstanceUniform::new([2.0 * 4096.0, 1.0 * 4096.0], 1.0, 1.0, [0.0, 1.0, 1.0, 1.0]), // horizontal
-            MaskInstanceUniform::new([2.0 * 4096.0, 3.0 * 4096.0], 1.0, 1.0, [0.0, 1.0, 1.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, 4.0, [0.5, 0.25, 0.5, 1.0]), // vertical
+            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, 4.0, [0.5, 0.25, 0.5, 1.0]), // vertical
         ];
 
         let tile_mask_instances = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -218,18 +181,15 @@ impl State {
             usage: wgpu::BufferUsages::VERTEX,
         });
 
-        let prim_buffer_byte_size = cmp::max(
-            MIN_BUFFER_SIZE,
-            (PRIM_BUFFER_LEN * std::mem::size_of::<PrimitiveUniform>()) as u64,
-        );
         let globals_buffer_byte_size = cmp::max(
             MIN_BUFFER_SIZE,
             std::mem::size_of::<GlobalsUniform>() as u64,
         );
 
-        let prims_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Prims ubo"),
-            size: prim_buffer_byte_size,
+        let tiles_uniform_buffer_size = std::mem::size_of::<TileUniform>() as u64 * 128; // FIXME: Tile count?
+        let tiles_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Tiles ubo"),
+            size: tiles_uniform_buffer_size,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -260,7 +220,7 @@ impl State {
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(prim_buffer_byte_size),
+                        min_binding_size: wgpu::BufferSize::new(tiles_uniform_buffer_size),
                     },
                     count: None,
                 },
@@ -280,7 +240,7 @@ impl State {
                 wgpu::BindGroupEntry {
                     binding: 1,
                     resource: wgpu::BindingResource::Buffer(
-                        prims_uniform_buffer.as_entire_buffer_binding(),
+                        tiles_uniform_buffer.as_entire_buffer_binding(),
                     ),
                 },
             ],
@@ -367,7 +327,7 @@ impl State {
             sample_count,
             scene: SceneParams::new(),
             globals_uniform_buffer,
-            prims_uniform_buffer,
+            tiles_uniform_buffer: tiles_uniform_buffer,
             fps_meter: FPSMeter::new(),
             tile_mask_instances,
             camera,
@@ -425,12 +385,34 @@ impl State {
         }
     }
 
-    pub fn update(&mut self, cache: &Cache) {
-        for tile in cache.pop_all().iter() {
+    pub fn upload_tile_geometry(&mut self, cache: &Cache) {
+        const OFFSET_X: u32 = 2179;
+        const OFFSET_Y: u32 = 1421;
+
+        let upload = cache.pop_all();
+
+        for tile in upload.iter() {
+            let new_coords = TileCoords {
+                x: tile.coords.x - OFFSET_X,
+                y: tile.coords.y - OFFSET_Y,
+                z: tile.coords.z,
+            };
+
             self.buffer_pool
-                .allocate_geometry(&self.queue, tile.coords, &tile.geometry);
+                .allocate_geometry(&self.queue, tile.id, new_coords, &tile.geometry);
+
+            let uniform = TileUniform::new(
+                [0.0, 0.0, 0.0, 1.0],
+                [new_coords.x as f32 * 4096.0, new_coords.y as f32 * 4096.0],
+            );
+            self.queue.write_buffer(
+                &self.tiles_uniform_buffer,
+                std::mem::size_of::<TileUniform>() as u64 * tile.id as u64,
+                bytemuck::cast_slice(&[uniform]),
+            );
         }
     }
+
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let frame = self.surface.get_current_texture()?;
         let scene = &mut self.scene;
@@ -445,12 +427,6 @@ impl State {
                 bytemuck::cast_slice(&[GlobalsUniform::new(
                     self.camera.create_camera_uniform(&self.projection),
                 )]),
-            );
-
-            self.queue.write_buffer(
-                &self.prims_uniform_buffer,
-                0,
-                bytemuck::cast_slice(&scene.cpu_primitives),
             );
         }
 
@@ -504,12 +480,21 @@ impl State {
                 pass.set_pipeline(&self.mask_pipeline);
                 pass.set_vertex_buffer(0, self.tile_mask_instances.slice(..));
                 // Draw 11 squares each out of 6 vertices
-                pass.draw(0..6, 0..11);
+                pass.draw(0..6, 0..7);
             }
             {
                 for entry in self.buffer_pool.available_vertices() {
+                    let TileCoords { x, y, .. } = entry.coords;
+
                     pass.set_pipeline(&self.render_pipeline);
-                    pass.set_stencil_reference(1);
+                    let reference = match (x, y) {
+                        (x, y) if x % 2 == 0 && y % 2 == 0 => 1,
+                        (x, y) if x % 2 == 0 && y % 2 != 0 => 2,
+                        (x, y) if x % 2 != 0 && y % 2 == 0 => 3,
+                        (x, y) if x % 2 != 0 && y % 2 != 0 => 4,
+                        _ => 0,
+                    };
+                    pass.set_stencil_reference(reference);
                     pass.set_index_buffer(
                         self.buffer_pool
                             .indices()
@@ -526,7 +511,12 @@ impl State {
                         pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
                     }*/
                     trace!("current buffer_pool index {:?}", self.buffer_pool.index);
-                    pass.draw_indexed(entry.indices_range(), 0, 0..1);
+                    // FIXME: Custom Instance index possibly breaks on Metal
+                    pass.draw_indexed(
+                        entry.indices_range(),
+                        0,
+                        entry.id as u32..(entry.id + 1) as u32,
+                    );
                 }
             }
         }

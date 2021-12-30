@@ -37,7 +37,7 @@ pub fn create_map_render_pipeline_description<'a>(
         }
     } else {
         wgpu::StencilFaceState {
-            compare: wgpu::CompareFunction::Always,
+            compare: wgpu::CompareFunction::Equal,
             fail_op: wgpu::StencilOperation::Keep,
             depth_fail_op: wgpu::StencilOperation::Keep,
             pass_op: wgpu::StencilOperation::Keep,

@@ -64,6 +64,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod> BufferPool<Q, B, V, I> 
     pub fn allocate_geometry(
         &mut self,
         queue: &Q,
+        id: u32,
         coords: TileCoords,
         geometry: &VertexBuffers<V, I>,
     ) {
@@ -73,6 +74,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod> BufferPool<Q, B, V, I> 
         let new_indices = (geometry.indices.len() * indices_stride) as wgpu::BufferAddress;
 
         let maybe_entry = IndexEntry {
+            id,
             coords,
             indices_stride: indices_stride as u64,
             vertices: self.vertices.make_room(new_vertices, &mut self.index, true),
@@ -182,6 +184,7 @@ impl<B> BackingBuffer<B> {
 
 #[derive(Debug)]
 pub struct IndexEntry {
+    pub id: u32,
     pub coords: TileCoords,
     indices_stride: u64,
     vertices: Range<wgpu::BufferAddress>,

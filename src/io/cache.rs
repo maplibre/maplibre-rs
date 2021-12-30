@@ -14,12 +14,14 @@ use crate::tesselation::{IndexDataType, Tesselated};
 
 #[derive(Clone)]
 pub struct TesselatedTile {
+    pub id: u32,
     pub coords: TileCoords,
     pub geometry: VertexBuffers<GpuVertexUniform, IndexDataType>,
 }
 
 #[derive(Clone)]
 pub struct Cache {
+    current_id: u32,
     requests: Arc<WorkQueue<TileCoords>>,
     responses: Arc<WorkQueue<TesselatedTile>>,
 }
@@ -27,6 +29,7 @@ pub struct Cache {
 impl Cache {
     pub fn new() -> Self {
         Self {
+            current_id: 0,
             requests: Arc::new(WorkQueue::new()),
             responses: Arc::new(WorkQueue::new()),
         }
@@ -41,7 +44,7 @@ impl Cache {
         self.responses.try_pop_all()
     }
 
-    pub fn run_loop(&self) {
+    pub fn run_loop(&mut self) {
         loop {
             while let Some(coords) = self.requests.pop() {
                 if let Some(file) = static_database::get_tile(&coords) {
@@ -51,7 +54,12 @@ impl Cache {
                         VertexBuffers::new();
 
                     tile.tesselate_stroke(&mut geometry, 1);
-                    self.responses.push(TesselatedTile { coords, geometry });
+                    self.responses.push(TesselatedTile {
+                        id: self.current_id,
+                        coords,
+                        geometry,
+                    });
+                    self.current_id += 1;
                     info!("tile ready: {:?}", &coords);
                 } else {
                     info!("tile failed: {:?}", &coords);

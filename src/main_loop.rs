@@ -63,7 +63,7 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cac
                 let dt = now - last_render_time;
                 last_render_time = now;
                 input.update_state(&mut state, dt);
-                state.update(&cache);
+                state.upload_tile_geometry(&cache);
                 match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if lost

@@ -12,7 +12,7 @@ fn main() {
         .build(&event_loop)
         .unwrap();
 
-    let cache_io = Cache::new();
+    let mut cache_io = Cache::new();
     let cache_main = cache_io.clone();
 
     std::thread::spawn(move || {

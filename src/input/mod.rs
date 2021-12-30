@@ -111,7 +111,7 @@ impl InputHandler {
             scene.stroke_width + (self.target_stroke_width - scene.stroke_width) / 5.0;
 
         // Animate the strokes of primitive
-        scene.cpu_primitives[0 as usize].width = scene.stroke_width;
+        /*        scene.cpu_primitives[0 as usize].width = scene.stroke_width;*/
         /*
         scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
                     (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
