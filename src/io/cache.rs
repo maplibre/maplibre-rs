@@ -19,12 +19,12 @@ pub struct TesselatedTile {
 }
 
 #[derive(Clone)]
-pub struct Pool {
+pub struct Cache {
     requests: Arc<WorkQueue<TileCoords>>,
     responses: Arc<WorkQueue<TesselatedTile>>,
 }
 
-impl Pool {
+impl Cache {
     pub fn new() -> Self {
         Self {
             requests: Arc::new(WorkQueue::new()),

@@ -1,4 +1,4 @@
-use mapr::io::pool::Pool;
+use mapr::io::cache::Cache;
 use mapr::main_loop;
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
@@ -12,12 +12,12 @@ fn main() {
         .build(&event_loop)
         .unwrap();
 
-    let io_tile_pool = Pool::new();
-    let main_tile_pool = io_tile_pool.clone();
+    let cache_io = Cache::new();
+    let cache_main = cache_io.clone();
 
     std::thread::spawn(move || {
-        io_tile_pool.run_loop();
+        cache_io.run_loop();
     });
 
-    pollster::block_on(main_loop::setup(window, event_loop, main_tile_pool));
+    pollster::block_on(main_loop::setup(window, event_loop, cache_main));
 }

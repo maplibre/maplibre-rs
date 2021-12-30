@@ -15,7 +15,7 @@ use winit::window::Window;
 use vector_tile::parse_tile_reader;
 
 use crate::fps_meter::FPSMeter;
-use crate::io::pool::Pool;
+use crate::io::cache::Cache;
 use crate::io::static_database;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
@@ -425,8 +425,8 @@ impl State {
         }
     }
 
-    pub fn update(&mut self, pool: &Pool) {
-        for tile in pool.pop_all().iter() {
+    pub fn update(&mut self, cache: &Cache) {
+        for tile in cache.pop_all().iter() {
             self.buffer_pool
                 .allocate_geometry(&self.queue, tile.coords, &tile.geometry);
         }
