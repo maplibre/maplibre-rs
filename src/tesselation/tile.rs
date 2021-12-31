@@ -1,3 +1,4 @@
+use lyon::lyon_tessellation::LineJoin;
 use lyon::tessellation;
 use lyon::tessellation::geometry_builder::MaxIndex;
 use lyon::tessellation::{
@@ -97,7 +98,7 @@ impl<
         tesselator
             .tessellate_path(
                 &tile_path,
-                &StrokeOptions::tolerance(DEFAULT_TOLERANCE),
+                &StrokeOptions::default(),
                 &mut BuffersBuilder::new(buffer, WithId(prim_id)),
             )
             .unwrap();
@@ -119,7 +120,7 @@ impl<
         tesselator
             .tessellate_path(
                 &tile_path,
-                &FillOptions::tolerance(DEFAULT_TOLERANCE),
+                &FillOptions::default(),
                 &mut BuffersBuilder::new(buffer, WithId(prim_id)),
             )
             .unwrap();

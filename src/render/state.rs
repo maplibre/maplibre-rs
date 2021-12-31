@@ -386,7 +386,7 @@ impl State {
     }
 
     pub fn upload_tile_geometry(&mut self, cache: &Cache) {
-        const OFFSET_X: u32 = 2179;
+        const OFFSET_X: u32 = 2178;
         const OFFSET_Y: u32 = 1421;
 
         let upload = cache.pop_all();

@@ -10,9 +10,9 @@ use crate::render::state::State;
 pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cache: Cache) {
     info!("== mapr ==");
 
-    for x in 0..2 {
-        for y in 0..2 {
-            cache.fetch((2179 + x, 1421 + y, 12).into())
+    for x in 0..6 {
+        for y in 0..6 {
+            cache.fetch((2178 + x, 1421 + y, 12).into())
         }
     }
 
