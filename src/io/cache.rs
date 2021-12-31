@@ -88,8 +88,6 @@ impl<T: Send> WorkQueue<T> {
             while let Some(element) = queue.pop_front() {
                 result.push(element);
             }
-        } else {
-            panic!("locking failed");
         }
         result
     }
