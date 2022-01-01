@@ -27,9 +27,11 @@ pub fn parse_tile<P: AsRef<Path>>(path: P) -> Result<Tile, Error> {
 }
 
 pub fn parse_tile_reader<B: BufRead>(reader: &mut B) -> Result<Tile, Error> {
-    if reader.fill_buf()?.is_empty() {
-        return Err(Error::Generic("input must not be empty".to_string()));
-    }
     let proto_tile = TileProto::parse_from_reader(reader)?;
+    Ok(proto_tile.decode())
+}
+
+pub fn parse_tile_bytes(bytes: &[u8]) -> Result<Tile, Error> {
+    let proto_tile = TileProto::parse_from_bytes(bytes)?;
     Ok(proto_tile.decode())
 }

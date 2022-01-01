@@ -2,10 +2,10 @@ use std::collections::VecDeque;
 use std::io::Cursor;
 use std::sync::{Arc, Condvar, Mutex};
 
-use log::info;
+use log::{error, info};
 use lyon::tessellation::VertexBuffers;
 
-use vector_tile::parse_tile_reader;
+use vector_tile::parse_tile_bytes;
 use vector_tile::tile::Tile;
 
 use crate::io::{static_database, TileCoords};
@@ -21,15 +21,19 @@ pub struct TesselatedTile {
 
 #[derive(Clone)]
 pub struct Cache {
-    current_id: u32,
     requests: Arc<WorkQueue<TileCoords>>,
     responses: Arc<WorkQueue<TesselatedTile>>,
+}
+
+impl Drop for Cache {
+    fn drop(&mut self) {
+        error!("Cache dropped, even though it should never drop!");
+    }
 }
 
 impl Cache {
     pub fn new() -> Self {
         Self {
-            current_id: 0,
             requests: Arc::new(WorkQueue::new()),
             responses: Arc::new(WorkQueue::new()),
         }
@@ -45,21 +49,27 @@ impl Cache {
     }
 
     pub fn run_loop(&mut self) {
+        let mut current_id = 0;
         loop {
             while let Some(coords) = self.requests.pop() {
                 if let Some(file) = static_database::get_tile(&coords) {
-                    let tile = parse_tile_reader(&mut Cursor::new(file.contents()))
-                        .expect("failed to load tile");
+                    info!(
+                        "preparing tile {} with {}bytes",
+                        &coords,
+                        file.contents().len()
+                    );
+                    let tile = parse_tile_bytes(file.contents()).expect("failed to load tile");
+
                     let mut geometry: VertexBuffers<GpuVertexUniform, IndexDataType> =
                         VertexBuffers::new();
 
                     tile.tesselate_stroke(&mut geometry, 1);
                     self.responses.push(TesselatedTile {
-                        id: self.current_id,
+                        id: current_id,
                         coords,
                         geometry,
                     });
-                    self.current_id += 1;
+                    current_id += 1;
                     info!("tile ready: {:?}", &coords);
                 } else {
                     info!("tile failed: {:?}", &coords);
