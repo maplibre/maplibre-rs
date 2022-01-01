@@ -6,14 +6,12 @@ use std::ops::Range;
 use log::{trace, warn};
 use lyon::tessellation::VertexBuffers;
 use wgpu::util::DeviceExt;
-use wgpu::{Buffer, Limits, Queue};
+use wgpu::{Buffer, BufferAddress, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::event::{
     DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent,
 };
 use winit::window::Window;
-
-use vector_tile::parse_tile_reader;
 
 use crate::fps_meter::FPSMeter;
 use crate::io::cache::Cache;
@@ -190,7 +188,7 @@ impl State {
         let tiles_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Tiles ubo"),
             size: tiles_uniform_buffer_size,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
 
@@ -203,47 +201,27 @@ impl State {
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("Bind group layout"),
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(globals_buffer_byte_size),
-                    },
-                    count: None,
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: wgpu::BufferSize::new(globals_buffer_byte_size),
                 },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(tiles_uniform_buffer_size),
-                    },
-                    count: None,
-                },
-            ],
+                count: None,
+            }],
         });
 
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("Bind group"),
             layout: &bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::Buffer(
-                        globals_uniform_buffer.as_entire_buffer_binding(),
-                    ),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Buffer(
-                        tiles_uniform_buffer.as_entire_buffer_binding(),
-                    ),
-                },
-            ],
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::Buffer(
+                    globals_uniform_buffer.as_entire_buffer_binding(),
+                ),
+            }],
         });
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -327,7 +305,7 @@ impl State {
             sample_count,
             scene: SceneParams::new(),
             globals_uniform_buffer,
-            tiles_uniform_buffer: tiles_uniform_buffer,
+            tiles_uniform_buffer,
             fps_meter: FPSMeter::new(),
             tile_mask_instances,
             camera,
@@ -507,16 +485,20 @@ impl State {
                             .vertices()
                             .slice(entry.vertices_buffer_range()),
                     );
+                    let id = entry.id as BufferAddress;
+                    pass.set_vertex_buffer(
+                        1,
+                        self.tiles_uniform_buffer.slice(
+                            std::mem::size_of::<TileUniform>() as u64 * id
+                                ..std::mem::size_of::<TileUniform>() as u64 * (id + 1),
+                        ),
+                    );
                     /* if !self.tile_fill_range.is_empty() {
                         pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
                     }*/
                     trace!("current buffer_pool index {:?}", self.buffer_pool.index);
                     // FIXME: Custom Instance index possibly breaks on Metal
-                    pass.draw_indexed(
-                        entry.indices_range(),
-                        0,
-                        entry.id as u32..(entry.id + 1) as u32,
-                    );
+                    pass.draw_indexed(entry.indices_range(), 0, 0..1);
                 }
             }
         }

@@ -15,12 +15,7 @@ struct TileUniform {
     pad2: i32;
 };
 
-struct Tiles {
-    tiles: [[stride(32)]] array<TileUniform, 128>;
-};
-
 [[group(0), binding(0)]] var<uniform> globals: GlobalsUniform;
-[[group(0), binding(1)]] var<uniform> tiles: Tiles;
 
 struct VertexOutput {
     [[location(0)]] v_color: vec4<f32>;
@@ -32,14 +27,15 @@ fn main(
     [[location(0)]] position: vec2<f32>,
     [[location(1)]] normal: vec2<f32>,
     [[location(2)]] tile_id: u32,
+    [[location(3)]] color: vec4<f32>,
+    [[location(4)]] translate: vec2<f32>,
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
-    let tile = tiles.tiles[instance_idx];
     let z = 0.0;
 
-    let world_pos = position + tile.translate + normal;
+    let world_pos = position + translate + normal;
 
     let position = globals.camera.view_proj * vec4<f32>(world_pos, z, 1.0);
 
-    return VertexOutput(tile.color, position);
+    return VertexOutput(color, position);
 }

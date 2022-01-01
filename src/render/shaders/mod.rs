@@ -65,33 +65,53 @@ impl VertexShaderState {
 
 pub mod tile {
     use crate::platform::COLOR_TEXTURE_FORMAT;
-    use crate::render::shader_ffi::GpuVertexUniform;
+    use crate::render::shader_ffi::{GpuVertexUniform, TileUniform};
 
     use super::{FragmentShaderState, VertexShaderState};
 
     pub const VERTEX: VertexShaderState = VertexShaderState::new(
         include_str!("tile.vertex.wgsl"),
-        &[wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &[
-                wgpu::VertexAttribute {
-                    offset: 0,
-                    format: wgpu::VertexFormat::Float32x2,
-                    shader_location: 0,
-                },
-                wgpu::VertexAttribute {
-                    offset: wgpu::VertexFormat::Float32x2.size(),
-                    format: wgpu::VertexFormat::Float32x2,
-                    shader_location: 1,
-                },
-                wgpu::VertexAttribute {
-                    offset: 2 * wgpu::VertexFormat::Float32x2.size(),
-                    format: wgpu::VertexFormat::Uint32,
-                    shader_location: 2,
-                },
-            ],
-        }],
+        &[
+            wgpu::VertexBufferLayout {
+                array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
+                step_mode: wgpu::VertexStepMode::Vertex,
+                attributes: &[
+                    wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Float32x2,
+                        shader_location: 0,
+                    },
+                    wgpu::VertexAttribute {
+                        offset: wgpu::VertexFormat::Float32x2.size(),
+                        format: wgpu::VertexFormat::Float32x2,
+                        shader_location: 1,
+                    },
+                    wgpu::VertexAttribute {
+                        offset: 2 * wgpu::VertexFormat::Float32x2.size(),
+                        format: wgpu::VertexFormat::Uint32,
+                        shader_location: 2,
+                    },
+                ],
+            },
+            wgpu::VertexBufferLayout {
+                array_stride: std::mem::size_of::<TileUniform>() as u64,
+                step_mode: wgpu::VertexStepMode::Instance,
+                attributes: &[
+                    // color
+                    wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: 3,
+                    },
+                    // translate
+                    wgpu::VertexAttribute {
+                        offset: wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32x2,
+                        shader_location: 4,
+                    },
+                ],
+            },
+        ],
     );
 
     pub const FRAGMENT: FragmentShaderState = FragmentShaderState::new(
