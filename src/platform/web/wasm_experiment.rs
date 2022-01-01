@@ -21,7 +21,7 @@ pub fn test_fetch(web_window: &Window) {
 #[wasm_bindgen]
 pub fn test_shared_mem(memory: &JsValue) {
     let worker = web_sys::Worker::new_with_options(
-        "./fetch-worker.js",
+        "./cache-worker.js",
         // Works only on chrome
         &web_sys::WorkerOptions::new().type_(web_sys::WorkerType::Module),
     )

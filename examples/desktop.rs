@@ -19,5 +19,5 @@ fn main() {
         cache_io.run_loop();
     });
 
-    pollster::block_on(main_loop::setup(window, event_loop, cache_main));
+    pollster::block_on(main_loop::setup(window, event_loop, Box::new(cache_main)));
 }

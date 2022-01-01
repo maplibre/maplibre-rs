@@ -7,7 +7,7 @@ use crate::io::cache::Cache;
 use crate::platform::Instant;
 use crate::render::state::State;
 
-pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cache: Cache) {
+pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cache: Box<Cache>) {
     info!("== mapr ==");
 
     for x in 0..6 {
