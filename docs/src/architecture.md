@@ -3,6 +3,12 @@
 
 ## GPU Architecture
 
+The big picture of wgpu is as follows:
+
+![](https://raw.githubusercontent.com/gfx-rs/wgpu/8f02b73655aff641361822a8ac0347fc47622b49/etc/big-picture.png)
+
+A simplified version is shown below:
+
 ![](./figures/gpu-stack.drawio.svg)
 
 Notes:

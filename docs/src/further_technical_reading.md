@@ -86,6 +86,12 @@ Projects:
 * [SDF Render](https://docs.rs/sdf_glyph_renderer/latest/sdf_glyph_renderer/)
 * [pbf_font_tools](https://github.com/stadiamaps/pbf_font_tools)
 
+## Tesselation
+
+Projects:
+
+* [earcutr](https://github.com/donbright/earcutr)
+
 ## Render Graphs
 
 * https://github.com/metal-by-example/simple-instancing/blob/master/MetalSimpleInstancing/Renderer.swift
