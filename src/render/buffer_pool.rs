@@ -25,6 +25,8 @@ impl Queue<wgpu::Buffer> for wgpu::Queue {
     }
 }
 
+/// This is inspired by the memory pool in Vulkan documented
+/// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
 #[derive(Debug)]
 pub struct BufferPool<Q, B, V, I> {
     vertices: BackingBuffer<B>,
