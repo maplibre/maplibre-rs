@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 pub mod cache;
 pub mod static_database;
 
@@ -11,6 +13,12 @@ pub struct TileCoords {
 impl TileCoords {
     fn hash(&self) -> u32 {
         self.x + self.y + self.z as u32
+    }
+}
+
+impl Display for TileCoords {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({x}, {y}, {z})", x = self.x, y = self.y, z = self.z)
     }
 }
 
