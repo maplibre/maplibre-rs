@@ -16,14 +16,15 @@
     "url": "https://github.com/maxammann/mapr"
   },
   "dependencies": {
+    "spectorjs": "^0.9.27"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "^1.6.0",
     "copy-webpack-plugin": "^10.0.0",
+    "wasm-pack": "^0.10.1",
     "webpack": "^5.65.0",
     "webpack-cli": "^4.9.1",
-    "webpack-dev-server": "^4.6.0",
-    "wasm-pack": "^0.10.1"
+    "webpack-dev-server": "^4.6.0"
   },
   "keywords": [
     "wasm",

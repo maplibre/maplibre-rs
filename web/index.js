@@ -1,6 +1,9 @@
 import init from "./dist/libs/mapr";
+import {Spector} from "spectorjs";
 
 const start = async () => {
+    let spector = new Spector();
+    spector.displayUI();
     let MEMORY = 16 * 1024;
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY, shared: true});
     const module = await init(undefined, memory);
