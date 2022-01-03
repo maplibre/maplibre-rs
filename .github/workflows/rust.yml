@@ -156,8 +156,8 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr && find ~/public_html/mapr -type f -not -name ".htaccess" -delete'
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr/webgl && find ~/public_html/mapr/webgl -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/webgl/
 
   build-wasm-webgpu:
     runs-on: ubuntu-20.04
@@ -192,8 +192,8 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr-webgpu && find ~/public_html/mapr-webgpu -type f -not -name ".htaccess" -delete'
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr-webgpu/
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr/webgpu && find ~/public_html/mapr/webgpu -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/webgpu/
 
   book:
     runs-on: ubuntu-20.04
@@ -226,5 +226,5 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr-docs && find ~/public_html/mapr-docs -type f -not -name ".htaccess" -delete'
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "book/." max@maxammann.org:~/public_html/mapr-docs/
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr/docs && find ~/public_html/mapr/docs -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "book/." max@maxammann.org:~/public_html/mapr/docs/
