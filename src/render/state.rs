@@ -363,6 +363,8 @@ impl State {
         }
     }
 
+    // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
+    // TODO: What is StagingBelt for?
     pub fn upload_tile_geometry(&mut self, cache: &Cache) {
         const OFFSET_X: u32 = 2178;
         const OFFSET_Y: u32 = 1421;

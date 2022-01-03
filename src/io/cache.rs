@@ -81,6 +81,8 @@ impl Cache {
 
 struct WorkQueue<T: Send> {
     inner: Mutex<VecDeque<T>>,
+    /// Condvar is also supported on WASM
+    /// ([see here]( https://github.com/rust-lang/rust/blob/effea9a2a0d501db5722d507690a1a66236933bf/library/std/src/sys/wasm/atomics/condvar.rs))!
     cvar: Condvar,
 }
 
