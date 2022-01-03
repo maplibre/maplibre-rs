@@ -15,6 +15,21 @@ const isWebGLSupported = () => {
 }
 
 const start = async () => {
+    if (!isSecureContext) {
+        let message = "isSecureContext is false!";
+        console.error(message)
+        alert(message)
+        return;
+    }
+
+    if (!crossOriginIsolated) {
+        let message = "crossOriginIsolated is false! " +
+            "The Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy HTTP headers are required.";
+        console.error(message)
+        alert(message)
+        return;
+    }
+
     if (WEBGL) {
         if (!isWebGLSupported()) {
             console.error("WebGL is not supported in this Browser!")
