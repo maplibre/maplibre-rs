@@ -1,3 +1,4 @@
+use crate::io::cache::Cache;
 pub use std::time::Instant;
 
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm;
@@ -15,5 +16,16 @@ pub fn main() {
         .build(&event_loop)
         .unwrap();
 
-    pollster::block_on(crate::main_loop::setup(window, event_loop));
+    let mut cache_io = Cache::new();
+    let cache_main = cache_io.clone();
+
+    std::thread::spawn(move || {
+        cache_io.run_loop();
+    });
+
+    pollster::block_on(crate::main_loop::setup(
+        window,
+        event_loop,
+        Box::new(cache_main),
+    ));
 }
