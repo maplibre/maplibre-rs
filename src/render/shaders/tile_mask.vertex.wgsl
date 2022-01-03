@@ -17,15 +17,6 @@ struct VertexOutput {
 
 let EXTENT = 4096.0;
 
-var<private> VERTICES: array<vec2<f32>, 6> = array<vec2<f32>, 6>(
-    vec2<f32>(0.0, 0.0),
-    vec2<f32>(0.0, EXTENT),
-    vec2<f32>(EXTENT, 0.0),
-    vec2<f32>(EXTENT, 0.0),
-    vec2<f32>(0.0, EXTENT),
-    vec2<f32>(EXTENT, EXTENT)
-);
-
 [[stage(vertex)]]
 fn main(
     [[location(4)]] mask_offset: vec2<f32>,
@@ -35,6 +26,14 @@ fn main(
     [[builtin(vertex_index)]] vertex_idx: u32,
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
+    var VERTICES: array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+        vec2<f32>(0.0, 0.0),
+        vec2<f32>(0.0, EXTENT),
+        vec2<f32>(EXTENT, 0.0),
+        vec2<f32>(EXTENT, 0.0),
+        vec2<f32>(0.0, EXTENT),
+        vec2<f32>(EXTENT, EXTENT)
+    );
     let a_position = VERTICES[vertex_idx];
 
     let scaling: mat3x3<f32> = mat3x3<f32>(
