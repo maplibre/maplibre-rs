@@ -92,6 +92,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod> BufferPool<Q, B, V, I> 
             new_indices
         );
 
+        // write_buffer() is the preferred method for WASM: https://toji.github.io/webgpu-best-practices/buffer-uploads.html#when-in-doubt-writebuffer
         queue.write_buffer(
             &self.vertices.inner,
             maybe_entry.vertices.start,
