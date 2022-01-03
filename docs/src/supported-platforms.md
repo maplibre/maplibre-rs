@@ -4,8 +4,8 @@ For development the following platforms are recommended:
 
 * Linux X11/Wayland
 * MacOS
-* Firefox Nightly/Chrome Canary with WebGPU (Because WebGPU is a living spec, sometimes a bleeding-edge browser release
-  is required)
+* Latest Firefox Nightly/Chrome Canary with WebGPU (Because WebGPU is a living spec, sometimes a bleeding-edge browser
+  release is required)
 
 ## Short-term Obstacles
 
@@ -17,8 +17,8 @@ For development the following platforms are recommended:
 | MacOS          |                                                                                                                                                          |
 | Android        | * Unable to get window size before resume                                                                                                                |
 | iOS            | * Touches are crashing the app on real devices <br/> * Instanced indices drawing is not supported <br/> * Drawing zero-length indices is prohibited<br/> |
-| Firefox        | * \[\[block\]\] is still present (WebGPU) <br/> * 2D Texture initialisation not working (WebGL)                                                          |
-| Chrome         | * \[\[block\]\] is still present (WebGPU) <br/> * 2D Texture initialisation not working (WebGL)                                                          |
+| Firefox        | * Shared Memory is currently not working because it a parallel web worker corrupts memory                                                                |
+| Chrome         |                                                                                                                                                          |
 | Safari         |                                                                                                                                                          |
 | Mobile Firefox |                                                                                                                                                          |
 | Mobile Chrome  |                                                                                                                                                          |
