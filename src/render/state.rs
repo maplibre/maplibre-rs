@@ -119,6 +119,7 @@ impl State {
 
         let limits = if cfg!(feature = "web-webgl") {
             Limits {
+                max_texture_dimension_2d: 4096,
                 ..wgpu::Limits::downlevel_webgl2_defaults()
             }
         } else if cfg!(target_os = "android") {
