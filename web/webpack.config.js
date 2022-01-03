@@ -1,4 +1,5 @@
 const path = require("path");
+const webpack = require("webpack");
 const CopyPlugin = require("copy-webpack-plugin");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
@@ -6,7 +7,7 @@ let dist = path.join(__dirname, 'dist/demo');
 module.exports = (env) => ({
     mode: "development",
     entry: {
-        index: "./index.js"
+        index: "./index.ts"
     },
     experiments: {
         syncWebAssembly: true
@@ -31,10 +32,25 @@ module.exports = (env) => ({
             'Cross-Origin-Embedder-Policy': 'require-corp'
         },
     },
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
+        ],
+    },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js'],
+    },
     plugins: [
+        new webpack.DefinePlugin({
+            WEBGL: !!env.webgl
+        }),
         new CopyPlugin({
             patterns: [
-                { from: "static", to: "." },
+                {from: "static", to: "."},
             ],
         }),
         new WasmPackPlugin({
