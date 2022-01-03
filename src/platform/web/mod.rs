@@ -18,8 +18,6 @@ use web_sys::{MessageEvent, Window as WebWindow};
 
 use crate::io::cache::Cache;
 
-mod wasm_experiment;
-
 // WebGPU
 #[cfg(not(feature = "web-webgl"))]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8Unorm;
