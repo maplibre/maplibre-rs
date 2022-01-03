@@ -15,7 +15,7 @@ use crate::tesselation::IndexDataType;
 /// Buffer and its size
 pub struct BackingBufferDescriptor<B>(pub B, pub wgpu::BufferAddress);
 
-trait Queue<B> {
+pub trait Queue<B> {
     fn write_buffer(&self, buffer: &B, offset: wgpu::BufferAddress, data: &[u8]);
 }
 

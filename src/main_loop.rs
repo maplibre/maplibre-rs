@@ -1,3 +1,4 @@
+use crate::example::fetch_munich_tiles;
 use log::{error, info, trace};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -10,11 +11,7 @@ use crate::render::state::State;
 pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cache: Box<Cache>) {
     info!("== mapr ==");
 
-    for x in 0..6 {
-        for y in 0..6 {
-            cache.fetch((2178 + x, 1421 + y, 12).into())
-        }
-    }
+    fetch_munich_tiles(cache.as_ref());
 
     let mut input = InputHandler::new();
     let mut state = State::new(&window).await;

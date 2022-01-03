@@ -3,6 +3,7 @@ use std::default::Default;
 use std::io::Cursor;
 use std::ops::Range;
 
+use crate::example::{MUNICH_OFFSET_X, MUNICH_OFFSET_Y};
 use log::{trace, warn};
 use lyon::tessellation::VertexBuffers;
 use wgpu::util::DeviceExt;
@@ -366,15 +367,12 @@ impl State {
     // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
     // TODO: What is StagingBelt for?
     pub fn upload_tile_geometry(&mut self, cache: &Cache) {
-        const OFFSET_X: u32 = 2178;
-        const OFFSET_Y: u32 = 1421;
-
         let upload = cache.pop_all();
 
         for tile in upload.iter() {
             let new_coords = TileCoords {
-                x: tile.coords.x - OFFSET_X,
-                y: tile.coords.y - OFFSET_Y,
+                x: tile.coords.x - MUNICH_OFFSET_X,
+                y: tile.coords.y - MUNICH_OFFSET_Y,
                 z: tile.coords.z,
             };
 

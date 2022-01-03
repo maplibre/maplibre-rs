@@ -2,10 +2,10 @@ mod fps_meter;
 mod input;
 mod platform;
 
-// FIXME: Should not be public, currenlty used because of shader_ffi
-pub mod render;
+pub(crate) mod example;
+pub(crate) mod io;
+pub(crate) mod render;
+pub(crate) mod util;
 
-pub mod io;
 pub mod main_loop;
 pub mod tesselation;
-mod util;

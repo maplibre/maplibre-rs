@@ -61,12 +61,6 @@ pub async fn run(cache_ptr: *mut Cache) {
         height: body.client_height(),
     });
 
-    /*    for x in 0..6 {
-        for y in 0..6 {
-            cache.fetch((2178 + x, 1421 + y, 12).into())
-        }
-    }*/
-
     // Either call forget or the main loop to keep cache alive
     //std::mem::forget(cache);
     crate::main_loop::setup(window, event_loop, cache).await;
@@ -84,6 +78,6 @@ pub async fn run_cache_loop(cache_ptr: *mut Cache) {
     let mut cache: Box<Cache> = unsafe { Box::from_raw(cache_ptr) };
 
     // Either call forget or the cache loop to keep cache alive
-    // std::mem::forget(cache);
     cache.run_loop();
+    std::mem::forget(cache);
 }
