@@ -33,7 +33,8 @@ fn main(
 ) -> VertexOutput {
     let z = 0.0;
 
-    let world_pos = position + translate + normal;
+    // position the anchor of a tile at the top left, instead of bottom right
+    let world_pos = vec2<f32>(1.0, -1.0) * (position + normal * 3.0) + translate;
 
     let position = globals.camera.view_proj * vec4<f32>(world_pos, z, 1.0);
 

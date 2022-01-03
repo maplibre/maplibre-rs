@@ -162,17 +162,16 @@ impl State {
 
         let instances = [
             // Step 1
-            MaskInstanceUniform::new([0.0, 0.0], 4.0, 4.0, [1.0, 0.0, 0.0, 1.0]), // horizontal
-            //MaskInstanceUniform::new([0.0, 2.0 * 4096.0], 4.0, 1.0, [1.0, 0.0, 0.0, 1.0]), // vertical
+            MaskInstanceUniform::new([0.0, 0.0], 4.0, -4.0, [1.0, 0.0, 0.0, 1.0]), // horizontal
             // Step 2
-            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, 4.0, [0.0, 1.0, 0.0, 1.0]), // vertical
-            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, 4.0, [0.0, 1.0, 0.0, 1.0]), // vertical
+            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, -4.0, [0.0, 1.0, 0.0, 1.0]), // vertical
+            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, -4.0, [0.0, 1.0, 0.0, 1.0]), // vertical
             // Step 3
-            MaskInstanceUniform::new([0.0, 1.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
-            MaskInstanceUniform::new([0.0, 3.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([0.0, -1.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
+            MaskInstanceUniform::new([0.0, -3.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
             // Step 4
-            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, 4.0, [0.5, 0.25, 0.5, 1.0]), // vertical
-            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, 4.0, [0.5, 0.25, 0.5, 1.0]), // vertical
+            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, -4.0, [0.5, 0.25, 0.5, 1.0]), // vertical
+            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, -4.0, [0.5, 0.25, 0.5, 1.0]), // vertical
         ];
 
         let tile_mask_instances = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -382,7 +381,10 @@ impl State {
 
             let uniform = TileUniform::new(
                 [0.0, 0.0, 0.0, 1.0],
-                [new_coords.x as f32 * 4096.0, new_coords.y as f32 * 4096.0],
+                [
+                    new_coords.x as f32 * 4096.0,
+                    -1.0 * new_coords.y as f32 * 4096.0, // FIXME: Improve conversion to world tile coordinates
+                ],
             );
             self.queue.write_buffer(
                 &self.tiles_uniform_buffer,
@@ -458,15 +460,19 @@ impl State {
                 // Draw masks
                 pass.set_pipeline(&self.mask_pipeline);
                 pass.set_vertex_buffer(0, self.tile_mask_instances.slice(..));
-                // Draw 11 squares each out of 6 vertices
+                // Draw 7 squares each out of 6 vertices
                 pass.draw(0..6, 0..7);
             }
             {
                 for entry in self.buffer_pool.available_vertices() {
                     let TileCoords { x, y, .. } = entry.coords;
 
+                    // FIXME: Improve conversion
+                    let world_x = x as i32 - MUNICH_OFFSET_X as i32;
+                    let world_y = y as i32 - MUNICH_OFFSET_Y as i32 * -1;
+
                     pass.set_pipeline(&self.render_pipeline);
-                    let reference = match (x, y) {
+                    let reference = match (world_x, world_y) {
                         (x, y) if x % 2 == 0 && y % 2 == 0 => 1,
                         (x, y) if x % 2 == 0 && y % 2 != 0 => 2,
                         (x, y) if x % 2 != 0 && y % 2 == 0 => 3,

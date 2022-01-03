@@ -76,16 +76,19 @@ pub mod tile {
                 array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
+                    // position
                     wgpu::VertexAttribute {
                         offset: 0,
                         format: wgpu::VertexFormat::Float32x2,
                         shader_location: 0,
                     },
+                    // normal
                     wgpu::VertexAttribute {
                         offset: wgpu::VertexFormat::Float32x2.size(),
                         format: wgpu::VertexFormat::Float32x2,
                         shader_location: 1,
                     },
+                    // tile_id
                     wgpu::VertexAttribute {
                         offset: 2 * wgpu::VertexFormat::Float32x2.size(),
                         format: wgpu::VertexFormat::Uint32,
