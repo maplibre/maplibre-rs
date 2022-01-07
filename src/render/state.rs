@@ -86,6 +86,11 @@ impl SceneParams {
     }
 }
 
+const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 32;
+const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 32;
+const TILE_META_COUNT: BufferAddress = 512;
+const TILE_MASK_INSTANCE_COUNT: BufferAddress = 512;
+
 impl State {
     pub async fn new(window: &Window) -> Self {
         let mut measure = Measure::time();
@@ -151,20 +156,20 @@ impl State {
 
         let vertex_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
-            size: 1024 * 1024 * 16,
+            size: VERTEX_BUFFER_SIZE,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
 
         let indices_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
-            size: 1024 * 1024 * 16,
+            size: INDICES_BUFFER_SIZE,
             usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
 
         let tile_masks_uniform_buffer_size =
-            std::mem::size_of::<MaskInstanceUniform>() as u64 * 128; // FIXME: Tile count?
+            std::mem::size_of::<MaskInstanceUniform>() as u64 * TILE_MASK_INSTANCE_COUNT;
 
         let tile_mask_instances = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
@@ -178,7 +183,7 @@ impl State {
             std::mem::size_of::<GlobalsUniform>() as u64,
         );
 
-        let tiles_uniform_buffer_size = std::mem::size_of::<TileUniform>() as u64 * 128; // FIXME: Tile count?
+        let tiles_uniform_buffer_size = std::mem::size_of::<TileUniform>() as u64 * TILE_META_COUNT;
         let tiles_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Tiles ubo"),
             size: tiles_uniform_buffer_size,
@@ -306,8 +311,8 @@ impl State {
             projection,
             suspended: false, // Initially the app is not suspended
             buffer_pool: BufferPool::new(
-                BackingBufferDescriptor(vertex_uniform_buffer, 1024 * 1024 * 16),
-                BackingBufferDescriptor(indices_uniform_buffer, 1024 * 1024 * 16),
+                BackingBufferDescriptor(vertex_uniform_buffer, VERTEX_BUFFER_SIZE),
+                BackingBufferDescriptor(indices_uniform_buffer, INDICES_BUFFER_SIZE),
             ),
             tile_mask_pattern: TileMaskPattern::new(),
         }
