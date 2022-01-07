@@ -8,7 +8,7 @@ use std::ops::Range;
 
 use lyon::tessellation::VertexBuffers;
 
-use crate::io::TileCoords;
+use crate::coords::TileCoords;
 use crate::render::shader_ffi::GpuVertexUniform;
 use crate::tesselation::IndexDataType;
 

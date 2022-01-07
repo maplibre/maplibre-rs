@@ -1,9 +1,10 @@
 use bytemuck_derive::{Pod, Zeroable};
 use cgmath::SquareMatrix;
 
-type Vec2f32 = [f32; 2];
-type Vec4f32 = [f32; 4];
-type Mat4f32 = [Vec4f32; 4];
+pub type Vec2f32 = [f32; 2];
+pub type Vec3f32 = [f32; 3];
+pub type Vec4f32 = [f32; 4];
+pub type Mat4f32 = [Vec4f32; 4];
 
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
@@ -100,18 +101,16 @@ impl MaskInstanceUniform {
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct TileUniform {
     pub color: Vec4f32,
-    pub translate: Vec2f32,
-    _pad1: i32, // _padX aligns it to 16 bytes = AlignOf(Vec4f32/vec4<f32>):
-    _pad2: i32, // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
+    pub translate: Vec3f32,
+    _pad1: i32, // _padX aligns it to 16 bytes = AlignOf(Vec4f32/vec4<f32>): // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
 }
 
 impl TileUniform {
-    pub fn new(color: Vec4f32, translate: Vec2f32) -> Self {
+    pub fn new(color: Vec4f32, translate: Vec3f32) -> Self {
         Self {
             color,
             translate,
             _pad1: Default::default(),
-            _pad2: Default::default(),
         }
     }
 }

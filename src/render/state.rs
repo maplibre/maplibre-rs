@@ -3,6 +3,7 @@ use std::default::Default;
 use std::io::Cursor;
 use std::ops::Range;
 
+use crate::coords::{TileCoords, WorldTileCoords};
 use crate::example::{MUNICH_X, MUNICH_Y};
 use log::{trace, warn};
 use lyon::tessellation::VertexBuffers;
@@ -16,7 +17,7 @@ use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
 use crate::io::cache::Cache;
-use crate::io::{static_database, TileCoords};
+use crate::io::static_database;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::{camera, shaders};
@@ -381,10 +382,10 @@ impl State {
 
             let uniform = TileUniform::new(
                 [0.0, 0.0, 0.0, 1.0],
-                [
-                    (new_coords.x - MUNICH_X) as f32 * 4096.0,
-                    -1.0 * (new_coords.y - MUNICH_Y) as f32 * 4096.0, // FIXME: Improve conversion to world tile coordinates
-                ],
+                new_coords
+                    .into_world_tile()
+                    .into_world(4096)
+                    .into_shader_coords(),
             );
             self.queue.write_buffer(
                 &self.tiles_uniform_buffer,
@@ -465,21 +466,9 @@ impl State {
             }
             {
                 for entry in self.buffer_pool.available_vertices() {
-                    let TileCoords { x, y, .. } = entry.coords;
-
-                    // FIXME: Improve conversion
-                    let world_x = x as i32 - MUNICH_X as i32;
-                    let world_y = (y as i32 - MUNICH_Y as i32 + 1) * -1;
-
                     pass.set_pipeline(&self.render_pipeline);
-                    let reference = match (world_x, world_y) {
-                        (x, y) if x % 2 == 0 && y % 2 == 0 => 1,
-                        (x, y) if x % 2 == 0 && y % 2 != 0 => 2,
-                        (x, y) if x % 2 != 0 && y % 2 == 0 => 3,
-                        (x, y) if x % 2 != 0 && y % 2 != 0 => 4,
-                        _ => 0,
-                    };
-                    pass.set_stencil_reference(reference);
+                    let reference = entry.coords.into_world_tile().stencil_reference_value();
+                    pass.set_stencil_reference(reference as u32);
                     pass.set_index_buffer(
                         self.buffer_pool
                             .indices()

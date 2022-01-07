@@ -5,10 +5,11 @@ use std::sync::{Arc, Condvar, Mutex};
 use log::{error, info};
 use lyon::tessellation::VertexBuffers;
 
+use crate::coords::TileCoords;
 use vector_tile::parse_tile_bytes;
 use vector_tile::tile::Tile;
 
-use crate::io::{static_database, TileCoords};
+use crate::io::static_database;
 use crate::render::shader_ffi::GpuVertexUniform;
 use crate::tesselation::{IndexDataType, Tesselated};
 

@@ -109,7 +109,7 @@ pub mod tile {
                     // translate
                     wgpu::VertexAttribute {
                         offset: wgpu::VertexFormat::Float32x4.size(),
-                        format: wgpu::VertexFormat::Float32x2,
+                        format: wgpu::VertexFormat::Float32x3,
                         shader_location: 4,
                     },
                 ],

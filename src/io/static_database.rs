@@ -1,7 +1,7 @@
 use std::concat;
 use std::env;
 
-use crate::io::TileCoords;
+use crate::coords::TileCoords;
 use include_dir::{include_dir, Dir, File};
 
 static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
