@@ -371,8 +371,8 @@ impl State {
 
         for tile in upload.iter() {
             let new_coords = TileCoords {
-                x: tile.coords.x - MUNICH_X,
-                y: tile.coords.y - MUNICH_Y,
+                x: tile.coords.x,
+                y: tile.coords.y,
                 z: tile.coords.z,
             };
 
@@ -382,8 +382,8 @@ impl State {
             let uniform = TileUniform::new(
                 [0.0, 0.0, 0.0, 1.0],
                 [
-                    new_coords.x as f32 * 4096.0,
-                    -1.0 * new_coords.y as f32 * 4096.0, // FIXME: Improve conversion to world tile coordinates
+                    (new_coords.x - MUNICH_X) as f32 * 4096.0,
+                    -1.0 * (new_coords.y - MUNICH_Y) as f32 * 4096.0, // FIXME: Improve conversion to world tile coordinates
                 ],
             );
             self.queue.write_buffer(
@@ -469,7 +469,7 @@ impl State {
 
                     // FIXME: Improve conversion
                     let world_x = x as i32 - MUNICH_X as i32;
-                    let world_y = y as i32 - MUNICH_Y as i32 * -1;
+                    let world_y = (y as i32 - MUNICH_Y as i32 + 1) * -1;
 
                     pass.set_pipeline(&self.render_pipeline);
                     let reference = match (world_x, world_y) {

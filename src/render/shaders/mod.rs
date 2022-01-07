@@ -174,7 +174,7 @@ pub mod tile_mask {
         &[wgpu::ColorTargetState {
             format: COLOR_TEXTURE_FORMAT,
             blend: None,
-            write_mask: wgpu::ColorWrites::empty(),
+            write_mask: wgpu::ColorWrites::ALL,
         }],
     );
 }
