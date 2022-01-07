@@ -57,12 +57,16 @@ fn build_path(tile: &Tile, fill: bool) -> Path {
                                         cmd.x as f32,
                                         cmd.y as f32,
                                     ));
+
+                                    //print!("M{} {} ", cmd.x, cmd.y);
                                 }
                                 Command::LineTo(cmd) => {
                                     tile_builder.relative_line_to(lyon_path::math::vector(
                                         cmd.x as f32,
                                         cmd.y as f32,
                                     ));
+
+                                    //print!("l{} {} ", cmd.x, cmd.y);
                                 }
                                 Command::Close => {
                                     panic!("error")
