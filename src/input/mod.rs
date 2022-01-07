@@ -19,7 +19,7 @@ pub struct InputHandler {
 
 impl InputHandler {
     pub fn new() -> Self {
-        let camera_controller = CameraController::new(3000.0, 0.2);
+        let camera_controller = CameraController::new(5000.0, 0.2);
         Self {
             target_stroke_width: 1.0,
             last_touch: None,
