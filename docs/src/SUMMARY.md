@@ -7,11 +7,7 @@
 
 ## Developer Log
 
-- [Developer Log](./log00-logs.md)
-  - [Log 01 - WebGPU Stencil](./log01-stencil.md)
-  - [Log 02 - WASM Shared Memory](./log02-wasm-shared-memory.md)
-  - [Log 03 - WASM Bundle Size](./log03-wgpu-wasm-size.md)
-  - [Log 04 - Compiling for Apple](./log04-winit-apple.md)
+I'm regularly releasing blog posts [on my blog](http://localhost:1313/categories/mapr/).
 
 ## Appendix
 

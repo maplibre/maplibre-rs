@@ -91,6 +91,7 @@ Projects:
 Projects:
 
 * [earcutr](https://github.com/donbright/earcutr)
+* [Line Tesselation in MapLibre](https://github.com/maplibre/maplibre-gl-js/blob/main/src/data/bucket/line_bucket.ts)
 
 ## Render Graphs
 
