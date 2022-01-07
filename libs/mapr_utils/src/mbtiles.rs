@@ -34,7 +34,7 @@ impl From<rusqlite::Error> for Error {
 pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(
     input_mbtiles: P,
     output_dir: R,
-    z: u32,
+    z: u8,
     x_range: Range<u32>,
     y_range: Range<u32>,
 ) -> Result<(), Error> {
@@ -83,13 +83,13 @@ pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(
     Ok(())
 }
 
-fn flip_vertical_axis(zoom: u32, value: u32) -> u32 {
-    2u32.pow(zoom) - 1 - value
+fn flip_vertical_axis(zoom: u8, value: u32) -> u32 {
+    2u32.pow(zoom as u32) - 1 - value
 }
 
 fn extract_tile(tile: &Row, output_path: &Path) -> Result<(), Error> {
-    let (z, x, mut y): (u32, u32, u32) = (
-        tile.get::<_, u32>(0)?,
+    let (z, x, mut y): (u8, u32, u32) = (
+        tile.get::<_, u8>(0)?,
         tile.get::<_, u32>(1)?,
         tile.get::<_, u32>(2)?,
     );

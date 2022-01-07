@@ -4,6 +4,10 @@ use std::{env, fs};
 use mapr_utils::mbtiles::extract;
 use wgsl_validate::validate_project_wgsl;
 
+pub const MUNICH_X: u32 = 17421;
+pub const MUNICH_Y: u32 = 11360;
+pub const MUNICH_Z: u8 = 15;
+
 fn main() {
     validate_project_wgsl();
 
@@ -14,15 +18,15 @@ fn main() {
     if out.exists() && out.is_dir() {
         fs::remove_dir_all(&out).unwrap()
     }
-    let source = Path::new(&root_dir).join("test-data/munich-12.mbtiles");
+    let source = Path::new(&root_dir).join(format!("test-data/munich-{}.mbtiles", MUNICH_Z));
 
-    // Pack tiles around Maxvorstadt (100 tiles in each direction)
+    // Pack tiles around Munich HBF (100 tiles in each direction)
     extract(
         source,
         out,
-        12,
-        (2179 - 100)..(2179 + 100),
-        (1421 - 100)..(1421 + 100),
+        MUNICH_Z,
+        (MUNICH_X - 100)..(MUNICH_X + 100),
+        (MUNICH_Y - 100)..(MUNICH_Y + 100),
     )
     .unwrap();
 }

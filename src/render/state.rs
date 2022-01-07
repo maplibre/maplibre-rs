@@ -3,7 +3,7 @@ use std::default::Default;
 use std::io::Cursor;
 use std::ops::Range;
 
-use crate::example::{MUNICH_OFFSET_X, MUNICH_OFFSET_Y};
+use crate::example::{MUNICH_X, MUNICH_Y};
 use log::{trace, warn};
 use lyon::tessellation::VertexBuffers;
 use wgpu::util::DeviceExt;
@@ -371,8 +371,8 @@ impl State {
 
         for tile in upload.iter() {
             let new_coords = TileCoords {
-                x: tile.coords.x - MUNICH_OFFSET_X,
-                y: tile.coords.y - MUNICH_OFFSET_Y,
+                x: tile.coords.x - MUNICH_X,
+                y: tile.coords.y - MUNICH_Y,
                 z: tile.coords.z,
             };
 
@@ -468,8 +468,8 @@ impl State {
                     let TileCoords { x, y, .. } = entry.coords;
 
                     // FIXME: Improve conversion
-                    let world_x = x as i32 - MUNICH_OFFSET_X as i32;
-                    let world_y = y as i32 - MUNICH_OFFSET_Y as i32 * -1;
+                    let world_x = x as i32 - MUNICH_X as i32;
+                    let world_y = y as i32 - MUNICH_Y as i32 * -1;
 
                     pass.set_pipeline(&self.render_pipeline);
                     let reference = match (world_x, world_y) {
