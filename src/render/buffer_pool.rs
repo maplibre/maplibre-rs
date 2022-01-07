@@ -51,9 +51,10 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod> BufferPool<Q, B, V, I> 
     }
 
     fn available_space(&self, vertices: bool) -> wgpu::BufferAddress {
-        let gap = self.vertices.find_gap(&self.index, vertices);
+        let gap = self.vertices.find_largest_gap(&self.index, vertices);
         gap.end - gap.start
     }
+
     pub fn vertices(&self) -> &B {
         &self.vertices.inner
     }
@@ -140,12 +141,12 @@ impl<B> BackingBuffer<B> {
             panic!("can not allocate because backing buffers are too small")
         }
 
-        let mut available_gap = self.find_gap(index, vertices);
+        let mut available_gap = self.find_largest_gap(index, vertices);
 
         while new_data > available_gap.end - available_gap.start {
             // no more space, we need to evict items
             if let Some(_) = index.pop_front() {
-                available_gap = self.find_gap(index, vertices);
+                available_gap = self.find_largest_gap(index, vertices);
             } else {
                 panic!("evicted even though index is empty")
             }
@@ -154,7 +155,11 @@ impl<B> BackingBuffer<B> {
         available_gap.start..available_gap.start + new_data
     }
 
-    fn find_gap(&self, index: &VecDeque<IndexEntry>, vertices: bool) -> Range<wgpu::BufferAddress> {
+    fn find_largest_gap(
+        &self,
+        index: &VecDeque<IndexEntry>,
+        vertices: bool,
+    ) -> Range<wgpu::BufferAddress> {
         let start = index
             .front()
             .map(|first| {
@@ -176,11 +181,18 @@ impl<B> BackingBuffer<B> {
             })
             .unwrap_or(0);
 
-        // as soon as we have a gap in between choose that one
         if end >= start {
-            end..self.inner_size
+            let gap_from_start = 0..start; // gap from beginning to first entry
+            let gap_to_end = end..self.inner_size;
+
+            if gap_to_end.end - gap_to_end.start > gap_from_start.end - gap_from_start.start {
+                gap_to_end
+            } else {
+                gap_from_start
+            }
         } else {
-            start..end
+            // as soon as we have a gap in between choose that one
+            end..start
         }
     }
 }
@@ -251,7 +263,7 @@ mod tests {
         data.vertices.append(&mut create_48byte());
         data.indices.append(&mut vec![1, 2, 3, 4]);
         for i in 0..2 {
-            pool.allocate_geometry(&queue, (0, 0, 0).into(), &data);
+            pool.allocate_geometry(&queue, 0, (0, 0, 0).into(), &data);
         }
 
         assert_eq!(128 - 2 * 48, pool.available_space(true));
@@ -259,9 +271,18 @@ mod tests {
         let mut data = VertexBuffers::new();
         data.vertices.append(&mut create_24byte());
         data.indices.append(&mut vec![1, 2, 3, 4]);
-        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data);
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data);
 
         assert_eq!(128 - 2 * 48 - 24, pool.available_space(true));
-        //println!("{:?}", &pool.index)
+        println!("{:?}", &pool.index);
+
+        let mut data = VertexBuffers::new();
+        data.vertices.append(&mut create_24byte());
+        data.indices.append(&mut vec![1, 2, 3, 4]);
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data);
+
+        // appended now at the beginning
+        println!("{:?}", &pool.index);
+        assert_eq!(24, pool.available_space(true));
     }
 }
