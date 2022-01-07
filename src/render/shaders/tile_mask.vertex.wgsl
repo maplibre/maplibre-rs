@@ -26,13 +26,15 @@ fn main(
     [[builtin(vertex_index)]] vertex_idx: u32,
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
-    var VERTICES: array<vec2<f32>, 6> = array<vec2<f32>, 6>(
-        vec2<f32>(0.0, 0.0),
-        vec2<f32>(0.0, EXTENT),
-        vec2<f32>(EXTENT, 0.0),
-        vec2<f32>(EXTENT, 0.0),
-        vec2<f32>(0.0, EXTENT),
-        vec2<f32>(EXTENT, EXTENT)
+    let z = 0.0;
+
+    var VERTICES: array<vec3<f32>, 6> = array<vec3<f32>, 6>(
+        vec3<f32>(0.0, 0.0, z),
+        vec3<f32>(0.0, EXTENT, z),
+        vec3<f32>(EXTENT, 0.0, z),
+        vec3<f32>(EXTENT, 0.0, z),
+        vec3<f32>(0.0, EXTENT, z),
+        vec3<f32>(EXTENT, EXTENT, z)
     );
     let a_position = VERTICES[vertex_idx];
 
@@ -42,10 +44,7 @@ fn main(
             vec3<f32>(0.0,            0.0,            1.0)
     );
 
-    let z = 0.0;
-
-    let world_pos_3d = vec3<f32>(a_position + mask_offset, z);
-    let world_pos = scaling * world_pos_3d;
+    let world_pos = scaling * a_position + vec3<f32>(mask_offset, z);
 
     let position = globals.camera.view_proj * vec4<f32>(world_pos, 1.0);
 

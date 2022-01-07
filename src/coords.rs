@@ -1,5 +1,6 @@
-use crate::render::shader_ffi::Vec3f32;
 use std::fmt;
+
+use crate::render::shader_ffi::Vec3f32;
 
 #[derive(Clone, Copy, Debug)]
 pub struct TileCoords {
@@ -42,12 +43,20 @@ pub struct WorldTileCoords {
 }
 
 impl WorldTileCoords {
-    pub fn into_world(self, extent: u16) -> WorldCoords {
+    pub fn into_world(self, extent: f32) -> WorldCoords {
         WorldCoords {
-            x: self.x as f32 * extent as f32,
-            y: self.y as f32 * extent as f32 + extent as f32, // We add extent here as we want the upper left corner
+            x: self.x as f32 * extent,
+            y: self.y as f32 * extent + extent, // We add extent here as we want the upper left corner
             z: self.z as f32,
         }
+    }
+
+    pub fn into_aligned(self) -> AlignedWorldTileCoords {
+        return AlignedWorldTileCoords(WorldTileCoords {
+            x: self.x / 2 * 2,
+            y: self.y / 2 * 2 - 1,
+            z: self.z,
+        });
     }
 
     pub fn stencil_reference_value(&self) -> u8 {
@@ -56,7 +65,7 @@ impl WorldTileCoords {
             (x, y) if x % 2 == 0 && y % 2 != 0 => 2,
             (x, y) if x % 2 != 0 && y % 2 == 0 => 3,
             (x, y) if x % 2 != 0 && y % 2 != 0 => 4,
-            _ => 0,
+            _ => unreachable!(),
         }
     }
 }
@@ -73,6 +82,38 @@ impl From<(i32, i32, u8)> for WorldTileCoords {
             x: tuple.0,
             y: tuple.1,
             z: tuple.2,
+        }
+    }
+}
+
+pub struct AlignedWorldTileCoords(pub WorldTileCoords);
+
+impl AlignedWorldTileCoords {
+    pub fn into_upper_left(self) -> WorldTileCoords {
+        self.0
+    }
+
+    pub fn to_upper_right(&self) -> WorldTileCoords {
+        WorldTileCoords {
+            x: self.0.x + 1,
+            y: self.0.y + 1,
+            z: self.0.z,
+        }
+    }
+
+    pub fn to_lower_left(&self) -> WorldTileCoords {
+        WorldTileCoords {
+            x: self.0.x,
+            y: self.0.y - 1,
+            z: self.0.z,
+        }
+    }
+
+    pub fn to_lower_right(&self) -> WorldTileCoords {
+        WorldTileCoords {
+            x: self.0.x - 1,
+            y: self.0.y - 1,
+            z: self.0.z,
         }
     }
 }

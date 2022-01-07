@@ -3,8 +3,6 @@ use std::default::Default;
 use std::io::Cursor;
 use std::ops::Range;
 
-use crate::coords::{TileCoords, WorldTileCoords};
-use crate::example::{MUNICH_X, MUNICH_Y};
 use log::{trace, warn};
 use lyon::tessellation::VertexBuffers;
 use wgpu::util::DeviceExt;
@@ -15,11 +13,14 @@ use winit::event::{
 };
 use winit::window::Window;
 
+use crate::coords::{TileCoords, WorldTileCoords};
+use crate::example::{MUNICH_X, MUNICH_Y};
 use crate::fps_meter::FPSMeter;
 use crate::io::cache::Cache;
 use crate::io::static_database;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
+use crate::render::stencil_pattern::TileMaskPattern;
 use crate::render::{camera, shaders};
 use crate::tesselation::{IndexDataType, Tesselated};
 use crate::util::measure::Measure;
@@ -68,7 +69,8 @@ pub struct State {
 
     buffer_pool: BufferPool<Queue, Buffer, GpuVertexUniform, IndexDataType>,
 
-    tile_mask_instances: wgpu::Buffer,
+    tile_mask_pattern: TileMaskPattern,
+    tile_mask_instances_buffer: wgpu::Buffer,
 
     pub camera: camera::Camera,
     projection: camera::Projection,
@@ -161,24 +163,14 @@ impl State {
             mapped_at_creation: false,
         });
 
-        let instances = [
-            // Step 1
-            MaskInstanceUniform::new([0.0, 0.0], 4.0, -4.0, [1.0, 0.0, 0.0, 1.0]), // horizontal
-            // Step 2
-            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, -4.0, [0.0, 1.0, 0.0, 1.0]), // vertical
-            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, -4.0, [0.0, 1.0, 0.0, 1.0]), // vertical
-            // Step 3
-            MaskInstanceUniform::new([0.0, -1.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
-            MaskInstanceUniform::new([0.0, -3.0 * 4096.0], 4.0, 1.0, [0.0, 0.0, 1.0, 1.0]), // horizontal
-            // Step 4
-            MaskInstanceUniform::new([1.0 * 4096.0, 0.0], 1.0, -4.0, [0.5, 0.25, 0.5, 1.0]), // vertical
-            MaskInstanceUniform::new([3.0 * 4096.0, 0.0], 1.0, -4.0, [0.5, 0.25, 0.5, 1.0]), // vertical
-        ];
+        let tile_masks_uniform_buffer_size =
+            std::mem::size_of::<MaskInstanceUniform>() as u64 * 128; // FIXME: Tile count?
 
-        let tile_mask_instances = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        let tile_mask_instances = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
-            contents: bytemuck::cast_slice(&instances),
-            usage: wgpu::BufferUsages::VERTEX,
+            size: tile_masks_uniform_buffer_size,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
         });
 
         let globals_buffer_byte_size = cmp::max(
@@ -309,7 +301,7 @@ impl State {
             globals_uniform_buffer,
             tiles_uniform_buffer,
             fps_meter: FPSMeter::new(),
-            tile_mask_instances,
+            tile_mask_instances_buffer: tile_mask_instances,
             camera,
             projection,
             suspended: false, // Initially the app is not suspended
@@ -317,6 +309,7 @@ impl State {
                 BackingBufferDescriptor(vertex_uniform_buffer, 1024 * 1024 * 16),
                 BackingBufferDescriptor(indices_uniform_buffer, 1024 * 1024 * 16),
             ),
+            tile_mask_pattern: TileMaskPattern::new(),
         }
     }
 
@@ -371,28 +364,29 @@ impl State {
         let upload = cache.pop_all();
 
         for tile in upload.iter() {
-            let new_coords = TileCoords {
-                x: tile.coords.x,
-                y: tile.coords.y,
-                z: tile.coords.z,
-            };
+            let world_coords = tile.coords.into_world_tile();
+            self.tile_mask_pattern.update_bounds(&world_coords);
 
             self.buffer_pool
-                .allocate_geometry(&self.queue, tile.id, new_coords, &tile.geometry);
+                .allocate_geometry(&self.queue, tile.id, tile.coords, &tile.geometry);
 
-            let uniform = TileUniform::new(
-                [0.0, 0.0, 0.0, 1.0],
-                new_coords
-                    .into_world_tile()
-                    .into_world(4096)
-                    .into_shader_coords(),
-            );
             self.queue.write_buffer(
                 &self.tiles_uniform_buffer,
                 std::mem::size_of::<TileUniform>() as u64 * tile.id as u64,
-                bytemuck::cast_slice(&[uniform]),
+                bytemuck::cast_slice(&[TileUniform::new(
+                    [0.0, 0.0, 0.0, 1.0],
+                    world_coords.into_world(4096.0).into_shader_coords(),
+                )]),
             );
         }
+
+        self.tile_mask_pattern.update_pattern(15u8, 4096.0);
+
+        self.queue.write_buffer(
+            &self.tile_mask_instances_buffer,
+            0,
+            bytemuck::cast_slice(self.tile_mask_pattern.as_slice()),
+        );
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -460,9 +454,9 @@ impl State {
             {
                 // Draw masks
                 pass.set_pipeline(&self.mask_pipeline);
-                pass.set_vertex_buffer(0, self.tile_mask_instances.slice(..));
+                pass.set_vertex_buffer(0, self.tile_mask_instances_buffer.slice(..));
                 // Draw 7 squares each out of 6 vertices
-                pass.draw(0..6, 0..7);
+                pass.draw(0..6, 0..self.tile_mask_pattern.instances());
             }
             {
                 for entry in self.buffer_pool.available_vertices() {
