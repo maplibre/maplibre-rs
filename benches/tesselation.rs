@@ -1,25 +1,22 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use lyon::tessellation::VertexBuffers;
 use mapr::io::static_database;
-use mapr::render::shader_ffi::GpuVertexUniform;
 use mapr::tesselation::Tesselated;
 use std::io::Cursor;
 use vector_tile::parse_tile_reader;
 use vector_tile::tile::Tile;
 
 fn tessselate_stroke(tile: &Tile) {
-    let mut geometry: VertexBuffers<GpuVertexUniform, u32> = VertexBuffers::new();
-    tile.tesselate_stroke(&mut geometry, 1);
+    let _: VertexBuffers<_, u16> = tile.tesselate_stroke();
 }
 
 fn tessselate_fill(tile: &Tile) {
-    let mut geometry: VertexBuffers<GpuVertexUniform, u32> = VertexBuffers::new();
-    tile.tesselate_fill(&mut geometry, 1);
+    let _: VertexBuffers<_, u16> = tile.tesselate_fill();
 }
 
 fn tile1(c: &mut Criterion) {
     let tile = parse_tile_reader(&mut Cursor::new(
-        static_database::get_tile(2179, 1421, 12)
+        static_database::get_tile(&(2179u32, 1421u32, 12u8).into())
             .unwrap()
             .contents(),
     ))
@@ -31,7 +28,7 @@ fn tile1(c: &mut Criterion) {
 
 fn tile2(c: &mut Criterion) {
     let tile = parse_tile_reader(&mut Cursor::new(
-        static_database::get_tile(2180, 1421, 12)
+        static_database::get_tile(&(2179u32, 1421u32, 12u8).into())
             .unwrap()
             .contents(),
     ))
