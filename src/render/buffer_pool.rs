@@ -160,39 +160,45 @@ impl<B> BackingBuffer<B> {
         index: &VecDeque<IndexEntry>,
         vertices: bool,
     ) -> Range<wgpu::BufferAddress> {
-        let start = index
-            .front()
-            .map(|first| {
-                if vertices {
-                    first.vertices.start
-                } else {
-                    first.indices.start
-                }
-            })
-            .unwrap_or(0);
-        let end = index
-            .back()
-            .map(|first| {
-                if vertices {
-                    first.vertices.end
-                } else {
-                    first.indices.end
-                }
-            })
-            .unwrap_or(0);
-
-        if end >= start {
-            let gap_from_start = 0..start; // gap from beginning to first entry
-            let gap_to_end = end..self.inner_size;
-
-            if gap_to_end.end - gap_to_end.start > gap_from_start.end - gap_from_start.start {
-                gap_to_end
+        let start = index.front().map(|first| {
+            if vertices {
+                first.vertices.start
             } else {
-                gap_from_start
+                first.indices.start
+            }
+        });
+        let end = index.back().map(|first| {
+            if vertices {
+                first.vertices.end
+            } else {
+                first.indices.end
+            }
+        });
+
+        if let Some(start) = start {
+            if let Some(end) = end {
+                if end > start {
+                    // we haven't wrapped yet in the ring buffer
+
+                    let gap_from_start = 0..start; // gap from beginning to first entry
+                    let gap_to_end = end..self.inner_size;
+
+                    if gap_to_end.end - gap_to_end.start > gap_from_start.end - gap_from_start.start
+                    {
+                        gap_to_end
+                    } else {
+                        gap_from_start
+                    }
+                } else {
+                    // we already wrapped in the ring buffer
+                    // we choose the gab between the two
+                    end..start
+                }
+            } else {
+                unreachable!()
             }
         } else {
-            // as soon as we have a gap in between choose that one
-            end..start
+            0..self.inner_size
         }
     }
 }
@@ -242,47 +248,61 @@ mod tests {
         }
     }
 
-    fn create_48byte() -> Vec<GpuVertexUniform> {
-        vec![GpuVertexUniform::default(), GpuVertexUniform::default()]
+    #[repr(C)]
+    #[derive(Default, Copy, Clone, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
+    struct TestVertex {
+        data: [u8; 24],
     }
 
-    fn create_24byte() -> Vec<GpuVertexUniform> {
-        vec![GpuVertexUniform::default()]
+    fn create_48byte() -> Vec<TestVertex> {
+        vec![TestVertex::default(), TestVertex::default()]
+    }
+
+    fn create_24byte() -> Vec<TestVertex> {
+        vec![TestVertex::default()]
     }
 
     #[test]
     fn test_allocate() {
-        let mut pool: BufferPool<TestQueue, TestBuffer, GpuVertexUniform, u32> = BufferPool::new(
+        let mut pool: BufferPool<TestQueue, TestBuffer, TestVertex, u32> = BufferPool::new(
             BackingBufferDescriptor(TestBuffer { size: 128 }, 128),
             BackingBufferDescriptor(TestBuffer { size: 1024 }, 1024),
         );
 
         let queue = TestQueue {};
 
-        let mut data = VertexBuffers::new();
-        data.vertices.append(&mut create_48byte());
-        data.indices.append(&mut vec![1, 2, 3, 4]);
-        for i in 0..2 {
-            pool.allocate_geometry(&queue, 0, (0, 0, 0).into(), &data);
-        }
+        let mut data48bytes = VertexBuffers::new();
+        data48bytes.vertices.append(&mut create_48byte());
+        data48bytes.indices.append(&mut vec![1, 2, 3, 4]);
 
+        let mut data24bytes = VertexBuffers::new();
+        data24bytes.vertices.append(&mut create_24byte());
+        data24bytes.indices.append(&mut vec![1, 2, 3, 4]);
+
+        for i in 0..2 {
+            pool.allocate_geometry(&queue, 0, (0, 0, 0).into(), &data48bytes);
+        }
         assert_eq!(128 - 2 * 48, pool.available_space(true));
 
-        let mut data = VertexBuffers::new();
-        data.vertices.append(&mut create_24byte());
-        data.indices.append(&mut vec![1, 2, 3, 4]);
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data);
-
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
         assert_eq!(128 - 2 * 48 - 24, pool.available_space(true));
         println!("{:?}", &pool.index);
 
-        let mut data = VertexBuffers::new();
-        data.vertices.append(&mut create_24byte());
-        data.indices.append(&mut vec![1, 2, 3, 4]);
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data);
-
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
         // appended now at the beginning
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(true));
+
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
+        println!("{:?}", &pool.index);
+        assert_eq!(0, pool.available_space(true));
+
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
+        println!("{:?}", &pool.index);
+        assert_eq!(24, pool.available_space(true));
+
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
+        println!("{:?}", &pool.index);
+        assert_eq!(0, pool.available_space(true));
     }
 }
