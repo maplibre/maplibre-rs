@@ -8,6 +8,7 @@ pub use std::time::Instant;
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
 
 #[no_mangle]
+#[tokio::main]
 pub fn mapr_apple_main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
@@ -20,13 +21,10 @@ pub fn mapr_apple_main() {
     let mut cache_io = Cache::new();
     let cache_main = cache_io.clone();
 
-    std::thread::spawn(move || {
-        cache_io.run_loop();
-    });
+    let mut cache_io = Cache::new();
+    let cache_main = cache_io.clone();
 
-    pollster::block_on(crate::main_loop::setup(
-        window,
-        event_loop,
-        Box::new(cache_main),
-    ));
+    let join_handle = task::spawn(async move { cache_io.run_loop().await });
+    main_loop::setup(window, event_loop, Box::new(cache_main)).await;
+    join_handle.await;
 }

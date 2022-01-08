@@ -10,7 +10,7 @@ use crate::coords::TileCoords;
 use vector_tile::parse_tile_bytes;
 use vector_tile::tile::Tile;
 
-use crate::io::static_database;
+use crate::io::{static_database, web_database};
 use crate::render::shader_ffi::GpuVertexUniform;
 use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
 
@@ -50,17 +50,15 @@ impl Cache {
         self.responses.try_pop_all()
     }
 
-    pub fn run_loop(&mut self) {
+    pub async fn run_loop(&mut self) {
         let mut current_id = 0;
         loop {
             while let Some(coords) = self.requests.pop() {
-                if let Some(file) = static_database::get_tile(&coords) {
-                    info!(
-                        "preparing tile {} with {}bytes",
-                        &coords,
-                        file.contents().len()
-                    );
-                    let tile = parse_tile_bytes(file.contents()).expect("failed to load tile");
+                //if let (file) = static_database::get_tile(&coords) {
+                if let Ok(data) = web_database::get_tile(&coords).await {
+                    info!("preparing tile {} with {}bytes", &coords, data.len());
+                    let tile = parse_tile_bytes(bytemuck::cast_slice(data.as_slice()))
+                        .expect("failed to load tile");
 
                     let buffer = tile.tesselate_stroke();
                     self.responses.push(TesselatedTile {

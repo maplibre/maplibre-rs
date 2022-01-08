@@ -1,3 +1,5 @@
+//! Module which is used if android, apple and web is not used.
+
 pub use std::time::Instant;
 
 // Vulkan/OpenGL
