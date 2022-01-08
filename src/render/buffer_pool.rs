@@ -7,10 +7,11 @@ use std::mem::size_of;
 use std::ops::Range;
 
 use lyon::tessellation::VertexBuffers;
+use wgpu::BufferAddress;
 
 use crate::coords::TileCoords;
 use crate::render::shader_ffi::GpuVertexUniform;
-use crate::tesselation::IndexDataType;
+use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer};
 
 /// Buffer and its size
 pub struct BackingBufferDescriptor<B>(pub B, pub wgpu::BufferAddress);
@@ -63,46 +64,80 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod> BufferPool<Q, B, V, I> 
         &self.indices.inner
     }
 
+    /// The VertexBuffers can contain padding elements. Not everything from a VertexBuffers is useable.
+    /// The function returns the `bytes` and `aligned_bytes`. See [`OverAlignedVertexBuffer`].
+    fn align(
+        stride: wgpu::BufferAddress,
+        elements: wgpu::BufferAddress,
+        usable_elements: wgpu::BufferAddress,
+    ) -> (BufferAddress, BufferAddress) {
+        let bytes = elements * stride;
+
+        let usable_bytes = (usable_elements * stride) as wgpu::BufferAddress;
+
+        let align = wgpu::COPY_BUFFER_ALIGNMENT;
+        let padding = (align - usable_bytes % align) % align;
+
+        let aligned_bytes = usable_bytes + padding;
+
+        return (bytes, aligned_bytes);
+    }
+
     /// Allocates `buffer` and uploads it to the GPU
     pub fn allocate_geometry(
         &mut self,
         queue: &Q,
         id: u32,
         coords: TileCoords,
-        geometry: &VertexBuffers<V, I>,
+        over_aligned: &OverAlignedVertexBuffer<V, I>,
     ) {
-        let vertices_stride = size_of::<V>();
-        let new_vertices = (geometry.vertices.len() * vertices_stride) as wgpu::BufferAddress;
-        let indices_stride = size_of::<I>();
-        let new_indices = (geometry.indices.len() * indices_stride) as wgpu::BufferAddress;
+        let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
+        let indices_stride = size_of::<I>() as wgpu::BufferAddress;
+
+        let (vertices_bytes, aligned_vertices_bytes) = Self::align(
+            vertices_stride,
+            over_aligned.buffer.vertices.len() as BufferAddress,
+            over_aligned.buffer.vertices.len() as BufferAddress,
+        );
+        let (indices_bytes, aligned_indices_bytes) = Self::align(
+            indices_stride,
+            over_aligned.buffer.indices.len() as BufferAddress,
+            over_aligned.usable_indices as BufferAddress,
+        );
 
         let maybe_entry = IndexEntry {
             id,
             coords,
-            indices_stride: indices_stride as u64,
-            vertices: self.vertices.make_room(new_vertices, &mut self.index, true),
-            indices: self.indices.make_room(new_indices, &mut self.index, false),
+            indices_stride: indices_stride as wgpu::BufferAddress,
+            buffer_vertices: self
+                .vertices
+                .make_room(vertices_bytes, &mut self.index, true),
+            buffer_indices: self
+                .indices
+                .make_room(indices_bytes, &mut self.index, false),
+            usable_indices: over_aligned.usable_indices as u32,
         };
 
         assert_eq!(
-            maybe_entry.vertices.end - &maybe_entry.vertices.start,
-            new_vertices
+            maybe_entry.buffer_vertices.end - &maybe_entry.buffer_vertices.start,
+            vertices_bytes
         );
         assert_eq!(
-            maybe_entry.indices.end - &maybe_entry.indices.start,
-            new_indices
+            maybe_entry.buffer_indices.end - &maybe_entry.buffer_indices.start,
+            indices_bytes
         );
 
         // write_buffer() is the preferred method for WASM: https://toji.github.io/webgpu-best-practices/buffer-uploads.html#when-in-doubt-writebuffer
         queue.write_buffer(
             &self.vertices.inner,
-            maybe_entry.vertices.start,
-            bytemuck::cast_slice(&geometry.vertices),
+            maybe_entry.buffer_vertices.start,
+            &bytemuck::cast_slice(&over_aligned.buffer.vertices)
+                [0..aligned_vertices_bytes as usize],
         );
         queue.write_buffer(
             &self.indices.inner,
-            maybe_entry.indices.start,
-            bytemuck::cast_slice(&geometry.indices),
+            maybe_entry.buffer_indices.start,
+            &bytemuck::cast_slice(&over_aligned.buffer.indices)[0..aligned_indices_bytes as usize],
         );
         self.index.push_back(maybe_entry);
     }
@@ -162,16 +197,16 @@ impl<B> BackingBuffer<B> {
     ) -> Range<wgpu::BufferAddress> {
         let start = index.front().map(|first| {
             if vertices {
-                first.vertices.start
+                first.buffer_vertices.start
             } else {
-                first.indices.start
+                first.buffer_indices.start
             }
         });
         let end = index.back().map(|first| {
             if vertices {
-                first.vertices.end
+                first.buffer_vertices.end
             } else {
-                first.indices.end
+                first.buffer_indices.end
             }
         });
 
@@ -207,22 +242,27 @@ impl<B> BackingBuffer<B> {
 pub struct IndexEntry {
     pub id: u32,
     pub coords: TileCoords,
-    indices_stride: u64,
-    vertices: Range<wgpu::BufferAddress>,
-    indices: Range<wgpu::BufferAddress>,
+    indices_stride: wgpu::BufferAddress,
+    // Range of bytes within the backing buffer for vertices
+    buffer_vertices: Range<wgpu::BufferAddress>,
+    // Range of bytes within the backing buffer for indices
+    buffer_indices: Range<wgpu::BufferAddress>,
+    // Amount of actually usable indices. Each index has the size/format `IndexDataType`.
+    // Can be lower than size(buffer_indices) / indices_stride because of alignment.
+    usable_indices: u32,
 }
 
 impl IndexEntry {
     pub fn indices_range(&self) -> Range<u32> {
-        0..((self.indices.end - self.indices.start) / self.indices_stride) as u32
+        0..self.usable_indices
     }
 
     pub fn indices_buffer_range(&self) -> Range<wgpu::BufferAddress> {
-        self.indices.clone()
+        self.buffer_indices.clone()
     }
 
     pub fn vertices_buffer_range(&self) -> Range<wgpu::BufferAddress> {
-        self.vertices.clone()
+        self.buffer_vertices.clone()
     }
 }
 
@@ -274,10 +314,12 @@ mod tests {
         let mut data48bytes = VertexBuffers::new();
         data48bytes.vertices.append(&mut create_48byte());
         data48bytes.indices.append(&mut vec![1, 2, 3, 4]);
+        let data48bytes_range = 0..2;
 
         let mut data24bytes = VertexBuffers::new();
         data24bytes.vertices.append(&mut create_24byte());
         data24bytes.indices.append(&mut vec![1, 2, 3, 4]);
+        let data24bytes_range = 0..1;
 
         for i in 0..2 {
             pool.allocate_geometry(&queue, 0, (0, 0, 0).into(), &data48bytes);

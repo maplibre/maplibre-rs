@@ -1,5 +1,6 @@
 use std::collections::VecDeque;
 use std::io::Cursor;
+use std::ops::Range;
 use std::sync::{Arc, Condvar, Mutex};
 
 use log::{error, info};
@@ -11,13 +12,13 @@ use vector_tile::tile::Tile;
 
 use crate::io::static_database;
 use crate::render::shader_ffi::GpuVertexUniform;
-use crate::tesselation::{IndexDataType, Tesselated};
+use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
 
 #[derive(Clone)]
 pub struct TesselatedTile {
     pub id: u32,
     pub coords: TileCoords,
-    pub geometry: VertexBuffers<GpuVertexUniform, IndexDataType>,
+    pub over_aligned: OverAlignedVertexBuffer<GpuVertexUniform, IndexDataType>,
 }
 
 #[derive(Clone)]
@@ -61,14 +62,11 @@ impl Cache {
                     );
                     let tile = parse_tile_bytes(file.contents()).expect("failed to load tile");
 
-                    let mut geometry: VertexBuffers<GpuVertexUniform, IndexDataType> =
-                        VertexBuffers::new();
-
-                    tile.tesselate_stroke(&mut geometry);
+                    let buffer = tile.tesselate_stroke();
                     self.responses.push(TesselatedTile {
                         id: current_id,
                         coords,
-                        geometry,
+                        over_aligned: buffer.into(),
                     });
                     current_id += 1;
                     info!("tile ready: {:?}", &coords);

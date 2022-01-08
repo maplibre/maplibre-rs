@@ -40,8 +40,8 @@ impl Default for SceneParams {
 }
 
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint16; // Must match IndexDataType
-const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 16;
-const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 16;
+const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
+const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
 const TILE_META_COUNT: BufferAddress = 512;
 const TILE_MASK_INSTANCE_COUNT: BufferAddress = 512;
 
@@ -371,8 +371,12 @@ impl State {
             let world_coords = tile.coords.into_world_tile();
             self.tile_mask_pattern.update_bounds(&world_coords);
 
-            self.buffer_pool
-                .allocate_geometry(&self.queue, tile.id, tile.coords, &tile.geometry);
+            self.buffer_pool.allocate_geometry(
+                &self.queue,
+                tile.id,
+                tile.coords,
+                &tile.over_aligned,
+            );
 
             self.queue.write_buffer(
                 &self.tiles_uniform_buffer,
