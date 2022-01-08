@@ -42,22 +42,22 @@ impl Camera {
             cgmath::Vector3::unit_y(),
         )
     }
-    pub fn create_camera_uniform(&self, projection: &Projection) -> CameraUniform {
+    pub fn create_camera_uniform(&self, perspective: &Perspective) -> CameraUniform {
         CameraUniform::new(
-            (projection.calc_matrix() * self.calc_matrix()).into(),
+            (perspective.calc_matrix() * self.calc_matrix()).into(),
             self.position.to_homogeneous().into(),
         )
     }
 }
 
-pub struct Projection {
+pub struct Perspective {
     aspect: f32,
     fovy: cgmath::Rad<f32>,
     znear: f32,
     zfar: f32,
 }
 
-impl Projection {
+impl Perspective {
     pub fn new<F: Into<cgmath::Rad<f32>>>(
         width: u32,
         height: u32,

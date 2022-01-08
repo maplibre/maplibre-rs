@@ -77,7 +77,7 @@ pub struct State {
     tile_mask_instances_buffer: wgpu::Buffer,
 
     pub camera: camera::Camera,
-    projection: camera::Projection,
+    perspective: camera::Perspective,
 
     pub scene: SceneParams,
 }
@@ -278,7 +278,7 @@ impl State {
         };
 
         let camera = camera::Camera::new((0.0, 5.0, 5000.0), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
-        let projection = camera::Projection::new(
+        let projection = camera::Perspective::new(
             surface_config.width,
             surface_config.height,
             cgmath::Deg(45.0),
@@ -307,7 +307,7 @@ impl State {
             fps_meter: FPSMeter::new(),
             tile_mask_instances_buffer: tile_mask_instances,
             camera,
-            projection,
+            perspective: projection,
             suspended: false, // Initially the app is not suspended
             buffer_pool: BufferPool::new(
                 BackingBufferDescriptor(vertex_uniform_buffer, VERTEX_BUFFER_SIZE),
@@ -339,7 +339,7 @@ impl State {
             self.surface_config.height = new_size.height;
             self.surface.configure(&self.device, &self.surface_config);
 
-            self.projection.resize(new_size.width, new_size.height);
+            self.perspective.resize(new_size.width, new_size.height);
 
             // Re-configure depth buffer
             self.depth_texture = Texture::create_depth_texture(
@@ -409,7 +409,7 @@ impl State {
                 &self.globals_uniform_buffer,
                 0,
                 bytemuck::cast_slice(&[GlobalsUniform::new(
-                    self.camera.create_camera_uniform(&self.projection),
+                    self.camera.create_camera_uniform(&self.perspective),
                 )]),
             );
         }
