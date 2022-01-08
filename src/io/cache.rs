@@ -64,7 +64,7 @@ impl Cache {
                     let mut geometry: VertexBuffers<GpuVertexUniform, IndexDataType> =
                         VertexBuffers::new();
 
-                    tile.tesselate_stroke(&mut geometry, 1);
+                    tile.tesselate_stroke(&mut geometry);
                     self.responses.push(TesselatedTile {
                         id: current_id,
                         coords,

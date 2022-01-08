@@ -19,7 +19,6 @@ struct VertexOutput {
 fn main(
     [[location(0)]] position: vec2<f32>,
     [[location(1)]] normal: vec2<f32>,
-    [[location(2)]] tile_id: u32,
     [[location(3)]] color: vec4<f32>,
     [[location(4)]] translate: vec3<f32>,
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"

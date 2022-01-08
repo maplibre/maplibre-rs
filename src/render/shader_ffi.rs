@@ -50,25 +50,17 @@ impl GlobalsUniform {
 pub struct GpuVertexUniform {
     pub position: Vec2f32,
     pub normal: Vec2f32,
-    pub tile_id: u32,
-    _pad1: i32, // _padX aligns it to 8 bytes = AlignOf(Vec2f32=vec2<f32>):
-                // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
 }
 
 impl GpuVertexUniform {
-    pub fn new(position: Vec2f32, normal: Vec2f32, tile_id: u32) -> Self {
-        Self {
-            position,
-            normal,
-            tile_id,
-            _pad1: Default::default(),
-        }
+    pub fn new(position: Vec2f32, normal: Vec2f32) -> Self {
+        Self { position, normal }
     }
 }
 
 impl Default for GpuVertexUniform {
     fn default() -> Self {
-        GpuVertexUniform::new([0.0, 0.0], [0.0, 0.0], 0)
+        GpuVertexUniform::new([0.0, 0.0], [0.0, 0.0])
     }
 }
 

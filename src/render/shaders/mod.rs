@@ -88,12 +88,6 @@ pub mod tile {
                         format: wgpu::VertexFormat::Float32x2,
                         shader_location: 1,
                     },
-                    // tile_id
-                    wgpu::VertexAttribute {
-                        offset: 2 * wgpu::VertexFormat::Float32x2.size(),
-                        format: wgpu::VertexFormat::Uint32,
-                        shader_location: 2,
-                    },
                 ],
             },
             wgpu::VertexBufferLayout {
