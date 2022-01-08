@@ -469,7 +469,9 @@ impl State {
             {
                 for entry in self.buffer_pool.available_vertices() {
                     pass.set_pipeline(&self.render_pipeline);
-                    let reference = entry.coords.into_world_tile().stencil_reference_value();
+                    let reference = self
+                        .tile_mask_pattern
+                        .stencil_reference_value(&entry.coords.into_world_tile());
                     pass.set_stencil_reference(reference as u32);
                     pass.set_index_buffer(
                         self.buffer_pool

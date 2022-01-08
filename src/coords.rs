@@ -58,16 +58,6 @@ impl WorldTileCoords {
             z: self.z,
         });
     }
-
-    pub fn stencil_reference_value(&self) -> u8 {
-        match (self.x, self.y) {
-            (x, y) if x % 2 == 0 && y % 2 == 0 => 1,
-            (x, y) if x % 2 == 0 && y % 2 != 0 => 2,
-            (x, y) if x % 2 != 0 && y % 2 == 0 => 3,
-            (x, y) if x % 2 != 0 && y % 2 != 0 => 4,
-            _ => unreachable!(),
-        }
-    }
 }
 
 impl fmt::Display for WorldTileCoords {
