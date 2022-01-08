@@ -9,46 +9,55 @@ use std::ops::Range;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
-pub type IndexDataType = u32; // Must match INDEX_FORMAT
+pub type IndexDataType = u16; // Must match INDEX_FORMAT
 
 pub trait Tesselated<OutputIndex: std::ops::Add> {
     fn tesselate_stroke(
         &self,
         buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
-        prim_id: u32,
-    ) -> Range<u32>;
+    ) -> Range<IndexDataType>;
     fn tesselate_fill(
         &self,
         buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
-        prim_id: u32,
-    ) -> Range<u32>;
+    ) -> Range<IndexDataType>;
 
     fn empty_range(
         &self,
         buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
-        _prim_id: u32,
-    ) -> Range<u32> {
-        let initial_indices_count = buffer.indices.len() as u32;
+    ) -> Range<IndexDataType> {
+        let initial_indices_count = buffer.indices.len() as IndexDataType;
         initial_indices_count..initial_indices_count
     }
 }
 
-/// This vertex constructor forwards the positions and normals provided by the
-/// tessellators and add a shape id.
-pub struct WithId(pub u32);
+pub struct VertexConstructor();
 
-impl FillVertexConstructor<GpuVertexUniform> for WithId {
+impl FillVertexConstructor<GpuVertexUniform> for VertexConstructor {
     fn new_vertex(&mut self, vertex: FillVertex) -> GpuVertexUniform {
-        GpuVertexUniform::new(vertex.position().to_array(), [0.0, 0.0], self.0)
+        GpuVertexUniform::new(vertex.position().to_array(), [0.0, 0.0])
     }
 }
 
-impl StrokeVertexConstructor<GpuVertexUniform> for WithId {
+impl StrokeVertexConstructor<GpuVertexUniform> for VertexConstructor {
     fn new_vertex(&mut self, vertex: StrokeVertex) -> GpuVertexUniform {
         GpuVertexUniform::new(
             vertex.position_on_path().to_array(),
             vertex.normal().to_array(),
-            self.0,
         )
+    }
+}
+
+trait Align<V: bytemuck::Pod, I: bytemuck::Pod> {
+    fn align_indices(&mut self);
+}
+
+impl<V: bytemuck::Pod, I: bytemuck::Pod> Align<V, I> for VertexBuffers<V, I> {
+    fn align_indices(&mut self) {
+        let alignment = wgpu::COPY_BUFFER_ALIGNMENT as usize / std::mem::size_of::<I>();
+        let padding = self.indices.len() % alignment;
+        if padding > 0 {
+            self.indices
+                .extend(std::iter::repeat(I::zeroed()).take(alignment - padding));
+        }
     }
 }

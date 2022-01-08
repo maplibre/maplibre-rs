@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use lyon::lyon_tessellation::LineJoin;
 use lyon::tessellation;
 use lyon::tessellation::geometry_builder::MaxIndex;
@@ -7,13 +9,12 @@ use lyon::tessellation::{
 };
 use lyon_path::builder::SvgPathBuilder;
 use lyon_path::Path;
-use std::ops::Range;
 
 use vector_tile::geometry::{Command, Geometry};
 use vector_tile::tile::Tile;
 
 use crate::render::shader_ffi::GpuVertexUniform;
-use crate::tesselation::{Tesselated, WithId, DEFAULT_TOLERANCE};
+use crate::tesselation::{Align, IndexDataType, Tesselated, VertexConstructor, DEFAULT_TOLERANCE};
 
 fn build_path(tile: &Tile, fill: bool) -> Path {
     let mut tile_builder = Path::builder().with_svg();
@@ -85,14 +86,16 @@ fn build_path(tile: &Tile, fill: bool) -> Path {
 }
 
 impl<
-        OutputIndex: std::ops::Add + std::convert::From<lyon::lyon_tessellation::VertexId> + MaxIndex,
+        OutputIndex: std::ops::Add
+            + std::convert::From<lyon::lyon_tessellation::VertexId>
+            + MaxIndex
+            + bytemuck::Pod,
     > Tesselated<OutputIndex> for Tile
 {
     fn tesselate_stroke(
         &self,
         buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
-        prim_id: u32,
-    ) -> Range<u32> {
+    ) -> Range<IndexDataType> {
         let mut tesselator = StrokeTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -102,19 +105,20 @@ impl<
         tesselator
             .tessellate_path(
                 &tile_path,
-                &StrokeOptions::default(),
-                &mut BuffersBuilder::new(buffer, WithId(prim_id)),
+                &StrokeOptions::tolerance(DEFAULT_TOLERANCE),
+                &mut BuffersBuilder::new(buffer, VertexConstructor()),
             )
             .unwrap();
 
-        initial_indices_count as u32..buffer.indices.len() as u32
+        buffer.align_indices();
+
+        initial_indices_count as IndexDataType..buffer.indices.len() as IndexDataType
     }
 
     fn tesselate_fill(
         &self,
         buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
-        prim_id: u32,
-    ) -> Range<u32> {
+    ) -> Range<IndexDataType> {
         let mut tesselator = FillTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -124,11 +128,11 @@ impl<
         tesselator
             .tessellate_path(
                 &tile_path,
-                &FillOptions::default(),
-                &mut BuffersBuilder::new(buffer, WithId(prim_id)),
+                &FillOptions::tolerance(DEFAULT_TOLERANCE),
+                &mut BuffersBuilder::new(buffer, VertexConstructor()),
             )
             .unwrap();
 
-        initial_indices_count as u32..buffer.indices.len() as u32
+        initial_indices_count as IndexDataType..buffer.indices.len() as IndexDataType
     }
 }

@@ -14,7 +14,7 @@ use vector_tile::geometry::{Command, Geometry};
 use vector_tile::tile::Tile;
 
 use crate::render::shader_ffi::GpuVertexUniform;
-use crate::tesselation::{Tesselated, WithId, DEFAULT_TOLERANCE};
+use crate::tesselation::{IndexDataType, Tesselated, VertexConstructor, DEFAULT_TOLERANCE};
 
 pub struct RustLogo();
 
@@ -25,8 +25,7 @@ impl<
     fn tesselate_stroke(
         &self,
         buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
-        prim_id: u32,
-    ) -> Range<u32> {
+    ) -> Range<IndexDataType> {
         let mut stroke_tess = StrokeTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -40,18 +39,17 @@ impl<
             .tessellate_path(
                 &rust_logo,
                 &StrokeOptions::tolerance(DEFAULT_TOLERANCE),
-                &mut BuffersBuilder::new(buffer, WithId(prim_id)),
+                &mut BuffersBuilder::new(buffer, VertexConstructor()),
             )
             .unwrap();
 
-        initial_indices_count as u32..buffer.indices.len() as u32
+        initial_indices_count as IndexDataType..buffer.indices.len() as IndexDataType
     }
 
     fn tesselate_fill(
         &self,
         buffer: &mut VertexBuffers<GpuVertexUniform, OutputIndex>,
-        prim_id: u32,
-    ) -> Range<u32> {
+    ) -> Range<IndexDataType> {
         let mut fill_tess = FillTessellator::new();
 
         let initial_indices_count = buffer.indices.len();
@@ -66,10 +64,10 @@ impl<
                 &rust_logo,
                 &FillOptions::tolerance(DEFAULT_TOLERANCE)
                     .with_fill_rule(lyon_path::FillRule::NonZero),
-                &mut BuffersBuilder::new(buffer, WithId(prim_id as u32)),
+                &mut BuffersBuilder::new(buffer, VertexConstructor()),
             )
             .unwrap();
 
-        initial_indices_count as u32..buffer.indices.len() as u32
+        initial_indices_count as IndexDataType..buffer.indices.len() as IndexDataType
     }
 }

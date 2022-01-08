@@ -39,7 +39,11 @@ impl Default for SceneParams {
     }
 }
 
-const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32;
+const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint16; // Must match IndexDataType
+const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 16;
+const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 16;
+const TILE_META_COUNT: BufferAddress = 512;
+const TILE_MASK_INSTANCE_COUNT: BufferAddress = 512;
 
 pub struct State {
     instance: wgpu::Instance,
@@ -85,11 +89,6 @@ impl SceneParams {
         }
     }
 }
-
-const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 32;
-const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 32;
-const TILE_META_COUNT: BufferAddress = 512;
-const TILE_MASK_INSTANCE_COUNT: BufferAddress = 512;
 
 impl State {
     pub async fn new(window: &Window) -> Self {
