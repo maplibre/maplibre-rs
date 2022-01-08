@@ -1,17 +1,15 @@
-use std::any::Any;
 use std::collections::vec_deque::Iter;
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
 
-use lyon::tessellation::VertexBuffers;
 use wgpu::BufferAddress;
 
 use crate::coords::TileCoords;
-use crate::render::shader_ffi::GpuVertexUniform;
-use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer};
+
+use crate::tesselation::OverAlignedVertexBuffer;
 
 /// Buffer and its size
 pub struct BackingBufferDescriptor<B>(pub B, pub wgpu::BufferAddress);
@@ -80,7 +78,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod> BufferPool<Q, B, V, I> 
 
         let aligned_bytes = usable_bytes + padding;
 
-        return (bytes, aligned_bytes);
+        (bytes, aligned_bytes)
     }
 
     /// Allocates `buffer` and uploads it to the GPU
@@ -180,7 +178,7 @@ impl<B> BackingBuffer<B> {
 
         while new_data > available_gap.end - available_gap.start {
             // no more space, we need to evict items
-            if let Some(_) = index.pop_front() {
+            if index.pop_front().is_some() {
                 available_gap = self.find_largest_gap(index, vertices);
             } else {
                 panic!("evicted even though index is empty")
@@ -315,35 +313,37 @@ mod tests {
         data48bytes.vertices.append(&mut create_48byte());
         data48bytes.indices.append(&mut vec![1, 2, 3, 4]);
         let data48bytes_range = 0..2;
+        let data48bytes_aligned = data48bytes.into();
 
         let mut data24bytes = VertexBuffers::new();
         data24bytes.vertices.append(&mut create_24byte());
         data24bytes.indices.append(&mut vec![1, 2, 3, 4]);
         let data24bytes_range = 0..1;
+        let data24bytes_aligned = data24bytes.into();
 
         for i in 0..2 {
-            pool.allocate_geometry(&queue, 0, (0, 0, 0).into(), &data48bytes);
+            pool.allocate_geometry(&queue, 0, (0, 0, 0).into(), &data48bytes_aligned);
         }
         assert_eq!(128 - 2 * 48, pool.available_space(true));
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned);
         assert_eq!(128 - 2 * 48 - 24, pool.available_space(true));
         println!("{:?}", &pool.index);
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned);
         // appended now at the beginning
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(true));
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned);
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(true));
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned);
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(true));
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes);
+        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned);
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(true));
     }
