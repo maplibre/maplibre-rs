@@ -123,7 +123,7 @@ pub mod tile {
 
 pub mod tile_mask {
     use crate::platform::COLOR_TEXTURE_FORMAT;
-    use crate::render::shader_ffi::{GpuVertexUniform, MaskInstanceUniform};
+    use crate::render::shader_ffi::MaskInstanceUniform;
 
     use super::{FragmentShaderState, VertexShaderState};
 

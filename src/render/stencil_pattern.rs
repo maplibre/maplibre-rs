@@ -1,6 +1,4 @@
-use std::num;
-
-use crate::coords::{AlignedWorldTileCoords, WorldTileCoords};
+use crate::coords::WorldTileCoords;
 use crate::render::shader_ffi::MaskInstanceUniform;
 
 struct MinMaxBoundingBox {

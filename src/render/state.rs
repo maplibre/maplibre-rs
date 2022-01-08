@@ -1,20 +1,13 @@
 use std::cmp;
 use std::default::Default;
-use std::io::Cursor;
-use std::ops::Range;
 
-use log::{trace, warn};
-use lyon::tessellation::VertexBuffers;
-use wgpu::util::DeviceExt;
+use log::trace;
+
 use wgpu::{Buffer, BufferAddress, Limits, Queue};
 use winit::dpi::PhysicalSize;
-use winit::event::{
-    DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent,
-};
+
 use winit::window::Window;
 
-use crate::coords::{TileCoords, WorldTileCoords};
-use crate::example::{MUNICH_X, MUNICH_Y};
 use crate::fps_meter::FPSMeter;
 use crate::io::cache::Cache;
 use crate::io::static_database;
@@ -22,7 +15,7 @@ use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::stencil_pattern::TileMaskPattern;
 use crate::render::{camera, shaders};
-use crate::tesselation::{IndexDataType, Tesselated};
+use crate::tesselation::IndexDataType;
 use crate::util::measure::Measure;
 
 use super::piplines::*;
@@ -399,7 +392,6 @@ impl State {
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let frame = self.surface.get_current_texture()?;
-        let scene = &mut self.scene;
         let frame_view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());

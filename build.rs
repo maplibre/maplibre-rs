@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::{env, fs};
 
 use mapr_utils::mbtiles::extract;

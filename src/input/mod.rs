@@ -5,7 +5,7 @@ use winit::event::{
 use winit::window::Window;
 
 use crate::input::camera_controller::CameraController;
-use crate::render::state::{SceneParams, State};
+use crate::render::state::State;
 
 mod camera_controller;
 

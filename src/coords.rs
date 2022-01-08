@@ -52,11 +52,11 @@ impl WorldTileCoords {
     }
 
     pub fn into_aligned(self) -> AlignedWorldTileCoords {
-        return AlignedWorldTileCoords(WorldTileCoords {
+        AlignedWorldTileCoords(WorldTileCoords {
             x: self.x / 2 * 2,
             y: self.y / 2 * 2 - 1,
             z: self.z,
-        });
+        })
     }
 }
 

@@ -1,5 +1,5 @@
 use bytemuck::Pod;
-use std::ops::{Add, Range};
+use std::ops::Add;
 
 use lyon::tessellation::{
     FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor, VertexBuffers,

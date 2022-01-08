@@ -1,12 +1,10 @@
-use std::ops::{Add, Range};
+use std::ops::Add;
 
 use bytemuck::Pod;
-use lyon::lyon_tessellation::LineJoin;
-use lyon::tessellation;
+
 use lyon::tessellation::geometry_builder::MaxIndex;
 use lyon::tessellation::{
-    BuffersBuilder, FillOptions, FillTessellator, FillVertexConstructor, StrokeOptions,
-    StrokeTessellator, StrokeVertexConstructor, VertexBuffers,
+    BuffersBuilder, FillOptions, FillTessellator, StrokeOptions, StrokeTessellator, VertexBuffers,
 };
 use lyon_path::builder::SvgPathBuilder;
 use lyon_path::Path;
@@ -15,7 +13,7 @@ use vector_tile::geometry::{Command, Geometry};
 use vector_tile::tile::Tile;
 
 use crate::render::shader_ffi::GpuVertexUniform;
-use crate::tesselation::{IndexDataType, Tesselated, VertexConstructor, DEFAULT_TOLERANCE};
+use crate::tesselation::{Tesselated, VertexConstructor, DEFAULT_TOLERANCE};
 
 fn build_path(tile: &Tile, fill: bool) -> Path {
     let mut tile_builder = Path::builder().with_svg();

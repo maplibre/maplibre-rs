@@ -1,8 +1,7 @@
-use futures::poll;
 use mapr::io::cache::Cache;
 use mapr::main_loop;
 use pollster::FutureExt;
-use tokio;
+
 use tokio::task;
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;

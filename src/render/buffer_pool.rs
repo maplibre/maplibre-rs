@@ -270,7 +270,6 @@ mod tests {
     use wgpu::BufferAddress;
 
     use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, Queue};
-    use crate::render::shader_ffi::GpuVertexUniform;
 
     #[derive(Debug)]
     struct TestBuffer {
@@ -312,16 +311,14 @@ mod tests {
         let mut data48bytes = VertexBuffers::new();
         data48bytes.vertices.append(&mut create_48byte());
         data48bytes.indices.append(&mut vec![1, 2, 3, 4]);
-        let data48bytes_range = 0..2;
         let data48bytes_aligned = data48bytes.into();
 
         let mut data24bytes = VertexBuffers::new();
         data24bytes.vertices.append(&mut create_24byte());
         data24bytes.indices.append(&mut vec![1, 2, 3, 4]);
-        let data24bytes_range = 0..1;
         let data24bytes_aligned = data24bytes.into();
 
-        for i in 0..2 {
+        for _ in 0..2 {
             pool.allocate_geometry(&queue, 0, (0, 0, 0).into(), &data48bytes_aligned);
         }
         assert_eq!(128 - 2 * 48, pool.available_space(true));

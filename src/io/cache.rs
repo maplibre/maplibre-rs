@@ -1,16 +1,13 @@
 use std::collections::VecDeque;
-use std::io::Cursor;
-use std::ops::Range;
+
 use std::sync::{Arc, Condvar, Mutex};
 
 use log::{error, info};
-use lyon::tessellation::VertexBuffers;
 
 use crate::coords::TileCoords;
 use vector_tile::parse_tile_bytes;
-use vector_tile::tile::Tile;
 
-use crate::io::{static_database, web_database};
+use crate::io::web_database;
 use crate::render::shader_ffi::GpuVertexUniform;
 use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
 
