@@ -98,11 +98,6 @@ impl<T: Send> WorkQueue<T> {
         result
     }
 
-    fn try_pop(&self) -> Option<T> {
-        let mut queue = self.inner.try_lock().ok()?;
-        queue.pop_front()
-    }
-
     fn pop(&self) -> Option<T> {
         if let Ok(mut queue) = self.inner.lock() {
             loop {

@@ -1,26 +1,20 @@
 mod cache;
 mod fetch;
 
-use std::cell::RefCell;
 use std::panic;
-use std::rc::Rc;
 
-use log::{info, warn, Level};
-use winit::dpi::{LogicalSize, Size};
+use log::Level;
+use winit::dpi::LogicalSize;
 use winit::event_loop::EventLoop;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::window::{Window, WindowBuilder};
 
-use crate::error::Error;
 use crate::io::cache::Cache;
 use console_error_panic_hook;
 pub use instant::Instant;
-use js_sys::Array;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use wasm_bindgen::JsValue;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{MessageEvent, Window as WebSysWindow};
+use web_sys::Window as WebSysWindow;
 
 // WebGPU
 #[cfg(not(feature = "web-webgl"))]

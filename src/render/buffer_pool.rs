@@ -8,7 +8,6 @@ use std::ops::Range;
 use wgpu::BufferAddress;
 
 use crate::coords::TileCoords;
-
 use crate::tesselation::OverAlignedVertexBuffer;
 
 /// Buffer and its size
@@ -49,8 +48,14 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod> BufferPool<Q, B, V, I> 
         }
     }
 
+    #[cfg(test)]
     fn available_space(&self, vertices: bool) -> wgpu::BufferAddress {
-        let gap = self.vertices.find_largest_gap(&self.index, vertices);
+        let gap = if vertices {
+            &self.vertices
+        } else {
+            &self.indices
+        }
+        .find_largest_gap(&self.index, vertices);
         gap.end - gap.start
     }
 
@@ -106,7 +111,6 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod> BufferPool<Q, B, V, I> 
         let maybe_entry = IndexEntry {
             id,
             coords,
-            indices_stride: indices_stride as wgpu::BufferAddress,
             buffer_vertices: self
                 .vertices
                 .make_room(vertices_bytes, &mut self.index, true),
@@ -151,17 +155,11 @@ struct BackingBuffer<B> {
     inner: B,
     /// The size of the `inner` buffer
     inner_size: wgpu::BufferAddress,
-    /// The offset within `inner`
-    inner_offset: wgpu::BufferAddress,
 }
 
 impl<B> BackingBuffer<B> {
     fn new(inner: B, inner_size: wgpu::BufferAddress) -> Self {
-        Self {
-            inner,
-            inner_size,
-            inner_offset: 0,
-        }
+        Self { inner, inner_size }
     }
 
     fn make_room(
@@ -240,7 +238,6 @@ impl<B> BackingBuffer<B> {
 pub struct IndexEntry {
     pub id: u32,
     pub coords: TileCoords,
-    indices_stride: wgpu::BufferAddress,
     // Range of bytes within the backing buffer for vertices
     buffer_vertices: Range<wgpu::BufferAddress>,
     // Range of bytes within the backing buffer for indices

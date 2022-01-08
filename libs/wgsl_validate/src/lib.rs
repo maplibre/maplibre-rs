@@ -68,13 +68,13 @@ pub fn validate_project_wgsl() {
                         Err(err) => {
                             let path = path.strip_prefix(&root_dir).unwrap_or(path);
                             println!(
-                                "cargo:warning={}: {}",
+                                "cargo:warning={}{}",
                                 path.to_str().unwrap(),
                                 match err {
-                                    WgslError::ValidationErr(error) => format!("{:?}", error),
+                                    WgslError::ValidationErr(error) => format!(": {:?}", error),
                                     WgslError::ParserErr { error, line, pos } =>
-                                        format!("{}", error),
-                                    WgslError::IoErr(error) => format!("{:?}", error),
+                                        format!(":{}:{} {}", line, pos, error),
+                                    WgslError::IoErr(error) => format!(": {:?}", error),
                                 }
                             );
                             exit(1);

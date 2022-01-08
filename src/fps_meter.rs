@@ -5,7 +5,6 @@ use log::info;
 use crate::platform::Instant;
 
 pub struct FPSMeter {
-    start: Instant,
     next_report: Instant,
     frame_count: u32,
 }
@@ -14,7 +13,6 @@ impl FPSMeter {
     pub fn new() -> Self {
         let start = Instant::now();
         Self {
-            start,
             next_report: start + Duration::from_secs(1),
             frame_count: 0,
         }

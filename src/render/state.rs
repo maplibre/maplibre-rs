@@ -502,10 +502,6 @@ impl State {
         Ok(())
     }
 
-    pub fn is_suspended(&self) -> bool {
-        self.suspended
-    }
-
     pub fn suspend(&mut self) {
         self.suspended = true;
     }

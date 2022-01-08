@@ -1,6 +1,5 @@
 use mapr::io::cache::Cache;
 use mapr::main_loop;
-use pollster::FutureExt;
 
 use tokio::task;
 use winit::event_loop::EventLoop;
@@ -21,5 +20,5 @@ async fn main() {
 
     let join_handle = task::spawn(async move { cache_io.run_loop().await });
     main_loop::setup(window, event_loop, Box::new(cache_main)).await;
-    join_handle.await;
+    join_handle.await.unwrap();
 }

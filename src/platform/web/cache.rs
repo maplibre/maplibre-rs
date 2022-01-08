@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn create_cache() -> *mut Cache {
-    let mut cache = Box::new(Cache::new());
+    let cache = Box::new(Cache::new());
     let ptr = Box::into_raw(cache);
     return ptr;
 }
