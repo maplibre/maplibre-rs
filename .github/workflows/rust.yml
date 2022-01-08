@@ -43,7 +43,7 @@ jobs:
       - name: Clippy
         run: |
           rustup component add clippy
-          cargo clippy --lib
+          cargo clippy --all-targets --all-features
       - uses: actions/upload-artifact@v2
         with:
           name: mapr
