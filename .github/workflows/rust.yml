@@ -37,7 +37,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install Dependencies
-        run: sudo apt-get install -y libwayland-dev libxkbcommon-dev
+        run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
       - name: Build
         run: cargo build --example desktop
       - name: Clippy
@@ -116,6 +116,8 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install Dependencies
+        run: sudo apt-get install -y libssl-dev # Required for reqwest
       - name: Build
         run: tools/build-android
       - uses: actions/upload-artifact@v2
