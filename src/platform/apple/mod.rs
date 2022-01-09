@@ -28,5 +28,5 @@ pub async fn mapr_apple_main() {
 
     let join_handle = task::spawn(async move { cache_io.run_loop().await });
     main_loop::setup(window, event_loop, Box::new(cache_main)).await;
-    join_handle.await;
+    join_handle.await.unwrap();
 }
