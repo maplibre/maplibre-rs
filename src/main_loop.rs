@@ -1,7 +1,5 @@
 use crate::example::fetch_munich_tiles;
 use log::{error, info, trace};
-use tokio::runtime::Handle;
-use tokio::task;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 
@@ -16,7 +14,11 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cac
     fetch_munich_tiles(cache.as_ref());
 
     let mut input = InputHandler::new();
-    let mut maybe_state: Option<State> = None;
+    let mut maybe_state: Option<State> = if cfg!(target_os = "android") {
+        None
+    } else {
+        Some(State::new(&window).await)
+    };
 
     let mut last_render_time = Instant::now();
 
@@ -24,7 +26,11 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cac
         /* FIXME:   On Android we need to initialize the surface on Event::Resumed. On desktop this
                     event is not fired and we can do surface initialization anytime. Clean this up.
         */
-        if maybe_state.is_none() && (event == Event::Resumed || cfg!(not(target_os = "android"))) {
+        #[cfg(target_os = "android")]
+        if maybe_state.is_none() && event == Event::Resumed {
+            use tokio::runtime::Handle;
+            use tokio::task;
+
             let state = task::block_in_place(|| {
                 Handle::current().block_on(async { State::new(&window).await })
             });
