@@ -5,7 +5,6 @@ use std::sync::{Arc, Condvar, Mutex};
 use log::{error, info};
 
 use crate::coords::TileCoords;
-use crate::error::Error;
 use vector_tile::parse_tile_bytes;
 
 use crate::io::web_tile_fetcher::WebTileFetcher;
