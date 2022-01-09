@@ -29,13 +29,19 @@ pub struct PlatformHttpFetcher {
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl HttpFetcher for PlatformHttpFetcher {
     fn new() -> Self {
-        let client = ClientBuilder::new(Client::new())
-            .with(Cache {
+        let mut builder = ClientBuilder::new(Client::new());
+
+        // FIXME: Cache only works on desktop so far
+        if cfg!(not(any(target_os = "android", target_arch = "ios"))) {
+            builder = builder.with(Cache {
                 mode: CacheMode::Default,
                 cache_manager: CACacheManager::default(),
-            })
-            .build();
-        Self { client }
+            });
+        }
+
+        Self {
+            client: builder.build(),
+        }
     }
 
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
