@@ -6,14 +6,16 @@ pub mod cache;
 pub mod static_tile_fetcher;
 pub mod web_tile_fetcher;
 
-#[async_trait(?Send)]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait HttpFetcher {
     fn new() -> Self;
 
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error>;
 }
 
-#[async_trait(?Send)]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait TileFetcher {
     fn new() -> Self;
 

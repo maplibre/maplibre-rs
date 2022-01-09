@@ -25,7 +25,8 @@ pub struct PlatformHttpFetcher {
     client: ClientWithMiddleware,
 }
 
-#[async_trait(?Send)]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl HttpFetcher for PlatformHttpFetcher {
     fn new() -> Self {
         let client = ClientBuilder::new(Client::new())
