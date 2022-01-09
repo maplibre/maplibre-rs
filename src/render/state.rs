@@ -2,10 +2,8 @@ use std::cmp;
 use std::default::Default;
 
 use log::trace;
-
 use wgpu::{Buffer, BufferAddress, Limits, Queue};
 use winit::dpi::PhysicalSize;
-
 use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
@@ -382,6 +380,14 @@ impl State {
             0,
             bytemuck::cast_slice(self.tile_mask_pattern.as_slice()),
         );
+
+        self.queue.write_buffer(
+            &self.globals_uniform_buffer,
+            0,
+            bytemuck::cast_slice(&[GlobalsUniform::new(
+                self.camera.create_camera_uniform(&self.perspective),
+            )]),
+        );
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -389,16 +395,6 @@ impl State {
         let frame_view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-
-        {
-            self.queue.write_buffer(
-                &self.globals_uniform_buffer,
-                0,
-                bytemuck::cast_slice(&[GlobalsUniform::new(
-                    self.camera.create_camera_uniform(&self.perspective),
-                )]),
-            );
-        }
 
         let mut encoder = self
             .device
