@@ -18,4 +18,5 @@ pub trait TileFetcher {
     fn new() -> Self;
 
     async fn fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error>;
+    fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error>;
 }

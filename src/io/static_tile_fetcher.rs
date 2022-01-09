@@ -26,6 +26,10 @@ impl TileFetcher for StaticTileFetcher {
     }
 
     async fn fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
+        self.sync_fetch_tile(coords)
+    }
+
+    fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
         let tile = TILES
             .get_file(format!("{}/{}/{}.{}", coords.z, coords.x, coords.y, "pbf"))
             .ok_or_else(|| Error::File("Failed to load tile from within the binary".to_string()))?;

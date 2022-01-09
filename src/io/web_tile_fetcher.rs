@@ -3,6 +3,7 @@ use crate::error::Error;
 use crate::io::{HttpFetcher, TileFetcher};
 use crate::platform::PlatformHttpFetcher;
 use async_trait::async_trait;
+use core::panicking::panic;
 
 pub struct WebTileFetcher {
     http_fetcher: PlatformHttpFetcher,
@@ -28,6 +29,10 @@ impl TileFetcher for WebTileFetcher {
                 .as_str(),
             )
             .await
+    }
+
+    fn sync_fetch_tile(&self, _coords: &TileCoords) -> Result<Vec<u8>, Error> {
+        panic!("Unable to fetch sync from the web!");
     }
 }
 
