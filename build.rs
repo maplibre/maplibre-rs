@@ -8,9 +8,8 @@ pub const MUNICH_X: u32 = 17421;
 pub const MUNICH_Y: u32 = 11360;
 pub const MUNICH_Z: u8 = 15;
 
-fn main() {
-    validate_project_wgsl();
-
+/// Tiles which can be used by StaticTileFetcher
+fn embed_tiles_statically() {
     let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let out_dir = env::var("OUT_DIR").unwrap();
 
@@ -18,6 +17,8 @@ fn main() {
     if out.exists() && out.is_dir() {
         fs::remove_dir_all(&out).unwrap()
     }
+    fs::create_dir_all(&out).unwrap();
+
     let source = Path::new(&root_dir).join(format!("test-data/munich-{}.mbtiles", MUNICH_Z));
 
     if source.exists() {
@@ -33,4 +34,9 @@ fn main() {
     } else {
         // Do not statically embed tiles
     }
+}
+
+fn main() {
+    validate_project_wgsl();
+    embed_tiles_statically();
 }
