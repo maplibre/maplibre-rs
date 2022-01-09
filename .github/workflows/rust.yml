@@ -49,55 +49,6 @@ jobs:
           name: mapr
           path: target/debug/mapr
 
-  build-macos:
-    runs-on: macOS-11
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Cargo Build
-        run: cargo build --target aarch64-apple-darwin --lib
-      - name: XCode Build
-        run: cd apple/mapr && xcodebuild -scheme "mapr (macOS)" -arch arm64 build
-
-  build-iphoneos:
-    runs-on: macOS-11
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Cargo Build
-        run: cargo build --target aarch64-apple-ios --lib # First running `cargo build` before `xcodebuild` is REQUIRED!
-                                                          # Else the rust compilation fails during linking. This is
-                                                          # probably due to some weird environment variables set during
-                                                          # xcodebuild execution
-      - name: XCode Build
-        run: cd apple/mapr && xcodebuild -scheme "mapr (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
-
   build-aarch64-android:
     runs-on: ubuntu-20.04
     defaults:
