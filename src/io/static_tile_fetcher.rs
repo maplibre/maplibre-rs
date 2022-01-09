@@ -3,6 +3,7 @@ use std::env;
 
 use async_trait::async_trait;
 use include_dir::{include_dir, Dir};
+use log::error;
 
 use crate::coords::TileCoords;
 use crate::error::Error;
@@ -31,6 +32,13 @@ impl TileFetcher for StaticTileFetcher {
     }
 
     fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
+        if TILES.entries().is_empty() {
+            error!(
+                "There are not tiles statically embedded in this binary! StaticTileFetcher will \
+                not return any tiles!"
+            )
+        }
+
         let tile = TILES
             .get_file(format!("{}/{}/{}.{}", coords.z, coords.x, coords.y, "pbf"))
             .ok_or_else(|| Error::File("Failed to load tile from within the binary".to_string()))?;
