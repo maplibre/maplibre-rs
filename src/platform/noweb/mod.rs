@@ -32,7 +32,7 @@ impl HttpFetcher for PlatformHttpFetcher {
         let mut builder = ClientBuilder::new(Client::new());
 
         // FIXME: Cache only works on desktop so far
-        if cfg!(not(any(target_os = "android", target_arch = "ios"))) {
+        if cfg!(not(any(target_os = "android", target_arch = "aarch64"))) {
             builder = builder.with(Cache {
                 mode: CacheMode::Default,
                 cache_manager: CACacheManager::default(),
