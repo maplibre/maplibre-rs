@@ -5,6 +5,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use log::{error, info};
 
 use crate::coords::TileCoords;
+use crate::error::Error;
 use vector_tile::parse_tile_bytes;
 
 use crate::io::web_tile_fetcher::WebTileFetcher;
@@ -55,21 +56,24 @@ impl Cache {
         let mut current_id = 0;
         loop {
             while let Some(coords) = self.requests.pop() {
-                if let Ok(data) = fetcher.fetch_tile(&coords).await {
-                    info!("preparing tile {} with {}bytes", &coords, data.len());
-                    let tile = parse_tile_bytes(bytemuck::cast_slice(data.as_slice()))
-                        .expect("failed to load tile");
+                match fetcher.fetch_tile(&coords).await {
+                    Ok(data) => {
+                        info!("preparing tile {} with {}bytes", &coords, data.len());
+                        let tile = parse_tile_bytes(bytemuck::cast_slice(data.as_slice()))
+                            .expect("failed to load tile");
 
-                    let buffer = tile.tesselate_stroke();
-                    self.responses.push(TesselatedTile {
-                        id: current_id,
-                        coords,
-                        over_aligned: buffer.into(),
-                    });
-                    current_id += 1;
-                    info!("tile ready: {:?}", &coords);
-                } else {
-                    info!("tile failed: {:?}", &coords);
+                        let buffer = tile.tesselate_stroke();
+                        self.responses.push(TesselatedTile {
+                            id: current_id,
+                            coords,
+                            over_aligned: buffer.into(),
+                        });
+                        current_id += 1;
+                        info!("tile ready: {:?}", &coords);
+                    }
+                    Err(err) => {
+                        error!("tile failed: {:?}", &err);
+                    }
                 }
             }
         }
