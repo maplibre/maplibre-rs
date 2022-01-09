@@ -43,10 +43,8 @@ impl Camera {
         )
     }
     pub fn create_camera_uniform(&self, perspective: &Perspective) -> CameraUniform {
-        CameraUniform::new(
-            (perspective.calc_matrix() * self.calc_matrix()).into(),
-            self.position.to_homogeneous().into(),
-        )
+        let view_proj = (perspective.calc_matrix() * self.calc_matrix());
+        CameraUniform::new(view_proj.into(), self.position.to_homogeneous().into())
     }
 }
 
@@ -79,5 +77,51 @@ impl Perspective {
 
     pub fn calc_matrix(&self) -> cgmath::Matrix4<f32> {
         OPENGL_TO_WGPU_MATRIX * cgmath::perspective(self.fovy, self.aspect, self.znear, self.zfar)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use cgmath::{ElementWise, Matrix4, Vector3, Vector4};
+
+    use super::{Camera, Perspective};
+
+    #[test]
+    fn test() {
+        let camera = Camera::new((0.0, 5.0, 5000.0), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
+        let width = 1920;
+        let height = 1080;
+        let perspective = Perspective::new(width, height, cgmath::Deg(45.0), 0.1, 100000.0);
+        let projection = perspective;
+
+        let view_proj = (projection.calc_matrix() * camera.calc_matrix());
+
+        let world_pos = Vector4::new(2000.0, 2000.0, 0.0, 1.0);
+        let result = view_proj * world_pos;
+        let ndc = Vector3::new(
+            result.x / result.w,
+            result.y / result.w,
+            result.z / result.w,
+        );
+
+        // Adopted from: https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkViewport.html
+        // and https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/
+        let min_depth = 0.0;
+        let max_depth = 1.0;
+
+        let x = 0.0;
+        let y = 0.0;
+        let ox = x + width as f32 / 2.0;
+        let oy = y + height as f32 / 2.0;
+        let oz = min_depth;
+        let px = width as f32;
+        let py = height as f32;
+        let pz = max_depth - min_depth;
+        let xd = ndc.x;
+        let yd = ndc.y;
+        let zd = ndc.z;
+
+        let screen = Vector3::new(px / 2.0 * xd + ox, py / 2.0 * yd + oy, pz * zd + oz);
+        println!("{:?}", screen);
     }
 }
