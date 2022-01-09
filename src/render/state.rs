@@ -10,7 +10,6 @@ use winit::window::Window;
 
 use crate::fps_meter::FPSMeter;
 use crate::io::cache::Cache;
-use crate::io::static_database;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::stencil_pattern::TileMaskPattern;
@@ -35,8 +34,8 @@ impl Default for SceneParams {
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint16; // Must match IndexDataType
 const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
 const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
-const TILE_META_COUNT: BufferAddress = 512;
-const TILE_MASK_INSTANCE_COUNT: BufferAddress = 512;
+const TILE_META_COUNT: BufferAddress = 512; // FIXME: Move this to BufferPool
+const TILE_MASK_INSTANCE_COUNT: BufferAddress = 512; // FIXME: Pick reasonable size
 
 pub struct State {
     instance: wgpu::Instance,
@@ -95,11 +94,6 @@ impl State {
         } else {
             window.inner_size()
         };
-
-        println!(
-            "Using static database from {}",
-            static_database::get_source_path()
-        );
 
         // create an instance
         let instance = wgpu::Instance::new(wgpu::Backends::all());
