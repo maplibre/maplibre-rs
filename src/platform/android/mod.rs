@@ -7,7 +7,7 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8
 
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
 #[tokio::main]
-pub fn main() {
+pub async fn main() {
     use winit::event_loop::EventLoop;
     use winit::window::WindowBuilder;
 
