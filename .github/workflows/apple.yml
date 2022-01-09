@@ -1,6 +1,6 @@
 # The following workflows is expensive to run and runs less frequently.
 
-name: Rust
+name: Apple (Expensive)
 
 on: [ pull_request ]
 
