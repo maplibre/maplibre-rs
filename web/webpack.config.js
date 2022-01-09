@@ -7,7 +7,8 @@ let dist = path.join(__dirname, 'dist/demo');
 module.exports = (env) => ({
     mode: "development",
     entry: {
-        index: "./index.ts"
+        index: "./index.ts",
+        'service-worker': "./service-worker.ts",
     },
     experiments: {
         syncWebAssembly: true
@@ -21,7 +22,9 @@ module.exports = (env) => ({
         filename: "[name].js"
     },
     devServer: {
-        https: true,
+        server: {
+            type: 'http',
+        },
         allowedHosts: 'all',
         host: '0.0.0.0',
         static: {

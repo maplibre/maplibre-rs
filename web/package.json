@@ -16,7 +16,10 @@
     "url": "https://github.com/maxammann/mapr"
   },
   "dependencies": {
-    "spectorjs": "^0.9.27"
+    "spectorjs": "^0.9.27",
+    "workbox-cacheable-response": "^6.4.2",
+    "workbox-routing": "^6.4.2",
+    "workbox-strategies": "^6.4.2"
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "^1.6.0",

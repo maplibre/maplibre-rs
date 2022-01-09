@@ -45,6 +45,11 @@ const start = async () => {
         }
     }
 
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js');
+        });
+    }
 
     let MEMORY = 16 * 1024;
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY, shared: true});
