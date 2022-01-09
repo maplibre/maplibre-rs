@@ -2,7 +2,7 @@ use std::concat;
 use std::env;
 
 use async_trait::async_trait;
-use include_dir::{include_dir, Dir, File};
+use include_dir::{include_dir, Dir};
 
 use crate::coords::TileCoords;
 use crate::error::Error;

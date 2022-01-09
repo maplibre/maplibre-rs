@@ -3,7 +3,6 @@ use crate::error::Error;
 use crate::io::{HttpFetcher, TileFetcher};
 use crate::platform::PlatformHttpFetcher;
 use async_trait::async_trait;
-use core::panicking::panic;
 
 pub struct WebTileFetcher {
     http_fetcher: PlatformHttpFetcher,

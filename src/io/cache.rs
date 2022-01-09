@@ -7,9 +7,8 @@ use log::{error, info};
 use crate::coords::TileCoords;
 use vector_tile::parse_tile_bytes;
 
-use crate::io::static_tile_fetcher::StaticTileFetcher;
 use crate::io::web_tile_fetcher::WebTileFetcher;
-use crate::io::{web_tile_fetcher, TileFetcher};
+use crate::io::TileFetcher;
 use crate::render::shader_ffi::GpuVertexUniform;
 use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
 

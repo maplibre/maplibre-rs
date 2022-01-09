@@ -25,7 +25,7 @@ pub struct PlatformHttpFetcher {
     client: ClientWithMiddleware,
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl HttpFetcher for PlatformHttpFetcher {
     fn new() -> Self {
         let client = ClientBuilder::new(Client::new())

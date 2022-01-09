@@ -27,29 +27,7 @@ fn tile1(c: &mut Criterion) {
                 )
                     .into(),
             )
-            .unwrap()
-            .contents(),
-    ))
-    .expect("failed to load tile");
-
-    c.bench_function("tessselate_stroke", |b| b.iter(|| tessselate_stroke(&tile)));
-    c.bench_function("tessselate_fill", |b| b.iter(|| tessselate_fill(&tile)));
-}
-
-fn tile2(c: &mut Criterion) {
-    let fetcher = StaticTileFetcher::new();
-    let tile = parse_tile_reader(&mut Cursor::new(
-        fetcher
-            .sync_fetch_tile(
-                &(
-                    mapr::example::MUNICH_X,
-                    mapr::example::MUNICH_Y,
-                    mapr::example::MUNICH_Z,
-                )
-                    .into(),
-            )
-            .unwrap()
-            .contents(),
+            .unwrap(),
     ))
     .expect("failed to load tile");
 
