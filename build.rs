@@ -20,13 +20,17 @@ fn main() {
     }
     let source = Path::new(&root_dir).join(format!("test-data/munich-{}.mbtiles", MUNICH_Z));
 
-    // Pack tiles around Munich HBF (100 tiles in each direction)
-    extract(
-        source,
-        out,
-        MUNICH_Z,
-        (MUNICH_X - 100)..(MUNICH_X + 100),
-        (MUNICH_Y - 100)..(MUNICH_Y + 100),
-    )
-    .unwrap();
+    if source.exists() {
+        // Pack tiles around Munich HBF (100 tiles in each direction)
+        extract(
+            source,
+            out,
+            MUNICH_Z,
+            (MUNICH_X - 100)..(MUNICH_X + 100),
+            (MUNICH_Y - 100)..(MUNICH_Y + 100),
+        )
+        .unwrap();
+    } else {
+        // Do not statically embed tiles
+    }
 }
