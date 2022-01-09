@@ -1,5 +1,5 @@
 mod cache;
-mod fetch;
+mod http_fetcher;
 
 use std::panic;
 
@@ -24,7 +24,7 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 #[cfg(feature = "web-webgl")]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
 
-pub use fetch::download;
+pub use http_fetcher::PlatformHttpFetcher;
 
 #[wasm_bindgen(start)]
 pub fn start() {

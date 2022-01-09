@@ -7,7 +7,9 @@ use log::{error, info};
 use crate::coords::TileCoords;
 use vector_tile::parse_tile_bytes;
 
-use crate::io::web_database;
+use crate::io::static_tile_fetcher::StaticTileFetcher;
+use crate::io::web_tile_fetcher::WebTileFetcher;
+use crate::io::{web_tile_fetcher, TileFetcher};
 use crate::render::shader_ffi::GpuVertexUniform;
 use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
 
@@ -48,11 +50,13 @@ impl Cache {
     }
 
     pub async fn run_loop(&mut self) {
+        let fetcher = WebTileFetcher::new();
+        // let fetcher = StaticTileFetcher::new();
+
         let mut current_id = 0;
         loop {
             while let Some(coords) = self.requests.pop() {
-                //if let (file) = static_database::get_tile(&coords) {
-                if let Ok(data) = web_database::get_tile(&coords).await {
+                if let Ok(data) = fetcher.fetch_tile(&coords).await {
                     info!("preparing tile {} with {}bytes", &coords, data.len());
                     let tile = parse_tile_bytes(bytemuck::cast_slice(data.as_slice()))
                         .expect("failed to load tile");
