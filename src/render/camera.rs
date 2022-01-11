@@ -82,7 +82,7 @@ impl Perspective {
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{ElementWise, Matrix4, Vector3, Vector4};
+    use cgmath::{ElementWise, Matrix4, SquareMatrix, Vector3, Vector4};
 
     use super::{Camera, Perspective};
 
@@ -94,34 +94,59 @@ mod tests {
         let perspective = Perspective::new(width, height, cgmath::Deg(45.0), 0.1, 100000.0);
         let projection = perspective;
 
-        let view_proj = (projection.calc_matrix() * camera.calc_matrix());
+        let world_pos: Vector4<f64> = Vector4::new(2000.0, 2000.0, 0.0, 1.0);
+        println!("world_pos: {:?}", world_pos);
+        let view_proj: Matrix4<f64> = (projection.calc_matrix() * camera.calc_matrix())
+            .cast()
+            .unwrap();
 
-        let world_pos = Vector4::new(2000.0, 2000.0, 0.0, 1.0);
         let result = view_proj * world_pos;
-        let ndc = Vector3::new(
-            result.x / result.w,
-            result.y / result.w,
-            result.z / result.w,
-        );
+        println!("result: {:?}", result);
 
         // Adopted from: https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkViewport.html
         // and https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/
+        let result_ndc = Vector4::new(
+            result.x / result.w,
+            result.y / result.w,
+            result.z / result.w,
+            result.w,
+        );
+
         let min_depth = 0.0;
         let max_depth = 1.0;
 
         let x = 0.0;
         let y = 0.0;
-        let ox = x + width as f32 / 2.0;
-        let oy = y + height as f32 / 2.0;
+        let ox = x + width as f64 / 2.0;
+        let oy = y + height as f64 / 2.0;
         let oz = min_depth;
-        let px = width as f32;
-        let py = height as f32;
+        let px = width as f64;
+        let py = height as f64;
         let pz = max_depth - min_depth;
-        let xd = ndc.x;
-        let yd = ndc.y;
-        let zd = ndc.z;
-
+        let xd = result_ndc.x;
+        let yd = result_ndc.y;
+        let zd = result_ndc.z;
         let screen = Vector3::new(px / 2.0 * xd + ox, py / 2.0 * yd + oy, pz * zd + oz);
-        println!("{:?}", screen);
+        println!("screen: {:?}", screen);
+
+        // Adapted from: https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle
+        let direct_x = Matrix4::from_cols(
+            Vector4::new(width as f64 / 2.0, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, height as f64 / 2.0, 0.0, 0.0),
+            Vector4::new(0.0, 0.0, pz, 0.0),
+            Vector4::new(ox, oy, oz, 1.0),
+        );
+        let screen_hom = direct_x * result;
+        let screen = Vector3::new(
+            screen_hom.x / screen_hom.w,
+            screen_hom.y / screen_hom.w,
+            screen_hom.z / screen_hom.w,
+        );
+        println!("screen: {:?}", screen);
+
+        let result = direct_x.invert().unwrap() * screen_hom;
+        println!("result: {:?}", result);
+        let world_pos = view_proj.invert().unwrap() * result;
+        println!("world_pos: {:?}", world_pos);
     }
 }
