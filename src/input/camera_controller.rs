@@ -1,36 +1,32 @@
 use std::f32::consts::FRAC_PI_2;
 
-use cgmath::InnerSpace;
+use crate::render::camera;
+use cgmath::{EuclideanSpace, InnerSpace, Matrix4, SquareMatrix, Vector2, Vector3, Vector4};
+use log::info;
 
 const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
 
 #[derive(Debug)]
 pub struct CameraController {
-    amount_left: f32,
-    amount_right: f32,
-    amount_forward: f32,
-    amount_backward: f32,
-    amount_up: f32,
-    amount_down: f32,
-    rotate_horizontal: f32,
-    rotate_vertical: f32,
-    scroll: f32,
-    speed: f32,
-    sensitivity: f32,
+    translate_x: f64,
+    translate_y: f64,
+    direct_translate_x: f64,
+    direct_translate_y: f64,
+
+    zoom: f64,
+
+    speed: f64,
+    sensitivity: f64,
 }
 
 impl CameraController {
-    pub fn new(speed: f32, sensitivity: f32) -> Self {
+    pub fn new(speed: f64, sensitivity: f64) -> Self {
         Self {
-            amount_left: 0.0,
-            amount_right: 0.0,
-            amount_forward: 0.0,
-            amount_backward: 0.0,
-            amount_up: 0.0,
-            amount_down: 0.0,
-            rotate_horizontal: 0.0,
-            rotate_vertical: 0.0,
-            scroll: 0.0,
+            translate_x: 0.0,
+            translate_y: 0.0,
+            direct_translate_x: 0.0,
+            direct_translate_y: 0.0,
+            zoom: 0.0,
             speed,
             sensitivity,
         }
@@ -42,58 +38,107 @@ impl CameraController {
         state: winit::event::ElementState,
     ) -> bool {
         let amount = if state == winit::event::ElementState::Pressed {
-            1.0
+            10.0 * self.sensitivity // left, right is the same as panning 10px
         } else {
             0.0
         };
         match key {
             winit::event::VirtualKeyCode::W | winit::event::VirtualKeyCode::Up => {
-                self.amount_forward = amount;
+                self.translate_y += amount;
                 true
             }
             winit::event::VirtualKeyCode::S | winit::event::VirtualKeyCode::Down => {
-                self.amount_backward = amount;
+                self.translate_y -= amount;
                 true
             }
             winit::event::VirtualKeyCode::A | winit::event::VirtualKeyCode::Left => {
-                self.amount_left = amount;
+                self.translate_x -= amount;
                 true
             }
             winit::event::VirtualKeyCode::D | winit::event::VirtualKeyCode::Right => {
-                self.amount_right = amount;
+                self.translate_x += amount;
                 true
             }
             winit::event::VirtualKeyCode::Space => {
-                self.amount_up = amount;
-                true
-            }
-            winit::event::VirtualKeyCode::LShift => {
-                self.amount_down = amount;
+                self.translate_y = amount;
                 true
             }
             _ => false,
         }
     }
 
-    pub fn process_mouse(&mut self, mouse_dx: f64, mouse_dy: f64) {
-        self.rotate_horizontal = mouse_dx as f32;
-        self.rotate_vertical = mouse_dy as f32;
+    pub fn process_mouse(
+        &mut self,
+        start_cam_x: f64,
+        start_cam_y: f64,
+        mouse_dx: f64,
+        mouse_dy: f64,
+        width: f64,
+        height: f64,
+        camera: &mut camera::Camera,
+        view_proj: &Matrix4<f64>,
+    ) {
+        info!("mouse_dx {} mouse_dy {}", mouse_dx, mouse_dy);
+
+        let origin = Vector2::new(0.0, 0.0);
+        let screen = Vector2::new(mouse_dx, mouse_dy);
+        let camera_pos = &camera.position.to_vec();
+        let world = Self::screen_to_world(&origin, width, height, camera_pos, &view_proj)
+            - Self::screen_to_world(&screen, width, height, camera_pos, &view_proj);
+
+        info!("world {:?}", world);
+
+        //self.direct_translate_x -= world.x;
+        //self.direct_translate_y += world.y;
+        camera.position.x = start_cam_x - world.x;
+        camera.position.y = start_cam_y + world.y;
+    }
+
+    fn screen_to_world(
+        screen: &Vector2<f64>,
+        width: f64,
+        height: f64,
+        camera_pos: &Vector3<f64>,
+        view_proj: &Matrix4<f64>,
+    ) -> Vector4<f64> {
+        let min_depth = 0.0;
+        let max_depth = 1.0;
+
+        let x = 0.0;
+        let y = 0.0;
+        let ox = x + width / 2.0;
+        let oy = y + height / 2.0;
+        let oz = min_depth;
+        let pz = max_depth - min_depth;
+
+        // Adapted from: https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle
+        let direct_x = Matrix4::from_cols(
+            Vector4::new(width as f64 / 2.0, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, height as f64 / 2.0, 0.0, 0.0),
+            Vector4::new(0.0, 0.0, pz, 0.0),
+            Vector4::new(ox, oy, oz, 1.0),
+        );
+
+        let screen_hom = Vector4::new(screen.x, screen.y, 1.0, 1.0) * camera_pos.z;
+        let result = direct_x.invert().unwrap() * screen_hom;
+        let world_pos = view_proj.invert().unwrap() * result;
+        world_pos
     }
 
     pub fn process_touch(&mut self, touch_dx: f64, touch_dy: f64) {
-        self.amount_right += touch_dx as f32;
-        self.amount_up += touch_dy as f32;
+        self.translate_x += touch_dx as f64 * self.sensitivity;
+        self.translate_y += touch_dy as f64 * self.sensitivity;
     }
 
     pub fn process_scroll(&mut self, delta: &winit::event::MouseScrollDelta) {
-        self.scroll = -match delta {
+        self.zoom = -match delta {
             // I'm assuming a line is about 100 pixels
-            winit::event::MouseScrollDelta::LineDelta(_, scroll) => scroll * 100.0,
+            winit::event::MouseScrollDelta::LineDelta(_, scroll) => *scroll as f64 * 100.0,
             winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
                 y: scroll,
                 ..
-            }) => *scroll as f32,
-        };
+            }) => *scroll,
+        } * self.sensitivity;
     }
 
     pub fn update_camera(
@@ -101,44 +146,27 @@ impl CameraController {
         camera: &mut crate::render::camera::Camera,
         dt: std::time::Duration,
     ) {
-        let dt = dt.as_secs_f32();
+        camera.position.x += self.direct_translate_x;
+        camera.position.y += self.direct_translate_y;
+        self.direct_translate_x = 0.0;
+        self.direct_translate_y = 0.0;
 
-        // Move forward/backward and left/right
-        let (yaw_sin, yaw_cos) = camera.yaw.0.sin_cos();
-        let forward = cgmath::Vector3::new(yaw_cos, 0.0, yaw_sin).normalize();
-        let right = cgmath::Vector3::new(-yaw_sin, 0.0, yaw_cos).normalize();
-        camera.position += forward * (self.amount_forward - self.amount_backward) * self.speed * dt;
-        camera.position += right * (self.amount_right - self.amount_left) * self.speed * dt;
+        let dt = dt.as_secs_f64() * self.speed;
+
+        let dy = self.translate_y * dt;
+        camera.position.y += dy;
+        let dx = self.translate_x * dt;
+        camera.position.x += dx;
 
         // Move in/out (aka. "zoom")
         // Note: this isn't an actual zoom. The camera's position
         // changes when zooming. I've added this to make it easier
         // to get closer to an object you want to focus on.
-        let (pitch_sin, pitch_cos) = camera.pitch.0.sin_cos();
-        let scrollward =
-            cgmath::Vector3::new(pitch_cos * yaw_cos, pitch_sin, pitch_cos * yaw_sin).normalize();
-        camera.position += scrollward * self.scroll * self.speed * self.sensitivity * dt;
-        self.scroll = 0.0;
+        let dz = self.zoom * dt;
+        camera.position.z += dz;
 
-        // Move up/down. Since we don't use roll, we can just
-        // modify the y coordinate directly.
-        camera.position.y += (self.amount_up - self.amount_down) * self.speed * dt;
-
-        // Rotate
-        camera.yaw += cgmath::Rad(self.rotate_horizontal) * self.sensitivity * dt;
-        camera.pitch += cgmath::Rad(-self.rotate_vertical) * self.sensitivity * dt;
-
-        // If process_mouse isn't called every frame, these values
-        // will not get set to zero, and the camera will rotate
-        // when moving in a non cardinal direction.
-        self.rotate_horizontal = 0.0;
-        self.rotate_vertical = 0.0;
-
-        // Keep the camera's angle from going too high/low.
-        if camera.pitch < -cgmath::Rad(SAFE_FRAC_PI_2) {
-            camera.pitch = -cgmath::Rad(SAFE_FRAC_PI_2);
-        } else if camera.pitch > cgmath::Rad(SAFE_FRAC_PI_2) {
-            camera.pitch = cgmath::Rad(SAFE_FRAC_PI_2);
-        }
+        self.zoom -= dz;
+        self.translate_x -= dx;
+        self.translate_y -= dy;
     }
 }

@@ -47,7 +47,7 @@ pub struct State {
     surface_config: wgpu::SurfaceConfiguration,
     suspended: bool,
 
-    size: winit::dpi::PhysicalSize<u32>,
+    pub size: winit::dpi::PhysicalSize<u32>,
 
     render_pipeline: wgpu::RenderPipeline,
     mask_pipeline: wgpu::RenderPipeline,
@@ -67,7 +67,7 @@ pub struct State {
     tile_mask_instances_buffer: wgpu::Buffer,
 
     pub camera: camera::Camera,
-    perspective: camera::Perspective,
+    pub perspective: camera::Perspective,
 
     pub scene: SceneParams,
 }

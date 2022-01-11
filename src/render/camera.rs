@@ -1,9 +1,10 @@
 use cgmath::prelude::*;
+use cgmath::Matrix4;
 
 use crate::render::shader_ffi::CameraUniform;
 
 #[rustfmt::skip]
-pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
+pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
     1.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
     0.0, 0.0, 0.5, 0.0,
@@ -12,16 +13,16 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
 
 #[derive(Debug)]
 pub struct Camera {
-    pub position: cgmath::Point3<f32>,
-    pub yaw: cgmath::Rad<f32>,
-    pub pitch: cgmath::Rad<f32>,
+    pub position: cgmath::Point3<f64>,
+    pub yaw: cgmath::Rad<f64>,
+    pub pitch: cgmath::Rad<f64>,
 }
 
 impl Camera {
     pub fn new<
-        V: Into<cgmath::Point3<f32>>,
-        Y: Into<cgmath::Rad<f32>>,
-        P: Into<cgmath::Rad<f32>>,
+        V: Into<cgmath::Point3<f64>>,
+        Y: Into<cgmath::Rad<f64>>,
+        P: Into<cgmath::Rad<f64>>,
     >(
         position: V,
         yaw: Y,
@@ -34,7 +35,7 @@ impl Camera {
         }
     }
 
-    pub fn calc_matrix(&self) -> cgmath::Matrix4<f32> {
+    pub fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
         cgmath::Matrix4::look_to_rh(
             self.position,
             cgmath::Vector3::new(self.yaw.0.cos(), self.pitch.0.sin(), self.yaw.0.sin())
@@ -42,29 +43,37 @@ impl Camera {
             cgmath::Vector3::unit_y(),
         )
     }
+
+    pub fn calc_view_proj(&self, perspective: &Perspective) -> Matrix4<f64> {
+        perspective.calc_matrix() * self.calc_matrix()
+    }
+
     pub fn create_camera_uniform(&self, perspective: &Perspective) -> CameraUniform {
-        let view_proj = (perspective.calc_matrix() * self.calc_matrix());
-        CameraUniform::new(view_proj.into(), self.position.to_homogeneous().into())
+        let view_proj = self.calc_view_proj(perspective);
+        CameraUniform::new(
+            view_proj.cast::<f32>().unwrap().into(),
+            self.position.to_homogeneous().cast::<f32>().unwrap().into(),
+        )
     }
 }
 
 pub struct Perspective {
-    aspect: f32,
-    fovy: cgmath::Rad<f32>,
-    znear: f32,
-    zfar: f32,
+    aspect: f64,
+    fovy: cgmath::Rad<f64>,
+    znear: f64,
+    zfar: f64,
 }
 
 impl Perspective {
-    pub fn new<F: Into<cgmath::Rad<f32>>>(
+    pub fn new<F: Into<cgmath::Rad<f64>>>(
         width: u32,
         height: u32,
         fovy: F,
-        znear: f32,
-        zfar: f32,
+        znear: f64,
+        zfar: f64,
     ) -> Self {
         Self {
-            aspect: width as f32 / height as f32,
+            aspect: width as f64 / height as f64,
             fovy: fovy.into(),
             znear,
             zfar,
@@ -72,10 +81,10 @@ impl Perspective {
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.aspect = width as f32 / height as f32;
+        self.aspect = width as f64 / height as f64;
     }
 
-    pub fn calc_matrix(&self) -> cgmath::Matrix4<f32> {
+    pub fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
         OPENGL_TO_WGPU_MATRIX * cgmath::perspective(self.fovy, self.aspect, self.znear, self.zfar)
     }
 }
@@ -137,6 +146,7 @@ mod tests {
             Vector4::new(ox, oy, oz, 1.0),
         );
         let screen_hom = direct_x * result;
+        println!("screen_hom: {:?}", screen_hom);
         let screen = Vector3::new(
             screen_hom.x / screen_hom.w,
             screen_hom.y / screen_hom.w,
@@ -144,8 +154,12 @@ mod tests {
         );
         println!("screen: {:?}", screen);
 
+        let screen_hom2 = Vector4::new(screen.x, screen.y, 1.0, 1.0) * 5000.0;
+        println!("screen_hom2: {:?}", screen_hom2);
         let result = direct_x.invert().unwrap() * screen_hom;
-        println!("result: {:?}", result);
+        println!("result screen_hom: {:?}", result);
+        let result = direct_x.invert().unwrap() * screen_hom2;
+        println!("result screen_hom2: {:?}", result);
         let world_pos = view_proj.invert().unwrap() * result;
         println!("world_pos: {:?}", world_pos);
     }
