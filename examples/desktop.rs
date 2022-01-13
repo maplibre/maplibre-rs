@@ -1,4 +1,4 @@
-use mapr::io::cache::Cache;
+use mapr::io::worker_loop::WorkerLoop;
 use mapr::main_loop;
 
 use tokio::task;
@@ -15,7 +15,7 @@ async fn main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut cache_io = Cache::new();
+    let mut cache_io = WorkerLoop::new();
     let cache_main = cache_io.clone();
 
     let join_handle = task::spawn(async move { cache_io.run_loop().await });

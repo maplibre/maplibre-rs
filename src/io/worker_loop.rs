@@ -20,18 +20,18 @@ pub struct TesselatedTile {
 }
 
 #[derive(Clone)]
-pub struct Cache {
+pub struct WorkerLoop {
     requests: Arc<WorkQueue<TileCoords>>,
     responses: Arc<WorkQueue<TesselatedTile>>,
 }
 
-impl Drop for Cache {
+impl Drop for WorkerLoop {
     fn drop(&mut self) {
-        error!("Cache dropped, even though it should never drop!");
+        error!("WorkerLoop dropped. This should only happen when the application is stopped!");
     }
 }
 
-impl Cache {
+impl WorkerLoop {
     pub fn new() -> Self {
         Self {
             requests: Arc::new(WorkQueue::new()),

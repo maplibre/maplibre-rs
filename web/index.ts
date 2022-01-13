@@ -55,20 +55,16 @@ const start = async () => {
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY, shared: true});
     const module = await init(undefined, memory);
 
-    const worker = new Worker(new URL('./cache-worker.ts', import.meta.url), {
+    const worker = new Worker(new URL('./worker-loop.ts', import.meta.url), {
         type: "module",
     });
 
-    let cache_address = module.create_cache();
+    let workerLoopPtr = module.create_worker_loop();
 
     console.log("Starting cache-worker")
-    worker.postMessage({type: "init", memory, cache_address});
+    worker.postMessage({type: "init", memory, workerLoopPtr});
 
-    /*    worker.onmessage = (e) => {
-            console.log(e)
-        }*/
-
-    await module.run(cache_address);
+    await module.run(workerLoopPtr);
 }
 
 start().then(r => console.log("started via wasm"));

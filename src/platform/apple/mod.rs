@@ -1,7 +1,7 @@
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
 
-use crate::io::cache::Cache;
+use crate::io::worker_loop::WorkerLoop;
 use crate::main_loop;
 pub use std::time::Instant;
 use tokio::task;
@@ -20,13 +20,10 @@ pub async fn mapr_apple_main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut cache_io = Cache::new();
-    let cache_main = cache_io.clone();
+    let mut worker_loop = WorkerLoop::new();
+    let worker_loop_main = worker_loop.clone();
 
-    let mut cache_io = Cache::new();
-    let cache_main = cache_io.clone();
-
-    let join_handle = task::spawn(async move { cache_io.run_loop().await });
-    main_loop::setup(window, event_loop, Box::new(cache_main)).await;
+    let join_handle = task::spawn(async move { worker_loop.run_loop().await });
+    main_loop::setup(window, event_loop, Box::new(worker_loop_main)).await;
     join_handle.await.unwrap();
 }

@@ -2,9 +2,9 @@ use crate::coords::TileCoords;
 use crate::error::Error;
 use async_trait::async_trait;
 
-pub mod cache;
 pub mod static_tile_fetcher;
 pub mod web_tile_fetcher;
+pub mod worker_loop;
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]

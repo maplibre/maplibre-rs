@@ -4,14 +4,18 @@ use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEve
 use winit::event_loop::{ControlFlow, EventLoop};
 
 use crate::input::InputHandler;
-use crate::io::cache::Cache;
+use crate::io::worker_loop::WorkerLoop;
 use crate::platform::Instant;
 use crate::render::render_state::RenderState;
 
-pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cache: Box<Cache>) {
+pub async fn setup(
+    window: winit::window::Window,
+    event_loop: EventLoop<()>,
+    worker_loop: Box<WorkerLoop>,
+) {
     info!("== mapr ==");
 
-    fetch_munich_tiles(cache.as_ref());
+    fetch_munich_tiles(worker_loop.as_ref());
 
     let mut input = InputHandler::new();
     let mut maybe_state: Option<RenderState> = if cfg!(target_os = "android") {
@@ -80,7 +84,7 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cac
                     let dt = now - last_render_time;
                     last_render_time = now;
                     input.update_state(state, dt);
-                    state.upload_tile_geometry(&cache);
+                    state.upload_tile_geometry(&worker_loop);
                     match state.render() {
                         Ok(_) => {}
                         Err(wgpu::SurfaceError::Lost) => {

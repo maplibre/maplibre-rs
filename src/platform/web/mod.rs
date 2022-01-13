@@ -1,5 +1,5 @@
-mod cache;
 mod http_fetcher;
+mod worker_loop;
 
 use std::panic;
 
@@ -9,7 +9,7 @@ use winit::event_loop::EventLoop;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::window::{Window, WindowBuilder};
 
-use crate::io::cache::Cache;
+use crate::io::worker_loop::WorkerLoop;
 use console_error_panic_hook;
 pub use instant::Instant;
 use wasm_bindgen::prelude::*;
@@ -35,8 +35,8 @@ pub fn start() {
 }
 
 #[wasm_bindgen]
-pub async fn run(cache_ptr: *mut Cache) {
-    let cache: Box<Cache> = unsafe { Box::from_raw(cache_ptr) };
+pub async fn run(worker_loop_ptr: *mut WorkerLoop) {
+    let worker_loop: Box<WorkerLoop> = unsafe { Box::from_raw(worker_loop_ptr) };
     let event_loop = EventLoop::new();
 
     let web_window: WebSysWindow = web_sys::window().unwrap();
@@ -59,7 +59,7 @@ pub async fn run(cache_ptr: *mut Cache) {
         height: body.client_height(),
     });
 
-    // Either call forget or the main loop to keep cache alive
-    //std::mem::forget(cache);
-    crate::main_loop::setup(window, event_loop, cache).await;
+    // Either call forget or the main loop to keep worker loop alive
+    crate::main_loop::setup(window, event_loop, worker_loop).await;
+    // std::mem::forget(worker_loop);
 }

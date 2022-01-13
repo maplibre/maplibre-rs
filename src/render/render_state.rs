@@ -6,7 +6,7 @@ use wgpu::{Buffer, BufferAddress, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
-use crate::io::cache::Cache;
+use crate::io::worker_loop::WorkerLoop;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::stencil_pattern::TileMaskPattern;
@@ -344,8 +344,8 @@ impl RenderState {
 
     // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
     // TODO: What is StagingBelt for?
-    pub fn upload_tile_geometry(&mut self, cache: &Cache) {
-        let upload = cache.pop_all();
+    pub fn upload_tile_geometry(&mut self, worker_loop: &WorkerLoop) {
+        let upload = worker_loop.pop_all();
 
         for tile in upload.iter() {
             let world_coords = tile.coords.into_world_tile();
