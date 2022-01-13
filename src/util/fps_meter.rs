@@ -4,6 +4,17 @@ use log::info;
 
 use crate::platform::Instant;
 
+/// Measures the frames per second.
+///
+/// # Example
+/// ```rust
+/// use crate::util::FPSMeter;
+///
+/// let mut meter = FPSMeter::new();
+///
+/// // call the following the the render loop
+/// meter.update_and_print();
+/// ```
 pub struct FPSMeter {
     next_report: Instant,
     frame_count: u32,

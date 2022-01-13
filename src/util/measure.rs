@@ -1,11 +1,11 @@
 use crate::platform::Instant;
 use log::trace;
 
-pub struct Measure {
+pub struct TimeMeasure {
     now: Instant,
 }
 
-impl Measure {
+impl TimeMeasure {
     pub fn time() -> Self {
         Self {
             now: Instant::now(),
@@ -22,7 +22,7 @@ impl Measure {
     }
 }
 
-impl Drop for Measure {
+impl Drop for TimeMeasure {
     fn drop(&mut self) {
         self.breadcrumb("Drop");
     }

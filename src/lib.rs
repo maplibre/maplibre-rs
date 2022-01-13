@@ -1,4 +1,3 @@
-mod fps_meter;
 mod input;
 mod platform;
 
