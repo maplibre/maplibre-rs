@@ -22,7 +22,7 @@ use super::texture::Texture;
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint16; // Must match IndexDataType
 const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
 const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
-const TILE_META_COUNT: BufferAddress = 512; // FIXME: Move this to BufferPool
+const TILE_META_COUNT: BufferAddress = 1024 * 8; // FIXME: Move this to BufferPool
 const TILE_MASK_INSTANCE_COUNT: BufferAddress = 512; // FIXME: Pick reasonable size
 
 pub struct RenderState {
@@ -48,10 +48,9 @@ pub struct RenderState {
 
     depth_texture: Texture,
 
-    tiles_uniform_buffer: wgpu::Buffer,
     globals_uniform_buffer: wgpu::Buffer,
 
-    buffer_pool: BufferPool<Queue, Buffer, ShaderVertex, IndexDataType>,
+    buffer_pool: BufferPool<Queue, Buffer, ShaderVertex, IndexDataType, ShaderTileMetadata>,
 
     tile_mask_pattern: TileMaskPattern,
     tile_mask_instances_buffer: wgpu::Buffer,
@@ -268,15 +267,15 @@ impl RenderState {
             depth_texture,
             sample_count,
             globals_uniform_buffer,
-            tiles_uniform_buffer,
             fps_meter: FPSMeter::new(),
             tile_mask_instances_buffer: tile_mask_instances,
             camera,
             perspective: projection,
             suspended: false, // Initially the app is not suspended
             buffer_pool: BufferPool::new(
-                BackingBufferDescriptor(vertex_uniform_buffer, VERTEX_BUFFER_SIZE),
-                BackingBufferDescriptor(indices_uniform_buffer, INDICES_BUFFER_SIZE),
+                BackingBufferDescriptor::new(vertex_uniform_buffer, VERTEX_BUFFER_SIZE),
+                BackingBufferDescriptor::new(indices_uniform_buffer, INDICES_BUFFER_SIZE),
+                BackingBufferDescriptor::new(tiles_uniform_buffer, tiles_uniform_buffer_size),
             ),
             tile_mask_pattern: TileMaskPattern::new(),
         }
@@ -342,15 +341,10 @@ impl RenderState {
                 tile.id,
                 tile.coords,
                 &tile.over_aligned,
-            );
-
-            self.queue.write_buffer(
-                &self.tiles_uniform_buffer,
-                std::mem::size_of::<ShaderTileMetadata>() as u64 * tile.id as u64,
-                bytemuck::cast_slice(&[ShaderTileMetadata::new(
+                ShaderTileMetadata::new(
                     [0.0, 0.0, 0.0, 1.0],
                     world_coords.into_world(4096.0).into(),
-                )]),
+                ),
             );
         }
 
@@ -451,10 +445,9 @@ impl RenderState {
                     let id = entry.id as BufferAddress;
                     pass.set_vertex_buffer(
                         1,
-                        self.tiles_uniform_buffer.slice(
-                            std::mem::size_of::<ShaderTileMetadata>() as u64 * id
-                                ..std::mem::size_of::<ShaderTileMetadata>() as u64 * (id + 1),
-                        ),
+                        self.buffer_pool
+                            .metadata()
+                            .slice(entry.metadata_buffer_range()),
                     );
                     /* if !self.tile_fill_range.is_empty() {
                         pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
