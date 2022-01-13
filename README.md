@@ -79,6 +79,28 @@ graphics are achievable using the current stack.
 
 * Rendering any kind of rasterized data
 
+## Repository Layout
+
+```bash
+.
+├── docs                # Documentation for mapr
+├── src                 # The source code of the mapr library
+├── libs                # Libraries which will eventually be published as separate crates
+│   ├── mbtiles         # Library for extracting .mbtiles files
+│   ├── style_spec      # Library for interpreting MapLibre style specifications
+│   ├── vector_tile     # Library for parsing vector tile shaders
+│   └── wgsl_validate   # Library for validating WGSL shaders
+├── apple               # Platform specific files for Apple (iOS and MacOS)
+├── web                 # Platform specific files for Web (WebGL and WebGPU)
+├── benches             # Benchmarks for specific parts of the library
+├── examples            # Examples which can be run
+├── test-data           # Geo data which can be used for tests (Usually as .mbtiles)
+└── tools
+│   ├── build-android   # Script which helps building for Android
+│   ├── build-web       # Script which helps building for Web
+│   └── extract-region  # Script can extract data from a .mbtiles file
+```
+
 ## Building & Running
 
 Now, to clone the project:
