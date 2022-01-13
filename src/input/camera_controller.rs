@@ -1,19 +1,11 @@
-use std::f32::consts::FRAC_PI_2;
+use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
 
 use crate::render::camera;
-use cgmath::{EuclideanSpace, InnerSpace, Matrix4, SquareMatrix, Vector2, Vector3, Vector4};
-use log::info;
-
-const SAFE_FRAC_PI_2: f32 = FRAC_PI_2 - 0.0001;
 
 #[derive(Debug)]
 pub struct CameraController {
-    translate_x: f64,
-    translate_y: f64,
-    direct_translate_x: f64,
-    direct_translate_y: f64,
-
-    zoom: f64,
+    camera_position: Option<Vector3<f64>>,
+    camera_translate: Vector3<f64>,
 
     speed: f64,
     sensitivity: f64,
@@ -22,11 +14,8 @@ pub struct CameraController {
 impl CameraController {
     pub fn new(speed: f64, sensitivity: f64) -> Self {
         Self {
-            translate_x: 0.0,
-            translate_y: 0.0,
-            direct_translate_x: 0.0,
-            direct_translate_y: 0.0,
-            zoom: 0.0,
+            camera_position: None,
+            camera_translate: Vector3::zero(),
             speed,
             sensitivity,
         }
@@ -44,23 +33,19 @@ impl CameraController {
         };
         match key {
             winit::event::VirtualKeyCode::W | winit::event::VirtualKeyCode::Up => {
-                self.translate_y += amount;
+                self.camera_translate.y += amount;
                 true
             }
             winit::event::VirtualKeyCode::S | winit::event::VirtualKeyCode::Down => {
-                self.translate_y -= amount;
+                self.camera_translate.y -= amount;
                 true
             }
             winit::event::VirtualKeyCode::A | winit::event::VirtualKeyCode::Left => {
-                self.translate_x -= amount;
+                self.camera_translate.x -= amount;
                 true
             }
             winit::event::VirtualKeyCode::D | winit::event::VirtualKeyCode::Right => {
-                self.translate_x += amount;
-                true
-            }
-            winit::event::VirtualKeyCode::Space => {
-                self.translate_y = amount;
+                self.camera_translate.x += amount;
                 true
             }
             _ => false,
@@ -69,71 +54,22 @@ impl CameraController {
 
     pub fn process_mouse(
         &mut self,
-        start_cam_x: f64,
-        start_cam_y: f64,
-        mouse_dx: f64,
-        mouse_dy: f64,
-        width: f64,
-        height: f64,
-        camera: &mut camera::Camera,
-        view_proj: &Matrix4<f64>,
+        initial_camera_position: cgmath::Point3<f64>,
+        delta: Vector2<f64>,
+        camera: &camera::Camera,
+        perspective: &camera::Perspective,
     ) {
-        info!("mouse_dx {} mouse_dy {}", mouse_dx, mouse_dy);
+        let view_proj = camera.calc_view_proj(perspective);
+        let world = camera.project_screen_to_world(&Vector2::new(0.0, 0.0), &view_proj)
+            - camera.project_screen_to_world(&delta, &view_proj);
 
-        let origin = Vector2::new(0.0, 0.0);
-        let screen = Vector2::new(mouse_dx, mouse_dy);
-        let camera_pos = &camera.position.to_vec();
-        let world = Self::screen_to_world(&origin, width, height, camera_pos, &view_proj)
-            - Self::screen_to_world(&screen, width, height, camera_pos, &view_proj);
-
-        info!("world {:?}", world);
-
-        //self.direct_translate_x -= world.x;
-        //self.direct_translate_y += world.y;
-        camera.position.x = start_cam_x - world.x;
-        camera.position.y = start_cam_y + world.y;
-    }
-
-    fn screen_to_world(
-        screen: &Vector2<f64>,
-        width: f64,
-        height: f64,
-        camera_pos: &Vector3<f64>,
-        view_proj: &Matrix4<f64>,
-    ) -> Vector4<f64> {
-        let min_depth = 0.0;
-        let max_depth = 1.0;
-
-        let x = 0.0;
-        let y = 0.0;
-        let ox = x + width / 2.0;
-        let oy = y + height / 2.0;
-        let oz = min_depth;
-        let pz = max_depth - min_depth;
-
-        // Adapted from: https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle
-        let direct_x = Matrix4::from_cols(
-            Vector4::new(width as f64 / 2.0, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, height as f64 / 2.0, 0.0, 0.0),
-            Vector4::new(0.0, 0.0, pz, 0.0),
-            Vector4::new(ox, oy, oz, 1.0),
-        );
-
-        let screen_hom = Vector4::new(screen.x, screen.y, 1.0, 1.0) * camera_pos.z;
-        let result = direct_x.invert().unwrap() * screen_hom;
-        let world_pos = view_proj.invert().unwrap() * result;
-        world_pos
-    }
-
-    pub fn process_touch(&mut self, touch_dx: f64, touch_dy: f64) {
-        self.translate_x += touch_dx as f64 * self.sensitivity;
-        self.translate_y += touch_dy as f64 * self.sensitivity;
+        self.camera_position =
+            Some(initial_camera_position.to_vec() + Vector3::new(-world.x, world.y, 0.0))
     }
 
     pub fn process_scroll(&mut self, delta: &winit::event::MouseScrollDelta) {
-        self.zoom = -match delta {
-            // I'm assuming a line is about 100 pixels
-            winit::event::MouseScrollDelta::LineDelta(_, scroll) => *scroll as f64 * 100.0,
+        self.camera_translate.z -= match delta {
+            winit::event::MouseScrollDelta::LineDelta(_, scroll) => *scroll as f64 * 50.0,
             winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
                 y: scroll,
                 ..
@@ -146,27 +82,20 @@ impl CameraController {
         camera: &mut crate::render::camera::Camera,
         dt: std::time::Duration,
     ) {
-        camera.position.x += self.direct_translate_x;
-        camera.position.y += self.direct_translate_y;
-        self.direct_translate_x = 0.0;
-        self.direct_translate_y = 0.0;
-
         let dt = dt.as_secs_f64() * self.speed;
 
-        let dy = self.translate_y * dt;
-        camera.position.y += dy;
-        let dx = self.translate_x * dt;
-        camera.position.x += dx;
+        if let Some(position) = self.camera_position {
+            camera.position = Point3::from_vec(position);
+            self.camera_position = None;
+        }
 
         // Move in/out (aka. "zoom")
         // Note: this isn't an actual zoom. The camera's position
         // changes when zooming. I've added this to make it easier
         // to get closer to an object you want to focus on.
-        let dz = self.zoom * dt;
-        camera.position.z += dz;
+        let delta = self.camera_translate * dt;
+        camera.position += delta;
 
-        self.zoom -= dz;
-        self.translate_x -= dx;
-        self.translate_y -= dy;
+        self.camera_translate -= delta;
     }
 }

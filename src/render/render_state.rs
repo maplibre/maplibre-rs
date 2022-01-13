@@ -19,16 +19,6 @@ use super::shaders;
 use super::shaders::*;
 use super::texture::Texture;
 
-pub struct SceneParams {
-    pub stroke_width: f32,
-}
-
-impl Default for SceneParams {
-    fn default() -> Self {
-        SceneParams { stroke_width: 1.0 }
-    }
-}
-
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint16; // Must match IndexDataType
 const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
 const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
@@ -68,16 +58,6 @@ pub struct RenderState {
 
     pub camera: camera::Camera,
     pub perspective: camera::Perspective,
-
-    pub scene: SceneParams,
-}
-
-impl SceneParams {
-    pub fn new() -> Self {
-        Self {
-            ..SceneParams::default()
-        }
-    }
 }
 
 impl RenderState {
@@ -259,7 +239,13 @@ impl RenderState {
             None
         };
 
-        let camera = camera::Camera::new((0.0, 5.0, 5000.0), cgmath::Deg(-90.0), cgmath::Deg(-0.0));
+        let camera = camera::Camera::new(
+            (0.0, 5.0, 5000.0),
+            cgmath::Deg(-90.0),
+            cgmath::Deg(-0.0),
+            size.width,
+            size.height,
+        );
         let projection = camera::Perspective::new(
             surface_config.width,
             surface_config.height,
@@ -281,7 +267,6 @@ impl RenderState {
             multisampling_texture,
             depth_texture,
             sample_count,
-            scene: SceneParams::new(),
             globals_uniform_buffer,
             tiles_uniform_buffer,
             fps_meter: FPSMeter::new(),
@@ -320,6 +305,7 @@ impl RenderState {
             self.surface.configure(&self.device, &self.surface_config);
 
             self.perspective.resize(new_size.width, new_size.height);
+            self.camera.resize(new_size.width, new_size.height);
 
             // Re-configure depth buffer
             self.depth_texture = Texture::create_depth_texture(

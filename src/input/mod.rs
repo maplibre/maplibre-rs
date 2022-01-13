@@ -1,12 +1,13 @@
-use cgmath::Vector3;
+//! Handles the user input which is dispatched by the main event loop.
+
 use std::time::Duration;
+
+use cgmath::Vector2;
 use winit::event::{
     DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent,
 };
-use winit::window::Window;
 
 use crate::input::camera_controller::CameraController;
-use crate::render::camera::Camera;
 use crate::render::render_state::RenderState;
 
 mod camera_controller;
@@ -14,8 +15,8 @@ mod camera_controller;
 pub struct InputHandler {
     camera_controller: CameraController,
 
-    last_touch: Option<(f64, f64)>,
-    start_camera_pos: Option<cgmath::Point3<f64>>,
+    last_mouse_position: Option<Vector2<f64>>,
+    initial_camera_position: Option<cgmath::Point3<f64>>,
     mouse_pressed: bool,
     target_stroke_width: f32,
 }
@@ -25,65 +26,42 @@ impl InputHandler {
         let camera_controller = CameraController::new(5.0, 100.0);
         Self {
             target_stroke_width: 1.0,
-            start_camera_pos: None,
-            last_touch: None,
+            initial_camera_position: None,
+            last_mouse_position: None,
             mouse_pressed: false,
             camera_controller,
         }
     }
 
-    pub fn device_input(
-        &mut self,
-        event: &DeviceEvent,
-        state: &mut RenderState,
-        window: &Window,
-    ) -> bool {
+    pub fn device_input(&mut self, event: &DeviceEvent) -> bool {
         match event {
-            DeviceEvent::MouseMotion { delta } => {
-                /*                if self.mouse_pressed {
-                    let view_proj = state.camera.calc_view_proj(&state.perspective);
-                    self.camera_controller.process_mouse(
-                        delta.0 / window.scale_factor(),
-                        delta.1 / window.scale_factor(),
-                        state.size.width as f64,
-                        state.size.height as f64,
-                        &mut state.camera,
-                        &view_proj,
-                    );
-                }*/
-                true
-            }
             _ => false,
         }
     }
 
-    pub fn window_input(
-        &mut self,
-        event: &WindowEvent,
-        state: &mut RenderState,
-        window: &Window,
-    ) -> bool {
+    fn process_mouse_delta(&mut self, position: Vector2<f64>, state: &mut RenderState) {
+        if let (Some(last_mouse_position), Some(initial_camera_position)) =
+            (self.last_mouse_position, self.initial_camera_position)
+        {
+            let delta = last_mouse_position - position;
+            self.camera_controller.process_mouse(
+                initial_camera_position,
+                delta,
+                &state.camera,
+                &state.perspective,
+            );
+        } else {
+            self.last_mouse_position = Some(position);
+            self.initial_camera_position = Some(state.camera.position);
+        }
+    }
+
+    pub fn window_input(&mut self, event: &WindowEvent, state: &mut RenderState) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
                 if self.mouse_pressed {
-                    if let Some(start) = self.last_touch {
-                        let delta_x = start.0 - position.x;
-                        let delta_y = start.1 - position.y;
-                        let view_proj = state.camera.calc_view_proj(&state.perspective);
-                        self.camera_controller.process_mouse(
-                            self.start_camera_pos.unwrap().x,
-                            self.start_camera_pos.unwrap().y,
-                            delta_x,
-                            delta_y,
-                            state.size.width as f64,
-                            state.size.height as f64,
-                            &mut state.camera,
-                            &view_proj,
-                        );
-                    } else {
-                        self.last_touch = Some((position.x, position.y));
-                        self.start_camera_pos = Some(state.camera.position);
-                    }
+                    let mouse_position: (f64, f64) = position.to_owned().into();
+                    self.process_mouse_delta(Vector2::from(mouse_position), state);
                 }
                 true
             }
@@ -107,31 +85,14 @@ impl InputHandler {
                 _ => self.camera_controller.process_keyboard(*key, *state),
             },
             WindowEvent::Touch(touch) => {
+                let touch_position: (f64, f64) = touch.location.to_owned().into();
                 match touch.phase {
                     TouchPhase::Started => {
-                        self.last_touch = Some((touch.location.x, touch.location.y));
-                        self.start_camera_pos = Some(state.camera.position);
+                        self.last_mouse_position = Some(Vector2::from(touch_position));
+                        self.initial_camera_position = Some(state.camera.position);
                     }
-                    TouchPhase::Ended => {
-                        self.last_touch = None;
-                        self.start_camera_pos = None;
-                    }
-                    TouchPhase::Moved => {
-                        if let Some(start) = self.last_touch {
-                            let delta_x = start.0 - touch.location.x;
-                            let delta_y = start.1 - touch.location.y;
-                            let view_proj = state.camera.calc_view_proj(&state.perspective);
-                            self.camera_controller.process_mouse(
-                                self.start_camera_pos.unwrap().x,
-                                self.start_camera_pos.unwrap().y,
-                                delta_x,
-                                delta_y,
-                                state.size.width as f64,
-                                state.size.height as f64,
-                                &mut state.camera,
-                                &view_proj,
-                            );
-                        }
+                    TouchPhase::Moved | TouchPhase::Ended => {
+                        self.process_mouse_delta(Vector2::from(touch_position), state);
                     }
                     TouchPhase::Cancelled => {}
                 }
@@ -150,8 +111,8 @@ impl InputHandler {
                 self.mouse_pressed = *state == ElementState::Pressed;
 
                 if !self.mouse_pressed {
-                    self.last_touch = None;
-                    self.start_camera_pos = None;
+                    self.last_mouse_position = None;
+                    self.initial_camera_position = None;
                 }
                 true
             }
@@ -160,22 +121,6 @@ impl InputHandler {
     }
 
     pub fn update_state(&mut self, state: &mut RenderState, dt: Duration) {
-        let scene = &mut state.scene;
         self.camera_controller.update_camera(&mut state.camera, dt);
-
-        // Animate the stroke_width to match target_stroke_width
-        scene.stroke_width =
-            scene.stroke_width + (self.target_stroke_width - scene.stroke_width) / 5.0;
-
-        // Animate the strokes of primitive
-        /*        scene.cpu_primitives[0 as usize].width = scene.stroke_width;*/
-        /*
-        scene.cpu_primitives[STROKE_PRIM_ID as usize].color = [
-                    (time_secs * 0.8 - 1.6).sin() * 0.1 + 0.1,
-                    (time_secs * 0.5 - 1.6).sin() * 0.1 + 0.1,
-                    (time_secs - 1.6).sin() * 0.1 + 0.1,
-                    1.0,
-        ];
-        */
     }
 }

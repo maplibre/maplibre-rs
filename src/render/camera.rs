@@ -1,6 +1,7 @@
-use crate::render::shaders::ShaderCamera;
 use cgmath::prelude::*;
-use cgmath::Matrix4;
+use cgmath::{Matrix4, Vector2, Vector4};
+
+use crate::render::shaders::ShaderCamera;
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
@@ -23,6 +24,9 @@ pub struct Camera {
     pub position: cgmath::Point3<f64>,
     pub yaw: cgmath::Rad<f64>,
     pub pitch: cgmath::Rad<f64>,
+
+    pub width: f64,
+    pub height: f64,
 }
 
 impl Camera {
@@ -34,12 +38,21 @@ impl Camera {
         position: V,
         yaw: Y,
         pitch: P,
+        width: u32,
+        height: u32,
     ) -> Self {
         Self {
             position: position.into(),
             yaw: yaw.into(),
             pitch: pitch.into(),
+            width: width as f64,
+            height: height as f64,
         }
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.width = width as f64;
+        self.height = height as f64;
     }
 
     fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
@@ -61,6 +74,34 @@ impl Camera {
             view_proj.cast::<f32>().unwrap().into(),
             self.position.to_homogeneous().cast::<f32>().unwrap().into(),
         )
+    }
+
+    pub fn project_screen_to_world(
+        &self,
+        screen: &Vector2<f64>,
+        view_proj: &Matrix4<f64>,
+    ) -> Vector4<f64> {
+        let min_depth = 0.0;
+        let max_depth = 1.0;
+
+        let x = 0.0;
+        let y = 0.0;
+        let ox = x + self.width / 2.0;
+        let oy = y + self.height / 2.0;
+        let oz = min_depth;
+        let pz = max_depth - min_depth;
+
+        // Adapted from: https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle
+        let direct_x = Matrix4::from_cols(
+            Vector4::new(self.width as f64 / 2.0, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, self.height as f64 / 2.0, 0.0, 0.0),
+            Vector4::new(0.0, 0.0, pz, 0.0),
+            Vector4::new(ox, oy, oz, 1.0),
+        );
+
+        let homogenous = Vector4::new(screen.x, screen.y, 1.0, 1.0) * self.position.z;
+
+        view_proj.invert().unwrap() * direct_x.invert().unwrap() * homogenous
     }
 }
 
