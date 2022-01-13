@@ -1,7 +1,15 @@
+//! File which exposes all kinds of coordinates used throughout mapr
+
 use std::fmt;
 
 use crate::render::shader_ffi::Vec3f32;
 
+/// Every tile has tile coordinates. These tile coordinates are also called
+/// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
+///
+/// # Coordinate System Origin
+///
+/// For Web Mercator the origin of the coordinate system is in the upper-left corner.
 #[derive(Clone, Copy, Debug)]
 pub struct TileCoords {
     pub x: u32,
@@ -10,10 +18,12 @@ pub struct TileCoords {
 }
 
 impl TileCoords {
+    /// Transforms the tile coordinates as defined by the tile grid into a representation which is
+    /// used in the 3d-world.
     pub fn into_world_tile(self) -> WorldTileCoords {
         WorldTileCoords {
             x: self.x as i32 - crate::example::MUNICH_X as i32,
-            y: (self.y as i32 - crate::example::MUNICH_Y as i32 + 1) * -1,
+            y: self.y as i32 - crate::example::MUNICH_Y as i32,
             z: 0,
         }
     }
@@ -35,6 +45,13 @@ impl From<(u32, u32, u8)> for TileCoords {
     }
 }
 
+/// Every tile has tile coordinates. Every tile coordinate can be mapped to a coordinate within
+/// the world. This provides the freedom to map from [TMS](https://wiki.openstreetmap.org/wiki/TMS)
+/// to [Slippy_map_tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
+///
+/// # Coordinate System Origin
+///
+/// The origin of the coordinate system is in the upper-left corner.
 #[derive(Clone, Copy, Debug)]
 pub struct WorldTileCoords {
     pub x: i32,
@@ -46,7 +63,7 @@ impl WorldTileCoords {
     pub fn into_world(self, extent: f32) -> WorldCoords {
         WorldCoords {
             x: self.x as f32 * extent,
-            y: self.y as f32 * extent + extent, // We add extent here as we want the upper left corner
+            y: self.y as f32 * extent,
             z: self.z as f32,
         }
     }
@@ -54,7 +71,7 @@ impl WorldTileCoords {
     pub fn into_aligned(self) -> AlignedWorldTileCoords {
         AlignedWorldTileCoords(WorldTileCoords {
             x: self.x / 2 * 2,
-            y: self.y / 2 * 2 - 1,
+            y: self.y / 2 * 2,
             z: self.z,
         })
     }
@@ -76,6 +93,14 @@ impl From<(i32, i32, u8)> for WorldTileCoords {
     }
 }
 
+/// An aligned world tile coordinate aligns a world coordinate at a 4x4 tile raster within the
+/// world. The aligned coordinates is defined by the coordinates of the upper left tile in the 4x4
+/// tile raster divided by 2 and rounding to the ceiling.
+///
+///
+/// # Coordinate System Origin
+///
+/// The origin of the coordinate system is in the upper-left corner.
 pub struct AlignedWorldTileCoords(pub WorldTileCoords);
 
 impl AlignedWorldTileCoords {
@@ -83,15 +108,15 @@ impl AlignedWorldTileCoords {
         self.0
     }
 
-    pub fn to_upper_right(&self) -> WorldTileCoords {
+    pub fn upper_right(&self) -> WorldTileCoords {
         WorldTileCoords {
             x: self.0.x + 1,
-            y: self.0.y + 1,
+            y: self.0.y,
             z: self.0.z,
         }
     }
 
-    pub fn to_lower_left(&self) -> WorldTileCoords {
+    pub fn lower_left(&self) -> WorldTileCoords {
         WorldTileCoords {
             x: self.0.x,
             y: self.0.y - 1,
@@ -99,10 +124,10 @@ impl AlignedWorldTileCoords {
         }
     }
 
-    pub fn to_lower_right(&self) -> WorldTileCoords {
+    pub fn lower_right(&self) -> WorldTileCoords {
         WorldTileCoords {
-            x: self.0.x - 1,
-            y: self.0.y - 1,
+            x: self.0.x + 1,
+            y: self.0.y + 1,
             z: self.0.z,
         }
     }
@@ -115,6 +140,11 @@ pub struct WorldCoords {
     pub z: f32,
 }
 
+/// Actual coordinates within the 3d world.
+///
+/// # Coordinate System Origin
+///
+/// The origin of the coordinate system is in the upper-left corner.
 impl WorldCoords {
     pub fn into_shader_coords(self) -> Vec3f32 {
         [self.x, self.y, self.z]

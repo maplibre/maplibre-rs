@@ -123,7 +123,9 @@ pub mod tile {
 
 pub mod tile_mask {
     use crate::platform::COLOR_TEXTURE_FORMAT;
+    use crate::render::options::DEBUG_STENCIL_PATTERN;
     use crate::render::shader_ffi::MaskInstanceUniform;
+    use wgpu::ColorWrites;
 
     use super::{FragmentShaderState, VertexShaderState};
 
@@ -168,7 +170,15 @@ pub mod tile_mask {
         &[wgpu::ColorTargetState {
             format: COLOR_TEXTURE_FORMAT,
             blend: None,
-            write_mask: wgpu::ColorWrites::empty(),
+            write_mask: mask_write_mask(),
         }],
     );
+
+    pub const fn mask_write_mask() -> ColorWrites {
+        if DEBUG_STENCIL_PATTERN {
+            wgpu::ColorWrites::ALL
+        } else {
+            wgpu::ColorWrites::empty()
+        }
+    }
 }

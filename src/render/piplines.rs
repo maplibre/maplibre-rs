@@ -1,3 +1,4 @@
+use crate::render::options::DEBUG_STENCIL_PATTERN;
 use wgpu::{FragmentState, PipelineLayout, RenderPipelineDescriptor, VertexState};
 
 use super::texture::DEPTH_TEXTURE_FORMAT;
@@ -7,20 +8,10 @@ use super::texture::DEPTH_TEXTURE_FORMAT;
 ///
 /// # Arguments
 ///
-/// * `pipeline_layout`:
-/// * `vertex_state`:
-/// * `fragment_state`:
-/// * `sample_count`:
 /// * `update_stencil`: Fragments passing through the pipeline will be able to update the stencil
 ///                     buffer. This is used for masking
 ///
 /// returns: RenderPipelineDescriptor
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 pub fn create_map_render_pipeline_description<'a>(
     pipeline_layout: &'a PipelineLayout,
     vertex_state: VertexState<'a>,
@@ -37,7 +28,11 @@ pub fn create_map_render_pipeline_description<'a>(
         }
     } else {
         wgpu::StencilFaceState {
-            compare: wgpu::CompareFunction::Equal,
+            compare: if DEBUG_STENCIL_PATTERN {
+                wgpu::CompareFunction::Always
+            } else {
+                wgpu::CompareFunction::Equal
+            },
             fail_op: wgpu::StencilOperation::Keep,
             depth_fail_op: wgpu::StencilOperation::Keep,
             pass_op: wgpu::StencilOperation::Keep,

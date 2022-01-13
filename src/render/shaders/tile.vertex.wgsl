@@ -26,8 +26,7 @@ fn main(
     let z = 0.0;
     let width = 3.0;
 
-    // position the anchor of a tile at the top left, instead of bottom right
-    let world_pos = vec3<f32>(1.0, -1.0, 1.0) * vec3<f32>(position + normal * width, z) + translate;
+    let world_pos = vec3<f32>(position + normal * width, z) + translate;
 
     let position = globals.camera.view_proj * vec4<f32>(world_pos, 1.0);
 

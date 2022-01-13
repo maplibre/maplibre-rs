@@ -11,6 +11,14 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
     0.0, 0.0, 0.5, 1.0,
 );
 
+#[rustfmt::skip]
+pub const FLIP_Y: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
+    1.0, 0.0, 0.0, 0.0, 
+    0.0, -1.0, 0.0, 0.0, 
+    0.0, 0.0, 1.0, 0.0, 
+    0.0, 0.0, 0.0, 1.0,
+);
+
 #[derive(Debug)]
 pub struct Camera {
     pub position: cgmath::Point3<f64>,
@@ -35,7 +43,7 @@ impl Camera {
         }
     }
 
-    pub fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
+    fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
         cgmath::Matrix4::look_to_rh(
             self.position,
             cgmath::Vector3::new(self.yaw.0.cos(), self.pitch.0.sin(), self.yaw.0.sin())
@@ -45,7 +53,7 @@ impl Camera {
     }
 
     pub fn calc_view_proj(&self, perspective: &Perspective) -> Matrix4<f64> {
-        perspective.calc_matrix() * self.calc_matrix()
+        FLIP_Y * perspective.calc_matrix() * self.calc_matrix()
     }
 
     pub fn create_camera_uniform(&self, perspective: &Perspective) -> CameraUniform {
@@ -84,7 +92,7 @@ impl Perspective {
         self.aspect = width as f64 / height as f64;
     }
 
-    pub fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
+    fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
         OPENGL_TO_WGPU_MATRIX * cgmath::perspective(self.fovy, self.aspect, self.znear, self.zfar)
     }
 }

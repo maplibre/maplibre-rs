@@ -71,7 +71,7 @@ impl TileMaskPattern {
     }
 
     fn vertical(&mut self, dx: i32, dy: i32, anchor_x: f32, anchor_y: f32, extent: f32) {
-        for i in 0..(dx.abs() / 2) {
+        for i in 0..(dx.abs() / 2 + 1) {
             self.pattern.push(MaskInstanceUniform::new(
                 [anchor_x + ((i * 2) + 1) as f32 * extent, anchor_y],
                 1.0,
@@ -82,9 +82,9 @@ impl TileMaskPattern {
     }
 
     fn horizontal(&mut self, dx: i32, dy: i32, anchor_x: f32, anchor_y: f32, extent: f32) {
-        for i in 0..(dy.abs() / 2) {
+        for i in 0..(dy.abs() / 2 + 1) {
             self.pattern.push(MaskInstanceUniform::new(
-                [anchor_x, anchor_y - extent - (i * 2) as f32 * extent],
+                [anchor_x, anchor_y + (i * 2) as f32 * extent],
                 dx as f32,
                 1.0,
                 [0.0, 0.0, 1.0, 1.0],
@@ -94,10 +94,10 @@ impl TileMaskPattern {
 
     pub fn stencil_reference_value(&self, world_coords: &WorldTileCoords) -> u8 {
         match (world_coords.x, world_coords.y) {
-            (x, y) if x % 2 == 0 && y % 2 == 0 => 1,
-            (x, y) if x % 2 == 0 && y % 2 != 0 => 2,
-            (x, y) if x % 2 != 0 && y % 2 == 0 => 3,
-            (x, y) if x % 2 != 0 && y % 2 != 0 => 4,
+            (x, y) if x % 2 == 0 && y % 2 == 0 => 2,
+            (x, y) if x % 2 == 0 && y % 2 != 0 => 1,
+            (x, y) if x % 2 != 0 && y % 2 == 0 => 4,
+            (x, y) if x % 2 != 0 && y % 2 != 0 => 3,
             _ => unreachable!(),
         }
     }
@@ -109,11 +109,11 @@ impl TileMaskPattern {
 
         self.pattern.clear();
 
-        let start: WorldTileCoords = (self.bounding_box.min_x, self.bounding_box.max_y, z).into(); // upper left corner
-        let end: WorldTileCoords = (self.bounding_box.max_x, self.bounding_box.min_y, z).into(); // lower right corner
+        let start: WorldTileCoords = (self.bounding_box.min_x, self.bounding_box.min_y, z).into(); // upper left corner
+        let end: WorldTileCoords = (self.bounding_box.max_x, self.bounding_box.max_y, z).into(); // lower right corner
 
         let aligned_start = start.into_aligned();
-        let aligned_end = end.into_aligned().to_lower_right();
+        let aligned_end = end.into_aligned().lower_right();
 
         let start_world = start.into_world(extent);
 

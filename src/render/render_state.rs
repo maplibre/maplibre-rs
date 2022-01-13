@@ -6,14 +6,13 @@ use wgpu::{Buffer, BufferAddress, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
-use crate::fps_meter::FPSMeter;
 use crate::io::cache::Cache;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::stencil_pattern::TileMaskPattern;
 use crate::render::{camera, shaders};
 use crate::tesselation::IndexDataType;
-use crate::util::measure::Measure;
+use crate::util::FPSMeter;
 
 use super::piplines::*;
 use super::shader_ffi::*;
@@ -82,8 +81,6 @@ impl SceneParams {
 
 impl RenderState {
     pub async fn new(window: &Window) -> Self {
-        let mut measure = Measure::time();
-
         let sample_count = 4;
 
         let size = if cfg!(target_os = "android") {
@@ -270,8 +267,6 @@ impl RenderState {
             0.1,
             100000.0,
         );
-
-        measure.breadcrumb("initialized");
 
         Self {
             instance,
