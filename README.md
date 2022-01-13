@@ -31,8 +31,11 @@
       Example
     </a>
     <span> | </span>
-    <a href="https://maxammann.org/mapr-docs">
+    <a href="https://maxammann.org/mapr/docs">
       Book
+    </a> | </span>
+    <a href="https://maxammann.org/mapr/api-docs/mapr/">
+      API
     </a> | </span>
     <a href="https://matrix.to/#/#mapr:matrix.org">
       Chat in Matrix Space
