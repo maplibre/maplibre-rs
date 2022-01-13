@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::{env, fs};
 
-use mapr_utils::mbtiles::extract;
+use mbtiles::extract;
 use wgsl_validate::validate_project_wgsl;
 
 pub const MUNICH_X: u32 = 17421;

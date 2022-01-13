@@ -4,7 +4,7 @@ members = [
     "libs/vector_tile",
     "libs/style_spec",
     "libs/wgsl_validate",
-    "libs/mapr_utils",
+    "libs/mbtiles",
 ]
 
 [package]
@@ -100,7 +100,7 @@ test-env-log = "0.2"
 
 [build-dependencies]
 wgsl-validate = { path = "./libs/wgsl_validate" }
-mapr-utils = { path = "./libs/mapr_utils" }
+mbtiles = { path = "./libs/mbtiles" }
 
 [lib]
 crate-type = ["rlib", "cdylib", "staticlib"] # staticlib is used for apple

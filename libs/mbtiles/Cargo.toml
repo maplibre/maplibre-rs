@@ -1,0 +1,11 @@
+[package]
+name = "mbtiles"
+version = "0.1.0"
+description = ""
+edition = "2021"
+
+[dependencies]
+log = "0.4"
+rusqlite = "0.26"
+serde_json = "1.0"
+flate2 = "1.0"
