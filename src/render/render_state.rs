@@ -35,7 +35,7 @@ const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
 const TILE_META_COUNT: BufferAddress = 512; // FIXME: Move this to BufferPool
 const TILE_MASK_INSTANCE_COUNT: BufferAddress = 512; // FIXME: Pick reasonable size
 
-pub struct State {
+pub struct RenderState {
     instance: wgpu::Instance,
 
     device: wgpu::Device,
@@ -80,7 +80,7 @@ impl SceneParams {
     }
 }
 
-impl State {
+impl RenderState {
     pub async fn new(window: &Window) -> Self {
         let mut measure = Measure::time();
 

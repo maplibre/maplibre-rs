@@ -7,7 +7,7 @@ use winit::window::Window;
 
 use crate::input::camera_controller::CameraController;
 use crate::render::camera::Camera;
-use crate::render::state::State;
+use crate::render::render_state::RenderState;
 
 mod camera_controller;
 
@@ -35,7 +35,7 @@ impl InputHandler {
     pub fn device_input(
         &mut self,
         event: &DeviceEvent,
-        state: &mut State,
+        state: &mut RenderState,
         window: &Window,
     ) -> bool {
         match event {
@@ -60,7 +60,7 @@ impl InputHandler {
     pub fn window_input(
         &mut self,
         event: &WindowEvent,
-        state: &mut State,
+        state: &mut RenderState,
         window: &Window,
     ) -> bool {
         match event {
@@ -159,7 +159,7 @@ impl InputHandler {
         }
     }
 
-    pub fn update_state(&mut self, state: &mut State, dt: Duration) {
+    pub fn update_state(&mut self, state: &mut RenderState, dt: Duration) {
         let scene = &mut state.scene;
         self.camera_controller.update_camera(&mut state.camera, dt);
 

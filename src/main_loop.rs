@@ -6,7 +6,7 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use crate::input::InputHandler;
 use crate::io::cache::Cache;
 use crate::platform::Instant;
-use crate::render::state::State;
+use crate::render::render_state::RenderState;
 
 pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cache: Box<Cache>) {
     info!("== mapr ==");
@@ -14,10 +14,10 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cac
     fetch_munich_tiles(cache.as_ref());
 
     let mut input = InputHandler::new();
-    let mut maybe_state: Option<State> = if cfg!(target_os = "android") {
+    let mut maybe_state: Option<RenderState> = if cfg!(target_os = "android") {
         None
     } else {
-        Some(State::new(&window).await)
+        Some(RenderState::new(&window).await)
     };
 
     let mut last_render_time = Instant::now();
@@ -32,7 +32,7 @@ pub async fn setup(window: winit::window::Window, event_loop: EventLoop<()>, cac
             use tokio::task;
 
             let state = task::block_in_place(|| {
-                Handle::current().block_on(async { State::new(&window).await })
+                Handle::current().block_on(async { RenderState::new(&window).await })
             });
             maybe_state = Some(state);
             return;

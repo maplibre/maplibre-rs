@@ -5,5 +5,5 @@ mod stencil_pattern;
 mod texture;
 
 pub mod camera;
+pub mod render_state;
 pub mod shader_ffi;
-pub mod state;
