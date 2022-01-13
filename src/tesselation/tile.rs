@@ -9,10 +9,10 @@ use lyon::tessellation::{
 use lyon_path::builder::SvgPathBuilder;
 use lyon_path::Path;
 
+use crate::render::ShaderVertex;
 use vector_tile::geometry::{Command, Geometry};
 use vector_tile::tile::Tile;
 
-use crate::render::shader_ffi::GpuVertexUniform;
 use crate::tesselation::{Tesselated, VertexConstructor, DEFAULT_TOLERANCE};
 
 fn build_path(tile: &Tile, fill: bool) -> Path {
@@ -85,8 +85,8 @@ fn build_path(tile: &Tile, fill: bool) -> Path {
 }
 
 impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tesselated<I> for Tile {
-    fn tesselate_stroke(&self) -> VertexBuffers<GpuVertexUniform, I> {
-        let mut buffer: VertexBuffers<GpuVertexUniform, I> = VertexBuffers::new();
+    fn tesselate_stroke(&self) -> VertexBuffers<ShaderVertex, I> {
+        let mut buffer: VertexBuffers<ShaderVertex, I> = VertexBuffers::new();
         let mut tesselator = StrokeTessellator::new();
 
         let tile_path = build_path(self, false);
@@ -102,8 +102,8 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tesselat
         buffer
     }
 
-    fn tesselate_fill(&self) -> VertexBuffers<GpuVertexUniform, I> {
-        let mut buffer: VertexBuffers<GpuVertexUniform, I> = VertexBuffers::new();
+    fn tesselate_fill(&self) -> VertexBuffers<ShaderVertex, I> {
+        let mut buffer: VertexBuffers<ShaderVertex, I> = VertexBuffers::new();
         let mut tesselator = FillTessellator::new();
 
         let tile_path = build_path(self, true);

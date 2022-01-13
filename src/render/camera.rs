@@ -1,7 +1,6 @@
+use crate::render::shaders::ShaderCamera;
 use cgmath::prelude::*;
 use cgmath::Matrix4;
-
-use crate::render::shader_ffi::CameraUniform;
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
@@ -56,9 +55,9 @@ impl Camera {
         FLIP_Y * perspective.calc_matrix() * self.calc_matrix()
     }
 
-    pub fn create_camera_uniform(&self, perspective: &Perspective) -> CameraUniform {
+    pub fn create_camera_uniform(&self, perspective: &Perspective) -> ShaderCamera {
         let view_proj = self.calc_view_proj(perspective);
-        CameraUniform::new(
+        ShaderCamera::new(
             view_proj.cast::<f32>().unwrap().into(),
             self.position.to_homogeneous().cast::<f32>().unwrap().into(),
         )

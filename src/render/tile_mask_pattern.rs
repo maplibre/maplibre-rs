@@ -1,5 +1,5 @@
 use crate::coords::WorldTileCoords;
-use crate::render::shader_ffi::MaskInstanceUniform;
+use crate::render::shaders::ShaderTileMaskInstance;
 
 struct MinMaxBoundingBox {
     min_x: i32,
@@ -47,7 +47,7 @@ impl MinMaxBoundingBox {
 
 pub struct TileMaskPattern {
     bounding_box: MinMaxBoundingBox,
-    pattern: Vec<MaskInstanceUniform>,
+    pattern: Vec<ShaderTileMaskInstance>,
 }
 
 /// Implementation of a masking algorithm using a stencil buffer. The layout of the
@@ -65,7 +65,7 @@ impl TileMaskPattern {
         self.bounding_box.update(world_coords)
     }
 
-    pub fn as_slice(&self) -> &[MaskInstanceUniform] {
+    pub fn as_slice(&self) -> &[ShaderTileMaskInstance] {
         self.pattern.as_slice()
     }
 
@@ -75,7 +75,7 @@ impl TileMaskPattern {
 
     fn vertical(&mut self, dx: i32, dy: i32, anchor_x: f32, anchor_y: f32, extent: f32) {
         for i in 0..(dx.abs() / 2 + 1) {
-            self.pattern.push(MaskInstanceUniform::new(
+            self.pattern.push(ShaderTileMaskInstance::new(
                 [anchor_x + ((i * 2) + 1) as f32 * extent, anchor_y],
                 1.0,
                 dy as f32,
@@ -86,7 +86,7 @@ impl TileMaskPattern {
 
     fn horizontal(&mut self, dx: i32, dy: i32, anchor_x: f32, anchor_y: f32, extent: f32) {
         for i in 0..(dy.abs() / 2 + 1) {
-            self.pattern.push(MaskInstanceUniform::new(
+            self.pattern.push(ShaderTileMaskInstance::new(
                 [anchor_x, anchor_y + (i * 2) as f32 * extent],
                 dx as f32,
                 1.0,
@@ -126,7 +126,7 @@ impl TileMaskPattern {
         let anchor_x = start_world.x;
         let anchor_y = start_world.y;
         // red step
-        self.pattern.push(MaskInstanceUniform::new(
+        self.pattern.push(ShaderTileMaskInstance::new(
             [anchor_x, anchor_y],
             dx as f32,
             dy as f32,

@@ -2,8 +2,6 @@
 
 use std::fmt;
 
-use crate::render::shader_ffi::Vec3f32;
-
 /// Every tile has tile coordinates. These tile coordinates are also called
 /// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 ///
@@ -133,22 +131,16 @@ impl AlignedWorldTileCoords {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct WorldCoords {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
 /// Actual coordinates within the 3d world.
 ///
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-impl WorldCoords {
-    pub fn into_shader_coords(self) -> Vec3f32 {
-        [self.x, self.y, self.z]
-    }
+#[derive(Clone, Copy, Debug)]
+pub struct WorldCoords {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }
 
 impl fmt::Display for WorldCoords {

@@ -9,14 +9,14 @@ use vector_tile::parse_tile_bytes;
 
 use crate::io::web_tile_fetcher::WebTileFetcher;
 use crate::io::TileFetcher;
-use crate::render::shader_ffi::GpuVertexUniform;
+use crate::render::ShaderVertex;
 use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
 
 #[derive(Clone)]
 pub struct TesselatedTile {
     pub id: u32,
     pub coords: TileCoords,
-    pub over_aligned: OverAlignedVertexBuffer<GpuVertexUniform, IndexDataType>,
+    pub over_aligned: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
 }
 
 #[derive(Clone)]

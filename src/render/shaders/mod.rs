@@ -1,6 +1,22 @@
 use wgpu::{
-    ColorTargetState, Device, FragmentState, ShaderModule, VertexBufferLayout, VertexState,
+    ColorTargetState, Device, FragmentState, ShaderModule, VertexBufferLayout, VertexFormat,
+    VertexState,
 };
+
+use crate::coords::WorldCoords;
+use bytemuck_derive::{Pod, Zeroable};
+use cgmath::SquareMatrix;
+
+pub type Vec2f32 = [f32; 2];
+pub type Vec3f32 = [f32; 3];
+pub type Vec4f32 = [f32; 4];
+pub type Mat4f32 = [Vec4f32; 4];
+
+impl From<WorldCoords> for Vec3f32 {
+    fn from(world_coords: WorldCoords) -> Self {
+        [world_coords.x, world_coords.y, world_coords.z]
+    }
+}
 
 pub struct FragmentShaderState {
     source: &'static str,
@@ -64,8 +80,8 @@ impl VertexShaderState {
 }
 
 pub mod tile {
+    use super::{ShaderTileMetadata, ShaderVertex};
     use crate::platform::COLOR_TEXTURE_FORMAT;
-    use crate::render::shader_ffi::{GpuVertexUniform, TileUniform};
 
     use super::{FragmentShaderState, VertexShaderState};
 
@@ -73,7 +89,7 @@ pub mod tile {
         include_str!("tile.vertex.wgsl"),
         &[
             wgpu::VertexBufferLayout {
-                array_stride: std::mem::size_of::<GpuVertexUniform>() as u64,
+                array_stride: std::mem::size_of::<ShaderVertex>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
                     // position
@@ -91,7 +107,7 @@ pub mod tile {
                 ],
             },
             wgpu::VertexBufferLayout {
-                array_stride: std::mem::size_of::<TileUniform>() as u64,
+                array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
                 step_mode: wgpu::VertexStepMode::Instance,
                 attributes: &[
                     // color
@@ -122,9 +138,9 @@ pub mod tile {
 }
 
 pub mod tile_mask {
+    use super::ShaderTileMaskInstance;
     use crate::platform::COLOR_TEXTURE_FORMAT;
     use crate::render::options::DEBUG_STENCIL_PATTERN;
-    use crate::render::shader_ffi::MaskInstanceUniform;
     use wgpu::ColorWrites;
 
     use super::{FragmentShaderState, VertexShaderState};
@@ -132,7 +148,7 @@ pub mod tile_mask {
     pub const VERTEX: VertexShaderState = VertexShaderState::new(
         include_str!("tile_mask.vertex.wgsl"),
         &[wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<MaskInstanceUniform>() as u64,
+            array_stride: std::mem::size_of::<ShaderTileMaskInstance>() as u64,
             step_mode: wgpu::VertexStepMode::Instance,
             attributes: &[
                 // offset position
@@ -179,6 +195,107 @@ pub mod tile_mask {
             wgpu::ColorWrites::ALL
         } else {
             wgpu::ColorWrites::empty()
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct ShaderCamera {
+    view_proj: Mat4f32,     // 64 bytes
+    view_position: Vec4f32, // 16 bytes
+}
+
+impl ShaderCamera {
+    pub fn new(view_proj: Mat4f32, view_position: Vec4f32) -> Self {
+        Self {
+            view_position,
+            view_proj,
+        }
+    }
+}
+
+impl Default for ShaderCamera {
+    fn default() -> Self {
+        Self {
+            view_position: [0.0; 4],
+            view_proj: cgmath::Matrix4::identity().into(),
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct ShaderGlobals {
+    camera: ShaderCamera,
+}
+
+impl ShaderGlobals {
+    pub fn new(camera_uniform: ShaderCamera) -> Self {
+        Self {
+            camera: camera_uniform,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct ShaderVertex {
+    pub position: Vec2f32,
+    pub normal: Vec2f32,
+}
+
+impl ShaderVertex {
+    pub fn new(position: Vec2f32, normal: Vec2f32) -> Self {
+        Self { position, normal }
+    }
+}
+
+impl Default for ShaderVertex {
+    fn default() -> Self {
+        ShaderVertex::new([0.0, 0.0], [0.0, 0.0])
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct ShaderTileMaskInstance {
+    pub position: Vec2f32,
+    pub target_width: f32,
+    pub target_height: f32,
+    pub debug_color: Vec4f32,
+}
+
+impl ShaderTileMaskInstance {
+    pub fn new(
+        position: Vec2f32,
+        target_width: f32,
+        target_height: f32,
+        debug_color: Vec4f32,
+    ) -> Self {
+        Self {
+            position,
+            target_width,
+            target_height,
+            debug_color,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct ShaderTileMetadata {
+    pub color: Vec4f32,
+    pub translate: Vec3f32,
+    _pad1: i32, // _padX aligns it to 16 bytes = AlignOf(Vec4f32/vec4<f32>): // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
+}
+
+impl ShaderTileMetadata {
+    pub fn new(color: Vec4f32, translate: Vec3f32) -> Self {
+        Self {
+            color,
+            translate,
+            _pad1: Default::default(),
         }
     }
 }

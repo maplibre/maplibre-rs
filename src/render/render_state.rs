@@ -9,13 +9,14 @@ use winit::window::Window;
 use crate::io::worker_loop::WorkerLoop;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
+use crate::render::camera;
 use crate::render::tile_mask_pattern::TileMaskPattern;
-use crate::render::{camera, shaders};
 use crate::tesselation::IndexDataType;
 use crate::util::FPSMeter;
 
 use super::piplines::*;
-use super::shader_ffi::*;
+use super::shaders;
+use super::shaders::*;
 use super::texture::Texture;
 
 pub struct SceneParams {
@@ -60,7 +61,7 @@ pub struct RenderState {
     tiles_uniform_buffer: wgpu::Buffer,
     globals_uniform_buffer: wgpu::Buffer,
 
-    buffer_pool: BufferPool<Queue, Buffer, GpuVertexUniform, IndexDataType>,
+    buffer_pool: BufferPool<Queue, Buffer, ShaderVertex, IndexDataType>,
 
     tile_mask_pattern: TileMaskPattern,
     tile_mask_instances_buffer: wgpu::Buffer,
@@ -150,7 +151,7 @@ impl RenderState {
         });
 
         let tile_masks_uniform_buffer_size =
-            std::mem::size_of::<MaskInstanceUniform>() as u64 * TILE_MASK_INSTANCE_COUNT;
+            std::mem::size_of::<ShaderTileMaskInstance>() as u64 * TILE_MASK_INSTANCE_COUNT;
 
         let tile_mask_instances = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
@@ -159,12 +160,11 @@ impl RenderState {
             mapped_at_creation: false,
         });
 
-        let globals_buffer_byte_size = cmp::max(
-            MIN_BUFFER_SIZE,
-            std::mem::size_of::<GlobalsUniform>() as u64,
-        );
+        let globals_buffer_byte_size =
+            cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<ShaderGlobals>() as u64);
 
-        let tiles_uniform_buffer_size = std::mem::size_of::<TileUniform>() as u64 * TILE_META_COUNT;
+        let tiles_uniform_buffer_size =
+            std::mem::size_of::<ShaderTileMetadata>() as u64 * TILE_META_COUNT;
         let tiles_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Tiles ubo"),
             size: tiles_uniform_buffer_size,
@@ -360,10 +360,10 @@ impl RenderState {
 
             self.queue.write_buffer(
                 &self.tiles_uniform_buffer,
-                std::mem::size_of::<TileUniform>() as u64 * tile.id as u64,
-                bytemuck::cast_slice(&[TileUniform::new(
+                std::mem::size_of::<ShaderTileMetadata>() as u64 * tile.id as u64,
+                bytemuck::cast_slice(&[ShaderTileMetadata::new(
                     [0.0, 0.0, 0.0, 1.0],
-                    world_coords.into_world(4096.0).into_shader_coords(),
+                    world_coords.into_world(4096.0).into(),
                 )]),
             );
         }
@@ -379,7 +379,7 @@ impl RenderState {
         self.queue.write_buffer(
             &self.globals_uniform_buffer,
             0,
-            bytemuck::cast_slice(&[GlobalsUniform::new(
+            bytemuck::cast_slice(&[ShaderGlobals::new(
                 self.camera.create_camera_uniform(&self.perspective),
             )]),
         );
@@ -466,8 +466,8 @@ impl RenderState {
                     pass.set_vertex_buffer(
                         1,
                         self.tiles_uniform_buffer.slice(
-                            std::mem::size_of::<TileUniform>() as u64 * id
-                                ..std::mem::size_of::<TileUniform>() as u64 * (id + 1),
+                            std::mem::size_of::<ShaderTileMetadata>() as u64 * id
+                                ..std::mem::size_of::<ShaderTileMetadata>() as u64 * (id + 1),
                         ),
                     );
                     /* if !self.tile_fill_range.is_empty() {

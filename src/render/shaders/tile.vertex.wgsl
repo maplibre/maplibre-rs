@@ -1,14 +1,13 @@
-struct CameraUniform {
+struct ShaderCamera {
     view_proj: mat4x4<f32>;
     view_position: vec4<f32>;
 };
 
-
-struct GlobalsUniform {
-    camera: CameraUniform;
+struct ShaderGlobals {
+    camera:  ShaderCamera;
 };
 
-[[group(0), binding(0)]] var<uniform> globals: GlobalsUniform;
+[[group(0), binding(0)]] var<uniform> globals: ShaderGlobals;
 
 struct VertexOutput {
     [[location(0)]] v_color: vec4<f32>;
