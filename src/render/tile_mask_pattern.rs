@@ -50,6 +50,9 @@ pub struct TileMaskPattern {
     pattern: Vec<MaskInstanceUniform>,
 }
 
+/// Implementation of a masking algorithm using a stencil buffer. The layout of the
+/// buffer can be reviewed [here](https://maxammann.org/mapr/docs/stencil-masking.html).
+///
 impl TileMaskPattern {
     pub fn new() -> Self {
         Self {

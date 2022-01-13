@@ -9,7 +9,7 @@ use winit::window::Window;
 use crate::io::worker_loop::WorkerLoop;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
-use crate::render::stencil_pattern::TileMaskPattern;
+use crate::render::tile_mask_pattern::TileMaskPattern;
 use crate::render::{camera, shaders};
 use crate::tesselation::IndexDataType;
 use crate::util::FPSMeter;

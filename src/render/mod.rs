@@ -2,8 +2,8 @@ mod buffer_pool;
 
 mod piplines;
 mod shaders;
-mod stencil_pattern;
 mod texture;
+mod tile_mask_pattern;
 
 pub mod camera;
 pub mod options;
