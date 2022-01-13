@@ -44,6 +44,14 @@ jobs:
         run: |
           rustup component add clippy
           cargo clippy --all-targets --all-features
+      - name: API Documentation
+        run: cargo doc --no-deps --workspace --lib --all-features --document-private-items
+      - name: Deploy API Documentation
+        run: |
+          echo "$SSH_KEY" > id_rsa
+          chmod 600 id_rsa
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr/api-docs && find ~/public_html/mapr/api-docs -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "target/x86_64-unknown-linux-gnu/doc/." max@maxammann.org:~/public_html/mapr/api-docs/
       - uses: actions/upload-artifact@v2
         with:
           name: mapr
