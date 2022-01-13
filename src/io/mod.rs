@@ -1,3 +1,5 @@
+//! Handles IO related processing as well as multithreading.
+
 use crate::coords::TileCoords;
 use crate::error::Error;
 use async_trait::async_trait;

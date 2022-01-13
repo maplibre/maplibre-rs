@@ -1,3 +1,6 @@
+//! This module implements the rendering algorithm of mapr. It manages the whole communication with
+//! the GPU.
+
 mod buffer_pool;
 
 mod options;

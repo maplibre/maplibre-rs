@@ -49,14 +49,14 @@ pub async fn setup(
                     .. // We're not using device_id currently
                 } => {
                     trace!("{:?}", event);
-                    input.device_input(event, state, &window);
+                    input.device_input(event);
                 }
 
                 Event::WindowEvent {
                     ref event,
                     window_id,
                 } if window_id == window.id() => {
-                    if !input.window_input(event, state, &window) {
+                    if !input.window_input(event, state) {
                         match event {
                             WindowEvent::CloseRequested
                             | WindowEvent::KeyboardInput {

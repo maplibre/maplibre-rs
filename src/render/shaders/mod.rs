@@ -1,6 +1,5 @@
 use wgpu::{
-    ColorTargetState, Device, FragmentState, ShaderModule, VertexBufferLayout, VertexFormat,
-    VertexState,
+    ColorTargetState, Device, FragmentState, ShaderModule, VertexBufferLayout, VertexState,
 };
 
 use crate::coords::WorldCoords;

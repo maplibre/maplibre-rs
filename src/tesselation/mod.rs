@@ -1,3 +1,5 @@
+//! Tesselation for lines and polygons is implemented here.
+
 use bytemuck::Pod;
 use std::ops::Add;
 

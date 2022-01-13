@@ -1,3 +1,6 @@
+//! This module handles platform specific code. Depending on the compilation target different
+//! parts of this module are used
+
 #[cfg(target_arch = "wasm32")]
 mod web;
 
