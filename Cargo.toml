@@ -32,7 +32,6 @@ console_error_panic_hook = "0.1"
 winit = { version = "0.26", default-features = false }
 web-sys = { version = "0.3", features = [
     "Window",
-    "Worker", "WorkerOptions", "WorkerType", "MessageEvent",
     "Headers",
     "WorkerGlobalScope", "Request", "RequestInit", "RequestMode", "Response",
 ] }

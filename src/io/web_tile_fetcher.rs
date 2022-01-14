@@ -1,6 +1,6 @@
 use crate::coords::TileCoords;
 use crate::error::Error;
-use crate::io::{HttpFetcher, TileFetcher};
+use crate::io::{HttpFetcher, HttpFetcherConfig, TileFetcher};
 use crate::platform::PlatformHttpFetcher;
 use async_trait::async_trait;
 
@@ -11,9 +11,9 @@ pub struct WebTileFetcher {
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl TileFetcher for WebTileFetcher {
-    fn new() -> Self {
+    fn new(config: HttpFetcherConfig) -> Self {
         Self {
-            http_fetcher: PlatformHttpFetcher::new(),
+            http_fetcher: PlatformHttpFetcher::new(config),
         }
     }
 

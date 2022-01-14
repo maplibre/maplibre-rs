@@ -8,10 +8,15 @@ pub mod static_tile_fetcher;
 pub mod web_tile_fetcher;
 pub mod worker_loop;
 
+pub struct HttpFetcherConfig {
+    /// Under which path should we cache requests.
+    pub cache_path: String,
+}
+
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait HttpFetcher {
-    fn new() -> Self;
+    fn new(config: HttpFetcherConfig) -> Self;
 
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error>;
 }
@@ -19,7 +24,7 @@ pub trait HttpFetcher {
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait TileFetcher {
-    fn new() -> Self;
+    fn new(config: HttpFetcherConfig) -> Self;
 
     async fn fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error>;
     fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error>;

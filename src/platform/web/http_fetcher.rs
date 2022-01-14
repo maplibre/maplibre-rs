@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::io::HttpFetcher;
+use crate::io::{HttpFetcher, HttpFetcherConfig};
 use async_trait::async_trait;
 use js_sys::ArrayBuffer;
 use js_sys::Uint8Array;
@@ -19,7 +19,7 @@ pub struct PlatformHttpFetcher;
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl HttpFetcher for PlatformHttpFetcher {
-    fn new() -> Self {
+    fn new(_config: HttpFetcherConfig) -> Self {
         Self {}
     }
 

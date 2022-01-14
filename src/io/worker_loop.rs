@@ -8,7 +8,7 @@ use crate::coords::TileCoords;
 use vector_tile::parse_tile_bytes;
 
 use crate::io::web_tile_fetcher::WebTileFetcher;
-use crate::io::TileFetcher;
+use crate::io::{HttpFetcherConfig, TileFetcher};
 use crate::render::ShaderVertex;
 use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
 
@@ -49,7 +49,9 @@ impl WorkerLoop {
     }
 
     pub async fn run_loop(&mut self) {
-        let fetcher = WebTileFetcher::new();
+        let fetcher = WebTileFetcher::new(HttpFetcherConfig {
+            cache_path: "/tmp/mapr-cache".to_string(),
+        });
         // let fetcher = StaticTileFetcher::new();
 
         let mut current_id = 0;

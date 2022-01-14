@@ -7,7 +7,7 @@ use reqwest_middleware_cache::managers::CACacheManager;
 use reqwest_middleware_cache::{Cache, CacheMode};
 
 use crate::error::Error;
-use crate::io::HttpFetcher;
+use crate::io::{HttpFetcher, HttpFetcherConfig};
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Self {
@@ -28,14 +28,16 @@ pub struct PlatformHttpFetcher {
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl HttpFetcher for PlatformHttpFetcher {
-    fn new() -> Self {
+    fn new(config: HttpFetcherConfig) -> Self {
         let mut builder = ClientBuilder::new(Client::new());
 
         // FIXME: Cache only works on desktop so far
         if cfg!(not(any(target_os = "android", target_arch = "aarch64"))) {
             builder = builder.with(Cache {
                 mode: CacheMode::Default,
-                cache_manager: CACacheManager::default(),
+                cache_manager: CACacheManager {
+                    path: config.cache_path,
+                },
             });
         }
 
