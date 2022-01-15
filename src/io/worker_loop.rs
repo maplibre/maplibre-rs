@@ -6,23 +6,24 @@ use log::{error, info};
 
 use crate::coords::TileCoords;
 use vector_tile::parse_tile_bytes;
+use vector_tile::tile::{Feature, Layer, Tile};
 
 use crate::io::web_tile_fetcher::WebTileFetcher;
 use crate::io::{HttpFetcherConfig, TileFetcher};
 use crate::render::ShaderVertex;
 use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
 
-#[derive(Clone)]
-pub struct TesselatedTile {
-    pub id: u32,
+pub struct TesselatedLayer {
     pub coords: TileCoords,
-    pub over_aligned: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+    pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+    pub feature_vertices: Vec<u32>,
+    pub layer_data: Layer,
 }
 
 #[derive(Clone)]
 pub struct WorkerLoop {
     requests: Arc<WorkQueue<TileCoords>>,
-    responses: Arc<WorkQueue<TesselatedTile>>,
+    responses: Arc<WorkQueue<TesselatedLayer>>,
 }
 
 impl Drop for WorkerLoop {
@@ -44,7 +45,7 @@ impl WorkerLoop {
         self.requests.push(coords);
     }
 
-    pub fn pop_all(&self) -> Vec<TesselatedTile> {
+    pub fn pop_all(&self) -> Vec<TesselatedLayer> {
         self.responses.try_pop_all()
     }
 
@@ -54,7 +55,6 @@ impl WorkerLoop {
         });
         // let fetcher = StaticTileFetcher::new();
 
-        let mut current_id = 0;
         loop {
             while let Some(coords) = self.requests.pop() {
                 match fetcher.fetch_tile(&coords).await {
@@ -63,13 +63,20 @@ impl WorkerLoop {
                         let tile = parse_tile_bytes(bytemuck::cast_slice(data.as_slice()))
                             .expect("failed to load tile");
 
-                        let buffer = tile.tesselate_stroke();
-                        self.responses.push(TesselatedTile {
-                            id: current_id,
-                            coords,
-                            over_aligned: buffer.into(),
-                        });
-                        current_id += 1;
+                        for layer in tile.layers() {
+                            if let Some((buffer, feature_vertices)) = layer.tesselate() {
+                                if buffer.indices.is_empty() {
+                                    continue;
+                                }
+                                self.responses.push(TesselatedLayer {
+                                    coords,
+                                    buffer: buffer.into(),
+                                    feature_vertices,
+                                    layer_data: layer.clone(),
+                                });
+                            }
+                        }
+
                         info!("tile ready: {:?}", &coords);
                     }
                     Err(err) => {

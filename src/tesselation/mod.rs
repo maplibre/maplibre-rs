@@ -7,24 +7,20 @@ use crate::render::ShaderVertex;
 use lyon::tessellation::{
     FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor, VertexBuffers,
 };
+use lyon_path::Path;
 use wgpu::BufferAddress;
 
-pub mod tile;
+mod layer;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
 pub type IndexDataType = u16; // Must match INDEX_FORMAT
 
 pub trait Tesselated<I: Add> {
-    fn tesselate_stroke(&self) -> VertexBuffers<ShaderVertex, I>;
-    fn tesselate_fill(&self) -> VertexBuffers<ShaderVertex, I>;
-
-    fn empty_range(&self) -> VertexBuffers<ShaderVertex, I> {
-        VertexBuffers::new()
-    }
+    fn tesselate(&self) -> Option<(VertexBuffers<ShaderVertex, I>, Vec<u32>)>;
 }
 
-pub struct VertexConstructor();
+pub struct VertexConstructor {}
 
 impl FillVertexConstructor<ShaderVertex> for VertexConstructor {
     fn new_vertex(&mut self, vertex: FillVertex) -> ShaderVertex {
