@@ -22,7 +22,7 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tesselat
         let mut buffer: VertexBuffers<ShaderVertex, I> = VertexBuffers::new();
         let mut feature_vertices: Vec<u32> = Vec::new();
         let mut last = 0;
-        info!("features: {}", self.features().len());
+
         for feature in self.features() {
             match feature.geometry() {
                 Geometry::GeometryPolygon(polygon) => {
