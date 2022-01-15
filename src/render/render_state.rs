@@ -1,7 +1,8 @@
-use std::cmp;
 use std::default::Default;
+use std::{cmp, iter};
 
 use log::trace;
+use vector_tile::tile::Layer;
 use wgpu::{Buffer, BufferAddress, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
@@ -10,6 +11,10 @@ use crate::io::worker_loop::WorkerLoop;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::camera;
+use crate::render::options::{
+    DEBUG_WIREFRAME, FEATURE_METADATA_BUFFER_SIZE, INDEX_FORMAT, INDICES_BUFFER_SIZE,
+    TILE_MASK_INSTANCE_COUNT, TILE_META_COUNT, VERTEX_BUFFER_SIZE,
+};
 use crate::render::tile_mask_pattern::TileMaskPattern;
 use crate::tesselation::IndexDataType;
 use crate::util::FPSMeter;
@@ -18,12 +23,6 @@ use super::piplines::*;
 use super::shaders;
 use super::shaders::*;
 use super::texture::Texture;
-
-const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint16; // Must match IndexDataType
-const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
-const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 8;
-const TILE_META_COUNT: BufferAddress = 1024 * 8; // FIXME: Move this to BufferPool
-const TILE_MASK_INSTANCE_COUNT: BufferAddress = 512; // FIXME: Pick reasonable size
 
 pub struct RenderState {
     instance: wgpu::Instance,
@@ -50,7 +49,14 @@ pub struct RenderState {
 
     globals_uniform_buffer: wgpu::Buffer,
 
-    buffer_pool: BufferPool<Queue, Buffer, ShaderVertex, IndexDataType, ShaderTileMetadata>,
+    buffer_pool: BufferPool<
+        Queue,
+        Buffer,
+        ShaderVertex,
+        IndexDataType,
+        ShaderTileMetadata,
+        ShaderFeatureStyle,
+    >,
 
     tile_mask_pattern: TileMaskPattern,
     tile_mask_instances_buffer: wgpu::Buffer,
@@ -103,11 +109,17 @@ impl RenderState {
         };
 
         // create a device and a queue
+        let features = if DEBUG_WIREFRAME {
+            wgpu::Features::default() | wgpu::Features::POLYGON_MODE_LINE
+        } else {
+            wgpu::Features::default()
+        };
+
         let (device, queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::default(),
+                    features,
                     limits,
                 },
                 None,
@@ -115,26 +127,33 @@ impl RenderState {
             .await
             .unwrap();
 
-        let vertex_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: VERTEX_BUFFER_SIZE,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
 
-        let indices_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        let feature_metadata_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: FEATURE_METADATA_BUFFER_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        let indices_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: INDICES_BUFFER_SIZE,
             usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
 
-        let tile_masks_uniform_buffer_size =
+        let tile_masks_instances_buffer_size =
             std::mem::size_of::<ShaderTileMaskInstance>() as u64 * TILE_MASK_INSTANCE_COUNT;
 
         let tile_mask_instances = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
-            size: tile_masks_uniform_buffer_size,
+            size: tile_masks_instances_buffer_size,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -142,11 +161,11 @@ impl RenderState {
         let globals_buffer_byte_size =
             cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<ShaderGlobals>() as u64);
 
-        let tiles_uniform_buffer_size =
+        let metadata_buffer_size =
             std::mem::size_of::<ShaderTileMetadata>() as u64 * TILE_META_COUNT;
-        let tiles_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        let metadata_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Tiles ubo"),
-            size: tiles_uniform_buffer_size,
+            size: metadata_buffer_size,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -273,9 +292,10 @@ impl RenderState {
             perspective: projection,
             suspended: false, // Initially the app is not suspended
             buffer_pool: BufferPool::new(
-                BackingBufferDescriptor::new(vertex_uniform_buffer, VERTEX_BUFFER_SIZE),
-                BackingBufferDescriptor::new(indices_uniform_buffer, INDICES_BUFFER_SIZE),
-                BackingBufferDescriptor::new(tiles_uniform_buffer, tiles_uniform_buffer_size),
+                BackingBufferDescriptor::new(vertex_buffer, VERTEX_BUFFER_SIZE),
+                BackingBufferDescriptor::new(indices_buffer, INDICES_BUFFER_SIZE),
+                BackingBufferDescriptor::new(metadata_buffer, metadata_buffer_size),
+                BackingBufferDescriptor::new(feature_metadata_buffer, FEATURE_METADATA_BUFFER_SIZE),
             ),
             tile_mask_pattern: TileMaskPattern::new(),
         }
@@ -332,19 +352,47 @@ impl RenderState {
     pub fn upload_tile_geometry(&mut self, worker_loop: &WorkerLoop) {
         let upload = worker_loop.pop_all();
 
-        for tile in upload.iter() {
-            let world_coords = tile.coords.into_world_tile();
+        for layer in upload.iter() {
+            let world_coords = layer.coords.into_world_tile();
             self.tile_mask_pattern.update_bounds(&world_coords);
+
+            /*match tile.layer_data.name() {
+                "transportation" => {}
+                "building" => {}
+                "boundary" => {}
+                "water" => {}
+                "waterway" => {}
+                _ => {
+                    continue;
+                }
+            };*/
+
+            let feature_metadata = layer
+                .layer_data
+                .features()
+                .iter()
+                .enumerate()
+                .flat_map(|(i, feature)| {
+                    iter::repeat(ShaderFeatureStyle {
+                        color: match layer.layer_data.name() {
+                            "transportation" => [1.0, 0.0, 0.0, 1.0],
+                            "building" => [0.0, 1.0, 1.0, 1.0],
+                            "boundary" => [0.0, 0.0, 0.0, 1.0],
+                            "water" => [0.0, 0.0, 1.0, 1.0],
+                            "waterway" => [0.0, 0.0, 1.0, 1.0],
+                            _ => [0.0, 0.0, 0.0, 0.0],
+                        },
+                    })
+                    .take(*layer.feature_vertices.get(i).unwrap() as usize)
+                })
+                .collect::<Vec<_>>();
 
             self.buffer_pool.allocate_geometry(
                 &self.queue,
-                tile.id,
-                tile.coords,
-                &tile.over_aligned,
-                ShaderTileMetadata::new(
-                    [0.0, 0.0, 0.0, 1.0],
-                    world_coords.into_world(4096.0).into(),
-                ),
+                layer.coords,
+                &layer.buffer,
+                ShaderTileMetadata::new(world_coords.into_world(4096.0).into()),
+                &feature_metadata,
             );
         }
 
@@ -442,18 +490,18 @@ impl RenderState {
                             .vertices()
                             .slice(entry.vertices_buffer_range()),
                     );
-                    let id = entry.id as BufferAddress;
                     pass.set_vertex_buffer(
                         1,
                         self.buffer_pool
                             .metadata()
                             .slice(entry.metadata_buffer_range()),
                     );
-                    /* if !self.tile_fill_range.is_empty() {
-                        pass.draw_indexed(self.tile_fill_range.clone(), 0, 0..1);
-                    }*/
-                    trace!("current buffer_pool index {:?}", self.buffer_pool.index);
-                    // FIXME: Custom Instance index possibly breaks on Metal
+                    pass.set_vertex_buffer(
+                        2,
+                        self.buffer_pool
+                            .feature_metadata()
+                            .slice(entry.feature_metadata_buffer_range()),
+                    );
                     pass.draw_indexed(entry.indices_range(), 0, 0..1);
                 }
             }

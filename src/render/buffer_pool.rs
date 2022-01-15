@@ -23,16 +23,18 @@ impl Queue<wgpu::Buffer> for wgpu::Queue {
 /// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
 #[derive(Debug)]
-pub struct BufferPool<Q, B, V, I, M> {
+pub struct BufferPool<Q, B, V, I, M, FM> {
     vertices: BackingBuffer<B>,
     indices: BackingBuffer<B>,
     metadata: BackingBuffer<B>,
+    feature_metadata: BackingBuffer<B>,
 
     pub index: VecDeque<IndexEntry>,
     phantom_v: PhantomData<V>,
     phantom_i: PhantomData<I>,
     phantom_q: PhantomData<Q>,
     phantom_m: PhantomData<M>,
+    phantom_fm: PhantomData<FM>,
 }
 
 #[derive(Debug)]
@@ -40,15 +42,17 @@ enum BackingBufferType {
     VERTICES,
     INDICES,
     METADATA,
+    FEATURE_METADATA,
 }
 
-impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod>
-    BufferPool<Q, B, V, I, M>
+impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: bytemuck::Pod>
+    BufferPool<Q, B, V, I, M, FM>
 {
     pub fn new(
         vertices: BackingBufferDescriptor<B>,
         indices: BackingBufferDescriptor<B>,
         metadata: BackingBufferDescriptor<B>,
+        feature_metadata: BackingBufferDescriptor<B>,
     ) -> Self {
         Self {
             vertices: BackingBuffer::new(
@@ -66,11 +70,17 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod>
                 metadata.inner_size,
                 BackingBufferType::METADATA,
             ),
+            feature_metadata: BackingBuffer::new(
+                feature_metadata.buffer,
+                feature_metadata.inner_size,
+                BackingBufferType::FEATURE_METADATA,
+            ),
             index: VecDeque::new(), // TODO: Approximate amount of buffers in pool
             phantom_v: Default::default(),
             phantom_i: Default::default(),
             phantom_q: Default::default(),
             phantom_m: Default::default(),
+            phantom_fm: Default::default(),
         }
     }
 
@@ -80,6 +90,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod>
             BackingBufferType::VERTICES => &self.vertices,
             BackingBufferType::INDICES => &self.indices,
             BackingBufferType::METADATA => &self.metadata,
+            BackingBufferType::FEATURE_METADATA => &self.feature_metadata,
         }
         .find_largest_gap(&self.index);
 
@@ -96,6 +107,10 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod>
 
     pub fn metadata(&self) -> &B {
         &self.metadata.inner
+    }
+
+    pub fn feature_metadata(&self) -> &B {
+        &self.feature_metadata.inner
     }
 
     /// The VertexBuffers can contain padding elements. Not everything from a VertexBuffers is useable.
@@ -121,14 +136,15 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod>
     pub fn allocate_geometry(
         &mut self,
         queue: &Q,
-        id: u32,
         coords: TileCoords,
         over_aligned: &OverAlignedVertexBuffer<V, I>,
         metadata: M,
+        feature_metadata: &Vec<FM>,
     ) {
         let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
         let indices_stride = size_of::<I>() as wgpu::BufferAddress;
         let metadata_stride = size_of::<M>() as wgpu::BufferAddress;
+        let feature_metadata_stride = size_of::<FM>() as wgpu::BufferAddress;
 
         let (vertices_bytes, aligned_vertices_bytes) = Self::align(
             vertices_stride,
@@ -141,14 +157,28 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod>
             over_aligned.usable_indices as BufferAddress,
         );
         let (metadata_bytes, aligned_metadata_bytes) = Self::align(metadata_stride, 1, 1);
+        let (feature_metadata_bytes, aligned_feature_metadata_bytes) = Self::align(
+            feature_metadata_stride,
+            feature_metadata.len() as BufferAddress,
+            feature_metadata.len() as BufferAddress,
+        );
+
+        if feature_metadata_bytes != aligned_feature_metadata_bytes {
+            // FIXME: align if not aligned?
+            panic!(
+                "feature_metadata is not aligned. This should not happen as long as size_of::<FM>() is a multiple of the alignment."
+            )
+        }
 
         let maybe_entry = IndexEntry {
-            id,
             coords,
             buffer_vertices: self.vertices.make_room(vertices_bytes, &mut self.index),
             buffer_indices: self.indices.make_room(indices_bytes, &mut self.index),
             usable_indices: over_aligned.usable_indices as u32,
             buffer_metadata: self.metadata.make_room(metadata_bytes, &mut self.index),
+            buffer_feature_metadata: self
+                .feature_metadata
+                .make_room(feature_metadata_bytes, &mut self.index),
         };
 
         // write_buffer() is the preferred method for WASM: https://toji.github.io/webgpu-best-practices/buffer-uploads.html#when-in-doubt-writebuffer
@@ -167,6 +197,12 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod>
             &self.metadata.inner,
             maybe_entry.buffer_metadata.start,
             &bytemuck::cast_slice(&[metadata])[0..aligned_metadata_bytes as usize],
+        );
+        queue.write_buffer(
+            &self.feature_metadata.inner,
+            maybe_entry.buffer_feature_metadata.start,
+            &bytemuck::cast_slice(feature_metadata.as_slice())
+                [0..aligned_feature_metadata_bytes as usize],
         );
         self.index.push_back(maybe_entry);
     }
@@ -235,11 +271,13 @@ impl<B> BackingBuffer<B> {
             BackingBufferType::VERTICES => first.buffer_vertices.start,
             BackingBufferType::INDICES => first.buffer_indices.start,
             BackingBufferType::METADATA => first.buffer_metadata.start,
+            BackingBufferType::FEATURE_METADATA => first.buffer_feature_metadata.start,
         });
         let end = index.back().map(|first| match self.typ {
             BackingBufferType::VERTICES => first.buffer_vertices.end,
             BackingBufferType::INDICES => first.buffer_indices.end,
             BackingBufferType::METADATA => first.buffer_metadata.end,
+            BackingBufferType::FEATURE_METADATA => first.buffer_feature_metadata.end,
         });
 
         if let Some(start) = start {
@@ -272,7 +310,6 @@ impl<B> BackingBuffer<B> {
 
 #[derive(Debug)]
 pub struct IndexEntry {
-    pub id: u32,
     pub coords: TileCoords,
     // Range of bytes within the backing buffer for vertices
     buffer_vertices: Range<wgpu::BufferAddress>,
@@ -280,6 +317,8 @@ pub struct IndexEntry {
     buffer_indices: Range<wgpu::BufferAddress>,
     // Range of bytes within the backing buffer for metadata
     buffer_metadata: Range<wgpu::BufferAddress>,
+    // Range of bytes within the backing buffer for feature metadata
+    buffer_feature_metadata: Range<wgpu::BufferAddress>,
     // Amount of actually usable indices. Each index has the size/format `IndexDataType`.
     // Can be lower than size(buffer_indices) / indices_stride because of alignment.
     usable_indices: u32,
@@ -300,6 +339,10 @@ impl IndexEntry {
 
     pub fn metadata_buffer_range(&self) -> Range<wgpu::BufferAddress> {
         self.buffer_metadata.clone()
+    }
+
+    pub fn feature_metadata_buffer_range(&self) -> Range<wgpu::BufferAddress> {
+        self.buffer_feature_metadata.clone()
     }
 }
 

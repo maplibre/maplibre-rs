@@ -81,12 +81,14 @@ impl VertexShaderState {
 pub mod tile {
     use super::{ShaderTileMetadata, ShaderVertex};
     use crate::platform::COLOR_TEXTURE_FORMAT;
+    use wgpu::BlendState;
 
     use super::{FragmentShaderState, VertexShaderState};
 
     pub const VERTEX: VertexShaderState = VertexShaderState::new(
         include_str!("tile.vertex.wgsl"),
         &[
+            // vertex data
             wgpu::VertexBufferLayout {
                 array_stride: std::mem::size_of::<ShaderVertex>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
@@ -105,21 +107,29 @@ pub mod tile {
                     },
                 ],
             },
+            // tile metadata
             wgpu::VertexBufferLayout {
                 array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
                 step_mode: wgpu::VertexStepMode::Instance,
+                attributes: &[
+                    // translate
+                    wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Float32x3,
+                        shader_location: 4,
+                    },
+                ],
+            },
+            // vertex style
+            wgpu::VertexBufferLayout {
+                array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
+                step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
                     // color
                     wgpu::VertexAttribute {
                         offset: 0,
                         format: wgpu::VertexFormat::Float32x4,
-                        shader_location: 3,
-                    },
-                    // translate
-                    wgpu::VertexAttribute {
-                        offset: wgpu::VertexFormat::Float32x4.size(),
-                        format: wgpu::VertexFormat::Float32x3,
-                        shader_location: 4,
+                        shader_location: 5,
                     },
                 ],
             },
@@ -130,7 +140,18 @@ pub mod tile {
         include_str!("tile.fragment.wgsl"),
         &[wgpu::ColorTargetState {
             format: COLOR_TEXTURE_FORMAT,
-            blend: None,
+            blend: Some(wgpu::BlendState {
+                color: wgpu::BlendComponent {
+                    src_factor: wgpu::BlendFactor::SrcAlpha,
+                    dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
+                    operation: wgpu::BlendOperation::Add,
+                },
+                alpha: wgpu::BlendComponent {
+                    src_factor: wgpu::BlendFactor::SrcAlpha,
+                    dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
+                    operation: wgpu::BlendOperation::Add,
+                },
+            }),
             write_mask: wgpu::ColorWrites::ALL,
         }],
     );
@@ -282,17 +303,21 @@ impl ShaderTileMaskInstance {
 }
 
 #[repr(C)]
+#[derive(Debug, Copy, Clone, Pod, Zeroable)]
+pub struct ShaderFeatureStyle {
+    pub color: Vec4f32,
+}
+
+#[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderTileMetadata {
-    pub color: Vec4f32,
     pub translate: Vec3f32,
     _pad1: i32, // _padX aligns it to 16 bytes = AlignOf(Vec4f32/vec4<f32>): // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
 }
 
 impl ShaderTileMetadata {
-    pub fn new(color: Vec4f32, translate: Vec3f32) -> Self {
+    pub fn new(translate: Vec3f32) -> Self {
         Self {
-            color,
             translate,
             _pad1: Default::default(),
         }
