@@ -1,4 +1,4 @@
-use crate::render::options::DEBUG_STENCIL_PATTERN;
+use crate::render::options::{DEBUG_STENCIL_PATTERN, DEBUG_WIREFRAME};
 use wgpu::{FragmentState, PipelineLayout, RenderPipelineDescriptor, VertexState};
 
 use super::texture::DEPTH_TEXTURE_FORMAT;
@@ -46,7 +46,15 @@ pub fn create_map_render_pipeline_description<'a>(
         fragment: Some(fragment_state),
         primitive: wgpu::PrimitiveState {
             topology: wgpu::PrimitiveTopology::TriangleList,
-            polygon_mode: wgpu::PolygonMode::Fill,
+            polygon_mode: if update_stencil {
+                wgpu::PolygonMode::Fill
+            } else {
+                if DEBUG_WIREFRAME {
+                    wgpu::PolygonMode::Line
+                } else {
+                    wgpu::PolygonMode::Fill
+                }
+            },
             front_face: wgpu::FrontFace::Ccw,
             strip_index_format: None,
             cull_mode: None, // TODO Maps look the same from he bottom and above
