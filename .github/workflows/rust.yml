@@ -103,8 +103,8 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Prepare Rust Toolchain # This is required because we are recompiling the stdlib
         run: |
-          rustup install nightly-2021-12-07-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-2021-12-07-x86_64-unknown-linux-gnu
+          rustup install nightly-2022-01-14-x86_64-unknown-linux-gnu
+          rustup component add rust-src --toolchain nightly-2022-01-14-x86_64-unknown-linux-gnu
       - name: NPM Install
         run: npm install
       - name: Build
@@ -139,8 +139,8 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Prepare Rust Toolchain # This is required because we are recompiling the stdlib
         run: |
-          rustup install nightly-2021-12-07-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-2021-12-07-x86_64-unknown-linux-gnu
+          rustup install nightly-2022-01-14-x86_64-unknown-linux-gnu
+          rustup component add rust-src --toolchain nightly-2022-01-14-x86_64-unknown-linux-gnu
       - name: NPM Install
         run: npm install
       - name: Build
