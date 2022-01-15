@@ -3,26 +3,26 @@ use std::collections::HashMap;
 use crate::geometry::Geometry;
 use crate::protos::vector_tile::{Tile as ProtoTile, Tile_Layer as ProtoLayer};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Tile {
     internal: ProtoTile,
     layers: Vec<Layer>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Layer {
     internal: ProtoLayer,
     features: Vec<Feature>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Feature {
     id: u64,
     geometry: Geometry,
     properties: HashMap<String, PropertyValue>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum PropertyValue {
     StringValue(String),
     FloatValue(f32),
