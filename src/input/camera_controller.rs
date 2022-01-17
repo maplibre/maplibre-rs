@@ -1,4 +1,5 @@
-use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
+use cgmath::{EuclideanSpace, Matrix4, Point3, Vector2, Vector3, Vector4, Zero};
+use log::info;
 
 use crate::render::camera;
 
@@ -33,11 +34,11 @@ impl CameraController {
         };
         match key {
             winit::event::VirtualKeyCode::W | winit::event::VirtualKeyCode::Up => {
-                self.camera_translate.y += amount;
+                self.camera_translate.y -= amount;
                 true
             }
             winit::event::VirtualKeyCode::S | winit::event::VirtualKeyCode::Down => {
-                self.camera_translate.y -= amount;
+                self.camera_translate.y += amount;
                 true
             }
             winit::event::VirtualKeyCode::A | winit::event::VirtualKeyCode::Left => {
@@ -52,19 +53,33 @@ impl CameraController {
         }
     }
 
-    pub fn process_mouse(
+    pub fn pan_camera(
         &mut self,
         initial_camera_position: cgmath::Point3<f64>,
-        delta: Vector2<f64>,
+        initial_screen_position: Vector2<f64>,
+        current_screen_position: Vector2<f64>,
+        intial_camera: &camera::Camera,
         camera: &camera::Camera,
         perspective: &camera::Perspective,
     ) {
         let view_proj = camera.calc_view_proj(perspective);
-        let world = camera.project_screen_to_world(&Vector2::new(0.0, 0.0), &view_proj)
-            - camera.project_screen_to_world(&delta, &view_proj);
+        let initial = camera.project_screen_to_world(
+            &initial_screen_position,
+            &intial_camera.calc_view_proj(perspective),
+        );
+        let current = camera.project_screen_to_world(
+            &current_screen_position,
+            &intial_camera.calc_view_proj(perspective),
+        );
+        let delta = initial - current;
+
+        info!("initial: {:?}", initial);
+        info!("current: {:?}", current);
+        info!("delta: {:?}", delta);
 
         self.camera_position =
-            Some(initial_camera_position.to_vec() + Vector3::new(-world.x, world.y, 0.0))
+            Some(initial_camera_position.to_vec() + Vector3::new(delta.x, delta.y, 0.0));
+        //self.camera_position = Some(Vector3::new(-delta.x, delta.y, 0.0))
     }
 
     pub fn process_scroll(&mut self, delta: &winit::event::MouseScrollDelta) {
@@ -85,7 +100,9 @@ impl CameraController {
         let dt = dt.as_secs_f64() * self.speed;
 
         if let Some(position) = self.camera_position {
+            info!("position: {:?}", position);
             camera.position = Point3::from_vec(position);
+            //camera.translation = Matrix4::from_translation(position);
             self.camera_position = None;
         }
 
@@ -95,7 +112,6 @@ impl CameraController {
         // to get closer to an object you want to focus on.
         let delta = self.camera_translate * dt;
         camera.position += delta;
-
         self.camera_translate -= delta;
     }
 }

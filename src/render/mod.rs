@@ -2,7 +2,6 @@
 //! the GPU.
 
 mod buffer_pool;
-
 mod options;
 mod piplines;
 mod shaders;

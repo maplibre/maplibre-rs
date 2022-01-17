@@ -260,7 +260,7 @@ impl RenderState {
         let camera = camera::Camera::new(
             (0.0, 5.0, 5000.0),
             cgmath::Deg(-90.0),
-            cgmath::Deg(-0.0),
+            cgmath::Deg(-45.0),
             size.width,
             size.height,
         );
@@ -268,7 +268,7 @@ impl RenderState {
             surface_config.width,
             surface_config.height,
             cgmath::Deg(45.0),
-            0.1,
+            10.0,
             100000.0,
         );
 
@@ -378,7 +378,7 @@ impl RenderState {
                             "transportation" => [1.0, 0.0, 0.0, 1.0],
                             "building" => [0.0, 1.0, 1.0, 1.0],
                             "boundary" => [0.0, 0.0, 0.0, 1.0],
-                            "water" => [0.0, 0.0, 1.0, 1.0],
+                            "water" => [0.0, 0.0, 0.7, 1.0],
                             "waterway" => [0.0, 0.0, 1.0, 1.0],
                             _ => [0.0, 0.0, 0.0, 0.0],
                         },
