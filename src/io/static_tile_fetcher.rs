@@ -49,13 +49,13 @@ impl TileFetcher for StaticTileFetcher {
 
 #[cfg(test)]
 mod tests {
-    use crate::io::TileFetcher;
+    use crate::io::{HttpFetcherConfig, TileFetcher};
 
     use super::StaticTileFetcher;
 
     #[tokio::test]
     async fn test_tiles_available() {
-        let fetcher = StaticTileFetcher::new();
+        let fetcher = StaticTileFetcher::new(HttpFetcherConfig::default());
         assert!(fetcher.fetch_tile(&(0, 0, 0).into()).await.is_err()); // World overview
         assert!(fetcher
             .fetch_tile(

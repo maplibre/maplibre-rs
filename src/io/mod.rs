@@ -13,6 +13,14 @@ pub struct HttpFetcherConfig {
     pub cache_path: String,
 }
 
+impl Default for HttpFetcherConfig {
+    fn default() -> Self {
+        Self {
+            cache_path: ".".to_string(),
+        }
+    }
+}
+
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait HttpFetcher {

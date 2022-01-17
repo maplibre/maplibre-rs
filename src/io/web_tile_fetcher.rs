@@ -39,11 +39,11 @@ impl TileFetcher for WebTileFetcher {
 #[cfg(test)]
 mod tests {
     use super::WebTileFetcher;
-    use crate::io::TileFetcher;
+    use crate::io::{HttpFetcherConfig, TileFetcher};
 
     #[tokio::test]
     async fn test_tiles_available() {
-        let fetcher = WebTileFetcher::new();
+        let fetcher = WebTileFetcher::new(HttpFetcherConfig::default());
         assert!(fetcher.fetch_tile(&(0, 0, 0).into()).await.is_ok()); // World overview
     }
 }
