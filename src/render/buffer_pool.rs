@@ -385,11 +385,13 @@ mod tests {
 
     #[test]
     fn test_allocate() {
-        let mut pool: BufferPool<TestQueue, TestBuffer, TestVertex, u32, u32> = BufferPool::new(
-            BackingBuffer::new(TestBuffer { size: 128 }, 128, BackingBufferType::VERTICES),
-            BackingBuffer::new(TestBuffer { size: 128 }, 128, BackingBufferType::INDICES),
-            BackingBuffer::new(TestBuffer { size: 128 }, 128, BackingBufferType::METADATA),
-        );
+        let mut pool: BufferPool<TestQueue, TestBuffer, TestVertex, u32, u32, u32> =
+            BufferPool::new(
+                BackingBufferDescriptor::new(TestBuffer { size: 128 }, 128),
+                BackingBufferDescriptor::new(TestBuffer { size: 128 }, 128),
+                BackingBufferDescriptor::new(TestBuffer { size: 128 }, 128),
+                BackingBufferDescriptor::new(TestBuffer { size: 128 }, 128),
+            );
 
         let queue = TestQueue {};
 
@@ -404,34 +406,34 @@ mod tests {
         let data24bytes_aligned = data24bytes.into();
 
         for _ in 0..2 {
-            pool.allocate_geometry(&queue, 0, (0, 0, 0).into(), &data48bytes_aligned, 2);
+            pool.allocate_geometry(&queue, (0, 0, 0).into(), &data48bytes_aligned, 2, &vec![]);
         }
         assert_eq!(
             128 - 2 * 48,
             pool.available_space(BackingBufferType::VERTICES)
         );
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned, 2);
+        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         assert_eq!(
             128 - 2 * 48 - 24,
             pool.available_space(BackingBufferType::VERTICES)
         );
         println!("{:?}", &pool.index);
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned, 2);
+        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         // appended now at the beginning
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(BackingBufferType::VERTICES));
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned, 2);
+        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::VERTICES));
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned, 2);
+        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(BackingBufferType::VERTICES));
 
-        pool.allocate_geometry(&queue, 1, (0, 0, 0).into(), &data24bytes_aligned, 2);
+        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::VERTICES));
     }
