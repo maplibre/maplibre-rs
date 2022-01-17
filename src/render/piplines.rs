@@ -64,7 +64,7 @@ pub fn create_map_render_pipeline_description<'a>(
         depth_stencil: Some(wgpu::DepthStencilState {
             format: DEPTH_TEXTURE_FORMAT,
             depth_write_enabled: !update_stencil,
-            depth_compare: wgpu::CompareFunction::Less, // FIXME
+            depth_compare: wgpu::CompareFunction::Greater, // FIXME
             stencil: wgpu::StencilState {
                 front: stencil_state,
                 back: stencil_state,

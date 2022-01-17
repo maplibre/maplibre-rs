@@ -25,9 +25,16 @@ fn main(
     let z = 0.0;
     let width = 3.0;
 
+    // The following code moves all "invisible" vertices to (0, 0, 0)
+    //if (color.w == 0.0) {
+    //   return VertexOutput(color, vec4<f32>(0.0, 0.0, 0.0, 1.0));
+    //}
+
     let world_pos = vec3<f32>(position + normal * width, z) + translate;
 
-    let position = globals.camera.view_proj * vec4<f32>(world_pos, 1.0);
+    var position = globals.camera.view_proj * vec4<f32>(world_pos, 1.0);
+
+    position.z = 1.0;
 
     return VertexOutput(color, position);
 }

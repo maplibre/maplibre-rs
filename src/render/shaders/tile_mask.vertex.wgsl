@@ -45,7 +45,7 @@ fn main(
 
     let world_pos = scaling * a_position + vec3<f32>(mask_offset, z);
 
-    let position = globals.camera.view_proj * vec4<f32>(world_pos, 1.0);
-
+    var position = globals.camera.view_proj * vec4<f32>(world_pos, 1.0);
+    position.z = 1.0;
     return VertexOutput(debug_color, position);
 }
