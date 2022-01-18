@@ -3,7 +3,7 @@ use log::{error, info, trace};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 
-use crate::input::InputHandler;
+use crate::input::{InputController, UpdateState};
 use crate::io::worker_loop::WorkerLoop;
 use crate::platform::Instant;
 use crate::render::render_state::RenderState;
@@ -17,7 +17,7 @@ pub async fn setup(
 
     fetch_munich_tiles(worker_loop.as_ref());
 
-    let mut input = InputHandler::new();
+    let mut input = InputController::new(0.2, 100.0);
     let mut maybe_state: Option<RenderState> = if cfg!(target_os = "android") {
         None
     } else {
