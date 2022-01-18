@@ -77,7 +77,7 @@ impl Camera {
         )
     }
 
-    fn dx_matrix(width: f64, height: f64) -> Matrix4<f64> {
+    fn clip_to_window_transform(width: f64, height: f64) -> Matrix4<f64> {
         // Adapted from: https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle
         let min_depth = 0.0;
         let max_depth = 1.0;
@@ -86,8 +86,6 @@ impl Camera {
         let ox = x + width / 2.0;
         let oy = y + height / 2.0;
         let oz = min_depth;
-        let px = width as f64;
-        let py = height as f64;
         let pz = max_depth - min_depth;
         Matrix4::from_cols(
             Vector4::new(width as f64 / 2.0, 0.0, 0.0, 0.0),
@@ -97,9 +95,9 @@ impl Camera {
         )
     }
 
+    // Adopted from: https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkViewport.html
+    // and https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/
     fn clip_to_window(clip: &Vector4<f64>, width: f64, height: f64) -> Vector3<f64> {
-        // Adopted from: https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkViewport.html
-        // and https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/
         #[rustfmt::skip]
             let ndc = Vector4::new(
             clip.x / clip.w,
@@ -126,54 +124,18 @@ impl Camera {
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline
+    // https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline
     fn clip_to_window_matrix(clip: &Vector4<f64>, width: f64, height: f64) -> Vector4<f64> {
-        let w = clip.w;
-        let z = clip.z;
-        println!("z in clip space: {z}");
-        println!("w in clip space: {w}");
-
         #[rustfmt::skip]
-            let ndc = Vector4::new(
+        let ndc = Vector4::new(
             clip.x / clip.w,
             clip.y / clip.w,
             clip.z / clip.w,
             clip.w / clip.w
         );
 
-        let window = Self::dx_matrix(width, height) * ndc;
+        let window = Self::clip_to_window_transform(width, height) * ndc;
         window
-    }
-
-    // https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline
-    fn window_to_clip(
-        window: &Vector3<f64>,
-        origin_clip_space: &Vector4<f64>,
-        width: f64,
-        height: f64,
-    ) -> Vector4<f64> {
-        let z = window.z;
-        println!("z in window space: {z}");
-        #[rustfmt::skip]
-            let fixed_window = Vector4::new(
-            window.x,
-            window.y,
-            window.z,
-            1.0
-        );
-
-        let ndc = Self::dx_matrix(width, height).invert().unwrap() * fixed_window;
-
-        let w = origin_clip_space.w;
-
-        #[rustfmt::skip]
-            let clip = Vector4::new(
-            ndc.x * w,
-            ndc.y * w,
-            ndc.z * w,
-            w,
-        );
-
-        clip
     }
 
     fn window_to_world(
@@ -190,7 +152,10 @@ impl Camera {
             1.0
         );
 
-        let ndc = Self::dx_matrix(width, height).invert().unwrap() * fixed_window;
+        let ndc = Self::clip_to_window_transform(width, height)
+            .invert()
+            .unwrap()
+            * fixed_window;
         let unprojected = view_proj.invert().unwrap() * ndc;
         let world = Vector3::new(
             unprojected.x / unprojected.w,
@@ -200,6 +165,7 @@ impl Camera {
         world
     }
 
+    /// Alternative implementation to `window_to_world`
     fn window_to_world_nalgebra(
         window: &Vector3<f64>,
         view_proj: &Matrix4<f64>,
@@ -221,30 +187,19 @@ impl Camera {
         world
     }
 
-    pub fn project_screen_to_world(
+    pub fn window_to_world_z0(
         &self,
         window: &Vector2<f64>,
         view_proj: &Matrix4<f64>,
     ) -> Vector3<f64> {
-        /*        let origin_clip_space = (view_proj * Vector4::new(0.0, 0.0, 0.0, 1.0));
-
-        let origin_window_space =
-            Self::clip_to_window_matrix(&origin_clip_space, self.width, self.height);
-        let reverse_clip = Self::window_to_clip(
-            &Vector3::new(window.x, window.y, origin_window_space.z),
-            &origin_clip_space,
-            self.width,
-            self.height,
-        );*/
-
-        let near_world = Camera::window_to_world_nalgebra(
+        let near_world = Camera::window_to_world(
             &Vector3::new(window.x, window.y, 0.0),
             &view_proj,
             self.width,
             self.height,
         );
 
-        let far_world = Camera::window_to_world_nalgebra(
+        let far_world = Camera::window_to_world(
             &Vector3::new(window.x, window.y, 1.0),
             &view_proj,
             self.width,
@@ -330,35 +285,15 @@ mod tests {
         let window = Camera::clip_to_window_matrix(&clip, width, height);
         println!("window (matrix): {:?}", window);
 
-        let origin_window_space = Camera::clip_to_window_matrix(&origin_clip_space, width, height);
-        let reverse_clip = Camera::window_to_clip(
-            &Vector3::new(window.x, window.y, origin_window_space.z),
-            &origin_clip_space,
-            width,
-            height,
-        );
-        let reverse_world = view_proj.invert().unwrap() * reverse_clip;
-
-        println!("r clip: {:?}", reverse_clip);
-        println!("r world: {:?}", reverse_world);
-
         // --------- nalgebra
 
-        let scale = 1.0 / origin_clip_space.w;
-
-        let origin_window_space_nalgebra = Vector3::new(
-            0.0 + (width * (origin_clip_space.x * scale + 1.0) * 0.5),
-            0.0 + (height * (origin_clip_space.y * scale + 1.0) * 0.5),
-            origin_clip_space.z * scale,
-        );
-        println!("r origin (nalgebra): {:?}", origin_window_space_nalgebra);
         println!(
             "r world (nalgebra): {:?}",
             Camera::window_to_world_nalgebra(&window.truncate(), &view_proj, width, height)
         );
-        // --------
 
-        // pdf trick
+        // -------- far vs. near plane trick
+
         let near_world = Camera::window_to_world_nalgebra(
             &Vector3::new(window.x, window.y, 0.0),
             &view_proj,
@@ -378,8 +313,7 @@ mod tests {
         println!("u: {:?}", u);
         let unprojected = near_world + u * (far_world - near_world);
         println!("unprojected: {:?}", unprojected);
-        //assert!(Vector3::new(world_pos.x, world_pos.y, world_pos.z).abs_diff_eq(&unprojected, 0.05));
-        //.------
+        assert!(Vector3::new(world_pos.x, world_pos.y, world_pos.z).abs_diff_eq(&unprojected, 0.05));
 
         // ---- test for unproject
 

@@ -26,10 +26,8 @@ impl UpdateState for PanHandler {
                 let perspective = &state.perspective;
                 let view_proj = reference_camera.calc_view_proj(perspective);
 
-                let start =
-                    reference_camera.project_screen_to_world(&start_window_position, &view_proj);
-                let current =
-                    reference_camera.project_screen_to_world(&window_position, &view_proj);
+                let start = reference_camera.window_to_world_z0(&start_window_position, &view_proj);
+                let current = reference_camera.window_to_world_z0(&window_position, &view_proj);
                 let delta = start - current;
 
                 if self.start_camera_position.is_none() {
