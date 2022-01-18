@@ -64,6 +64,11 @@ const start = async () => {
     console.log("Starting cache-worker")
     worker.postMessage({type: "init", memory, workerLoopPtr});
 
+    document.body.querySelectorAll("canvas").forEach(canvas => {
+        canvas.addEventListener("touchstart", e => e.preventDefault());
+        canvas.addEventListener("touchmove", e => e.preventDefault());
+    })
+
     await module.run(workerLoopPtr);
 }
 
