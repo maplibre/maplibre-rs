@@ -260,7 +260,7 @@ impl RenderState {
         let camera = camera::Camera::new(
             (0.0, 5.0, 5000.0),
             cgmath::Deg(-90.0),
-            cgmath::Deg(-45.0),
+            cgmath::Deg(0.0),
             size.width,
             size.height,
         );

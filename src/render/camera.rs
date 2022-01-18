@@ -60,8 +60,7 @@ impl Camera {
     fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
         cgmath::Matrix4::look_to_rh(
             self.position,
-            cgmath::Vector3::new(self.yaw.0.cos(), self.pitch.0.sin(), self.yaw.0.sin())
-                .normalize(),
+            cgmath::Vector3::new(self.yaw.cos(), self.pitch.sin(), self.yaw.sin()).normalize(),
             cgmath::Vector3::unit_y(),
         ) * self.translation
     }
@@ -209,19 +208,10 @@ impl Camera {
     ) -> Vector3<f64> {
         let pt = Vector4::new(
             2.0 * (window.x - 0.0) / width - 1.0,
-            2.0 * (window.y - 0.0) / height - 1.0,
+            2.0 * (height - window.y - 0.0) / height - 1.0,
             window.z,
             1.0,
         );
-
-        /*        // opengl
-                let pt = Vector4::new(
-                    2.0 * (window.x - 0.0) / width - 1.0,
-                    2.0 * (window.y - 0.0) / height - 1.0,
-                    2.0 * window.z - 1.0,
-                    1.0,
-                );
-        */
         let unprojected_nalgebra = view_proj.invert().unwrap() * pt;
         let world = Vector3::new(
             unprojected_nalgebra.x / unprojected_nalgebra.w,
@@ -247,14 +237,14 @@ impl Camera {
             self.height,
         );*/
 
-        let near_world = Camera::window_to_world(
+        let near_world = Camera::window_to_world_nalgebra(
             &Vector3::new(window.x, window.y, 0.0),
             &view_proj,
             self.width,
             self.height,
         );
 
-        let far_world = Camera::window_to_world(
+        let far_world = Camera::window_to_world_nalgebra(
             &Vector3::new(window.x, window.y, 1.0),
             &view_proj,
             self.width,
@@ -263,12 +253,6 @@ impl Camera {
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);
-        println!("u: {:?}", u);
-
-        /*let vec = (near_world - far_world).normalize();
-        let znear = 0.1;
-        near_world + znear * vec*/
-
         near_world + u * (far_world - near_world)
     }
 }
