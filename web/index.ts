@@ -51,8 +51,8 @@ const start = async () => {
         });
     }
 
-    let MEMORY = 16 * 1024;
-    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY, shared: true});
+    let MEMORY_PAGES = 16 * 1024;
+    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true});
     const module = await init(undefined, memory);
 
     const worker = new Worker(new URL('./worker-loop.ts', import.meta.url), {
