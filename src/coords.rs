@@ -1,5 +1,7 @@
 //! File which exposes all kinds of coordinates used throughout mapr
 
+use crate::util::math::{div_away, div_ceil, div_floor};
+use cgmath::Point3;
 use std::fmt;
 
 /// Every tile has tile coordinates. These tile coordinates are also called
@@ -8,7 +10,7 @@ use std::fmt;
 /// # Coordinate System Origin
 ///
 /// For Web Mercator the origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Hash, std::cmp::Eq, std::cmp::PartialEq)]
 pub struct TileCoords {
     pub x: u32,
     pub y: u32,
@@ -39,6 +41,16 @@ impl From<(u32, u32, u8)> for TileCoords {
             x: tuple.0,
             y: tuple.1,
             z: tuple.2,
+        }
+    }
+}
+
+impl From<WorldTileCoords> for TileCoords {
+    fn from(world_coords: WorldTileCoords) -> Self {
+        TileCoords {
+            x: (world_coords.x + crate::example::MUNICH_X as i32) as u32,
+            y: (world_coords.y + crate::example::MUNICH_Y as i32) as u32,
+            z: world_coords.z,
         }
     }
 }
@@ -91,6 +103,16 @@ impl From<(i32, i32, u8)> for WorldTileCoords {
     }
 }
 
+impl From<WorldCoords> for WorldTileCoords {
+    fn from(world_coords: WorldCoords) -> Self {
+        WorldTileCoords {
+            x: div_away(world_coords.x as i32, 4096),
+            y: div_away(world_coords.y as i32, 4096), // FIXME: Do not hardcode
+            z: world_coords.z as u8,
+        }
+    }
+}
+
 /// An aligned world tile coordinate aligns a world coordinate at a 4x4 tile raster within the
 /// world. The aligned coordinates is defined by the coordinates of the upper left tile in the 4x4
 /// tile raster divided by 2 and rounding to the ceiling.
@@ -102,7 +124,7 @@ impl From<(i32, i32, u8)> for WorldTileCoords {
 pub struct AlignedWorldTileCoords(pub WorldTileCoords);
 
 impl AlignedWorldTileCoords {
-    pub fn into_upper_left(self) -> WorldTileCoords {
+    pub fn upper_left(self) -> WorldTileCoords {
         self.0
     }
 
@@ -155,6 +177,16 @@ impl From<(f32, f32, f32)> for WorldCoords {
             x: tuple.0,
             y: tuple.1,
             z: tuple.2,
+        }
+    }
+}
+
+impl From<Point3<f64>> for WorldCoords {
+    fn from(point: Point3<f64>) -> Self {
+        WorldCoords {
+            x: point.x as f32,
+            y: point.y as f32,
+            z: point.z as f32,
         }
     }
 }

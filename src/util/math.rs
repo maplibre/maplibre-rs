@@ -303,3 +303,46 @@ impl<S: BaseNum> fmt::Debug for Aabb3<S> {
         write!(f, "[{:?} - {:?}]", self.min, self.max)
     }
 }
+
+pub const fn div_away(lhs: i32, rhs: i32) -> i32 {
+    if rhs < 0 {
+        panic!("rhs must be positive")
+    }
+
+    if lhs < 0 {
+        div_floor(lhs, rhs)
+    } else {
+        div_ceil(lhs, rhs)
+    }
+}
+
+pub const fn div_ceil(lhs: i32, rhs: i32) -> i32 {
+    let d = lhs / rhs;
+    let r = lhs % rhs;
+    if (r > 0 && rhs > 0) || (r < 0 && rhs < 0) {
+        d + 1
+    } else {
+        d
+    }
+}
+
+pub const fn div_floor(lhs: i32, rhs: i32) -> i32 {
+    let d = lhs / rhs;
+    let r = lhs % rhs;
+    if (r > 0 && rhs < 0) || (r < 0 && rhs > 0) {
+        d - 1
+    } else {
+        d
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::util::math::{div_ceil, div_floor};
+
+    #[test]
+    pub fn test_div_floor() {
+        assert_eq!(div_ceil(7000, 4096), 2);
+        assert_eq!(div_ceil(-7000, 4096), -1);
+    }
+}
