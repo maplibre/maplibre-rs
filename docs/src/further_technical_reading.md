@@ -101,3 +101,8 @@ Projects:
 * https://de.slideshare.net/DICEStudio/framegraph-extensible-rendering-architecture-in-frostbite
 * http://themaister.net/blog/2017/08/15/render-graphs-and-vulkan-a-deep-dive/
 * http://themaister.net/blog/2017/08/15/render-graphs-and-vulkan-a-deep-dive/
+
+## Animation
+
+* https://crates.io/crates/pareen
+* https://crates.io/crates/keyframe

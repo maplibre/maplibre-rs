@@ -16,6 +16,8 @@ Because the data is probably not available this is a very hard challenge.
 ## Future Ideas
 
 * Use [rust-gpu](https://github.com/EmbarkStudios/rust-gpu) as shading language
+* Focus on accessibility of maps: https://www.w3.org/WAI/RD/wiki/Accessible_Maps
+* Display in AR: https://developer.apple.com/documentation/arkit/displaying_an_ar_experience_with_metal
 
 ## Debugging Rendering
 
