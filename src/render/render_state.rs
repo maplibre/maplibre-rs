@@ -363,9 +363,9 @@ impl RenderState {
             for x in min_tile.x..max_tile.x + 1 {
                 for y in min_tile.y..max_tile.y + 1 {
                     let to_be_fetched = (x, y, 15).into();
-                    if !worker_loop.is_loaded(&to_be_fetched) {
+                    if !worker_loop.try_is_loaded(&to_be_fetched) {
                         // FIXME: is_loaded is not correct right now
-                        worker_loop.fetch(to_be_fetched);
+                        worker_loop.try_fetch(to_be_fetched);
                     }
                 }
             }

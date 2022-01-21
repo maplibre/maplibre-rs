@@ -42,15 +42,16 @@ impl WorkerLoop {
         }
     }
 
-    pub fn is_loaded(&self, coords: &TileCoords) -> bool {
-        if let Ok(loaded_coords) = self.loaded_coords.lock() {
+    pub fn try_is_loaded(&self, coords: &TileCoords) -> bool {
+        if let Ok(loaded_coords) = self.loaded_coords.try_lock() {
             loaded_coords.contains(coords)
         } else {
             false
         }
     }
-    pub fn fetch(&mut self, coords: TileCoords) {
-        if let Ok(mut loaded_coords) = self.loaded_coords.lock() {
+
+    pub fn try_fetch(&mut self, coords: TileCoords) {
+        if let Ok(mut loaded_coords) = self.loaded_coords.try_lock() {
             if loaded_coords.contains(&coords) {
                 return;
             }
