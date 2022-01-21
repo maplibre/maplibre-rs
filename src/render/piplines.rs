@@ -48,12 +48,10 @@ pub fn create_map_render_pipeline_description<'a>(
             topology: wgpu::PrimitiveTopology::TriangleList,
             polygon_mode: if update_stencil {
                 wgpu::PolygonMode::Fill
+            } else if DEBUG_WIREFRAME {
+                wgpu::PolygonMode::Line
             } else {
-                if DEBUG_WIREFRAME {
-                    wgpu::PolygonMode::Line
-                } else {
-                    wgpu::PolygonMode::Fill
-                }
+                wgpu::PolygonMode::Fill
             },
             front_face: wgpu::FrontFace::Ccw,
             strip_index_format: None,

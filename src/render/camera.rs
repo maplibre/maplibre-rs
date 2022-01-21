@@ -134,8 +134,8 @@ impl Camera {
             clip.w / clip.w
         );
 
-        let window = Self::clip_to_window_transform(self.width, self.height) * ndc;
-        window
+        
+        Self::clip_to_window_transform(self.width, self.height) * ndc
     }
 
     /// Order of transformations reversed: https://computergraphics.stackexchange.com/questions/6087/screen-space-coordinates-to-eye-space-conversion/6093
@@ -156,12 +156,12 @@ impl Camera {
             .unwrap()
             * fixed_window;
         let unprojected = view_proj.invert().unwrap() * ndc;
-        let world = Vector3::new(
+        
+        Vector3::new(
             unprojected.x / unprojected.w,
             unprojected.y / unprojected.w,
             unprojected.z / unprojected.w,
-        );
-        world
+        )
     }
 
     /// Alternative implementation to `window_to_world`
@@ -180,12 +180,12 @@ impl Camera {
             1.0,
         );
         let unprojected_nalgebra = view_proj.invert().unwrap() * pt;
-        let world = Vector3::new(
+        
+        Vector3::new(
             unprojected_nalgebra.x / unprojected_nalgebra.w,
             unprojected_nalgebra.y / unprojected_nalgebra.w,
             unprojected_nalgebra.z / unprojected_nalgebra.w,
-        );
-        world
+        )
     }
 
     /// Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf
@@ -194,13 +194,13 @@ impl Camera {
         window: &Vector2<f64>,
         view_proj: &Matrix4<f64>,
     ) -> Vector3<f64> {
-        let near_world = self.window_to_world(&Vector3::new(window.x, window.y, 0.0), &view_proj);
+        let near_world = self.window_to_world(&Vector3::new(window.x, window.y, 0.0), view_proj);
 
-        let far_world = self.window_to_world(&Vector3::new(window.x, window.y, 1.0), &view_proj);
+        let far_world = self.window_to_world(&Vector3::new(window.x, window.y, 1.0), view_proj);
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);
-        if u < 0.0 || u > 1.0 {
+        if !(0.0..=1.0).contains(&u) {
             panic!("interpolation factor is out of bounds")
         }
         near_world + u * (far_world - near_world)
@@ -260,9 +260,9 @@ impl Camera {
         .unwrap();
         println!("{:?}", &plane);
 
-        let mut points = plane.intersection_points_aabb3(&Aabb3::new(
-            Point3::new(0.0, 0.0, 0.0).into(),
-            Point3::new(1.0, 1.0, 1.0).into(),
+        let points = plane.intersection_points_aabb3(&Aabb3::new(
+            Point3::new(0.0, 0.0, 0.0),
+            Point3::new(1.0, 1.0, 1.0),
         ));
 
         let from_ndc = Vector3::new(self.width, self.height, 1.0);
@@ -328,8 +328,8 @@ impl Perspective {
 
 #[cfg(test)]
 mod tests {
-    use crate::render::camera;
-    use cgmath::{AbsDiffEq, ElementWise, Matrix4, SquareMatrix, Vector2, Vector3, Vector4};
+    
+    use cgmath::{AbsDiffEq, Matrix4, SquareMatrix, Vector2, Vector3, Vector4};
 
     use super::{Camera, Perspective};
 

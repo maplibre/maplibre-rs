@@ -352,7 +352,7 @@ mod tests {
     use wgpu::BufferAddress;
 
     use crate::render::buffer_pool::{
-        BackingBuffer, BackingBufferDescriptor, BackingBufferType, BufferPool, Queue,
+        BackingBufferDescriptor, BackingBufferType, BufferPool, Queue,
     };
 
     #[derive(Debug)]

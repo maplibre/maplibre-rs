@@ -7,7 +7,7 @@ use crate::render::ShaderVertex;
 use lyon::tessellation::{
     FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor, VertexBuffers,
 };
-use lyon_path::Path;
+
 use wgpu::BufferAddress;
 
 mod layer;

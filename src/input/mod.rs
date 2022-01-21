@@ -2,8 +2,8 @@
 
 use std::time::Duration;
 
-use cgmath::{ElementWise, EuclideanSpace, InnerSpace, Point2, Point3, Vector2, Vector3, Vector4};
-use winit::event::{DeviceEvent, ElementState, KeyboardInput, TouchPhase, WindowEvent};
+use cgmath::{Vector2};
+use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
 use crate::input::pan_handler::PanHandler;
 use crate::input::pinch_handler::PinchHandler;
@@ -43,13 +43,11 @@ impl InputController {
         }
     }
 
-    pub fn device_input(&mut self, event: &DeviceEvent) -> bool {
-        match event {
-            _ => false,
-        }
+    pub fn device_input(&mut self, _event: &DeviceEvent) -> bool {
+        false
     }
 
-    pub fn window_input(&mut self, event: &WindowEvent, render_state: &RenderState) -> bool {
+    pub fn window_input(&mut self, event: &WindowEvent, _render_state: &RenderState) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
                 let position: (f64, f64) = position.to_owned().into();
@@ -64,12 +62,10 @@ impl InputController {
                         ..
                     },
                 ..
-            } => match key {
-                _ => {
-                    self.shift_handler.process_key_press(*key, *state);
-                    self.tilt_handler.process_key_press(*key, *state);
-                    true
-                }
+            } => {
+                self.shift_handler.process_key_press(*key, *state);
+                self.tilt_handler.process_key_press(*key, *state);
+                true
             },
             WindowEvent::Touch(touch) => match touch.phase {
                 TouchPhase::Started => self.pan_handler.process_touch_start(),

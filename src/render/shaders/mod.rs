@@ -81,7 +81,7 @@ impl VertexShaderState {
 pub mod tile {
     use super::{ShaderTileMetadata, ShaderVertex};
     use crate::platform::COLOR_TEXTURE_FORMAT;
-    use wgpu::BlendState;
+    
 
     use super::{FragmentShaderState, VertexShaderState};
 

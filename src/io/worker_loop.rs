@@ -6,7 +6,7 @@ use log::{error, info};
 
 use crate::coords::TileCoords;
 use vector_tile::parse_tile_bytes;
-use vector_tile::tile::{Feature, Layer, Tile};
+use vector_tile::tile::{Layer};
 
 use crate::io::web_tile_fetcher::WebTileFetcher;
 use crate::io::{HttpFetcherConfig, TileFetcher};

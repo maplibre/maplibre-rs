@@ -1,5 +1,5 @@
 use cgmath::{
-    ulps_eq, BaseFloat, BaseNum, EuclideanSpace, InnerSpace, Point2, Point3, Vector3, Vector4, Zero,
+    ulps_eq, BaseFloat, BaseNum, EuclideanSpace, InnerSpace, Point2, Point3, Vector3, Zero,
 };
 use std::cmp::Ordering;
 use std::fmt;
@@ -75,7 +75,7 @@ impl<S: BaseFloat> Plane<S> {
             -(self.n.x * ray_origin.x + self.n.y * ray_origin.y + self.n.z * ray_origin.z + self.d)
                 / vd;
 
-        return Some(t);
+        Some(t)
     }
 
     /// Returns unsorted intersection points with an Aabb3
@@ -83,8 +83,8 @@ impl<S: BaseFloat> Plane<S> {
     /// Inspired by: https://godotengine.org/qa/54688/camera-frustum-intersection-with-plane
     pub fn intersection_points_aabb3(&self, aabb: &Aabb3<S>) -> Vec<Vector3<S>> {
         let mut out_points: Vec<Vector3<S>> = Vec::new();
-        let aabb_min: Vector3<S> = aabb.min.to_vec().into();
-        let aabb_max: Vector3<S> = aabb.max.to_vec().into();
+        let aabb_min: Vector3<S> = aabb.min.to_vec();
+        let aabb_max: Vector3<S> = aabb.max.to_vec();
 
         // Test edges along X axis, pointing right.
         let mut dir: Vector3<S> = Vector3::new(aabb_max.x - aabb_min.x, S::zero(), S::zero());

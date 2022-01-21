@@ -1,9 +1,9 @@
 use std::default::Default;
 use std::{cmp, iter};
 
-use log::trace;
-use vector_tile::tile::Layer;
-use wgpu::{Buffer, BufferAddress, Limits, Queue};
+
+
+use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
@@ -375,7 +375,7 @@ impl RenderState {
                 .features()
                 .iter()
                 .enumerate()
-                .flat_map(|(i, feature)| {
+                .flat_map(|(i, _feature)| {
                     iter::repeat(ShaderFeatureStyle {
                         color: match layer.layer_data.name() {
                             "transportation" => [1.0, 0.0, 0.0, 1.0],

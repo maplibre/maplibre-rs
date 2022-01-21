@@ -5,7 +5,7 @@ use std::time::Duration;
 pub struct PinchHandler {}
 
 impl UpdateState for PinchHandler {
-    fn update_state(&mut self, state: &mut RenderState, dt: Duration) {
+    fn update_state(&mut self, _state: &mut RenderState, _dt: Duration) {
         // TODO
     }
 }
