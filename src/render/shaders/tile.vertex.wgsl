@@ -34,6 +34,7 @@ fn main(
 
     var position = globals.camera.view_proj * vec4<f32>(world_pos, 1.0);
 
+    // FIXME: how to fix z-fighting?
     position.z = 1.0;
 
     return VertexOutput(color, position);
