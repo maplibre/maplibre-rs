@@ -1,7 +1,7 @@
 use super::UpdateState;
 use crate::render::camera::Camera;
 use crate::render::render_state::RenderState;
-use cgmath::{EuclideanSpace, Point3, Vector2, Vector3};
+use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
 
@@ -26,9 +26,14 @@ impl UpdateState for PanHandler {
                 let perspective = &state.perspective;
                 let view_proj = reference_camera.calc_view_proj(perspective);
 
-                let start = reference_camera.window_to_world_z0(&start_window_position, &view_proj);
-                let current = reference_camera.window_to_world_z0(&window_position, &view_proj);
-                let delta = start - current;
+                let delta = if let (Some(start), Some(current)) = (
+                    reference_camera.window_to_world_z0(&start_window_position, &view_proj),
+                    reference_camera.window_to_world_z0(&window_position, &view_proj),
+                ) {
+                    start - current
+                } else {
+                    Vector3::zero()
+                };
 
                 if self.start_camera_position.is_none() {
                     self.start_camera_position = Some(state.camera.position.to_vec());

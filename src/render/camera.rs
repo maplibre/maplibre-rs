@@ -192,17 +192,18 @@ impl Camera {
         &self,
         window: &Vector2<f64>,
         view_proj: &Matrix4<f64>,
-    ) -> Vector3<f64> {
+    ) -> Option<Vector3<f64>> {
         let near_world = self.window_to_world(&Vector3::new(window.x, window.y, 0.0), view_proj);
 
         let far_world = self.window_to_world(&Vector3::new(window.x, window.y, 1.0), view_proj);
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);
-        if !(0.0..=1.0).contains(&u) {
-            panic!("interpolation factor is out of bounds")
+        if (0.0..=1.0).contains(&u) {
+            Some(near_world + u * (far_world - near_world))
+        } else {
+            None
         }
-        near_world + u * (far_world - near_world)
     }
 
     pub fn view_bounding_box2(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
@@ -215,7 +216,7 @@ impl Camera {
             Vector2::new(0.0, self.height),
         ]
         .iter()
-        .map(|point| self.window_to_world_z0(point, &view_proj))
+        .filter_map(|point| self.window_to_world_z0(point, &view_proj))
         .collect::<Vec<_>>();
 
         let min_x = vec
@@ -255,9 +256,7 @@ impl Camera {
             Point3::from_vec(a_ndc.mul_element_wise(to_ndc)),
             Point3::from_vec(b_ndc.mul_element_wise(to_ndc)),
             Point3::from_vec(c_ndc.mul_element_wise(to_ndc)),
-        )
-        .unwrap();
-        println!("{:?}", &plane);
+        )?;
 
         let points = plane.intersection_points_aabb3(&Aabb3::new(
             Point3::new(0.0, 0.0, 0.0),
