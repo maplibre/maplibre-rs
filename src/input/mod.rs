@@ -2,16 +2,13 @@
 
 use std::time::Duration;
 
-use cgmath::Vector2;
-use winit::event::{
-    DeviceEvent, ElementState, KeyboardInput, MouseButton, TouchPhase, WindowEvent,
-};
+use cgmath::{ElementWise, EuclideanSpace, InnerSpace, Point2, Point3, Vector2, Vector3, Vector4};
+use winit::event::{DeviceEvent, ElementState, KeyboardInput, TouchPhase, WindowEvent};
 
 use crate::input::pan_handler::PanHandler;
 use crate::input::pinch_handler::PinchHandler;
 use crate::input::shift_handler::ShiftHandler;
 use crate::input::tilt_handler::TiltHandler;
-use crate::render::camera::Camera;
 use crate::render::render_state::RenderState;
 
 mod pan_handler;

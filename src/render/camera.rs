@@ -1,7 +1,8 @@
 use cgmath::prelude::*;
-use cgmath::{Matrix4, Vector2, Vector3, Vector4};
+use cgmath::{Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
 use crate::render::shaders::ShaderCamera;
+use crate::util::math::{Aabb2, Aabb3, Plane};
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
@@ -124,8 +125,7 @@ impl Camera {
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline
-    // https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline
-    fn clip_to_window_matrix(clip: &Vector4<f64>, width: f64, height: f64) -> Vector4<f64> {
+    fn clip_to_window_via_transform(&self, clip: &Vector4<f64>) -> Vector4<f64> {
         #[rustfmt::skip]
         let ndc = Vector4::new(
             clip.x / clip.w,
@@ -134,16 +134,15 @@ impl Camera {
             clip.w / clip.w
         );
 
-        let window = Self::clip_to_window_transform(width, height) * ndc;
+        let window = Self::clip_to_window_transform(self.width, self.height) * ndc;
         window
     }
 
-    fn window_to_world(
-        window: &Vector3<f64>,
-        view_proj: &Matrix4<f64>,
-        width: f64,
-        height: f64,
-    ) -> Vector3<f64> {
+    /// Order of transformations reversed: https://computergraphics.stackexchange.com/questions/6087/screen-space-coordinates-to-eye-space-conversion/6093
+    /// `w` is lost.
+    ///
+    /// OpenGL explanation: https://www.khronos.org/opengl/wiki/Compute_eye_space_from_window_space#From_window_to_ndc
+    fn window_to_world(&self, window: &Vector3<f64>, view_proj: &Matrix4<f64>) -> Vector3<f64> {
         #[rustfmt::skip]
             let fixed_window = Vector4::new(
             window.x,
@@ -152,7 +151,7 @@ impl Camera {
             1.0
         );
 
-        let ndc = Self::clip_to_window_transform(width, height)
+        let ndc = Self::clip_to_window_transform(self.width, self.height)
             .invert()
             .unwrap()
             * fixed_window;
@@ -166,6 +165,8 @@ impl Camera {
     }
 
     /// Alternative implementation to `window_to_world`
+    ///
+    /// https://docs.rs/nalgebra-glm/latest/src/nalgebra_glm/ext/matrix_projection.rs.html#164-181
     fn window_to_world_nalgebra(
         window: &Vector3<f64>,
         view_proj: &Matrix4<f64>,
@@ -187,28 +188,109 @@ impl Camera {
         world
     }
 
+    /// Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf
     pub fn window_to_world_z0(
         &self,
         window: &Vector2<f64>,
         view_proj: &Matrix4<f64>,
     ) -> Vector3<f64> {
-        let near_world = Camera::window_to_world(
-            &Vector3::new(window.x, window.y, 0.0),
-            &view_proj,
-            self.width,
-            self.height,
-        );
+        let near_world = self.window_to_world(&Vector3::new(window.x, window.y, 0.0), &view_proj);
 
-        let far_world = Camera::window_to_world(
-            &Vector3::new(window.x, window.y, 1.0),
-            &view_proj,
-            self.width,
-            self.height,
-        );
+        let far_world = self.window_to_world(&Vector3::new(window.x, window.y, 1.0), &view_proj);
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);
+        if u < 0.0 || u > 1.0 {
+            panic!("interpolation factor is out of bounds")
+        }
         near_world + u * (far_world - near_world)
+    }
+
+    pub fn view_bounding_box2(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
+        let view_proj = self.calc_view_proj(perspective);
+
+        let vec = vec![
+            Vector2::new(0.0, 0.0),
+            Vector2::new(self.width, 0.0),
+            Vector2::new(self.width, self.height),
+            Vector2::new(0.0, self.height),
+        ]
+        .iter()
+        .map(|point| self.window_to_world_z0(point, &view_proj))
+        .collect::<Vec<_>>();
+
+        let min_x = vec
+            .iter()
+            .map(|point| point.x)
+            .min_by(|a, b| a.partial_cmp(b).unwrap())?;
+        let min_y = vec
+            .iter()
+            .map(|point| point.y)
+            .min_by(|a, b| a.partial_cmp(b).unwrap())?;
+        let max_x = vec
+            .iter()
+            .map(|point| point.x)
+            .max_by(|a, b| a.partial_cmp(b).unwrap())?;
+        let max_y = vec
+            .iter()
+            .map(|point| point.y)
+            .max_by(|a, b| a.partial_cmp(b).unwrap())?;
+        Some(Aabb2::new(
+            Point2::new(min_x, min_y),
+            Point2::new(max_x, max_y),
+        ))
+    }
+
+    pub fn view_bounding_box(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
+        let view_proj = self.calc_view_proj(perspective);
+        let a = view_proj * Vector4::new(0.0, 0.0, 0.0, 1.0);
+        let b = view_proj * Vector4::new(1.0, 0.0, 0.0, 1.0);
+        let c = view_proj * Vector4::new(1.0, 1.0, 0.0, 1.0);
+
+        let a = self.clip_to_window_via_transform(&a);
+        let a_ndc = a.truncate();
+        let b_ndc = self.clip_to_window_via_transform(&b).truncate();
+        let c_ndc = self.clip_to_window_via_transform(&c).truncate();
+        let to_ndc = Vector3::new(1.0 / self.width, 1.0 / self.height, 1.0);
+        let plane: Plane<f64> = Plane::from_points(
+            Point3::from_vec(a_ndc.mul_element_wise(to_ndc)),
+            Point3::from_vec(b_ndc.mul_element_wise(to_ndc)),
+            Point3::from_vec(c_ndc.mul_element_wise(to_ndc)),
+        )
+        .unwrap();
+        println!("{:?}", &plane);
+
+        let mut points = plane.intersection_points_aabb3(&Aabb3::new(
+            Point3::new(0.0, 0.0, 0.0).into(),
+            Point3::new(1.0, 1.0, 1.0).into(),
+        ));
+
+        let from_ndc = Vector3::new(self.width, self.height, 1.0);
+        let vec = points
+            .iter()
+            .map(|point| self.window_to_world(&point.mul_element_wise(from_ndc), &view_proj))
+            .collect::<Vec<_>>();
+
+        let min_x = vec
+            .iter()
+            .map(|point| point.x)
+            .min_by(|a, b| a.partial_cmp(b).unwrap())?;
+        let min_y = vec
+            .iter()
+            .map(|point| point.y)
+            .min_by(|a, b| a.partial_cmp(b).unwrap())?;
+        let max_x = vec
+            .iter()
+            .map(|point| point.x)
+            .max_by(|a, b| a.partial_cmp(b).unwrap())?;
+        let max_y = vec
+            .iter()
+            .map(|point| point.y)
+            .max_by(|a, b| a.partial_cmp(b).unwrap())?;
+        Some(Aabb2::new(
+            Point2::new(min_x, min_y),
+            Point2::new(max_x, max_y),
+        ))
     }
 }
 
@@ -246,6 +328,7 @@ impl Perspective {
 
 #[cfg(test)]
 mod tests {
+    use crate::render::camera;
     use cgmath::{AbsDiffEq, ElementWise, Matrix4, SquareMatrix, Vector2, Vector3, Vector4};
 
     use super::{Camera, Perspective};
@@ -282,7 +365,7 @@ mod tests {
         println!("world_pos: {:?}", view_proj.invert().unwrap() * clip);
 
         println!("window: {:?}", Camera::clip_to_window(&clip, width, height));
-        let window = Camera::clip_to_window_matrix(&clip, width, height);
+        let window = camera.clip_to_window_via_transform(&clip);
         println!("window (matrix): {:?}", window);
 
         // --------- nalgebra
@@ -320,19 +403,9 @@ mod tests {
         let window = Vector2::new(960.0, 631.0); // 0, 4096: passt nicht
                                                  //let window = Vector2::new(962.0, 1.0); // 0, 300: passt nicht
                                                  //let window = Vector2::new(960.0, 540.0); // 0, 0 passt
-        let near_world = Camera::window_to_world(
-            &Vector3::new(window.x, window.y, 0.0),
-            &view_proj,
-            width,
-            height,
-        );
+        let near_world = camera.window_to_world(&Vector3::new(window.x, window.y, 0.0), &view_proj);
 
-        let far_world = Camera::window_to_world(
-            &Vector3::new(window.x, window.y, 1.0),
-            &view_proj,
-            width,
-            height,
-        );
+        let far_world = camera.window_to_world(&Vector3::new(window.x, window.y, 1.0), &view_proj);
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);

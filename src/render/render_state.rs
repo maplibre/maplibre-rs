@@ -350,6 +350,9 @@ impl RenderState {
     // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
     // TODO: What is StagingBelt for?
     pub fn upload_tile_geometry(&mut self, worker_loop: &WorkerLoop) {
+        println!("1: {:?}", self.camera.view_bounding_box(&self.perspective));
+        println!("2: {:?}", self.camera.view_bounding_box2(&self.perspective));
+
         let upload = worker_loop.pop_all();
 
         for layer in upload.iter() {

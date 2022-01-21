@@ -16,8 +16,6 @@ impl UpdateState for TiltHandler {
 
         let delta = self.delta_pitch * dt;
         state.camera.pitch += Rad::from(delta);
-        let x: Deg<f64> = state.camera.pitch.into();
-        println!("{:?}", x);
         self.delta_pitch -= delta;
     }
 }
