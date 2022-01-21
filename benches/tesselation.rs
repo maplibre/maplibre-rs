@@ -1,22 +1,18 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use lyon::tessellation::VertexBuffers;
 use mapr::io::static_tile_fetcher::StaticTileFetcher;
-use mapr::io::{static_tile_fetcher, TileFetcher};
+use mapr::io::{static_tile_fetcher, HttpFetcherConfig, TileFetcher};
 use mapr::tesselation::Tesselated;
 use std::io::Cursor;
 use vector_tile::parse_tile_reader;
-use vector_tile::tile::Tile;
+use vector_tile::tile::{Layer, Tile};
 
-fn tessselate_stroke(tile: &Tile) {
-    let _: VertexBuffers<_, u16> = tile.tesselate_stroke();
-}
-
-fn tessselate_fill(tile: &Tile) {
-    let _: VertexBuffers<_, u16> = tile.tesselate_fill();
+fn tessselate(layer: &Layer) {
+    let _: (VertexBuffers<_, u32>, _) = layer.tesselate().unwrap();
 }
 
 fn tile1(c: &mut Criterion) {
-    let fetcher = StaticTileFetcher::new();
+    let fetcher = StaticTileFetcher::new(HttpFetcherConfig::default());
     let tile = parse_tile_reader(&mut Cursor::new(
         fetcher
             .sync_fetch_tile(
@@ -30,9 +26,9 @@ fn tile1(c: &mut Criterion) {
             .unwrap(),
     ))
     .expect("failed to load tile");
+    let layer = tile.layers().first().unwrap();
 
-    c.bench_function("tessselate_stroke", |b| b.iter(|| tessselate_stroke(&tile)));
-    c.bench_function("tessselate_fill", |b| b.iter(|| tessselate_fill(&tile)));
+    c.bench_function("tessselate", |b| b.iter(|| tessselate(&layer)));
 }
 
 criterion_group!(benches, tile1);
