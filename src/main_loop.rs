@@ -11,12 +11,12 @@ use crate::render::render_state::RenderState;
 pub async fn setup(
     window: winit::window::Window,
     event_loop: EventLoop<()>,
-    worker_loop: Box<WorkerLoop>,
+    mut worker_loop: Box<WorkerLoop>,
 ) {
     info!("== mapr ==");
 
-    fetch_munich_tiles(worker_loop.as_ref());
-
+    /*    fetch_munich_tiles(worker_loop.as_ref());
+     */
     let mut input = InputController::new(0.2, 100.0);
     let mut maybe_state: Option<RenderState> = if cfg!(target_os = "android") {
         None
@@ -84,7 +84,7 @@ pub async fn setup(
                     let dt = now - last_render_time;
                     last_render_time = now;
                     input.update_state(state, dt);
-                    state.upload_tile_geometry(&worker_loop);
+                    state.upload_tile_geometry(&mut worker_loop);
                     match state.render() {
                         Ok(_) => {}
                         Err(wgpu::SurfaceError::Lost) => {

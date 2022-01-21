@@ -1,6 +1,8 @@
+use cgmath::{Point3, Vector3};
 use std::default::Default;
 use std::{cmp, iter};
 
+use crate::coords::{TileCoords, WorldCoords, WorldTileCoords};
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
@@ -347,9 +349,27 @@ impl RenderState {
 
     // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
     // TODO: What is StagingBelt for?
-    pub fn upload_tile_geometry(&mut self, worker_loop: &WorkerLoop) {
-        println!("1: {:?}", self.camera.view_bounding_box(&self.perspective));
-        println!("2: {:?}", self.camera.view_bounding_box2(&self.perspective));
+    pub fn upload_tile_geometry(&mut self, worker_loop: &mut WorkerLoop) {
+        if let Some(view_box) = self.camera.view_bounding_box(&self.perspective) {
+            /*let view_box = self.camera.view_bounding_box2(&self.perspective).unwrap();*/
+
+            let min_world: WorldCoords = Point3::new(view_box.min.x, view_box.min.y, 15.0).into();
+            let min_world_tile: WorldTileCoords = min_world.into();
+            let min_tile: TileCoords = min_world_tile.into();
+            let max_world: WorldCoords = Point3::new(view_box.max.x, view_box.max.y, 15.0).into();
+            let max_world_tile: WorldTileCoords = max_world.into();
+            let max_tile: TileCoords = max_world_tile.into();
+
+            for x in min_tile.x..max_tile.x + 1 {
+                for y in min_tile.y..max_tile.y + 1 {
+                    let to_be_fetched = (x, y, 15).into();
+                    if !worker_loop.is_loaded(&to_be_fetched) {
+                        // FIXME: is_loaded is not correct right now
+                        worker_loop.fetch(to_be_fetched);
+                    }
+                }
+            }
+        }
 
         let upload = worker_loop.pop_all();
 
@@ -468,9 +488,18 @@ impl RenderState {
             {
                 // Draw masks
                 pass.set_pipeline(&self.mask_pipeline);
-                pass.set_vertex_buffer(0, self.tile_mask_instances_buffer.slice(..));
-                // Draw 7 squares each out of 6 vertices
-                pass.draw(0..6, 0..self.tile_mask_pattern.instances());
+                let masks = self.tile_mask_pattern.as_slice();
+                if !masks.is_empty() {
+                    pass.set_vertex_buffer(
+                        0,
+                        self.tile_mask_instances_buffer.slice(
+                            0..masks.len() as u64
+                                * std::mem::size_of::<ShaderTileMaskInstance>() as u64,
+                        ),
+                    );
+                    // Draw 7 squares each out of 6 vertices
+                    pass.draw(0..6, 0..self.tile_mask_pattern.instances());
+                }
             }
             {
                 for entry in self.buffer_pool.available_vertices() {

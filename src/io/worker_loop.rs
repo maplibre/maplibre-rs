@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 use std::sync::{Arc, Condvar, Mutex};
 
@@ -22,6 +22,7 @@ pub struct TesselatedLayer {
 
 #[derive(Clone)]
 pub struct WorkerLoop {
+    loaded_coords: Arc<Mutex<HashSet<TileCoords>>>,
     requests: Arc<WorkQueue<TileCoords>>,
     responses: Arc<WorkQueue<TesselatedLayer>>,
 }
@@ -35,14 +36,28 @@ impl Drop for WorkerLoop {
 impl WorkerLoop {
     pub fn new() -> Self {
         Self {
+            loaded_coords: Arc::new(Mutex::new(HashSet::new())),
             requests: Arc::new(WorkQueue::new()),
             responses: Arc::new(WorkQueue::new()),
         }
     }
 
-    pub fn fetch(&self, coords: TileCoords) {
-        info!("new tile request: {:?}", &coords);
-        self.requests.push(coords);
+    pub fn is_loaded(&self, coords: &TileCoords) -> bool {
+        if let Ok(loaded_coords) = self.loaded_coords.lock() {
+            loaded_coords.contains(coords)
+        } else {
+            false
+        }
+    }
+    pub fn fetch(&mut self, coords: TileCoords) {
+        if let Ok(mut loaded_coords) = self.loaded_coords.lock() {
+            if loaded_coords.contains(&coords) {
+                return;
+            }
+            loaded_coords.insert(coords);
+            info!("new tile request: {:?}", &coords);
+            self.requests.push(coords);
+        }
     }
 
     pub fn pop_all(&self) -> Vec<TesselatedLayer> {
