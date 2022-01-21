@@ -104,7 +104,7 @@ impl Camera {
             clip.x / clip.w,
             clip.y / clip.w,
             clip.z / clip.w,
-            clip.w / clip.w
+            1.0
         );
 
         let min_depth = 0.0;
@@ -131,7 +131,7 @@ impl Camera {
             clip.x / clip.w,
             clip.y / clip.w,
             clip.z / clip.w,
-            clip.w / clip.w
+            1.0
         );
 
         Self::clip_to_window_transform(self.width, self.height) * ndc
