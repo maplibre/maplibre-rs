@@ -48,6 +48,8 @@ jobs:
       - name: API Documentation
         run: cargo doc --no-deps --workspace --lib --all-features --document-private-items
       - name: Deploy API Documentation
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
