@@ -107,6 +107,7 @@ impl TileMaskPattern {
 
     pub fn update_pattern(&mut self, z: u8, extent: f32) {
         if !self.bounding_box.is_initialized() {
+            // Happens if `update_bounds` hasn't been called so far
             return;
         }
 
@@ -115,13 +116,13 @@ impl TileMaskPattern {
         let start: WorldTileCoords = (self.bounding_box.min_x, self.bounding_box.min_y, z).into(); // upper left corner
         let end: WorldTileCoords = (self.bounding_box.max_x, self.bounding_box.max_y, z).into(); // lower right corner
 
-        let aligned_start = start.into_aligned();
+        let aligned_start = start.into_aligned().upper_left();
         let aligned_end = end.into_aligned().lower_right();
 
-        let start_world = start.into_world(extent);
+        let start_world = aligned_start.into_world(extent);
 
-        let dy = aligned_end.y - aligned_start.0.y;
-        let dx = aligned_end.x - aligned_start.0.x;
+        let dy = aligned_end.y - aligned_start.y + 1;
+        let dx = aligned_end.x - aligned_start.x + 1;
 
         let anchor_x = start_world.x;
         let anchor_y = start_world.y;

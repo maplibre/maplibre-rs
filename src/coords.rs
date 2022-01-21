@@ -68,8 +68,8 @@ impl WorldTileCoords {
 
     pub fn into_aligned(self) -> AlignedWorldTileCoords {
         AlignedWorldTileCoords(WorldTileCoords {
-            x: self.x / 2 * 2,
-            y: self.y / 2 * 2,
+            x: div_floor(self.x, 2) * 2,
+            y: div_floor(self.y, 2) * 2,
             z: self.z,
         })
     }
