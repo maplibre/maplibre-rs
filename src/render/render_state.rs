@@ -1,8 +1,6 @@
 use std::default::Default;
 use std::{cmp, iter};
 
-
-
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;

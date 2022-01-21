@@ -134,7 +134,6 @@ impl Camera {
             clip.w / clip.w
         );
 
-        
         Self::clip_to_window_transform(self.width, self.height) * ndc
     }
 
@@ -156,7 +155,7 @@ impl Camera {
             .unwrap()
             * fixed_window;
         let unprojected = view_proj.invert().unwrap() * ndc;
-        
+
         Vector3::new(
             unprojected.x / unprojected.w,
             unprojected.y / unprojected.w,
@@ -180,7 +179,7 @@ impl Camera {
             1.0,
         );
         let unprojected_nalgebra = view_proj.invert().unwrap() * pt;
-        
+
         Vector3::new(
             unprojected_nalgebra.x / unprojected_nalgebra.w,
             unprojected_nalgebra.y / unprojected_nalgebra.w,
@@ -328,7 +327,7 @@ impl Perspective {
 
 #[cfg(test)]
 mod tests {
-    
+
     use cgmath::{AbsDiffEq, Matrix4, SquareMatrix, Vector2, Vector3, Vector4};
 
     use super::{Camera, Perspective};

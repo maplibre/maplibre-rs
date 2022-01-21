@@ -1,4 +1,3 @@
-
 use std::ops::Add;
 
 use bytemuck::Pod;
@@ -12,7 +11,7 @@ use lyon_path::traits::SvgPathBuilder;
 use lyon_path::Path;
 
 use vector_tile::geometry::{Command, Geometry};
-use vector_tile::tile::{Layer};
+use vector_tile::tile::Layer;
 
 use crate::render::ShaderVertex;
 use crate::tesselation::{Tesselated, VertexConstructor, DEFAULT_TOLERANCE};

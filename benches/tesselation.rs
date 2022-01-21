@@ -5,7 +5,7 @@ use mapr::io::{HttpFetcherConfig, TileFetcher};
 use mapr::tesselation::Tesselated;
 use std::io::Cursor;
 use vector_tile::parse_tile_reader;
-use vector_tile::tile::{Layer};
+use vector_tile::tile::Layer;
 
 fn tessselate(layer: &Layer) {
     let _: (VertexBuffers<_, u32>, _) = layer.tesselate().unwrap();

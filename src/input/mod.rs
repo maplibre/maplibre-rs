@@ -2,7 +2,7 @@
 
 use std::time::Duration;
 
-use cgmath::{Vector2};
+use cgmath::Vector2;
 use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
 use crate::input::pan_handler::PanHandler;
@@ -66,7 +66,7 @@ impl InputController {
                 self.shift_handler.process_key_press(*key, *state);
                 self.tilt_handler.process_key_press(*key, *state);
                 true
-            },
+            }
             WindowEvent::Touch(touch) => match touch.phase {
                 TouchPhase::Started => self.pan_handler.process_touch_start(),
                 TouchPhase::Ended => self.pan_handler.process_touch_end(),

@@ -1,5 +1,5 @@
 use super::UpdateState;
-use crate::render::camera::{Camera};
+use crate::render::camera::Camera;
 use crate::render::render_state::RenderState;
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3};
 use std::time::Duration;
