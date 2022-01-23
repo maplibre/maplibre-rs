@@ -1,6 +1,7 @@
 use std::ops::Add;
 
 use bytemuck::Pod;
+use lyon::geom::{point, vector};
 
 use lyon::lyon_tessellation::VertexBuffers;
 use lyon::tessellation::geometry_builder::MaxIndex;
@@ -8,7 +9,7 @@ use lyon::tessellation::{
     BuffersBuilder, FillOptions, FillTessellator, StrokeOptions, StrokeTessellator,
 };
 use lyon_path::traits::SvgPathBuilder;
-use lyon_path::Path;
+use lyon_path::{FillRule, Path};
 
 use vector_tile::geometry::{Command, Geometry};
 use vector_tile::tile::Layer;
@@ -25,51 +26,56 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tesselat
         for feature in self.features() {
             match feature.geometry() {
                 Geometry::GeometryPolygon(polygon) => {
-                    let mut tile_builder = Path::builder().with_svg();
+                    let mut polygon_builder = Path::builder();
+                    let mut cursor = point(0.0, 0.0);
                     for command in &polygon.commands {
                         match command {
                             Command::MoveTo(cmd) => {
-                                tile_builder.relative_move_to(lyon_path::math::vector(
-                                    cmd.x as f32,
-                                    cmd.y as f32,
-                                ));
+                                let delta = lyon_path::math::vector(cmd.x as f32, cmd.y as f32);
+                                cursor += delta;
+                                polygon_builder.begin(cursor);
                             }
                             Command::LineTo(cmd) => {
-                                tile_builder.relative_line_to(lyon_path::math::vector(
-                                    cmd.x as f32,
-                                    cmd.y as f32,
-                                ));
+                                let delta = lyon_path::math::vector(cmd.x as f32, cmd.y as f32);
+                                cursor += delta;
+                                polygon_builder.line_to(cursor);
                             }
                             Command::Close => {
-                                tile_builder.close();
+                                polygon_builder.close();
                             }
                         };
                     }
 
-                    let mut tesselator = FillTessellator::new();
-                    tesselator
+                    let mut fill_tesselator = FillTessellator::new();
+                    fill_tesselator
                         .tessellate_path(
-                            &tile_builder.build(),
-                            &FillOptions::tolerance(DEFAULT_TOLERANCE),
+                            &polygon_builder.build(),
+                            &FillOptions::tolerance(DEFAULT_TOLERANCE)
+                                .with_fill_rule(FillRule::NonZero),
                             &mut BuffersBuilder::new(&mut buffer, VertexConstructor {}),
                         )
                         .ok()?;
                 }
-                Geometry::GeometryLineString(polygon) => {
-                    let mut tile_builder = Path::builder().with_svg();
-                    for command in &polygon.commands {
+                Geometry::GeometryLineString(line_string) => {
+                    let mut line_string_builder = Path::builder();
+                    let mut cursor = point(0.0, 0.0);
+                    let mut subpath_open = false;
+                    for command in &line_string.commands {
                         match command {
                             Command::MoveTo(cmd) => {
-                                tile_builder.relative_move_to(lyon_path::math::vector(
-                                    cmd.x as f32,
-                                    cmd.y as f32,
-                                ));
+                                if subpath_open {
+                                    line_string_builder.end(false);
+                                }
+
+                                let delta = lyon_path::math::vector(cmd.x as f32, cmd.y as f32);
+                                cursor += delta;
+                                line_string_builder.begin(cursor);
+                                subpath_open = true;
                             }
                             Command::LineTo(cmd) => {
-                                tile_builder.relative_line_to(lyon_path::math::vector(
-                                    cmd.x as f32,
-                                    cmd.y as f32,
-                                ));
+                                let delta = lyon_path::math::vector(cmd.x as f32, cmd.y as f32);
+                                cursor += delta;
+                                line_string_builder.line_to(cursor);
                             }
                             Command::Close => {
                                 panic!("error")
@@ -77,11 +83,15 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tesselat
                         };
                     }
 
-                    let mut tesselator = StrokeTessellator::new();
+                    if subpath_open {
+                        line_string_builder.end(false);
+                    }
 
-                    tesselator
+                    let mut stroke_tesselator = StrokeTessellator::new();
+
+                    stroke_tesselator
                         .tessellate_path(
-                            &tile_builder.build(),
+                            &line_string_builder.build(),
                             &StrokeOptions::tolerance(DEFAULT_TOLERANCE),
                             &mut BuffersBuilder::new(&mut buffer, VertexConstructor {}),
                         )
