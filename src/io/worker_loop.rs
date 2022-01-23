@@ -57,7 +57,7 @@ impl WorkerLoop {
             }
             loaded_coords.insert(coords);
             info!("new tile request: {:?}", &coords);
-            self.requests.push(coords);
+            while !self.requests.try_push(coords) {}
         }
     }
 
@@ -142,13 +142,23 @@ impl<T: Send> WorkQueue<T> {
         }
     }
 
-    fn push(&self, work: T) -> usize {
+    fn push(&self, work: T) -> bool {
         if let Ok(mut queue) = self.inner.lock() {
             queue.push_back(work);
             self.cvar.notify_all();
-            queue.len()
+            true
         } else {
-            panic!("locking failed");
+            false
+        }
+    }
+
+    fn try_push(&self, work: T) -> bool {
+        if let Ok(mut queue) = self.inner.try_lock() {
+            queue.push_back(work);
+            self.cvar.notify_all();
+            true
+        } else {
+            false
         }
     }
 }
