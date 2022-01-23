@@ -1,7 +1,7 @@
 //! Module which is used target platform is not web related.
 
 use async_trait::async_trait;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_middleware_cache::managers::CACacheManager;
 use reqwest_middleware_cache::{Cache, CacheMode};
@@ -47,7 +47,11 @@ impl HttpFetcher for PlatformHttpFetcher {
     }
 
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
-        let body = self.client.get(url).send().await?.bytes().await?;
+        let response = self.client.get(url).send().await?;
+        if response.status() != StatusCode::OK {
+            return Err(Error::Network("response code not 200".to_string()));
+        }
+        let body = response.bytes().await?;
         Ok(Vec::from(body.as_ref()))
     }
 }
