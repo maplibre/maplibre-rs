@@ -1,6 +1,6 @@
 //! File which exposes all kinds of coordinates used throughout mapr
 
-use crate::util::math::{div_away, div_ceil, div_floor};
+use crate::util::math::{div_away, div_floor};
 use cgmath::Point3;
 use std::fmt;
 

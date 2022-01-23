@@ -39,10 +39,10 @@ pub struct BufferPool<Q, B, V, I, M, FM> {
 
 #[derive(Debug)]
 enum BackingBufferType {
-    VERTICES,
-    INDICES,
-    METADATA,
-    FEATURE_METADATA,
+    Vertices,
+    Indices,
+    Metadata,
+    FeatureMetadata,
 }
 
 impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: bytemuck::Pod>
@@ -58,22 +58,22 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: b
             vertices: BackingBuffer::new(
                 vertices.buffer,
                 vertices.inner_size,
-                BackingBufferType::VERTICES,
+                BackingBufferType::Vertices,
             ),
             indices: BackingBuffer::new(
                 indices.buffer,
                 indices.inner_size,
-                BackingBufferType::INDICES,
+                BackingBufferType::Indices,
             ),
             metadata: BackingBuffer::new(
                 metadata.buffer,
                 metadata.inner_size,
-                BackingBufferType::METADATA,
+                BackingBufferType::Metadata,
             ),
             feature_metadata: BackingBuffer::new(
                 feature_metadata.buffer,
                 feature_metadata.inner_size,
-                BackingBufferType::FEATURE_METADATA,
+                BackingBufferType::FeatureMetadata,
             ),
             index: VecDeque::new(), // TODO: Approximate amount of buffers in pool
             phantom_v: Default::default(),
@@ -87,10 +87,10 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: b
     #[cfg(test)]
     fn available_space(&self, typ: BackingBufferType) -> wgpu::BufferAddress {
         let gap = match typ {
-            BackingBufferType::VERTICES => &self.vertices,
-            BackingBufferType::INDICES => &self.indices,
-            BackingBufferType::METADATA => &self.metadata,
-            BackingBufferType::FEATURE_METADATA => &self.feature_metadata,
+            BackingBufferType::Vertices => &self.vertices,
+            BackingBufferType::Indices => &self.indices,
+            BackingBufferType::Metadata => &self.metadata,
+            BackingBufferType::FeatureMetadata => &self.feature_metadata,
         }
         .find_largest_gap(&self.index);
 
@@ -268,16 +268,16 @@ impl<B> BackingBuffer<B> {
 
     fn find_largest_gap(&self, index: &VecDeque<IndexEntry>) -> Range<wgpu::BufferAddress> {
         let start = index.front().map(|first| match self.typ {
-            BackingBufferType::VERTICES => first.buffer_vertices.start,
-            BackingBufferType::INDICES => first.buffer_indices.start,
-            BackingBufferType::METADATA => first.buffer_metadata.start,
-            BackingBufferType::FEATURE_METADATA => first.buffer_feature_metadata.start,
+            BackingBufferType::Vertices => first.buffer_vertices.start,
+            BackingBufferType::Indices => first.buffer_indices.start,
+            BackingBufferType::Metadata => first.buffer_metadata.start,
+            BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.start,
         });
         let end = index.back().map(|first| match self.typ {
-            BackingBufferType::VERTICES => first.buffer_vertices.end,
-            BackingBufferType::INDICES => first.buffer_indices.end,
-            BackingBufferType::METADATA => first.buffer_metadata.end,
-            BackingBufferType::FEATURE_METADATA => first.buffer_feature_metadata.end,
+            BackingBufferType::Vertices => first.buffer_vertices.end,
+            BackingBufferType::Indices => first.buffer_indices.end,
+            BackingBufferType::Metadata => first.buffer_metadata.end,
+            BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.end,
         });
 
         if let Some(start) = start {
@@ -410,31 +410,31 @@ mod tests {
         }
         assert_eq!(
             128 - 2 * 48,
-            pool.available_space(BackingBufferType::VERTICES)
+            pool.available_space(BackingBufferType::Vertices)
         );
 
         pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         assert_eq!(
             128 - 2 * 48 - 24,
-            pool.available_space(BackingBufferType::VERTICES)
+            pool.available_space(BackingBufferType::Vertices)
         );
         println!("{:?}", &pool.index);
 
         pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         // appended now at the beginning
         println!("{:?}", &pool.index);
-        assert_eq!(24, pool.available_space(BackingBufferType::VERTICES));
+        assert_eq!(24, pool.available_space(BackingBufferType::Vertices));
 
         pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         println!("{:?}", &pool.index);
-        assert_eq!(0, pool.available_space(BackingBufferType::VERTICES));
+        assert_eq!(0, pool.available_space(BackingBufferType::Vertices));
 
         pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         println!("{:?}", &pool.index);
-        assert_eq!(24, pool.available_space(BackingBufferType::VERTICES));
+        assert_eq!(24, pool.available_space(BackingBufferType::Vertices));
 
         pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         println!("{:?}", &pool.index);
-        assert_eq!(0, pool.available_space(BackingBufferType::VERTICES));
+        assert_eq!(0, pool.available_space(BackingBufferType::Vertices));
     }
 }

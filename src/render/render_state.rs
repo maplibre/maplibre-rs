@@ -1,4 +1,4 @@
-use cgmath::{Point3, Vector3};
+use cgmath::Point3;
 use std::default::Default;
 use std::{cmp, iter};
 
@@ -376,17 +376,6 @@ impl RenderState {
         for layer in upload.iter() {
             let world_coords = layer.coords.into_world_tile();
             self.tile_mask_pattern.update_bounds(&world_coords);
-
-            /*match tile.layer_data.name() {
-                "transportation" => {}
-                "building" => {}
-                "boundary" => {}
-                "water" => {}
-                "waterway" => {}
-                _ => {
-                    continue;
-                }
-            };*/
 
             let feature_metadata = layer
                 .layer_data
