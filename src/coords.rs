@@ -47,9 +47,17 @@ impl From<(u32, u32, u8)> for TileCoords {
 
 impl From<WorldTileCoords> for TileCoords {
     fn from(world_coords: WorldTileCoords) -> Self {
+        let mut tile_x = world_coords.x + crate::example::MUNICH_X as i32;
+        let mut tile_y = world_coords.y + crate::example::MUNICH_Y as i32;
+        if tile_x < 0 {
+            tile_x = 0;
+        }
+        if tile_y < 0 {
+            tile_y = 0;
+        }
         TileCoords {
-            x: (world_coords.x + crate::example::MUNICH_X as i32) as u32,
-            y: (world_coords.y + crate::example::MUNICH_Y as i32) as u32,
+            x: tile_x as u32,
+            y: tile_y as u32,
             z: world_coords.z,
         }
     }
