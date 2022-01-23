@@ -63,9 +63,11 @@ impl InputController {
                     },
                 ..
             } => {
-                self.shift_handler.process_key_press(*key, *state);
-                self.tilt_handler.process_key_press(*key, *state);
-                true
+                if self.shift_handler.process_key_press(*key, *state) {
+                    self.tilt_handler.process_key_press(*key, *state)
+                } else {
+                    false
+                }
             }
             WindowEvent::Touch(touch) => match touch.phase {
                 TouchPhase::Started => self.pan_handler.process_touch_start(),
