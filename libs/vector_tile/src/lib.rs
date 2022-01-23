@@ -23,7 +23,7 @@ pub mod tile;
 pub fn parse_tile<P: AsRef<Path>>(path: P) -> Result<Tile, Error> {
     let f = File::open(path)?;
     let mut reader = BufReader::new(f);
-    parse_tile_reader(&mut reader).into()
+    parse_tile_reader(&mut reader)
 }
 
 pub fn parse_tile_reader<B: BufRead>(reader: &mut B) -> Result<Tile, Error> {

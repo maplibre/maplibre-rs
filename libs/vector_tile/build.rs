@@ -1,5 +1,3 @@
-extern crate protobuf_codegen_pure;
-
 use std::path::PathBuf;
 
 fn main() {

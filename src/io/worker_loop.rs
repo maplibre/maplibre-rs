@@ -76,8 +76,7 @@ impl WorkerLoop {
                 match fetcher.fetch_tile(&coords).await {
                     Ok(data) => {
                         info!("preparing tile {} with {}bytes", &coords, data.len());
-                        let tile = parse_tile_bytes(bytemuck::cast_slice(data.as_slice()))
-                            .expect("failed to load tile");
+                        let tile = parse_tile_bytes(data.as_slice()).expect("failed to load tile");
 
                         for layer in tile.layers() {
                             if let Some((buffer, feature_vertices)) = layer.tesselate() {

@@ -20,7 +20,7 @@ impl Decode<PropertyValue> for ProtoValue {
         if self.has_bool_value() {
             PropertyValue::BoolValue(self.get_bool_value())
         } else if self.has_string_value() {
-            PropertyValue::StringValue(String::from(self.take_string_value()))
+            PropertyValue::StringValue(self.take_string_value())
         } else if self.has_float_value() {
             PropertyValue::FloatValue(self.get_float_value())
         } else if self.has_int_value() {
@@ -68,7 +68,7 @@ impl Decode<GeometryPoint> for Vec<u32> {
         let mut points = vec![];
         let mut i = 0;
 
-        while i < self.len() - 1 {
+        while i < self.len() {
             let command = self[i] & 0x7;
 
             if command != CMD_MOVE_TO {
@@ -76,7 +76,7 @@ impl Decode<GeometryPoint> for Vec<u32> {
                 panic!("error")
             }
 
-            let count = (self[i] >> 3) as usize;
+            let count = self[i] >> 3;
             i += 1;
 
             for _ in 0..count {
@@ -86,12 +86,10 @@ impl Decode<GeometryPoint> for Vec<u32> {
             }
         }
 
-        if points.len() == 1 {
-            GeometryPoint::Point(points.remove(0))
-        } else if points.len() > 1 {
-            GeometryPoint::MultiPoint(MultiPoint::new(points))
-        } else {
-            GeometryPoint::Point(Point::new(0, 0)) // point is at the origin
+        match points.len() {
+            0 => GeometryPoint::Point(Point::new(0, 0)),
+            1 => GeometryPoint::Point(points.remove(0)),
+            _ => GeometryPoint::MultiPoint(MultiPoint::new(points)),
         }
     }
 }
@@ -101,31 +99,29 @@ impl Decode<GeometryLineString> for Vec<u32> {
         let mut commands = Vec::with_capacity(self.len()); // Create vec of maximum size
         let mut i = 0;
 
-        while i < self.len() - 1 {
+        while i < self.len() {
             let command = self[i] & 0x7;
 
-            let count = (self[i] >> 3) as usize;
+            let count = self[i] >> 3;
             i += 1;
 
             match command {
                 CMD_MOVE_TO => {
                     for _ in 0..count {
-                        let x_index = i;
                         commands.push(Command::MoveTo(MoveTo {
-                            x: self[x_index].zagzig(),
-                            y: self[x_index + 1].zagzig(),
+                            x: self[i].zagzig(),
+                            y: self[i + 1].zagzig(),
                         }));
                         i += CMD_MOVE_TO_PARAMETERS;
                     }
                 }
                 CMD_LINE_TO => {
                     for _ in 0..count {
-                        let x_index = i;
                         commands.push(Command::LineTo(LineTo {
-                            x: self[x_index].zagzig(),
-                            y: self[x_index + 1].zagzig(),
+                            x: self[i].zagzig(),
+                            y: self[i + 1].zagzig(),
                         }));
-                        i += CMD_MOVE_TO_PARAMETERS;
+                        i += CMD_LINE_TO_PARAMETERS;
                     }
                 }
                 CMD_CLOSE_PATH => {
@@ -149,7 +145,7 @@ impl Decode<GeometryPolygon> for Vec<u32> {
 
         while i < self.len() {
             let command = self[i] & 0x7;
-            let count = (self[i] >> 3) as usize;
+            let count = self[i] >> 3;
 
             // parsed command and count => +1
             i += 1;
@@ -157,29 +153,28 @@ impl Decode<GeometryPolygon> for Vec<u32> {
             match command {
                 CMD_MOVE_TO => {
                     for _ in 0..count {
-                        let x_index = i;
                         commands.push(Command::MoveTo(MoveTo {
-                            x: self[x_index].zagzig(),
-                            y: self[x_index + 1].zagzig(),
+                            x: self[i].zagzig(),
+                            y: self[i + 1].zagzig(),
                         }));
                         i += CMD_MOVE_TO_PARAMETERS;
                     }
                 }
                 CMD_LINE_TO => {
                     for _ in 0..count {
-                        let x_index = i;
                         commands.push(Command::LineTo(LineTo {
-                            x: self[x_index].zagzig(),
-                            y: self[x_index + 1].zagzig(),
+                            x: self[i].zagzig(),
+                            y: self[i + 1].zagzig(),
                         }));
-                        i += CMD_MOVE_TO_PARAMETERS;
+                        i += CMD_LINE_TO_PARAMETERS;
                     }
                 }
                 CMD_CLOSE_PATH => {
-                    for _ in 0..count {
-                        commands.push(Command::Close);
-                        i += CMD_CLOSE_PATH_PARAMETERS;
+                    if count != 1 {
+                        panic!("error")
                     }
+                    commands.push(Command::Close);
+                    i += CMD_CLOSE_PATH_PARAMETERS;
                 }
                 _ => {
                     panic!("error")
