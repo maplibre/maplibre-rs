@@ -2,7 +2,9 @@
 
 name: Apple (Expensive)
 
-on: [ pull_request ]
+on:
+  schedule:
+    - cron:  '0 17 * * 1'
 
 jobs:
   build-macos:

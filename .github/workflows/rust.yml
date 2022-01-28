@@ -84,7 +84,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: mapr.apk
-          path: target/debug/apk/mapr.apk
+          path: target/debug/apk/mapr-demo.apk
 
   build-wasm-webgl:
     runs-on: ubuntu-20.04
