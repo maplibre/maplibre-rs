@@ -1,3 +1,8 @@
+//! Main (platform-specific) main loop which handles:
+//! * Input (Mouse/Keyboard)
+//! * Platform Events like suspend/resume
+//! * Render a new frame
+
 use log::{error, info, trace};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
