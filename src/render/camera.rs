@@ -22,7 +22,6 @@ pub const FLIP_Y: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
 
 #[derive(Debug, Clone)]
 pub struct Camera {
-    pub translation: cgmath::Matrix4<f64>,
     pub position: cgmath::Point3<f64>,
     pub yaw: cgmath::Rad<f64>,
     pub pitch: cgmath::Rad<f64>,
@@ -45,7 +44,6 @@ impl Camera {
     ) -> Self {
         Self {
             position: position.into(),
-            translation: Matrix4::identity(),
             yaw: yaw.into(),
             pitch: pitch.into(),
             width: width as f64,
@@ -63,7 +61,7 @@ impl Camera {
             self.position,
             cgmath::Vector3::new(self.yaw.cos(), self.pitch.sin(), self.yaw.sin()).normalize(),
             cgmath::Vector3::unit_y(),
-        ) * self.translation
+        )
     }
 
     pub fn calc_view_proj(&self, perspective: &Perspective) -> Matrix4<f64> {
