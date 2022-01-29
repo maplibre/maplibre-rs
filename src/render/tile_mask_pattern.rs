@@ -73,10 +73,13 @@ impl TileMaskPattern {
         self.pattern.len() as u32
     }
 
-    fn vertical(&mut self, dx: i32, dy: i32, anchor_x: f32, anchor_y: f32, extent: f32) {
+    fn vertical(&mut self, dx: i32, dy: i32, anchor_x: f64, anchor_y: f64, extent: f64) {
         for i in 0..(dx.abs() / 2 + 1) {
             self.pattern.push(ShaderTileMaskInstance::new(
-                [anchor_x + ((i * 2) + 1) as f32 * extent, anchor_y],
+                [
+                    (anchor_x + ((i as f64 * 2.0) + 1.0) * extent) as f32,
+                    anchor_y as f32,
+                ],
                 1.0,
                 dy as f32,
                 [0.0, 1.0, 0.0, 1.0],
@@ -84,10 +87,13 @@ impl TileMaskPattern {
         }
     }
 
-    fn horizontal(&mut self, dx: i32, dy: i32, anchor_x: f32, anchor_y: f32, extent: f32) {
+    fn horizontal(&mut self, dx: i32, dy: i32, anchor_x: f64, anchor_y: f64, extent: f64) {
         for i in 0..(dy.abs() / 2 + 1) {
             self.pattern.push(ShaderTileMaskInstance::new(
-                [anchor_x, anchor_y + (i * 2) as f32 * extent],
+                [
+                    anchor_x as f32,
+                    (anchor_y + (i as f64 * 2.0) * extent) as f32,
+                ],
                 dx as f32,
                 1.0,
                 [0.0, 0.0, 1.0, 1.0],
@@ -105,7 +111,7 @@ impl TileMaskPattern {
         }
     }
 
-    pub fn update_pattern(&mut self, z: u8, extent: f32) {
+    pub fn update_pattern(&mut self, z: u8, extent: f64) {
         if !self.bounding_box.is_initialized() {
             // Happens if `update_bounds` hasn't been called so far
             return;
@@ -128,7 +134,7 @@ impl TileMaskPattern {
         let anchor_y = start_world.y;
         // red step
         self.pattern.push(ShaderTileMaskInstance::new(
-            [anchor_x, anchor_y],
+            [anchor_x as f32, anchor_y as f32],
             dx as f32,
             dy as f32,
             [1.0, 0.0, 0.0, 1.0],

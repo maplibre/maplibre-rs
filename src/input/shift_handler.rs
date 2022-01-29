@@ -14,10 +14,6 @@ impl UpdateState for ShiftHandler {
     fn update_state(&mut self, state: &mut RenderState, dt: Duration) {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
-        // Move in/out (aka. "zoom")
-        // Note: this isn't an actual zoom. The camera's position
-        // changes when zooming. I've added this to make it easier
-        // to get closer to an object you want to focus on.
         let delta = self.camera_translate * dt;
         state.camera.position += delta;
         self.camera_translate -= delta;
@@ -34,13 +30,13 @@ impl ShiftHandler {
     }
 
     pub fn process_scroll(&mut self, delta: &winit::event::MouseScrollDelta) {
-        self.camera_translate.z -= match delta {
-            winit::event::MouseScrollDelta::LineDelta(_, scroll) => *scroll as f64 * 50.0,
+        /*self.camera_translate.z -= match delta {
+            winit::event::MouseScrollDelta::LineDelta(_horizontal, vertical) => *vertical as f64,
             winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
                 y: scroll,
                 ..
             }) => *scroll,
-        } * self.sensitivity;
+        } * self.sensitivity;*/
     }
 
     pub fn process_key_press(

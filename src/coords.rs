@@ -1,8 +1,14 @@
 //! File which exposes all kinds of coordinates used throughout mapr
 
 use crate::util::math::{div_away, div_floor};
-use cgmath::Point3;
+use cgmath::num_traits::Pow;
+use cgmath::{Matrix4, Point3, SquareMatrix, Vector3};
 use std::fmt;
+use std::ops::Mul;
+
+pub const EXTENT_UINT: u32 = 4096;
+pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
+pub const EXTENT: f64 = EXTENT_UINT as f64;
 
 /// Every tile has tile coordinates. These tile coordinates are also called
 /// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
@@ -22,9 +28,9 @@ impl TileCoords {
     /// used in the 3d-world.
     pub fn into_world_tile(self) -> WorldTileCoords {
         WorldTileCoords {
-            x: self.x as i32 - crate::example::MUNICH_X as i32,
-            y: self.y as i32 - crate::example::MUNICH_Y as i32,
-            z: 0,
+            x: self.x as i32 as i32,
+            y: self.y as i32 as i32,
+            z: self.z,
         }
     }
 }
@@ -47,8 +53,8 @@ impl From<(u32, u32, u8)> for TileCoords {
 
 impl From<WorldTileCoords> for TileCoords {
     fn from(world_coords: WorldTileCoords) -> Self {
-        let mut tile_x = world_coords.x + crate::example::MUNICH_X as i32;
-        let mut tile_y = world_coords.y + crate::example::MUNICH_Y as i32;
+        let mut tile_x = world_coords.x;
+        let mut tile_y = world_coords.y;
         if tile_x < 0 {
             tile_x = 0;
         }
@@ -70,7 +76,7 @@ impl From<WorldTileCoords> for TileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct WorldTileCoords {
     pub x: i32,
     pub y: i32,
@@ -78,11 +84,11 @@ pub struct WorldTileCoords {
 }
 
 impl WorldTileCoords {
-    pub fn into_world(self, extent: f32) -> WorldCoords {
+    pub fn into_world(self, extent: f64) -> WorldCoords {
         WorldCoords {
-            x: self.x as f32 * extent,
-            y: self.y as f32 * extent,
-            z: self.z as f32,
+            x: self.x as f64,
+            y: self.y as f64,
+            z: self.z as f64,
         }
     }
 
@@ -107,16 +113,6 @@ impl From<(i32, i32, u8)> for WorldTileCoords {
             x: tuple.0,
             y: tuple.1,
             z: tuple.2,
-        }
-    }
-}
-
-impl From<WorldCoords> for WorldTileCoords {
-    fn from(world_coords: WorldCoords) -> Self {
-        WorldTileCoords {
-            x: div_away(world_coords.x as i32, 4096),
-            y: div_away(world_coords.y as i32, 4096), // FIXME: Do not hardcode
-            z: world_coords.z as u8,
         }
     }
 }
@@ -166,11 +162,55 @@ impl AlignedWorldTileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct WorldCoords {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+}
+
+impl WorldCoords {
+    fn tiles_at_zoom(zoom: f64) -> f64 {
+        2.0.pow(zoom)
+    }
+
+    pub fn into_world_tile(self, zoom: f64) -> WorldTileCoords {
+        const TILE_SIZE: f64 = 512.0;
+        let world_size = TILE_SIZE * Self::tiles_at_zoom(zoom);
+
+        let x = self.x / world_size * Self::tiles_at_zoom(zoom.floor());
+        let y = self.y / world_size * Self::tiles_at_zoom(zoom.floor());
+        WorldTileCoords {
+            x: x.floor() as i32,
+            y: y.floor() as i32,
+            z: zoom as u8, // FIXME
+        }
+    }
+
+    pub fn transform_matrix(&self, zoom: f64) -> Matrix4<f64> {
+        const TILE_SIZE: f64 = 512.0;
+        let world_size = TILE_SIZE * Self::tiles_at_zoom(zoom);
+        let wrap = 0.0; // how often did we wrap the world around in x direction?
+
+        /*
+           For tile.z = zoom:
+               => scale = 512
+           If tile.z < zoom:
+               => scale > 512
+           If tile.z > zoom:
+               => scale < 512
+        */
+        let tile_scale = world_size / Self::tiles_at_zoom(self.z); // z, x and z are tile coordinates
+        let unwrapped_x = self.x + Self::tiles_at_zoom(self.z) * wrap;
+
+        let translate = Matrix4::from_translation(Vector3::new(
+            unwrapped_x * tile_scale,
+            self.y * tile_scale,
+            0.0,
+        ));
+        translate * Matrix4::from_nonuniform_scale(tile_scale / EXTENT, tile_scale / EXTENT, 1.0)
+        // Divide by EXTENT to normalize tile to 1x1 square
+    }
 }
 
 impl fmt::Display for WorldCoords {
@@ -182,6 +222,16 @@ impl fmt::Display for WorldCoords {
 impl From<(f32, f32, f32)> for WorldCoords {
     fn from(tuple: (f32, f32, f32)) -> Self {
         WorldCoords {
+            x: tuple.0 as f64,
+            y: tuple.1 as f64,
+            z: tuple.2 as f64,
+        }
+    }
+}
+
+impl From<(f64, f64, f64)> for WorldCoords {
+    fn from(tuple: (f64, f64, f64)) -> Self {
+        WorldCoords {
             x: tuple.0,
             y: tuple.1,
             z: tuple.2,
@@ -192,9 +242,65 @@ impl From<(f32, f32, f32)> for WorldCoords {
 impl From<Point3<f64>> for WorldCoords {
     fn from(point: Point3<f64>) -> Self {
         WorldCoords {
-            x: point.x as f32,
-            y: point.y as f32,
-            z: point.z as f32,
+            x: point.x,
+            y: point.y,
+            z: point.z,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::coords::{WorldCoords, WorldTileCoords, EXTENT};
+    use cgmath::{Vector3, Vector4, Zero};
+
+    #[test]
+    fn world_coords_tests() {
+        let top_left = Vector4::new(0.0, 0.0, 0.0, 1.0);
+        let bottom_right = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
+
+        let zoom = 0.0;
+        let tile = WorldTileCoords::from((0, 0, 0));
+        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
+        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
+        println!("{:?}\n{:?}", p1, p2);
+
+        assert_eq!(
+            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
+            tile
+        );
+
+        let zoom = 1.0;
+        let tile = WorldTileCoords::from((1, 0, 1));
+        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
+        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
+        println!("{:?}\n{:?}", p1, p2);
+
+        assert_eq!(
+            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
+            tile
+        );
+
+        let tile = WorldTileCoords::from((67, 42, 7));
+        let zoom = 7.0;
+        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
+        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
+        println!("{:?}\n{:?}", p1, p2);
+
+        assert_eq!(
+            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
+            tile
+        );
+
+        let tile = WorldTileCoords::from((17421, 11360, 15));
+        let zoom = 15.0;
+        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
+        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
+        println!("{:?}\n{:?}", p1, p2);
+
+        assert_eq!(
+            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
+            tile
+        );
     }
 }

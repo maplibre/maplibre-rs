@@ -2,8 +2,7 @@ use cgmath::Point3;
 use std::default::Default;
 use std::{cmp, iter};
 
-use crate::coords::{TileCoords, WorldCoords, WorldTileCoords};
-use crate::example;
+use crate::coords::{TileCoords, WorldCoords, WorldTileCoords, EXTENT};
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
@@ -64,6 +63,7 @@ pub struct RenderState {
 
     pub camera: camera::Camera,
     pub perspective: camera::Perspective,
+    pub zoom: f64,
 }
 
 impl RenderState {
@@ -259,7 +259,7 @@ impl RenderState {
         };
 
         let camera = camera::Camera::new(
-            (0.0, 0.0, 5000.0),
+            (0.0, 0.0, 500.0),
             cgmath::Deg(-90.0),
             cgmath::Deg(0.0),
             size.width,
@@ -270,7 +270,7 @@ impl RenderState {
             surface_config.height,
             cgmath::Deg(45.0),
             10.0,
-            100000.0,
+            600.0,
         );
 
         Self {
@@ -299,6 +299,7 @@ impl RenderState {
                 BackingBufferDescriptor::new(feature_metadata_buffer, FEATURE_METADATA_BUFFER_SIZE),
             ),
             tile_mask_pattern: TileMaskPattern::new(),
+            zoom: 0.0,
         }
     }
 
@@ -351,19 +352,18 @@ impl RenderState {
     // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
     // TODO: What is StagingBelt for?
     pub fn upload_tile_geometry(&mut self, worker_loop: &mut WorkerLoop) {
-        if let Some(view_box) = self.camera.view_bounding_box(&self.perspective) {
+        if let Some(view_box) = self.camera.view_bounding_box2(&self.perspective) {
             /*let view_box = self.camera.view_bounding_box2(&self.perspective).unwrap();*/
             let min_world: WorldCoords = Point3::new(view_box.min.x, view_box.min.y, 0.0).into();
-            let min_world_tile: WorldTileCoords = min_world.into();
+            let min_world_tile: WorldTileCoords = min_world.into_world_tile(self.zoom);
             let min_tile: TileCoords = min_world_tile.into();
             let max_world: WorldCoords = Point3::new(view_box.max.x, view_box.max.y, 0.0).into();
-            let max_world_tile: WorldTileCoords = max_world.into();
+            let max_world_tile: WorldTileCoords = max_world.into_world_tile(self.zoom);
             let max_tile: TileCoords = max_world_tile.into();
 
             for x in min_tile.x..max_tile.x + 1 {
                 for y in min_tile.y..max_tile.y + 1 {
-                    let z = example::MUNICH_Z;
-                    let to_be_fetched = (x, y, z).into();
+                    let to_be_fetched = (x, y, self.zoom as u8).into();
                     if !worker_loop.try_is_loaded(&to_be_fetched) {
                         // FIXME: is_loaded is not correct right now
                         worker_loop.try_fetch(to_be_fetched);
@@ -376,6 +376,8 @@ impl RenderState {
 
         for layer in upload.iter() {
             match layer.layer_data.name() {
+                "transportation" => {}
+                "building" => {}
                 "boundary" => {}
                 "water" => {}
                 _ => {
@@ -394,8 +396,8 @@ impl RenderState {
                 .flat_map(|(i, _feature)| {
                     iter::repeat(ShaderFeatureStyle {
                         color: match layer.layer_data.name() {
-                            //"transportation" => [1.0, 0.0, 0.0, 1.0],
-                            //"building" => [0.0, 1.0, 1.0, 1.0],
+                            "transportation" => [1.0, 0.0, 0.0, 1.0],
+                            "building" => [0.0, 1.0, 1.0, 1.0],
                             "boundary" => [0.0, 0.0, 0.0, 1.0],
                             "water" => [0.0, 0.0, 0.7, 1.0],
                             //"waterway" => [0.0, 0.0, 1.0, 1.0],
@@ -406,22 +408,42 @@ impl RenderState {
                 })
                 .collect::<Vec<_>>();
 
+            let transform = world_coords
+                .into_world(EXTENT)
+                .transform_matrix(self.zoom)
+                .cast()
+                .unwrap();
             self.buffer_pool.allocate_geometry(
                 &self.queue,
                 layer.coords,
                 &layer.buffer,
-                ShaderTileMetadata::new(world_coords.into_world(4096.0).into()),
+                ShaderTileMetadata::new(transform.into()),
                 &feature_metadata,
             );
         }
 
-        self.tile_mask_pattern.update_pattern(15u8, 4096.0);
+        for entry in self.buffer_pool.index() {
+            let world_coords = entry.coords.into_world_tile();
+            let view_proj = self.camera.calc_view_proj(&self.perspective);
+            let transform = view_proj * world_coords.into_world(EXTENT).transform_matrix(self.zoom);
 
-        self.queue.write_buffer(
+            let low_precision_transform = transform.cast().unwrap();
+
+            self.buffer_pool.update_tile_metadata(
+                &self.queue,
+                entry,
+                ShaderTileMetadata::new(low_precision_transform.into()),
+            )
+        }
+
+        self.tile_mask_pattern
+            .update_pattern(self.zoom as u8, EXTENT);
+
+        /*self.queue.write_buffer(
             &self.tile_mask_instances_buffer,
             0,
             bytemuck::cast_slice(self.tile_mask_pattern.as_slice()),
-        );
+        );*/
 
         self.queue.write_buffer(
             &self.globals_uniform_buffer,
@@ -500,7 +522,11 @@ impl RenderState {
                 }
             }
             {
-                for entry in self.buffer_pool.available_vertices() {
+                for entry in self
+                    .buffer_pool
+                    .index()
+                    .filter(|entry| entry.coords.z == self.zoom as u8)
+                {
                     pass.set_pipeline(&self.render_pipeline);
                     let reference = self
                         .tile_mask_pattern

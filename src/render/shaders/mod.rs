@@ -9,11 +9,15 @@ use cgmath::SquareMatrix;
 pub type Vec2f32 = [f32; 2];
 pub type Vec3f32 = [f32; 3];
 pub type Vec4f32 = [f32; 4];
-pub type Mat4f32 = [Vec4f32; 4];
+pub type Mat4x4f32 = [Vec4f32; 4];
 
 impl From<WorldCoords> for Vec3f32 {
     fn from(world_coords: WorldCoords) -> Self {
-        [world_coords.x, world_coords.y, world_coords.z]
+        [
+            world_coords.x as f32,
+            world_coords.y as f32,
+            world_coords.z as f32,
+        ]
     }
 }
 
@@ -81,6 +85,7 @@ impl VertexShaderState {
 pub mod tile {
     use super::{ShaderTileMetadata, ShaderVertex};
     use crate::platform::COLOR_TEXTURE_FORMAT;
+    use crate::render::shaders::ShaderFeatureStyle;
 
     use super::{FragmentShaderState, VertexShaderState};
 
@@ -114,21 +119,36 @@ pub mod tile {
                     // translate
                     wgpu::VertexAttribute {
                         offset: 0,
-                        format: wgpu::VertexFormat::Float32x3,
+                        format: wgpu::VertexFormat::Float32x4,
                         shader_location: 4,
+                    },
+                    wgpu::VertexAttribute {
+                        offset: 1 * wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: 5,
+                    },
+                    wgpu::VertexAttribute {
+                        offset: 2 * wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: 6,
+                    },
+                    wgpu::VertexAttribute {
+                        offset: 3 * wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: 7,
                     },
                 ],
             },
             // vertex style
             wgpu::VertexBufferLayout {
-                array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
+                array_stride: std::mem::size_of::<ShaderFeatureStyle>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
                     // color
                     wgpu::VertexAttribute {
                         offset: 0,
                         format: wgpu::VertexFormat::Float32x4,
-                        shader_location: 5,
+                        shader_location: 8,
                     },
                 ],
             },
@@ -139,7 +159,7 @@ pub mod tile {
         include_str!("tile.fragment.wgsl"),
         &[wgpu::ColorTargetState {
             format: COLOR_TEXTURE_FORMAT,
-            blend: Some(wgpu::BlendState {
+            /*blend: Some(wgpu::BlendState {
                 color: wgpu::BlendComponent {
                     src_factor: wgpu::BlendFactor::SrcAlpha,
                     dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
@@ -150,7 +170,8 @@ pub mod tile {
                     dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
                     operation: wgpu::BlendOperation::Add,
                 },
-            }),
+            }),*/
+            blend: None,
             write_mask: wgpu::ColorWrites::ALL,
         }],
     );
@@ -221,12 +242,12 @@ pub mod tile_mask {
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderCamera {
-    view_proj: Mat4f32,     // 64 bytes
+    view_proj: Mat4x4f32,   // 64 bytes
     view_position: Vec4f32, // 16 bytes
 }
 
 impl ShaderCamera {
-    pub fn new(view_proj: Mat4f32, view_position: Vec4f32) -> Self {
+    pub fn new(view_proj: Mat4x4f32, view_position: Vec4f32) -> Self {
         Self {
             view_position,
             view_proj,
@@ -310,15 +331,11 @@ pub struct ShaderFeatureStyle {
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderTileMetadata {
-    pub translate: Vec3f32,
-    _pad1: i32, // _padX aligns it to 16 bytes = AlignOf(Vec4f32/vec4<f32>): // https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
+    pub transform: Mat4x4f32,
 }
 
 impl ShaderTileMetadata {
-    pub fn new(translate: Vec3f32) -> Self {
-        Self {
-            translate,
-            _pad1: Default::default(),
-        }
+    pub fn new(transform: Mat4x4f32) -> Self {
+        Self { transform }
     }
 }

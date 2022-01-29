@@ -338,11 +338,12 @@ pub const fn div_floor(lhs: i32, rhs: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::util::math::{div_ceil, div_floor};
+    use crate::coords::EXTENT_SINT;
+    use crate::util::math::div_ceil;
 
     #[test]
     pub fn test_div_floor() {
-        assert_eq!(div_ceil(7000, 4096), 2);
-        assert_eq!(div_ceil(-7000, 4096), -1);
+        assert_eq!(div_ceil(7000, EXTENT_SINT), 2);
+        assert_eq!(div_ceil(-7000, EXTENT_SINT), -1);
     }
 }

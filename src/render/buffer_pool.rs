@@ -8,6 +8,7 @@ use std::ops::Range;
 use wgpu::BufferAddress;
 
 use crate::coords::TileCoords;
+use crate::render::shaders::ShaderTileMetadata;
 use crate::tesselation::OverAlignedVertexBuffer;
 
 pub trait Queue<B> {
@@ -29,7 +30,7 @@ pub struct BufferPool<Q, B, V, I, M, FM> {
     metadata: BackingBuffer<B>,
     feature_metadata: BackingBuffer<B>,
 
-    pub index: VecDeque<IndexEntry>,
+    index: VecDeque<IndexEntry>,
     phantom_v: PhantomData<V>,
     phantom_i: PhantomData<I>,
     phantom_q: PhantomData<Q>,
@@ -207,7 +208,17 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: b
         self.index.push_back(maybe_entry);
     }
 
-    pub fn available_vertices(&self) -> Iter<'_, IndexEntry> {
+    pub fn update_tile_metadata(&self, queue: &Q, entry: &IndexEntry, metadata: M) {
+        let metadata_stride = size_of::<M>() as wgpu::BufferAddress; // TODO: deduplicate
+        let (metadata_bytes, aligned_metadata_bytes) = Self::align(metadata_stride, 1, 1);
+        queue.write_buffer(
+            &self.metadata.inner,
+            entry.buffer_metadata.start,
+            &bytemuck::cast_slice(&[metadata])[0..aligned_metadata_bytes as usize],
+        );
+    }
+
+    pub fn index(&self) -> Iter<'_, IndexEntry> {
         self.index.iter()
     }
 }

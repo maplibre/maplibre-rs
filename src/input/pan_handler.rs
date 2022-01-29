@@ -86,6 +86,7 @@ impl PanHandler {
 
         true
     }
+
     pub fn process_mouse_key_press(&mut self, key: &MouseButton, state: &ElementState) -> bool {
         if *key != MouseButton::Left {
             return false;
