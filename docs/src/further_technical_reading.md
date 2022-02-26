@@ -85,6 +85,8 @@ Projects:
 * [RustType](https://github.com/redox-os/rusttype)
 * [SDF Render](https://docs.rs/sdf_glyph_renderer/latest/sdf_glyph_renderer/)
 * [pbf_font_tools](https://github.com/stadiamaps/pbf_font_tools)
+* [Multi-channel signed distance field generator](https://github.com/Chlumsky/msdfgen)
+  * [MSDF font atlas generator ](https://github.com/Chlumsky/msdf-atlas-gen)
 
 ## Tesselation
 
