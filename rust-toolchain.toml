@@ -1,4 +1,4 @@
 [toolchain]
-channel = "1.58"
+channel = "1.59"
 targets = [ "wasm32-unknown-unknown", "x86_64-unknown-linux-gnu", "aarch64-linux-android", "aarch64-apple-darwin", "aarch64-apple-ios", "aarch64-apple-ios-sim" ]
 components = [ "rust-src" ] # rust-src is required for WASM builds which recompile the stdlib
