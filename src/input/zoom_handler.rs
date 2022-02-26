@@ -36,23 +36,12 @@ impl UpdateState for ZoomHandler {
                     .camera
                     .window_to_world_z0(&window_position, &view_proj)
                 {
-                    let scale1 = 2.0.pow(next_zoom - current_zoom);
-                    println!("{scale1:?}");
+                    let scale = 2.0.pow(next_zoom - current_zoom);
 
-                    let current_center = state.camera.position.to_vec();
-                    let new_center = window_position_world;
-
-                    //state.camera.position += Matrix4::from_nonuniform_scale(scale1, scale1, 1.0) * current_center;
-                    /*state.camera.position = Point3::new(
-                        new_center.x * scale1,
-                        new_center.y * scale1,
-                        current_center.z,
-                    );*/
-                    let scale1 = 2.0.pow(current_zoom - next_zoom);
-                    state.camera.position += Vector3::new(
-                        (new_center.x - new_center.x * scale1),
-                        (new_center.y - new_center.y * scale1),
-                        0.0,
+                    state.camera.position = Point3::new(
+                        window_position_world.x * scale,
+                        window_position_world.y * scale,
+                        state.camera.position.z,
                     );
                 }
             }

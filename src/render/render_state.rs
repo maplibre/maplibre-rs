@@ -408,16 +408,15 @@ impl RenderState {
                 })
                 .collect::<Vec<_>>();
 
-            let transform = world_coords
-                .into_world(EXTENT)
-                .transform_matrix(self.zoom)
-                .cast()
-                .unwrap();
+            let view_proj = self.camera.calc_view_proj(&self.perspective);
+            let transform = view_proj * world_coords.into_world(EXTENT).transform_matrix(self.zoom);
+            let low_precision_transform = transform.cast().unwrap();
+
             self.buffer_pool.allocate_geometry(
                 &self.queue,
                 layer.coords,
                 &layer.buffer,
-                ShaderTileMetadata::new(transform.into()),
+                ShaderTileMetadata::new(low_precision_transform.into()),
                 &feature_metadata,
             );
         }
@@ -426,7 +425,6 @@ impl RenderState {
             let world_coords = entry.coords.into_world_tile();
             let view_proj = self.camera.calc_view_proj(&self.perspective);
             let transform = view_proj * world_coords.into_world(EXTENT).transform_matrix(self.zoom);
-
             let low_precision_transform = transform.cast().unwrap();
 
             self.buffer_pool.update_tile_metadata(

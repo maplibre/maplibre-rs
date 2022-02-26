@@ -189,27 +189,29 @@ impl WorldCoords {
 
     pub fn transform_matrix(&self, zoom: f64) -> Matrix4<f64> {
         const TILE_SIZE: f64 = 512.0;
-        let world_size = TILE_SIZE * Self::tiles_at_zoom(zoom);
+        let world_size = Self::tiles_at_zoom(zoom);
         let wrap = 0.0; // how often did we wrap the world around in x direction?
 
         /*
            For tile.z = zoom:
-               => scale = 512
+               => scale = 1
            If tile.z < zoom:
-               => scale > 512
+               => scale > 1
            If tile.z > zoom:
-               => scale < 512
+               => scale < 1
         */
-        let tile_scale = world_size / Self::tiles_at_zoom(self.z); // z, x and z are tile coordinates
+        let tile_scale = world_size / Self::tiles_at_zoom(self.z);
         let unwrapped_x = self.x + Self::tiles_at_zoom(self.z) * wrap;
 
         let translate = Matrix4::from_translation(Vector3::new(
-            unwrapped_x * tile_scale,
-            self.y * tile_scale,
+            unwrapped_x * TILE_SIZE * tile_scale,
+            self.y * TILE_SIZE * tile_scale,
             0.0,
         ));
-        translate * Matrix4::from_nonuniform_scale(tile_scale / EXTENT, tile_scale / EXTENT, 1.0)
-        // Divide by EXTENT to normalize tile to 1x1 square
+        // Divide by EXTENT to normalize tile to 512x512 square
+        let normalize = Matrix4::from_nonuniform_scale(TILE_SIZE / EXTENT, TILE_SIZE / EXTENT, 1.0);
+        let scale = Matrix4::from_nonuniform_scale(tile_scale, tile_scale, 1.0);
+        translate * normalize * scale
     }
 }
 
@@ -254,53 +256,25 @@ mod tests {
     use crate::coords::{WorldCoords, WorldTileCoords, EXTENT};
     use cgmath::{Vector3, Vector4, Zero};
 
+    const top_left: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
+    const bottom_right: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
+
+    fn to_from_world(tile: (i32, i32, u8), zoom: f64) {
+        let tile = WorldTileCoords::from(tile);
+        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
+        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
+        println!("{:?}\n{:?}", p1, p2);
+
+        assert_eq!(
+            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
+            tile
+        );
+    }
+
     #[test]
     fn world_coords_tests() {
-        let top_left = Vector4::new(0.0, 0.0, 0.0, 1.0);
-        let bottom_right = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
-
-        let zoom = 0.0;
-        let tile = WorldTileCoords::from((0, 0, 0));
-        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
-        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
-        println!("{:?}\n{:?}", p1, p2);
-
-        assert_eq!(
-            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
-            tile
-        );
-
-        let zoom = 1.0;
-        let tile = WorldTileCoords::from((1, 0, 1));
-        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
-        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
-        println!("{:?}\n{:?}", p1, p2);
-
-        assert_eq!(
-            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
-            tile
-        );
-
-        let tile = WorldTileCoords::from((67, 42, 7));
-        let zoom = 7.0;
-        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
-        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
-        println!("{:?}\n{:?}", p1, p2);
-
-        assert_eq!(
-            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
-            tile
-        );
-
-        let tile = WorldTileCoords::from((17421, 11360, 15));
-        let zoom = 15.0;
-        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
-        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
-        println!("{:?}\n{:?}", p1, p2);
-
-        assert_eq!(
-            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
-            tile
-        );
+        to_from_world((1, 0, 1), 1.0);
+        to_from_world((67, 42, 7), 7.0);
+        to_from_world((17421, 11360, 15), 15.0);
     }
 }
