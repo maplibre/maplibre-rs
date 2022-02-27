@@ -37,11 +37,11 @@ impl InputController {
     ///
     /// returns: InputController
     ///
-    pub fn new(speed: f64, sensitivity: f64) -> Self {
+    pub fn new(speed: f64, sensitivity: f64, zoom_sensitivity: f64) -> Self {
         Self {
             pinch_handler: PinchHandler::new(),
             pan_handler: PanHandler::new(),
-            zoom_handler: ZoomHandler::new(speed, sensitivity),
+            zoom_handler: ZoomHandler::new(speed, zoom_sensitivity),
             tilt_handler: TiltHandler::new(speed, sensitivity),
             shift_handler: ShiftHandler::new(speed, sensitivity),
         }

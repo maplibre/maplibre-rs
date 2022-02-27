@@ -28,21 +28,20 @@ impl UpdateState for ZoomHandler {
 
                 let perspective = &state.perspective;
                 let view_proj = state.camera.calc_view_proj(perspective);
-                //if let Some(screen_center_world) = state.camera.window_to_world_z0(
-                //    &Vector2::new(state.camera.width / 2.0, state.camera.height / 2.0),
-                //    &view_proj,
-                //) {
+
                 if let Some(window_position_world) = state
                     .camera
                     .window_to_world_z0(&window_position, &view_proj)
                 {
                     let scale = 2.0.pow(next_zoom - current_zoom);
 
-                    state.camera.position = Point3::new(
+                    let delta = Vector3::new(
                         window_position_world.x * scale,
                         window_position_world.y * scale,
-                        state.camera.position.z,
-                    );
+                        window_position_world.z,
+                    ) - window_position_world;
+
+                    state.camera.position += delta;
                 }
             }
         }
@@ -67,16 +66,13 @@ impl ZoomHandler {
     }
 
     pub fn process_scroll(&mut self, delta: &winit::event::MouseScrollDelta) {
-        self.zoom_delta +=
-            0.1 * match delta {
-                winit::event::MouseScrollDelta::LineDelta(_horizontal, vertical) => {
-                    *vertical as f64
-                }
-                winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
-                    y: scroll,
-                    ..
-                }) => *scroll,
-            } * self.sensitivity;
+        self.zoom_delta += match delta {
+            winit::event::MouseScrollDelta::LineDelta(_horizontal, vertical) => *vertical as f64,
+            winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
+                y: scroll,
+                ..
+            }) => *scroll,
+        } * self.sensitivity;
     }
 
     pub fn process_key_press(
@@ -85,7 +81,7 @@ impl ZoomHandler {
         state: winit::event::ElementState,
     ) -> bool {
         let amount = if state == winit::event::ElementState::Pressed {
-            0.5
+            0.1
         } else {
             0.0
         };

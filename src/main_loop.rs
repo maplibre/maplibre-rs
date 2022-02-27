@@ -19,7 +19,7 @@ pub async fn setup(
 ) {
     info!("== mapr ==");
 
-    let mut input = InputController::new(0.2, 100.0);
+    let mut input = InputController::new(0.2, 100.0, 0.1);
     let mut maybe_state: Option<RenderState> = if cfg!(target_os = "android") {
         None
     } else {
