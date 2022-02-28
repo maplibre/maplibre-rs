@@ -33,10 +33,7 @@ fn main(
     //   return VertexOutput(color, vec4<f32>(0.0, 0.0, 0.0, 1.0));
     //}
 
-    var position = (mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(position + normal * width, z, 1.0));
-
-    //let world_pos = vec3<f32>(position + normal * width, z);
-    //var position = globals.camera.view_proj * vec4<f32>(world_pos, 1.0);
+    var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(position + normal * width, z, 1.0);
     // FIXME: how to fix z-fighting?
     position.z = 1.0;
 

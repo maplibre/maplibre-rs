@@ -178,9 +178,9 @@ pub mod tile {
 }
 
 pub mod tile_mask {
-    use super::ShaderTileMaskInstance;
     use crate::platform::COLOR_TEXTURE_FORMAT;
     use crate::render::options::DEBUG_STENCIL_PATTERN;
+    use crate::render::shaders::ShaderTileMetadata;
     use wgpu::ColorWrites;
 
     use super::{FragmentShaderState, VertexShaderState};
@@ -188,32 +188,27 @@ pub mod tile_mask {
     pub const VERTEX: VertexShaderState = VertexShaderState::new(
         include_str!("tile_mask.vertex.wgsl"),
         &[wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<ShaderTileMaskInstance>() as u64,
+            array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
             step_mode: wgpu::VertexStepMode::Instance,
             attributes: &[
-                // offset position
+                // translate
                 wgpu::VertexAttribute {
                     offset: 0,
-                    format: wgpu::VertexFormat::Float32x2,
+                    format: wgpu::VertexFormat::Float32x4,
                     shader_location: 4,
                 },
-                // target_width
                 wgpu::VertexAttribute {
-                    offset: 1 * wgpu::VertexFormat::Float32x2.size(),
-                    format: wgpu::VertexFormat::Float32,
+                    offset: 1 * wgpu::VertexFormat::Float32x4.size(),
+                    format: wgpu::VertexFormat::Float32x4,
                     shader_location: 5,
                 },
-                // target_height
                 wgpu::VertexAttribute {
-                    offset: 1 * wgpu::VertexFormat::Float32x2.size()
-                        + wgpu::VertexFormat::Float32.size(),
-                    format: wgpu::VertexFormat::Float32,
+                    offset: 2 * wgpu::VertexFormat::Float32x4.size(),
+                    format: wgpu::VertexFormat::Float32x4,
                     shader_location: 6,
                 },
-                // debug_color
                 wgpu::VertexAttribute {
-                    offset: 1 * wgpu::VertexFormat::Float32x2.size()
-                        + 2 * wgpu::VertexFormat::Float32.size(),
+                    offset: 3 * wgpu::VertexFormat::Float32x4.size(),
                     format: wgpu::VertexFormat::Float32x4,
                     shader_location: 7,
                 },
@@ -294,31 +289,6 @@ impl ShaderVertex {
 impl Default for ShaderVertex {
     fn default() -> Self {
         ShaderVertex::new([0.0, 0.0], [0.0, 0.0])
-    }
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Pod, Zeroable)]
-pub struct ShaderTileMaskInstance {
-    pub position: Vec2f32,
-    pub target_width: f32,
-    pub target_height: f32,
-    pub debug_color: Vec4f32,
-}
-
-impl ShaderTileMaskInstance {
-    pub fn new(
-        position: Vec2f32,
-        target_width: f32,
-        target_height: f32,
-        debug_color: Vec4f32,
-    ) -> Self {
-        Self {
-            position,
-            target_width,
-            target_height,
-            debug_color,
-        }
     }
 }
 

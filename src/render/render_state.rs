@@ -59,7 +59,6 @@ pub struct RenderState {
     >,
 
     tile_mask_pattern: TileMaskPattern,
-    tile_mask_instances_buffer: wgpu::Buffer,
 
     pub camera: camera::Camera,
     pub perspective: camera::Perspective,
@@ -146,16 +145,6 @@ impl RenderState {
             label: None,
             size: INDICES_BUFFER_SIZE,
             usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let tile_masks_instances_buffer_size =
-            std::mem::size_of::<ShaderTileMaskInstance>() as u64 * TILE_MASK_INSTANCE_COUNT;
-
-        let tile_mask_instances = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: tile_masks_instances_buffer_size,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
 
@@ -288,7 +277,6 @@ impl RenderState {
             sample_count,
             globals_uniform_buffer,
             fps_meter: FPSMeter::new(),
-            tile_mask_instances_buffer: tile_mask_instances,
             camera,
             perspective: projection,
             suspended: false, // Initially the app is not suspended
@@ -386,7 +374,6 @@ impl RenderState {
             };
 
             let world_coords = layer.coords.into_world_tile();
-            self.tile_mask_pattern.update_bounds(&world_coords);
 
             let feature_metadata = layer
                 .layer_data
@@ -431,17 +418,8 @@ impl RenderState {
                 &self.queue,
                 entry,
                 ShaderTileMetadata::new(low_precision_transform.into()),
-            )
+            );
         }
-
-        self.tile_mask_pattern
-            .update_pattern(self.zoom as u8, EXTENT);
-
-        /*self.queue.write_buffer(
-            &self.tile_mask_instances_buffer,
-            0,
-            bytemuck::cast_slice(self.tile_mask_pattern.as_slice()),
-        );*/
 
         self.queue.write_buffer(
             &self.globals_uniform_buffer,
@@ -504,57 +482,59 @@ impl RenderState {
             pass.set_bind_group(0, &self.bind_group, &[]);
 
             {
-                // Draw masks
-                pass.set_pipeline(&self.mask_pipeline);
-                let masks = self.tile_mask_pattern.as_slice();
-                if !masks.is_empty() {
-                    pass.set_vertex_buffer(
-                        0,
-                        self.tile_mask_instances_buffer.slice(
-                            0..masks.len() as u64
-                                * std::mem::size_of::<ShaderTileMaskInstance>() as u64,
-                        ),
-                    );
-                    // Draw 7 squares each out of 6 vertices
-                    pass.draw(0..6, 0..self.tile_mask_pattern.instances());
-                }
-            }
-            {
                 for entry in self
                     .buffer_pool
                     .index()
                     .filter(|entry| entry.coords.z == self.zoom as u8)
                 {
-                    pass.set_pipeline(&self.render_pipeline);
                     let reference = self
                         .tile_mask_pattern
-                        .stencil_reference_value(&entry.coords.into_world_tile());
-                    pass.set_stencil_reference(reference as u32);
-                    pass.set_index_buffer(
-                        self.buffer_pool
-                            .indices()
-                            .slice(entry.indices_buffer_range()),
-                        INDEX_FORMAT,
-                    );
-                    pass.set_vertex_buffer(
-                        0,
-                        self.buffer_pool
-                            .vertices()
-                            .slice(entry.vertices_buffer_range()),
-                    );
-                    pass.set_vertex_buffer(
-                        1,
-                        self.buffer_pool
-                            .metadata()
-                            .slice(entry.metadata_buffer_range()),
-                    );
-                    pass.set_vertex_buffer(
-                        2,
-                        self.buffer_pool
-                            .feature_metadata()
-                            .slice(entry.feature_metadata_buffer_range()),
-                    );
-                    pass.draw_indexed(entry.indices_range(), 0, 0..1);
+                        .stencil_reference_value(&entry.coords.into_world_tile())
+                        as u32;
+
+                    // Draw mask
+                    {
+                        pass.set_pipeline(&self.mask_pipeline);
+                        pass.set_stencil_reference(reference);
+                        pass.set_vertex_buffer(
+                            0,
+                            self.buffer_pool
+                                .metadata()
+                                .slice(entry.metadata_buffer_range()),
+                        );
+                        pass.draw(0..6, 0..1);
+                    }
+
+                    // Draw tile
+                    {
+                        pass.set_pipeline(&self.render_pipeline);
+                        pass.set_stencil_reference(reference);
+                        pass.set_index_buffer(
+                            self.buffer_pool
+                                .indices()
+                                .slice(entry.indices_buffer_range()),
+                            INDEX_FORMAT,
+                        );
+                        pass.set_vertex_buffer(
+                            0,
+                            self.buffer_pool
+                                .vertices()
+                                .slice(entry.vertices_buffer_range()),
+                        );
+                        pass.set_vertex_buffer(
+                            1,
+                            self.buffer_pool
+                                .metadata()
+                                .slice(entry.metadata_buffer_range()),
+                        );
+                        pass.set_vertex_buffer(
+                            2,
+                            self.buffer_pool
+                                .feature_metadata()
+                                .slice(entry.feature_metadata_buffer_range()),
+                        );
+                        pass.draw_indexed(entry.indices_range(), 0, 0..1);
+                    }
                 }
             }
         }

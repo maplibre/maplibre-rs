@@ -18,14 +18,18 @@ let EXTENT = 4096.0;
 
 [[stage(vertex)]]
 fn main(
-    [[location(4)]] mask_offset: vec2<f32>,
-    [[location(5)]] target_width: f32,
-    [[location(6)]] target_height: f32,
-    [[location(7)]] debug_color: vec4<f32>,
+    [[location(4)]] translate1: vec4<f32>,
+    [[location(5)]] translate2: vec4<f32>,
+    [[location(6)]] translate3: vec4<f32>,
+    [[location(7)]] translate4: vec4<f32>,
     [[builtin(vertex_index)]] vertex_idx: u32,
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
     let z = 0.0;
+
+    let target_width = 1.0;
+    let target_height = 1.0;
+    let debug_color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
 
     var VERTICES: array<vec3<f32>, 6> = array<vec3<f32>, 6>(
         vec3<f32>(0.0, 0.0, z),
@@ -43,9 +47,9 @@ fn main(
             vec3<f32>(0.0,            0.0,            1.0)
     );
 
-    let world_pos = scaling * a_position + vec3<f32>(mask_offset, z);
-
-    var position = globals.camera.view_proj * vec4<f32>(world_pos, 1.0);
+    var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>((scaling * a_position), 1.0);
+    // FIXME: how to fix z-fighting?
     position.z = 1.0;
+
     return VertexOutput(debug_color, position);
 }
