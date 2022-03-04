@@ -1,8 +1,8 @@
-use cgmath::Point3;
+use cgmath::Matrix4;
 use std::default::Default;
 use std::{cmp, iter};
 
-use crate::coords::{TileCoords, WorldCoords, WorldTileCoords, EXTENT};
+use crate::coords::{TileCoords, WorldCoords, WorldTileCoords};
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
@@ -13,10 +13,11 @@ use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::camera;
 use crate::render::options::{
     DEBUG_WIREFRAME, FEATURE_METADATA_BUFFER_SIZE, INDEX_FORMAT, INDICES_BUFFER_SIZE,
-    TILE_MASK_INSTANCE_COUNT, TILE_META_COUNT, VERTEX_BUFFER_SIZE,
+    TILE_META_COUNT, VERTEX_BUFFER_SIZE,
 };
 use crate::render::tile_mask_pattern::TileMaskPattern;
 use crate::tesselation::IndexDataType;
+use crate::util::math::Aabb2;
 use crate::util::FPSMeter;
 
 use super::piplines::*;
@@ -337,37 +338,61 @@ impl RenderState {
         }
     }
 
-    // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
-    // TODO: What is StagingBelt for?
-    pub fn upload_tile_geometry(&mut self, worker_loop: &mut WorkerLoop) {
-        if let Some(view_box) = self.camera.view_bounding_box2(&self.perspective) {
-            /*let view_box = self.camera.view_bounding_box2(&self.perspective).unwrap();*/
-            let min_world: WorldCoords = Point3::new(view_box.min.x, view_box.min.y, 0.0).into();
-            let min_world_tile: WorldTileCoords = min_world.into_world_tile(self.zoom);
-            let min_tile: TileCoords = min_world_tile.into();
-            let max_world: WorldCoords = Point3::new(view_box.max.x, view_box.max.y, 0.0).into();
-            let max_world_tile: WorldTileCoords = max_world.into_world_tile(self.zoom);
-            let max_tile: TileCoords = max_world_tile.into();
+    pub fn visible_z(&self) -> u8 {
+        self.zoom.floor() as u8
+    }
 
-            for x in min_tile.x..max_tile.x + 1 {
-                for y in min_tile.y..max_tile.y + 1 {
-                    let to_be_fetched = (x, y, self.zoom as u8).into();
-                    if !worker_loop.try_is_loaded(&to_be_fetched) {
-                        // FIXME: is_loaded is not correct right now
-                        worker_loop.try_fetch(to_be_fetched);
-                    }
+    pub fn fetch_view_region(&self, worker_loop: &mut WorkerLoop, view_region: Aabb2<f64>) {
+        let visible_z = self.visible_z();
+
+        let min_world: WorldCoords = WorldCoords::at_ground(view_region.min.x, view_region.min.y);
+        let min_world_tile: WorldTileCoords = min_world.into_world_tile(visible_z, self.zoom);
+        let min_tile: TileCoords = min_world_tile.into();
+        let max_world: WorldCoords = WorldCoords::at_ground(view_region.max.x, view_region.max.y);
+        let max_world_tile: WorldTileCoords = max_world.into_world_tile(visible_z, self.zoom);
+        let max_tile: TileCoords = max_world_tile.into();
+
+        for x in min_tile.x..max_tile.x + 1 {
+            for y in min_tile.y..max_tile.y + 1 {
+                let to_be_fetched = (x, y, self.zoom as u8).into();
+                if !worker_loop.try_is_loaded(&to_be_fetched) {
+                    // FIXME: is_loaded is not correct right now
+                    worker_loop.try_fetch(to_be_fetched);
                 }
             }
         }
+    }
 
-        let upload = worker_loop.pop_all();
+    // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
+    // TODO: What is StagingBelt for?
+    pub fn upload_tile_geometry(&mut self, worker_loop: &mut WorkerLoop) {
+        // Fetch tiles which are currently in view
+        if let Some(view_region) = self.camera.view_region_bounding_box(&self.perspective) {
+            self.fetch_view_region(worker_loop, view_region);
+        }
 
-        for layer in upload.iter() {
+        let view_proj = self.camera.calc_view_proj(&self.perspective);
+
+        // Update tile metadata according to current zoom, camera and perspective
+        // We perform the update before uploading new tessellated tiles, such that each
+        // tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
+        for entry in self.buffer_pool.index() {
+            let world_coords = entry.coords.into_world_tile();
+            let transform: Matrix4<f32> = (view_proj * world_coords.transform_for_zoom(self.zoom))
+                .cast()
+                .unwrap();
+
+            self.buffer_pool.update_tile_metadata(
+                &self.queue,
+                entry,
+                ShaderTileMetadata::new(transform.into()),
+            );
+        }
+
+        // Upload all tessellated layers
+        for layer in worker_loop.pop_all().iter() {
             match layer.layer_data.name() {
-                "transportation" => {}
-                "building" => {}
-                "boundary" => {}
-                "water" => {}
+                "transportation" | "building" | "boundary" | "water" => {}
                 _ => {
                     continue;
                 }
@@ -387,7 +412,7 @@ impl RenderState {
                             "building" => [0.0, 1.0, 1.0, 1.0],
                             "boundary" => [0.0, 0.0, 0.0, 1.0],
                             "water" => [0.0, 0.0, 0.7, 1.0],
-                            //"waterway" => [0.0, 0.0, 1.0, 1.0],
+                            "waterway" => [0.0, 0.0, 7.0, 1.0],
                             _ => [0.0, 0.0, 0.0, 0.0],
                         },
                     })
@@ -395,32 +420,22 @@ impl RenderState {
                 })
                 .collect::<Vec<_>>();
 
-            let view_proj = self.camera.calc_view_proj(&self.perspective);
-            let transform = view_proj * world_coords.into_world(EXTENT).transform_matrix(self.zoom);
-            let low_precision_transform = transform.cast().unwrap();
+            // We are casting here from 64bit to 32bit, because 32bit is more performant and is
+            // better supported.
+            let transform: Matrix4<f32> = (view_proj * world_coords.transform_for_zoom(self.zoom))
+                .cast()
+                .unwrap();
 
-            self.buffer_pool.allocate_geometry(
+            self.buffer_pool.allocate_tile_geometry(
                 &self.queue,
                 layer.coords,
                 &layer.buffer,
-                ShaderTileMetadata::new(low_precision_transform.into()),
+                ShaderTileMetadata::new(transform.into()),
                 &feature_metadata,
             );
         }
 
-        for entry in self.buffer_pool.index() {
-            let world_coords = entry.coords.into_world_tile();
-            let view_proj = self.camera.calc_view_proj(&self.perspective);
-            let transform = view_proj * world_coords.into_world(EXTENT).transform_matrix(self.zoom);
-            let low_precision_transform = transform.cast().unwrap();
-
-            self.buffer_pool.update_tile_metadata(
-                &self.queue,
-                entry,
-                ShaderTileMetadata::new(low_precision_transform.into()),
-            );
-        }
-
+        // Update globals
         self.queue.write_buffer(
             &self.globals_uniform_buffer,
             0,
@@ -485,7 +500,7 @@ impl RenderState {
                 for entry in self
                     .buffer_pool
                     .index()
-                    .filter(|entry| entry.coords.z == self.zoom as u8)
+                    .filter(|entry| entry.coords.z == self.visible_z())
                 {
                     let reference = self
                         .tile_mask_pattern
