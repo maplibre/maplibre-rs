@@ -28,8 +28,8 @@ impl TileCoords {
     /// used in the 3d-world.
     pub fn into_world_tile(self) -> WorldTileCoords {
         WorldTileCoords {
-            x: self.x as i32 as i32,
-            y: self.y as i32 as i32,
+            x: self.x as i32,
+            y: self.y as i32,
             z: self.z,
         }
     }
@@ -84,12 +84,28 @@ pub struct WorldTileCoords {
 }
 
 impl WorldTileCoords {
-    pub fn into_world(self, extent: f64) -> WorldCoords {
-        WorldCoords {
-            x: self.x as f64,
-            y: self.y as f64,
-            z: self.z as f64,
-        }
+    pub fn transform_for_zoom(&self, zoom: f64) -> Matrix4<f64> {
+        /*
+           For tile.z = zoom:
+               => scale = 512
+           If tile.z < zoom:
+               => scale > 512
+           If tile.z > zoom:
+               => scale < 512
+        */
+        let tile_scale = TILE_SIZE * 2.0.pow(zoom - self.z as f64);
+
+        let translate = Matrix4::from_translation(Vector3::new(
+            self.x as f64 * tile_scale,
+            self.y as f64 * tile_scale,
+            0.0,
+        ));
+
+        // Divide by EXTENT to normalize tile
+        let normalize = Matrix4::from_nonuniform_scale(1.0 / EXTENT, 1.0 / EXTENT, 1.0);
+        // Scale tiles where the zoom level matches its z to 512x512
+        let scale = Matrix4::from_nonuniform_scale(tile_scale, tile_scale, 1.0);
+        translate * normalize * scale
     }
 
     pub fn into_aligned(self) -> AlignedWorldTileCoords {
@@ -157,7 +173,9 @@ impl AlignedWorldTileCoords {
     }
 }
 
-/// Actual coordinates within the 3d world.
+/// Actual coordinates within the 3D world. The `z` value of the [`WorldCoors`] is not related to
+/// the `z` value of the [`WorldTileCoors`]. In the 3D world all tiles are rendered at `z` values
+/// which are determined only by the render engine and not by the zoom level.
 ///
 /// # Coordinate System Origin
 ///
@@ -169,49 +187,31 @@ pub struct WorldCoords {
     pub z: f64,
 }
 
+const TILE_SIZE: f64 = 512.0;
+
+fn world_size_at_zoom(zoom: f64) -> f64 {
+    TILE_SIZE * 2.0.pow(zoom)
+}
+
+fn tiles_with_z(z: u8) -> f64 {
+    2.0.pow(z)
+}
+
 impl WorldCoords {
-    fn tiles_at_zoom(zoom: f64) -> f64 {
-        2.0.pow(zoom)
+    pub fn at_ground(x: f64, y: f64) -> Self {
+        Self { x, y, z: 0.0 }
     }
 
-    pub fn into_world_tile(self, zoom: f64) -> WorldTileCoords {
-        const TILE_SIZE: f64 = 512.0;
-        let world_size = TILE_SIZE * Self::tiles_at_zoom(zoom);
+    pub fn into_world_tile(self, z: u8, zoom: f64) -> WorldTileCoords {
+        let tile_scale = 2.0.pow(z as f64 - zoom) / TILE_SIZE;
+        let x = self.x * tile_scale;
+        let y = self.y * tile_scale;
 
-        let x = self.x / world_size * Self::tiles_at_zoom(zoom.floor());
-        let y = self.y / world_size * Self::tiles_at_zoom(zoom.floor());
         WorldTileCoords {
-            x: x.floor() as i32,
-            y: y.floor() as i32,
-            z: zoom as u8, // FIXME
+            x: x as i32,
+            y: y as i32,
+            z,
         }
-    }
-
-    pub fn transform_matrix(&self, zoom: f64) -> Matrix4<f64> {
-        const TILE_SIZE: f64 = 512.0;
-        let world_size = Self::tiles_at_zoom(zoom);
-        let wrap = 0.0; // how often did we wrap the world around in x direction?
-
-        /*
-           For tile.z = zoom:
-               => scale = 1
-           If tile.z < zoom:
-               => scale > 1
-           If tile.z > zoom:
-               => scale < 1
-        */
-        let tile_scale = world_size / Self::tiles_at_zoom(self.z);
-        let unwrapped_x = self.x + Self::tiles_at_zoom(self.z) * wrap;
-
-        let translate = Matrix4::from_translation(Vector3::new(
-            unwrapped_x * TILE_SIZE * tile_scale,
-            self.y * TILE_SIZE * tile_scale,
-            0.0,
-        ));
-        // Divide by EXTENT to normalize tile to 512x512 square
-        let normalize = Matrix4::from_nonuniform_scale(TILE_SIZE / EXTENT, TILE_SIZE / EXTENT, 1.0);
-        let scale = Matrix4::from_nonuniform_scale(tile_scale, tile_scale, 1.0);
-        translate * normalize * scale
     }
 }
 
@@ -256,17 +256,17 @@ mod tests {
     use crate::coords::{WorldCoords, WorldTileCoords, EXTENT};
     use cgmath::{Vector3, Vector4, Zero};
 
-    const top_left: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
-    const bottom_right: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
+    const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
+    const BOTTOM_RIGHT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
 
     fn to_from_world(tile: (i32, i32, u8), zoom: f64) {
         let tile = WorldTileCoords::from(tile);
-        let p1 = tile.into_world(EXTENT).transform_matrix(zoom) * top_left;
-        let p2 = tile.into_world(EXTENT).transform_matrix(zoom) * bottom_right;
+        let p1 = tile.transform_for_zoom(zoom) * TOP_LEFT;
+        let p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT;
         println!("{:?}\n{:?}", p1, p2);
 
         assert_eq!(
-            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom),
+            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom.floor() as u8, zoom),
             tile
         );
     }
