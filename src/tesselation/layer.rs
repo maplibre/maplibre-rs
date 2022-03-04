@@ -20,8 +20,8 @@ use crate::tesselation::{Tesselated, VertexConstructor, DEFAULT_TOLERANCE};
 impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tesselated<I> for Layer {
     fn tesselate(&self) -> Option<(VertexBuffers<ShaderVertex, I>, Vec<u32>)> {
         let mut buffer: VertexBuffers<ShaderVertex, I> = VertexBuffers::new();
-        let mut feature_vertices: Vec<u32> = Vec::new();
-        let mut last = 0;
+        let mut feature_indices: Vec<u32> = Vec::new();
+        let mut current_index = 0;
 
         for feature in self.features() {
             match feature.geometry() {
@@ -100,11 +100,12 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tesselat
                 _ => {}
             };
 
-            let new_length = buffer.indices.len();
-            feature_vertices.push((new_length - last) as u32);
-            last = new_length;
+            let next_index = buffer.indices.len();
+            let indices = (next_index - current_index) as u32;
+            feature_indices.push(indices);
+            current_index = next_index;
         }
 
-        Some((buffer, feature_vertices))
+        Some((buffer, feature_indices))
     }
 }

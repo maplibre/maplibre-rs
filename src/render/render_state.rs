@@ -366,14 +366,16 @@ impl RenderState {
     // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
     // TODO: What is StagingBelt for?
     pub fn upload_tile_geometry(&mut self, worker_loop: &mut WorkerLoop) {
+        let view_region = self.camera.view_region_bounding_box(&self.perspective);
+
         // Fetch tiles which are currently in view
-        if let Some(view_region) = self.camera.view_region_bounding_box(&self.perspective) {
+        if let Some(view_region) = view_region {
             self.fetch_view_region(worker_loop, view_region);
         }
 
         let view_proj = self.camera.calc_view_proj(&self.perspective);
 
-        // Update tile metadata according to current zoom, camera and perspective
+        // Update tile metadata for all tiles on the GPU according to current zoom, camera and perspective
         // We perform the update before uploading new tessellated tiles, such that each
         // tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
         for entry in self.buffer_pool.index() {
@@ -416,7 +418,7 @@ impl RenderState {
                             _ => [0.0, 0.0, 0.0, 0.0],
                         },
                     })
-                    .take(*layer.feature_vertices.get(i).unwrap() as usize)
+                    .take(*layer.feature_indices.get(i).unwrap() as usize)
                 })
                 .collect::<Vec<_>>();
 

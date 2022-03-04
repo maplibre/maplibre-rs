@@ -16,7 +16,8 @@ use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
 pub struct TesselatedLayer {
     pub coords: TileCoords,
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-    pub feature_vertices: Vec<u32>,
+    /// Holds for each feature the count of indices
+    pub feature_indices: Vec<u32>,
     pub layer_data: Layer,
 }
 
@@ -79,14 +80,11 @@ impl WorkerLoop {
                         let tile = parse_tile_bytes(data.as_slice()).expect("failed to load tile");
 
                         for layer in tile.layers() {
-                            if let Some((buffer, feature_vertices)) = layer.tesselate() {
-                                if buffer.indices.is_empty() {
-                                    continue;
-                                }
+                            if let Some((buffer, feature_indices)) = layer.tesselate() {
                                 self.responses.push(TesselatedLayer {
                                     coords,
                                     buffer: buffer.into(),
-                                    feature_vertices,
+                                    feature_indices,
                                     layer_data: layer.clone(),
                                 });
                             }
