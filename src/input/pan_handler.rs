@@ -27,8 +27,8 @@ impl UpdateState for PanHandler {
                 let view_proj = reference_camera.calc_view_proj(perspective);
 
                 let delta = if let (Some(start), Some(current)) = (
-                    reference_camera.window_to_world_z0(&start_window_position, &view_proj),
-                    reference_camera.window_to_world_z0(&window_position, &view_proj),
+                    reference_camera.window_to_world_at_ground(&start_window_position, &view_proj),
+                    reference_camera.window_to_world_at_ground(&window_position, &view_proj),
                 ) {
                     start - current
                 } else {

@@ -29,17 +29,17 @@ impl UpdateState for ZoomHandler {
                 let perspective = &state.perspective;
                 let view_proj = state.camera.calc_view_proj(perspective);
 
-                if let Some(window_position_world) = state
+                if let Some(cursor_position) = state
                     .camera
-                    .window_to_world_z0(&window_position, &view_proj)
+                    .window_to_world_at_ground(&window_position, &view_proj)
                 {
                     let scale = 2.0.pow(next_zoom - current_zoom);
 
                     let delta = Vector3::new(
-                        window_position_world.x * scale,
-                        window_position_world.y * scale,
-                        window_position_world.z,
-                    ) - window_position_world;
+                        cursor_position.x * scale,
+                        cursor_position.y * scale,
+                        cursor_position.z,
+                    ) - cursor_position;
 
                     state.camera.position += delta;
                 }

@@ -46,8 +46,8 @@ enum BackingBufferType {
     FeatureMetadata,
 }
 
-impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: bytemuck::Pod>
-    BufferPool<Q, B, V, I, M, FM>
+impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: bytemuck::Pod>
+    BufferPool<Q, B, V, I, TM, FM>
 {
     pub fn new(
         vertices: BackingBufferDescriptor<B>,
@@ -133,31 +133,37 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: b
         (bytes, aligned_bytes)
     }
 
-    /// Allocates `buffer` and uploads it to the GPU
-    pub fn allocate_geometry(
+    /// Allocates
+    /// * `geometry`
+    /// * `tile_metadata` and
+    /// * `feature_metadata` for a tile. This function is able to dynamically evict tiles if there
+    /// is not enough space available.
+    pub fn allocate_tile_geometry(
         &mut self,
         queue: &Q,
         coords: TileCoords,
-        over_aligned: &OverAlignedVertexBuffer<V, I>,
-        metadata: M,
+        geometry: &OverAlignedVertexBuffer<V, I>,
+        tile_metadata: TM,
         feature_metadata: &Vec<FM>,
-    ) {
+    ) -> Option<&IndexEntry> {
         let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
         let indices_stride = size_of::<I>() as wgpu::BufferAddress;
-        let metadata_stride = size_of::<M>() as wgpu::BufferAddress;
+        let tile_metadata_stride = size_of::<TM>() as wgpu::BufferAddress;
         let feature_metadata_stride = size_of::<FM>() as wgpu::BufferAddress;
 
         let (vertices_bytes, aligned_vertices_bytes) = Self::align(
             vertices_stride,
-            over_aligned.buffer.vertices.len() as BufferAddress,
-            over_aligned.buffer.vertices.len() as BufferAddress,
+            geometry.buffer.vertices.len() as BufferAddress,
+            geometry.buffer.vertices.len() as BufferAddress,
         );
         let (indices_bytes, aligned_indices_bytes) = Self::align(
             indices_stride,
-            over_aligned.buffer.indices.len() as BufferAddress,
-            over_aligned.usable_indices as BufferAddress,
+            geometry.buffer.indices.len() as BufferAddress,
+            geometry.usable_indices as BufferAddress,
         );
-        let (metadata_bytes, aligned_metadata_bytes) = Self::align(metadata_stride, 1, 1);
+        let (tile_metadata_bytes, aligned_tile_metadata_bytes) =
+            Self::align(tile_metadata_stride, 1, 1);
+
         let (feature_metadata_bytes, aligned_feature_metadata_bytes) = Self::align(
             feature_metadata_stride,
             feature_metadata.len() as BufferAddress,
@@ -175,8 +181,10 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: b
             coords,
             buffer_vertices: self.vertices.make_room(vertices_bytes, &mut self.index),
             buffer_indices: self.indices.make_room(indices_bytes, &mut self.index),
-            usable_indices: over_aligned.usable_indices as u32,
-            buffer_metadata: self.metadata.make_room(metadata_bytes, &mut self.index),
+            usable_indices: geometry.usable_indices as u32,
+            buffer_tile_metadata: self
+                .metadata
+                .make_room(tile_metadata_bytes, &mut self.index),
             buffer_feature_metadata: self
                 .feature_metadata
                 .make_room(feature_metadata_bytes, &mut self.index),
@@ -186,18 +194,17 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: b
         queue.write_buffer(
             &self.vertices.inner,
             maybe_entry.buffer_vertices.start,
-            &bytemuck::cast_slice(&over_aligned.buffer.vertices)
-                [0..aligned_vertices_bytes as usize],
+            &bytemuck::cast_slice(&geometry.buffer.vertices)[0..aligned_vertices_bytes as usize],
         );
         queue.write_buffer(
             &self.indices.inner,
             maybe_entry.buffer_indices.start,
-            &bytemuck::cast_slice(&over_aligned.buffer.indices)[0..aligned_indices_bytes as usize],
+            &bytemuck::cast_slice(&geometry.buffer.indices)[0..aligned_indices_bytes as usize],
         );
         queue.write_buffer(
             &self.metadata.inner,
-            maybe_entry.buffer_metadata.start,
-            &bytemuck::cast_slice(&[metadata])[0..aligned_metadata_bytes as usize],
+            maybe_entry.buffer_tile_metadata.start,
+            &bytemuck::cast_slice(&[tile_metadata])[0..aligned_tile_metadata_bytes as usize],
         );
         queue.write_buffer(
             &self.feature_metadata.inner,
@@ -206,15 +213,23 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, M: bytemuck::Pod, FM: b
                 [0..aligned_feature_metadata_bytes as usize],
         );
         self.index.push_back(maybe_entry);
+        self.index.back()
     }
 
-    pub fn update_tile_metadata(&self, queue: &Q, entry: &IndexEntry, metadata: M) {
-        let metadata_stride = size_of::<M>() as wgpu::BufferAddress; // TODO: deduplicate
-        let (metadata_bytes, aligned_metadata_bytes) = Self::align(metadata_stride, 1, 1);
+    pub fn update_tile_metadata(&self, queue: &Q, entry: &IndexEntry, tile_metadata: TM) {
+        let tile_metadata_stride = size_of::<TM>() as wgpu::BufferAddress; // TODO: deduplicate
+        let (tile_metadata_bytes, aligned_tile_metadata_bytes) =
+            Self::align(tile_metadata_stride, 1, 1);
+
+        if entry.buffer_tile_metadata.end - entry.buffer_tile_metadata.start != tile_metadata_bytes
+        {
+            panic!("Updated tile metadata has wrong size!");
+        }
+
         queue.write_buffer(
             &self.metadata.inner,
-            entry.buffer_metadata.start,
-            &bytemuck::cast_slice(&[metadata])[0..aligned_metadata_bytes as usize],
+            entry.buffer_tile_metadata.start,
+            &bytemuck::cast_slice(&[tile_metadata])[0..aligned_tile_metadata_bytes as usize],
         );
     }
 
@@ -281,13 +296,13 @@ impl<B> BackingBuffer<B> {
         let start = index.front().map(|first| match self.typ {
             BackingBufferType::Vertices => first.buffer_vertices.start,
             BackingBufferType::Indices => first.buffer_indices.start,
-            BackingBufferType::Metadata => first.buffer_metadata.start,
+            BackingBufferType::Metadata => first.buffer_tile_metadata.start,
             BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.start,
         });
         let end = index.back().map(|first| match self.typ {
             BackingBufferType::Vertices => first.buffer_vertices.end,
             BackingBufferType::Indices => first.buffer_indices.end,
-            BackingBufferType::Metadata => first.buffer_metadata.end,
+            BackingBufferType::Metadata => first.buffer_tile_metadata.end,
             BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.end,
         });
 
@@ -327,7 +342,7 @@ pub struct IndexEntry {
     // Range of bytes within the backing buffer for indices
     buffer_indices: Range<wgpu::BufferAddress>,
     // Range of bytes within the backing buffer for metadata
-    buffer_metadata: Range<wgpu::BufferAddress>,
+    buffer_tile_metadata: Range<wgpu::BufferAddress>,
     // Range of bytes within the backing buffer for feature metadata
     buffer_feature_metadata: Range<wgpu::BufferAddress>,
     // Amount of actually usable indices. Each index has the size/format `IndexDataType`.
@@ -349,7 +364,7 @@ impl IndexEntry {
     }
 
     pub fn metadata_buffer_range(&self) -> Range<wgpu::BufferAddress> {
-        self.buffer_metadata.clone()
+        self.buffer_tile_metadata.clone()
     }
 
     pub fn feature_metadata_buffer_range(&self) -> Range<wgpu::BufferAddress> {
@@ -417,34 +432,34 @@ mod tests {
         let data24bytes_aligned = data24bytes.into();
 
         for _ in 0..2 {
-            pool.allocate_geometry(&queue, (0, 0, 0).into(), &data48bytes_aligned, 2, &vec![]);
+            pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data48bytes_aligned, 2, &vec![]);
         }
         assert_eq!(
             128 - 2 * 48,
             pool.available_space(BackingBufferType::Vertices)
         );
 
-        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         assert_eq!(
             128 - 2 * 48 - 24,
             pool.available_space(BackingBufferType::Vertices)
         );
         println!("{:?}", &pool.index);
 
-        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         // appended now at the beginning
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(BackingBufferType::Vertices));
 
-        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::Vertices));
 
-        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(BackingBufferType::Vertices));
 
-        pool.allocate_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::Vertices));
     }

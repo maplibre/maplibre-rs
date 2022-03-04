@@ -76,27 +76,45 @@ impl Camera {
         )
     }
 
-    fn clip_to_window_transform(width: f64, height: f64) -> Matrix4<f64> {
-        // Adapted from: https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle
+    /// A transform which can be used to transfrom between clip and window space.
+    /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle) (Direct3D).
+    fn clip_to_window_transform(&self) -> Matrix4<f64> {
         let min_depth = 0.0;
         let max_depth = 1.0;
         let x = 0.0;
         let y = 0.0;
-        let ox = x + width / 2.0;
-        let oy = y + height / 2.0;
+        let ox = x + self.width / 2.0;
+        let oy = y + self.height / 2.0;
         let oz = min_depth;
         let pz = max_depth - min_depth;
         Matrix4::from_cols(
-            Vector4::new(width as f64 / 2.0, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, -height as f64 / 2.0, 0.0, 0.0),
+            Vector4::new(self.width as f64 / 2.0, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, -self.height as f64 / 2.0, 0.0, 0.0),
             Vector4::new(0.0, 0.0, pz, 0.0),
             Vector4::new(ox, oy, oz, 1.0),
         )
     }
 
-    // Adopted from: https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkViewport.html
-    // and https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/
-    fn clip_to_window(clip: &Vector4<f64>, width: f64, height: f64) -> Vector3<f64> {
+    /// Transforms coordinates in clip space to window coordinates.
+    ///
+    /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline) (Direct3D).
+    fn clip_to_window(&self, clip: &Vector4<f64>) -> Vector4<f64> {
+        #[rustfmt::skip]
+            let ndc = Vector4::new(
+            clip.x / clip.w,
+            clip.y / clip.w,
+            clip.z / clip.w,
+            1.0
+        );
+
+        self.clip_to_window_transform() * ndc
+    }
+    /// Alternative implementation to `clip_to_window`. Transforms coordinates in clip space to
+    /// window coordinates.
+    ///
+    /// Adopted from [here](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkViewport.html)
+    /// and [here](https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/) (Vulkan).
+    fn clip_to_window_vulkan(&self, clip: &Vector4<f64>) -> Vector3<f64> {
         #[rustfmt::skip]
             let ndc = Vector4::new(
             clip.x / clip.w,
@@ -110,29 +128,16 @@ impl Camera {
 
         let x = 0.0;
         let y = 0.0;
-        let ox = x + width as f64 / 2.0;
-        let oy = y + height as f64 / 2.0;
+        let ox = x + self.width as f64 / 2.0;
+        let oy = y + self.height as f64 / 2.0;
         let oz = min_depth;
-        let px = width as f64;
-        let py = height as f64;
+        let px = self.width as f64;
+        let py = self.height as f64;
         let pz = max_depth - min_depth;
         let xd = ndc.x;
         let yd = ndc.y;
         let zd = ndc.z;
         Vector3::new(px / 2.0 * xd + ox, py / 2.0 * yd + oy, pz * zd + oz)
-    }
-
-    // https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline
-    fn clip_to_window_via_transform(&self, clip: &Vector4<f64>) -> Vector4<f64> {
-        #[rustfmt::skip]
-        let ndc = Vector4::new(
-            clip.x / clip.w,
-            clip.y / clip.w,
-            clip.z / clip.w,
-            1.0
-        );
-
-        Self::clip_to_window_transform(self.width, self.height) * ndc
     }
 
     /// Order of transformations reversed: https://computergraphics.stackexchange.com/questions/6087/screen-space-coordinates-to-eye-space-conversion/6093
@@ -141,17 +146,14 @@ impl Camera {
     /// OpenGL explanation: https://www.khronos.org/opengl/wiki/Compute_eye_space_from_window_space#From_window_to_ndc
     fn window_to_world(&self, window: &Vector3<f64>, view_proj: &Matrix4<f64>) -> Vector3<f64> {
         #[rustfmt::skip]
-            let fixed_window = Vector4::new(
+        let fixed_window = Vector4::new(
             window.x,
             window.y,
             window.z,
             1.0
         );
 
-        let ndc = Self::clip_to_window_transform(self.width, self.height)
-            .invert()
-            .unwrap()
-            * fixed_window;
+        let ndc = self.clip_to_window_transform().invert().unwrap() * fixed_window;
         let unprojected = view_proj.invert().unwrap() * ndc;
 
         Vector3::new(
@@ -163,7 +165,7 @@ impl Camera {
 
     /// Alternative implementation to `window_to_world`
     ///
-    /// https://docs.rs/nalgebra-glm/latest/src/nalgebra_glm/ext/matrix_projection.rs.html#164-181
+    /// Adopted from [here](https://docs.rs/nalgebra-glm/latest/src/nalgebra_glm/ext/matrix_projection.rs.html#164-181).
     fn window_to_world_nalgebra(
         window: &Vector3<f64>,
         view_proj: &Matrix4<f64>,
@@ -176,17 +178,17 @@ impl Camera {
             window.z,
             1.0,
         );
-        let unprojected_nalgebra = view_proj.invert().unwrap() * pt;
+        let unprojected = view_proj.invert().unwrap() * pt;
 
         Vector3::new(
-            unprojected_nalgebra.x / unprojected_nalgebra.w,
-            unprojected_nalgebra.y / unprojected_nalgebra.w,
-            unprojected_nalgebra.z / unprojected_nalgebra.w,
+            unprojected.x / unprojected.w,
+            unprojected.y / unprojected.w,
+            unprojected.z / unprojected.w,
         )
     }
 
-    /// Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf
-    pub fn window_to_world_z0(
+    /// Gets the world coordinates for the specified `window` coordinates on the `z=0` plane.
+    pub fn window_to_world_at_ground(
         &self,
         window: &Vector2<f64>,
         view_proj: &Matrix4<f64>,
@@ -196,6 +198,7 @@ impl Camera {
         let far_world = self.window_to_world(&Vector3::new(window.x, window.y, 1.0), view_proj);
 
         // for z = 0 in world coordinates
+        // Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf
         let u = -near_world.z / (far_world.z - near_world.z);
         if (0.0..=1.0).contains(&u) {
             Some(near_world + u * (far_world - near_world))
@@ -204,7 +207,17 @@ impl Camera {
         }
     }
 
-    pub fn view_bounding_box2(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
+    /// Calculates an [`Aabb2`] bounding box which contains at least the visible area on the `z=0`
+    /// plane. One can think of it as being the bounding box of the geometry which forms the
+    /// intersection between the viewing frustum and the `z=0` plane.
+    ///
+    /// This implementation works in the world 3D space. It casts rays from the corners of the
+    /// window to calculate intersections points with the `z=0` plane. Then a bounding box is
+    /// calculated.
+    ///
+    /// *Note:* It is possible that no such bounding box exists. This is the case if the `z=0` plane
+    /// is not in view.
+    pub fn view_region_bounding_box(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
         let view_proj = self.calc_view_proj(perspective);
 
         let vec = vec![
@@ -214,7 +227,7 @@ impl Camera {
             Vector2::new(0.0, self.height),
         ]
         .iter()
-        .filter_map(|point| self.window_to_world_z0(point, &view_proj))
+        .filter_map(|point| self.window_to_world_at_ground(point, &view_proj))
         .collect::<Vec<_>>();
 
         let min_x = vec
@@ -238,17 +251,20 @@ impl Camera {
             Point2::new(max_x, max_y),
         ))
     }
-
-    pub fn view_bounding_box(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
+    /// An alternative implementation for `view_bounding_box`.
+    ///
+    /// This implementation works in the NDC space. We are creating a plane in the world 3D space.
+    /// Then we are transforming it to the NDC space. In NDC space it is easy to calculate
+    /// the intersection points between an Aabb3 and a plane. The resulting Aabb2 is returned.
+    pub fn view_region_bounding_box_ndc(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
         let view_proj = self.calc_view_proj(perspective);
         let a = view_proj * Vector4::new(0.0, 0.0, 0.0, 1.0);
         let b = view_proj * Vector4::new(1.0, 0.0, 0.0, 1.0);
         let c = view_proj * Vector4::new(1.0, 1.0, 0.0, 1.0);
 
-        let a = self.clip_to_window_via_transform(&a);
-        let a_ndc = a.truncate();
-        let b_ndc = self.clip_to_window_via_transform(&b).truncate();
-        let c_ndc = self.clip_to_window_via_transform(&c).truncate();
+        let a_ndc = self.clip_to_window(&a).truncate();
+        let b_ndc = self.clip_to_window(&b).truncate();
+        let c_ndc = self.clip_to_window(&c).truncate();
         let to_ndc = Vector3::new(1.0 / self.width, 1.0 / self.height, 1.0);
         let plane: Plane<f64> = Plane::from_points(
             Point3::from_vec(a_ndc.mul_element_wise(to_ndc)),
@@ -360,8 +376,8 @@ mod tests {
         println!("clip: {:?}", clip);
         println!("world_pos: {:?}", view_proj.invert().unwrap() * clip);
 
-        println!("window: {:?}", Camera::clip_to_window(&clip, width, height));
-        let window = camera.clip_to_window_via_transform(&clip);
+        println!("window: {:?}", camera.clip_to_window_vulkan(&clip));
+        let window = camera.clip_to_window(&clip);
         println!("window (matrix): {:?}", window);
 
         // --------- nalgebra
