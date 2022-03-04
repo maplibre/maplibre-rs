@@ -230,27 +230,30 @@ impl Decode<Feature> for (&mut ProtoLayer, ProtoFeature) {
 /// Decode a Layer
 impl Decode<Layer> for ProtoLayer {
     fn decode(mut self) -> Layer {
-        // FIXME: Order of features is changed here
         let mut features = Vec::new();
 
         while let Some(feature) = self.features.pop() {
-            features.push((&mut self, feature).decode())
+            features.insert(0, (&mut self, feature).decode())
         }
 
-        Layer::new(self, features)
+        Layer::new(
+            self.take_name(),
+            self.get_version(),
+            features,
+            self.get_extent(),
+        )
     }
 }
 
 /// Decode a whole Tile
 impl Decode<Tile> for ProtoTile {
     fn decode(mut self) -> Tile {
-        // FIXME: Order of layers is changed here
         let mut layers = Vec::new();
 
         while let Some(layer) = self.layers.pop() {
-            layers.push(layer.decode())
+            layers.insert(0, layer.decode())
         }
 
-        Tile::new(self, layers)
+        Tile::new(layers)
     }
 }

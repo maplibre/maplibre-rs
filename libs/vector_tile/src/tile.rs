@@ -5,14 +5,15 @@ use crate::protos::vector_tile::{Tile as ProtoTile, Tile_Layer as ProtoLayer};
 
 #[derive(Debug, Clone)]
 pub struct Tile {
-    internal: ProtoTile,
     layers: Vec<Layer>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Layer {
-    internal: ProtoLayer,
+    name: String,
+    version: u32,
     features: Vec<Feature>,
+    extent: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -60,20 +61,25 @@ impl Feature {
 }
 
 impl Layer {
-    pub(crate) fn new(internal: ProtoLayer, features: Vec<Feature>) -> Self {
-        Layer { internal, features }
+    pub(crate) fn new(name: String, version: u32, features: Vec<Feature>, extent: u32) -> Self {
+        Layer {
+            name,
+            version,
+            features,
+            extent,
+        }
     }
 
-    pub fn extend(&self) -> u32 {
-        self.internal.get_extent()
+    pub fn extent(&self) -> u32 {
+        self.extent
     }
 
     pub fn version(&self) -> u32 {
-        self.internal.get_version()
+        self.version
     }
 
     pub fn name(&self) -> &str {
-        self.internal.get_name()
+        self.name.as_str()
     }
 
     pub fn features(&self) -> &Vec<Feature> {
@@ -82,8 +88,8 @@ impl Layer {
 }
 
 impl Tile {
-    pub(crate) fn new(internal: ProtoTile, layers: Vec<Layer>) -> Self {
-        Tile { internal, layers }
+    pub(crate) fn new(layers: Vec<Layer>) -> Self {
+        Tile { layers }
     }
 
     pub fn layers(&self) -> &Vec<Layer> {
