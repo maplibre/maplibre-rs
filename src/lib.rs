@@ -11,5 +11,4 @@ pub mod io;
 pub mod main_loop;
 
 // Used for benchmarking
-pub mod example;
 pub mod tesselation;
