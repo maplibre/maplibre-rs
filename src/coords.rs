@@ -1,6 +1,6 @@
 //! File which exposes all kinds of coordinates used throughout mapr
 
-use crate::util::math::{div_away, div_floor};
+use crate::util::math::{div_away, div_floor, Aabb2};
 use cgmath::num_traits::Pow;
 use cgmath::{Matrix4, Point3, SquareMatrix, Vector3};
 use std::fmt;
@@ -251,10 +251,43 @@ impl From<Point3<f64>> for WorldCoords {
     }
 }
 
+pub struct ViewRegion {
+    min_tile: TileCoords,
+    max_tile: TileCoords,
+    z: u8,
+}
+
+impl ViewRegion {
+    pub fn new(view_region: Aabb2<f64>, zoom: f64, z: u8) -> Self {
+        let min_world: WorldCoords = WorldCoords::at_ground(view_region.min.x, view_region.min.y);
+        let min_world_tile: WorldTileCoords = min_world.into_world_tile(z, zoom);
+        let min_tile: TileCoords = min_world_tile.into();
+        let max_world: WorldCoords = WorldCoords::at_ground(view_region.max.x, view_region.max.y);
+        let max_world_tile: WorldTileCoords = max_world.into_world_tile(z, zoom);
+        let max_tile: TileCoords = max_world_tile.into();
+
+        Self {
+            min_tile,
+            max_tile,
+            z,
+        }
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = TileCoords> + '_ {
+        (self.min_tile.x..self.max_tile.x + 1).flat_map(move |x| {
+            (self.min_tile.y..self.max_tile.y + 1).map(move |y| {
+                let tile_coord: TileCoords = (x, y, self.z as u8).into();
+                tile_coord
+            })
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::coords::{WorldCoords, WorldTileCoords, EXTENT};
-    use cgmath::{Vector3, Vector4, Zero};
+    use crate::coords::{ViewRegion, WorldCoords, WorldTileCoords, EXTENT};
+    use crate::util::math::Aabb2;
+    use cgmath::{Point2, Vector3, Vector4, Zero};
 
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
     const BOTTOM_RIGHT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
@@ -276,5 +309,18 @@ mod tests {
         to_from_world((1, 0, 1), 1.0);
         to_from_world((67, 42, 7), 7.0);
         to_from_world((17421, 11360, 15), 15.0);
+    }
+
+    #[test]
+    fn test_view_region() {
+        for tile_coords in ViewRegion::new(
+            Aabb2::new(Point2::new(0.0, 0.0), Point2::new(2000.0, 2000.0)),
+            0.0,
+            0,
+        )
+        .iter()
+        {
+            println!("{}", tile_coords);
+        }
     }
 }
