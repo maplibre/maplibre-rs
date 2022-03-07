@@ -18,7 +18,7 @@ pub type IndexDataType = u16; // Must match INDEX_FORMAT
 
 pub trait Tesselated<I: Add> {
     /// Returns a vertex buffer which represents some object like a layer. Each object can contain
-    /// multiple features. For each feature also a amount of indices is returned.
+    /// multiple features. For each feature also the amount of indices is returned.
     ///
     fn tesselate(&self) -> Option<(VertexBuffers<ShaderVertex, I>, Vec<u32>)>;
 }
