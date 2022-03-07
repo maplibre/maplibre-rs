@@ -1,4 +1,4 @@
-//! Tesselation for lines and polygons is implemented here.
+//! Tessellation for lines and polygons is implemented here.
 
 use bytemuck::Pod;
 use std::ops::Add;
@@ -16,11 +16,11 @@ const DEFAULT_TOLERANCE: f32 = 0.02;
 
 pub type IndexDataType = u16; // Must match INDEX_FORMAT
 
-pub trait Tesselated<I: Add> {
+pub trait Tessellated<I: Add> {
     /// Returns a vertex buffer which represents some object like a layer. Each object can contain
     /// multiple features. For each feature also the amount of indices is returned.
     ///
-    fn tesselate(&self) -> Option<(VertexBuffers<ShaderVertex, I>, Vec<u32>)>;
+    fn tessellate(&self) -> Option<(VertexBuffers<ShaderVertex, I>, Vec<u32>)>;
 }
 
 pub struct VertexConstructor {}

@@ -9,7 +9,7 @@ use wgpu::BufferAddress;
 
 use crate::coords::TileCoords;
 use crate::render::shaders::ShaderTileMetadata;
-use crate::tesselation::OverAlignedVertexBuffer;
+use crate::tessellation::OverAlignedVertexBuffer;
 
 pub trait Queue<B> {
     fn write_buffer(&self, buffer: &B, offset: wgpu::BufferAddress, data: &[u8]);

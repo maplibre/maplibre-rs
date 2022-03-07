@@ -88,12 +88,12 @@ Projects:
 * [Multi-channel signed distance field generator](https://github.com/Chlumsky/msdfgen)
   * [MSDF font atlas generator ](https://github.com/Chlumsky/msdf-atlas-gen)
 
-## Tesselation
+## Tessellation
 
 Projects:
 
 * [earcutr](https://github.com/donbright/earcutr)
-* [Line Tesselation in MapLibre](https://github.com/maplibre/maplibre-gl-js/blob/main/src/data/bucket/line_bucket.ts)
+* [Line Tessellation in MapLibre](https://github.com/maplibre/maplibre-gl-js/blob/main/src/data/bucket/line_bucket.ts)
 
 ## Render Graphs
 

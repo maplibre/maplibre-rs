@@ -6,7 +6,7 @@
   coordinates ([Plot](https://en.wikipedia.org/wiki/IEEE_754#/media/File:IEEE754.svg))
 * [Perils of World Space](https://paroj.github.io/gltut/Positioning/Tut07%20The%20Perils%20of%20World%20Space.html)
 
-### Create paths for tesselating streets
+### Create paths for tessellating streets
 
 Streets can have unusual shaped like shown [here](https://www.google.de/maps/@48.1353883,11.5717232,19z) in Munich. OSM
 does not offer such data and therefore just renders an ordinary street contour like

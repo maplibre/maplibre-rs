@@ -7,7 +7,7 @@ use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
-use crate::io::worker_loop::{TesselationResult, TileRequest, WorkerLoop};
+use crate::io::worker_loop::{TessellationResult, TileRequest, WorkerLoop};
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::camera;
@@ -16,7 +16,7 @@ use crate::render::options::{
     TILE_META_COUNT, VERTEX_BUFFER_SIZE,
 };
 use crate::render::tile_mask_pattern::TileMaskPattern;
-use crate::tesselation::IndexDataType;
+use crate::tessellation::IndexDataType;
 use crate::util::math::Aabb2;
 use crate::util::FPSMeter;
 
@@ -390,11 +390,11 @@ impl RenderState {
             for tile_coords in view_region.iter() {
                 let loaded_layers = self.buffer_pool.get_loaded_layers(&tile_coords);
 
-                let layers = worker_loop.get_tesselated_layers_at(&tile_coords, &loaded_layers);
+                let layers = worker_loop.get_tessellated_layers_at(&tile_coords, &loaded_layers);
                 for result in layers {
                     match result {
-                        TesselationResult::Unavailable(_) => {}
-                        TesselationResult::TesselatedLayer(layer) => {
+                        TessellationResult::Unavailable(_) => {}
+                        TessellationResult::TessellatedLayer(layer) => {
                             let world_coords = layer.coords.into_world_tile();
 
                             let feature_metadata = layer

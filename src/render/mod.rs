@@ -11,5 +11,5 @@ mod tile_mask_pattern;
 pub mod camera;
 pub mod render_state;
 
-// These are created during tesselation and must be public
+// These are created during tessellation and must be public
 pub use shaders::ShaderVertex;

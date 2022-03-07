@@ -2,13 +2,13 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use lyon::tessellation::VertexBuffers;
 use mapr::io::static_tile_fetcher::StaticTileFetcher;
 use mapr::io::{HttpFetcherConfig, TileFetcher};
-use mapr::tesselation::Tesselated;
+use mapr::tessellation::Tessellated;
 use std::io::Cursor;
 use vector_tile::parse_tile_reader;
 use vector_tile::tile::Layer;
 
 fn tessselate(layer: &Layer) {
-    let _: (VertexBuffers<_, u32>, _) = layer.tesselate().unwrap();
+    let _: (VertexBuffers<_, u32>, _) = layer.tessellate().unwrap();
 }
 
 fn tile1(c: &mut Criterion) {

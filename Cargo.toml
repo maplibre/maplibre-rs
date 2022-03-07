@@ -109,7 +109,7 @@ name = "desktop"
 crate-type = ["bin"]
 
 [[bench]]
-name = "tesselation"
+name = "tessellation"
 harness = false
 
 [package.metadata.android]

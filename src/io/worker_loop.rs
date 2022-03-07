@@ -11,33 +11,33 @@ use vector_tile::tile::Layer;
 use crate::io::web_tile_fetcher::WebTileFetcher;
 use crate::io::{HttpFetcherConfig, TileFetcher};
 use crate::render::ShaderVertex;
-use crate::tesselation::{IndexDataType, OverAlignedVertexBuffer, Tesselated};
+use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer, Tessellated};
 use std::collections::btree_map::Entry;
 
 #[derive(Clone)]
-pub enum TesselationResult {
+pub enum TessellationResult {
     Unavailable(EmptyLayer),
-    TesselatedLayer(TesselatedLayer),
+    TessellatedLayer(TessellatedLayer),
 }
 
-impl TesselationResult {
+impl TessellationResult {
     pub fn get_tile_coords(&self) -> TileCoords {
         match self {
-            TesselationResult::Unavailable(result) => result.coords,
-            TesselationResult::TesselatedLayer(result) => result.coords,
+            TessellationResult::Unavailable(result) => result.coords,
+            TessellationResult::TessellatedLayer(result) => result.coords,
         }
     }
 
     pub fn layer_name(&self) -> &str {
         match self {
-            TesselationResult::Unavailable(result) => result.layer_name.as_str(),
-            TesselationResult::TesselatedLayer(result) => result.layer_data.name(),
+            TessellationResult::Unavailable(result) => result.layer_name.as_str(),
+            TessellationResult::TessellatedLayer(result) => result.layer_data.name(),
         }
     }
 }
 
 #[derive(Clone)]
-pub struct TesselatedLayer {
+pub struct TessellatedLayer {
     pub coords: TileCoords,
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices
@@ -52,7 +52,7 @@ pub struct EmptyLayer {
 }
 
 pub struct TileResultStore {
-    store: Mutex<BTreeMap<TileCoords, Vec<TesselationResult>>>,
+    store: Mutex<BTreeMap<TileCoords, Vec<TessellationResult>>>,
 }
 
 impl TileResultStore {
@@ -62,7 +62,7 @@ impl TileResultStore {
         }
     }
 
-    fn push(&self, result: TesselationResult) -> bool {
+    fn push(&self, result: TessellationResult) -> bool {
         if let Ok(mut map) = self.store.lock() {
             match map.entry(result.get_tile_coords()) {
                 Entry::Vacant(entry) => {
@@ -78,11 +78,11 @@ impl TileResultStore {
         }
     }
 
-    fn get_tesselated_layers_at(
+    fn get_tessellated_layers_at(
         &self,
         coords: &TileCoords,
         skip_layers: &Vec<String>,
-    ) -> Vec<TesselationResult> {
+    ) -> Vec<TessellationResult> {
         let mut ret = Vec::new();
         if let Ok(map) = self.store.try_lock() {
             if let Some(results) = map.get(coords) {
@@ -97,18 +97,18 @@ impl TileResultStore {
         ret
     }
 
-    fn get_missing_tesselated_layer_names_at(
+    fn get_missing_tessellated_layer_names_at(
         &self,
         coords: &TileCoords,
         layers: &Vec<String>,
     ) -> Vec<String> {
         if let Ok(loaded) = self.store.try_lock() {
-            if let Some(tesselated_layers) = loaded.get(coords) {
+            if let Some(tessellated_layers) = loaded.get(coords) {
                 let mut result = Vec::new();
                 for layer in layers {
-                    if tesselated_layers
+                    if tessellated_layers
                         .iter()
-                        .find(|tesselated_layer| tesselated_layer.layer_name() == layer)
+                        .find(|tessellated_layer| tessellated_layer.layer_name() == layer)
                         .is_none()
                     {
                         result.push(layer.clone());
@@ -159,7 +159,7 @@ impl WorkerLoop {
 
             let missing_layers = self
                 .tile_result_store
-                .get_missing_tesselated_layer_names_at(&coords, &layers);
+                .get_missing_tessellated_layer_names_at(&coords, &layers);
 
             if missing_layers.is_empty() {
                 return;
@@ -170,13 +170,13 @@ impl WorkerLoop {
         }
     }
 
-    pub fn get_tesselated_layers_at(
+    pub fn get_tessellated_layers_at(
         &self,
         coords: &TileCoords,
         skip_layers: &Vec<String>,
-    ) -> Vec<TesselationResult> {
+    ) -> Vec<TessellationResult> {
         self.tile_result_store
-            .get_tesselated_layers_at(coords, skip_layers)
+            .get_tessellated_layers_at(coords, skip_layers)
     }
 
     pub async fn run_loop(&mut self) {
@@ -198,9 +198,9 @@ impl WorkerLoop {
                                 .iter()
                                 .find(|layer| to_load.as_str() == layer.name())
                             {
-                                if let Some((buffer, feature_indices)) = layer.tesselate() {
+                                if let Some((buffer, feature_indices)) = layer.tessellate() {
                                     self.tile_result_store.push(
-                                        TesselationResult::TesselatedLayer(TesselatedLayer {
+                                        TessellationResult::TessellatedLayer(TessellatedLayer {
                                             coords,
                                             buffer: buffer.into(),
                                             feature_indices,
