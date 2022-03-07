@@ -133,6 +133,15 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         (bytes, aligned_bytes)
     }
 
+    /// FIXME: use an id instead of layer_name to identify tiles
+    pub fn get_loaded_layers(&self, coords: &TileCoords) -> Vec<String> {
+        self.index
+            .iter()
+            .filter(|entry| entry.coords == *coords)
+            .map(|entry| entry.layer_name.clone())
+            .collect()
+    }
+
     /// Allocates
     /// * `geometry`
     /// * `tile_metadata` and
@@ -142,6 +151,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         &mut self,
         queue: &Q,
         coords: TileCoords,
+        layer_name: &str,
         geometry: &OverAlignedVertexBuffer<V, I>,
         tile_metadata: TM,
         feature_metadata: &Vec<FM>,
@@ -179,6 +189,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
 
         let maybe_entry = IndexEntry {
             coords,
+            layer_name: layer_name.to_string(),
             buffer_vertices: self.vertices.make_room(vertices_bytes, &mut self.index),
             buffer_indices: self.indices.make_room(indices_bytes, &mut self.index),
             usable_indices: geometry.usable_indices as u32,
@@ -337,6 +348,7 @@ impl<B> BackingBuffer<B> {
 #[derive(Debug)]
 pub struct IndexEntry {
     pub coords: TileCoords,
+    pub layer_name: String,
     // Range of bytes within the backing buffer for vertices
     buffer_vertices: Range<wgpu::BufferAddress>,
     // Range of bytes within the backing buffer for indices
