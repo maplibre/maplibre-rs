@@ -16,7 +16,7 @@ pub const EXTENT: f64 = EXTENT_UINT as f64;
 /// # Coordinate System Origin
 ///
 /// For Web Mercator the origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, Hash, std::cmp::Eq, std::cmp::PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, std::cmp::Eq, std::cmp::PartialEq, PartialOrd, Ord)]
 pub struct TileCoords {
     pub x: u32,
     pub y: u32,
