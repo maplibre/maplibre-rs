@@ -55,17 +55,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_tiles_available() {
+        const MUNICH_X: u32 = 17425;
+        const MUNICH_Y: u32 = 11365;
+        const MUNICH_Z: u8 = 15;
+
         let fetcher = StaticTileFetcher::new(HttpFetcherConfig::default());
         assert!(fetcher.fetch_tile(&(0, 0, 0).into()).await.is_err()); // World overview
         assert!(fetcher
-            .fetch_tile(
-                &(
-                    crate::example::MUNICH_X,
-                    crate::example::MUNICH_Y,
-                    crate::example::MUNICH_Z
-                )
-                    .into()
-            )
+            .fetch_tile(&(MUNICH_X, MUNICH_Y, MUNICH_Z).into())
             .await
             .is_ok()); // Maxvorstadt Munich
     }

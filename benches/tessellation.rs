@@ -12,17 +12,14 @@ fn tessselate(layer: &Layer) {
 }
 
 fn tile1(c: &mut Criterion) {
+    const MUNICH_X: u32 = 17425;
+    const MUNICH_Y: u32 = 11365;
+    const MUNICH_Z: u8 = 15;
+
     let fetcher = StaticTileFetcher::new(HttpFetcherConfig::default());
     let tile = parse_tile_reader(&mut Cursor::new(
         fetcher
-            .sync_fetch_tile(
-                &(
-                    mapr::example::MUNICH_X,
-                    mapr::example::MUNICH_Y,
-                    mapr::example::MUNICH_Z,
-                )
-                    .into(),
-            )
+            .sync_fetch_tile(&(MUNICH_X, MUNICH_Y, MUNICH_Z).into())
             .unwrap(),
     ))
     .expect("failed to load tile");

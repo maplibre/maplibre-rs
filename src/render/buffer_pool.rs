@@ -432,6 +432,7 @@ mod tests {
             );
 
         let queue = TestQueue {};
+        let layer_name = "layer";
 
         let mut data48bytes = VertexBuffers::new();
         data48bytes.vertices.append(&mut create_48byte());
@@ -444,34 +445,76 @@ mod tests {
         let data24bytes_aligned = data24bytes.into();
 
         for _ in 0..2 {
-            pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data48bytes_aligned, 2, &vec![]);
+            pool.allocate_tile_geometry(
+                &queue,
+                (0, 0, 0).into(),
+                layer_name,
+                &data48bytes_aligned,
+                2,
+                &vec![],
+            );
         }
         assert_eq!(
             128 - 2 * 48,
             pool.available_space(BackingBufferType::Vertices)
         );
 
-        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(
+            &queue,
+            (0, 0, 0).into(),
+            layer_name,
+            &data24bytes_aligned,
+            2,
+            &vec![],
+        );
         assert_eq!(
             128 - 2 * 48 - 24,
             pool.available_space(BackingBufferType::Vertices)
         );
         println!("{:?}", &pool.index);
 
-        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(
+            &queue,
+            (0, 0, 0).into(),
+            layer_name,
+            &data24bytes_aligned,
+            2,
+            &vec![],
+        );
         // appended now at the beginning
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(BackingBufferType::Vertices));
 
-        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(
+            &queue,
+            (0, 0, 0).into(),
+            layer_name,
+            &data24bytes_aligned,
+            2,
+            &vec![],
+        );
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::Vertices));
 
-        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(
+            &queue,
+            (0, 0, 0).into(),
+            layer_name,
+            &data24bytes_aligned,
+            2,
+            &vec![],
+        );
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(BackingBufferType::Vertices));
 
-        pool.allocate_tile_geometry(&queue, (0, 0, 0).into(), &data24bytes_aligned, 2, &vec![]);
+        pool.allocate_tile_geometry(
+            &queue,
+            (0, 0, 0).into(),
+            layer_name,
+            &data24bytes_aligned,
+            2,
+            &vec![],
+        );
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::Vertices));
     }
