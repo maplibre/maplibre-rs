@@ -4,18 +4,23 @@
 //! * Render a new frame
 
 use log::{error, info, trace};
+use std::sync::mpsc::Receiver;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
+use winit::window::Window;
 
 use crate::input::{InputController, UpdateState};
-use crate::io::worker_loop::WorkerLoop;
+use crate::io::tile_cache::TileCache;
+use crate::io::workflow::{LayerResult, TileRequestDispatcher, Workflow};
 use crate::platform::Instant;
 use crate::render::render_state::RenderState;
 
 pub async fn setup(
     window: winit::window::Window,
     event_loop: EventLoop<()>,
-    mut worker_loop: Box<WorkerLoop>,
+    mut dispatcher: Box<TileRequestDispatcher>,
+    receiver: Box<Receiver<LayerResult>>,
+    tile_cache: Box<TileCache>,
 ) {
     info!("== mapr ==");
 
@@ -85,8 +90,13 @@ pub async fn setup(
                     let now = Instant::now();
                     let dt = now - last_render_time;
                     last_render_time = now;
+
+                    while let Ok(d) = receiver.try_recv() {
+                        tile_cache.push(d);
+                    }
+
                     input.update_state(state, dt);
-                    state.upload_tile_geometry(&mut worker_loop);
+                    state.upload_tile_geometry(&mut dispatcher, &tile_cache);
                     match state.render() {
                         Ok(_) => {}
                         Err(wgpu::SurfaceError::Lost) => {

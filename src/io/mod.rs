@@ -5,8 +5,9 @@ use crate::error::Error;
 use async_trait::async_trait;
 
 pub mod static_tile_fetcher;
+pub mod tile_cache;
 pub mod web_tile_fetcher;
-pub mod worker_loop;
+pub mod workflow;
 
 pub struct HttpFetcherConfig {
     /// Under which path should we cache requests.

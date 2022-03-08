@@ -59,17 +59,17 @@ const start = async () => {
         type: "module",
     });
 
-    let workerLoopPtr = module.create_worker_loop();
+    let workflowPtr = module.create_workflow();
 
     console.log("Starting cache-worker")
-    worker.postMessage({type: "init", memory, workerLoopPtr});
+    worker.postMessage({type: "init", memory, workflowPtr: workflowPtr});
 
     document.body.querySelectorAll("canvas").forEach(canvas => {
         canvas.addEventListener("touchstart", e => e.preventDefault());
         canvas.addEventListener("touchmove", e => e.preventDefault());
     })
 
-    await module.run(workerLoopPtr);
+    await module.run(workflowPtr);
 }
 
 start().then(r => console.log("started via wasm"));

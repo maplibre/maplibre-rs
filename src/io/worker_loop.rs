@@ -8,223 +8,25 @@ use crate::coords::TileCoords;
 use vector_tile::parse_tile_bytes;
 use vector_tile::tile::Layer;
 
+use crate::io::tile_cache::TileCache;
 use crate::io::web_tile_fetcher::WebTileFetcher;
+use crate::io::workflow::{LayerResult, TileRequest};
 use crate::io::{HttpFetcherConfig, TileFetcher};
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer, Tessellated};
 use std::collections::btree_map::Entry;
+use std::sync::mpsc::{channel, Receiver, Sender};
 
-#[derive(Clone)]
-pub enum TessellationResult {
-    Unavailable(EmptyLayer),
-    TessellatedLayer(TessellatedLayer),
-}
-
-impl TessellationResult {
-    pub fn get_tile_coords(&self) -> TileCoords {
-        match self {
-            TessellationResult::Unavailable(result) => result.coords,
-            TessellationResult::TessellatedLayer(result) => result.coords,
-        }
-    }
-
-    pub fn layer_name(&self) -> &str {
-        match self {
-            TessellationResult::Unavailable(result) => result.layer_name.as_str(),
-            TessellationResult::TessellatedLayer(result) => result.layer_data.name(),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct TessellatedLayer {
-    pub coords: TileCoords,
-    pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-    /// Holds for each feature the count of indices
-    pub feature_indices: Vec<u32>,
-    pub layer_data: Layer,
-}
-
-#[derive(Clone)]
-pub struct EmptyLayer {
-    pub coords: TileCoords,
-    pub layer_name: String,
-}
-
-pub struct TileResultStore {
-    store: Mutex<BTreeMap<TileCoords, Vec<TessellationResult>>>,
-}
-
-impl TileResultStore {
-    fn new() -> Self {
-        Self {
-            store: Mutex::new(BTreeMap::new()),
-        }
-    }
-
-    fn push(&self, result: TessellationResult) -> bool {
-        if let Ok(mut map) = self.store.lock() {
-            match map.entry(result.get_tile_coords()) {
-                Entry::Vacant(entry) => {
-                    entry.insert(vec![result]);
-                }
-                Entry::Occupied(mut entry) => {
-                    entry.get_mut().push(result);
-                }
-            }
-            true
-        } else {
-            false
-        }
-    }
-
-    fn get_tessellated_layers_at(
-        &self,
-        coords: &TileCoords,
-        skip_layers: &Vec<String>,
-    ) -> Vec<TessellationResult> {
-        let mut ret = Vec::new();
-        if let Ok(map) = self.store.try_lock() {
-            if let Some(results) = map.get(coords) {
-                for result in results {
-                    if !skip_layers.contains(&result.layer_name().to_string()) {
-                        ret.push(result.clone());
-                    }
-                }
-            }
-        }
-
-        ret
-    }
-
-    fn get_missing_tessellated_layer_names_at(
-        &self,
-        coords: &TileCoords,
-        layers: &Vec<String>,
-    ) -> Vec<String> {
-        if let Ok(loaded) = self.store.try_lock() {
-            if let Some(tessellated_layers) = loaded.get(coords) {
-                let mut result = Vec::new();
-                for layer in layers {
-                    if tessellated_layers
-                        .iter()
-                        .find(|tessellated_layer| tessellated_layer.layer_name() == layer)
-                        .is_none()
-                    {
-                        result.push(layer.clone());
-                    }
-                }
-                result
-            } else {
-                layers.clone()
-            }
-        } else {
-            Vec::new()
-        }
-    }
-}
-
-pub struct TileRequest(pub TileCoords, pub Vec<String>);
-
-#[derive(Clone)]
-pub struct WorkerLoop {
-    requests: Arc<RequestQueue<TileRequest>>,
-    tile_result_store: Arc<TileResultStore>,
-    pending_tiles: Arc<Mutex<HashSet<TileCoords>>>,
-}
-
-impl Drop for WorkerLoop {
+/*impl Drop for WorkerLoop {
     fn drop(&mut self) {
         error!("WorkerLoop dropped. This should only happen when the application is stopped!");
     }
 }
-
-impl WorkerLoop {
-    pub fn new() -> Self {
-        Self {
-            requests: Arc::new(RequestQueue::new()),
-            tile_result_store: Arc::new(TileResultStore::new()),
-            pending_tiles: Arc::new(Mutex::new(HashSet::new())),
-        }
-    }
-
-    pub fn spin_fetch(&self, tile_request: TileRequest) {
-        let TileRequest(coords, layers) = &tile_request;
-
-        if let Ok(mut pending_tiles) = self.pending_tiles.try_lock() {
-            if pending_tiles.contains(&coords) {
-                return;
-            }
-            pending_tiles.insert(*coords);
-
-            let missing_layers = self
-                .tile_result_store
-                .get_missing_tessellated_layer_names_at(&coords, &layers);
-
-            if missing_layers.is_empty() {
-                return;
-            }
-
-            info!("new tile request: {}", &coords);
-            self.requests.spin_push(tile_request);
-        }
-    }
-
-    pub fn get_tessellated_layers_at(
-        &self,
-        coords: &TileCoords,
-        skip_layers: &Vec<String>,
-    ) -> Vec<TessellationResult> {
-        self.tile_result_store
-            .get_tessellated_layers_at(coords, skip_layers)
-    }
-
-    pub async fn run_loop(&mut self) {
-        let fetcher = WebTileFetcher::new(HttpFetcherConfig {
-            cache_path: "/tmp/mapr-cache".to_string(),
-        });
-        // let fetcher = StaticTileFetcher::new();
-
-        loop {
-            while let Some(TileRequest(coords, layers_to_load)) = self.requests.pop() {
-                match fetcher.fetch_tile(&coords).await {
-                    Ok(data) => {
-                        info!("preparing tile {} with {}bytes", &coords, data.len());
-                        let tile = parse_tile_bytes(data.as_slice()).expect("failed to load tile");
-
-                        for to_load in layers_to_load {
-                            if let Some(layer) = tile
-                                .layers()
-                                .iter()
-                                .find(|layer| to_load.as_str() == layer.name())
-                            {
-                                if let Some((buffer, feature_indices)) = layer.tessellate() {
-                                    self.tile_result_store.push(
-                                        TessellationResult::TessellatedLayer(TessellatedLayer {
-                                            coords,
-                                            buffer: buffer.into(),
-                                            feature_indices,
-                                            layer_data: layer.clone(),
-                                        }),
-                                    );
-                                }
-                            }
-                        }
-                        info!("layer ready: {:?}", &coords);
-                    }
-                    Err(err) => {
-                        error!("layer failed: {:?}", &err);
-                    }
-                }
-            }
-        }
-    }
-}
+*/
 
 struct RequestQueue<T: Send> {
     queue: Mutex<VecDeque<T>>,
-    /// Condvar is also supported on WASM
-    /// ([see here]( https://github.com/rust-lang/rust/blob/effea9a2a0d501db5722d507690a1a66236933bf/library/std/src/sys/wasm/atomics/condvar.rs))!
+
     cvar: Condvar,
 }
 

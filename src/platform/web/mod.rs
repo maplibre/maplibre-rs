@@ -1,5 +1,5 @@
 mod http_fetcher;
-mod worker_loop;
+mod workflow;
 
 use std::panic;
 
@@ -9,7 +9,6 @@ use winit::event_loop::EventLoop;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::window::{Window, WindowBuilder};
 
-use crate::io::worker_loop::WorkerLoop;
 use console_error_panic_hook;
 pub use instant::Instant;
 use wasm_bindgen::prelude::*;
@@ -24,6 +23,8 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 #[cfg(feature = "web-webgl")]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
 
+use crate::io::tile_cache::TileCache;
+use crate::io::workflow::Workflow;
 pub use http_fetcher::PlatformHttpFetcher;
 
 #[wasm_bindgen(start)]
@@ -35,8 +36,8 @@ pub fn start() {
 }
 
 #[wasm_bindgen]
-pub async fn run(worker_loop_ptr: *mut WorkerLoop) {
-    let worker_loop: Box<WorkerLoop> = unsafe { Box::from_raw(worker_loop_ptr) };
+pub async fn run(workflow_ptr: *mut Workflow) {
+    let workflow: Box<Workflow> = unsafe { Box::from_raw(workflow_ptr) };
     let event_loop = EventLoop::new();
 
     let web_window: WebSysWindow = web_sys::window().unwrap();
@@ -60,6 +61,13 @@ pub async fn run(worker_loop_ptr: *mut WorkerLoop) {
     });
 
     // Either call forget or the main loop to keep worker loop alive
-    crate::main_loop::setup(window, event_loop, worker_loop).await;
-    // std::mem::forget(worker_loop);
+    crate::main_loop::setup(
+        window,
+        event_loop,
+        Box::new(workflow.tile_request_dispatcher),
+        Box::new(workflow.layer_result_receiver),
+        Box::new(TileCache::new()),
+    )
+    .await;
+    // std::mem::forget(workflow);
 }

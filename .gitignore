@@ -17,6 +17,6 @@ target/
 dist/
 
 # Cache by reqwest-middleware-cache
-*cache*
+*reqwest*cache*
 
 logs/

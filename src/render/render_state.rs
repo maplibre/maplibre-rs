@@ -3,11 +3,12 @@ use std::default::Default;
 use std::{cmp, iter};
 
 use crate::coords::{TileCoords, ViewRegion, WorldCoords, WorldTileCoords};
+use crate::io::tile_cache::TileCache;
+use crate::io::workflow::{LayerResult, TileRequest, TileRequestDispatcher, Workflow};
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
-use crate::io::worker_loop::{TessellationResult, TileRequest, WorkerLoop};
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
 use crate::render::camera;
@@ -344,7 +345,11 @@ impl RenderState {
 
     // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
     // TODO: What is StagingBelt for?
-    pub fn upload_tile_geometry(&mut self, worker_loop: &mut WorkerLoop) {
+    pub fn upload_tile_geometry(
+        &mut self,
+        dispatcher: &mut TileRequestDispatcher,
+        tile_cache: &TileCache,
+    ) {
         let visible_z = self.visible_z();
         let view_region = self
             .camera
@@ -363,7 +368,7 @@ impl RenderState {
                         "water".to_string(),
                     ],
                 );
-                worker_loop.spin_fetch(tile_request);
+                dispatcher.request_tile(tile_request, &tile_cache).unwrap();
             }
         }
 
@@ -390,21 +395,26 @@ impl RenderState {
             for tile_coords in view_region.iter() {
                 let loaded_layers = self.buffer_pool.get_loaded_layers(&tile_coords);
 
-                let layers = worker_loop.get_tessellated_layers_at(&tile_coords, &loaded_layers);
+                let layers = tile_cache.get_tessellated_layers_at(&tile_coords, &loaded_layers);
                 for result in layers {
                     match result {
-                        TessellationResult::Unavailable(_) => {}
-                        TessellationResult::TessellatedLayer(layer) => {
-                            let world_coords = layer.coords.into_world_tile();
+                        LayerResult::EmptyLayer { .. } => {}
+                        LayerResult::TessellatedLayer {
+                            coords,
+                            feature_indices,
+                            layer_data,
+                            buffer,
+                            ..
+                        } => {
+                            let world_coords = coords.into_world_tile();
 
-                            let feature_metadata = layer
-                                .layer_data
+                            let feature_metadata = layer_data
                                 .features()
                                 .iter()
                                 .enumerate()
                                 .flat_map(|(i, _feature)| {
                                     iter::repeat(ShaderFeatureStyle {
-                                        color: match layer.layer_data.name() {
+                                        color: match layer_data.name() {
                                             "transportation" => [1.0, 0.0, 0.0, 1.0],
                                             "building" => [0.0, 1.0, 1.0, 1.0],
                                             "boundary" => [0.0, 0.0, 0.0, 1.0],
@@ -413,7 +423,7 @@ impl RenderState {
                                             _ => [0.0, 0.0, 0.0, 0.0],
                                         },
                                     })
-                                    .take(*layer.feature_indices.get(i).unwrap() as usize)
+                                    .take(*feature_indices.get(i).unwrap() as usize)
                                 })
                                 .collect::<Vec<_>>();
 
@@ -426,9 +436,9 @@ impl RenderState {
 
                             self.buffer_pool.allocate_tile_geometry(
                                 &self.queue,
-                                layer.coords,
-                                layer.layer_data.name(),
-                                &layer.buffer,
+                                coords,
+                                layer_data.name(),
+                                &buffer,
                                 ShaderTileMetadata::new(transform.into()),
                                 &feature_metadata,
                             );

@@ -1,6 +1,12 @@
-use mapr::io::worker_loop::WorkerLoop;
 use mapr::main_loop;
+use std::sync::mpsc::channel;
+use std::thread;
+use tokio::runtime::Handle;
 
+use mapr::io::tile_cache::TileCache;
+use mapr::io::web_tile_fetcher::WebTileFetcher;
+use mapr::io::workflow::{DownloadTessellateLoop, TileRequestDispatcher, Workflow};
+use mapr::io::{HttpFetcherConfig, TileFetcher};
 use tokio::task;
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
@@ -15,10 +21,24 @@ async fn main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut cache_io = WorkerLoop::new();
-    let cache_main = cache_io.clone();
+    let workflow = Workflow::create();
+    let download_tessellate_loop = workflow.download_tessellate_loop;
+    let tile_request_dispatcher = workflow.tile_request_dispatcher;
+    let layer_result_receiver = workflow.layer_result_receiver;
 
-    let join_handle = task::spawn(async move { cache_io.run_loop().await });
-    main_loop::setup(window, event_loop, Box::new(cache_main)).await;
-    join_handle.await.unwrap();
+    let join_handle = task::spawn_blocking(move || {
+        Handle::current().block_on(async move {
+            download_tessellate_loop.run_loop().await;
+        });
+    });
+
+    main_loop::setup(
+        window,
+        event_loop,
+        Box::new(tile_request_dispatcher),
+        Box::new(layer_result_receiver),
+        Box::new(TileCache::new()),
+    )
+    .await;
+    join_handle.await.unwrap()
 }

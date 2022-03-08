@@ -11,8 +11,8 @@ onmessage = async message => {
         }
         initialized = true;
         const module = await init(undefined, data.memory);
-        let workerLoopPtr = data.workerLoopPtr;
-        console.log("Started WorkerLoop: " + workerLoopPtr)
-        module.run_worker_loop(workerLoopPtr);
+        let workflowPtr = data.workflowPtr;
+        console.log("Started WorkerLoop: " + workflowPtr)
+        module.run_worker_loop(workflowPtr);
     }
 };
