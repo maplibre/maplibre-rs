@@ -3,6 +3,7 @@
 members = [
     "libs/vector_tile",
     "libs/style_spec",
+    "libs/tilejson_spec",
     "libs/wgsl_validate",
     "libs/mbtiles",
 ]
@@ -68,6 +69,7 @@ async-trait = "0.1"
 # Vector riles
 vector-tile = { path = "./libs/vector_tile" }
 style-spec = { path = "./libs/style_spec" }
+tilejson-spec = { path = "./libs/tilejson_spec" }
 
 # Math and geo
 # https://docs.rs/euclid/0.22.6/euclid/index.html

@@ -1,17 +1,13 @@
 [package]
-name = "style-spec"
+name = "tilejson-spec"
 version = "0.1.0"
-description = "A library for decoding style specs"
+description = "A library for decoding and encoding tilejson specs"
 readme = "README.md"
 categories = ["encoding"]
 edition = "2021"
-build = "build.rs"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
-
-[build-dependencies]
-serde_json = "1.0"
 
 [dev-dependencies]
 serde_json = "1.0"

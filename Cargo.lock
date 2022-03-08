@@ -1644,6 +1644,7 @@ dependencies = [
  "reqwest-middleware-cache",
  "style-spec",
  "test-env-log",
+ "tilejson-spec",
  "tokio",
  "vector-tile",
  "wasm-bindgen",
@@ -2732,7 +2733,6 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 name = "style-spec"
 version = "0.1.0"
 dependencies = [
- "log",
  "serde",
  "serde_json",
 ]
@@ -2825,6 +2825,14 @@ name = "tile-grid"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83937e65b5cacefe707f639c59125c4c4b730573b27a2d63f2e13356b78f4c2c"
+
+[[package]]
+name = "tilejson-spec"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "tinytemplate"
