@@ -1,16 +1,17 @@
 use crate::error::Error;
 use crate::io::{HttpFetcher, HttpFetcherConfig};
 use async_trait::async_trait;
-use js_sys::ArrayBuffer;
-use js_sys::Uint8Array;
+use js_sys::{ArrayBuffer, Error as JSError, Uint8Array};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
 
 impl From<JsValue> for Error {
-    fn from(err: JsValue) -> Self {
-        Error::Network("JsValue error".to_string())
+    fn from(maybe_error: JsValue) -> Self {
+        assert!(maybe_error.is_instance_of::<JSError>());
+        let error: JSError = maybe_error.dyn_into().unwrap();
+        Error::Network(error.message().as_string().unwrap())
     }
 }
 
