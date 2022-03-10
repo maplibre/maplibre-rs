@@ -3,8 +3,8 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
+use crossbeam_channel::Receiver;
 use log::{error, info, trace};
-use std::sync::mpsc::Receiver;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::Window;
@@ -18,9 +18,7 @@ use crate::render::render_state::RenderState;
 pub async fn setup(
     window: winit::window::Window,
     event_loop: EventLoop<()>,
-    mut dispatcher: Box<TileRequestDispatcher>,
-    receiver: Box<Receiver<LayerResult>>,
-    tile_cache: Box<TileCache>,
+    mut workflow: Box<Workflow>,
 ) {
     info!("== mapr ==");
 
@@ -91,12 +89,10 @@ pub async fn setup(
                     let dt = now - last_render_time;
                     last_render_time = now;
 
-                    while let Ok(d) = receiver.try_recv() {
-                        tile_cache.push(d);
-                    }
+                    workflow.populate_cache();
 
                     input.update_state(state, dt);
-                    state.upload_tile_geometry(&mut dispatcher, &tile_cache);
+                    state.upload_tile_geometry(&mut workflow);
                     match state.render() {
                         Ok(_) => {}
                         Err(wgpu::SurfaceError::Lost) => {

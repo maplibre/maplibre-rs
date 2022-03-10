@@ -5,17 +5,24 @@ use crate::io::web_tile_fetcher::WebTileFetcher;
 use crate::io::{HttpFetcherConfig, TileFetcher};
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer, Tessellated};
-use log::{error, info};
+use crossbeam_channel::{unbounded as channel, Receiver, SendError, Sender};
+use log::{error, info, warn};
 use std::collections::HashSet;
-use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::Mutex;
 use vector_tile::parse_tile_bytes;
 use vector_tile::tile::Layer;
 
 pub struct Workflow {
-    pub layer_result_receiver: Receiver<LayerResult>,
+    layer_result_receiver: Receiver<LayerResult>,
     pub tile_request_dispatcher: TileRequestDispatcher,
-    pub download_tessellate_loop: DownloadTessellateLoop,
+    pub download_tessellate_loop: Option<DownloadTessellateLoop>,
+    pub tile_cache: TileCache,
+}
+
+impl Drop for Workflow {
+    fn drop(&mut self) {
+        warn!("WorkerLoop dropped. This should only happen when the application is stopped!");
+    }
 }
 
 impl Workflow {
@@ -32,8 +39,19 @@ impl Workflow {
         Self {
             layer_result_receiver,
             tile_request_dispatcher,
-            download_tessellate_loop,
+            download_tessellate_loop: Some(download_tessellate_loop),
+            tile_cache: TileCache::new(),
         }
+    }
+
+    pub fn populate_cache(&self) {
+        while let Ok(result) = self.layer_result_receiver.try_recv() {
+            self.tile_cache.push(result);
+        }
+    }
+
+    pub fn take_download_loop(&mut self) -> DownloadTessellateLoop {
+        self.download_tessellate_loop.take().unwrap()
     }
 }
 

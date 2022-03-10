@@ -345,11 +345,7 @@ impl RenderState {
 
     // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
     // TODO: What is StagingBelt for?
-    pub fn upload_tile_geometry(
-        &mut self,
-        dispatcher: &mut TileRequestDispatcher,
-        tile_cache: &TileCache,
-    ) {
+    pub fn upload_tile_geometry(&mut self, workflow: &mut Workflow) {
         let visible_z = self.visible_z();
         let view_region = self
             .camera
@@ -368,7 +364,10 @@ impl RenderState {
                         "water".to_string(),
                     ],
                 );
-                dispatcher.request_tile(tile_request, &tile_cache).unwrap();
+                workflow
+                    .tile_request_dispatcher
+                    .request_tile(tile_request, &workflow.tile_cache)
+                    .unwrap();
             }
         }
 
@@ -395,7 +394,9 @@ impl RenderState {
             for tile_coords in view_region.iter() {
                 let loaded_layers = self.buffer_pool.get_loaded_layers(&tile_coords);
 
-                let layers = tile_cache.get_tessellated_layers_at(&tile_coords, &loaded_layers);
+                let layers = workflow
+                    .tile_cache
+                    .get_tessellated_layers_at(&tile_coords, &loaded_layers);
                 for result in layers {
                     match result {
                         LayerResult::EmptyLayer { .. } => {}
