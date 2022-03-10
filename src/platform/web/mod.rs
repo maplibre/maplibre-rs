@@ -1,5 +1,4 @@
 mod http_fetcher;
-mod workflow;
 
 use std::panic;
 
@@ -26,6 +25,7 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8
 use crate::io::tile_cache::TileCache;
 use crate::io::workflow::Workflow;
 pub use http_fetcher::PlatformHttpFetcher;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
 pub fn start() {
@@ -33,6 +33,22 @@ pub fn start() {
         // Failed to initialize logging. No need to log a message.
     }
     panic::set_hook(Box::new(console_error_panic_hook::hook));
+}
+
+#[wasm_bindgen]
+pub fn create_workflow() -> *mut Workflow {
+    let workflow = Box::new(Workflow::create());
+    let workflow_ptr = Box::into_raw(workflow);
+    return workflow_ptr;
+}
+
+#[wasm_bindgen]
+pub async fn run_worker_loop(workflow_ptr: *mut Workflow) {
+    let mut workflow: Box<Workflow> = unsafe { Box::from_raw(workflow_ptr) };
+
+    // Either call forget or the worker loop to keep it alive
+    workflow.take_download_loop().run_loop().await;
+    //std::mem::forget(workflow);
 }
 
 #[wasm_bindgen]
@@ -61,13 +77,6 @@ pub async fn run(workflow_ptr: *mut Workflow) {
     });
 
     // Either call forget or the main loop to keep worker loop alive
-    crate::main_loop::setup(
-        window,
-        event_loop,
-        Box::new(workflow.tile_request_dispatcher),
-        Box::new(workflow.layer_result_receiver),
-        Box::new(TileCache::new()),
-    )
-    .await;
+    crate::main_loop::setup(window, event_loop, workflow).await;
     // std::mem::forget(workflow);
 }
