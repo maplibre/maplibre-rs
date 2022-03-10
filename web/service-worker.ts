@@ -1,3 +1,4 @@
+/*
 import {registerRoute} from 'workbox-routing';
 import {CacheFirst} from 'workbox-strategies';
 import {CacheableResponsePlugin} from 'workbox-cacheable-response';
@@ -13,3 +14,4 @@ registerRoute(
         ]
     })
 );
+*/
