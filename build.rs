@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{env, fs};
 
 use mbtiles::extract;
@@ -9,15 +9,22 @@ pub const MUNICH_Y: u32 = 11360;
 pub const MUNICH_Z: u8 = 15;
 
 /// Tiles which can be used by StaticTileFetcher
-fn embed_tiles_statically() {
-    let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+fn clean_static_tiles() -> PathBuf {
     let out_dir = env::var("OUT_DIR").unwrap();
 
     let out = Path::new(&out_dir).join("extracted-tiles");
+
     if out.exists() && out.is_dir() {
         fs::remove_dir_all(&out).unwrap()
     }
-    fs::create_dir_all(&out).unwrap();
+
+    out
+}
+
+fn embed_tiles_statically() {
+    let out = clean_static_tiles();
+
+    let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
     let source = Path::new(&root_dir).join(format!("test-data/munich-{}.mbtiles", MUNICH_Z));
 
@@ -38,5 +45,6 @@ fn embed_tiles_statically() {
 
 fn main() {
     validate_project_wgsl();
+
     embed_tiles_statically();
 }

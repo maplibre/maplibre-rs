@@ -395,7 +395,7 @@ impl RenderState {
                 let layers = workflow.get_tessellated_layers_at(&coords, &loaded_layers);
                 for result in layers {
                     match result {
-                        LayerResult::EmptyLayer { .. } => {}
+                        LayerResult::UnavailableLayer { .. } => {}
                         LayerResult::TessellatedLayer {
                             coords,
                             feature_indices,

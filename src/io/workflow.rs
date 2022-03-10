@@ -5,10 +5,11 @@ use crate::io::web_tile_fetcher::WebTileFetcher;
 use crate::io::{HttpFetcherConfig, TileFetcher};
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer, Tessellated};
-use crossbeam_channel::{unbounded as channel, Receiver, RecvError, SendError, Sender};
+//use crossbeam_channel::{unbounded as channel, Receiver, RecvError, SendError, Sender};
 use log::{error, info, warn};
 use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
+use std::sync::mpsc::{channel, Receiver, RecvError, SendError, Sender};
 use std::sync::Mutex;
 use style_spec::source::TileAdressingScheme;
 use vector_tile::parse_tile_bytes;
@@ -76,7 +77,7 @@ impl Workflow {
 
 #[derive(Clone)]
 pub enum LayerResult {
-    EmptyLayer {
+    UnavailableLayer {
         coords: WorldTileCoords,
         layer_name: String,
     },
@@ -98,14 +99,14 @@ impl Debug for LayerResult {
 impl LayerResult {
     pub fn get_coords(&self) -> WorldTileCoords {
         match self {
-            LayerResult::EmptyLayer { coords, .. } => *coords,
+            LayerResult::UnavailableLayer { coords, .. } => *coords,
             LayerResult::TessellatedLayer { coords, .. } => *coords,
         }
     }
 
     pub fn layer_name(&self) -> &str {
         match self {
-            LayerResult::EmptyLayer { layer_name, .. } => layer_name.as_str(),
+            LayerResult::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
             LayerResult::TessellatedLayer { layer_data, .. } => layer_data.name(),
         }
     }
@@ -200,11 +201,11 @@ impl DownloadTessellateLoop {
                 layers: layers_to_load,
             } = self.request_receiver.recv()?
             {
-                let tile_coords = coords.into_tile(&TileAdressingScheme::TMS);
+                let tile_coords = coords.into_tile(TileAdressingScheme::TMS);
                 match fetcher.fetch_tile(&tile_coords).await {
                     Ok(data) => {
                         info!("preparing tile {} with {}bytes", &tile_coords, data.len());
-                        let tile = parse_tile_bytes(data.as_slice()).expect("failed to load tile");
+                        let tile = parse_tile_bytes(data.as_slice()).expect("failed to load tile1");
 
                         for to_load in layers_to_load {
                             if let Some(layer) = tile
@@ -220,12 +221,20 @@ impl DownloadTessellateLoop {
                                         layer_data: layer.clone(),
                                     })?;
                                 }
+
+                                info!("layer {} ready: {}", to_load, &coords);
+                            } else {
+                                self.result_sender.send(LayerResult::UnavailableLayer {
+                                    coords,
+                                    layer_name: to_load.to_string(),
+                                })?;
+
+                                info!("layer {} not found: {}", to_load, &coords);
                             }
                         }
-                        info!("LayerResult ready: {}", &coords);
                     }
                     Err(err) => {
-                        error!("LayerResult failed: {:?}", &err);
+                        error!("fetching tile failed: {:?}", &err);
                     }
                 }
             }

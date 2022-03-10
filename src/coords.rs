@@ -28,7 +28,7 @@ pub struct TileCoords {
 impl TileCoords {
     /// Transforms the tile coordinates as defined by the tile grid addressing scheme into a representation which is
     /// used in the 3d-world.
-    pub fn into_world_tile(self, scheme: &TileAdressingScheme) -> WorldTileCoords {
+    pub fn into_world_tile(self, scheme: TileAdressingScheme) -> WorldTileCoords {
         match scheme {
             TileAdressingScheme::XYZ => WorldTileCoords {
                 x: self.x as i32,
@@ -75,7 +75,7 @@ pub struct WorldTileCoords {
 }
 
 impl WorldTileCoords {
-    pub fn into_tile(self, scheme: &TileAdressingScheme) -> TileCoords {
+    pub fn into_tile(self, scheme: TileAdressingScheme) -> TileCoords {
         match scheme {
             TileAdressingScheme::XYZ => TileCoords {
                 x: self.x as u32,
