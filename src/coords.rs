@@ -1,11 +1,11 @@
 //! File which exposes all kinds of coordinates used throughout mapr
 
-use crate::io::tile_cache::TileCache;
-use crate::util::math::{div_away, div_floor, Aabb2};
+
+use crate::util::math::{div_floor, Aabb2};
 use cgmath::num_traits::Pow;
-use cgmath::{Matrix4, Point3, SquareMatrix, Vector3};
+use cgmath::{Matrix4, Point3, Vector3};
 use std::fmt;
-use std::ops::Mul;
+
 use style_spec::source::TileAdressingScheme;
 
 pub const EXTENT_UINT: u32 = 4096;
@@ -291,7 +291,7 @@ impl ViewRegion {
 mod tests {
     use crate::coords::{ViewRegion, WorldCoords, WorldTileCoords, EXTENT};
     use crate::util::math::Aabb2;
-    use cgmath::{Point2, Vector3, Vector4, Zero};
+    use cgmath::{Point2, Vector4};
 
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
     const BOTTOM_RIGHT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);

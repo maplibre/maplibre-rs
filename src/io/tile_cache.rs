@@ -1,4 +1,4 @@
-use crate::coords::{TileCoords, WorldTileCoords};
+use crate::coords::{WorldTileCoords};
 use crate::io::workflow::LayerResult;
 use std::collections::{btree_map, BTreeMap, HashSet};
 use std::sync::{Arc, Mutex};

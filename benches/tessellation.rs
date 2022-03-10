@@ -1,8 +1,8 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use lyon::tessellation::VertexBuffers;
-use mapr::io::static_tile_fetcher::StaticTileFetcher;
-use mapr::io::{HttpFetcherConfig, TileFetcher};
-use mapr::tessellation::Tessellated;
+use mapr::benchmarking::io::static_tile_fetcher::StaticTileFetcher;
+use mapr::benchmarking::io::{HttpFetcherConfig, TileFetcher};
+use mapr::benchmarking::tessellation::Tessellated;
 use std::io::Cursor;
 use vector_tile::parse_tile_reader;
 use vector_tile::tile::Layer;

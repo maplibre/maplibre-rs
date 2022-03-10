@@ -7,8 +7,8 @@ use std::ops::Range;
 
 use wgpu::BufferAddress;
 
-use crate::coords::{TileCoords, WorldTileCoords};
-use crate::render::shaders::ShaderTileMetadata;
+use crate::coords::{WorldTileCoords};
+
 use crate::tessellation::OverAlignedVertexBuffer;
 
 pub trait Queue<B> {

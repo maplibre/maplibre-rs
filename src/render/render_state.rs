@@ -3,9 +3,9 @@ use std::collections::HashSet;
 use std::default::Default;
 use std::{cmp, iter};
 
-use crate::coords::{TileCoords, ViewRegion, WorldCoords, WorldTileCoords};
-use crate::io::tile_cache::TileCache;
-use crate::io::workflow::{LayerResult, TileRequest, TileRequestDispatcher, Workflow};
+use crate::coords::{ViewRegion};
+
+use crate::io::workflow::{LayerResult, TileRequest, Workflow};
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
@@ -19,7 +19,7 @@ use crate::render::options::{
 };
 use crate::render::tile_mask_pattern::TileMaskPattern;
 use crate::tessellation::IndexDataType;
-use crate::util::math::Aabb2;
+
 use crate::util::FPSMeter;
 
 use super::piplines::*;

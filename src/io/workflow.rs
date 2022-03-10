@@ -1,5 +1,5 @@
 /// Describes through which channels work-requests travel. It describes the flow of work.
-use crate::coords::{TileCoords, WorldTileCoords};
+use crate::coords::WorldTileCoords;
 use crate::io::tile_cache::TileCache;
 use crate::io::web_tile_fetcher::WebTileFetcher;
 use crate::io::{HttpFetcherConfig, TileFetcher};
@@ -10,7 +10,7 @@ use log::{error, info, warn};
 use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 use std::sync::mpsc::{channel, Receiver, RecvError, SendError, Sender};
-use std::sync::Mutex;
+
 use style_spec::source::TileAdressingScheme;
 use vector_tile::parse_tile_bytes;
 use vector_tile::tile::Layer;
@@ -138,9 +138,13 @@ impl TileRequestDispatcher {
         let TileRequest { coords, layers } = &tile_request;
 
         if let Some(missing_layers) =
-            tile_cache.get_missing_tessellated_layer_names_at(&coords, layers.clone())
+            tile_cache.get_missing_tessellated_layer_names_at(coords, layers.clone())
         {
-            if self.pending_tiles.contains(&coords) {
+            if missing_layers.is_empty() {
+                return Ok(());
+            }
+
+            if self.pending_tiles.contains(coords) {
                 return Ok(());
             }
             self.pending_tiles.insert(*coords);
@@ -148,7 +152,7 @@ impl TileRequestDispatcher {
             info!("new tile request: {}", &coords);
             self.request_sender.send(tile_request)
         } else {
-            return Ok(());
+            Ok(())
         }
     }
 }

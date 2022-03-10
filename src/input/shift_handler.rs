@@ -29,7 +29,7 @@ impl ShiftHandler {
         }
     }
 
-    pub fn process_scroll(&mut self, delta: &winit::event::MouseScrollDelta) {
+    pub fn process_scroll(&mut self, _delta: &winit::event::MouseScrollDelta) {
         /*self.camera_translate.z -= match delta {
             winit::event::MouseScrollDelta::LineDelta(_horizontal, vertical) => *vertical as f64,
             winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {

@@ -1,9 +1,9 @@
 use super::UpdateState;
-use crate::coords::{WorldCoords, EXTENT};
-use crate::render::camera::Camera;
+
+
 use crate::render::render_state::RenderState;
 use cgmath::num_traits::Pow;
-use cgmath::{ulps_eq, EuclideanSpace, Matrix4, Point3, Vector2, Vector3, Vector4, Zero};
+use cgmath::{Vector2, Vector3, Zero};
 use std::time::Duration;
 
 pub struct ZoomHandler {
@@ -17,7 +17,7 @@ pub struct ZoomHandler {
 }
 
 impl UpdateState for ZoomHandler {
-    fn update_state(&mut self, state: &mut RenderState, dt: Duration) {
+    fn update_state(&mut self, state: &mut RenderState, _dt: Duration) {
         if self.zoom_delta != 0.0 {
             if let Some(window_position) = self.window_position {
                 let current_zoom = state.zoom;
@@ -60,7 +60,7 @@ impl ZoomHandler {
         }
     }
 
-    pub fn process_window_position(&mut self, window_position: &Vector2<f64>, touch: bool) -> bool {
+    pub fn process_window_position(&mut self, window_position: &Vector2<f64>, _touch: bool) -> bool {
         self.window_position = Some(*window_position);
         true
     }
