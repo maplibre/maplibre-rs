@@ -1,5 +1,5 @@
 use std::collections::vec_deque::Iter;
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::mem::size_of;
@@ -7,7 +7,7 @@ use std::ops::Range;
 
 use wgpu::BufferAddress;
 
-use crate::coords::TileCoords;
+use crate::coords::{TileCoords, WorldTileCoords};
 use crate::render::shaders::ShaderTileMetadata;
 use crate::tessellation::OverAlignedVertexBuffer;
 
@@ -134,7 +134,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
     }
 
     /// FIXME: use an id instead of layer_name to identify tiles
-    pub fn get_loaded_layers(&self, coords: &TileCoords) -> Vec<String> {
+    pub fn get_loaded_layers(&self, coords: &WorldTileCoords) -> HashSet<String> {
         self.index
             .iter()
             .filter(|entry| entry.coords == *coords)
@@ -150,7 +150,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
     pub fn allocate_tile_geometry(
         &mut self,
         queue: &Q,
-        coords: TileCoords,
+        coords: WorldTileCoords,
         layer_name: &str,
         geometry: &OverAlignedVertexBuffer<V, I>,
         tile_metadata: TM,
@@ -347,7 +347,7 @@ impl<B> BackingBuffer<B> {
 
 #[derive(Debug)]
 pub struct IndexEntry {
-    pub coords: TileCoords,
+    pub coords: WorldTileCoords,
     pub layer_name: String,
     // Range of bytes within the backing buffer for vertices
     buffer_vertices: Range<wgpu::BufferAddress>,

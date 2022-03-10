@@ -1,4 +1,5 @@
 use cgmath::Matrix4;
+use std::collections::HashSet;
 use std::default::Default;
 use std::{cmp, iter};
 
@@ -354,20 +355,17 @@ impl RenderState {
 
         // Fetch tiles which are currently in view
         if let Some(view_region) = &view_region {
-            for tile_coords in view_region.iter() {
-                let tile_request = TileRequest(
-                    tile_coords,
-                    vec![
+            for coords in view_region.iter() {
+                let tile_request = TileRequest {
+                    coords,
+                    layers: HashSet::from([
                         "transportation".to_string(),
                         "building".to_string(),
                         "boundary".to_string(),
                         "water".to_string(),
-                    ],
-                );
-                workflow
-                    .tile_request_dispatcher
-                    .request_tile(tile_request, &workflow.tile_cache)
-                    .unwrap();
+                    ]),
+                };
+                workflow.request_tile(tile_request).unwrap();
             }
         }
 
@@ -377,7 +375,7 @@ impl RenderState {
         // We perform the update before uploading new tessellated tiles, such that each
         // tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
         for entry in self.buffer_pool.index() {
-            let world_coords = entry.coords.into_world_tile();
+            let world_coords = entry.coords;
             let transform: Matrix4<f32> = (view_proj * world_coords.transform_for_zoom(self.zoom))
                 .cast()
                 .unwrap();
@@ -391,12 +389,10 @@ impl RenderState {
 
         // Upload all tessellated layers which are in view
         if let Some(view_region) = &view_region {
-            for tile_coords in view_region.iter() {
-                let loaded_layers = self.buffer_pool.get_loaded_layers(&tile_coords);
+            for coords in view_region.iter() {
+                let loaded_layers = self.buffer_pool.get_loaded_layers(&coords);
 
-                let layers = workflow
-                    .tile_cache
-                    .get_tessellated_layers_at(&tile_coords, &loaded_layers);
+                let layers = workflow.get_tessellated_layers_at(&coords, &loaded_layers);
                 for result in layers {
                     match result {
                         LayerResult::EmptyLayer { .. } => {}
@@ -407,7 +403,7 @@ impl RenderState {
                             buffer,
                             ..
                         } => {
-                            let world_coords = coords.into_world_tile();
+                            let world_coords = coords;
 
                             let feature_metadata = layer_data
                                 .features()
@@ -516,10 +512,9 @@ impl RenderState {
                     .index()
                     .filter(|entry| entry.coords.z == self.visible_z())
                 {
-                    let reference = self
-                        .tile_mask_pattern
-                        .stencil_reference_value(&entry.coords.into_world_tile())
-                        as u32;
+                    let reference =
+                        self.tile_mask_pattern
+                            .stencil_reference_value(&entry.coords) as u32;
 
                     // Draw mask
                     {

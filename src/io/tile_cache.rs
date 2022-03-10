@@ -1,11 +1,11 @@
-use crate::coords::TileCoords;
+use crate::coords::{TileCoords, WorldTileCoords};
 use crate::io::workflow::LayerResult;
-use std::collections::{btree_map, BTreeMap};
+use std::collections::{btree_map, BTreeMap, HashSet};
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct TileCache {
-    store: Arc<Mutex<BTreeMap<TileCoords, Vec<LayerResult>>>>,
+    store: Arc<Mutex<BTreeMap<WorldTileCoords, Vec<LayerResult>>>>,
 }
 
 impl TileCache {
@@ -15,9 +15,9 @@ impl TileCache {
         }
     }
 
-    pub(crate) fn push(&self, result: LayerResult) -> bool {
+    pub fn push(&self, result: LayerResult) -> bool {
         if let Ok(mut map) = self.store.lock() {
-            match map.entry(result.get_tile_coords()) {
+            match map.entry(result.get_coords()) {
                 btree_map::Entry::Vacant(entry) => {
                     entry.insert(vec![result]);
                 }
@@ -31,10 +31,10 @@ impl TileCache {
         }
     }
 
-    pub(crate) fn get_tessellated_layers_at(
+    pub fn get_tessellated_layers_at(
         &self,
-        coords: &TileCoords,
-        skip_layers: &Vec<String>,
+        coords: &WorldTileCoords,
+        skip_layers: &HashSet<String>,
     ) -> Vec<LayerResult> {
         let mut ret = Vec::new();
         if let Ok(map) = self.store.try_lock() {
@@ -50,29 +50,26 @@ impl TileCache {
         ret
     }
 
-    pub(crate) fn get_missing_tessellated_layer_names_at(
+    pub fn get_missing_tessellated_layer_names_at(
         &self,
-        coords: &TileCoords,
-        layers: &Vec<String>,
-    ) -> Vec<String> {
+        coords: &WorldTileCoords,
+        mut layers: HashSet<String>,
+    ) -> Option<HashSet<String>> {
         if let Ok(loaded) = self.store.try_lock() {
             if let Some(tessellated_layers) = loaded.get(coords) {
-                let mut result = Vec::new();
-                for layer in layers {
-                    if tessellated_layers
-                        .iter()
-                        .find(|tessellated_layer| tessellated_layer.layer_name() == layer)
-                        .is_none()
-                    {
-                        result.push(layer.clone());
-                    }
-                }
-                result
+                let tessellated_set: HashSet<String> = tessellated_layers
+                    .iter()
+                    .map(|tessellated_layer| tessellated_layer.layer_name().to_string())
+                    .collect();
+
+                layers.retain(|layer| !tessellated_set.contains(layer));
+
+                Some(layers)
             } else {
-                layers.clone()
+                Some(layers)
             }
         } else {
-            Vec::new()
+            None
         }
     }
 }

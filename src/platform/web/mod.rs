@@ -47,7 +47,9 @@ pub async fn run_worker_loop(workflow_ptr: *mut Workflow) {
     let mut workflow: Box<Workflow> = unsafe { Box::from_raw(workflow_ptr) };
 
     // Either call forget or the worker loop to keep it alive
-    workflow.take_download_loop().run_loop().await;
+    if let Err(e) = workflow.take_download_loop().run_loop().await {
+        error!("Worker loop errored {:?}", e)
+    }
     //std::mem::forget(workflow);
 }
 

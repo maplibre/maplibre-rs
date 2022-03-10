@@ -25,7 +25,9 @@ pub async fn mapr_apple_main() {
 
     let join_handle = task::spawn_blocking(move || {
         Handle::current().block_on(async move {
-            download_tessellate_loop.run_loop().await;
+            if let Err(e) = download_tessellate_loop.run_loop().await {
+                error!("Worker loop errored {:?}", e)
+            }
         });
     });
 

@@ -1,10 +1,12 @@
 //! File which exposes all kinds of coordinates used throughout mapr
 
+use crate::io::tile_cache::TileCache;
 use crate::util::math::{div_away, div_floor, Aabb2};
 use cgmath::num_traits::Pow;
 use cgmath::{Matrix4, Point3, SquareMatrix, Vector3};
 use std::fmt;
 use std::ops::Mul;
+use style_spec::source::TileAdressingScheme;
 
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
@@ -16,7 +18,7 @@ pub const EXTENT: f64 = EXTENT_UINT as f64;
 /// # Coordinate System Origin
 ///
 /// For Web Mercator the origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, Hash, std::cmp::Eq, std::cmp::PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
 pub struct TileCoords {
     pub x: u32,
     pub y: u32,
@@ -24,13 +26,20 @@ pub struct TileCoords {
 }
 
 impl TileCoords {
-    /// Transforms the tile coordinates as defined by the tile grid into a representation which is
+    /// Transforms the tile coordinates as defined by the tile grid addressing scheme into a representation which is
     /// used in the 3d-world.
-    pub fn into_world_tile(self) -> WorldTileCoords {
-        WorldTileCoords {
-            x: self.x as i32,
-            y: self.y as i32,
-            z: self.z,
+    pub fn into_world_tile(self, scheme: &TileAdressingScheme) -> WorldTileCoords {
+        match scheme {
+            TileAdressingScheme::XYZ => WorldTileCoords {
+                x: self.x as i32,
+                y: self.y as i32,
+                z: self.z,
+            },
+            TileAdressingScheme::TMS => WorldTileCoords {
+                x: self.x as i32,
+                y: (2u32.pow(self.z as u32) - 1 - self.y) as i32,
+                z: self.z,
+            },
         }
     }
 }
@@ -51,24 +60,6 @@ impl From<(u32, u32, u8)> for TileCoords {
     }
 }
 
-impl From<WorldTileCoords> for TileCoords {
-    fn from(world_coords: WorldTileCoords) -> Self {
-        let mut tile_x = world_coords.x;
-        let mut tile_y = world_coords.y;
-        if tile_x < 0 {
-            tile_x = 0;
-        }
-        if tile_y < 0 {
-            tile_y = 0;
-        }
-        TileCoords {
-            x: tile_x as u32,
-            y: tile_y as u32,
-            z: world_coords.z,
-        }
-    }
-}
-
 /// Every tile has tile coordinates. Every tile coordinate can be mapped to a coordinate within
 /// the world. This provides the freedom to map from [TMS](https://wiki.openstreetmap.org/wiki/TMS)
 /// to [Slippy_map_tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
@@ -76,7 +67,7 @@ impl From<WorldTileCoords> for TileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct WorldTileCoords {
     pub x: i32,
     pub y: i32,
@@ -84,6 +75,21 @@ pub struct WorldTileCoords {
 }
 
 impl WorldTileCoords {
+    pub fn into_tile(self, scheme: &TileAdressingScheme) -> TileCoords {
+        match scheme {
+            TileAdressingScheme::XYZ => TileCoords {
+                x: self.x as u32,
+                y: self.y as u32,
+                z: self.z,
+            },
+            TileAdressingScheme::TMS => TileCoords {
+                x: self.x as u32,
+                y: 2u32.pow(self.z as u32) - 1 - self.y as u32,
+                z: self.z,
+            },
+        }
+    }
+
     pub fn transform_for_zoom(&self, zoom: f64) -> Matrix4<f64> {
         /*
            For tile.z = zoom:
@@ -252,8 +258,8 @@ impl From<Point3<f64>> for WorldCoords {
 }
 
 pub struct ViewRegion {
-    min_tile: TileCoords,
-    max_tile: TileCoords,
+    min_tile: WorldTileCoords,
+    max_tile: WorldTileCoords,
     z: u8,
 }
 
@@ -261,22 +267,20 @@ impl ViewRegion {
     pub fn new(view_region: Aabb2<f64>, zoom: f64, z: u8) -> Self {
         let min_world: WorldCoords = WorldCoords::at_ground(view_region.min.x, view_region.min.y);
         let min_world_tile: WorldTileCoords = min_world.into_world_tile(z, zoom);
-        let min_tile: TileCoords = min_world_tile.into();
         let max_world: WorldCoords = WorldCoords::at_ground(view_region.max.x, view_region.max.y);
         let max_world_tile: WorldTileCoords = max_world.into_world_tile(z, zoom);
-        let max_tile: TileCoords = max_world_tile.into();
 
         Self {
-            min_tile,
-            max_tile,
+            min_tile: min_world_tile,
+            max_tile: max_world_tile,
             z,
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = TileCoords> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
         (self.min_tile.x..self.max_tile.x + 1).flat_map(move |x| {
             (self.min_tile.y..self.max_tile.y + 1).map(move |y| {
-                let tile_coord: TileCoords = (x, y, self.z as u8).into();
+                let tile_coord: WorldTileCoords = (x, y, self.z as u8).into();
                 tile_coord
             })
         })

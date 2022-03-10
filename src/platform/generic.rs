@@ -3,6 +3,7 @@
 use crate::io::tile_cache::TileCache;
 use crate::io::workflow::Workflow;
 use crate::main_loop;
+use log::error;
 pub use std::time::Instant;
 use tokio::runtime::Handle;
 use tokio::task;
@@ -27,7 +28,9 @@ pub async fn mapr_generic_main() {
 
     let join_handle = task::spawn_blocking(move || {
         Handle::current().block_on(async move {
-            download_tessellate_loop.run_loop().await;
+            if let Err(e) = download_tessellate_loop.run_loop().await {
+                error!("Worker loop errored {:?}", e)
+            }
         });
     });
 
