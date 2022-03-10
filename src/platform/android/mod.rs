@@ -1,4 +1,4 @@
-use crate::io::worker_loop::DownloadTessellateLoop;
+use crate::io::workflow::Workflow;
 use crate::main_loop;
 pub use std::time::Instant;
 use tokio::task;
@@ -19,10 +19,15 @@ pub async fn main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut worker_loop = DownloadTessellateLoop::new();
-    let worker_loop_main = worker_loop.clone();
+    let mut workflow = Workflow::create();
+    let download_tessellate_loop = workflow.take_download_loop();
 
-    let join_handle = task::spawn(async move { worker_loop.run_loop().await });
-    main_loop::setup(window, event_loop, Box::new(worker_loop_main), , ).await;
-    join_handle.await.unwrap();
+    let join_handle = task::spawn_blocking(move || {
+        Handle::current().block_on(async move {
+            download_tessellate_loop.run_loop().await;
+        });
+    });
+
+    main_loop::setup(window, event_loop, Box::new(workflow)).await;
+    join_handle.await.unwrap()
 }
