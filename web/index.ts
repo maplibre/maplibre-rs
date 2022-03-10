@@ -1,75 +1,87 @@
-import init from "./dist/libs/mapr";
+import init from "./dist/libs/mapr"
 // @ts-ignore
-import {Spector} from "spectorjs";
+import {Spector} from "spectorjs"
+import {WebWorkerMessageType} from "./types"
 
-declare var WEBGL: boolean;
+declare var WEBGL: boolean
 
 const isWebGLSupported = () => {
     try {
-        const canvas = document.createElement('canvas');
-        canvas.getContext("webgl");
-        return true;
+        const canvas = document.createElement('canvas')
+        canvas.getContext("webgl")
+        return true
     } catch (x) {
-        return false;
+        return false
     }
 }
 
-const start = async () => {
+const alertUser = (message: string) => {
+    console.error(message)
+    alert(message)
+}
+
+const checkRequirements = () => {
     if (!isSecureContext) {
-        let message = "isSecureContext is false!";
-        console.error(message)
-        alert(message)
-        return;
+        alertUser("isSecureContext is false!")
+        return false
     }
 
     if (!crossOriginIsolated) {
-        let message = "crossOriginIsolated is false! " +
-            "The Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy HTTP headers are required.";
-        console.error(message)
-        alert(message)
-        return;
+        alertUser("crossOriginIsolated is false! " +
+            "The Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy HTTP headers are required.")
+        return false
     }
 
     if (WEBGL) {
         if (!isWebGLSupported()) {
-            console.error("WebGL is not supported in this Browser!")
-            return;
+            alertUser("WebGL is not supported in this Browser!")
+            return false
         }
 
-        let spector = new Spector();
-        spector.displayUI();
+        let spector = new Spector()
+        spector.displayUI()
     } else {
         if (!("gpu" in navigator)) {
-            console.error("WebGPU is not supported in this Browser!")
-            return;
+            let message = "WebGPU is not supported in this Browser!"
+            alertUser(message)
+            return false
         }
+    }
+
+    return true
+}
+
+
+const start = async () => {
+    if (!checkRequirements()) {
+        return
     }
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./service-worker.js');
-        });
+            navigator.serviceWorker.register(new URL('./service-worker.ts', import.meta.url))
+        })
     }
 
-    let MEMORY_PAGES = 16 * 1024;
-    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true});
-    const module = await init(undefined, memory);
-
-    const worker = new Worker(new URL('./worker-loop.ts', import.meta.url), {
-        type: "module",
-    });
-
-    let workflowPtr = module.create_workflow();
-
-    console.log("Starting cache-worker")
-    worker.postMessage({type: "init", memory, workflowPtr: workflowPtr});
-
     document.body.querySelectorAll("canvas").forEach(canvas => {
-        canvas.addEventListener("touchstart", e => e.preventDefault());
-        canvas.addEventListener("touchmove", e => e.preventDefault());
+        canvas.addEventListener("touchstart", e => e.preventDefault())
+        canvas.addEventListener("touchmove", e => e.preventDefault())
     })
 
-    await module.run(workflowPtr);
+    let MEMORY_PAGES = 16 * 1024
+    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
+    const module = await init(undefined, memory)
+
+    const worker = new Worker(new URL('./worker.ts', import.meta.url), {
+        type: "module",
+    })
+
+    worker.postMessage({type: "init", memory} as WebWorkerMessageType)
+
+    let workflowPtr = module.create_workflow()
+    worker.postMessage({type: "run_worker_loop", workflowPtr: workflowPtr} as WebWorkerMessageType)
+
+    await module.run(workflowPtr)
 }
 
-start().then(r => console.log("started via wasm"));
+start().then(() => console.log("started via wasm"))

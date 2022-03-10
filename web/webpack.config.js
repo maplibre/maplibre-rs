@@ -8,7 +8,6 @@ module.exports = (env) => ({
     mode: "development",
     entry: {
         index: "./index.ts",
-        'service-worker': "./service-worker.ts",
     },
     experiments: {
         syncWebAssembly: true
