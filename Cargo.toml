@@ -65,6 +65,7 @@ winit = { version = "0.26", default-features = false, features = ["x11", "waylan
 [dependencies]
 
 async-trait = "0.1"
+# For MPMS (instead of only MPSC)
 crossbeam-channel = "0.5"
 
 # Vector riles
@@ -84,6 +85,8 @@ cgmath = "0.18"
 wgpu = { version = "0.12" }
 lyon = { version = "0.17", features = [] }
 lyon_path = "0.17"
+
+# cached = "0.32"
 
 
 # Logging
