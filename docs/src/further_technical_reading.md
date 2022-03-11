@@ -1,9 +1,15 @@
 # Related Resources
 
+## Talks
+
+* [Project_ Demonstration_mapr](https://docs.google.com/presentation/d/1mhpKTIf3iv3T1Lucfuyiry5Vg9bNuzLCXkLLKN3R1AA/edit?usp=sharing)
+
 ## Related Projects
 
 * [Tangram Renderer](https://github.com/tangrams/tangram/)
 * [Tilezen/Nextzen](https://www.nextzen.org/)
+* [Protomaps: New Maps Stack](https://protomaps.com/)
+* [Harp GL](https://www.harp.gl/)
 
 ## GIS
 * [Google Maps Projection](https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection)
@@ -11,6 +17,8 @@
 * [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames) (also known as XYZ) 
 * [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#TileMap_Diagram)
 * [Mapbox Adaptive Projections](https://www.mapbox.com/blog/adaptive-projections)
+* [Bing Map Tile System](https://docs.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system)
+* [Bing: Understanding Scale and Resolution](https://docs.microsoft.com/en-us/bingmaps/articles/understanding-scale-and-resolution)
 
 ## WebAssembly and WebWorkers
 
@@ -64,6 +72,9 @@ Examples:
 
 ## Maths
 
+Articles:
+* [Magnificent Matrix](https://ncase.me/matrix/)
+
 Examples:
 
 * [Dolly Camera](https://github.com/h3r2tic/dolly)
@@ -94,6 +105,11 @@ Projects:
 
 * [earcutr](https://github.com/donbright/earcutr)
 * [Line Tessellation in MapLibre](https://github.com/maplibre/maplibre-gl-js/blob/main/src/data/bucket/line_bucket.ts)
+
+## Specifications
+
+* [TileJSON](https://github.com/mapbox/tilejson-spec)
+* 
 
 ## Render Graphs
 
