@@ -1,7 +1,8 @@
 //! Module which is used if android, apple and web is not used.
 
-use crate::io::scheduler::IOScheduler;
+use crate::io::scheduler::{IOScheduler, ScheduleMethod};
 use crate::main_loop;
+use crate::platform::TokioScheduleMethod;
 use log::error;
 pub use std::time::Instant;
 use tokio::runtime::Handle;
@@ -22,7 +23,9 @@ pub async fn mapr_generic_main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut scheduler = IOScheduler::create();
+    let mut scheduler = IOScheduler::new(ScheduleMethod::Tokio(TokioScheduleMethod::new(
+        "/tmp/mapr_cache".to_string(),
+    )));
 
     /*    let join_handle = task::spawn_blocking(move || {
         Handle::current().block_on(async move {

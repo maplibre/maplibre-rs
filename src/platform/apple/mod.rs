@@ -20,7 +20,7 @@ pub async fn mapr_apple_main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut scheduler = IOScheduler::create();
+    let mut scheduler = IOScheduler::new();
     let download_tessellate_loop = scheduler.take_download_loop();
 
     let join_handle = task::spawn_blocking(move || {

@@ -1,15 +1,11 @@
 use std::concat;
 use std::env;
 
-use async_trait::async_trait;
 use include_dir::{include_dir, Dir};
 use log::error;
 
 use crate::coords::TileCoords;
 use crate::error::Error;
-use crate::io::HttpFetcherConfig;
-
-use super::TileFetcher;
 
 static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 
@@ -19,12 +15,8 @@ impl StaticTileFetcher {
     pub fn get_source_path() -> &'static str {
         concat!(env!("OUT_DIR"), "/extracted-tiles")
     }
-}
 
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
-#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl TileFetcher for StaticTileFetcher {
-    fn new(_config: HttpFetcherConfig) -> Self {
+    fn new() -> Self {
         Self {}
     }
 
@@ -49,9 +41,10 @@ impl TileFetcher for StaticTileFetcher {
 
 #[cfg(test)]
 mod tests {
+    use style_spec::source::TileAdressingScheme;
+
     use crate::coords::WorldTileCoords;
     use crate::io::{HttpFetcherConfig, TileFetcher};
-    use style_spec::source::TileAdressingScheme;
 
     use super::StaticTileFetcher;
 

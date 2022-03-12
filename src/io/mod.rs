@@ -12,37 +12,6 @@ use vector_tile::tile::Layer;
 pub mod scheduler;
 pub mod static_tile_fetcher;
 pub mod tile_cache;
-pub mod web_tile_fetcher;
-
-pub struct HttpFetcherConfig {
-    /// Under which path should we cache requests.
-    pub cache_path: String,
-}
-
-impl Default for HttpFetcherConfig {
-    fn default() -> Self {
-        Self {
-            cache_path: ".".to_string(),
-        }
-    }
-}
-
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
-#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-pub trait HttpFetcher {
-    fn new(config: HttpFetcherConfig) -> Self;
-
-    async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error>;
-}
-
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
-#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-pub trait TileFetcher {
-    fn new(config: HttpFetcherConfig) -> Self;
-
-    async fn fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error>;
-    fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error>;
-}
 
 #[derive(Clone)]
 pub enum TileResult {

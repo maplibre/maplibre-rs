@@ -13,13 +13,45 @@ use vector_tile::tile::Layer;
 /// Describes through which channels work-requests travel. It describes the flow of work.
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::io::tile_cache::TileCache;
-use crate::io::web_tile_fetcher::WebTileFetcher;
-use crate::io::{
-    HttpFetcherConfig, LayerResult, TileFetcher, TileRequest, TileRequestID, TileResult,
-};
+use crate::io::{LayerResult, TileRequest, TileRequestID, TileResult};
 
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer, Tessellated};
+
+pub enum ScheduleMethod {
+    #[cfg(not(any(
+        target_os = "android",
+        all(target_arch = "aarch64", not(target_os = "android")),
+        target_arch = "wasm32"
+    )))]
+    Tokio(crate::platform::TokioScheduleMethod),
+    #[cfg(target_arch = "wasm32")]
+    WebWorker(crate::platform::WebWorkerScheduleMethod),
+}
+
+impl ScheduleMethod {
+    pub fn schedule_tile_request(
+        &self,
+        scheduler: &IOScheduler,
+        request_id: TileRequestID,
+        coords: TileCoords,
+    ) {
+        match self {
+            #[cfg(not(any(
+                target_os = "android",
+                all(target_arch = "aarch64", not(target_os = "android")),
+                target_arch = "wasm32"
+            )))]
+            ScheduleMethod::Tokio(method) => {
+                method.schedule_tile_request(scheduler, request_id, coords)
+            }
+            #[cfg(target_arch = "wasm32")]
+            ScheduleMethod::WebWorker(method) => {
+                method.schedule_tile_request(scheduler, request_id, coords)
+            }
+        }
+    }
+}
 
 pub struct ThreadLocalTessellatorState {
     tile_request_state: Arc<Mutex<TileRequestState>>,
@@ -96,6 +128,7 @@ pub struct IOScheduler {
     layer_result_receiver: Receiver<LayerResult>,
     tile_request_state: Arc<Mutex<TileRequestState>>,
     tile_cache: TileCache,
+    schedule_method: ScheduleMethod,
 }
 
 const _: () = {
@@ -113,13 +146,14 @@ impl Drop for IOScheduler {
 }
 
 impl IOScheduler {
-    pub fn create() -> Self {
+    pub fn new(schedule_method: ScheduleMethod) -> Self {
         let (layer_result_sender, layer_result_receiver) = channel();
         Self {
             layer_result_sender,
             layer_result_receiver,
             tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
             tile_cache: TileCache::new(),
+            schedule_method,
         }
     }
 
@@ -154,32 +188,10 @@ impl IOScheduler {
                 if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
                     if let Some(id) = tile_request_state.start_tile_request(tile_request.clone()) {
                         info!("new tile request: {}", &coords);
+
                         let tile_coords = coords.into_tile(TileAdressingScheme::TMS);
-
-                        /*                        crate::platform::schedule_tile_request(
-                            format!(
-                                "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
-                                x = tile_coords.x,
-                                y = tile_coords.y,
-                                z = tile_coords.z,
-                            )
-                            .as_str(),
-                            id,
-                        );*/
-
-                        let state = self.new_tessellator_state();
-
-                        tokio::task::spawn(async move {
-                            let fetcher = WebTileFetcher::new(HttpFetcherConfig {
-                                cache_path: "/tmp/mapr-cache".to_string(),
-                            });
-
-                            if let Ok(data) = fetcher.fetch_tile(&tile_coords).await {
-                                state
-                                    .tessellate_layers(id, data.into_boxed_slice())
-                                    .unwrap();
-                            }
-                        });
+                        self.schedule_method
+                            .schedule_tile_request(self, id, tile_coords)
                     }
 
                     break;
