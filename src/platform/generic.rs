@@ -3,10 +3,10 @@
 use crate::io::scheduler::{IOScheduler, ScheduleMethod};
 use crate::main_loop;
 use crate::platform::TokioScheduleMethod;
-use log::error;
+
 pub use std::time::Instant;
-use tokio::runtime::Handle;
-use tokio::task;
+
+
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
 
@@ -23,7 +23,7 @@ pub async fn mapr_generic_main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut scheduler = IOScheduler::new(ScheduleMethod::Tokio(TokioScheduleMethod::new(
+    let scheduler = IOScheduler::new(ScheduleMethod::Tokio(TokioScheduleMethod::new(
         "/tmp/mapr_cache".to_string(),
     )));
 

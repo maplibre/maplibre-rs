@@ -1,10 +1,10 @@
 //! Handles IO related processing as well as multithreading.
 
-use crate::coords::{TileCoords, WorldTileCoords};
-use crate::error::Error;
+use crate::coords::{WorldTileCoords};
+
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use async_trait::async_trait;
+
 use std::collections::HashSet;
 use std::fmt;
 use vector_tile::tile::Layer;

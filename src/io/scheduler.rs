@@ -1,22 +1,22 @@
 use std::collections::{HashMap, HashSet};
-use std::fmt::{Debug, Formatter};
-use std::sync::mpsc::{channel, Receiver, RecvError, SendError, Sender};
+
+use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
 
 //use crossbeam_channel::{unbounded as channel, Receiver, RecvError, SendError, Sender};
-use log::{error, info, warn};
+use log::{info, warn};
 
 use style_spec::source::TileAdressingScheme;
 use vector_tile::parse_tile_bytes;
-use vector_tile::tile::Layer;
+
 
 /// Describes through which channels work-requests travel. It describes the flow of work.
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::io::tile_cache::TileCache;
 use crate::io::{LayerResult, TileRequest, TileRequestID, TileResult};
 
-use crate::render::ShaderVertex;
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer, Tessellated};
+
+use crate::tessellation::{Tessellated};
 
 pub enum ScheduleMethod {
     #[cfg(not(any(
@@ -64,14 +64,14 @@ impl ThreadLocalTessellatorState {
         request_id: TileRequestID,
         data: Box<[u8]>,
     ) -> Result<(), SendError<LayerResult>> {
-        if let Ok(mut tile_request_state) = self.tile_request_state.lock() {
+        if let Ok(tile_request_state) = self.tile_request_state.lock() {
             if let Some(tile_request) = tile_request_state.finish_tile_request(request_id) {
                 self.tessellate_layers_with_request(
                     TileResult::Tile {
                         coords: tile_request.coords,
                         data,
                     },
-                    &tile_request,
+                    tile_request,
                 )
             } else {
                 Ok(())
@@ -238,7 +238,7 @@ impl TileRequestState {
             return None;
         }
 
-        self.pending_coords.insert(tile_request.coords.clone());
+        self.pending_coords.insert(tile_request.coords);
         let id = self.current_id;
         self.pending_tile_requests.insert(id, tile_request);
         self.current_id += 1;

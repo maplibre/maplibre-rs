@@ -1,7 +1,7 @@
 //! Module which is used target platform is not web related.
 
 use crate::coords::TileCoords;
-use async_trait::async_trait;
+
 use reqwest::{Client, StatusCode};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_middleware_cache::managers::CACacheManager;
@@ -9,7 +9,7 @@ use reqwest_middleware_cache::{Cache, CacheMode};
 
 use crate::error::Error;
 use crate::io::scheduler::IOScheduler;
-use crate::io::{TileRequest, TileRequestID};
+use crate::io::{TileRequestID};
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Self {
