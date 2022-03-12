@@ -41,7 +41,7 @@ pub fn start() {
 
 #[wasm_bindgen()]
 extern "C" {
-    pub fn fetch_tile(url: &str, request_id: u32);
+    pub fn schedule_tile_request(url: &str, request_id: u32);
 }
 
 #[wasm_bindgen]

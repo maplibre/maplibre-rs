@@ -156,7 +156,7 @@ impl IOScheduler {
                         info!("new tile request: {}", &coords);
                         let tile_coords = coords.into_tile(TileAdressingScheme::TMS);
 
-                        /*                        crate::platform::fetch_tile(
+                        /*                        crate::platform::schedule_tile_request(
                             format!(
                                 "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
                                 x = tile_coords.x,
