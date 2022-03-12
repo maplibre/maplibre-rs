@@ -16,15 +16,15 @@ impl StaticTileFetcher {
         concat!(env!("OUT_DIR"), "/extracted-tiles")
     }
 
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 
-    async fn fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
+    pub async fn fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
         self.sync_fetch_tile(coords)
     }
 
-    fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
+    pub fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
         if TILES.entries().is_empty() {
             error!(
                 "There are not tiles statically embedded in this binary! StaticTileFetcher will \
@@ -44,7 +44,6 @@ mod tests {
     use style_spec::source::TileAdressingScheme;
 
     use crate::coords::WorldTileCoords;
-    use crate::io::{HttpFetcherConfig, TileFetcher};
 
     use super::StaticTileFetcher;
 
@@ -54,7 +53,7 @@ mod tests {
         const MUNICH_Y: i32 = 11365;
         const MUNICH_Z: u8 = 15;
 
-        let fetcher = StaticTileFetcher::new(HttpFetcherConfig::default());
+        let fetcher = StaticTileFetcher::new();
         assert!(fetcher.fetch_tile(&(0, 0, 0).into()).await.is_err()); // World overview
         let world_tile: WorldTileCoords = (MUNICH_X, MUNICH_Y, MUNICH_Z).into();
         assert!(fetcher

@@ -1,7 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use lyon::tessellation::VertexBuffers;
 use mapr::benchmarking::io::static_tile_fetcher::StaticTileFetcher;
-use mapr::benchmarking::io::{HttpFetcherConfig, TileFetcher};
 use mapr::benchmarking::tessellation::Tessellated;
 use std::io::Cursor;
 use vector_tile::parse_tile_reader;
@@ -16,7 +15,7 @@ fn tile1(c: &mut Criterion) {
     const MUNICH_Y: u32 = 11365;
     const MUNICH_Z: u8 = 15;
 
-    let fetcher = StaticTileFetcher::new(HttpFetcherConfig::default());
+    let fetcher = StaticTileFetcher::new();
     let tile = parse_tile_reader(&mut Cursor::new(
         fetcher
             .sync_fetch_tile(&(MUNICH_X, MUNICH_Y, MUNICH_Z).into())
