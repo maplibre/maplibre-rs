@@ -1,5 +1,5 @@
-use crate::coords::{WorldTileCoords};
-use crate::io::workflow::LayerResult;
+use crate::coords::WorldTileCoords;
+use crate::io::LayerResult;
 use std::collections::{btree_map, BTreeMap, HashSet};
 use std::sync::{Arc, Mutex};
 

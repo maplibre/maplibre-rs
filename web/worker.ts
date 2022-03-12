@@ -1,25 +1,32 @@
-import init, { InitOutput } from "./dist/libs/mapr";
-import {WebWorkerMessageType} from "./types";
+import init, {InitOutput, tessellate_layers} from "./dist/libs/mapr"
+import {WebWorkerMessageType} from "./types"
 
-let module: Promise<InitOutput> = null;
+let module: Promise<InitOutput> = null
 
 onmessage = async message => {
-    let messageData: WebWorkerMessageType = message.data;
+    let messageData: WebWorkerMessageType = message.data
+    console.dir(messageData)
 
     switch (messageData.type) {
         case "init":
             if (module != null) {
-                return;
+                return
             }
-            module = init(undefined, messageData.memory);
+            module = init(undefined, messageData.memory)
             break
-        case "run_worker_loop":
-            let workflowPtr = messageData.workflowPtr;
-            (await module).run_worker_loop(workflowPtr);
+        case "fetch_tile":
+            let {tessellatorState, url, request_id} = messageData
+            await module
+
+            console.log("Fetching from " + self.name)
+
+            let result = await fetch(url)
+            let buffer = await result.arrayBuffer()
+
+            tessellate_layers(tessellatorState, request_id, new Uint8Array(buffer))
             break
         default:
             console.warn("WebWorker received unknown message!")
-            break;
-
+            break
     }
-};
+}

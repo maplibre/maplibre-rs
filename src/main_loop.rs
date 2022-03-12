@@ -3,22 +3,20 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
-
 use log::{error, info, trace};
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 
-
 use crate::input::{InputController, UpdateState};
 
-use crate::io::workflow::{Workflow};
+use crate::io::scheduler::IOScheduler;
 use crate::platform::Instant;
 use crate::render::render_state::RenderState;
 
 pub async fn setup(
     window: winit::window::Window,
     event_loop: EventLoop<()>,
-    mut workflow: Box<Workflow>,
+    mut workflow: Box<IOScheduler>,
 ) {
     info!("== mapr ==");
 

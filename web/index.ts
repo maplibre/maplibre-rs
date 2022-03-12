@@ -1,9 +1,15 @@
-import init from "./dist/libs/mapr"
+import init, { create_scheduler, new_tessellator_state, run } from "./dist/libs/mapr"
 // @ts-ignore
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 
 declare var WEBGL: boolean
+
+declare global {
+    interface Window {
+        fetch_tile: (url: string, x: number, y: number, z: number, callback: (data: Uint8Array) => void) => void;
+    }
+}
 
 const isWebGLSupported = () => {
     try {
@@ -51,37 +57,54 @@ const checkRequirements = () => {
     return true
 }
 
+const preventDefaultTouchActions = () => {
+    document.body.querySelectorAll("canvas").forEach(canvas => {
+        canvas.addEventListener("touchstart", e => e.preventDefault())
+        canvas.addEventListener("touchmove", e => e.preventDefault())
+    })
+}
+
+const registerServiceWorker = () => {
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register(new URL('./service-worker.ts', import.meta.url))
+        })
+    }
+}
+
 
 const start = async () => {
     if (!checkRequirements()) {
         return
     }
 
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register(new URL('./service-worker.ts', import.meta.url))
-        })
-    }
-
-    document.body.querySelectorAll("canvas").forEach(canvas => {
-        canvas.addEventListener("touchstart", e => e.preventDefault())
-        canvas.addEventListener("touchmove", e => e.preventDefault())
-    })
+    registerServiceWorker()
+    preventDefaultTouchActions();
 
     let MEMORY_PAGES = 16 * 1024
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
-    const module = await init(undefined, memory)
+    await init(undefined, memory)
+    const schedulerPtr = create_scheduler()
 
-    const worker = new Worker(new URL('./worker.ts', import.meta.url), {
-        type: "module",
-    })
+    const createWorker = (id: number) => {
+        const worker = new Worker(new URL('./worker.ts', import.meta.url), {
+            type: "module",
+            name: `worker_${id}`
+        })
+        worker.postMessage({type: "init", memory} as WebWorkerMessageType)
 
-    worker.postMessage({type: "init", memory} as WebWorkerMessageType)
+        return worker
+    }
 
-    let workflowPtr = module.create_workflow()
-    worker.postMessage({type: "run_worker_loop", workflowPtr: workflowPtr} as WebWorkerMessageType)
+    let workers: [number, Worker][] = Array.from(new Array(2).keys(), (id) => [new_tessellator_state(schedulerPtr), createWorker(id)])
 
-    await module.run(workflowPtr)
+    window.fetch_tile = (url: string, request_id: number) => {
+        const [tessellatorState, worker] = workers[Math.floor(Math.random() * workers.length)]
+        worker.postMessage({type: "fetch_tile", tessellatorState: tessellatorState, url, request_id} as WebWorkerMessageType)
+    }
+
+
+    await run(schedulerPtr)
 }
 
 start().then(() => console.log("started via wasm"))

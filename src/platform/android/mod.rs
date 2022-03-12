@@ -1,4 +1,4 @@
-use crate::io::workflow::Workflow;
+use crate::io::scheduler::IOScheduler;
 use crate::main_loop;
 pub use std::time::Instant;
 use tokio::task;
@@ -19,8 +19,8 @@ pub async fn main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut workflow = Workflow::create();
-    let download_tessellate_loop = workflow.take_download_loop();
+    let mut scheduler = IOScheduler::create();
+    let download_tessellate_loop = scheduler.take_download_loop();
 
     let join_handle = task::spawn_blocking(move || {
         Handle::current().block_on(async move {
@@ -30,6 +30,6 @@ pub async fn main() {
         });
     });
 
-    main_loop::setup(window, event_loop, Box::new(workflow)).await;
+    main_loop::setup(window, event_loop, Box::new(scheduler)).await;
     join_handle.await.unwrap()
 }

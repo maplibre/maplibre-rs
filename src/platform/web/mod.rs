@@ -2,6 +2,8 @@ mod http_fetcher;
 
 use std::panic;
 
+use log::error;
+use log::info;
 use log::Level;
 use winit::dpi::LogicalSize;
 use winit::event_loop::EventLoop;
@@ -22,9 +24,11 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 #[cfg(feature = "web-webgl")]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
 
+use crate::coords::{TileCoords, WorldTileCoords};
+use crate::io::scheduler::{IOScheduler, ThreadLocalTessellatorState, TileResult};
 use crate::io::tile_cache::TileCache;
-use crate::io::workflow::Workflow;
 pub use http_fetcher::PlatformHttpFetcher;
+use style_spec::source::TileAdressingScheme;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
@@ -35,27 +39,46 @@ pub fn start() {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 }
 
-#[wasm_bindgen]
-pub fn create_workflow() -> *mut Workflow {
-    let workflow = Box::new(Workflow::create());
-    let workflow_ptr = Box::into_raw(workflow);
-    return workflow_ptr;
+#[wasm_bindgen()]
+extern "C" {
+    pub fn fetch_tile(url: &str, request_id: u32);
 }
 
 #[wasm_bindgen]
-pub async fn run_worker_loop(workflow_ptr: *mut Workflow) {
-    let mut workflow: Box<Workflow> = unsafe { Box::from_raw(workflow_ptr) };
-
-    // Either call forget or the worker loop to keep it alive
-    if let Err(e) = workflow.take_download_loop().run_loop().await {
-        error!("Worker loop errored {:?}", e)
-    }
-    //std::mem::forget(workflow);
+pub fn create_scheduler() -> *mut IOScheduler {
+    let scheduler = Box::new(IOScheduler::create());
+    let scheduler_ptr = Box::into_raw(scheduler);
+    return scheduler_ptr;
 }
 
 #[wasm_bindgen]
-pub async fn run(workflow_ptr: *mut Workflow) {
-    let workflow: Box<Workflow> = unsafe { Box::from_raw(workflow_ptr) };
+pub fn new_tessellator_state(workflow_ptr: *mut IOScheduler) -> *mut ThreadLocalTessellatorState {
+    let workflow: Box<IOScheduler> = unsafe { Box::from_raw(workflow_ptr) };
+    let tessellator_state = Box::new(workflow.new_tessellator_state());
+    let tessellator_state_ptr = Box::into_raw(tessellator_state);
+    // Call forget such that workflow does not get deallocated
+    std::mem::forget(workflow);
+    return tessellator_state_ptr;
+}
+
+#[wasm_bindgen]
+pub fn tessellate_layers(
+    tessellator_state_ptr: *mut ThreadLocalTessellatorState,
+    request_id: u32,
+    data: Box<[u8]>,
+) {
+    let tessellator_state: Box<ThreadLocalTessellatorState> =
+        unsafe { Box::from_raw(tessellator_state_ptr) };
+
+    tessellator_state.tessellate_layers(request_id, data);
+
+    // Call forget such that workflow does not get deallocated
+    std::mem::forget(tessellator_state);
+}
+
+#[wasm_bindgen]
+pub async fn run(workflow_ptr: *mut IOScheduler) {
+    let workflow: Box<IOScheduler> = unsafe { Box::from_raw(workflow_ptr) };
     let event_loop = EventLoop::new();
 
     let web_window: WebSysWindow = web_sys::window().unwrap();

@@ -1,7 +1,6 @@
 //! Module which is used if android, apple and web is not used.
 
-
-use crate::io::workflow::Workflow;
+use crate::io::scheduler::IOScheduler;
 use crate::main_loop;
 use log::error;
 pub use std::time::Instant;
@@ -23,17 +22,16 @@ pub async fn mapr_generic_main() {
         .build(&event_loop)
         .unwrap();
 
-    let mut workflow = Workflow::create();
-    let download_tessellate_loop = workflow.take_download_loop();
+    let mut scheduler = IOScheduler::create();
 
-    let join_handle = task::spawn_blocking(move || {
+    /*    let join_handle = task::spawn_blocking(move || {
         Handle::current().block_on(async move {
             if let Err(e) = download_tessellate_loop.run_loop().await {
                 error!("Worker loop errored {:?}", e)
             }
         });
-    });
+    });*/
 
-    main_loop::setup(window, event_loop, Box::new(workflow)).await;
-    join_handle.await.unwrap()
+    main_loop::setup(window, event_loop, Box::new(scheduler)).await;
+    /*    join_handle.await.unwrap()*/
 }

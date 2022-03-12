@@ -3,9 +3,10 @@ use std::collections::HashSet;
 use std::default::Default;
 use std::{cmp, iter};
 
-use crate::coords::{ViewRegion};
+use crate::coords::ViewRegion;
 
-use crate::io::workflow::{LayerResult, TileRequest, Workflow};
+use crate::io::scheduler::IOScheduler;
+use crate::io::{LayerResult, TileRequest};
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
@@ -346,7 +347,7 @@ impl RenderState {
 
     // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
     // TODO: What is StagingBelt for?
-    pub fn upload_tile_geometry(&mut self, workflow: &mut Workflow) {
+    pub fn upload_tile_geometry(&mut self, scheduler: &mut IOScheduler) {
         let visible_z = self.visible_z();
         let view_region = self
             .camera
@@ -365,7 +366,7 @@ impl RenderState {
                         "water".to_string(),
                     ]),
                 };
-                workflow.request_tile(tile_request).unwrap();
+                scheduler.request_tile(tile_request).unwrap();
             }
         }
 
@@ -392,7 +393,7 @@ impl RenderState {
             for coords in view_region.iter() {
                 let loaded_layers = self.buffer_pool.get_loaded_layers(&coords);
 
-                let layers = workflow.get_tessellated_layers_at(&coords, &loaded_layers);
+                let layers = scheduler.get_tessellated_layers_at(&coords, &loaded_layers);
                 for result in layers {
                     match result {
                         LayerResult::UnavailableLayer { .. } => {}
