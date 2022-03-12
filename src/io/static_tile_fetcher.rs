@@ -7,7 +7,10 @@ use log::error;
 use crate::coords::TileCoords;
 use crate::error::Error;
 
+#[cfg(static_tiles)]
 static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
+#[cfg(not(static_tiles))]
+static TILES: Dir = Dir::new("/path", &[]);
 
 pub struct StaticTileFetcher;
 

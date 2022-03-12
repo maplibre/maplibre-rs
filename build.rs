@@ -29,6 +29,7 @@ fn embed_tiles_statically() {
     let source = Path::new(&root_dir).join(format!("test-data/munich-{}.mbtiles", MUNICH_Z));
 
     if source.exists() {
+        println!("cargo:rustc-cfg=static_tiles");
         // Pack tiles around Munich HBF (100 tiles in each direction)
         extract(
             source,
