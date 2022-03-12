@@ -1,13 +1,11 @@
-import init, { create_scheduler, new_tessellator_state, run } from "./dist/libs/mapr"
-// @ts-ignore
+import init, {create_scheduler, new_tessellator_state, run} from "./dist/libs/mapr"
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 
-declare var WEBGL: boolean
 
 declare global {
     interface Window {
-        fetch_tile: (url: string, x: number, y: number, z: number, callback: (data: Uint8Array) => void) => void;
+        schedule_tile_request: (url: string, request_id: number) => void;
     }
 }
 
@@ -67,7 +65,9 @@ const preventDefaultTouchActions = () => {
 const registerServiceWorker = () => {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register(new URL('./service-worker.ts', import.meta.url))
+            navigator.serviceWorker.register(new URL('./service-worker.ts', import.meta.url)).catch(() => {
+                console.error("Failed to register service worker");
+            })
         })
     }
 }
@@ -79,9 +79,11 @@ const start = async () => {
     }
 
     registerServiceWorker()
+
     preventDefaultTouchActions();
 
     let MEMORY_PAGES = 16 * 1024
+    let WORKER_COUNT = 2
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
     await init(undefined, memory)
     const schedulerPtr = create_scheduler()
@@ -96,13 +98,20 @@ const start = async () => {
         return worker
     }
 
-    let workers: [number, Worker][] = Array.from(new Array(2).keys(), (id) => [new_tessellator_state(schedulerPtr), createWorker(id)])
+    let workers: [number, Worker][] = Array.from(
+        new Array(WORKER_COUNT).keys(),
+        (id) => [new_tessellator_state(schedulerPtr), createWorker(id)]
+    )
 
-    window.fetch_tile = (url: string, request_id: number) => {
+    window.schedule_tile_request = (url: string, request_id: number) => {
         const [tessellatorState, worker] = workers[Math.floor(Math.random() * workers.length)]
-        worker.postMessage({type: "fetch_tile", tessellatorState: tessellatorState, url, request_id} as WebWorkerMessageType)
+        worker.postMessage({
+            type: "fetch_tile",
+            tessellatorState: tessellatorState,
+            url,
+            request_id
+        } as WebWorkerMessageType)
     }
-
 
     await run(schedulerPtr)
 }
