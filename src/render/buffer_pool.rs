@@ -7,7 +7,7 @@ use std::ops::Range;
 
 use wgpu::BufferAddress;
 
-use crate::coords::{WorldTileCoords};
+use crate::coords::WorldTileCoords;
 
 use crate::tessellation::OverAlignedVertexBuffer;
 

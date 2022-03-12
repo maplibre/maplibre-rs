@@ -1,6 +1,5 @@
 //! File which exposes all kinds of coordinates used throughout mapr
 
-
 use crate::util::math::{div_floor, Aabb2};
 use cgmath::num_traits::Pow;
 use cgmath::{Matrix4, Point3, Vector3};

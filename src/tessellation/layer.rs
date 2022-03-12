@@ -1,7 +1,7 @@
 use std::ops::Add;
 
 use bytemuck::Pod;
-use lyon::geom::{point};
+use lyon::geom::point;
 
 use lyon::lyon_tessellation::VertexBuffers;
 use lyon::tessellation::geometry_builder::MaxIndex;

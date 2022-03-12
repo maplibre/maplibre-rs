@@ -9,14 +9,12 @@ use log::{info, warn};
 use style_spec::source::TileAdressingScheme;
 use vector_tile::parse_tile_bytes;
 
-
 /// Describes through which channels work-requests travel. It describes the flow of work.
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::io::tile_cache::TileCache;
 use crate::io::{LayerResult, TileRequest, TileRequestID, TileResult};
 
-
-use crate::tessellation::{Tessellated};
+use crate::tessellation::Tessellated;
 
 pub enum ScheduleMethod {
     #[cfg(not(any(

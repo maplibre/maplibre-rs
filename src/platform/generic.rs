@@ -6,7 +6,6 @@ use crate::platform::TokioScheduleMethod;
 
 pub use std::time::Instant;
 
-
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
 

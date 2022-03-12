@@ -9,7 +9,7 @@ use reqwest_middleware_cache::{Cache, CacheMode};
 
 use crate::error::Error;
 use crate::io::scheduler::IOScheduler;
-use crate::io::{TileRequestID};
+use crate::io::TileRequestID;
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Self {

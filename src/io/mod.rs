@@ -1,6 +1,6 @@
 //! Handles IO related processing as well as multithreading.
 
-use crate::coords::{WorldTileCoords};
+use crate::coords::WorldTileCoords;
 
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};

@@ -1,6 +1,5 @@
 use super::UpdateState;
 
-
 use crate::render::render_state::RenderState;
 use cgmath::num_traits::Pow;
 use cgmath::{Vector2, Vector3, Zero};
@@ -60,7 +59,11 @@ impl ZoomHandler {
         }
     }
 
-    pub fn process_window_position(&mut self, window_position: &Vector2<f64>, _touch: bool) -> bool {
+    pub fn process_window_position(
+        &mut self,
+        window_position: &Vector2<f64>,
+        _touch: bool,
+    ) -> bool {
         self.window_position = Some(*window_position);
         true
     }
