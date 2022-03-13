@@ -12,7 +12,7 @@ pub mod scheduler {
     use crate::error::Error;
     use crate::io::scheduler::IOScheduler;
     use crate::io::TileRequestID;
-    use crate::{MapBuilder, ScheduleMethod};
+    
 
     impl From<reqwest::Error> for Error {
         fn from(err: reqwest::Error) -> Self {

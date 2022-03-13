@@ -67,7 +67,7 @@ impl MapBuilder {
             create_window: Box::new(move |event_loop| {
                 WindowBuilder::new()
                     .with_title(title)
-                    .build(&event_loop)
+                    .build(event_loop)
                     .unwrap()
             }),
             schedule_method: None,
