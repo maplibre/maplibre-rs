@@ -65,7 +65,7 @@ module.exports = (env) => ({
             // command. Default arguments are `--verbose`.
             //args: '--log-level warn',
             // Default arguments are `--typescript --target browser --mode normal`.
-            extraArgs: `--target web -- ${env.webgl ? '--features web-webgl' : ''} -Z build-std=std,panic_abort`,
+            extraArgs: ` --target web -- . -Z build-std=std,panic_abort ${env.webgl ? '--features web-webgl' : ''}`,
 
             // Optional array of absolute paths to directories, changes to which
             // will trigger the build.
