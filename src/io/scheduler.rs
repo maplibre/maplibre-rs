@@ -22,9 +22,9 @@ pub enum ScheduleMethod {
         all(target_arch = "aarch64", not(target_os = "android")),
         target_arch = "wasm32"
     )))]
-    Tokio(crate::platform::TokioScheduleMethod),
+    Tokio(crate::platform::scheduler::TokioScheduleMethod),
     #[cfg(target_arch = "wasm32")]
-    WebWorker(crate::platform::WebWorkerScheduleMethod),
+    WebWorker(crate::platform::scheduler::WebWorkerScheduleMethod),
 }
 
 impl ScheduleMethod {

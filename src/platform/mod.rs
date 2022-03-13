@@ -13,12 +13,13 @@ mod android;
 #[cfg(not(target_arch = "wasm32"))]
 mod noweb;
 
+/// For Vulkan/OpenGL
 #[cfg(not(any(
     target_os = "android",
     all(target_arch = "aarch64", not(target_os = "android")),
     target_arch = "wasm32"
 )))]
-mod generic;
+pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
 
 #[cfg(target_arch = "wasm32")]
 pub use web::*;
@@ -31,13 +32,6 @@ pub use android::*;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use noweb::*;
-
-#[cfg(not(any(
-    target_os = "android",
-    all(target_arch = "aarch64", not(target_os = "android")),
-    target_arch = "wasm32"
-)))]
-pub use generic::*;
 
 // FIXME: This limit is enforced by WebGL. Actually this makes sense!
 // FIXME: This can also be achieved by _pad attributes in shader_ffi.rs

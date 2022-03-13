@@ -1,15 +1,109 @@
+use crate::io::scheduler::IOScheduler;
+use winit::event_loop::EventLoop;
+use winit::window::WindowBuilder;
+
 mod input;
 
 pub(crate) mod coords;
 pub(crate) mod error;
 pub(crate) mod io;
 pub(crate) mod main_loop;
+pub(crate) mod platform;
 pub(crate) mod render;
 pub(crate) mod tessellation;
 pub(crate) mod util;
 
-// Used from outside to initialize mapr
-pub mod platform;
-
 // Used for benchmarking
 pub mod benchmarking;
+
+pub use io::scheduler::ScheduleMethod;
+pub use platform::scheduler::*;
+
+pub struct Map {
+    window: winit::window::Window,
+    event_loop: EventLoop<()>,
+    scheduler: Box<IOScheduler>,
+}
+
+impl Map {
+    #[cfg(target_arch = "wasm32")]
+    pub async fn run_async(self) {
+        main_loop::setup(self.window, self.event_loop, self.scheduler).await;
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn run_sync(self) {
+        tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                main_loop::setup(self.window, self.event_loop, self.scheduler).await;
+            })
+    }
+}
+
+pub struct MapBuilder {
+    create_window: Box<dyn FnOnce(&EventLoop<()>) -> winit::window::Window>,
+    schedule_method: Option<ScheduleMethod>,
+    scheduler: Option<Box<IOScheduler>>,
+}
+
+impl MapBuilder {
+    pub fn with_schedule_method(mut self, schedule_method: ScheduleMethod) -> Self {
+        self.schedule_method = Some(schedule_method);
+        self
+    }
+
+    pub fn with_existing_scheduler(mut self, scheduler: Box<IOScheduler>) -> Self {
+        self.scheduler = Some(scheduler);
+        self
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn from_window(title: &'static str) -> Self {
+        Self {
+            create_window: Box::new(move |event_loop| {
+                WindowBuilder::new()
+                    .with_title(title)
+                    .build(&event_loop)
+                    .unwrap()
+            }),
+            schedule_method: None,
+            scheduler: None,
+        }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn from_canvas(dom_id: &'static str) -> Self {
+        Self {
+            create_window: Box::new(move |event_loop| {
+                use crate::platform::{get_body_size, get_canvas};
+                use winit::platform::web::WindowBuilderExtWebSys;
+
+                let window: winit::window::Window = WindowBuilder::new()
+                    .with_canvas(Some(get_canvas(dom_id)))
+                    .build(&event_loop)
+                    .unwrap();
+
+                window.set_inner_size(get_body_size().unwrap());
+                window
+            }),
+            schedule_method: None,
+            scheduler: None,
+        }
+    }
+
+    pub fn build(self) -> Map {
+        let event_loop = EventLoop::new();
+
+        Map {
+            window: (self.create_window)(&event_loop),
+            event_loop,
+            scheduler: self
+                .scheduler
+                .unwrap_or_else(|| Box::new(IOScheduler::new(self.schedule_method.unwrap()))),
+        }
+    }
+}

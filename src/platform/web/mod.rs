@@ -8,6 +8,11 @@ use winit::event_loop::EventLoop;
 use winit::platform::web::WindowBuilderExtWebSys;
 use winit::window::{Window, WindowBuilder};
 
+use crate::io::scheduler::IOScheduler;
+use crate::io::scheduler::ScheduleMethod;
+use crate::io::scheduler::ThreadLocalTessellatorState;
+use crate::MapBuilder;
+use crate::WebWorkerScheduleMethod;
 use console_error_panic_hook;
 pub use instant::Instant;
 use style_spec::source::TileAdressingScheme;
@@ -15,11 +20,6 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::Window as WebSysWindow;
-
-use crate::coords::{TileCoords, WorldTileCoords};
-use crate::io::scheduler::{IOScheduler, ScheduleMethod, ThreadLocalTessellatorState};
-use crate::io::tile_cache::TileCache;
-use crate::io::TileRequestID;
 
 // WebGPU
 #[cfg(not(feature = "web-webgl"))]
@@ -61,32 +61,6 @@ pub fn new_tessellator_state(workflow_ptr: *mut IOScheduler) -> *mut ThreadLocal
     return tessellator_state_ptr;
 }
 
-pub struct WebWorkerScheduleMethod;
-
-impl WebWorkerScheduleMethod {
-    pub fn new() -> Self {
-        Self
-    }
-
-    pub fn schedule_tile_request(
-        &self,
-        _scheduler: &IOScheduler,
-        request_id: TileRequestID,
-        coords: TileCoords,
-    ) {
-        schedule_tile_request(
-            format!(
-                "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
-                x = coords.x,
-                y = coords.y,
-                z = coords.z,
-            )
-            .as_str(),
-            request_id,
-        )
-    }
-}
-
 #[wasm_bindgen]
 pub fn tessellate_layers(
     tessellator_state_ptr: *mut ThreadLocalTessellatorState,
@@ -104,34 +78,72 @@ pub fn tessellate_layers(
     std::mem::forget(tessellator_state);
 }
 
-#[wasm_bindgen]
-pub async fn run(workflow_ptr: *mut IOScheduler) {
-    let workflow: Box<IOScheduler> = unsafe { Box::from_raw(workflow_ptr) };
-    let event_loop = EventLoop::new();
-
+pub fn get_body_size() -> Option<LogicalSize<i32>> {
     let web_window: WebSysWindow = web_sys::window().unwrap();
     let document = web_window.document().unwrap();
     let body = document.body().unwrap();
-    let builder = WindowBuilder::new();
-    let canvas: web_sys::HtmlCanvasElement = document
-        .get_element_by_id("mapr")
-        .unwrap()
-        .dyn_into::<web_sys::HtmlCanvasElement>()
-        .unwrap();
-
-    let window: Window = builder
-        .with_canvas(Some(canvas))
-        .build(&event_loop)
-        .unwrap();
-
-    window.set_inner_size(LogicalSize {
+    Some(LogicalSize {
         width: body.client_width(),
         height: body.client_height(),
-    });
+    })
+}
+
+pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
+    let web_window: WebSysWindow = web_sys::window().unwrap();
+    let document = web_window.document().unwrap();
+    document
+        .get_element_by_id(element_id)
+        .unwrap()
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .unwrap()
+}
+
+#[wasm_bindgen]
+pub async fn run(workflow_ptr: *mut IOScheduler) {
+    let scheduler: Box<IOScheduler> = unsafe { Box::from_raw(workflow_ptr) };
 
     // Either call forget or the main loop to keep worker loop alive
-    crate::main_loop::setup(window, event_loop, workflow).await;
+    MapBuilder::from_canvas("mapr")
+        .with_existing_scheduler(scheduler)
+        .build()
+        .run_async()
+        .await;
+
     // std::mem::forget(workflow);
+}
+
+pub mod scheduler {
+    use super::schedule_tile_request;
+    use crate::coords::{TileCoords, WorldTileCoords};
+    use crate::io::scheduler::{IOScheduler, ScheduleMethod, ThreadLocalTessellatorState};
+    use crate::io::tile_cache::TileCache;
+    use crate::io::TileRequestID;
+
+    pub struct WebWorkerScheduleMethod;
+
+    impl WebWorkerScheduleMethod {
+        pub fn new() -> Self {
+            Self
+        }
+
+        pub fn schedule_tile_request(
+            &self,
+            _scheduler: &IOScheduler,
+            request_id: TileRequestID,
+            coords: TileCoords,
+        ) {
+            schedule_tile_request(
+                format!(
+                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
+                    x = coords.x,
+                    y = coords.y,
+                    z = coords.z,
+                )
+                .as_str(),
+                request_id,
+            )
+        }
+    }
 }
 
 /*use crate::error::Error;
