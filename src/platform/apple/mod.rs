@@ -1,5 +1,6 @@
 use crate::io::scheduler::ScheduleMethod;
 use crate::platform::scheduler::TokioScheduleMethod;
+use crate::MapBuilder;
 pub use std::time::Instant;
 
 // macOS and iOS (Metal)

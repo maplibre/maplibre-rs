@@ -1,5 +1,6 @@
 use crate::io::scheduler::ScheduleMethod;
 use crate::platform::scheduler::TokioScheduleMethod;
+use crate::MapBuilder;
 pub use std::time::Instant;
 
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm;
