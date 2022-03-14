@@ -17,11 +17,7 @@ use crate::io::{LayerResult, TileRequest, TileRequestID, TileResult};
 use crate::tessellation::Tessellated;
 
 pub enum ScheduleMethod {
-    #[cfg(not(any(
-        target_os = "android",
-        all(target_arch = "aarch64", not(target_os = "android")),
-        target_arch = "wasm32"
-    )))]
+    #[cfg(not(target_arch = "wasm32"))]
     Tokio(crate::platform::scheduler::TokioScheduleMethod),
     #[cfg(target_arch = "wasm32")]
     WebWorker(crate::platform::scheduler::WebWorkerScheduleMethod),
