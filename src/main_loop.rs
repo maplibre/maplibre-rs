@@ -4,6 +4,7 @@
 //! * Render a new frame
 
 use log::{error, info, trace};
+use style_spec::Style;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 
@@ -13,18 +14,17 @@ use crate::io::scheduler::IOScheduler;
 use crate::platform::Instant;
 use crate::render::render_state::RenderState;
 
-pub async fn setup(
+pub async fn run(
     window: winit::window::Window,
     event_loop: EventLoop<()>,
     mut workflow: Box<IOScheduler>,
+    style: Box<Style>,
 ) {
-    info!("== mapr ==");
-
     let mut input = InputController::new(0.2, 100.0, 0.1);
     let mut maybe_state: Option<RenderState> = if cfg!(target_os = "android") {
         None
     } else {
-        Some(RenderState::new(&window).await)
+        Some(RenderState::new(&window, style).await)
     };
 
     let mut last_render_time = Instant::now();
@@ -39,7 +39,7 @@ pub async fn setup(
             use tokio::task;
 
             let state = task::block_in_place(|| {
-                Handle::current().block_on(async { RenderState::new(&window).await })
+                Handle::current().block_on(async { RenderState::new(&window, style).await })
             });
             maybe_state = Some(state);
             return;

@@ -18,8 +18,10 @@ pub mod benchmarking;
 
 pub use io::scheduler::ScheduleMethod;
 pub use platform::scheduler::*;
+use style_spec::Style;
 
 pub struct Map {
+    style: Style,
     window: winit::window::Window,
     event_loop: EventLoop<()>,
     scheduler: Box<IOScheduler>,
@@ -28,18 +30,23 @@ pub struct Map {
 impl Map {
     #[cfg(target_arch = "wasm32")]
     pub async fn run_async(self) {
-        main_loop::setup(self.window, self.event_loop, self.scheduler).await;
+        main_loop::run(self.window, self.event_loop, self.scheduler).await;
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     pub fn run_sync(self) {
         tokio::runtime::Builder::new_multi_thread()
-            .worker_threads(2)
             .enable_all()
             .build()
             .unwrap()
             .block_on(async {
-                main_loop::setup(self.window, self.event_loop, self.scheduler).await;
+                main_loop::run(
+                    self.window,
+                    self.event_loop,
+                    self.scheduler,
+                    Box::new(self.style),
+                )
+                .await;
             })
     }
 }
@@ -48,6 +55,7 @@ pub struct MapBuilder {
     create_window: Box<dyn FnOnce(&EventLoop<()>) -> winit::window::Window>,
     schedule_method: Option<ScheduleMethod>,
     scheduler: Option<Box<IOScheduler>>,
+    style: Option<Style>,
 }
 
 impl MapBuilder {
@@ -58,6 +66,11 @@ impl MapBuilder {
 
     pub fn with_existing_scheduler(mut self, scheduler: Box<IOScheduler>) -> Self {
         self.scheduler = Some(scheduler);
+        self
+    }
+
+    pub fn with_style(mut self, style: Style) -> Self {
+        self.style = Some(style);
         self
     }
 
@@ -72,6 +85,7 @@ impl MapBuilder {
             }),
             schedule_method: None,
             scheduler: None,
+            style: None,
         }
     }
 
@@ -92,6 +106,7 @@ impl MapBuilder {
             }),
             schedule_method: None,
             scheduler: None,
+            style: None,
         }
     }
 
@@ -99,11 +114,12 @@ impl MapBuilder {
         let event_loop = EventLoop::new();
 
         Map {
+            style: self.style.unwrap_or_default(),
             window: (self.create_window)(&event_loop),
             event_loop,
-            scheduler: self
-                .scheduler
-                .unwrap_or_else(|| Box::new(IOScheduler::new(self.schedule_method.unwrap()))),
+            scheduler: self.scheduler.unwrap_or_else(|| {
+                Box::new(IOScheduler::new(self.schedule_method.unwrap_or_default()))
+            }),
         }
     }
 }

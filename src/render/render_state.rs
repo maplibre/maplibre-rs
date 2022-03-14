@@ -7,6 +7,7 @@ use crate::coords::ViewRegion;
 
 use crate::io::scheduler::IOScheduler;
 use crate::io::{LayerResult, TileRequest};
+use style_spec::Style;
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
@@ -67,10 +68,12 @@ pub struct RenderState {
     pub camera: camera::Camera,
     pub perspective: camera::Perspective,
     pub zoom: f64,
+
+    style: Box<Style>,
 }
 
 impl RenderState {
-    pub async fn new(window: &Window) -> Self {
+    pub async fn new(window: &Window, style: Box<Style>) -> Self {
         let sample_count = 4;
 
         let size = if cfg!(target_os = "android") {
@@ -292,6 +295,7 @@ impl RenderState {
             ),
             tile_mask_pattern: TileMaskPattern::new(),
             zoom: 0.0,
+            style,
         }
     }
 
@@ -356,15 +360,19 @@ impl RenderState {
 
         // Fetch tiles which are currently in view
         if let Some(view_region) = &view_region {
+            let source_layers: HashSet<String> = self
+                .style
+                .layers
+                .iter()
+                .map(|layer| layer.source_layer.as_ref())
+                .filter_map(|x| x)
+                .cloned()
+                .collect();
+
             for coords in view_region.iter() {
                 let tile_request = TileRequest {
                     coords,
-                    layers: HashSet::from([
-                        "transportation".to_string(),
-                        "building".to_string(),
-                        "boundary".to_string(),
-                        "water".to_string(),
-                    ]),
+                    layers: source_layers.clone(),
                 };
                 scheduler.request_tile(tile_request).unwrap();
             }
