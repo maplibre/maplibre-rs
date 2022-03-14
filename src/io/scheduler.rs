@@ -31,11 +31,7 @@ impl ScheduleMethod {
         coords: TileCoords,
     ) {
         match self {
-            #[cfg(not(any(
-                target_os = "android",
-                all(target_arch = "aarch64", not(target_os = "android")),
-                target_arch = "wasm32"
-            )))]
+            #[cfg(not(target_arch = "wasm32"))]
             ScheduleMethod::Tokio(method) => {
                 method.schedule_tile_request(scheduler, request_id, coords)
             }
