@@ -1623,14 +1623,12 @@ dependencies = [
 name = "mapr"
 version = "0.1.0"
 dependencies = [
- "async-trait",
  "bytemuck",
  "bytemuck_derive",
  "cgmath",
  "console_error_panic_hook",
  "console_log",
  "criterion",
- "crossbeam-channel",
  "env_logger",
  "include_dir",
  "instant",

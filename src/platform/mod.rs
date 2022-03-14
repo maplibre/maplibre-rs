@@ -4,7 +4,7 @@
 #[cfg(target_arch = "wasm32")]
 mod web;
 
-#[cfg(all(target_arch = "aarch64", not(target_os = "android")))]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 mod apple;
 
 #[cfg(target_os = "android")]
@@ -16,7 +16,8 @@ mod noweb;
 /// For Vulkan/OpenGL
 #[cfg(not(any(
     target_os = "android",
-    all(target_arch = "aarch64", not(target_os = "android")),
+    target_os = "macos",
+    target_os = "ios",
     target_arch = "wasm32"
 )))]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
@@ -24,7 +25,7 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 #[cfg(target_arch = "wasm32")]
 pub use web::*;
 
-#[cfg(all(target_arch = "aarch64", not(target_os = "android")))]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 pub use apple::*;
 
 #[cfg(target_os = "android")]
