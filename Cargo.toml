@@ -15,6 +15,7 @@ authors = ["Maximilian Ammann <max@maxammann.org>"]
 edition = "2021"
 resolver = "2"
 build = "build.rs"
+license = "MIT OR Apache-2.0"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = true
