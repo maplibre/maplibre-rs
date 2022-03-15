@@ -3,7 +3,7 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
-use log::{error, info, trace};
+use log::{error, trace};
 use style_spec::Style;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};

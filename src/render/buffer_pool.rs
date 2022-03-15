@@ -512,7 +512,7 @@ mod tests {
         pool.allocate_tile_geometry(
             &queue,
             (0, 0, 0).into(),
-            style_layer.clone(),
+            style_layer,
             &data24bytes_aligned,
             2,
             &vec![],

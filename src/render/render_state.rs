@@ -364,9 +364,7 @@ impl RenderState {
             let source_layers: HashSet<String> = self
                 .style
                 .layers
-                .iter()
-                .map(|layer| layer.source_layer.as_ref())
-                .filter_map(|x| x)
+                .iter().filter_map(|layer| layer.source_layer.as_ref())
                 .cloned()
                 .collect();
 
@@ -459,7 +457,7 @@ impl RenderState {
                                     &self.queue,
                                     *coords,
                                     style_layer.clone(),
-                                    &buffer,
+                                    buffer,
                                     ShaderTileMetadata::new(transform.into()),
                                     &feature_metadata,
                                 );

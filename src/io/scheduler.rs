@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use log::{info, warn};
+use log::{info};
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
 
@@ -75,7 +75,7 @@ impl ThreadLocalTessellatorState {
         request_id: TileRequestID,
         data: Box<[u8]>,
     ) -> Result<(), SendError<TileTessellateResult>> {
-        if let Ok(mut tile_request_state) = self.tile_request_state.lock() {
+        if let Ok(tile_request_state) = self.tile_request_state.lock() {
             if let Some(tile_request) = tile_request_state.get_tile_request(request_id) {
                 self.tessellate_layers_with_request(
                     TileFetchResult::Tile {
