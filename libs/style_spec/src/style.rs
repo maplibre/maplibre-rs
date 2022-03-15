@@ -12,6 +12,59 @@ pub struct Style {
     pub layers: Vec<Layer>,
 }
 
+impl Default for Style {
+    fn default() -> Self {
+        Style {
+            version: 8,
+            name: "Default Style".to_string(),
+            metadata: Default::default(),
+            sources: Default::default(),
+            layers: vec![
+                Layer {
+                    id: "transportation".to_string(),
+                    typ: "line".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: None,
+                    source: None,
+                    source_layer: Some("transportation".to_string()),
+                },
+                Layer {
+                    id: "building".to_string(),
+                    typ: "fill".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: None,
+                    source: None,
+                    source_layer: Some("building".to_string()),
+                },
+                Layer {
+                    id: "water".to_string(),
+                    typ: "fill".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: None,
+                    source: None,
+                    source_layer: Some("water".to_string()),
+                },
+                Layer {
+                    id: "boundary".to_string(),
+                    typ: "line".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: None,
+                    source: None,
+                    source_layer: Some("boundary".to_string()),
+                },
+            ],
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
