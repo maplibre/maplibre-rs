@@ -3,7 +3,7 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
-use log::{error, trace};
+use log::{error, info, trace};
 use style_spec::Style;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -19,6 +19,7 @@ pub async fn run(
     event_loop: EventLoop<()>,
     mut scheduler: Box<IOScheduler>,
     style: Box<Style>,
+    max_frames: Option<u64>,
 ) {
     let mut input = InputController::new(0.2, 100.0, 0.1);
     let mut maybe_state: Option<RenderState> = {
@@ -33,6 +34,8 @@ pub async fn run(
     };
 
     let mut last_render_time = Instant::now();
+
+    let mut current_frame: u64 = 0;
 
     event_loop.run(move |event, _, control_flow| {
         /* FIXME:   On Android we need to initialize the surface on Event::Resumed. On desktop this
@@ -108,6 +111,15 @@ pub async fn run(
                         },
                         // All other errors (Outdated, Timeout) should be resolved by the next frame
                         Err(e) => eprintln!("{:?}", e),
+                    };
+
+                    current_frame += 1;
+
+                    if let Some(max_frames) = max_frames {
+                        if current_frame >= max_frames {
+                            info!("Exiting because maximum frames reached.");
+                            *control_flow = ControlFlow::Exit;
+                        }
                     }
                 }
                 Event::Suspended => {

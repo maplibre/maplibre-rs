@@ -35,12 +35,18 @@ impl Map {
             self.event_loop,
             self.scheduler,
             Box::new(self.style),
+            None,
         )
         .await;
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     pub fn run_sync(self) {
+        self.run_sync_with_max_frames(None);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn run_sync_with_max_frames(self, max_frames: Option<u64>) {
         tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
@@ -51,6 +57,7 @@ impl Map {
                     self.event_loop,
                     self.scheduler,
                     Box::new(self.style),
+                    max_frames,
                 )
                 .await;
             })
