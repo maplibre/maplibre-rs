@@ -62,6 +62,7 @@ pub struct ThreadLocalTessellatorState {
 #[cfg(target_arch = "wasm32")]
 impl Drop for ThreadLocalTessellatorState {
     fn drop(&mut self) {
+        use log::warn;
         warn!(
             "ThreadLocalTessellatorState dropped. \
             On web this should only happen when the application is stopped!"
