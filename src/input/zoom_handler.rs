@@ -24,6 +24,7 @@ impl UpdateState for ZoomHandler {
 
                 state.zoom = next_zoom;
                 self.zoom_delta = 0.0;
+                println!("zoom: {}", state.zoom);
 
                 let perspective = &state.perspective;
                 let view_proj = state.camera.calc_view_proj(perspective);
