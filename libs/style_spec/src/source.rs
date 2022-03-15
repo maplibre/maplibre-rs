@@ -4,7 +4,7 @@ pub type TileUrl = String;
 
 pub type TileJSONUrl = String;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum TileAdressingScheme {
     #[serde(rename = "xyz")]
     XYZ,
@@ -18,7 +18,7 @@ impl Default for TileAdressingScheme {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct VectorSource {
     /// String which contains attribution information for the used tiles
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,7 +43,7 @@ pub struct VectorSource {
     // TODO volatile
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 pub enum Source {
     #[serde(rename = "vector")]
