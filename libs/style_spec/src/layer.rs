@@ -58,3 +58,18 @@ pub struct StyleLayer {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_layer: Option<String>,
 }
+
+impl Default for StyleLayer {
+    fn default() -> Self {
+        Self {
+            id: "id".to_string(),
+            typ: "fill".to_string(),
+            maxzoom: None,
+            minzoom: None,
+            metadata: None,
+            paint: None,
+            source: None,
+            source_layer: None,
+        }
+    }
+}

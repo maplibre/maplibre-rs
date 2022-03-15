@@ -388,6 +388,7 @@ impl IndexEntry {
 #[cfg(test)]
 mod tests {
     use lyon::tessellation::VertexBuffers;
+    use style_spec::layer::StyleLayer;
     use wgpu::BufferAddress;
 
     use crate::render::buffer_pool::{
@@ -433,7 +434,7 @@ mod tests {
             );
 
         let queue = TestQueue {};
-        let layer_name = "layer";
+        let style_layer = StyleLayer::default();
 
         let mut data48bytes = VertexBuffers::new();
         data48bytes.vertices.append(&mut create_48byte());
@@ -449,7 +450,7 @@ mod tests {
             pool.allocate_tile_geometry(
                 &queue,
                 (0, 0, 0).into(),
-                layer_name,
+                style_layer.clone(),
                 &data48bytes_aligned,
                 2,
                 &vec![],
@@ -463,7 +464,7 @@ mod tests {
         pool.allocate_tile_geometry(
             &queue,
             (0, 0, 0).into(),
-            layer_name,
+            style_layer.clone(),
             &data24bytes_aligned,
             2,
             &vec![],
@@ -477,7 +478,7 @@ mod tests {
         pool.allocate_tile_geometry(
             &queue,
             (0, 0, 0).into(),
-            layer_name,
+            style_layer.clone(),
             &data24bytes_aligned,
             2,
             &vec![],
@@ -489,7 +490,7 @@ mod tests {
         pool.allocate_tile_geometry(
             &queue,
             (0, 0, 0).into(),
-            layer_name,
+            style_layer.clone(),
             &data24bytes_aligned,
             2,
             &vec![],
@@ -500,7 +501,7 @@ mod tests {
         pool.allocate_tile_geometry(
             &queue,
             (0, 0, 0).into(),
-            layer_name,
+            style_layer.clone(),
             &data24bytes_aligned,
             2,
             &vec![],
@@ -511,7 +512,7 @@ mod tests {
         pool.allocate_tile_geometry(
             &queue,
             (0, 0, 0).into(),
-            layer_name,
+            style_layer.clone(),
             &data24bytes_aligned,
             2,
             &vec![],
