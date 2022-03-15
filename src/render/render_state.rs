@@ -374,7 +374,7 @@ impl RenderState {
                     coords,
                     layers: source_layers.clone(),
                 };
-                scheduler.request_tile(tile_request).unwrap();
+                scheduler.try_request_tile(tile_request).unwrap();
             }
         }
 

@@ -1,10 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
+use log::{info, warn};
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
-
-//use crossbeam_channel::{unbounded as channel, Receiver, RecvError, SendError, Sender};
-use log::{info, warn};
 
 use style_spec::source::TileAdressingScheme;
 use vector_tile::parse_tile_bytes;
@@ -12,7 +10,7 @@ use vector_tile::parse_tile_bytes;
 /// Describes through which channels work-requests travel. It describes the flow of work.
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::io::tile_cache::TileCache;
-use crate::io::{LayerResult, TileRequest, TileRequestID, TileResult};
+use crate::io::{LayerResult, TileFetchResult, TileRequest, TileRequestID, TileTessellateResult};
 
 use crate::tessellation::Tessellated;
 
@@ -21,6 +19,19 @@ pub enum ScheduleMethod {
     Tokio(crate::platform::scheduler::TokioScheduleMethod),
     #[cfg(target_arch = "wasm32")]
     WebWorker(crate::platform::scheduler::WebWorkerScheduleMethod),
+}
+
+impl Default for ScheduleMethod {
+    fn default() -> Self {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            ScheduleMethod::Tokio(crate::platform::scheduler::TokioScheduleMethod::new(None))
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            ScheduleMethod::Tokio(crate::platform::scheduler::WebWorkerScheduleMethod::new())
+        }
+    }
 }
 
 impl ScheduleMethod {
@@ -45,7 +56,17 @@ impl ScheduleMethod {
 
 pub struct ThreadLocalTessellatorState {
     tile_request_state: Arc<Mutex<TileRequestState>>,
-    layer_result_sender: Sender<LayerResult>,
+    layer_result_sender: Sender<TileTessellateResult>,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl Drop for ThreadLocalTessellatorState {
+    fn drop(&mut self) {
+        warn!(
+            "ThreadLocalTessellatorState dropped. \
+            On web this should only happen when the application is stopped!"
+        );
+    }
 }
 
 impl ThreadLocalTessellatorState {
@@ -53,15 +74,16 @@ impl ThreadLocalTessellatorState {
         &self,
         request_id: TileRequestID,
         data: Box<[u8]>,
-    ) -> Result<(), SendError<LayerResult>> {
-        if let Ok(tile_request_state) = self.tile_request_state.lock() {
-            if let Some(tile_request) = tile_request_state.finish_tile_request(request_id) {
+    ) -> Result<(), SendError<TileTessellateResult>> {
+        if let Ok(mut tile_request_state) = self.tile_request_state.lock() {
+            if let Some(tile_request) = tile_request_state.get_tile_request(request_id) {
                 self.tessellate_layers_with_request(
-                    TileResult::Tile {
+                    TileFetchResult::Tile {
                         coords: tile_request.coords,
                         data,
                     },
-                    tile_request,
+                    &tile_request,
+                    request_id,
                 )
             } else {
                 Ok(())
@@ -73,10 +95,11 @@ impl ThreadLocalTessellatorState {
 
     fn tessellate_layers_with_request(
         &self,
-        tile_result: TileResult,
+        tile_result: TileFetchResult,
         tile_request: &TileRequest,
-    ) -> Result<(), SendError<LayerResult>> {
-        if let TileResult::Tile { data, coords } = tile_result {
+        request_id: TileRequestID,
+    ) -> Result<(), SendError<TileTessellateResult>> {
+        if let TileFetchResult::Tile { data, coords } = tile_result {
             info!("parsing tile {} with {}bytes", &coords, data.len());
             let tile = parse_tile_bytes(&data).expect("failed to load tile");
 
@@ -87,26 +110,37 @@ impl ThreadLocalTessellatorState {
                     .find(|layer| to_load.as_str() == layer.name())
                 {
                     if let Some((buffer, feature_indices)) = layer.tessellate() {
-                        self.layer_result_sender
-                            .send(LayerResult::TessellatedLayer {
+                        self.layer_result_sender.send(TileTessellateResult::Layer(
+                            LayerResult::TessellatedLayer {
                                 coords,
                                 buffer: buffer.into(),
                                 feature_indices,
                                 layer_data: layer.clone(),
-                            })?;
+                            },
+                        ))?;
+                    } else {
+                        self.layer_result_sender.send(TileTessellateResult::Layer(
+                            LayerResult::UnavailableLayer {
+                                coords,
+                                layer_name: to_load.to_string(),
+                            },
+                        ))?;
                     }
 
                     info!("layer {} ready: {}", to_load, &coords);
                 } else {
-                    self.layer_result_sender
-                        .send(LayerResult::UnavailableLayer {
+                    self.layer_result_sender.send(TileTessellateResult::Layer(
+                        LayerResult::UnavailableLayer {
                             coords,
                             layer_name: to_load.to_string(),
-                        })?;
+                        },
+                    ))?;
 
                     info!("layer {} not found: {}", to_load, &coords);
                 }
             }
+            self.layer_result_sender
+                .send(TileTessellateResult::Tile { request_id })?;
         }
 
         Ok(())
@@ -114,8 +148,8 @@ impl ThreadLocalTessellatorState {
 }
 
 pub struct IOScheduler {
-    layer_result_sender: Sender<LayerResult>,
-    layer_result_receiver: Receiver<LayerResult>,
+    result_sender: Sender<TileTessellateResult>,
+    result_receiver: Receiver<TileTessellateResult>,
     tile_request_state: Arc<Mutex<TileRequestState>>,
     tile_cache: TileCache,
     schedule_method: ScheduleMethod,
@@ -129,69 +163,68 @@ const _: () = {
     }
 };
 
-impl Drop for IOScheduler {
-    fn drop(&mut self) {
-        warn!("WorkerLoop dropped. This should only happen when the application is stopped!");
-    }
-}
-
 impl IOScheduler {
     pub fn new(schedule_method: ScheduleMethod) -> Self {
-        let (layer_result_sender, layer_result_receiver) = channel();
+        let (result_sender, result_receiver) = channel();
         Self {
-            layer_result_sender,
-            layer_result_receiver,
+            result_sender,
+            result_receiver,
             tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
             tile_cache: TileCache::new(),
             schedule_method,
         }
     }
 
-    pub fn populate_cache(&self) {
-        while let Ok(result) = self.layer_result_receiver.try_recv() {
-            self.tile_cache.push(result);
+    pub fn try_populate_cache(&mut self) {
+        if let Ok(result) = self.result_receiver.try_recv() {
+            match result {
+                TileTessellateResult::Tile { request_id } => loop {
+                    if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
+                        tile_request_state.finish_tile_request(request_id);
+                        break;
+                    }
+                },
+                TileTessellateResult::Layer(layer_result) => {
+                    self.tile_cache.push(layer_result);
+                }
+            }
         }
     }
 
     pub fn new_tessellator_state(&self) -> ThreadLocalTessellatorState {
         ThreadLocalTessellatorState {
             tile_request_state: self.tile_request_state.clone(),
-            layer_result_sender: self.layer_result_sender.clone(),
+            layer_result_sender: self.result_sender.clone(),
         }
     }
 
-    pub fn request_tile(
+    pub fn try_request_tile(
         &mut self,
         tile_request: TileRequest,
     ) -> Result<(), SendError<TileRequest>> {
         let TileRequest { coords, layers } = &tile_request;
 
-        if let Some(missing_layers) = self
-            .tile_cache
-            .get_missing_tessellated_layer_names_at(coords, layers.clone())
-        {
-            if missing_layers.is_empty() {
-                return Ok(());
-            }
+        let mut missing_layers = layers.clone();
+        self.tile_cache
+            .retain_missing_layer_names(coords, &mut missing_layers);
 
-            loop {
-                if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
-                    if let Some(id) = tile_request_state.start_tile_request(tile_request.clone()) {
-                        info!("new tile request: {}", &coords);
-
-                        let tile_coords = coords.into_tile(TileAdressingScheme::TMS);
-                        self.schedule_method
-                            .schedule_tile_request(self, id, tile_coords)
-                    }
-
-                    break;
-                }
-            }
-
-            Ok(())
-        } else {
-            Ok(())
+        if missing_layers.is_empty() {
+            return Ok(());
         }
+
+        if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
+            let tile_coords = *coords;
+
+            if let Some(id) = tile_request_state.start_tile_request(tile_request) {
+                info!("new tile request: {}", &tile_coords);
+
+                let tile_coords = tile_coords.into_tile(TileAdressingScheme::TMS);
+                self.schedule_method
+                    .schedule_tile_request(self, id, tile_coords)
+            }
+        }
+
+        Ok(())
     }
 
     pub fn get_tessellated_layers_at(
@@ -235,14 +268,14 @@ impl TileRequestState {
         Some(id)
     }
 
-    /*pub fn finish_tile_request(&mut self, id: TileRequestID) -> Option<TileRequest> {
+    pub fn finish_tile_request(&mut self, id: TileRequestID) -> Option<TileRequest> {
         self.pending_tile_requests.remove(&id).map(|request| {
             self.pending_coords.remove(&request.coords);
             request
         })
-    }*/
+    }
 
-    pub fn finish_tile_request(&self, id: TileRequestID) -> Option<&TileRequest> {
-        self.pending_tile_requests.get(&id)
+    pub fn get_tile_request(&self, id: TileRequestID) -> Option<TileRequest> {
+        self.pending_tile_requests.get(&id).cloned()
     }
 }

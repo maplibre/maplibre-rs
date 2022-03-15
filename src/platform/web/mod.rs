@@ -52,12 +52,12 @@ pub fn create_scheduler() -> *mut IOScheduler {
 }
 
 #[wasm_bindgen]
-pub fn new_tessellator_state(workflow_ptr: *mut IOScheduler) -> *mut ThreadLocalTessellatorState {
-    let workflow: Box<IOScheduler> = unsafe { Box::from_raw(workflow_ptr) };
-    let tessellator_state = Box::new(workflow.new_tessellator_state());
+pub fn new_tessellator_state(scheduler_ptr: *mut IOScheduler) -> *mut ThreadLocalTessellatorState {
+    let scheduler: Box<IOScheduler> = unsafe { Box::from_raw(scheduler_ptr) };
+    let tessellator_state = Box::new(scheduler.new_tessellator_state());
     let tessellator_state_ptr = Box::into_raw(tessellator_state);
-    // Call forget such that workflow does not get deallocated
-    std::mem::forget(workflow);
+    // Call forget such that scheduler does not get deallocated
+    std::mem::forget(scheduler);
     return tessellator_state_ptr;
 }
 
@@ -74,7 +74,7 @@ pub fn tessellate_layers(
         .tessellate_layers(request_id, data)
         .unwrap();
 
-    // Call forget such that workflow does not get deallocated
+    // Call forget such that scheduler does not get deallocated
     std::mem::forget(tessellator_state);
 }
 
@@ -99,8 +99,8 @@ pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
 }
 
 #[wasm_bindgen]
-pub async fn run(workflow_ptr: *mut IOScheduler) {
-    let scheduler: Box<IOScheduler> = unsafe { Box::from_raw(workflow_ptr) };
+pub async fn run(scheduler_ptr: *mut IOScheduler) {
+    let scheduler: Box<IOScheduler> = unsafe { Box::from_raw(scheduler_ptr) };
 
     // Either call forget or the main loop to keep worker loop alive
     MapBuilder::from_canvas("mapr")
@@ -109,7 +109,7 @@ pub async fn run(workflow_ptr: *mut IOScheduler) {
         .run_async()
         .await;
 
-    // std::mem::forget(workflow);
+    // std::mem::forget(scheduler);
 }
 
 pub mod scheduler {

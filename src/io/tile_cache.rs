@@ -3,31 +3,25 @@ use crate::io::LayerResult;
 use std::collections::{btree_map, BTreeMap, HashSet};
 use std::sync::{Arc, Mutex};
 
-#[derive(Clone)]
 pub struct TileCache {
-    store: Arc<Mutex<BTreeMap<WorldTileCoords, Vec<LayerResult>>>>,
+    index: BTreeMap<WorldTileCoords, Vec<LayerResult>>,
 }
 
 impl TileCache {
     pub fn new() -> Self {
         Self {
-            store: Arc::new(Mutex::new(BTreeMap::new())),
+            index: BTreeMap::new(),
         }
     }
 
-    pub fn push(&self, result: LayerResult) -> bool {
-        if let Ok(mut map) = self.store.lock() {
-            match map.entry(result.get_coords()) {
-                btree_map::Entry::Vacant(entry) => {
-                    entry.insert(vec![result]);
-                }
-                btree_map::Entry::Occupied(mut entry) => {
-                    entry.get_mut().push(result);
-                }
+    pub fn push(&mut self, result: LayerResult) {
+        match self.index.entry(result.get_coords()) {
+            btree_map::Entry::Vacant(entry) => {
+                entry.insert(vec![result]);
             }
-            true
-        } else {
-            false
+            btree_map::Entry::Occupied(mut entry) => {
+                entry.get_mut().push(result);
+            }
         }
     }
 
@@ -37,12 +31,11 @@ impl TileCache {
         skip_layers: &HashSet<String>,
     ) -> Vec<LayerResult> {
         let mut ret = Vec::new();
-        if let Ok(map) = self.store.try_lock() {
-            if let Some(results) = map.get(coords) {
-                for result in results {
-                    if !skip_layers.contains(&result.layer_name().to_string()) {
-                        ret.push(result.clone());
-                    }
+
+        if let Some(results) = self.index.get(coords) {
+            for result in results {
+                if !skip_layers.contains(&result.layer_name().to_string()) {
+                    ret.push(result.clone());
                 }
             }
         }
@@ -50,26 +43,18 @@ impl TileCache {
         ret
     }
 
-    pub fn get_missing_tessellated_layer_names_at(
+    pub fn retain_missing_layer_names(
         &self,
         coords: &WorldTileCoords,
-        mut layers: HashSet<String>,
-    ) -> Option<HashSet<String>> {
-        if let Ok(loaded) = self.store.try_lock() {
-            if let Some(tessellated_layers) = loaded.get(coords) {
-                let tessellated_set: HashSet<String> = tessellated_layers
-                    .iter()
-                    .map(|tessellated_layer| tessellated_layer.layer_name().to_string())
-                    .collect();
+        layers: &mut HashSet<String>,
+    ) {
+        if let Some(results) = self.index.get(coords) {
+            let tessellated_set: HashSet<String> = results
+                .iter()
+                .map(|tessellated_layer| tessellated_layer.layer_name().to_string())
+                .collect();
 
-                layers.retain(|layer| !tessellated_set.contains(layer));
-
-                Some(layers)
-            } else {
-                Some(layers)
-            }
-        } else {
-            None
+            layers.retain(|layer| !tessellated_set.contains(layer));
         }
     }
 }

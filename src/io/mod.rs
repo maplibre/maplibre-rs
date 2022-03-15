@@ -14,7 +14,7 @@ pub mod static_tile_fetcher;
 pub mod tile_cache;
 
 #[derive(Clone)]
-pub enum TileResult {
+pub enum TileFetchResult {
     Unavailable {
         coords: WorldTileCoords,
     },
@@ -22,6 +22,12 @@ pub enum TileResult {
         coords: WorldTileCoords,
         data: Box<[u8]>,
     },
+}
+
+#[derive(Clone)]
+pub enum TileTessellateResult {
+    Tile { request_id: TileRequestID },
+    Layer(LayerResult),
 }
 
 #[derive(Clone)]

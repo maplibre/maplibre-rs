@@ -17,7 +17,7 @@ use crate::render::render_state::RenderState;
 pub async fn run(
     window: winit::window::Window,
     event_loop: EventLoop<()>,
-    mut workflow: Box<IOScheduler>,
+    mut scheduler: Box<IOScheduler>,
     style: Box<Style>,
 ) {
     let mut input = InputController::new(0.2, 100.0, 0.1);
@@ -87,10 +87,10 @@ pub async fn run(
                     let dt = now - last_render_time;
                     last_render_time = now;
 
-                    workflow.populate_cache();
+                    scheduler.try_populate_cache();
 
                     input.update_state(state, dt);
-                    state.upload_tile_geometry(&mut workflow);
+                    state.upload_tile_geometry(&mut scheduler);
                     match state.render() {
                         Ok(_) => {}
                         Err(wgpu::SurfaceError::Lost) => {
