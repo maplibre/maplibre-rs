@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Build WASM" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --lib --target wasm32-unknown-unknown --features web-webgl" />
+    <option name="command" value="build --features web-webgl --lib --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />
@@ -8,7 +8,9 @@
     <option name="emulateTerminal" value="false" />
     <option name="withSudo" value="false" />
     <option name="backtrace" value="SHORT" />
-    <envs />
+    <envs>
+      <env name="RUSTUP_TOOLCHAIN" value="nightly-2022-02-26-x86_64-unknown-linux-gnu" />
+    </envs>
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
     <method v="2">
