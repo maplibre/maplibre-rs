@@ -35,7 +35,7 @@ impl Default for Style {
                     source_layer: Some("park".to_string()),
                 },
                 StyleLayer {
-                    id: "lanuse".to_string(),
+                    id: "landuse".to_string(),
                     typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
@@ -59,7 +59,7 @@ impl Default for Style {
                     source_layer: Some("landcover".to_string()),
                 },
                 StyleLayer {
-                    id: "transportation".to_string(),
+                    id: "1transportation".to_string(),
                     typ: "line".to_string(),
                     maxzoom: None,
                     minzoom: None,
