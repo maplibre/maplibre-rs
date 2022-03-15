@@ -37,7 +37,7 @@ pub enum LayerPaint {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Layer {
+pub struct StyleLayer {
     pub id: String,
     #[serde(rename = "type")]
     pub typ: String,

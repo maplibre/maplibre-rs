@@ -1,4 +1,4 @@
-use crate::layer::Layer;
+use crate::layer::StyleLayer;
 use crate::source::Source;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -9,7 +9,7 @@ pub struct Style {
     pub name: String,
     pub metadata: HashMap<String, String>,
     pub sources: HashMap<String, Source>,
-    pub layers: Vec<Layer>,
+    pub layers: Vec<StyleLayer>,
 }
 
 impl Default for Style {
@@ -20,7 +20,7 @@ impl Default for Style {
             metadata: Default::default(),
             sources: Default::default(),
             layers: vec![
-                Layer {
+                StyleLayer {
                     id: "transportation".to_string(),
                     typ: "line".to_string(),
                     maxzoom: None,
@@ -30,7 +30,7 @@ impl Default for Style {
                     source: None,
                     source_layer: Some("transportation".to_string()),
                 },
-                Layer {
+                StyleLayer {
                     id: "building".to_string(),
                     typ: "fill".to_string(),
                     maxzoom: None,
@@ -40,7 +40,7 @@ impl Default for Style {
                     source: None,
                     source_layer: Some("building".to_string()),
                 },
-                Layer {
+                StyleLayer {
                     id: "water".to_string(),
                     typ: "fill".to_string(),
                     maxzoom: None,
@@ -50,7 +50,7 @@ impl Default for Style {
                     source: None,
                     source_layer: Some("water".to_string()),
                 },
-                Layer {
+                StyleLayer {
                     id: "boundary".to_string(),
                     typ: "line".to_string(),
                     maxzoom: None,
