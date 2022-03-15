@@ -29,7 +29,7 @@ impl Default for ScheduleMethod {
         }
         #[cfg(target_arch = "wasm32")]
         {
-            ScheduleMethod::Tokio(crate::platform::scheduler::WebWorkerScheduleMethod::new())
+            ScheduleMethod::WebWorker(crate::platform::scheduler::WebWorkerScheduleMethod::new())
         }
     }
 }

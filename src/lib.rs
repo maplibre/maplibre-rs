@@ -30,7 +30,13 @@ pub struct Map {
 impl Map {
     #[cfg(target_arch = "wasm32")]
     pub async fn run_async(self) {
-        main_loop::run(self.window, self.event_loop, self.scheduler).await;
+        main_loop::run(
+            self.window,
+            self.event_loop,
+            self.scheduler,
+            Box::new(self.style),
+        )
+        .await;
     }
 
     #[cfg(not(target_arch = "wasm32"))]

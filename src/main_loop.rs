@@ -21,10 +21,15 @@ pub async fn run(
     style: Box<Style>,
 ) {
     let mut input = InputController::new(0.2, 100.0, 0.1);
-    let mut maybe_state: Option<RenderState> = if cfg!(target_os = "android") {
-        None
-    } else {
-        Some(RenderState::new(&window, style).await)
+    let mut maybe_state: Option<RenderState> = {
+        #[cfg(target_os = "android")]
+        {
+            None
+        }
+        #[cfg(not(target_os = "android"))]
+        {
+            Some(RenderState::new(&window, style).await)
+        }
     };
 
     let mut last_render_time = Instant::now();
