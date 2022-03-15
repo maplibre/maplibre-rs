@@ -9,7 +9,8 @@ build = "build.rs"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
-# csscolorparser = "0.5"
+csscolorparser = { version = "0.5", features = ["serde", "cint"]}
+cint = "0.2"
 
 [build-dependencies]
 serde_json = "1.0"

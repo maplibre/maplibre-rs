@@ -5,6 +5,7 @@ use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
 
+use style_spec::layer::StyleLayer;
 use wgpu::BufferAddress;
 
 use crate::coords::WorldTileCoords;
@@ -138,7 +139,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         self.index
             .iter()
             .filter(|entry| entry.coords == *coords)
-            .map(|entry| entry.layer_name.clone())
+            .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().clone())
             .collect()
     }
 
@@ -151,7 +152,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         &mut self,
         queue: &Q,
         coords: WorldTileCoords,
-        layer_name: &str,
+        style_layer: StyleLayer,
         geometry: &OverAlignedVertexBuffer<V, I>,
         tile_metadata: TM,
         feature_metadata: &Vec<FM>,
@@ -189,7 +190,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
 
         let maybe_entry = IndexEntry {
             coords,
-            layer_name: layer_name.to_string(),
+            style_layer,
             buffer_vertices: self.vertices.make_room(vertices_bytes, &mut self.index),
             buffer_indices: self.indices.make_room(indices_bytes, &mut self.index),
             usable_indices: geometry.usable_indices as u32,
@@ -348,7 +349,7 @@ impl<B> BackingBuffer<B> {
 #[derive(Debug)]
 pub struct IndexEntry {
     pub coords: WorldTileCoords,
-    pub layer_name: String,
+    pub style_layer: StyleLayer,
     // Range of bytes within the backing buffer for vertices
     buffer_vertices: Range<wgpu::BufferAddress>,
     // Range of bytes within the backing buffer for indices

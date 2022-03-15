@@ -7,7 +7,8 @@ use crate::coords::ViewRegion;
 
 use crate::io::scheduler::IOScheduler;
 use crate::io::{LayerResult, TileRequest};
-use style_spec::Style;
+use style_spec::layer::LayerPaint;
+use style_spec::{EncodedSrgb, Style};
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
@@ -401,53 +402,68 @@ impl RenderState {
             for coords in view_region.iter() {
                 let loaded_layers = self.buffer_pool.get_loaded_layers(&coords);
 
-                let layers = scheduler.get_tessellated_layers_at(&coords, &loaded_layers);
-                for result in layers {
-                    match result {
-                        LayerResult::UnavailableLayer { .. } => {}
-                        LayerResult::TessellatedLayer {
-                            coords,
-                            feature_indices,
-                            layer_data,
-                            buffer,
-                            ..
-                        } => {
-                            let world_coords = coords;
+                let available_layers = scheduler.get_tessellated_layers_at(&coords, &loaded_layers);
 
-                            let feature_metadata = layer_data
-                                .features()
-                                .iter()
-                                .enumerate()
-                                .flat_map(|(i, _feature)| {
-                                    iter::repeat(ShaderFeatureStyle {
-                                        color: match layer_data.name() {
-                                            "transportation" => [1.0, 0.0, 0.0, 1.0],
-                                            "building" => [0.0, 1.0, 1.0, 1.0],
-                                            "boundary" => [0.0, 0.0, 0.0, 1.0],
-                                            "water" => [0.0, 0.0, 0.7, 1.0],
-                                            "waterway" => [0.0, 0.0, 7.0, 1.0],
-                                            _ => [0.0, 0.0, 0.0, 0.0],
-                                        },
-                                    })
-                                    .take(*feature_indices.get(i).unwrap() as usize)
-                                })
-                                .collect::<Vec<_>>();
+                for style_layer in &self.style.layers {
+                    let source_layer = style_layer.source_layer.as_ref().unwrap();
 
-                            // We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                            // better supported.
-                            let transform: Matrix4<f32> = (view_proj
-                                * world_coords.transform_for_zoom(self.zoom))
-                            .cast()
-                            .unwrap();
+                    if let Some(result) = available_layers
+                        .iter()
+                        .find(|layer| source_layer.as_str() == layer.layer_name())
+                    {
+                        let color: Option<style_spec::Alpha<EncodedSrgb<f32>>> =
+                            style_layer.paint.as_ref().and_then(|paint| match paint {
+                                LayerPaint::Background(paint) => paint
+                                    .background_color
+                                    .as_ref()
+                                    .map(|color| color.clone().into()),
+                                LayerPaint::Line(paint) => {
+                                    paint.line_color.as_ref().map(|color| color.clone().into())
+                                }
+                                LayerPaint::Fill(paint) => {
+                                    paint.fill_color.as_ref().map(|color| color.clone().into())
+                                }
+                            });
 
-                            self.buffer_pool.allocate_tile_geometry(
-                                &self.queue,
+                        match result {
+                            LayerResult::UnavailableLayer { .. } => {}
+                            LayerResult::TessellatedLayer {
                                 coords,
-                                layer_data.name(),
-                                &buffer,
-                                ShaderTileMetadata::new(transform.into()),
-                                &feature_metadata,
-                            );
+                                feature_indices,
+                                layer_data,
+                                buffer,
+                                ..
+                            } => {
+                                let world_coords = coords;
+
+                                let feature_metadata = layer_data
+                                    .features()
+                                    .iter()
+                                    .enumerate()
+                                    .flat_map(|(i, _feature)| {
+                                        iter::repeat(ShaderFeatureStyle {
+                                            color: color.unwrap().into(),
+                                        })
+                                        .take(*feature_indices.get(i).unwrap() as usize)
+                                    })
+                                    .collect::<Vec<_>>();
+
+                                // We are casting here from 64bit to 32bit, because 32bit is more performant and is
+                                // better supported.
+                                let transform: Matrix4<f32> = (view_proj
+                                    * world_coords.transform_for_zoom(self.zoom))
+                                .cast()
+                                .unwrap();
+
+                                self.buffer_pool.allocate_tile_geometry(
+                                    &self.queue,
+                                    *coords,
+                                    style_layer.clone(),
+                                    &buffer,
+                                    ShaderTileMetadata::new(transform.into()),
+                                    &feature_metadata,
+                                );
+                            }
                         }
                     }
                 }
@@ -516,9 +532,10 @@ impl RenderState {
             pass.set_bind_group(0, &self.bind_group, &[]);
 
             {
-                for entry in self
-                    .buffer_pool
-                    .index()
+                let mut to_render = self.buffer_pool.index().collect::<Vec<_>>();
+                to_render.sort_by(|a, b| a.style_layer.id.partial_cmp(&b.style_layer.id).unwrap());
+                for entry in to_render
+                    .iter()
                     .filter(|entry| entry.coords.z == self.visible_z())
                 {
                     let reference =

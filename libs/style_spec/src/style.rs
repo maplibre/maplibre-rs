@@ -1,7 +1,9 @@
-use crate::layer::StyleLayer;
+use crate::layer::{LayerPaint, LinePaint, StyleLayer};
 use crate::source::Source;
+use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::str::FromStr;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Style {
@@ -21,12 +23,50 @@ impl Default for Style {
             sources: Default::default(),
             layers: vec![
                 StyleLayer {
+                    id: "park".to_string(),
+                    typ: "fill".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("lightgreen").unwrap()),
+                    })),
+                    source: None,
+                    source_layer: Some("park".to_string()),
+                },
+                StyleLayer {
+                    id: "lanuse".to_string(),
+                    typ: "fill".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("lightgreen").unwrap()),
+                    })),
+                    source: None,
+                    source_layer: Some("landuse".to_string()),
+                },
+                StyleLayer {
+                    id: "landcover".to_string(),
+                    typ: "fill".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("lightgreen").unwrap()),
+                    })),
+                    source: None,
+                    source_layer: Some("landcover".to_string()),
+                },
+                StyleLayer {
                     id: "transportation".to_string(),
                     typ: "line".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("violet").unwrap()),
+                    })),
                     source: None,
                     source_layer: Some("transportation".to_string()),
                 },
@@ -36,7 +76,9 @@ impl Default for Style {
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("grey").unwrap()),
+                    })),
                     source: None,
                     source_layer: Some("building".to_string()),
                 },
@@ -46,7 +88,9 @@ impl Default for Style {
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("blue").unwrap()),
+                    })),
                     source: None,
                     source_layer: Some("water".to_string()),
                 },
@@ -56,7 +100,9 @@ impl Default for Style {
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("black").unwrap()),
+                    })),
                     source: None,
                     source_layer: Some("boundary".to_string()),
                 },

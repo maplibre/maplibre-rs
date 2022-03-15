@@ -1,31 +1,32 @@
+use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {
     #[serde(rename = "background-color")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub background_color: Option<String>,
+    pub background_color: Option<Color>,
     // TODO a lot
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FillPaint {
     #[serde(rename = "fill-color")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill_color: Option<String>,
+    pub fill_color: Option<Color>,
     // TODO a lot
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LinePaint {
     #[serde(rename = "line-color")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub line_color: Option<String>,
+    pub line_color: Option<Color>,
     // TODO a lot
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", content = "paint")]
 pub enum LayerPaint {
     #[serde(rename = "background")]
@@ -36,7 +37,7 @@ pub enum LayerPaint {
     Fill(FillPaint),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct StyleLayer {
     pub id: String,
     #[serde(rename = "type")]
