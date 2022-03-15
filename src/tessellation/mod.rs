@@ -5,22 +5,24 @@ use std::ops::Add;
 
 use crate::render::ShaderVertex;
 use lyon::tessellation::{
-    FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor, VertexBuffers,
+    FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor, TessellationError,
+    VertexBuffers,
 };
 
+use crate::error::Error;
 use wgpu::BufferAddress;
 
 mod layer;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
-pub type IndexDataType = u16; // Must match INDEX_FORMAT
+pub type IndexDataType = u32; // Must match INDEX_FORMAT
 
 pub trait Tessellated<I: Add> {
     /// Returns a vertex buffer which represents some object like a layer. Each object can contain
     /// multiple features. For each feature also the amount of indices is returned.
     ///
-    fn tessellate(&self) -> Option<(VertexBuffers<ShaderVertex, I>, Vec<u32>)>;
+    fn tessellate(&self) -> Result<(VertexBuffers<ShaderVertex, I>, Vec<u32>), Error>;
 }
 
 pub struct VertexConstructor {}

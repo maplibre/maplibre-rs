@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use log::info;
+use log::{error, info};
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
 
@@ -110,22 +110,30 @@ impl ThreadLocalTessellatorState {
                     .iter()
                     .find(|layer| to_load.as_str() == layer.name())
                 {
-                    if let Some((buffer, feature_indices)) = layer.tessellate() {
-                        self.layer_result_sender.send(TileTessellateResult::Layer(
-                            LayerResult::TessellatedLayer {
-                                coords,
-                                buffer: buffer.into(),
-                                feature_indices,
-                                layer_data: layer.clone(),
-                            },
-                        ))?;
-                    } else {
-                        self.layer_result_sender.send(TileTessellateResult::Layer(
-                            LayerResult::UnavailableLayer {
-                                coords,
-                                layer_name: to_load.to_string(),
-                            },
-                        ))?;
+                    match layer.tessellate() {
+                        Ok((buffer, feature_indices)) => {
+                            self.layer_result_sender.send(TileTessellateResult::Layer(
+                                LayerResult::TessellatedLayer {
+                                    coords,
+                                    buffer: buffer.into(),
+                                    feature_indices,
+                                    layer_data: layer.clone(),
+                                },
+                            ))?;
+                        }
+                        Err(e) => {
+                            self.layer_result_sender.send(TileTessellateResult::Layer(
+                                LayerResult::UnavailableLayer {
+                                    coords,
+                                    layer_name: to_load.to_string(),
+                                },
+                            ))?;
+
+                            error!(
+                                "tesselation for layer {} failed: {} {:?}",
+                                to_load, &coords, e
+                            );
+                        }
                     }
 
                     info!("layer {} ready: {}", to_load, &coords);

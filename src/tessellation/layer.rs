@@ -11,6 +11,7 @@ use lyon::tessellation::{
 use lyon_path::traits::SvgPathBuilder;
 use lyon_path::{FillRule, Path};
 
+use crate::error::Error;
 use vector_tile::geometry::{Command, Geometry};
 use vector_tile::tile::Layer;
 
@@ -18,7 +19,7 @@ use crate::render::ShaderVertex;
 use crate::tessellation::{Tessellated, VertexConstructor, DEFAULT_TOLERANCE};
 
 impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tessellated<I> for Layer {
-    fn tessellate(&self) -> Option<(VertexBuffers<ShaderVertex, I>, Vec<u32>)> {
+    fn tessellate(&self) -> Result<(VertexBuffers<ShaderVertex, I>, Vec<u32>), Error> {
         let mut buffer: VertexBuffers<ShaderVertex, I> = VertexBuffers::new();
         let mut feature_indices: Vec<u32> = Vec::new();
         let mut current_index = 0;
@@ -47,14 +48,12 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tessella
                     }
 
                     let mut fill_tessellator = FillTessellator::new();
-                    fill_tessellator
-                        .tessellate_path(
-                            &polygon_builder.build(),
-                            &FillOptions::tolerance(DEFAULT_TOLERANCE)
-                                .with_fill_rule(FillRule::NonZero),
-                            &mut BuffersBuilder::new(&mut buffer, VertexConstructor {}),
-                        )
-                        .ok()?;
+                    fill_tessellator.tessellate_path(
+                        &polygon_builder.build(),
+                        &FillOptions::tolerance(DEFAULT_TOLERANCE)
+                            .with_fill_rule(FillRule::NonZero),
+                        &mut BuffersBuilder::new(&mut buffer, VertexConstructor {}),
+                    )?;
                 }
                 Geometry::GeometryLineString(line_string) => {
                     let mut line_string_builder = Path::builder();
@@ -89,13 +88,11 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tessella
 
                     let mut stroke_tessellator = StrokeTessellator::new();
 
-                    stroke_tessellator
-                        .tessellate_path(
-                            &line_string_builder.build(),
-                            &StrokeOptions::tolerance(DEFAULT_TOLERANCE),
-                            &mut BuffersBuilder::new(&mut buffer, VertexConstructor {}),
-                        )
-                        .ok()?;
+                    stroke_tessellator.tessellate_path(
+                        &line_string_builder.build(),
+                        &StrokeOptions::tolerance(DEFAULT_TOLERANCE),
+                        &mut BuffersBuilder::new(&mut buffer, VertexConstructor {}),
+                    )?;
                 }
                 _ => {}
             };
@@ -106,6 +103,6 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tessella
             current_index = next_index;
         }
 
-        Some((buffer, feature_indices))
+        Ok((buffer, feature_indices))
     }
 }
