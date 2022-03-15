@@ -44,7 +44,7 @@ pub async fn run(
             use tokio::task;
 
             let state = task::block_in_place(|| {
-                Handle::current().block_on(async { RenderState::new(&window, style).await })
+                Handle::current().block_on(async { RenderState::new(&window, style.clone()).await })
             });
             maybe_state = Some(state);
             return;
