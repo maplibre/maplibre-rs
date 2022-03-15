@@ -2,7 +2,6 @@ use crate::coords::WorldTileCoords;
 use crate::io::LayerResult;
 use std::collections::{btree_map, BTreeMap, HashSet};
 
-
 pub struct TileCache {
     index: BTreeMap<WorldTileCoords, Vec<LayerResult>>,
 }

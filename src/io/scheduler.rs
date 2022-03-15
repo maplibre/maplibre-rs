@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use log::{info};
+use log::info;
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
 

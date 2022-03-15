@@ -364,7 +364,8 @@ impl RenderState {
             let source_layers: HashSet<String> = self
                 .style
                 .layers
-                .iter().filter_map(|layer| layer.source_layer.as_ref())
+                .iter()
+                .filter_map(|layer| layer.source_layer.as_ref())
                 .cloned()
                 .collect();
 
