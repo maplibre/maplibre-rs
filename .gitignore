@@ -20,3 +20,6 @@ dist/
 *reqwest*cache*
 
 logs/
+
+perf.data*
+flamegraph.svg
