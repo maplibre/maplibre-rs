@@ -19,6 +19,8 @@ pub enum ScheduleMethod {
     Tokio(crate::platform::scheduler::TokioScheduleMethod),
     #[cfg(target_arch = "wasm32")]
     WebWorker(crate::platform::scheduler::WebWorkerScheduleMethod),
+    #[cfg(target_arch = "wasm32")]
+    WebWorkerPool(crate::platform::scheduler::WebWorkerPoolScheduleMethod),
 }
 
 impl Default for ScheduleMethod {
@@ -48,6 +50,10 @@ impl ScheduleMethod {
             }
             #[cfg(target_arch = "wasm32")]
             ScheduleMethod::WebWorker(method) => {
+                method.schedule_tile_request(scheduler, request_id, coords)
+            }
+            #[cfg(target_arch = "wasm32")]
+            ScheduleMethod::WebWorkerPool(method) => {
                 method.schedule_tile_request(scheduler, request_id, coords)
             }
         }

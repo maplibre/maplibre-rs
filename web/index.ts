@@ -2,10 +2,10 @@ import init, {create_scheduler, new_tessellator_state, run} from "./dist/libs/ma
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 
-
 declare global {
     interface Window {
         schedule_tile_request: (url: string, request_id: number) => void;
+        newWorker: () => void;
     }
 }
 
@@ -83,37 +83,20 @@ const start = async () => {
     preventDefaultTouchActions();
 
     let MEMORY_PAGES = 16 * 1024
-    let WORKER_COUNT = 2
+
+    window.newWorker = () => {
+        return new Worker(new URL('./worker.ts', import.meta.url), {
+            type: 'module'
+        });
+    }
+
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
     await init(undefined, memory)
     const schedulerPtr = create_scheduler()
-
-    const createWorker = (id: number) => {
-        const worker = new Worker(new URL('./worker.ts', import.meta.url), {
-            type: "module",
-            name: `worker_${id}`
-        })
-        worker.postMessage({type: "init", memory} as WebWorkerMessageType)
-
-        return worker
-    }
-
-    let workers: [number, Worker][] = Array.from(
-        new Array(WORKER_COUNT).keys(),
-        (id) => [new_tessellator_state(schedulerPtr), createWorker(id)]
-    )
-
-    window.schedule_tile_request = (url: string, request_id: number) => {
-        const [tessellatorState, worker] = workers[Math.floor(Math.random() * workers.length)]
-        worker.postMessage({
-            type: "fetch_tile",
-            tessellatorState: tessellatorState,
-            url,
-            request_id
-        } as WebWorkerMessageType)
-    }
 
     await run(schedulerPtr)
 }
 
 start().then(() => console.log("started via wasm"))
+
+

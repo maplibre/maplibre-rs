@@ -7,7 +7,7 @@ let dist = path.join(__dirname, 'dist/demo');
 module.exports = (env) => ({
     mode: "development",
     entry: {
-        index: "./index.ts",
+        main: "./index.ts",
     },
     experiments: {
         syncWebAssembly: true

@@ -1,3 +1,5 @@
+mod pool;
+
 use std::panic;
 
 use log::error;
@@ -14,6 +16,7 @@ use crate::io::scheduler::ThreadLocalTessellatorState;
 use crate::MapBuilder;
 use console_error_panic_hook;
 pub use instant::Instant;
+use scheduler::WebWorkerPoolScheduleMethod;
 use scheduler::WebWorkerScheduleMethod;
 use style_spec::source::TileAdressingScheme;
 use wasm_bindgen::prelude::*;
@@ -44,8 +47,8 @@ extern "C" {
 
 #[wasm_bindgen]
 pub fn create_scheduler() -> *mut IOScheduler {
-    let scheduler = Box::new(IOScheduler::new(ScheduleMethod::WebWorker(
-        WebWorkerScheduleMethod::new(),
+    let scheduler = Box::new(IOScheduler::new(ScheduleMethod::WebWorkerPool(
+        WebWorkerPoolScheduleMethod::new(),
     )));
     let scheduler_ptr = Box::into_raw(scheduler);
     return scheduler_ptr;
@@ -113,11 +116,14 @@ pub async fn run(scheduler_ptr: *mut IOScheduler) {
 }
 
 pub mod scheduler {
+    use super::pool::WorkerPool;
     use super::schedule_tile_request;
     use crate::coords::{TileCoords, WorldTileCoords};
     use crate::io::scheduler::{IOScheduler, ScheduleMethod, ThreadLocalTessellatorState};
     use crate::io::tile_cache::TileCache;
     use crate::io::TileRequestID;
+    use log::warn;
+    use std::thread::Thread;
 
     pub struct WebWorkerScheduleMethod;
 
@@ -142,6 +148,91 @@ pub mod scheduler {
                 .as_str(),
                 request_id,
             )
+        }
+    }
+
+    use crate::error::Error;
+    use js_sys::{ArrayBuffer, Error as JSError, Uint8Array};
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen::JsCast;
+    use wasm_bindgen_futures::JsFuture;
+    use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
+    impl From<JsValue> for Error {
+        fn from(maybe_error: JsValue) -> Self {
+            assert!(maybe_error.is_instance_of::<JSError>());
+            let error: JSError = maybe_error.dyn_into().unwrap();
+            Error::Network(error.message().as_string().unwrap())
+        }
+    }
+
+    pub struct WebWorkerPoolScheduleMethod {
+        pool: WorkerPool,
+    }
+
+    impl WebWorkerPoolScheduleMethod {
+        pub fn new() -> Self {
+            Self {
+                pool: WorkerPool::new(4).unwrap(),
+            }
+        }
+
+        async fn fetch(
+            state: ThreadLocalTessellatorState,
+            request_id: TileRequestID,
+            url: &str,
+        ) -> Result<JsValue, JsValue> {
+            let mut opts = RequestInit::new();
+            opts.method("GET");
+
+            let request = Request::new_with_str_and_init(&url, &opts)?;
+
+            // Get the global scope
+            let global = js_sys::global();
+            assert!(global.is_instance_of::<WorkerGlobalScope>());
+            let scope = global.dyn_into::<WorkerGlobalScope>().unwrap();
+
+            // Call fetch on global scope
+            let maybe_response = JsFuture::from(scope.fetch_with_request(&request)).await?;
+            assert!(maybe_response.is_instance_of::<Response>());
+            let response: Response = maybe_response.dyn_into().unwrap();
+
+            // Get ArrayBuffer
+            let maybe_array_buffer = JsFuture::from(response.array_buffer()?).await?;
+            assert!(maybe_array_buffer.is_instance_of::<ArrayBuffer>());
+            let array_buffer: ArrayBuffer = maybe_array_buffer.dyn_into().unwrap();
+
+            // Copy data to Vec<u8>
+            let buffer: Uint8Array = Uint8Array::new(&array_buffer);
+            let mut output: Vec<u8> = vec![0; array_buffer.byte_length() as usize];
+            buffer.copy_to(output.as_mut_slice());
+
+            state
+                .tessellate_layers(request_id, output.into_boxed_slice())
+                .unwrap();
+            Ok(JsValue::undefined())
+        }
+
+        pub fn schedule_tile_request(
+            &self,
+            scheduler: &IOScheduler,
+            request_id: TileRequestID,
+            coords: TileCoords,
+        ) {
+            let state = scheduler.new_tessellator_state();
+
+            self.pool
+                .run(move || {
+                    wasm_bindgen_futures::future_to_promise(async move {
+                        let string = format!(
+                            "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
+                            x = coords.x,
+                            y = coords.y,
+                            z = coords.z,
+                        );
+                        Self::fetch(state, request_id, string.as_str()).await
+                    })
+                })
+                .unwrap();
         }
     }
 }

@@ -18,7 +18,7 @@ build = "build.rs"
 license = "MIT OR Apache-2.0"
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = true
+wasm-opt = false
 
 [profile.release]
 lto = true
@@ -38,6 +38,7 @@ web-sys = { version = "0.3", features = [
     "Window",
     "Headers",
     "WorkerGlobalScope", "Request", "RequestInit", "RequestMode", "Response",
+    "ErrorEvent", "DedicatedWorkerGlobalScope"
 ] }
 js-sys = "0.3"
 wasm-bindgen = "0.2"
