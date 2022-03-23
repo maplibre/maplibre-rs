@@ -19,6 +19,7 @@ extern "C" {
 }
 
 pub struct WorkerPool {
+    new_worker: Box<dyn Fn() -> Worker>,
     state: Rc<PoolState>,
 }
 
@@ -42,8 +43,9 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    pub fn new(initial: usize) -> Result<WorkerPool, JsValue> {
+    pub fn new(initial: usize, new_worker: Box<dyn Fn() -> Worker>) -> Result<WorkerPool, JsValue> {
         let pool = WorkerPool {
+            new_worker,
             state: Rc::new(PoolState {
                 workers: RefCell::new(Vec::with_capacity(initial)),
                 callback: Closure::wrap(Box::new(|event: Event| {
@@ -77,9 +79,10 @@ impl WorkerPool {
         // * How do we not fetch a script N times? It internally then
         //   causes another script to get fetched N times...
         warn!("New worker spawned");
-        let maybe_worker = new_worker();
+        /*let maybe_worker = new_worker();
         assert!(maybe_worker.is_instance_of::<Worker>());
-        let worker: Worker = maybe_worker.dyn_into().unwrap();
+        let worker: Worker = maybe_worker.dyn_into().unwrap();*/
+        let worker = (self.new_worker)();
 
         // With a worker spun up send it the module/memory so it can start
         // instantiating the wasm module. Later it might receive further
