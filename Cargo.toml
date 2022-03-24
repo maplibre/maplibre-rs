@@ -46,7 +46,7 @@ wasm-bindgen-futures = "0.4"
 console_log = { version = "0.2", features = ["color"] }
 instant = { version = "0.1", features = ["stdweb"] } # FIXME: Untrusted dependency
 
-[target.'cfg(any(target_arch = "macos", target_arch = "ios", target_os = "linux", target_os = "android"))'.dependencies]
+[target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android"))'.dependencies]
 tokio = { version = "1.15", features = ["full"] }
 env_logger = "0.9"
 reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "gzip"] }
