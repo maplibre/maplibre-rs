@@ -23,6 +23,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::Window as WebSysWindow;
+use web_sys::Worker;
 
 // WebGPU
 #[cfg(not(feature = "web-webgl"))]
@@ -33,16 +34,11 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
 
 #[wasm_bindgen(start)]
-pub fn start() {
+pub fn wasm_bindgen_start() {
     if let Err(_) = console_log::init_with_level(Level::Info) {
         // Failed to initialize logging. No need to log a message.
     }
     panic::set_hook(Box::new(console_error_panic_hook::hook));
-}
-
-#[wasm_bindgen()]
-extern "C" {
-    pub fn schedule_tile_request(url: &str, request_id: u32);
 }
 
 #[wasm_bindgen]
@@ -54,52 +50,13 @@ pub fn create_scheduler() -> *mut IOScheduler {
     return scheduler_ptr;
 }
 
-use web_sys::Worker;
-
 #[wasm_bindgen]
 pub fn create_pool_scheduler(new_worker: js_sys::Function) -> *mut IOScheduler {
-    let f = move || {
-        new_worker
-            .call0(&JsValue::null())
-            .unwrap()
-            .dyn_into::<Worker>()
-            .unwrap()
-    };
-
-    f();
-
     let scheduler = Box::new(IOScheduler::new(ScheduleMethod::WebWorkerPool(
-        WebWorkerPoolScheduleMethod::new(Box::new(f)),
+        WebWorkerPoolScheduleMethod::new(new_worker),
     )));
     let scheduler_ptr = Box::into_raw(scheduler);
     return scheduler_ptr;
-}
-
-#[wasm_bindgen]
-pub fn new_tessellator_state(scheduler_ptr: *mut IOScheduler) -> *mut ThreadLocalTessellatorState {
-    let scheduler: Box<IOScheduler> = unsafe { Box::from_raw(scheduler_ptr) };
-    let tessellator_state = Box::new(scheduler.new_tessellator_state());
-    let tessellator_state_ptr = Box::into_raw(tessellator_state);
-    // Call forget such that scheduler does not get deallocated
-    std::mem::forget(scheduler);
-    return tessellator_state_ptr;
-}
-
-#[wasm_bindgen]
-pub fn tessellate_layers(
-    tessellator_state_ptr: *mut ThreadLocalTessellatorState,
-    request_id: u32,
-    data: Box<[u8]>,
-) {
-    let tessellator_state: Box<ThreadLocalTessellatorState> =
-        unsafe { Box::from_raw(tessellator_state_ptr) };
-
-    tessellator_state
-        .tessellate_layers(request_id, data)
-        .unwrap();
-
-    // Call forget such that scheduler does not get deallocated
-    std::mem::forget(tessellator_state);
 }
 
 pub fn get_body_size() -> Option<LogicalSize<i32>> {
@@ -138,7 +95,6 @@ pub async fn run(scheduler_ptr: *mut IOScheduler) {
 
 pub mod scheduler {
     use super::pool::WorkerPool;
-    use super::schedule_tile_request;
     use crate::coords::{TileCoords, WorldTileCoords};
     use crate::error::Error;
     use crate::io::scheduler::{IOScheduler, ScheduleMethod, ThreadLocalTessellatorState};
@@ -152,6 +108,40 @@ pub mod scheduler {
     use wasm_bindgen_futures::JsFuture;
     use web_sys::Worker;
     use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
+
+    #[wasm_bindgen]
+    extern "C" {
+        pub fn schedule_tile_request(url: &str, request_id: u32);
+    }
+
+    #[wasm_bindgen]
+    pub fn new_tessellator_state(
+        scheduler_ptr: *mut IOScheduler,
+    ) -> *mut ThreadLocalTessellatorState {
+        let scheduler: Box<IOScheduler> = unsafe { Box::from_raw(scheduler_ptr) };
+        let tessellator_state = Box::new(scheduler.new_tessellator_state());
+        let tessellator_state_ptr = Box::into_raw(tessellator_state);
+        // Call forget such that scheduler does not get deallocated
+        std::mem::forget(scheduler);
+        return tessellator_state_ptr;
+    }
+
+    #[wasm_bindgen]
+    pub fn tessellate_layers(
+        tessellator_state_ptr: *mut ThreadLocalTessellatorState,
+        request_id: u32,
+        data: Box<[u8]>,
+    ) {
+        let tessellator_state: Box<ThreadLocalTessellatorState> =
+            unsafe { Box::from_raw(tessellator_state_ptr) };
+
+        tessellator_state
+            .tessellate_layers(request_id, data)
+            .unwrap();
+
+        // Call forget such that scheduler does not get deallocated
+        std::mem::forget(tessellator_state);
+    }
 
     pub struct WebWorkerScheduleMethod;
 
@@ -192,9 +182,19 @@ pub mod scheduler {
     }
 
     impl WebWorkerPoolScheduleMethod {
-        pub fn new(f: Box<dyn Fn() -> Worker>) -> Self {
+        pub fn new(new_worker: js_sys::Function) -> Self {
             Self {
-                pool: WorkerPool::new(4, f).unwrap(),
+                pool: WorkerPool::new(
+                    4,
+                    Box::new(move || {
+                        new_worker
+                            .call0(&JsValue::undefined())
+                            .unwrap()
+                            .dyn_into::<Worker>()
+                            .unwrap()
+                    }),
+                )
+                .unwrap(),
             }
         }
 

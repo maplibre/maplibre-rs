@@ -87,7 +87,6 @@ const start = async () => {
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
     await init(undefined, memory)
     /*const schedulerPtr = create_pool_scheduler(() => {
-        console.log("spawni")
         return new Worker(new URL('./pool_worker.ts', import.meta.url), {
             type: 'module'
         });

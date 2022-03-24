@@ -5,7 +5,7 @@ use std::ops::Add;
 
 use crate::render::ShaderVertex;
 use lyon::tessellation::{
-    FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor, TessellationError,
+    FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor,
     VertexBuffers,
 };
 
