@@ -231,9 +231,9 @@ impl IOScheduler {
             let tile_coords = *coords;
 
             if let Some(id) = tile_request_state.start_tile_request(tile_request) {
-                info!("new tile request: {}", &tile_coords);
-
                 if let Some(tile_coords) = tile_coords.into_tile(TileAddressingScheme::TMS) {
+                    info!("new tile request: {}", &tile_coords);
+
                     self.schedule_method
                         .schedule_tile_request(self, id, tile_coords);
                 }

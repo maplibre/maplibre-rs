@@ -75,7 +75,7 @@ impl ZoomHandler {
             winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
                 y: scroll,
                 ..
-            }) => *scroll,
+            }) => *scroll / 100.0,
         } * self.sensitivity;
     }
 
