@@ -1,6 +1,6 @@
 name: Rust
 
-on: [ push, pull_request ]
+on: [ workflow_dispatch, push, pull_request ]
 
 jobs:
   check-format:
