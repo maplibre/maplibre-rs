@@ -60,7 +60,7 @@ mod tests {
         assert!(fetcher.fetch_tile(&(0, 0, 0).into()).await.is_err()); // World overview
         let world_tile: WorldTileCoords = (MUNICH_X, MUNICH_Y, MUNICH_Z).into();
         assert!(fetcher
-            .fetch_tile(&world_tile.into_tile(TileAddressingScheme::XYZ))
+            .fetch_tile(&world_tile.into_tile(TileAddressingScheme::XYZ).unwrap())
             .await
             .is_ok()); // Maxvorstadt Munich
     }

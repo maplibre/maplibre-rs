@@ -101,7 +101,7 @@ impl TileCoords {
             }
             key.push(b);
         }
-        return key;
+        key
     }
 }
 
