@@ -26,7 +26,7 @@ fn main(
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
     let z = 0.0;
-    let width = 1.0;
+    let width = 2.0;
 
     // The following code moves all "invisible" vertices to (0, 0, 0)
     //if (color.w == 0.0) {

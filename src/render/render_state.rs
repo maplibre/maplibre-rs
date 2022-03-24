@@ -256,7 +256,7 @@ impl RenderState {
         };
 
         let camera = camera::Camera::new(
-            (0.0, 0.0, 500.0),
+            (0.0, 0.0, 150.0),
             cgmath::Deg(-90.0),
             cgmath::Deg(0.0),
             size.width,
@@ -265,7 +265,7 @@ impl RenderState {
         let projection = camera::Perspective::new(
             surface_config.width,
             surface_config.height,
-            cgmath::Deg(45.0),
+            cgmath::Deg(110.0),
             10.0,
             600.0,
         );
