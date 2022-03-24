@@ -1,7 +1,7 @@
 use std::concat;
 use std::env;
 
-use include_dir::{Dir};
+use include_dir::Dir;
 use log::error;
 
 use crate::coords::TileCoords;
