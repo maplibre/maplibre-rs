@@ -137,6 +137,11 @@ pub mod tile {
                         format: wgpu::VertexFormat::Float32x4,
                         shader_location: 7,
                     },
+                    wgpu::VertexAttribute {
+                        offset: 4 * wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32,
+                        shader_location: 9,
+                    },
                 ],
             },
             // vertex style
@@ -302,10 +307,14 @@ pub struct ShaderFeatureStyle {
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderTileMetadata {
     pub transform: Mat4x4f32,
+    pub zoom_factor: f32,
 }
 
 impl ShaderTileMetadata {
-    pub fn new(transform: Mat4x4f32) -> Self {
-        Self { transform }
+    pub fn new(transform: Mat4x4f32, zoom_factor: f32) -> Self {
+        Self {
+            transform,
+            zoom_factor,
+        }
     }
 }

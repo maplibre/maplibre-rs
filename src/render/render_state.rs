@@ -1,3 +1,4 @@
+use cgmath::num_traits::Pow;
 use cgmath::Matrix4;
 use std::collections::HashSet;
 use std::default::Default;
@@ -354,6 +355,11 @@ impl RenderState {
     // TODO: What is StagingBelt for?
     pub fn upload_tile_geometry(&mut self, scheduler: &mut IOScheduler) {
         let visible_z = self.visible_z();
+
+        // Factor which determines how much we need to adjust the width of lines for example.
+        // If zoom == z -> zoom_factor == 1
+        let zoom_factor = 2.0_f64.powf(visible_z as f64 - self.zoom) as f32;
+
         let view_region = self
             .camera
             .view_region_bounding_box(&self.perspective)
@@ -392,7 +398,7 @@ impl RenderState {
             self.buffer_pool.update_tile_metadata(
                 &self.queue,
                 entry,
-                ShaderTileMetadata::new(transform.into()),
+                ShaderTileMetadata::new(transform.into(), zoom_factor),
             );
         }
 
@@ -459,7 +465,7 @@ impl RenderState {
                                     *coords,
                                     style_layer.clone(),
                                     buffer,
-                                    ShaderTileMetadata::new(transform.into()),
+                                    ShaderTileMetadata::new(transform.into(), zoom_factor),
                                     &feature_metadata,
                                 );
                             }
