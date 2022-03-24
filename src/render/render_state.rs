@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::default::Default;
 use std::{cmp, iter};
 
-use crate::coords::ViewRegion;
+use crate::coords::{ViewRegion, TILE_SIZE};
 
 use crate::io::scheduler::IOScheduler;
 use crate::io::{LayerResult, TileRequest};
@@ -15,7 +15,7 @@ use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
-use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
+use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
 use crate::render::camera;
 use crate::render::options::{
     DEBUG_WIREFRAME, FEATURE_METADATA_BUFFER_SIZE, INDEX_FORMAT, INDICES_BUFFER_SIZE,
@@ -257,7 +257,7 @@ impl RenderState {
         };
 
         let camera = camera::Camera::new(
-            (256.0, 256.0, 150.0),
+            (TILE_SIZE / 2.0, TILE_SIZE / 2.0, 150.0),
             cgmath::Deg(-90.0),
             cgmath::Deg(0.0),
             size.width,
@@ -356,10 +356,6 @@ impl RenderState {
     pub fn upload_tile_geometry(&mut self, scheduler: &mut IOScheduler) {
         let visible_z = self.visible_z();
 
-        // Factor which determines how much we need to adjust the width of lines for example.
-        // If zoom == z -> zoom_factor == 1
-        let zoom_factor = 2.0_f64.powf(visible_z as f64 - self.zoom) as f32;
-
         let view_region = self
             .camera
             .view_region_bounding_box(&self.perspective)
@@ -385,27 +381,36 @@ impl RenderState {
         }
 
         let view_proj = self.camera.calc_view_proj(&self.perspective);
+        // Factor which determines how much we need to adjust the width of lines for example.
+        // If zoom == z -> zoom_factor == 1
+        let zoom_factor = 2.0_f64.powf(visible_z as f64 - self.zoom) as f32;
 
-        // Update tile metadata for all tiles on the GPU according to current zoom, camera and perspective
+        // Update tile metadata for all required tiles on the GPU according to current zoom, camera and perspective
         // We perform the update before uploading new tessellated tiles, such that each
         // tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
-        for entry in self.buffer_pool.index() {
-            let world_coords = entry.coords;
-            let transform: Matrix4<f32> = (view_proj * world_coords.transform_for_zoom(self.zoom))
-                .cast()
-                .unwrap();
+        if let Some(view_region) = &view_region {
+            for world_coords in view_region.iter() {
+                if let Some(entries) = self.buffer_pool.index().get_layers(&world_coords) {
+                    for entry in entries {
+                        let transform: Matrix4<f32> = (view_proj
+                            * entry.coords.transform_for_zoom(self.zoom))
+                        .cast()
+                        .unwrap();
 
-            self.buffer_pool.update_tile_metadata(
-                &self.queue,
-                entry,
-                ShaderTileMetadata::new(transform.into(), zoom_factor),
-            );
+                        self.buffer_pool.update_tile_metadata(
+                            &self.queue,
+                            entry,
+                            ShaderTileMetadata::new(transform.into(), zoom_factor),
+                        );
+                    }
+                }
+            }
         }
 
         // Upload all tessellated layers which are in view
         if let Some(view_region) = &view_region {
             for coords in view_region.iter() {
-                let loaded_layers = self.buffer_pool.get_loaded_layers(&coords);
+                let loaded_layers = self.buffer_pool.get_loaded_layers_at(&coords);
 
                 let available_layers = scheduler.get_tessellated_layers_at(&coords, &loaded_layers);
 
@@ -537,58 +542,71 @@ impl RenderState {
             pass.set_bind_group(0, &self.bind_group, &[]);
 
             {
-                let mut to_render = self.buffer_pool.index().collect::<Vec<_>>();
-                to_render.sort_by(|a, b| a.style_layer.id.partial_cmp(&b.style_layer.id).unwrap());
-                for entry in to_render
-                    .iter()
-                    .filter(|entry| entry.coords.z == self.visible_z())
-                {
-                    let reference =
-                        self.tile_mask_pattern
-                            .stencil_reference_value(&entry.coords) as u32;
+                let visible_z = self.visible_z();
 
-                    // Draw mask
-                    {
-                        pass.set_pipeline(&self.mask_pipeline);
-                        pass.set_stencil_reference(reference);
-                        pass.set_vertex_buffer(
-                            0,
-                            self.buffer_pool
-                                .metadata()
-                                .slice(entry.metadata_buffer_range()),
-                        );
-                        pass.draw(0..6, 0..1);
-                    }
+                let view_region = self
+                    .camera
+                    .view_region_bounding_box(&self.perspective)
+                    .map(|bounding_box| ViewRegion::new(bounding_box, 2, self.zoom, visible_z));
 
-                    // Draw tile
-                    {
-                        pass.set_pipeline(&self.render_pipeline);
-                        pass.set_stencil_reference(reference);
-                        pass.set_index_buffer(
-                            self.buffer_pool
-                                .indices()
-                                .slice(entry.indices_buffer_range()),
-                            INDEX_FORMAT,
-                        );
-                        pass.set_vertex_buffer(
-                            0,
-                            self.buffer_pool
-                                .vertices()
-                                .slice(entry.vertices_buffer_range()),
-                        );
-                        pass.set_vertex_buffer(
-                            1,
-                            self.buffer_pool
-                                .metadata()
-                                .slice(entry.metadata_buffer_range()),
-                        );
-                        pass.set_vertex_buffer(
-                            2,
-                            self.buffer_pool
-                                .feature_metadata()
-                                .slice(entry.feature_metadata_buffer_range()),
-                        );
-                        pass.draw_indexed(entry.indices_range(), 0, 0..1);
+                if let Some(view_region) = &view_region {
+                    for world_coords in view_region.iter() {
+                        if let Some(entries) = self.buffer_pool.index().get_layers(&world_coords) {
+                            let mut to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
+                            to_render.sort_by(|a, b| {
+                                a.style_layer.id.partial_cmp(&b.style_layer.id).unwrap()
+                            });
+
+                            for entry in to_render {
+                                let reference = self
+                                    .tile_mask_pattern
+                                    .stencil_reference_value(&entry.coords)
+                                    as u32;
+                                // Draw mask
+                                {
+                                    pass.set_pipeline(&self.mask_pipeline);
+                                    pass.set_stencil_reference(reference);
+                                    pass.set_vertex_buffer(
+                                        0,
+                                        self.buffer_pool
+                                            .metadata()
+                                            .slice(entry.metadata_buffer_range()),
+                                    );
+                                    pass.draw(0..6, 0..1);
+                                }
+
+                                // Draw tile
+                                {
+                                    pass.set_pipeline(&self.render_pipeline);
+                                    pass.set_stencil_reference(reference);
+                                    pass.set_index_buffer(
+                                        self.buffer_pool
+                                            .indices()
+                                            .slice(entry.indices_buffer_range()),
+                                        INDEX_FORMAT,
+                                    );
+                                    pass.set_vertex_buffer(
+                                        0,
+                                        self.buffer_pool
+                                            .vertices()
+                                            .slice(entry.vertices_buffer_range()),
+                                    );
+                                    pass.set_vertex_buffer(
+                                        1,
+                                        self.buffer_pool
+                                            .metadata()
+                                            .slice(entry.metadata_buffer_range()),
+                                    );
+                                    pass.set_vertex_buffer(
+                                        2,
+                                        self.buffer_pool
+                                            .feature_metadata()
+                                            .slice(entry.feature_metadata_buffer_range()),
+                                    );
+                                    pass.draw_indexed(entry.indices_range(), 0, 0..1);
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -48,7 +48,7 @@ impl Map {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn run_sync_with_max_frames(self, max_frames: Option<u64>) {
         tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
+            .enable_io()
             .build()
             .unwrap()
             .block_on(async {

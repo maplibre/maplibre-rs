@@ -1,5 +1,5 @@
 use std::collections::vec_deque::Iter;
-use std::collections::{HashSet, VecDeque};
+use std::collections::{btree_map, BTreeMap, HashSet, VecDeque};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::mem::size_of;
@@ -8,7 +8,7 @@ use std::ops::Range;
 use style_spec::layer::StyleLayer;
 use wgpu::BufferAddress;
 
-use crate::coords::WorldTileCoords;
+use crate::coords::{Quadkey, WorldTileCoords};
 
 use crate::tessellation::OverAlignedVertexBuffer;
 
@@ -31,7 +31,7 @@ pub struct BufferPool<Q, B, V, I, M, FM> {
     metadata: BackingBuffer<B>,
     feature_metadata: BackingBuffer<B>,
 
-    index: VecDeque<IndexEntry>,
+    index: RingIndex,
     phantom_v: PhantomData<V>,
     phantom_i: PhantomData<I>,
     phantom_q: PhantomData<Q>,
@@ -77,7 +77,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
                 feature_metadata.inner_size,
                 BackingBufferType::FeatureMetadata,
             ),
-            index: VecDeque::new(), // TODO: Approximate amount of buffers in pool
+            index: RingIndex::new(),
             phantom_v: Default::default(),
             phantom_i: Default::default(),
             phantom_q: Default::default(),
@@ -135,10 +135,11 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
     }
 
     /// FIXME: use an id instead of layer_name to identify tiles
-    pub fn get_loaded_layers(&self, coords: &WorldTileCoords) -> HashSet<String> {
+    pub fn get_loaded_layers_at(&self, coords: &WorldTileCoords) -> HashSet<String> {
         self.index
+            .get_layers(coords)
+            .unwrap_or(&VecDeque::new())
             .iter()
-            .filter(|entry| entry.coords == *coords)
             .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().clone())
             .collect()
     }
@@ -156,7 +157,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         geometry: &OverAlignedVertexBuffer<V, I>,
         tile_metadata: TM,
         feature_metadata: &Vec<FM>,
-    ) -> Option<&IndexEntry> {
+    ) {
         let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
         let indices_stride = size_of::<I>() as wgpu::BufferAddress;
         let tile_metadata_stride = size_of::<TM>() as wgpu::BufferAddress;
@@ -225,7 +226,6 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
                 [0..aligned_feature_metadata_bytes as usize],
         );
         self.index.push_back(maybe_entry);
-        self.index.back()
     }
 
     pub fn update_tile_metadata(&self, queue: &Q, entry: &IndexEntry, tile_metadata: TM) {
@@ -245,8 +245,8 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         );
     }
 
-    pub fn index(&self) -> Iter<'_, IndexEntry> {
-        self.index.iter()
+    pub fn index(&self) -> &RingIndex {
+        &self.index
     }
 }
 
@@ -284,7 +284,7 @@ impl<B> BackingBuffer<B> {
     fn make_room(
         &mut self,
         new_data: wgpu::BufferAddress,
-        index: &mut VecDeque<IndexEntry>,
+        index: &mut RingIndex,
     ) -> Range<wgpu::BufferAddress> {
         if new_data > self.inner_size {
             panic!("can not allocate because backing buffers are too small")
@@ -304,7 +304,7 @@ impl<B> BackingBuffer<B> {
         available_gap.start..available_gap.start + new_data
     }
 
-    fn find_largest_gap(&self, index: &VecDeque<IndexEntry>) -> Range<wgpu::BufferAddress> {
+    fn find_largest_gap(&self, index: &RingIndex) -> Range<wgpu::BufferAddress> {
         let start = index.front().map(|first| match self.typ {
             BackingBufferType::Vertices => first.buffer_vertices.start,
             BackingBufferType::Indices => first.buffer_indices.start,
@@ -382,6 +382,63 @@ impl IndexEntry {
 
     pub fn feature_metadata_buffer_range(&self) -> Range<wgpu::BufferAddress> {
         self.buffer_feature_metadata.clone()
+    }
+}
+
+#[derive(Debug)]
+pub struct RingIndex {
+    tree_index: BTreeMap<Quadkey, VecDeque<IndexEntry>>,
+    linear_index: VecDeque<Quadkey>,
+}
+
+impl RingIndex {
+    pub fn new() -> Self {
+        Self {
+            tree_index: Default::default(),
+            linear_index: Default::default(),
+        }
+    }
+
+    pub fn front(&self) -> Option<&IndexEntry> {
+        self.linear_index
+            .front()
+            .and_then(|key| self.tree_index.get(key).and_then(|entries| entries.front()))
+    }
+
+    pub fn back(&self) -> Option<&IndexEntry> {
+        self.linear_index
+            .back()
+            .and_then(|key| self.tree_index.get(key).and_then(|entries| entries.back()))
+    }
+
+    pub fn get_layers(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
+        self.tree_index.get(coords.to_quad_key().as_slice())
+    }
+
+    pub fn pop_front(&mut self) -> Option<IndexEntry> {
+        if let Some(entries) = self
+            .linear_index
+            .pop_front()
+            .and_then(|key| self.tree_index.get_mut(&key))
+        {
+            entries.pop_front()
+        } else {
+            None
+        }
+    }
+
+    pub fn push_back(&mut self, entry: IndexEntry) {
+        let key = entry.coords.to_quad_key();
+        match self.tree_index.entry(key.clone()) {
+            btree_map::Entry::Vacant(index_entry) => {
+                index_entry.insert(VecDeque::from([entry]));
+            }
+            btree_map::Entry::Occupied(mut index_entry) => {
+                index_entry.get_mut().push_back(entry);
+            }
+        }
+
+        self.linear_index.push_back(key)
     }
 }
 

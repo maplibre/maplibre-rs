@@ -12,6 +12,9 @@ use crate::util::math::{div_floor, Aabb2};
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
 pub const EXTENT: f64 = EXTENT_UINT as f64;
+pub const TILE_SIZE: f64 = 512.0;
+
+pub type Quadkey = [u8; 32];
 
 /// Every tile has tile coordinates. These tile coordinates are also called
 /// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
@@ -85,23 +88,6 @@ impl TileCoords {
             y: self.y >> 1,
             z: self.z - 1,
         }
-    }
-
-    pub fn to_quad_key(&self) -> Vec<u8> {
-        let mut key = Vec::with_capacity(self.z as usize);
-
-        for z in (0..self.z).rev() {
-            let mut b = 0;
-            let mask: u32 = 1 << (z - 1);
-            if self.x & mask != 0 {
-                b += 1u8;
-            }
-            if self.y & mask != 0 {
-                b += 2u8;
-            }
-            key.push(b);
-        }
-        key
     }
 }
 
@@ -187,6 +173,25 @@ impl WorldTileCoords {
             z: self.z,
         })
     }
+
+    pub fn to_quad_key(&self) -> Quadkey {
+        let mut key = [0u8; 32];
+
+        key[0] = self.z;
+
+        for z in 1..self.z + 1 {
+            let mut b = 0;
+            let mask: i32 = 1 << (z - 1);
+            if (self.x & mask) != 0 {
+                b += 1u8;
+            }
+            if (self.y & mask) != 0 {
+                b += 2u8;
+            }
+            key[z as usize] = b;
+        }
+        key
+    }
 }
 
 impl From<(i32, i32, u8)> for WorldTileCoords {
@@ -252,8 +257,6 @@ pub struct WorldCoords {
     pub y: f64,
     pub z: f64,
 }
-
-const TILE_SIZE: f64 = 512.0;
 
 fn world_size_at_zoom(zoom: f64) -> f64 {
     TILE_SIZE * 2.0.pow(zoom)
@@ -381,8 +384,9 @@ impl fmt::Display for WorldCoords {
 #[cfg(test)]
 mod tests {
     use cgmath::{Point2, Vector4};
+    use style_spec::source::TileAddressingScheme;
 
-    use crate::coords::{ViewRegion, WorldCoords, WorldTileCoords, EXTENT};
+    use crate::coords::{Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, EXTENT};
     use crate::util::math::Aabb2;
 
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
@@ -405,6 +409,45 @@ mod tests {
         to_from_world((1, 0, 1), 1.0);
         to_from_world((67, 42, 7), 7.0);
         to_from_world((17421, 11360, 15), 15.0);
+    }
+
+    #[test]
+    fn test_quad_key() {
+        fn new_quad_key_z1(a: u8) -> Quadkey {
+            let mut key = [0u8; 32];
+            key[0] = 1;
+            key[1] = a;
+            key
+        }
+
+        assert_eq!(
+            TileCoords { x: 0, y: 0, z: 1 }
+                .into_world_tile(TileAddressingScheme::TMS)
+                .unwrap()
+                .to_quad_key(),
+            new_quad_key_z1(2)
+        );
+        assert_eq!(
+            TileCoords { x: 0, y: 1, z: 1 }
+                .into_world_tile(TileAddressingScheme::TMS)
+                .unwrap()
+                .to_quad_key(),
+            new_quad_key_z1(0)
+        );
+        assert_eq!(
+            TileCoords { x: 1, y: 1, z: 1 }
+                .into_world_tile(TileAddressingScheme::TMS)
+                .unwrap()
+                .to_quad_key(),
+            new_quad_key_z1(1)
+        );
+        assert_eq!(
+            TileCoords { x: 1, y: 0, z: 1 }
+                .into_world_tile(TileAddressingScheme::TMS)
+                .unwrap()
+                .to_quad_key(),
+            new_quad_key_z1(3)
+        );
     }
 
     #[test]
