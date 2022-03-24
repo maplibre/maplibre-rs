@@ -4,7 +4,7 @@ use log::{error, info};
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
 
-use style_spec::source::TileAdressingScheme;
+use style_spec::source::TileAddressingScheme;
 use vector_tile::parse_tile_bytes;
 
 /// Describes through which channels work-requests travel. It describes the flow of work.
@@ -233,9 +233,10 @@ impl IOScheduler {
             if let Some(id) = tile_request_state.start_tile_request(tile_request) {
                 info!("new tile request: {}", &tile_coords);
 
-                let tile_coords = tile_coords.into_tile(TileAdressingScheme::TMS);
-                self.schedule_method
-                    .schedule_tile_request(self, id, tile_coords)
+                if let Some(tile_coords) = tile_coords.into_tile(TileAddressingScheme::TMS) {
+                    self.schedule_method
+                        .schedule_tile_request(self, id, tile_coords);
+                }
             }
         }
 

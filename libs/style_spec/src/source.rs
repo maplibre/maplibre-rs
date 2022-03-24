@@ -5,16 +5,16 @@ pub type TileUrl = String;
 pub type TileJSONUrl = String;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum TileAdressingScheme {
+pub enum TileAddressingScheme {
     #[serde(rename = "xyz")]
     XYZ,
     #[serde(rename = "tms")]
     TMS,
 }
 
-impl Default for TileAdressingScheme {
+impl Default for TileAddressingScheme {
     fn default() -> Self {
-        TileAdressingScheme::XYZ
+        TileAddressingScheme::XYZ
     }
 }
 
@@ -35,7 +35,7 @@ pub struct VectorSource {
     // TODO: promoteId
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scheme: Option<TileAdressingScheme>,
+    pub scheme: Option<TileAddressingScheme>,
     /// Array of URLs which can contain place holders like {x}, {y}, {z}.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tiles: Option<TileUrl>,

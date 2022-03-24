@@ -1,5 +1,6 @@
 //! A small module that's intended to provide an example of creating a pool of
-//! web workers which can be used to execute `rayon`-style work.
+//! web workers which can be used to execute work.
+//! Adopted from [wasm-bindgen example](https://github.com/rustwasm/wasm-bindgen/blob/0eba2efe45801b71f8873bc368c58a8ed8e894ff/examples/raytrace-parallel/src/pool.rs)
 
 use js_sys::Promise;
 use log::{info, warn};

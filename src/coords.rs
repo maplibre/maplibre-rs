@@ -1,11 +1,13 @@
 //! File which exposes all kinds of coordinates used throughout mapr
 
-use crate::util::math::{div_floor, Aabb2};
-use cgmath::num_traits::Pow;
-use cgmath::{Matrix4, Point3, Vector3};
 use std::fmt;
 
-use style_spec::source::TileAdressingScheme;
+use cgmath::num_traits::Pow;
+use cgmath::{Matrix4, Point3, Vector3};
+
+use style_spec::source::TileAddressingScheme;
+
+use crate::util::math::{div_floor, Aabb2};
 
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
@@ -25,27 +27,81 @@ pub struct TileCoords {
 }
 
 impl TileCoords {
-    /// Transforms the tile coordinates as defined by the tile grid addressing scheme into a representation which is
-    /// used in the 3d-world.
-    pub fn into_world_tile(self, scheme: TileAdressingScheme) -> WorldTileCoords {
-        match scheme {
-            TileAdressingScheme::XYZ => WorldTileCoords {
-                x: self.x as i32,
-                y: self.y as i32,
+    /// Transforms the tile coordinates as defined by the tile grid addressing scheme into a
+    /// representation which is used in the 3d-world.
+    /// This is not possible if the coordinates of this [`TileCoords`] exceed their bounds.
+    ///
+    /// # Example
+    /// The [`TileCoords`] `T(x=5,y=5,z=0)` exceeds its bounds because there is no tile
+    /// `x=5,y=5` at zoom level `z=0`.
+    pub fn into_world_tile(self, scheme: TileAddressingScheme) -> Option<WorldTileCoords> {
+        let bounds = 2i32.pow(self.z as u32);
+        let x = self.x as i32;
+        let y = self.y as i32;
+
+        if x >= bounds || y >= bounds {
+            return None;
+        }
+
+        Some(match scheme {
+            TileAddressingScheme::XYZ => WorldTileCoords { x, y, z: self.z },
+            TileAddressingScheme::TMS => WorldTileCoords {
+                x,
+                y: bounds - 1 - y,
                 z: self.z,
             },
-            TileAdressingScheme::TMS => WorldTileCoords {
-                x: self.x as i32,
-                y: (2u32.pow(self.z as u32) - 1 - self.y) as i32,
-                z: self.z,
+        })
+    }
+
+    /// Get the tile which is one zoom level lower and contains this one
+    pub fn get_parent(&self) -> [TileCoords; 4] {
+        [
+            TileCoords {
+                x: self.x * 2,
+                y: self.y * 2,
+                z: self.z + 1,
             },
+            TileCoords {
+                x: self.x * 2 + 1,
+                y: self.y * 2,
+                z: self.z + 1,
+            },
+            TileCoords {
+                x: self.x * 2 + 1,
+                y: self.y * 2 + 1,
+                z: self.z + 1,
+            },
+            TileCoords {
+                x: self.x * 2,
+                y: self.y * 2 + 1,
+                z: self.z + 1,
+            },
+        ]
+    }
+
+    pub fn get_children(&self) -> TileCoords {
+        TileCoords {
+            x: self.x >> 1,
+            y: self.y >> 1,
+            z: self.z - 1,
         }
     }
-}
 
-impl fmt::Display for TileCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "T({x}, {y}, {z})", x = self.x, y = self.y, z = self.z)
+    pub fn to_quad_key(&self) -> Vec<u8> {
+        let mut key = Vec::with_capacity(self.z as usize);
+
+        for z in (0..self.z).rev() {
+            let mut b = 0;
+            let mask: u32 = 1 << (z - 1);
+            if self.x & mask != 0 {
+                b += 1u8;
+            }
+            if self.y & mask != 0 {
+                b += 2u8;
+            }
+            key.push(b);
+        }
+        return key;
     }
 }
 
@@ -74,19 +130,30 @@ pub struct WorldTileCoords {
 }
 
 impl WorldTileCoords {
-    pub fn into_tile(self, scheme: TileAdressingScheme) -> TileCoords {
-        match scheme {
-            TileAdressingScheme::XYZ => TileCoords {
-                x: self.x as u32,
-                y: self.y as u32,
-                z: self.z,
-            },
-            TileAdressingScheme::TMS => TileCoords {
-                x: self.x as u32,
-                y: 2u32.pow(self.z as u32) - 1 - self.y as u32,
-                z: self.z,
-            },
+    /// Returns the tile coords according to an addressing scheme. This is not possible if the
+    /// coordinates of this [`WorldTileCoords`] exceed their bounds.
+    ///
+    /// # Example
+    ///
+    /// The [`WorldTileCoords`] `WT(x=5,y=5,z=0)` exceeds its bounds because there is no tile
+    /// `x=5,y=5` at zoom level `z=0`.
+    pub fn into_tile(self, scheme: TileAddressingScheme) -> Option<TileCoords> {
+        let bounds = 2u32.pow(self.z as u32);
+        let x = self.x as u32;
+        let y = self.y as u32;
+
+        if x >= bounds || y >= bounds {
+            return None;
         }
+
+        Some(match scheme {
+            TileAddressingScheme::XYZ => TileCoords { x, y, z: self.z },
+            TileAddressingScheme::TMS => TileCoords {
+                x,
+                y: bounds - 1 - y,
+                z: self.z,
+            },
+        })
     }
 
     pub fn transform_for_zoom(&self, zoom: f64) -> Matrix4<f64> {
@@ -119,12 +186,6 @@ impl WorldTileCoords {
             y: div_floor(self.y, 2) * 2,
             z: self.z,
         })
-    }
-}
-
-impl fmt::Display for WorldTileCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "WT({x}, {y}, {z})", x = self.x, y = self.y, z = self.z)
     }
 }
 
@@ -220,12 +281,6 @@ impl WorldCoords {
     }
 }
 
-impl fmt::Display for WorldCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "W({x}, {y}, {z})", x = self.x, y = self.y, z = self.z)
-    }
-}
-
 impl From<(f32, f32, f32)> for WorldCoords {
     fn from(tuple: (f32, f32, f32)) -> Self {
         WorldCoords {
@@ -260,10 +315,11 @@ pub struct ViewRegion {
     min_tile: WorldTileCoords,
     max_tile: WorldTileCoords,
     z: u8,
+    padding: i32,
 }
 
 impl ViewRegion {
-    pub fn new(view_region: Aabb2<f64>, zoom: f64, z: u8) -> Self {
+    pub fn new(view_region: Aabb2<f64>, padding: i32, zoom: f64, z: u8) -> Self {
         let min_world: WorldCoords = WorldCoords::at_ground(view_region.min.x, view_region.min.y);
         let min_world_tile: WorldTileCoords = min_world.into_world_tile(z, zoom);
         let max_world: WorldCoords = WorldCoords::at_ground(view_region.max.x, view_region.max.y);
@@ -273,12 +329,13 @@ impl ViewRegion {
             min_tile: min_world_tile,
             max_tile: max_world_tile,
             z,
+            padding,
         }
     }
 
     pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
-        (self.min_tile.x..self.max_tile.x + 1).flat_map(move |x| {
-            (self.min_tile.y..self.max_tile.y + 1).map(move |y| {
+        (self.min_tile.x..self.max_tile.x + self.padding).flat_map(move |x| {
+            (self.min_tile.y..self.max_tile.y + self.padding).map(move |y| {
                 let tile_coord: WorldTileCoords = (x, y, self.z as u8).into();
                 tile_coord
             })
@@ -286,11 +343,47 @@ impl ViewRegion {
     }
 }
 
+impl fmt::Display for TileCoords {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "T(x={x},y={y},z={z})",
+            x = self.x,
+            y = self.y,
+            z = self.z
+        )
+    }
+}
+
+impl fmt::Display for WorldTileCoords {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "WT(x={x},y={y},z={z})",
+            x = self.x,
+            y = self.y,
+            z = self.z
+        )
+    }
+}
+impl fmt::Display for WorldCoords {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "W(x={x},y={y},z={z})",
+            x = self.x,
+            y = self.y,
+            z = self.z
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use cgmath::{Point2, Vector4};
+
     use crate::coords::{ViewRegion, WorldCoords, WorldTileCoords, EXTENT};
     use crate::util::math::Aabb2;
-    use cgmath::{Point2, Vector4};
 
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
     const BOTTOM_RIGHT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
@@ -318,6 +411,7 @@ mod tests {
     fn test_view_region() {
         for tile_coords in ViewRegion::new(
             Aabb2::new(Point2::new(0.0, 0.0), Point2::new(2000.0, 2000.0)),
+            1,
             0.0,
             0,
         )

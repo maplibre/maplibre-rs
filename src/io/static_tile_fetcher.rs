@@ -44,7 +44,7 @@ impl StaticTileFetcher {
 
 #[cfg(test)]
 mod tests {
-    use style_spec::source::TileAdressingScheme;
+    use style_spec::source::TileAddressingScheme;
 
     use crate::coords::WorldTileCoords;
 
@@ -60,7 +60,7 @@ mod tests {
         assert!(fetcher.fetch_tile(&(0, 0, 0).into()).await.is_err()); // World overview
         let world_tile: WorldTileCoords = (MUNICH_X, MUNICH_Y, MUNICH_Z).into();
         assert!(fetcher
-            .fetch_tile(&world_tile.into_tile(TileAdressingScheme::XYZ))
+            .fetch_tile(&world_tile.into_tile(TileAddressingScheme::XYZ))
             .await
             .is_ok()); // Maxvorstadt Munich
     }

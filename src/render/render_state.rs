@@ -357,7 +357,7 @@ impl RenderState {
         let view_region = self
             .camera
             .view_region_bounding_box(&self.perspective)
-            .map(|bounding_box| ViewRegion::new(bounding_box, self.zoom, visible_z));
+            .map(|bounding_box| ViewRegion::new(bounding_box, 2, self.zoom, visible_z));
 
         // Fetch tiles which are currently in view
         if let Some(view_region) = &view_region {

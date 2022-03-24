@@ -18,7 +18,7 @@ use console_error_panic_hook;
 pub use instant::Instant;
 use scheduler::WebWorkerPoolScheduleMethod;
 use scheduler::WebWorkerScheduleMethod;
-use style_spec::source::TileAdressingScheme;
+use style_spec::source::TileAddressingScheme;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
