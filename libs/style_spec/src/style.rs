@@ -95,6 +95,18 @@ impl Default for Style {
                     source_layer: Some("water".to_string()),
                 },
                 StyleLayer {
+                    id: "waterway".to_string(),
+                    typ: "fill".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("blue").unwrap()),
+                    })),
+                    source: None,
+                    source_layer: Some("waterway".to_string()),
+                },
+                StyleLayer {
                     id: "boundary".to_string(),
                     typ: "line".to_string(),
                     maxzoom: None,
