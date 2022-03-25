@@ -381,42 +381,47 @@ impl RenderState {
         }
 
         let view_proj = self.camera.calc_view_proj(&self.perspective);
-        // Factor which determines how much we need to adjust the width of lines for example.
-        // If zoom == z -> zoom_factor == 1
-        let zoom_factor = 2.0_f64.powf(visible_z as f64 - self.zoom) as f32;
 
         // Update tile metadata for all required tiles on the GPU according to current zoom, camera and perspective
         // We perform the update before uploading new tessellated tiles, such that each
         // tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
-        if let Some(view_region) = &view_region {
-            for world_coords in view_region.iter() {
-                if let Some(entries) = self.buffer_pool.index().get_layers(&world_coords) {
-                    for entry in entries {
-                        let transform: Matrix4<f32> = (view_proj
-                            * entry.coords.transform_for_zoom(self.zoom))
-                        .cast()
-                        .unwrap();
 
-                        self.buffer_pool.update_tile_metadata(
-                            &self.queue,
-                            entry,
-                            ShaderTileMetadata::new(
-                                transform.into(),
-                                zoom_factor,
-                                entry.style_layer.index as f32,
-                            ),
-                        );
-                    }
-                }
+        for entries in self.buffer_pool.index().iter() {
+            for entry in entries {
+                let world_coords = entry.coords;
+
+                // Factor which determines how much we need to adjust the width of lines for example.
+                // If zoom == z -> zoom_factor == 1
+                let zoom_factor = 2.0_f64.powf(world_coords.z as f64 - self.zoom) as f32;
+
+                let transform: Matrix4<f32> = (view_proj
+                    * world_coords.transform_for_zoom(self.zoom))
+                .cast()
+                .unwrap();
+
+                self.buffer_pool.update_tile_metadata(
+                    &self.queue,
+                    entry,
+                    ShaderTileMetadata::new(
+                        transform.into(),
+                        zoom_factor,
+                        entry.style_layer.index as f32,
+                    ),
+                );
             }
         }
 
+        // Factor which determines how much we need to adjust the width of lines for example.
+        // If zoom == z -> zoom_factor == 1
+        let zoom_factor = 2.0_f64.powf(visible_z as f64 - self.zoom) as f32;
+
         // Upload all tessellated layers which are in view
         if let Some(view_region) = &view_region {
-            for coords in view_region.iter() {
-                let loaded_layers = self.buffer_pool.get_loaded_layers_at(&coords);
+            for world_coords in view_region.iter() {
+                let loaded_layers = self.buffer_pool.get_loaded_layers_at(&world_coords);
 
-                let available_layers = scheduler.get_tessellated_layers_at(&coords, &loaded_layers);
+                let available_layers =
+                    scheduler.get_tessellated_layers_at(&world_coords, &loaded_layers);
 
                 for style_layer in &self.style.layers {
                     let source_layer = style_layer.source_layer.as_ref().unwrap();
@@ -557,9 +562,11 @@ impl RenderState {
                     .view_region_bounding_box(&self.perspective)
                     .map(|bounding_box| ViewRegion::new(bounding_box, 2, self.zoom, visible_z));
 
+                let index = self.buffer_pool.index();
+
                 if let Some(view_region) = &view_region {
                     for world_coords in view_region.iter() {
-                        if let Some(entries) = self.buffer_pool.index().get_layers(&world_coords) {
+                        if let Some(entries) = index.get_layers_fallback(&world_coords) {
                             let mut to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
                             to_render.sort_by_key(|entry| entry.style_layer.index);
 

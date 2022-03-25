@@ -415,6 +415,29 @@ impl RingIndex {
         self.tree_index.get(coords.to_quad_key().as_slice())
     }
 
+    pub fn get_layers_fallback(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
+        let mut current = *coords;
+
+        /*index.get_layers(&world_coords)
+        .or_else(|| {
+            world_coords
+                .get_parent()
+                .and_then(|parent| index.get_layers(&parent))
+        })*/
+
+        loop {
+            if let Some(entries) = self.get_layers(&current) {
+                return Some(entries);
+            } else {
+                if let Some(parent) = current.get_parent() {
+                    current = parent
+                } else {
+                    return None;
+                }
+            }
+        }
+    }
+
     pub fn pop_front(&mut self) -> Option<IndexEntry> {
         if let Some(entries) = self
             .linear_index
@@ -439,6 +462,12 @@ impl RingIndex {
         }
 
         self.linear_index.push_back(key)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &VecDeque<IndexEntry>> + '_ {
+        self.linear_index
+            .iter()
+            .flat_map(|key| self.tree_index.get(key))
     }
 }
 

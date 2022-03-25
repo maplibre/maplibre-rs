@@ -55,40 +55,6 @@ impl TileCoords {
             },
         })
     }
-
-    /// Get the tile which is one zoom level lower and contains this one
-    pub fn get_parent(&self) -> [TileCoords; 4] {
-        [
-            TileCoords {
-                x: self.x * 2,
-                y: self.y * 2,
-                z: self.z + 1,
-            },
-            TileCoords {
-                x: self.x * 2 + 1,
-                y: self.y * 2,
-                z: self.z + 1,
-            },
-            TileCoords {
-                x: self.x * 2 + 1,
-                y: self.y * 2 + 1,
-                z: self.z + 1,
-            },
-            TileCoords {
-                x: self.x * 2,
-                y: self.y * 2 + 1,
-                z: self.z + 1,
-            },
-        ]
-    }
-
-    pub fn get_children(&self) -> TileCoords {
-        TileCoords {
-            x: self.x >> 1,
-            y: self.y >> 1,
-            z: self.z - 1,
-        }
-    }
 }
 
 impl From<(u32, u32, u8)> for TileCoords {
@@ -191,6 +157,44 @@ impl WorldTileCoords {
             key[z as usize] = b;
         }
         key
+    }
+
+    pub fn get_children(&self) -> [WorldTileCoords; 4] {
+        [
+            WorldTileCoords {
+                x: self.x * 2,
+                y: self.y * 2,
+                z: self.z + 1,
+            },
+            WorldTileCoords {
+                x: self.x * 2 + 1,
+                y: self.y * 2,
+                z: self.z + 1,
+            },
+            WorldTileCoords {
+                x: self.x * 2 + 1,
+                y: self.y * 2 + 1,
+                z: self.z + 1,
+            },
+            WorldTileCoords {
+                x: self.x * 2,
+                y: self.y * 2 + 1,
+                z: self.z + 1,
+            },
+        ]
+    }
+
+    /// Get the tile which is one zoom level lower and contains this one
+    pub fn get_parent(&self) -> Option<WorldTileCoords> {
+        if self.z == 0 {
+            return None;
+        }
+
+        Some(WorldTileCoords {
+            x: self.x >> 1,
+            y: self.y >> 1,
+            z: self.z - 1,
+        })
     }
 }
 
