@@ -219,11 +219,7 @@ impl IOScheduler {
     ) -> Result<(), SendError<TileRequest>> {
         let TileRequest { coords, layers } = &tile_request;
 
-        let mut missing_layers = layers.clone();
-        self.tile_cache
-            .retain_missing_layer_names(coords, &mut missing_layers);
-
-        if missing_layers.is_empty() {
+        if !self.tile_cache.is_layers_missing(coords, layers) {
             return Ok(());
         }
 

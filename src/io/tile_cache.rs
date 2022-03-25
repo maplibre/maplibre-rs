@@ -56,4 +56,22 @@ impl TileCache {
             layers.retain(|layer| !tessellated_set.contains(layer));
         }
     }
+
+    pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
+        if let Some(results) = self.index.get(coords) {
+            let tessellated_set: HashSet<&str> = results
+                .iter()
+                .map(|tessellated_layer| tessellated_layer.layer_name())
+                .collect();
+
+            for layer in layers {
+                if !tessellated_set.contains(layer.as_str()) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        true
+    }
 }
