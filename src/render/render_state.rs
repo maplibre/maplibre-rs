@@ -356,9 +356,10 @@ impl RenderState {
     pub fn upload_tile_geometry(&mut self, scheduler: &mut IOScheduler) {
         let visible_z = self.visible_z();
 
+        let inverted_view_proj = self.camera.calc_view_proj(&self.perspective).invert();
         let view_region = self
             .camera
-            .view_region_bounding_box(&self.perspective)
+            .view_region_bounding_box(&inverted_view_proj)
             .map(|bounding_box| ViewRegion::new(bounding_box, 2, self.zoom, visible_z));
 
         // Fetch tiles which are currently in view
@@ -367,14 +368,13 @@ impl RenderState {
                 .style
                 .layers
                 .iter()
-                .filter_map(|layer| layer.source_layer.as_ref())
-                .cloned()
+                .filter_map(|layer| layer.source_layer.clone())
                 .collect();
 
             for coords in view_region.iter() {
                 let tile_request = TileRequest {
                     coords,
-                    layers: source_layers.clone(),
+                    layers: source_layers.clone(), // TODO: Optimize: This is expensive
                 };
                 scheduler.try_request_tile(tile_request).unwrap();
             }
@@ -395,9 +395,8 @@ impl RenderState {
                 let zoom_factor = 2.0_f64.powf(world_coords.z as f64 - self.zoom) as f32;
 
                 let transform: Matrix4<f32> = (view_proj
-                    * world_coords.transform_for_zoom(self.zoom))
-                .cast()
-                .unwrap();
+                    .to_model_view_projection(world_coords.transform_for_zoom(self.zoom)))
+                .downcast();
 
                 self.buffer_pool.update_tile_metadata(
                     &self.queue,
@@ -420,6 +419,7 @@ impl RenderState {
             for world_coords in view_region.iter() {
                 let loaded_layers = self.buffer_pool.get_loaded_layers_at(&world_coords);
 
+                // TODO: Optimize: Dropping this is expensive
                 let available_layers =
                     scheduler.get_tessellated_layers_at(&world_coords, &loaded_layers);
 
@@ -469,10 +469,10 @@ impl RenderState {
 
                                 // We are casting here from 64bit to 32bit, because 32bit is more performant and is
                                 // better supported.
-                                let transform: Matrix4<f32> = (view_proj
-                                    * world_coords.transform_for_zoom(self.zoom))
-                                .cast()
-                                .unwrap();
+                                let transform: Matrix4<f32> = (view_proj.to_model_view_projection(
+                                    world_coords.transform_for_zoom(self.zoom),
+                                ))
+                                .downcast();
 
                                 self.buffer_pool.allocate_tile_geometry(
                                     &self.queue,
@@ -556,10 +556,10 @@ impl RenderState {
 
             {
                 let visible_z = self.visible_z();
-
+                let inverted_view_proj = self.camera.calc_view_proj(&self.perspective).invert();
                 let view_region = self
                     .camera
-                    .view_region_bounding_box(&self.perspective)
+                    .view_region_bounding_box(&inverted_view_proj)
                     .map(|bounding_box| ViewRegion::new(bounding_box, 2, self.zoom, visible_z));
 
                 let index = self.buffer_pool.index();

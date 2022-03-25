@@ -1,3 +1,4 @@
+use cgmath::num_traits::Inv;
 use cgmath::prelude::*;
 use cgmath::{Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
@@ -19,6 +20,48 @@ pub const FLIP_Y: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
     0.0, 0.0, 1.0, 0.0, 
     0.0, 0.0, 0.0, 1.0,
 );
+
+pub struct ViewProjection(Matrix4<f64>);
+
+impl ViewProjection {
+    pub fn invert(&self) -> InvertedViewProjection {
+        InvertedViewProjection(self.0.invert().expect("Unable to invert view projection"))
+    }
+
+    pub fn project(&self, vector: Vector4<f64>) -> Vector4<f64> {
+        self.0 * vector
+    }
+
+    pub fn to_model_view_projection(&self, projection: Matrix4<f64>) -> ModelViewProjection {
+        ModelViewProjection(self.0 * projection)
+    }
+
+    pub fn downcast(&self) -> Matrix4<f32> {
+        self.0
+            .cast::<f32>()
+            .expect("Unable to cast view projection to f32")
+            .into()
+    }
+}
+
+pub struct InvertedViewProjection(Matrix4<f64>);
+
+impl InvertedViewProjection {
+    pub fn project(&self, vector: Vector4<f64>) -> Vector4<f64> {
+        self.0 * vector
+    }
+}
+
+pub struct ModelViewProjection(Matrix4<f64>);
+
+impl ModelViewProjection {
+    pub fn downcast(&self) -> Matrix4<f32> {
+        self.0
+            .cast::<f32>()
+            .expect("Unable to cast view projection to f32")
+            .into()
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Camera {
@@ -64,14 +107,14 @@ impl Camera {
         )
     }
 
-    pub fn calc_view_proj(&self, perspective: &Perspective) -> Matrix4<f64> {
-        FLIP_Y * perspective.calc_matrix() * self.calc_matrix()
+    pub fn calc_view_proj(&self, perspective: &Perspective) -> ViewProjection {
+        ViewProjection(FLIP_Y * perspective.calc_matrix() * self.calc_matrix())
     }
 
     pub fn create_camera_uniform(&self, perspective: &Perspective) -> ShaderCamera {
         let view_proj = self.calc_view_proj(perspective);
         ShaderCamera::new(
-            view_proj.cast::<f32>().unwrap().into(),
+            view_proj.downcast().into(),
             self.position.to_homogeneous().cast::<f32>().unwrap().into(),
         )
     }
@@ -144,7 +187,11 @@ impl Camera {
     /// `w` is lost.
     ///
     /// OpenGL explanation: https://www.khronos.org/opengl/wiki/Compute_eye_space_from_window_space#From_window_to_ndc
-    fn window_to_world(&self, window: &Vector3<f64>, view_proj: &Matrix4<f64>) -> Vector3<f64> {
+    fn window_to_world(
+        &self,
+        window: &Vector3<f64>,
+        inverted_view_proj: &InvertedViewProjection,
+    ) -> Vector3<f64> {
         #[rustfmt::skip]
         let fixed_window = Vector4::new(
             window.x,
@@ -154,7 +201,7 @@ impl Camera {
         );
 
         let ndc = self.clip_to_window_transform().invert().unwrap() * fixed_window;
-        let unprojected = view_proj.invert().unwrap() * ndc;
+        let unprojected = inverted_view_proj.project(ndc);
 
         Vector3::new(
             unprojected.x / unprojected.w,
@@ -168,7 +215,7 @@ impl Camera {
     /// Adopted from [here](https://docs.rs/nalgebra-glm/latest/src/nalgebra_glm/ext/matrix_projection.rs.html#164-181).
     fn window_to_world_nalgebra(
         window: &Vector3<f64>,
-        view_proj: &Matrix4<f64>,
+        inverted_view_proj: &InvertedViewProjection,
         width: f64,
         height: f64,
     ) -> Vector3<f64> {
@@ -178,7 +225,7 @@ impl Camera {
             window.z,
             1.0,
         );
-        let unprojected = view_proj.invert().unwrap() * pt;
+        let unprojected = inverted_view_proj.project(pt);
 
         Vector3::new(
             unprojected.x / unprojected.w,
@@ -191,11 +238,13 @@ impl Camera {
     pub fn window_to_world_at_ground(
         &self,
         window: &Vector2<f64>,
-        view_proj: &Matrix4<f64>,
+        inverted_view_proj: &InvertedViewProjection,
     ) -> Option<Vector3<f64>> {
-        let near_world = self.window_to_world(&Vector3::new(window.x, window.y, 0.0), view_proj);
+        let near_world =
+            self.window_to_world(&Vector3::new(window.x, window.y, 0.0), inverted_view_proj);
 
-        let far_world = self.window_to_world(&Vector3::new(window.x, window.y, 1.0), view_proj);
+        let far_world =
+            self.window_to_world(&Vector3::new(window.x, window.y, 1.0), inverted_view_proj);
 
         // for z = 0 in world coordinates
         // Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf
@@ -217,16 +266,17 @@ impl Camera {
     ///
     /// *Note:* It is possible that no such bounding box exists. This is the case if the `z=0` plane
     /// is not in view.
-    pub fn view_region_bounding_box(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
-        let view_proj = self.calc_view_proj(perspective);
-
+    pub fn view_region_bounding_box(
+        &self,
+        inverted_view_proj: &InvertedViewProjection,
+    ) -> Option<Aabb2<f64>> {
         let screen_bounding_box = [
             Vector2::new(0.0, 0.0),
             Vector2::new(self.width, 0.0),
             Vector2::new(self.width, self.height),
             Vector2::new(0.0, self.height),
         ]
-        .map(|point| self.window_to_world_at_ground(&point, &view_proj));
+        .map(|point| self.window_to_world_at_ground(&point, &inverted_view_proj));
 
         let mut min: Option<Point2<f64>> = None;
         let mut max: Option<Point2<f64>> = None;
@@ -266,9 +316,9 @@ impl Camera {
     /// the intersection points between an Aabb3 and a plane. The resulting Aabb2 is returned.
     pub fn view_region_bounding_box_ndc(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
         let view_proj = self.calc_view_proj(perspective);
-        let a = view_proj * Vector4::new(0.0, 0.0, 0.0, 1.0);
-        let b = view_proj * Vector4::new(1.0, 0.0, 0.0, 1.0);
-        let c = view_proj * Vector4::new(1.0, 1.0, 0.0, 1.0);
+        let a = view_proj.project(Vector4::new(0.0, 0.0, 0.0, 1.0));
+        let b = view_proj.project(Vector4::new(1.0, 0.0, 0.0, 1.0));
+        let c = view_proj.project(Vector4::new(1.0, 1.0, 0.0, 1.0));
 
         let a_ndc = self.clip_to_window(&a).truncate();
         let b_ndc = self.clip_to_window(&b).truncate();
@@ -285,10 +335,14 @@ impl Camera {
             Point3::new(1.0, 1.0, 1.0),
         ));
 
+        let inverted_view_proj = view_proj.invert();
+
         let from_ndc = Vector3::new(self.width, self.height, 1.0);
         let vec = points
             .iter()
-            .map(|point| self.window_to_world(&point.mul_element_wise(from_ndc), &view_proj))
+            .map(|point| {
+                self.window_to_world(&point.mul_element_wise(from_ndc), &inverted_view_proj)
+            })
             .collect::<Vec<_>>();
 
         let min_x = vec
@@ -348,6 +402,7 @@ impl Perspective {
 
 #[cfg(test)]
 mod tests {
+    use crate::render::camera::{InvertedViewProjection, ViewProjection};
     use cgmath::{AbsDiffEq, Matrix4, SquareMatrix, Vector2, Vector3, Vector4};
 
     use super::{Camera, Perspective};
@@ -371,12 +426,13 @@ mod tests {
             0.1,
             100000.0,
         );
-        let view_proj: Matrix4<f64> = camera.calc_view_proj(&perspective);
+        let view_proj: ViewProjection = camera.calc_view_proj(&perspective);
+        let inverted_view_proj: InvertedViewProjection = view_proj.invert();
 
         let world_pos: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
         let clip = view_proj * world_pos;
 
-        let origin_clip_space = view_proj * Vector4::new(0.0, 0.0, 0.0, 1.0);
+        let origin_clip_space = view_proj.project(Vector4::new(0.0, 0.0, 0.0, 1.0));
         println!("origin w in clip space: {:?}", origin_clip_space.w);
 
         println!("world_pos: {:?}", world_pos);
@@ -391,21 +447,26 @@ mod tests {
 
         println!(
             "r world (nalgebra): {:?}",
-            Camera::window_to_world_nalgebra(&window.truncate(), &view_proj, width, height)
+            Camera::window_to_world_nalgebra(
+                &window.truncate(),
+                &inverted_view_proj,
+                width,
+                height
+            )
         );
 
         // -------- far vs. near plane trick
 
         let near_world = Camera::window_to_world_nalgebra(
             &Vector3::new(window.x, window.y, 0.0),
-            &view_proj,
+            &inverted_view_proj,
             width,
             height,
         );
 
         let far_world = Camera::window_to_world_nalgebra(
             &Vector3::new(window.x, window.y, 1.0),
-            &view_proj,
+            &inverted_view_proj,
             width,
             height,
         );
@@ -422,9 +483,11 @@ mod tests {
         let window = Vector2::new(960.0, 631.0); // 0, 4096: passt nicht
                                                  //let window = Vector2::new(962.0, 1.0); // 0, 300: passt nicht
                                                  //let window = Vector2::new(960.0, 540.0); // 0, 0 passt
-        let near_world = camera.window_to_world(&Vector3::new(window.x, window.y, 0.0), &view_proj);
+        let near_world =
+            camera.window_to_world(&Vector3::new(window.x, window.y, 0.0), &inverted_view_proj);
 
-        let far_world = camera.window_to_world(&Vector3::new(window.x, window.y, 1.0), &view_proj);
+        let far_world =
+            camera.window_to_world(&Vector3::new(window.x, window.y, 1.0), &inverted_view_proj);
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);

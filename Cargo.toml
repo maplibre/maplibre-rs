@@ -18,7 +18,7 @@ build = "build.rs"
 license = "MIT OR Apache-2.0"
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = false
+wasm-opt = true
 
 [profile.release]
 lto = true
@@ -44,6 +44,7 @@ js-sys = "0.3"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 console_log = { version = "0.2", features = ["color"] }
+# stdweb variant is way faster!
 instant = { version = "0.1", features = ["stdweb"] } # FIXME: Untrusted dependency
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android"))'.dependencies]

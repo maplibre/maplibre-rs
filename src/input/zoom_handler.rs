@@ -28,10 +28,11 @@ impl UpdateState for ZoomHandler {
 
                 let perspective = &state.perspective;
                 let view_proj = state.camera.calc_view_proj(perspective);
+                let inverted_view_proj = view_proj.invert();
 
                 if let Some(cursor_position) = state
                     .camera
-                    .window_to_world_at_ground(&window_position, &view_proj)
+                    .window_to_world_at_ground(&window_position, &inverted_view_proj)
                 {
                     let scale = 2.0.pow(next_zoom - current_zoom);
 
