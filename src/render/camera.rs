@@ -220,36 +220,44 @@ impl Camera {
     pub fn view_region_bounding_box(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
         let view_proj = self.calc_view_proj(perspective);
 
-        let vec = vec![
+        let screen_bounding_box = [
             Vector2::new(0.0, 0.0),
             Vector2::new(self.width, 0.0),
             Vector2::new(self.width, self.height),
             Vector2::new(0.0, self.height),
         ]
-        .iter()
-        .filter_map(|point| self.window_to_world_at_ground(point, &view_proj))
-        .collect::<Vec<_>>();
+        .map(|point| self.window_to_world_at_ground(&point, &view_proj));
 
-        let min_x = vec
-            .iter()
-            .map(|point| point.x)
-            .min_by(|a, b| a.partial_cmp(b).unwrap())?;
-        let min_y = vec
-            .iter()
-            .map(|point| point.y)
-            .min_by(|a, b| a.partial_cmp(b).unwrap())?;
-        let max_x = vec
-            .iter()
-            .map(|point| point.x)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())?;
-        let max_y = vec
-            .iter()
-            .map(|point| point.y)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())?;
-        Some(Aabb2::new(
-            Point2::new(min_x, min_y),
-            Point2::new(max_x, max_y),
-        ))
+        let mut min: Option<Point2<f64>> = None;
+        let mut max: Option<Point2<f64>> = None;
+
+        for vector in screen_bounding_box {
+            if let Some(vector) = vector {
+                if let Some(current_min) = &mut min {
+                    if vector.x < current_min.x {
+                        current_min.x = vector.x;
+                    }
+                    if vector.y < current_min.y {
+                        current_min.y = vector.y;
+                    }
+                } else {
+                    min = Some(Point2::new(vector.x, vector.y))
+                }
+
+                if let Some(current_max) = &mut max {
+                    if vector.x > current_max.x {
+                        current_max.x = vector.x;
+                    }
+                    if vector.y > current_max.y {
+                        current_max.y = vector.y;
+                    }
+                } else {
+                    max = Some(Point2::new(vector.x, vector.y))
+                }
+            }
+        }
+
+        Some(Aabb2::new(min?, max?))
     }
     /// An alternative implementation for `view_bounding_box`.
     ///
@@ -340,7 +348,6 @@ impl Perspective {
 
 #[cfg(test)]
 mod tests {
-
     use cgmath::{AbsDiffEq, Matrix4, SquareMatrix, Vector2, Vector3, Vector4};
 
     use super::{Camera, Perspective};
