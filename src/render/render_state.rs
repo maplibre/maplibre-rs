@@ -267,8 +267,8 @@ impl RenderState {
             surface_config.width,
             surface_config.height,
             cgmath::Deg(110.0),
-            10.0,
-            600.0,
+            100.0,
+            2000.0,
         );
 
         Self {
@@ -400,7 +400,11 @@ impl RenderState {
                         self.buffer_pool.update_tile_metadata(
                             &self.queue,
                             entry,
-                            ShaderTileMetadata::new(transform.into(), zoom_factor),
+                            ShaderTileMetadata::new(
+                                transform.into(),
+                                zoom_factor,
+                                entry.style_layer.index as f32,
+                            ),
                         );
                     }
                 }
@@ -470,7 +474,11 @@ impl RenderState {
                                     *coords,
                                     style_layer.clone(),
                                     buffer,
-                                    ShaderTileMetadata::new(transform.into(), zoom_factor),
+                                    ShaderTileMetadata::new(
+                                        transform.into(),
+                                        zoom_factor,
+                                        style_layer.index as f32,
+                                    ),
                                     &feature_metadata,
                                 );
                             }

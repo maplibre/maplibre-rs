@@ -39,6 +39,8 @@ pub enum LayerPaint {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct StyleLayer {
+    #[serde(skip)]
+    pub index: u32,
     pub id: String,
     #[serde(rename = "type")]
     pub typ: String,
@@ -62,6 +64,7 @@ pub struct StyleLayer {
 impl Default for StyleLayer {
     fn default() -> Self {
         Self {
+            index: 0,
             id: "id".to_string(),
             typ: "fill".to_string(),
             maxzoom: None,

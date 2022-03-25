@@ -23,6 +23,7 @@ impl Default for Style {
             sources: Default::default(),
             layers: vec![
                 StyleLayer {
+                    index: 0,
                     id: "park".to_string(),
                     typ: "fill".to_string(),
                     maxzoom: None,
@@ -35,6 +36,7 @@ impl Default for Style {
                     source_layer: Some("park".to_string()),
                 },
                 StyleLayer {
+                    index: 1,
                     id: "landuse".to_string(),
                     typ: "fill".to_string(),
                     maxzoom: None,
@@ -47,6 +49,7 @@ impl Default for Style {
                     source_layer: Some("landuse".to_string()),
                 },
                 StyleLayer {
+                    index: 2,
                     id: "landcover".to_string(),
                     typ: "fill".to_string(),
                     maxzoom: None,
@@ -59,6 +62,7 @@ impl Default for Style {
                     source_layer: Some("landcover".to_string()),
                 },
                 StyleLayer {
+                    index: 3,
                     id: "1transportation".to_string(),
                     typ: "line".to_string(),
                     maxzoom: None,
@@ -71,6 +75,7 @@ impl Default for Style {
                     source_layer: Some("transportation".to_string()),
                 },
                 StyleLayer {
+                    index: 4,
                     id: "building".to_string(),
                     typ: "fill".to_string(),
                     maxzoom: None,
@@ -83,6 +88,7 @@ impl Default for Style {
                     source_layer: Some("building".to_string()),
                 },
                 StyleLayer {
+                    index: 4,
                     id: "water".to_string(),
                     typ: "fill".to_string(),
                     maxzoom: None,
@@ -95,6 +101,7 @@ impl Default for Style {
                     source_layer: Some("water".to_string()),
                 },
                 StyleLayer {
+                    index: 6,
                     id: "waterway".to_string(),
                     typ: "fill".to_string(),
                     maxzoom: None,
@@ -107,6 +114,7 @@ impl Default for Style {
                     source_layer: Some("waterway".to_string()),
                 },
                 StyleLayer {
+                    index: 7,
                     id: "boundary".to_string(),
                     typ: "line".to_string(),
                     maxzoom: None,

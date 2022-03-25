@@ -24,6 +24,7 @@ fn main(
     [[location(7)]] translate4: vec4<f32>,
     [[location(8)]] color: vec4<f32>,
     [[location(9)]] zoom_factor: f32,
+    [[location(10)]] z_index: f32,
     [[builtin(instance_index)]] instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
     let z = 0.0;
@@ -36,7 +37,7 @@ fn main(
 
     var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(position + normal * width, z, 1.0);
     // FIXME: how to fix z-fighting?
-    position.z = 1.0;
+    position.z = z_index;
 
     return VertexOutput(color, position);
 }
