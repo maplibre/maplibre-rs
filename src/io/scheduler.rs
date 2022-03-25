@@ -82,22 +82,23 @@ impl ThreadLocalTessellatorState {
         request_id: TileRequestID,
         data: Box<[u8]>,
     ) -> Result<(), SendError<TileTessellateResult>> {
-        if let Ok(tile_request_state) = self.tile_request_state.lock() {
-            if let Some(tile_request) = tile_request_state.get_tile_request(request_id) {
-                self.tessellate_layers_with_request(
-                    TileFetchResult::Tile {
-                        coords: tile_request.coords,
-                        data,
-                    },
-                    &tile_request,
-                    request_id,
-                )
-            } else {
-                Ok(())
-            }
-        } else {
-            Ok(())
+        if let Some(tile_request) = self
+            .tile_request_state
+            .lock()
+            .ok()
+            .and_then(|tile_request_state| tile_request_state.get_tile_request(request_id))
+        {
+            self.tessellate_layers_with_request(
+                TileFetchResult::Tile {
+                    coords: tile_request.coords,
+                    data,
+                },
+                &tile_request,
+                request_id,
+            )?;
         }
+
+        Ok(())
     }
 
     fn tessellate_layers_with_request(
@@ -191,16 +192,15 @@ impl IOScheduler {
     }
 
     pub fn try_populate_cache(&mut self) {
-        if let Ok(result) = self.result_receiver.try_recv() {
-            match result {
-                TileTessellateResult::Tile { request_id } => loop {
-                    if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
+        if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
+            if let Ok(result) = self.result_receiver.try_recv() {
+                match result {
+                    TileTessellateResult::Tile { request_id } => {
                         tile_request_state.finish_tile_request(request_id);
-                        break;
                     }
-                },
-                TileTessellateResult::Layer(layer_result) => {
-                    self.tile_cache.push(layer_result);
+                    TileTessellateResult::Layer(layer_result) => {
+                        self.tile_cache.push(layer_result);
+                    }
                 }
             }
         }
@@ -218,6 +218,8 @@ impl IOScheduler {
         tile_request: TileRequest,
     ) -> Result<(), SendError<TileRequest>> {
         let TileRequest { coords, layers } = &tile_request;
+
+        // TODO: Optimize: Dropping TileRequest is expensive
 
         if !self.tile_cache.is_layers_missing(coords, layers) {
             return Ok(());
