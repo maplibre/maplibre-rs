@@ -4,9 +4,9 @@ use std::{env, fs};
 use mbtiles::extract;
 use wgsl_validate::validate_project_wgsl;
 
-pub const MUNICH_X: u32 = 17421;
-pub const MUNICH_Y: u32 = 11360;
-pub const MUNICH_Z: u8 = 15;
+const MUNICH_X: u32 = 17425;
+const MUNICH_Y: u32 = 11365;
+const MUNICH_Z: u8 = 15;
 
 /// Tiles which can be used by StaticTileFetcher
 fn clean_static_tiles() -> PathBuf {
@@ -35,8 +35,8 @@ fn embed_tiles_statically() {
             source,
             out,
             MUNICH_Z,
-            (MUNICH_X - 100)..(MUNICH_X + 100),
-            (MUNICH_Y - 100)..(MUNICH_Y + 100),
+            (MUNICH_X - 2)..(MUNICH_X + 2),
+            (MUNICH_Y - 2)..(MUNICH_Y + 2),
         )
         .unwrap();
     } else {
