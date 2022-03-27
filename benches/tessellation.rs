@@ -6,15 +6,26 @@ use std::io::Cursor;
 use vector_tile::parse_tile_reader;
 use vector_tile::tile::Layer;
 
-fn tessselate(layer: &Layer) {
-    let _: (VertexBuffers<_, u32>, _) = layer.tessellate().unwrap();
+const MUNICH_X: u32 = 17425;
+const MUNICH_Y: u32 = 11365;
+const MUNICH_Z: u8 = 15;
+
+fn parse_tile(c: &mut Criterion) {
+    let fetcher = StaticTileFetcher::new();
+
+    c.bench_function("parse", |b| {
+        b.iter(|| {
+            parse_tile_reader(&mut Cursor::new(
+                fetcher
+                    .sync_fetch_tile(&(MUNICH_X, MUNICH_Y, MUNICH_Z).into())
+                    .unwrap(),
+            ))
+            .expect("failed to load tile")
+        })
+    });
 }
 
-fn tile1(c: &mut Criterion) {
-    const MUNICH_X: u32 = 17425;
-    const MUNICH_Y: u32 = 11365;
-    const MUNICH_Z: u8 = 15;
-
+fn tessellate_tile(c: &mut Criterion) {
     let fetcher = StaticTileFetcher::new();
     let tile = parse_tile_reader(&mut Cursor::new(
         fetcher
@@ -24,8 +35,12 @@ fn tile1(c: &mut Criterion) {
     .expect("failed to load tile");
     let layer = tile.layers().first().unwrap();
 
+    fn tessselate(layer: &Layer) {
+        let _: (VertexBuffers<_, u32>, _) = layer.tessellate().unwrap();
+    }
+
     c.bench_function("tessselate", |b| b.iter(|| tessselate(layer)));
 }
 
-criterion_group!(benches, tile1);
+criterion_group!(benches, parse_tile, tessellate_tile);
 criterion_main!(benches);
