@@ -4,11 +4,11 @@ use bytemuck::Pod;
 use lyon::geom::point;
 
 use lyon::lyon_tessellation::VertexBuffers;
+use lyon::path::{FillRule, Path};
 use lyon::tessellation::geometry_builder::MaxIndex;
 use lyon::tessellation::{
     BuffersBuilder, FillOptions, FillTessellator, StrokeOptions, StrokeTessellator,
 };
-use lyon_path::{FillRule, Path};
 
 use crate::error::Error;
 use vector_tile::geometry::{Command, Geometry};
@@ -31,12 +31,12 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tessella
                     for command in &polygon.commands {
                         match command {
                             Command::MoveTo(cmd) => {
-                                let delta = lyon_path::math::vector(cmd.x as f32, cmd.y as f32);
+                                let delta = lyon::path::math::vector(cmd.x as f32, cmd.y as f32);
                                 cursor += delta;
                                 polygon_builder.begin(cursor);
                             }
                             Command::LineTo(cmd) => {
-                                let delta = lyon_path::math::vector(cmd.x as f32, cmd.y as f32);
+                                let delta = lyon::path::math::vector(cmd.x as f32, cmd.y as f32);
                                 cursor += delta;
                                 polygon_builder.line_to(cursor);
                             }
@@ -65,13 +65,13 @@ impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tessella
                                     line_string_builder.end(false);
                                 }
 
-                                let delta = lyon_path::math::vector(cmd.x as f32, cmd.y as f32);
+                                let delta = lyon::path::math::vector(cmd.x as f32, cmd.y as f32);
                                 cursor += delta;
                                 line_string_builder.begin(cursor);
                                 subpath_open = true;
                             }
                             Command::LineTo(cmd) => {
-                                let delta = lyon_path::math::vector(cmd.x as f32, cmd.y as f32);
+                                let delta = lyon::path::math::vector(cmd.x as f32, cmd.y as f32);
                                 cursor += delta;
                                 line_string_builder.line_to(cursor);
                             }

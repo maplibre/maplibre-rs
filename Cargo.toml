@@ -82,10 +82,8 @@ cgmath = "0.18"
 # Rendering
 wgpu = { version = "0.12" }
 lyon = { version = "0.17", features = [] }
-lyon_path = "0.17"
 
 # cached = "0.32"
-
 
 # Logging
 log = "0.4"

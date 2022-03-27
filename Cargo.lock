@@ -1663,7 +1663,6 @@ dependencies = [
  "js-sys",
  "log",
  "lyon",
- "lyon_path",
  "mbtiles",
  "ndk-glue",
  "reqwest",
