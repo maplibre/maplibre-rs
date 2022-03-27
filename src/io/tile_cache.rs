@@ -15,12 +15,18 @@ impl TileCache {
     }
 
     pub fn push(&mut self, result: LayerResult) {
-        match self.index.entry(result.get_coords().build_quad_key()) {
-            btree_map::Entry::Vacant(entry) => {
-                entry.insert(vec![result]);
-            }
-            btree_map::Entry::Occupied(mut entry) => {
-                entry.get_mut().push(result);
+        if let Some(entry) = result
+            .get_coords()
+            .build_quad_key()
+            .map(|key| self.index.entry(key))
+        {
+            match entry {
+                btree_map::Entry::Vacant(entry) => {
+                    entry.insert(vec![result]);
+                }
+                btree_map::Entry::Occupied(mut entry) => {
+                    entry.get_mut().push(result);
+                }
             }
         }
     }
@@ -32,7 +38,7 @@ impl TileCache {
     ) -> Vec<&LayerResult> {
         let mut ret = Vec::with_capacity(10);
 
-        if let Some(results) = self.index.get(&coords.build_quad_key()) {
+        if let Some(results) = coords.build_quad_key().and_then(|key| self.index.get(&key)) {
             for result in results {
                 if !skip_layers.contains(&result.layer_name()) {
                     ret.push(result);
@@ -48,7 +54,7 @@ impl TileCache {
         coords: &WorldTileCoords,
         layers: &mut HashSet<String>,
     ) {
-        if let Some(results) = self.index.get(&coords.build_quad_key()) {
+        if let Some(results) = coords.build_quad_key().and_then(|key| self.index.get(&key)) {
             let tessellated_set: HashSet<String> = results
                 .iter()
                 .map(|tessellated_layer| tessellated_layer.layer_name().to_string())
@@ -59,7 +65,7 @@ impl TileCache {
     }
 
     pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
-        if let Some(results) = self.index.get(&coords.build_quad_key()) {
+        if let Some(results) = coords.build_quad_key().and_then(|key| self.index.get(&key)) {
             let tessellated_set: HashSet<&str> = results
                 .iter()
                 .map(|tessellated_layer| tessellated_layer.layer_name())

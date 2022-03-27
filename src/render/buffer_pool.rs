@@ -412,7 +412,9 @@ impl RingIndex {
     }
 
     pub fn get_layers(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
-        self.tree_index.get(coords.build_quad_key().as_slice())
+        coords
+            .build_quad_key()
+            .and_then(|key| self.tree_index.get(&key))
     }
 
     pub fn get_layers_fallback(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
@@ -449,17 +451,20 @@ impl RingIndex {
     }
 
     pub fn push_back(&mut self, entry: IndexEntry) {
-        let key = entry.coords.build_quad_key();
-        match self.tree_index.entry(key) {
-            btree_map::Entry::Vacant(index_entry) => {
-                index_entry.insert(VecDeque::from([entry]));
+        if let Some(key) = entry.coords.build_quad_key() {
+            match self.tree_index.entry(key) {
+                btree_map::Entry::Vacant(index_entry) => {
+                    index_entry.insert(VecDeque::from([entry]));
+                }
+                btree_map::Entry::Occupied(mut index_entry) => {
+                    index_entry.get_mut().push_back(entry);
+                }
             }
-            btree_map::Entry::Occupied(mut index_entry) => {
-                index_entry.get_mut().push_back(entry);
-            }
+
+            self.linear_index.push_back(key)
         }
 
-        self.linear_index.push_back(key)
+        // TODO Else
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &VecDeque<IndexEntry>> + '_ {

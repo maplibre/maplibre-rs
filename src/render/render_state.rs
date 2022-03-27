@@ -558,8 +558,12 @@ impl RenderState {
 
                 let index = self.buffer_pool.index();
 
+                /*println!("Render pass start");*/
+
                 if let Some(view_region) = &view_region {
                     for world_coords in view_region.iter() {
+                        /*println!("Render coordinate {:?}", world_coords);*/
+
                         if let Some(entries) = index.get_layers_fallback(&world_coords) {
                             let mut to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
                             to_render.sort_by_key(|entry| entry.style_layer.index);
@@ -568,6 +572,8 @@ impl RenderState {
                                 .tile_mask_pattern
                                 .stencil_reference_value(&world_coords)
                                 as u32;
+
+                            /*println!("Render mask");*/
 
                             if let Some(entry) = entries.front() {
                                 // Draw mask
@@ -587,6 +593,8 @@ impl RenderState {
                             for entry in to_render {
                                 // Draw tile
                                 {
+                                    /*println!("Render tile");*/
+
                                     pass.set_pipeline(&self.render_pipeline);
                                     pass.set_stencil_reference(reference);
                                     pass.set_index_buffer(
@@ -619,6 +627,8 @@ impl RenderState {
                         }
                     }
                 }
+
+                /*println!("Render pass end");*/
             }
         }
 

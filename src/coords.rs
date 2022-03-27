@@ -140,7 +140,15 @@ impl WorldTileCoords {
         })
     }
 
-    pub fn build_quad_key(&self) -> Quadkey {
+    pub fn build_quad_key(&self) -> Option<Quadkey> {
+        let bounds = 2u32.pow(self.z as u32);
+        let x = self.x as u32;
+        let y = self.y as u32;
+
+        if x >= bounds || y >= bounds {
+            return None;
+        }
+
         let mut key = [0u8; 32];
 
         key[0] = self.z;
@@ -156,7 +164,7 @@ impl WorldTileCoords {
             }
             key[z as usize] = b;
         }
-        key
+        Some(key)
     }
 
     pub fn get_children(&self) -> [WorldTileCoords; 4] {
