@@ -2,6 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 const CopyPlugin = require("copy-webpack-plugin");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 let dist = path.join(__dirname, 'dist/demo');
 module.exports = (env) => ({
@@ -18,7 +19,7 @@ module.exports = (env) => ({
     },
     output: {
         path: dist,
-        filename: "[name].js"
+        filename: "[name].[hash].js"
     },
     devServer: {
         server: {
@@ -50,10 +51,8 @@ module.exports = (env) => ({
         new webpack.DefinePlugin({
             WEBGL: !!env.webgl
         }),
-        new CopyPlugin({
-            patterns: [
-                {from: "static", to: "."},
-            ],
+        new HtmlWebpackPlugin({
+            title: 'mapr',
         }),
         new WasmPackPlugin({
             crateDirectory: path.resolve(__dirname, '../'),
