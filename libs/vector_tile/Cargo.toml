@@ -9,11 +9,11 @@ build = "build.rs"
 
 [dependencies]
 log = "0.4"
-protobuf = "2.25"
+protobuf = { version = "2.27", features = [] }
 tile-grid = "0.3"
 
 
 [build-dependencies]
-protobuf-codegen-pure = "2.25"
+protobuf-codegen-pure = "2.27"
 
 
