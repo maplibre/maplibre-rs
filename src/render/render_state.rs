@@ -371,11 +371,7 @@ impl RenderState {
                 .collect();
 
             for coords in view_region.iter() {
-                let tile_request = TileRequest {
-                    coords,
-                    layers: source_layers.clone(), // TODO: Optimize: This is expensive
-                };
-                scheduler.try_request_tile(tile_request).unwrap();
+                scheduler.try_request_tile(&coords, &source_layers).unwrap();
             }
         }
 
@@ -418,7 +414,6 @@ impl RenderState {
             for world_coords in view_region.iter() {
                 let loaded_layers = self.buffer_pool.get_loaded_layers_at(&world_coords);
 
-                // TODO: Optimize: Dropping this is expensive
                 let available_layers =
                     scheduler.get_tessellated_layers_at(&world_coords, &loaded_layers);
 

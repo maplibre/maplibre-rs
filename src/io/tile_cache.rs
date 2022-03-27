@@ -28,14 +28,14 @@ impl TileCache {
     pub fn get_tessellated_layers_at(
         &self,
         coords: &WorldTileCoords,
-        skip_layers: &HashSet<String>,
-    ) -> Vec<LayerResult> {
-        let mut ret = Vec::new();
+        skip_layers: &HashSet<&str>,
+    ) -> Vec<&LayerResult> {
+        let mut ret = Vec::with_capacity(10);
 
         if let Some(results) = self.index.get(&coords.build_quad_key()) {
             for result in results {
-                if !skip_layers.contains(&result.layer_name().to_string()) {
-                    ret.push(result.clone());
+                if !skip_layers.contains(&result.layer_name()) {
+                    ret.push(result);
                 }
             }
         }

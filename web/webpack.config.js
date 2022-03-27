@@ -92,10 +92,7 @@ module.exports = (env) => ({
             //
             // the mode `development` makes `wasm-pack` build in `debug` mode.
             // the mode `production` makes `wasm-pack` build in `release` mode.
-            // TODO: We always build a production build because a development build runs slow
-            // TODO: The function which is slowing it down is TileProto::decode() which maps the tile proto struct
-            // TODO: into our data structure. (Development: 15s, Production: 60ms)
-            forceMode: "production",
+            // forceMode: "production",
 
             // Controls plugin output verbosity, either 'info' or 'error'.
             // Defaults to 'info'.

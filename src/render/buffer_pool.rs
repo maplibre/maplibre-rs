@@ -134,13 +134,15 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
     }
 
     /// FIXME: use an id instead of layer_name to identify tiles
-    pub fn get_loaded_layers_at(&self, coords: &WorldTileCoords) -> HashSet<String> {
-        self.index
-            .get_layers(coords)
-            .unwrap_or(&VecDeque::new())
-            .iter()
-            .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().clone())
-            .collect()
+    pub fn get_loaded_layers_at(&self, coords: &WorldTileCoords) -> HashSet<&str> {
+        if let Some(layers) = self.index.get_layers(coords) {
+            layers
+                .iter()
+                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str())
+                .collect()
+        } else {
+            HashSet::new()
+        }
     }
 
     /// Allocates

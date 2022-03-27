@@ -215,21 +215,19 @@ impl IOScheduler {
 
     pub fn try_request_tile(
         &mut self,
-        tile_request: TileRequest,
+        coords: &WorldTileCoords,
+        layers: &HashSet<String>,
     ) -> Result<(), SendError<TileRequest>> {
-        let TileRequest { coords, layers } = &tile_request;
-
-        // TODO: Optimize: Dropping TileRequest is expensive
-
         if !self.tile_cache.is_layers_missing(coords, layers) {
             return Ok(());
         }
 
         if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
-            let tile_coords = *coords;
-
-            if let Some(id) = tile_request_state.start_tile_request(tile_request) {
-                if let Some(tile_coords) = tile_coords.into_tile(TileAddressingScheme::TMS) {
+            if let Some(id) = tile_request_state.start_tile_request(TileRequest {
+                coords: *coords,
+                layers: layers.clone(),
+            }) {
+                if let Some(tile_coords) = coords.into_tile(TileAddressingScheme::TMS) {
                     info!("new tile request: {}", &tile_coords);
 
                     self.schedule_method
@@ -244,8 +242,8 @@ impl IOScheduler {
     pub fn get_tessellated_layers_at(
         &self,
         coords: &WorldTileCoords,
-        skip_layers: &HashSet<String>,
-    ) -> Vec<LayerResult> {
+        skip_layers: &HashSet<&str>,
+    ) -> Vec<&LayerResult> {
         self.tile_cache
             .get_tessellated_layers_at(coords, skip_layers)
     }
