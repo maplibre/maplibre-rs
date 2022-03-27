@@ -1,3 +1,4 @@
+#![allow(clippy::identity_op)]
 use wgpu::{
     ColorTargetState, Device, FragmentState, ShaderModule, VertexBufferLayout, VertexState,
 };

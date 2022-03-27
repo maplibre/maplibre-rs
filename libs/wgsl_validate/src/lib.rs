@@ -63,7 +63,7 @@ pub fn validate_project_wgsl() {
             Ok(entry) => {
                 let path = entry.path();
                 if !path.is_dir() {
-                    match validate_wgsl(&mut validator, &path) {
+                    match validate_wgsl(&mut validator, path) {
                         Ok(_) => {}
                         Err(err) => {
                             let path = path.strip_prefix(&root_dir).unwrap_or(path);
@@ -83,7 +83,7 @@ pub fn validate_project_wgsl() {
                 }
             }
             Err(error) => {
-                println!("cargo:warning={}", format!("{:?}", error));
+                println!("cargo:warning={:?}", error);
                 exit(1);
             }
         }

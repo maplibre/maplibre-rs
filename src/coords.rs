@@ -140,7 +140,7 @@ impl WorldTileCoords {
         })
     }
 
-    pub fn to_quad_key(&self) -> Quadkey {
+    pub fn build_quad_key(&self) -> Quadkey {
         let mut key = [0u8; 32];
 
         key[0] = self.z;
@@ -428,28 +428,28 @@ mod tests {
             TileCoords { x: 0, y: 0, z: 1 }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
-                .to_quad_key(),
+                .build_quad_key(),
             new_quad_key_z1(2)
         );
         assert_eq!(
             TileCoords { x: 0, y: 1, z: 1 }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
-                .to_quad_key(),
+                .build_quad_key(),
             new_quad_key_z1(0)
         );
         assert_eq!(
             TileCoords { x: 1, y: 1, z: 1 }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
-                .to_quad_key(),
+                .build_quad_key(),
             new_quad_key_z1(1)
         );
         assert_eq!(
             TileCoords { x: 1, y: 0, z: 1 }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
-                .to_quad_key(),
+                .build_quad_key(),
             new_quad_key_z1(3)
         );
     }

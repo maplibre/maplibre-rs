@@ -1,4 +1,3 @@
-use std::collections::vec_deque::Iter;
 use std::collections::{btree_map, BTreeMap, HashSet, VecDeque};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -156,7 +155,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         style_layer: StyleLayer,
         geometry: &OverAlignedVertexBuffer<V, I>,
         tile_metadata: TM,
-        feature_metadata: &Vec<FM>,
+        feature_metadata: &[FM],
     ) {
         let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
         let indices_stride = size_of::<I>() as wgpu::BufferAddress;
@@ -222,8 +221,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         queue.write_buffer(
             &self.feature_metadata.inner,
             maybe_entry.buffer_feature_metadata.start,
-            &bytemuck::cast_slice(feature_metadata.as_slice())
-                [0..aligned_feature_metadata_bytes as usize],
+            &bytemuck::cast_slice(feature_metadata)[0..aligned_feature_metadata_bytes as usize],
         );
         self.index.push_back(maybe_entry);
     }
@@ -412,7 +410,7 @@ impl RingIndex {
     }
 
     pub fn get_layers(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
-        self.tree_index.get(coords.to_quad_key().as_slice())
+        self.tree_index.get(coords.build_quad_key().as_slice())
     }
 
     pub fn get_layers_fallback(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
@@ -428,12 +426,10 @@ impl RingIndex {
         loop {
             if let Some(entries) = self.get_layers(&current) {
                 return Some(entries);
+            } else if let Some(parent) = current.get_parent() {
+                current = parent
             } else {
-                if let Some(parent) = current.get_parent() {
-                    current = parent
-                } else {
-                    return None;
-                }
+                return None;
             }
         }
     }
@@ -451,8 +447,8 @@ impl RingIndex {
     }
 
     pub fn push_back(&mut self, entry: IndexEntry) {
-        let key = entry.coords.to_quad_key();
-        match self.tree_index.entry(key.clone()) {
+        let key = entry.coords.build_quad_key();
+        match self.tree_index.entry(key) {
             btree_map::Entry::Vacant(index_entry) => {
                 index_entry.insert(VecDeque::from([entry]));
             }
@@ -539,7 +535,7 @@ mod tests {
                 style_layer.clone(),
                 &data48bytes_aligned,
                 2,
-                &vec![],
+                &[],
             );
         }
         assert_eq!(
@@ -553,7 +549,7 @@ mod tests {
             style_layer.clone(),
             &data24bytes_aligned,
             2,
-            &vec![],
+            &[],
         );
         assert_eq!(
             128 - 2 * 48 - 24,
@@ -567,7 +563,7 @@ mod tests {
             style_layer.clone(),
             &data24bytes_aligned,
             2,
-            &vec![],
+            &[],
         );
         // appended now at the beginning
         println!("{:?}", &pool.index);
@@ -579,7 +575,7 @@ mod tests {
             style_layer.clone(),
             &data24bytes_aligned,
             2,
-            &vec![],
+            &[],
         );
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::Vertices));
@@ -590,7 +586,7 @@ mod tests {
             style_layer.clone(),
             &data24bytes_aligned,
             2,
-            &vec![],
+            &[],
         );
         println!("{:?}", &pool.index);
         assert_eq!(24, pool.available_space(BackingBufferType::Vertices));
@@ -601,7 +597,7 @@ mod tests {
             style_layer,
             &data24bytes_aligned,
             2,
-            &vec![],
+            &[],
         );
         println!("{:?}", &pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::Vertices));

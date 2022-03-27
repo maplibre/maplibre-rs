@@ -1,5 +1,3 @@
-type Number = i32;
-
 #[derive(Debug, Clone)]
 pub enum GeometryPoint {
     Point(Point),
@@ -14,22 +12,22 @@ pub struct MultiPoint {
 
 #[derive(Debug, Clone)]
 pub struct Point {
-    x: Number,
-    y: Number,
+    x: i32,
+    y: i32,
 }
 
 /// Contains relative coordinates to which the cursor is moved
 #[derive(Debug, Clone)]
 pub struct MoveTo {
-    pub x: Number,
-    pub y: Number,
+    pub x: i32,
+    pub y: i32,
 }
 
 /// Contains relative coordinates to which a line is drawn
 #[derive(Debug, Clone)]
 pub struct LineTo {
-    pub x: Number,
-    pub y: Number,
+    pub x: i32,
+    pub y: i32,
 }
 
 #[derive(Debug, Clone)]
@@ -58,7 +56,7 @@ pub enum Geometry {
 }
 
 impl Point {
-    pub(crate) fn new(x: Number, y: Number) -> Self {
+    pub(crate) fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
 }

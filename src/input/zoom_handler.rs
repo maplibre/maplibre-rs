@@ -2,16 +2,12 @@ use super::UpdateState;
 
 use crate::render::render_state::RenderState;
 use cgmath::num_traits::Pow;
-use cgmath::{Vector2, Vector3, Zero};
+use cgmath::{Vector2, Vector3};
 use std::time::Duration;
 
 pub struct ZoomHandler {
     window_position: Option<Vector2<f64>>,
-    translate_delta: Vector3<f64>,
-    zooming: bool,
     zoom_delta: f64,
-
-    speed: f64,
     sensitivity: f64,
 }
 
@@ -50,13 +46,10 @@ impl UpdateState for ZoomHandler {
 }
 
 impl ZoomHandler {
-    pub fn new(speed: f64, sensitivity: f64) -> Self {
+    pub fn new(sensitivity: f64) -> Self {
         Self {
             window_position: None,
-            translate_delta: Vector3::zero(),
-            zooming: false,
             zoom_delta: 0.0,
-            speed,
             sensitivity,
         }
     }

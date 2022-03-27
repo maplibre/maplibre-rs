@@ -77,7 +77,7 @@ pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(
     ])?;
 
     while let Ok(Some(tile)) = tiles_rows.next() {
-        extract_tile(&tile, &output_path)?;
+        extract_tile(tile, &output_path)?;
     }
 
     Ok(())

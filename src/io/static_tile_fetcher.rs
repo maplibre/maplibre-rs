@@ -14,6 +14,7 @@ static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 #[cfg(not(static_tiles))]
 static TILES: Dir = Dir::new("/path", &[]);
 
+#[derive(Default)]
 pub struct StaticTileFetcher;
 
 impl StaticTileFetcher {

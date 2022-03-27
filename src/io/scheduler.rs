@@ -251,6 +251,7 @@ impl IOScheduler {
     }
 }
 
+#[derive(Default)]
 pub struct TileRequestState {
     current_id: TileRequestID,
     pending_tile_requests: HashMap<TileRequestID, TileRequest>,

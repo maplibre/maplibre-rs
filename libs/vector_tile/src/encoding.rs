@@ -5,8 +5,8 @@ use crate::geometry::{
     MultiPoint, Point,
 };
 use crate::protos::vector_tile::{
-    Tile as ProtoTile, Tile_Feature as ProtoFeature, Tile_GeomType as ProtoGeomType, Tile_GeomType,
-    Tile_Layer as ProtoLayer, Tile_Value as ProtoValue,
+    Tile as ProtoTile, Tile_Feature as ProtoFeature, Tile_GeomType, Tile_Layer as ProtoLayer,
+    Tile_Value as ProtoValue,
 };
 use crate::tile::{Feature, Layer, PropertyValue, Tile};
 

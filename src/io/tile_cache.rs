@@ -1,9 +1,10 @@
-use crate::coords::WorldTileCoords;
+use crate::coords::{Quadkey, WorldTileCoords};
 use crate::io::LayerResult;
 use std::collections::{btree_map, BTreeMap, HashSet};
 
+#[derive(Default)]
 pub struct TileCache {
-    index: BTreeMap<WorldTileCoords, Vec<LayerResult>>,
+    index: BTreeMap<Quadkey, Vec<LayerResult>>,
 }
 
 impl TileCache {
@@ -14,7 +15,7 @@ impl TileCache {
     }
 
     pub fn push(&mut self, result: LayerResult) {
-        match self.index.entry(result.get_coords()) {
+        match self.index.entry(result.get_coords().build_quad_key()) {
             btree_map::Entry::Vacant(entry) => {
                 entry.insert(vec![result]);
             }
@@ -31,7 +32,7 @@ impl TileCache {
     ) -> Vec<LayerResult> {
         let mut ret = Vec::new();
 
-        if let Some(results) = self.index.get(coords) {
+        if let Some(results) = self.index.get(&coords.build_quad_key()) {
             for result in results {
                 if !skip_layers.contains(&result.layer_name().to_string()) {
                     ret.push(result.clone());
@@ -47,7 +48,7 @@ impl TileCache {
         coords: &WorldTileCoords,
         layers: &mut HashSet<String>,
     ) {
-        if let Some(results) = self.index.get(coords) {
+        if let Some(results) = self.index.get(&coords.build_quad_key()) {
             let tessellated_set: HashSet<String> = results
                 .iter()
                 .map(|tessellated_layer| tessellated_layer.layer_name().to_string())
@@ -58,7 +59,7 @@ impl TileCache {
     }
 
     pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
-        if let Some(results) = self.index.get(coords) {
+        if let Some(results) = self.index.get(&coords.build_quad_key()) {
             let tessellated_set: HashSet<&str> = results
                 .iter()
                 .map(|tessellated_layer| tessellated_layer.layer_name())

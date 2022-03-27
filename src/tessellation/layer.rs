@@ -8,7 +8,6 @@ use lyon::tessellation::geometry_builder::MaxIndex;
 use lyon::tessellation::{
     BuffersBuilder, FillOptions, FillTessellator, StrokeOptions, StrokeTessellator,
 };
-use lyon_path::traits::SvgPathBuilder;
 use lyon_path::{FillRule, Path};
 
 use crate::error::Error;

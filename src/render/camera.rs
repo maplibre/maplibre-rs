@@ -1,4 +1,3 @@
-use cgmath::num_traits::Inv;
 use cgmath::prelude::*;
 use cgmath::{Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
@@ -40,7 +39,6 @@ impl ViewProjection {
         self.0
             .cast::<f32>()
             .expect("Unable to cast view projection to f32")
-            .into()
     }
 }
 
@@ -59,7 +57,6 @@ impl ModelViewProjection {
         self.0
             .cast::<f32>()
             .expect("Unable to cast view projection to f32")
-            .into()
     }
 }
 
@@ -276,34 +273,32 @@ impl Camera {
             Vector2::new(self.width, self.height),
             Vector2::new(0.0, self.height),
         ]
-        .map(|point| self.window_to_world_at_ground(&point, &inverted_view_proj));
+        .map(|point| self.window_to_world_at_ground(&point, inverted_view_proj));
 
         let mut min: Option<Point2<f64>> = None;
         let mut max: Option<Point2<f64>> = None;
 
-        for vector in screen_bounding_box {
-            if let Some(vector) = vector {
-                if let Some(current_min) = &mut min {
-                    if vector.x < current_min.x {
-                        current_min.x = vector.x;
-                    }
-                    if vector.y < current_min.y {
-                        current_min.y = vector.y;
-                    }
-                } else {
-                    min = Some(Point2::new(vector.x, vector.y))
+        for vector in screen_bounding_box.into_iter().flatten() {
+            if let Some(current_min) = &mut min {
+                if vector.x < current_min.x {
+                    current_min.x = vector.x;
                 }
+                if vector.y < current_min.y {
+                    current_min.y = vector.y;
+                }
+            } else {
+                min = Some(Point2::new(vector.x, vector.y))
+            }
 
-                if let Some(current_max) = &mut max {
-                    if vector.x > current_max.x {
-                        current_max.x = vector.x;
-                    }
-                    if vector.y > current_max.y {
-                        current_max.y = vector.y;
-                    }
-                } else {
-                    max = Some(Point2::new(vector.x, vector.y))
+            if let Some(current_max) = &mut max {
+                if vector.x > current_max.x {
+                    current_max.x = vector.x;
                 }
+                if vector.y > current_max.y {
+                    current_max.y = vector.y;
+                }
+            } else {
+                max = Some(Point2::new(vector.x, vector.y))
             }
         }
 
@@ -403,7 +398,7 @@ impl Perspective {
 #[cfg(test)]
 mod tests {
     use crate::render::camera::{InvertedViewProjection, ViewProjection};
-    use cgmath::{AbsDiffEq, Matrix4, SquareMatrix, Vector2, Vector3, Vector4};
+    use cgmath::{AbsDiffEq, Vector2, Vector3, Vector4};
 
     use super::{Camera, Perspective};
 
@@ -430,14 +425,14 @@ mod tests {
         let inverted_view_proj: InvertedViewProjection = view_proj.invert();
 
         let world_pos: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
-        let clip = view_proj * world_pos;
+        let clip = view_proj.project(world_pos);
 
         let origin_clip_space = view_proj.project(Vector4::new(0.0, 0.0, 0.0, 1.0));
         println!("origin w in clip space: {:?}", origin_clip_space.w);
 
         println!("world_pos: {:?}", world_pos);
         println!("clip: {:?}", clip);
-        println!("world_pos: {:?}", view_proj.invert().unwrap() * clip);
+        println!("world_pos: {:?}", view_proj.invert().project(clip));
 
         println!("window: {:?}", camera.clip_to_window_vulkan(&clip));
         let window = camera.clip_to_window(&clip);

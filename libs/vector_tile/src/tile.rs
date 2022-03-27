@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 use crate::geometry::Geometry;
-use crate::protos::vector_tile::{Tile as ProtoTile, Tile_Layer as ProtoLayer};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Tile {
