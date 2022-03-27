@@ -1,4 +1,3 @@
-
 use cgmath::Matrix4;
 use std::collections::HashSet;
 use std::default::Default;
