@@ -304,6 +304,47 @@ impl<S: BaseNum> fmt::Debug for Aabb3<S> {
     }
 }
 
+pub fn bounds_from_points<P, T>(points: impl Iterator<Item = P>) -> Option<([T; 2], [T; 2])>
+where
+    P: Into<[T; 2]>,
+    T: PartialOrd + Copy,
+{
+    let mut min: Option<[T; 2]> = None;
+    let mut max: Option<[T; 2]> = None;
+
+    for point in points {
+        let [x, y] = point.into();
+
+        if let Some([min_x, min_y]) = &mut min {
+            if x < *min_x {
+                *min_x = x;
+            }
+            if y < *min_y {
+                *min_y = y;
+            }
+        } else {
+            min = Some([x, y])
+        }
+
+        if let Some([max_x, max_y]) = &mut max {
+            if x > *max_x {
+                *max_x = x;
+            }
+            if y > *max_y {
+                *max_y = y;
+            }
+        } else {
+            max = Some([x, y])
+        }
+    }
+
+    if let (Some(min), Some(max)) = (min, max) {
+        return Some((min, max));
+    } else {
+        None
+    }
+}
+
 pub const fn div_away(lhs: i32, rhs: i32) -> i32 {
     if rhs < 0 {
         panic!("rhs must be positive")

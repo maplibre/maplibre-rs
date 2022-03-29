@@ -2,7 +2,7 @@ use cgmath::prelude::*;
 use cgmath::{Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
 use crate::render::shaders::ShaderCamera;
-use crate::util::math::{Aabb2, Aabb3, Plane};
+use crate::util::math::{bounds_from_points, Aabb2, Aabb3, Plane};
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
@@ -275,34 +275,14 @@ impl Camera {
         ]
         .map(|point| self.window_to_world_at_ground(&point, inverted_view_proj));
 
-        let mut min: Option<Point2<f64>> = None;
-        let mut max: Option<Point2<f64>> = None;
+        let (min, max) = bounds_from_points(
+            screen_bounding_box
+                .into_iter()
+                .flatten()
+                .map(|point| [point.x, point.y]),
+        )?;
 
-        for vector in screen_bounding_box.into_iter().flatten() {
-            if let Some(current_min) = &mut min {
-                if vector.x < current_min.x {
-                    current_min.x = vector.x;
-                }
-                if vector.y < current_min.y {
-                    current_min.y = vector.y;
-                }
-            } else {
-                min = Some(Point2::new(vector.x, vector.y))
-            }
-
-            if let Some(current_max) = &mut max {
-                if vector.x > current_max.x {
-                    current_max.x = vector.x;
-                }
-                if vector.y > current_max.y {
-                    current_max.y = vector.y;
-                }
-            } else {
-                max = Some(Point2::new(vector.x, vector.y))
-            }
-        }
-
-        Some(Aabb2::new(min?, max?))
+        Some(Aabb2::new(Point2::from(min), Point2::from(max)))
     }
     /// An alternative implementation for `view_bounding_box`.
     ///
