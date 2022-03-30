@@ -97,7 +97,7 @@ pub async fn run(
 
                     scheduler.try_populate_cache();
 
-                    input.update_state(state, dt);
+                    input.update_state(state, &scheduler.tile_cache, dt);
                     state.upload_tile_geometry(&mut scheduler);
                     match state.render() {
                         Ok(_) => {}

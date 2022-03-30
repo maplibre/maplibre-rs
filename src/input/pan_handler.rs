@@ -1,4 +1,5 @@
 use super::UpdateState;
+use crate::io::tile_cache::TileCache;
 use crate::render::camera::Camera;
 use crate::render::render_state::RenderState;
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
@@ -14,7 +15,7 @@ pub struct PanHandler {
 }
 
 impl UpdateState for PanHandler {
-    fn update_state(&mut self, state: &mut RenderState, _dt: Duration) {
+    fn update_state(&mut self, state: &mut RenderState, _tile_cache: &TileCache, _dt: Duration) {
         if !self.is_panning {
             return;
         }

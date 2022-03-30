@@ -5,15 +5,16 @@ use crate::coords::WorldTileCoords;
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 
+use crate::io::geometry_index::TileIndex;
 use std::collections::HashSet;
 use std::fmt;
 use vector_tile::tile::Layer;
 
+mod geometry_index;
 pub mod scheduler;
 pub mod static_tile_fetcher;
 pub mod tile_cache;
 
-#[derive(Clone)]
 pub enum TileFetchResult {
     Unavailable {
         coords: WorldTileCoords,
@@ -24,14 +25,18 @@ pub enum TileFetchResult {
     },
 }
 
-#[derive(Clone)]
-pub enum TileTessellateResult {
-    Tile { request_id: TileRequestID },
-    Layer(LayerResult),
+pub struct TileIndexResult {
+    request_id: TileRequestID,
+    coords: WorldTileCoords,
+    index: TileIndex,
 }
 
-#[derive(Clone)]
-pub enum LayerResult {
+pub enum TileTessellateResult {
+    Tile { request_id: TileRequestID },
+    Layer(LayerTessellateResult),
+}
+
+pub enum LayerTessellateResult {
     UnavailableLayer {
         coords: WorldTileCoords,
         layer_name: String,
@@ -45,24 +50,24 @@ pub enum LayerResult {
     },
 }
 
-impl fmt::Debug for LayerResult {
+impl fmt::Debug for LayerTessellateResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "LayerResult{}", self.get_coords())
     }
 }
 
-impl LayerResult {
+impl LayerTessellateResult {
     pub fn get_coords(&self) -> WorldTileCoords {
         match self {
-            LayerResult::UnavailableLayer { coords, .. } => *coords,
-            LayerResult::TessellatedLayer { coords, .. } => *coords,
+            LayerTessellateResult::UnavailableLayer { coords, .. } => *coords,
+            LayerTessellateResult::TessellatedLayer { coords, .. } => *coords,
         }
     }
 
     pub fn layer_name(&self) -> &str {
         match self {
-            LayerResult::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
-            LayerResult::TessellatedLayer { layer_data, .. } => layer_data.name(),
+            LayerTessellateResult::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
+            LayerTessellateResult::TessellatedLayer { layer_data, .. } => layer_data.name(),
         }
     }
 }

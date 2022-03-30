@@ -6,7 +6,7 @@ use std::{cmp, iter};
 use crate::coords::{ViewRegion, TILE_SIZE};
 
 use crate::io::scheduler::IOScheduler;
-use crate::io::{LayerResult, TileRequest};
+use crate::io::{LayerTessellateResult, TileRequest};
 use style_spec::layer::LayerPaint;
 use style_spec::{EncodedSrgb, Style};
 use wgpu::{Buffer, Limits, Queue};
@@ -414,76 +414,79 @@ impl RenderState {
             for world_coords in view_region.iter() {
                 let loaded_layers = self.buffer_pool.get_loaded_layers_at(&world_coords);
 
-                let available_layers =
-                    scheduler.get_tessellated_layers_at(&world_coords, &loaded_layers);
+                if let Some(mut available_layers) = scheduler
+                    .iter_tessellated_layers_at(&world_coords, &loaded_layers)
+                    .map(|layers| layers.collect::<Vec<_>>())
+                {
+                    for style_layer in &self.style.layers {
+                        let source_layer = style_layer.source_layer.as_ref().unwrap();
 
-                for style_layer in &self.style.layers {
-                    let source_layer = style_layer.source_layer.as_ref().unwrap();
+                        if let Some(result) = available_layers
+                            .iter()
+                            .find(|layer| source_layer.as_str() == layer.layer_name())
+                        {
+                            let color: Option<style_spec::Alpha<EncodedSrgb<f32>>> =
+                                style_layer.paint.as_ref().and_then(|paint| match paint {
+                                    LayerPaint::Background(paint) => paint
+                                        .background_color
+                                        .as_ref()
+                                        .map(|color| color.clone().into()),
+                                    LayerPaint::Line(paint) => {
+                                        paint.line_color.as_ref().map(|color| color.clone().into())
+                                    }
+                                    LayerPaint::Fill(paint) => {
+                                        paint.fill_color.as_ref().map(|color| color.clone().into())
+                                    }
+                                });
 
-                    if let Some(result) = available_layers
-                        .iter()
-                        .find(|layer| source_layer.as_str() == layer.layer_name())
-                    {
-                        let color: Option<style_spec::Alpha<EncodedSrgb<f32>>> =
-                            style_layer.paint.as_ref().and_then(|paint| match paint {
-                                LayerPaint::Background(paint) => paint
-                                    .background_color
-                                    .as_ref()
-                                    .map(|color| color.clone().into()),
-                                LayerPaint::Line(paint) => {
-                                    paint.line_color.as_ref().map(|color| color.clone().into())
-                                }
-                                LayerPaint::Fill(paint) => {
-                                    paint.fill_color.as_ref().map(|color| color.clone().into())
-                                }
-                            });
-
-                        match result {
-                            LayerResult::UnavailableLayer { .. } => {}
-                            LayerResult::TessellatedLayer {
-                                coords,
-                                feature_indices,
-                                layer_data,
-                                buffer,
-                                ..
-                            } => {
-                                let world_coords = coords;
-
-                                let feature_metadata = layer_data
-                                    .features()
-                                    .iter()
-                                    .enumerate()
-                                    .flat_map(|(i, _feature)| {
-                                        iter::repeat(ShaderFeatureStyle {
-                                            color: color.unwrap().into(),
-                                        })
-                                        .take(*feature_indices.get(i).unwrap() as usize)
-                                    })
-                                    .collect::<Vec<_>>();
-
-                                // We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                                // better supported.
-                                let transform: Matrix4<f32> = (view_proj.to_model_view_projection(
-                                    world_coords.transform_for_zoom(self.zoom),
-                                ))
-                                .downcast();
-
-                                self.buffer_pool.allocate_tile_geometry(
-                                    &self.queue,
-                                    *coords,
-                                    style_layer.clone(),
+                            match result {
+                                LayerTessellateResult::UnavailableLayer { .. } => {}
+                                LayerTessellateResult::TessellatedLayer {
+                                    coords,
+                                    feature_indices,
+                                    layer_data,
                                     buffer,
-                                    ShaderTileMetadata::new(
-                                        transform.into(),
-                                        zoom_factor,
-                                        style_layer.index as f32,
-                                    ),
-                                    &feature_metadata,
-                                );
+                                    ..
+                                } => {
+                                    let world_coords = coords;
+
+                                    let feature_metadata = layer_data
+                                        .features()
+                                        .iter()
+                                        .enumerate()
+                                        .flat_map(|(i, _feature)| {
+                                            iter::repeat(ShaderFeatureStyle {
+                                                color: color.unwrap().into(),
+                                            })
+                                            .take(*feature_indices.get(i).unwrap() as usize)
+                                        })
+                                        .collect::<Vec<_>>();
+
+                                    // We are casting here from 64bit to 32bit, because 32bit is more performant and is
+                                    // better supported.
+                                    let transform: Matrix4<f32> = (view_proj
+                                        .to_model_view_projection(
+                                            world_coords.transform_for_zoom(self.zoom),
+                                        ))
+                                    .downcast();
+
+                                    self.buffer_pool.allocate_tile_geometry(
+                                        &self.queue,
+                                        *coords,
+                                        style_layer.clone(),
+                                        buffer,
+                                        ShaderTileMetadata::new(
+                                            transform.into(),
+                                            zoom_factor,
+                                            style_layer.index as f32,
+                                        ),
+                                        &feature_metadata,
+                                    );
+                                }
                             }
                         }
                     }
-                }
+                };
             }
         }
 

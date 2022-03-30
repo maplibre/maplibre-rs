@@ -7,13 +7,16 @@ use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
 use crate::input::pan_handler::PanHandler;
 use crate::input::pinch_handler::PinchHandler;
+use crate::input::query_handler::QueryHandler;
 use crate::input::shift_handler::ShiftHandler;
 use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
+use crate::io::tile_cache::TileCache;
 use crate::render::render_state::RenderState;
 
 mod pan_handler;
 mod pinch_handler;
+mod query_handler;
 mod shift_handler;
 mod tilt_handler;
 mod zoom_handler;
@@ -24,6 +27,7 @@ pub struct InputController {
     zoom_handler: ZoomHandler,
     tilt_handler: TiltHandler,
     shift_handler: ShiftHandler,
+    query_handler: QueryHandler,
 }
 
 impl InputController {
@@ -44,6 +48,7 @@ impl InputController {
             zoom_handler: ZoomHandler::new(zoom_sensitivity),
             tilt_handler: TiltHandler::new(speed, sensitivity),
             shift_handler: ShiftHandler::new(speed, sensitivity),
+            query_handler: QueryHandler::new(),
         }
     }
 
@@ -56,6 +61,8 @@ impl InputController {
             WindowEvent::CursorMoved { position, .. } => {
                 let position: (f64, f64) = position.to_owned().into();
                 self.pan_handler
+                    .process_window_position(&Vector2::from(position), false);
+                self.query_handler
                     .process_window_position(&Vector2::from(position), false);
                 self.zoom_handler
                     .process_window_position(&Vector2::from(position), false);
@@ -81,12 +88,25 @@ impl InputController {
                 }
             }
             WindowEvent::Touch(touch) => match touch.phase {
-                TouchPhase::Started => self.pan_handler.process_touch_start(),
-                TouchPhase::Ended => self.pan_handler.process_touch_end(),
+                TouchPhase::Started => {
+                    self.pan_handler.process_touch_start();
+                    self.query_handler.process_touch_start();
+                    true
+                }
+                TouchPhase::Ended => {
+                    self.pan_handler.process_touch_end();
+                    self.query_handler.process_touch_end();
+                    true
+                }
                 TouchPhase::Moved => {
                     let position: (f64, f64) = touch.location.to_owned().into();
                     self.pan_handler
-                        .process_window_position(&Vector2::from(position), true)
+                        .process_window_position(&Vector2::from(position), true);
+                    self.query_handler
+                        .process_window_position(&Vector2::from(position), true);
+                    self.zoom_handler
+                        .process_window_position(&Vector2::from(position), true);
+                    true
                 }
                 TouchPhase::Cancelled => false,
             },
@@ -96,7 +116,8 @@ impl InputController {
                 true
             }
             WindowEvent::MouseInput { button, state, .. } => {
-                self.pan_handler.process_mouse_key_press(button, state)
+                self.pan_handler.process_mouse_key_press(button, state);
+                self.query_handler.process_mouse_key_press(button, state)
             }
             _ => false,
         }
@@ -104,15 +125,16 @@ impl InputController {
 }
 
 pub trait UpdateState {
-    fn update_state(&mut self, state: &mut RenderState, dt: Duration);
+    fn update_state(&mut self, state: &mut RenderState, tile_cache: &TileCache, dt: Duration);
 }
 
 impl UpdateState for InputController {
-    fn update_state(&mut self, state: &mut RenderState, dt: Duration) {
-        self.pan_handler.update_state(state, dt);
-        self.pinch_handler.update_state(state, dt);
-        self.zoom_handler.update_state(state, dt);
-        self.tilt_handler.update_state(state, dt);
-        self.shift_handler.update_state(state, dt);
+    fn update_state(&mut self, state: &mut RenderState, tile_cache: &TileCache, dt: Duration) {
+        self.pan_handler.update_state(state, tile_cache, dt);
+        self.pinch_handler.update_state(state, tile_cache, dt);
+        self.zoom_handler.update_state(state, tile_cache, dt);
+        self.tilt_handler.update_state(state, tile_cache, dt);
+        self.shift_handler.update_state(state, tile_cache, dt);
+        self.query_handler.update_state(state, tile_cache, dt);
     }
 }

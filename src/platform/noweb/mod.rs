@@ -78,7 +78,7 @@ pub mod scheduler {
                 .await
                 {
                     state
-                        .tessellate_layers(request_id, data.into_boxed_slice())
+                        .process_tile(request_id, data.into_boxed_slice())
                         .unwrap();
                 } else {
                     // TODO Error

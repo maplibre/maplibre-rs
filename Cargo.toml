@@ -79,6 +79,12 @@ tilejson-spec = { path = "./libs/tilejson_spec" }
 
 cgmath = "0.18"
 
+geo = { version = "0.19" }
+geo-types = { version = "0.7", features = ["use-rstar_0_9"] }
+rstar = { version = "0.9" }
+prost = "0.9"
+geozero = { git = "https://github.com/georust/geozero", rev = "24973aa", default-features = false, features = ["with-mvt", "with-geo"]}
+
 # Rendering
 wgpu = { version = "0.12" }
 lyon = { version = "0.17", features = [] }

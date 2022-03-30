@@ -1,5 +1,9 @@
 use std::collections::{HashMap, HashSet};
+use std::ops::Index;
 
+use geo_types::{Geometry, Line};
+use geozero::mvt::Tile;
+use geozero::{GeozeroDatasource, ToGeo};
 use log::{error, info};
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
@@ -10,7 +14,10 @@ use vector_tile::parse_tile_bytes;
 /// Describes through which channels work-requests travel. It describes the flow of work.
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::io::tile_cache::TileCache;
-use crate::io::{LayerResult, TileFetchResult, TileRequest, TileRequestID, TileTessellateResult};
+use crate::io::{
+    LayerTessellateResult, TileFetchResult, TileIndexResult, TileRequest, TileRequestID,
+    TileTessellateResult,
+};
 
 use crate::tessellation::Tessellated;
 
@@ -62,7 +69,8 @@ impl ScheduleMethod {
 
 pub struct ThreadLocalTessellatorState {
     tile_request_state: Arc<Mutex<TileRequestState>>,
-    layer_result_sender: Sender<TileTessellateResult>,
+    tessellate_result_sender: Sender<TileTessellateResult>,
+    index_result_sender: Sender<TileIndexResult>,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -75,99 +83,161 @@ impl Drop for ThreadLocalTessellatorState {
         );
     }
 }
+use crate::io::geometry_index::{IndexGeometry, IndexProcessor, TileIndex};
+use prost::Message;
 
 impl ThreadLocalTessellatorState {
-    pub fn tessellate_layers(
+    fn get_tile_request(&self, request_id: TileRequestID) -> Option<TileRequest> {
+        self.tile_request_state
+            .lock()
+            .ok()
+            .and_then(|tile_request_state| tile_request_state.get_tile_request(request_id).cloned())
+    }
+
+    pub fn process_tile(
         &self,
         request_id: TileRequestID,
         data: Box<[u8]>,
     ) -> Result<(), SendError<TileTessellateResult>> {
-        if let Some(tile_request) = self
-            .tile_request_state
-            .lock()
-            .ok()
-            .and_then(|tile_request_state| tile_request_state.get_tile_request(request_id))
-        {
-            self.tessellate_layers_with_request(
-                TileFetchResult::Tile {
-                    coords: tile_request.coords,
-                    data,
-                },
-                &tile_request,
-                request_id,
-            )?;
+        if let Some(tile_request) = self.get_tile_request(request_id) {
+            let tile_result = TileFetchResult::Tile {
+                coords: tile_request.coords,
+                data,
+            };
+
+            self.tessellate_layers_with_request(&tile_result, &tile_request, request_id)?;
+
+            self.index_geometry(request_id, &tile_result);
         }
 
         Ok(())
     }
 
+    pub fn tile_unavailable(
+        &self,
+        request_id: TileRequestID,
+    ) -> Result<(), SendError<TileTessellateResult>> {
+        if let Some(tile_request) = self.get_tile_request(request_id) {
+            let tile_result = TileFetchResult::Unavailable {
+                coords: tile_request.coords,
+            };
+            self.tessellate_layers_with_request(&tile_result, &tile_request, request_id)?;
+        }
+
+        Ok(())
+    }
+
+    fn index_geometry(&self, request_id: TileRequestID, tile_result: &TileFetchResult) {
+        match tile_result {
+            TileFetchResult::Tile { data, coords } => {
+                let tile: Tile = Tile::decode(data.as_ref()).unwrap();
+
+                let mut processor = IndexProcessor::new();
+                for mut layer in tile.layers {
+                    layer.process(&mut processor).unwrap();
+                }
+
+                self.index_result_sender
+                    .send(TileIndexResult {
+                        request_id,
+                        coords: *coords,
+                        /*index: TileIndex::Spatial {
+                            tree: processor.build_tree(),
+                        },*/
+                        index: TileIndex::Linear {
+                            list: processor.get_geometries(),
+                        },
+                    })
+                    .unwrap();
+            }
+            _ => {}
+        }
+    }
+
     fn tessellate_layers_with_request(
         &self,
-        tile_result: TileFetchResult,
+        tile_result: &TileFetchResult,
         tile_request: &TileRequest,
         request_id: TileRequestID,
     ) -> Result<(), SendError<TileTessellateResult>> {
-        if let TileFetchResult::Tile { data, coords } = tile_result {
-            info!("parsing tile {} with {}bytes", &coords, data.len());
-            let tile = parse_tile_bytes(&data).expect("failed to load tile");
+        match tile_result {
+            TileFetchResult::Unavailable { coords } => {
+                for to_load in &tile_request.layers {
+                    self.tessellate_result_sender
+                        .send(TileTessellateResult::Layer(
+                            LayerTessellateResult::UnavailableLayer {
+                                coords: *coords,
+                                layer_name: to_load.to_string(),
+                            },
+                        ))?;
+                }
+            }
+            TileFetchResult::Tile { data, coords } => {
+                info!("parsing tile {} with {}bytes", &coords, data.len());
+                let tile = parse_tile_bytes(&data).expect("failed to load tile");
 
-            for to_load in &tile_request.layers {
-                if let Some(layer) = tile
-                    .layers()
-                    .iter()
-                    .find(|layer| to_load.as_str() == layer.name())
-                {
-                    match layer.tessellate() {
-                        Ok((buffer, feature_indices)) => {
-                            self.layer_result_sender.send(TileTessellateResult::Layer(
-                                LayerResult::TessellatedLayer {
-                                    coords,
-                                    buffer: buffer.into(),
-                                    feature_indices,
-                                    layer_data: layer.clone(),
-                                },
-                            ))?;
+                for to_load in &tile_request.layers {
+                    if let Some(layer) = tile
+                        .layers()
+                        .iter()
+                        .find(|layer| to_load.as_str() == layer.name())
+                    {
+                        match layer.tessellate() {
+                            Ok((buffer, feature_indices)) => {
+                                self.tessellate_result_sender
+                                    .send(TileTessellateResult::Layer(
+                                        LayerTessellateResult::TessellatedLayer {
+                                            coords: *coords,
+                                            buffer: buffer.into(),
+                                            feature_indices,
+                                            layer_data: layer.clone(),
+                                        },
+                                    ))?;
+                            }
+                            Err(e) => {
+                                self.tessellate_result_sender
+                                    .send(TileTessellateResult::Layer(
+                                        LayerTessellateResult::UnavailableLayer {
+                                            coords: *coords,
+                                            layer_name: to_load.to_string(),
+                                        },
+                                    ))?;
+
+                                error!(
+                                    "tesselation for layer {} failed: {} {:?}",
+                                    to_load, &coords, e
+                                );
+                            }
                         }
-                        Err(e) => {
-                            self.layer_result_sender.send(TileTessellateResult::Layer(
-                                LayerResult::UnavailableLayer {
-                                    coords,
+
+                        info!("layer {} ready: {}", to_load, &coords);
+                    } else {
+                        self.tessellate_result_sender
+                            .send(TileTessellateResult::Layer(
+                                LayerTessellateResult::UnavailableLayer {
+                                    coords: *coords,
                                     layer_name: to_load.to_string(),
                                 },
                             ))?;
 
-                            error!(
-                                "tesselation for layer {} failed: {} {:?}",
-                                to_load, &coords, e
-                            );
-                        }
+                        info!("layer {} not found: {}", to_load, &coords);
                     }
-
-                    info!("layer {} ready: {}", to_load, &coords);
-                } else {
-                    self.layer_result_sender.send(TileTessellateResult::Layer(
-                        LayerResult::UnavailableLayer {
-                            coords,
-                            layer_name: to_load.to_string(),
-                        },
-                    ))?;
-
-                    info!("layer {} not found: {}", to_load, &coords);
                 }
             }
-            self.layer_result_sender
-                .send(TileTessellateResult::Tile { request_id })?;
         }
+
+        self.tessellate_result_sender
+            .send(TileTessellateResult::Tile { request_id })?;
 
         Ok(())
     }
 }
 
 pub struct IOScheduler {
-    result_sender: Sender<TileTessellateResult>,
-    result_receiver: Receiver<TileTessellateResult>,
+    index_channel: (Sender<TileIndexResult>, Receiver<TileIndexResult>),
+    tessellate_channel: (Sender<TileTessellateResult>, Receiver<TileTessellateResult>),
     tile_request_state: Arc<Mutex<TileRequestState>>,
-    tile_cache: TileCache,
+    pub tile_cache: TileCache,
     schedule_method: ScheduleMethod,
 }
 
@@ -181,10 +251,9 @@ const _: () = {
 
 impl IOScheduler {
     pub fn new(schedule_method: ScheduleMethod) -> Self {
-        let (result_sender, result_receiver) = channel();
         Self {
-            result_sender,
-            result_receiver,
+            index_channel: channel(),
+            tessellate_channel: channel(),
             tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
             tile_cache: TileCache::new(),
             schedule_method,
@@ -193,23 +262,28 @@ impl IOScheduler {
 
     pub fn try_populate_cache(&mut self) {
         if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
-            if let Ok(result) = self.result_receiver.try_recv() {
+            if let Ok(result) = self.tessellate_channel.1.try_recv() {
                 match result {
                     TileTessellateResult::Tile { request_id } => {
                         tile_request_state.finish_tile_request(request_id);
                     }
                     TileTessellateResult::Layer(layer_result) => {
-                        self.tile_cache.push(layer_result);
+                        self.tile_cache.put_tessellation_result(layer_result);
                     }
                 }
             }
+        }
+
+        if let Ok(result) = self.index_channel.1.try_recv() {
+            self.tile_cache.put_index_result(result);
         }
     }
 
     pub fn new_tessellator_state(&self) -> ThreadLocalTessellatorState {
         ThreadLocalTessellatorState {
             tile_request_state: self.tile_request_state.clone(),
-            layer_result_sender: self.result_sender.clone(),
+            tessellate_result_sender: self.tessellate_channel.0.clone(),
+            index_result_sender: self.index_channel.0.clone(),
         }
     }
 
@@ -239,13 +313,13 @@ impl IOScheduler {
         Ok(())
     }
 
-    pub fn get_tessellated_layers_at(
-        &self,
+    pub fn iter_tessellated_layers_at<'b: 'a, 'a>(
+        &'b self,
         coords: &WorldTileCoords,
-        skip_layers: &HashSet<&str>,
-    ) -> Vec<&LayerResult> {
+        skip_layers: &'a HashSet<&str>,
+    ) -> Option<impl Iterator<Item = &LayerTessellateResult> + 'a> {
         self.tile_cache
-            .get_tessellated_layers_at(coords, skip_layers)
+            .iter_tessellated_layers_at(coords, skip_layers)
     }
 }
 
@@ -288,7 +362,7 @@ impl TileRequestState {
         })
     }
 
-    pub fn get_tile_request(&self, id: TileRequestID) -> Option<TileRequest> {
-        self.pending_tile_requests.get(&id).cloned()
+    pub fn get_tile_request(&self, id: TileRequestID) -> Option<&TileRequest> {
+        self.pending_tile_requests.get(&id)
     }
 }

@@ -135,9 +135,7 @@ pub mod scheduler {
         let tessellator_state: Box<ThreadLocalTessellatorState> =
             unsafe { Box::from_raw(tessellator_state_ptr) };
 
-        tessellator_state
-            .tessellate_layers(request_id, data)
-            .unwrap();
+        tessellator_state.process_tile(request_id, data).unwrap();
 
         // Call forget such that scheduler does not get deallocated
         std::mem::forget(tessellator_state);
@@ -198,11 +196,7 @@ pub mod scheduler {
             }
         }
 
-        async fn fetch(
-            state: ThreadLocalTessellatorState,
-            request_id: TileRequestID,
-            url: &str,
-        ) -> Result<JsValue, JsValue> {
+        async fn fetch(url: &str) -> Result<JsValue, JsValue> {
             let mut opts = RequestInit::new();
             opts.method("GET");
 
@@ -220,18 +214,7 @@ pub mod scheduler {
 
             // Get ArrayBuffer
             let maybe_array_buffer = JsFuture::from(response.array_buffer()?).await?;
-            assert!(maybe_array_buffer.is_instance_of::<ArrayBuffer>());
-            let array_buffer: ArrayBuffer = maybe_array_buffer.dyn_into().unwrap();
-
-            // Copy data to Vec<u8>
-            let buffer: Uint8Array = Uint8Array::new(&array_buffer);
-            let mut output: Vec<u8> = vec![0; array_buffer.byte_length() as usize];
-            buffer.copy_to(output.as_mut_slice());
-
-            state
-                .tessellate_layers(request_id, output.into_boxed_slice())
-                .unwrap();
-            Ok(JsValue::undefined())
+            Ok(maybe_array_buffer)
         }
 
         pub fn schedule_tile_request(
@@ -251,7 +234,22 @@ pub mod scheduler {
                             y = coords.y,
                             z = coords.z,
                         );
-                        Self::fetch(state, request_id, string.as_str()).await
+                        if let Ok(maybe_array_buffer) = Self::fetch(string.as_str()).await {
+                            assert!(maybe_array_buffer.is_instance_of::<ArrayBuffer>());
+                            let array_buffer: ArrayBuffer = maybe_array_buffer.dyn_into().unwrap();
+
+                            // Copy data to Vec<u8>
+                            let buffer: Uint8Array = Uint8Array::new(&array_buffer);
+                            let mut output: Vec<u8> = vec![0; array_buffer.byte_length() as usize];
+                            buffer.copy_to(output.as_mut_slice());
+
+                            state
+                                .process_tile(request_id, output.into_boxed_slice())
+                                .unwrap();
+                        } else {
+                            state.tile_unavailable(request_id).unwrap();
+                        }
+                        Ok(JsValue::undefined())
                     })
                 })
                 .unwrap();

@@ -1,24 +1,29 @@
-use crate::coords::{Quadkey, WorldTileCoords};
-use crate::io::LayerResult;
+use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, TILE_SIZE};
+use crate::io::geometry_index::IndexGeometry;
+use crate::io::{LayerTessellateResult, TileIndexResult};
+use cgmath::num_traits::Pow;
 use std::collections::{btree_map, BTreeMap, HashSet};
+use std::iter;
 
 #[derive(Default)]
 pub struct TileCache {
-    index: BTreeMap<Quadkey, Vec<LayerResult>>,
+    cache_index: BTreeMap<Quadkey, Vec<LayerTessellateResult>>,
+    tile_geometry_index: BTreeMap<Quadkey, TileIndexResult>,
 }
 
 impl TileCache {
     pub fn new() -> Self {
         Self {
-            index: BTreeMap::new(),
+            cache_index: BTreeMap::new(),
+            tile_geometry_index: BTreeMap::new(),
         }
     }
 
-    pub fn push(&mut self, result: LayerResult) {
+    pub fn put_tessellation_result(&mut self, result: LayerTessellateResult) {
         if let Some(entry) = result
             .get_coords()
             .build_quad_key()
-            .map(|key| self.index.entry(key))
+            .map(|key| self.cache_index.entry(key))
         {
             match entry {
                 btree_map::Entry::Vacant(entry) => {
@@ -31,22 +36,53 @@ impl TileCache {
         }
     }
 
-    pub fn get_tessellated_layers_at(
+    pub fn put_index_result(&mut self, result: TileIndexResult) {
+        result
+            .coords
+            .build_quad_key()
+            .and_then(|key| self.tile_geometry_index.insert(key, result));
+    }
+
+    pub fn query_point(
         &self,
-        coords: &WorldTileCoords,
-        skip_layers: &HashSet<&str>,
-    ) -> Vec<&LayerResult> {
-        let mut ret = Vec::with_capacity(10);
+        world_coords: &WorldCoords,
+        z: u8,
+        zoom: f64,
+    ) -> Option<Vec<&IndexGeometry<f64>>> {
+        let world_tile_coords = world_coords.into_world_tile(z, zoom);
 
-        if let Some(results) = coords.build_quad_key().and_then(|key| self.index.get(&key)) {
-            for result in results {
-                if !skip_layers.contains(&result.layer_name()) {
-                    ret.push(result);
-                }
-            }
+        if let Some(index) = world_tile_coords
+            .build_quad_key()
+            .and_then(|key| self.tile_geometry_index.get(&key))
+        {
+            let scale = 2.0.pow(z as f64 - zoom);
+
+            let delta_x = world_coords.x * scale - world_tile_coords.x as f64 * TILE_SIZE;
+            let delta_y = world_coords.y * scale - world_tile_coords.y as f64 * TILE_SIZE;
+
+            let scale = 1.0 / 512.0 * 4096.0;
+
+            let x = delta_x * scale;
+            let y = delta_y * scale;
+            Some(index.index.point_query(InnerCoords { x, y }))
+        } else {
+            None
         }
+    }
 
-        ret
+    pub fn iter_tessellated_layers_at<'b: 'a, 'a>(
+        &'b self,
+        coords: &WorldTileCoords,
+        skip_layers: &'a HashSet<&str>,
+    ) -> Option<impl Iterator<Item = &LayerTessellateResult> + 'a> {
+        coords
+            .build_quad_key()
+            .and_then(|key| self.cache_index.get(&key))
+            .map(|results| {
+                results
+                    .iter()
+                    .filter(|result| !skip_layers.contains(&result.layer_name()))
+            })
     }
 
     pub fn retain_missing_layer_names(
@@ -54,7 +90,10 @@ impl TileCache {
         coords: &WorldTileCoords,
         layers: &mut HashSet<String>,
     ) {
-        if let Some(results) = coords.build_quad_key().and_then(|key| self.index.get(&key)) {
+        if let Some(results) = coords
+            .build_quad_key()
+            .and_then(|key| self.cache_index.get(&key))
+        {
             let tessellated_set: HashSet<String> = results
                 .iter()
                 .map(|tessellated_layer| tessellated_layer.layer_name().to_string())
@@ -65,7 +104,10 @@ impl TileCache {
     }
 
     pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
-        if let Some(results) = coords.build_quad_key().and_then(|key| self.index.get(&key)) {
+        if let Some(results) = coords
+            .build_quad_key()
+            .and_then(|key| self.cache_index.get(&key))
+        {
             let tessellated_set: HashSet<&str> = results
                 .iter()
                 .map(|tessellated_layer| tessellated_layer.layer_name())
