@@ -16,6 +16,18 @@ pub const TILE_SIZE: f64 = 512.0;
 
 pub type Quadkey = [u8; 32];
 
+/// Within each tile there is a separate coordinate system. Usually this coordinate system is
+/// within [`crate::coords::EXTENT`].
+///
+/// # Coordinate System Origin
+///
+/// The origin is in the upper-left corner.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct InnerCoords {
+    pub x: f64,
+    pub y: f64,
+}
+
 /// Every tile has tile coordinates. These tile coordinates are also called
 /// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 ///
@@ -106,6 +118,14 @@ impl WorldTileCoords {
                 z: self.z,
             },
         })
+    }
+
+    pub fn into_world_coords(self, z: u8, zoom: f64) -> WorldCoords {
+        let tile_scale = 2.0.pow(self.z as f64) * TILE_SIZE;
+        let x = self.x as f64 * 512.0;
+        let y = self.y as f64 * 512.0;
+
+        WorldCoords { x, y }
     }
 
     pub fn transform_for_zoom(&self, zoom: f64) -> Matrix4<f64> {
@@ -267,7 +287,6 @@ impl AlignedWorldTileCoords {
 pub struct WorldCoords {
     pub x: f64,
     pub y: f64,
-    pub z: f64,
 }
 
 fn world_size_at_zoom(zoom: f64) -> f64 {
@@ -280,7 +299,7 @@ fn tiles_with_z(z: u8) -> f64 {
 
 impl WorldCoords {
     pub fn at_ground(x: f64, y: f64) -> Self {
-        Self { x, y, z: 0.0 }
+        Self { x, y }
     }
 
     pub fn into_world_tile(self, z: u8, zoom: f64) -> WorldTileCoords {
@@ -296,22 +315,20 @@ impl WorldCoords {
     }
 }
 
-impl From<(f32, f32, f32)> for WorldCoords {
-    fn from(tuple: (f32, f32, f32)) -> Self {
+impl From<(f32, f32)> for WorldCoords {
+    fn from(tuple: (f32, f32)) -> Self {
         WorldCoords {
             x: tuple.0 as f64,
             y: tuple.1 as f64,
-            z: tuple.2 as f64,
         }
     }
 }
 
-impl From<(f64, f64, f64)> for WorldCoords {
-    fn from(tuple: (f64, f64, f64)) -> Self {
+impl From<(f64, f64)> for WorldCoords {
+    fn from(tuple: (f64, f64)) -> Self {
         WorldCoords {
             x: tuple.0,
             y: tuple.1,
-            z: tuple.2,
         }
     }
 }
@@ -321,7 +338,6 @@ impl From<Point3<f64>> for WorldCoords {
         WorldCoords {
             x: point.x,
             y: point.y,
-            z: point.z,
         }
     }
 }
@@ -383,13 +399,7 @@ impl fmt::Display for WorldTileCoords {
 }
 impl fmt::Display for WorldCoords {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "W(x={x},y={y},z={z})",
-            x = self.x,
-            y = self.y,
-            z = self.z
-        )
+        write!(f, "W(x={x},y={y})", x = self.x, y = self.y,)
     }
 }
 

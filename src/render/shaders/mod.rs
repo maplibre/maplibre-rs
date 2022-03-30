@@ -14,11 +14,7 @@ pub type Mat4x4f32 = [Vec4f32; 4];
 
 impl From<WorldCoords> for Vec3f32 {
     fn from(world_coords: WorldCoords) -> Self {
-        [
-            world_coords.x as f32,
-            world_coords.y as f32,
-            world_coords.z as f32,
-        ]
+        [world_coords.x as f32, world_coords.y as f32, 0.0]
     }
 }
 
