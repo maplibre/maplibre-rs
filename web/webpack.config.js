@@ -19,7 +19,7 @@ module.exports = (env) => ({
     },
     output: {
         path: dist,
-        filename: "[name].[hash].js"
+        filename: "[name].[fullhash].js"
     },
     devServer: {
         server: {
