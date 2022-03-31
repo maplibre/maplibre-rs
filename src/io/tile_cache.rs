@@ -1,9 +1,9 @@
-use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, TILE_SIZE};
+use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, EXTENT, TILE_SIZE};
 use crate::io::geometry_index::IndexGeometry;
 use crate::io::{LayerTessellateResult, TileIndexResult};
 use cgmath::num_traits::Pow;
 use std::collections::{btree_map, BTreeMap, HashSet};
-use std::iter;
+
 
 #[derive(Default)]
 pub struct TileCache {
@@ -57,13 +57,11 @@ impl TileCache {
         {
             let scale = 2.0.pow(z as f64 - zoom);
 
-            let delta_x = world_coords.x * scale - world_tile_coords.x as f64 * TILE_SIZE;
-            let delta_y = world_coords.y * scale - world_tile_coords.y as f64 * TILE_SIZE;
+            let delta_x = world_coords.x / TILE_SIZE * scale - world_tile_coords.x as f64;
+            let delta_y = world_coords.y / TILE_SIZE * scale - world_tile_coords.y as f64;
 
-            let scale = 1.0 / 512.0 * 4096.0;
-
-            let x = delta_x * scale;
-            let y = delta_y * scale;
+            let x = delta_x * EXTENT;
+            let y = delta_y * EXTENT;
             Some(index.index.point_query(InnerCoords { x, y }))
         } else {
             None

@@ -1,10 +1,10 @@
-use super::UpdateState;
+
 use crate::coords::WorldCoords;
 use crate::io::tile_cache::TileCache;
-use crate::render::camera::Camera;
+
 use crate::render::render_state::RenderState;
-use cgmath::num_traits::Pow;
-use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
+
+use cgmath::{Vector2};
 use log::info;
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};

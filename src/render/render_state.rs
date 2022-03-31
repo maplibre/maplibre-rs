@@ -6,7 +6,7 @@ use std::{cmp, iter};
 use crate::coords::{ViewRegion, TILE_SIZE};
 
 use crate::io::scheduler::IOScheduler;
-use crate::io::{LayerTessellateResult, TileRequest};
+use crate::io::{LayerTessellateResult};
 use style_spec::layer::LayerPaint;
 use style_spec::{EncodedSrgb, Style};
 use wgpu::{Buffer, Limits, Queue};
@@ -414,7 +414,7 @@ impl RenderState {
             for world_coords in view_region.iter() {
                 let loaded_layers = self.buffer_pool.get_loaded_layers_at(&world_coords);
 
-                if let Some(mut available_layers) = scheduler
+                if let Some(available_layers) = scheduler
                     .iter_tessellated_layers_at(&world_coords, &loaded_layers)
                     .map(|layers| layers.collect::<Vec<_>>())
                 {

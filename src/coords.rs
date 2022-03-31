@@ -1,6 +1,7 @@
 //! File which exposes all kinds of coordinates used throughout mapr
 
 use std::fmt;
+use std::fmt::Formatter;
 
 use cgmath::num_traits::Pow;
 use cgmath::{Matrix4, Point3, Vector3};
@@ -13,11 +14,35 @@ pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
 pub const EXTENT: f64 = EXTENT_UINT as f64;
 pub const TILE_SIZE: f64 = 512.0;
+pub const MAX_ZOOM: usize = 32;
 
-pub type Quadkey = [u8; 32];
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
+pub struct Quadkey([u8; MAX_ZOOM]);
+
+impl Quadkey {
+    pub fn new(quad_encoded: &[u8]) -> Self {
+        let mut key = [0u8; 32];
+        key[0] = quad_encoded.len() as u8;
+        for (i, part) in quad_encoded.iter().enumerate() {
+            key[i + 1] = *part;
+        }
+        Self(key)
+    }
+}
+
+impl fmt::Debug for Quadkey {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let len = self.0[0] as usize;
+        for part in &self.0[0..len] {
+            write!(f, "{:?}", part)?;
+        }
+        Ok(())
+    }
+}
 
 /// Within each tile there is a separate coordinate system. Usually this coordinate system is
-/// within [`crate::coords::EXTENT`].
+/// within [`crate::coords::EXTENT`]. Therefore, `x` and `y` must be within the bounds of
+/// [`crate::coords::EXTENT`].
 ///
 /// # Coordinate System Origin
 ///
@@ -120,8 +145,8 @@ impl WorldTileCoords {
         })
     }
 
-    pub fn into_world_coords(self, z: u8, zoom: f64) -> WorldCoords {
-        let tile_scale = 2.0.pow(self.z as f64) * TILE_SIZE;
+    pub fn into_world_coords(self, _z: u8, _zoom: f64) -> WorldCoords {
+        let _tile_scale = 2.0.pow(self.z as f64) * TILE_SIZE;
         let x = self.x as f64 * 512.0;
         let y = self.y as f64 * 512.0;
 
@@ -160,6 +185,7 @@ impl WorldTileCoords {
         })
     }
 
+    /// Adopted from [tilebelt](https://github.com/mapbox/tilebelt)
     pub fn build_quad_key(&self) -> Option<Quadkey> {
         let bounds = 2u32.pow(self.z as u32);
         let x = self.x as u32;
@@ -184,9 +210,10 @@ impl WorldTileCoords {
             }
             key[z as usize] = b;
         }
-        Some(key)
+        Some(Quadkey(key))
     }
 
+    /// Adopted from [tilebelt](https://github.com/mapbox/tilebelt)
     pub fn get_children(&self) -> [WorldTileCoords; 4] {
         [
             WorldTileCoords {
@@ -421,7 +448,7 @@ mod tests {
         println!("{:?}\n{:?}", p1, p2);
 
         assert_eq!(
-            WorldCoords::from((p1.x, p1.y, 0.0)).into_world_tile(zoom.floor() as u8, zoom),
+            WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.floor() as u8, zoom),
             tile
         );
     }
@@ -435,40 +462,33 @@ mod tests {
 
     #[test]
     fn test_quad_key() {
-        fn new_quad_key_z1(a: u8) -> Quadkey {
-            let mut key = [0u8; 32];
-            key[0] = 1;
-            key[1] = a;
-            key
-        }
-
         assert_eq!(
             TileCoords { x: 0, y: 0, z: 1 }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
                 .build_quad_key(),
-            new_quad_key_z1(2)
+            Some(Quadkey::new(&[2]))
         );
         assert_eq!(
             TileCoords { x: 0, y: 1, z: 1 }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
                 .build_quad_key(),
-            new_quad_key_z1(0)
+            Some(Quadkey::new(&[0]))
         );
         assert_eq!(
             TileCoords { x: 1, y: 1, z: 1 }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
                 .build_quad_key(),
-            new_quad_key_z1(1)
+            Some(Quadkey::new(&[1]))
         );
         assert_eq!(
             TileCoords { x: 1, y: 0, z: 1 }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
                 .build_quad_key(),
-            new_quad_key_z1(3)
+            Some(Quadkey::new(&[3]))
         );
     }
 

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use cgmath::num_traits::Signed;
 use cgmath::Bounded;
 use geo::prelude::*;
-use geo_types::{CoordFloat, CoordNum, Coordinate, Geometry, LineString, Point, Polygon};
+use geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
 use geozero::error::GeozeroError;
 use geozero::geo_types::GeoWriter;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
@@ -95,7 +95,7 @@ where
     type Envelope = AABB<Point<T>>;
 
     fn envelope(&self) -> Self::Envelope {
-        self.bounds.clone()
+        self.bounds
     }
 }
 
@@ -180,7 +180,7 @@ impl GeomProcessor for IndexProcessor {
 impl PropertyProcessor for IndexProcessor {
     fn property(
         &mut self,
-        idx: usize,
+        _idx: usize,
         name: &str,
         value: &ColumnValue,
     ) -> Result<bool, GeozeroError> {
@@ -194,7 +194,7 @@ impl PropertyProcessor for IndexProcessor {
 
 impl FeatureProcessor for IndexProcessor {
     /// Begin of dataset processing
-    fn dataset_begin(&mut self, name: Option<&str>) -> Result<(), GeozeroError> {
+    fn dataset_begin(&mut self, _name: Option<&str>) -> Result<(), GeozeroError> {
         Ok(())
     }
     /// End of dataset processing
@@ -202,11 +202,11 @@ impl FeatureProcessor for IndexProcessor {
         Ok(())
     }
     /// Begin of feature processing
-    fn feature_begin(&mut self, idx: u64) -> Result<(), GeozeroError> {
+    fn feature_begin(&mut self, _idx: u64) -> Result<(), GeozeroError> {
         Ok(())
     }
     /// End of feature processing
-    fn feature_end(&mut self, idx: u64) -> Result<(), GeozeroError> {
+    fn feature_end(&mut self, _idx: u64) -> Result<(), GeozeroError> {
         Ok(())
     }
     /// Begin of feature property processing

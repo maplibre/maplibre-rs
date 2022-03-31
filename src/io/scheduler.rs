@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet};
-use std::ops::Index;
 
-use geo_types::{Geometry, Line};
+
+
 use geozero::mvt::Tile;
-use geozero::{GeozeroDatasource, ToGeo};
+use geozero::{GeozeroDatasource};
 use log::{error, info};
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
@@ -83,7 +83,7 @@ impl Drop for ThreadLocalTessellatorState {
         );
     }
 }
-use crate::io::geometry_index::{IndexGeometry, IndexProcessor, TileIndex};
+use crate::io::geometry_index::{IndexProcessor, TileIndex};
 use prost::Message;
 
 impl ThreadLocalTessellatorState {
@@ -174,7 +174,7 @@ impl ThreadLocalTessellatorState {
             }
             TileFetchResult::Tile { data, coords } => {
                 info!("parsing tile {} with {}bytes", &coords, data.len());
-                let tile = parse_tile_bytes(&data).expect("failed to load tile");
+                let tile = parse_tile_bytes(data).expect("failed to load tile");
 
                 for to_load in &tile_request.layers {
                     if let Some(layer) = tile

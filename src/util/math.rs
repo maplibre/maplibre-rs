@@ -339,7 +339,7 @@ where
     }
 
     if let (Some(min), Some(max)) = (min, max) {
-        return Some((min, max));
+        Some((min, max))
     } else {
         None
     }
