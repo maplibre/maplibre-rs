@@ -145,14 +145,6 @@ impl WorldTileCoords {
         })
     }
 
-    pub fn into_world_coords(self, _z: u8, _zoom: f64) -> WorldCoords {
-        let _tile_scale = 2.0.pow(self.z as f64) * TILE_SIZE;
-        let x = self.x as f64 * 512.0;
-        let y = self.y as f64 * 512.0;
-
-        WorldCoords { x, y }
-    }
-
     pub fn transform_for_zoom(&self, zoom: f64) -> Matrix4<f64> {
         /*
            For tile.z = zoom:
@@ -330,7 +322,7 @@ impl WorldCoords {
     }
 
     pub fn into_world_tile(self, z: u8, zoom: f64) -> WorldTileCoords {
-        let tile_scale = 2.0.pow(z as f64 - zoom) / TILE_SIZE;
+        let tile_scale = 2.0.pow(z as f64 - zoom) / TILE_SIZE; // TODO: Deduplicate
         let x = self.x * tile_scale;
         let y = self.y * tile_scale;
 

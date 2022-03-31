@@ -1,4 +1,4 @@
-use cgmath::Matrix4;
+use cgmath::{Matrix4, Vector4};
 use std::collections::HashSet;
 use std::default::Default;
 use std::{cmp, iter};
@@ -6,7 +6,7 @@ use std::{cmp, iter};
 use crate::coords::{ViewRegion, TILE_SIZE};
 
 use crate::io::scheduler::IOScheduler;
-use crate::io::{LayerTessellateResult};
+use crate::io::LayerTessellateResult;
 use style_spec::layer::LayerPaint;
 use style_spec::{EncodedSrgb, Style};
 use wgpu::{Buffer, Limits, Queue};
@@ -380,7 +380,6 @@ impl RenderState {
         // Update tile metadata for all required tiles on the GPU according to current zoom, camera and perspective
         // We perform the update before uploading new tessellated tiles, such that each
         // tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
-
         for entries in self.buffer_pool.index().iter() {
             for entry in entries {
                 let world_coords = entry.coords;
@@ -407,7 +406,7 @@ impl RenderState {
 
         // Factor which determines how much we need to adjust the width of lines for example.
         // If zoom == z -> zoom_factor == 1
-        let zoom_factor = 2.0_f64.powf(visible_z as f64 - self.zoom) as f32;
+        let zoom_factor = 2.0_f64.powf(visible_z as f64 - self.zoom) as f32; // TODO deduplicate
 
         // Upload all tessellated layers which are in view
         if let Some(view_region) = &view_region {
@@ -425,19 +424,11 @@ impl RenderState {
                             .iter()
                             .find(|layer| source_layer.as_str() == layer.layer_name())
                         {
-                            let color: Option<style_spec::Alpha<EncodedSrgb<f32>>> =
-                                style_layer.paint.as_ref().and_then(|paint| match paint {
-                                    LayerPaint::Background(paint) => paint
-                                        .background_color
-                                        .as_ref()
-                                        .map(|color| color.clone().into()),
-                                    LayerPaint::Line(paint) => {
-                                        paint.line_color.as_ref().map(|color| color.clone().into())
-                                    }
-                                    LayerPaint::Fill(paint) => {
-                                        paint.fill_color.as_ref().map(|color| color.clone().into())
-                                    }
-                                });
+                            let color: Option<Vec4f32> = style_layer
+                                .paint
+                                .as_ref()
+                                .and_then(|paint| paint.get_color())
+                                .map(|color| color.into());
 
                             match result {
                                 LayerTessellateResult::UnavailableLayer { .. } => {}
@@ -456,9 +447,9 @@ impl RenderState {
                                         .enumerate()
                                         .flat_map(|(i, _feature)| {
                                             iter::repeat(ShaderFeatureStyle {
-                                                color: color.unwrap().into(),
+                                                color: color.unwrap(),
                                             })
-                                            .take(*feature_indices.get(i).unwrap() as usize)
+                                            .take(feature_indices[i] as usize)
                                         })
                                         .collect::<Vec<_>>();
 
@@ -470,23 +461,24 @@ impl RenderState {
                                         ))
                                     .downcast();
 
+                                    let tile_metadata = ShaderTileMetadata::new(
+                                        transform.into(),
+                                        zoom_factor,
+                                        style_layer.index as f32,
+                                    );
                                     self.buffer_pool.allocate_tile_geometry(
                                         &self.queue,
                                         *coords,
                                         style_layer.clone(),
                                         buffer,
-                                        ShaderTileMetadata::new(
-                                            transform.into(),
-                                            zoom_factor,
-                                            style_layer.index as f32,
-                                        ),
+                                        tile_metadata,
                                         &feature_metadata,
                                     );
                                 }
                             }
                         }
                     }
-                };
+                }
             }
         }
 
@@ -587,7 +579,7 @@ impl RenderState {
                                         0,
                                         self.buffer_pool
                                             .metadata()
-                                            .slice(entry.metadata_buffer_range()),
+                                            .slice(entry.tile_metadata_buffer_range()),
                                     );
                                     pass.draw(0..6, 0..1);
                                 }
@@ -616,7 +608,7 @@ impl RenderState {
                                         1,
                                         self.buffer_pool
                                             .metadata()
-                                            .slice(entry.metadata_buffer_range()),
+                                            .slice(entry.tile_metadata_buffer_range()),
                                     );
                                     pass.set_vertex_buffer(
                                         2,

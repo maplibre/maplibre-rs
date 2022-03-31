@@ -4,7 +4,6 @@ use crate::io::{LayerTessellateResult, TileIndexResult};
 use cgmath::num_traits::Pow;
 use std::collections::{btree_map, BTreeMap, HashSet};
 
-
 #[derive(Default)]
 pub struct TileCache {
     cache_index: BTreeMap<Quadkey, Vec<LayerTessellateResult>>,
@@ -55,7 +54,7 @@ impl TileCache {
             .build_quad_key()
             .and_then(|key| self.tile_geometry_index.get(&key))
         {
-            let scale = 2.0.pow(z as f64 - zoom);
+            let scale = 2.0.pow(z as f64 - zoom); // TODO deduplicate
 
             let delta_x = world_coords.x / TILE_SIZE * scale - world_tile_coords.x as f64;
             let delta_y = world_coords.y / TILE_SIZE * scale - world_tile_coords.y as f64;

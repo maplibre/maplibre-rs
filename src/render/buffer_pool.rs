@@ -376,7 +376,7 @@ impl IndexEntry {
         self.buffer_vertices.clone()
     }
 
-    pub fn metadata_buffer_range(&self) -> Range<wgpu::BufferAddress> {
+    pub fn tile_metadata_buffer_range(&self) -> Range<wgpu::BufferAddress> {
         self.buffer_tile_metadata.clone()
     }
 
@@ -419,14 +419,6 @@ impl RingIndex {
 
     pub fn get_layers_fallback(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
         let mut current = *coords;
-
-        /*index.get_layers(&world_coords)
-        .or_else(|| {
-            world_coords
-                .get_parent()
-                .and_then(|parent| index.get_layers(&parent))
-        })*/
-
         loop {
             if let Some(entries) = self.get_layers(&current) {
                 return Some(entries);

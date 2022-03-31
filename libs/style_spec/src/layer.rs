@@ -1,3 +1,4 @@
+use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -35,6 +36,19 @@ pub enum LayerPaint {
     Line(LinePaint),
     #[serde(rename = "fill")]
     Fill(FillPaint),
+}
+
+impl LayerPaint {
+    pub fn get_color(&self) -> Option<Alpha<EncodedSrgb<f32>>> {
+        match self {
+            LayerPaint::Background(paint) => paint
+                .background_color
+                .as_ref()
+                .map(|color| color.clone().into()),
+            LayerPaint::Line(paint) => paint.line_color.as_ref().map(|color| color.clone().into()),
+            LayerPaint::Fill(paint) => paint.fill_color.as_ref().map(|color| color.clone().into()),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
