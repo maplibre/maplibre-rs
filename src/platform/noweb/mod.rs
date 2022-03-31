@@ -81,7 +81,7 @@ pub mod scheduler {
                         .process_tile(request_id, data.into_boxed_slice())
                         .unwrap();
                 } else {
-                    // TODO Error
+                    state.tile_unavailable(request_id).unwrap();
                 }
             });
         }
