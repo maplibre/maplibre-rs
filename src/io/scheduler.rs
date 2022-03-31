@@ -1,9 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
-
-
 use geozero::mvt::Tile;
-use geozero::{GeozeroDatasource};
+use geozero::GeozeroDatasource;
 use log::{error, info};
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
@@ -237,7 +235,7 @@ pub struct IOScheduler {
     index_channel: (Sender<TileIndexResult>, Receiver<TileIndexResult>),
     tessellate_channel: (Sender<TileTessellateResult>, Receiver<TileTessellateResult>),
     tile_request_state: Arc<Mutex<TileRequestState>>,
-    pub tile_cache: TileCache,
+    tile_cache: TileCache,
     schedule_method: ScheduleMethod,
 }
 
@@ -313,13 +311,8 @@ impl IOScheduler {
         Ok(())
     }
 
-    pub fn iter_tessellated_layers_at<'b: 'a, 'a>(
-        &'b self,
-        coords: &WorldTileCoords,
-        skip_layers: &'a HashSet<&str>,
-    ) -> Option<impl Iterator<Item = &LayerTessellateResult> + 'a> {
-        self.tile_cache
-            .iter_tessellated_layers_at(coords, skip_layers)
+    pub fn get_tile_cache(&self) -> &TileCache {
+        &self.tile_cache
     }
 }
 

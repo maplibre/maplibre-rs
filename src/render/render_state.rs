@@ -414,6 +414,7 @@ impl RenderState {
                 let loaded_layers = self.buffer_pool.get_loaded_layers_at(&world_coords);
 
                 if let Some(available_layers) = scheduler
+                    .get_tile_cache()
                     .iter_tessellated_layers_at(&world_coords, &loaded_layers)
                     .map(|layers| layers.collect::<Vec<_>>())
                 {
