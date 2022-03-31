@@ -7,7 +7,7 @@ use crate::coords::{ViewRegion, TILE_SIZE};
 
 use crate::io::scheduler::IOScheduler;
 use crate::io::LayerTessellateResult;
-use style_spec::layer::LayerPaint;
+use style_spec::layer::{LayerPaint, StyleLayer};
 use style_spec::{EncodedSrgb, Style};
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
@@ -21,7 +21,7 @@ use crate::render::options::{
     TILE_META_COUNT, VERTEX_BUFFER_SIZE,
 };
 use crate::render::tile_mask_pattern::TileMaskPattern;
-use crate::tessellation::IndexDataType;
+use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 
 use crate::util::FPSMeter;
 
@@ -371,7 +371,9 @@ impl RenderState {
                 .collect();
 
             for coords in view_region.iter() {
-                scheduler.try_request_tile(&coords, &source_layers).unwrap();
+                if let Some(_) = coords.build_quad_key() {
+                    scheduler.try_request_tile(&coords, &source_layers).unwrap();
+                }
             }
         }
 
@@ -432,7 +434,31 @@ impl RenderState {
                                 .map(|color| color.into());
 
                             match result {
-                                LayerTessellateResult::UnavailableLayer { .. } => {}
+                                LayerTessellateResult::UnavailableLayer { coords, .. } => {
+                                    // We are casting here from 64bit to 32bit, because 32bit is more performant and is
+                                    // better supported.
+                                    let transform: Matrix4<f32> = (view_proj
+                                        .to_model_view_projection(
+                                            world_coords.transform_for_zoom(self.zoom),
+                                        ))
+                                    .downcast();
+
+                                    let tile_metadata = ShaderTileMetadata::new(
+                                        transform.into(),
+                                        zoom_factor,
+                                        style_layer.index as f32,
+                                    );
+                                    println!("unavailable layer");
+                                    self.buffer_pool.allocate_tile_geometry(
+                                        &self.queue,
+                                        *coords,
+                                        style_layer.clone(),
+                                        &OverAlignedVertexBuffer::empty(),
+                                        tile_metadata,
+                                        &[],
+                                        true,
+                                    );
+                                }
                                 LayerTessellateResult::TessellatedLayer {
                                     coords,
                                     feature_indices,
@@ -474,6 +500,7 @@ impl RenderState {
                                         buffer,
                                         tile_metadata,
                                         &feature_metadata,
+                                        false,
                                     );
                                 }
                             }
@@ -554,13 +581,15 @@ impl RenderState {
 
                 let index = self.buffer_pool.index();
 
-                /*println!("Render pass start");*/
+                /* println!("Render pass start");*/
 
                 if let Some(view_region) = &view_region {
                     for world_coords in view_region.iter() {
-                        /*println!("Render coordinate {:?}", world_coords);*/
+                        /*  println!("Render coordinate {:?}", world_coords);*/
 
-                        if let Some(entries) = index.get_layers_fallback(&world_coords) {
+                        if let Some((entries, mask_entry)) =
+                            index.get_layers_fallback(&world_coords)
+                        {
                             let mut to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
                             to_render.sort_by_key(|entry| entry.style_layer.index);
 
@@ -569,27 +598,29 @@ impl RenderState {
                                 .stencil_reference_value(&world_coords)
                                 as u32;
 
-                            /*println!("Render mask");*/
+                            /* println!("Render mask");*/
 
-                            if let Some(entry) = entries.front() {
-                                // Draw mask
-                                {
-                                    pass.set_pipeline(&self.mask_pipeline);
-                                    pass.set_stencil_reference(reference);
-                                    pass.set_vertex_buffer(
-                                        0,
-                                        self.buffer_pool
-                                            .metadata()
-                                            .slice(entry.tile_metadata_buffer_range()),
-                                    );
-                                    pass.draw(0..6, 0..1);
-                                }
+                            // Draw mask
+                            {
+                                pass.set_pipeline(&self.mask_pipeline);
+                                pass.set_stencil_reference(reference);
+                                pass.set_vertex_buffer(
+                                    0,
+                                    self.buffer_pool
+                                        .metadata()
+                                        .slice(mask_entry.tile_metadata_buffer_range()),
+                                );
+                                pass.draw(0..6, 0..1);
                             }
 
                             for entry in to_render {
+                                if entry.empty {
+                                    continue;
+                                }
+
                                 // Draw tile
                                 {
-                                    /*println!("Render tile");*/
+                                    /* println!("Render tile");*/
 
                                     pass.set_pipeline(&self.render_pipeline);
                                     pass.set_stencil_reference(reference);
@@ -624,7 +655,7 @@ impl RenderState {
                     }
                 }
 
-                /*println!("Render pass end");*/
+                /*      println!("Render pass end");*/
             }
         }
 

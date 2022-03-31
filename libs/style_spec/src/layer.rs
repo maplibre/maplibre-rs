@@ -86,7 +86,7 @@ impl Default for StyleLayer {
             metadata: None,
             paint: None,
             source: None,
-            source_layer: None,
+            source_layer: Some("does not exist".to_string()),
         }
     }
 }

@@ -158,6 +158,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         geometry: &OverAlignedVertexBuffer<V, I>,
         tile_metadata: TM,
         feature_metadata: &[FM],
+        empty: bool,
     ) {
         let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
         let indices_stride = size_of::<I>() as wgpu::BufferAddress;
@@ -202,29 +203,40 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
             buffer_feature_metadata: self
                 .feature_metadata
                 .make_room(feature_metadata_bytes, &mut self.index),
+            empty,
         };
 
         // write_buffer() is the preferred method for WASM: https://toji.github.io/webgpu-best-practices/buffer-uploads.html#when-in-doubt-writebuffer
-        queue.write_buffer(
-            &self.vertices.inner,
-            maybe_entry.buffer_vertices.start,
-            &bytemuck::cast_slice(&geometry.buffer.vertices)[0..aligned_vertices_bytes as usize],
-        );
-        queue.write_buffer(
-            &self.indices.inner,
-            maybe_entry.buffer_indices.start,
-            &bytemuck::cast_slice(&geometry.buffer.indices)[0..aligned_indices_bytes as usize],
-        );
-        queue.write_buffer(
-            &self.metadata.inner,
-            maybe_entry.buffer_tile_metadata.start,
-            &bytemuck::cast_slice(&[tile_metadata])[0..aligned_tile_metadata_bytes as usize],
-        );
-        queue.write_buffer(
-            &self.feature_metadata.inner,
-            maybe_entry.buffer_feature_metadata.start,
-            &bytemuck::cast_slice(feature_metadata)[0..aligned_feature_metadata_bytes as usize],
-        );
+        if !maybe_entry.buffer_vertices.is_empty() {
+            queue.write_buffer(
+                &self.vertices.inner,
+                maybe_entry.buffer_vertices.start,
+                &bytemuck::cast_slice(&geometry.buffer.vertices)
+                    [0..aligned_vertices_bytes as usize],
+            );
+        }
+        if !maybe_entry.buffer_indices.is_empty() {
+            queue.write_buffer(
+                &self.indices.inner,
+                maybe_entry.buffer_indices.start,
+                &bytemuck::cast_slice(&geometry.buffer.indices)[0..aligned_indices_bytes as usize],
+            );
+        }
+        if !maybe_entry.buffer_tile_metadata.is_empty() {
+            queue.write_buffer(
+                &self.metadata.inner,
+                maybe_entry.buffer_tile_metadata.start,
+                &bytemuck::cast_slice(&[tile_metadata])[0..aligned_tile_metadata_bytes as usize],
+            );
+        }
+        if !maybe_entry.buffer_feature_metadata.is_empty() {
+            queue.write_buffer(
+                &self.feature_metadata.inner,
+                maybe_entry.buffer_feature_metadata.start,
+                &bytemuck::cast_slice(feature_metadata)[0..aligned_feature_metadata_bytes as usize],
+            );
+        }
+
         self.index.push_back(maybe_entry);
     }
 
@@ -361,6 +373,7 @@ pub struct IndexEntry {
     // Amount of actually usable indices. Each index has the size/format `IndexDataType`.
     // Can be lower than size(buffer_indices) / indices_stride because of alignment.
     usable_indices: u32,
+    pub empty: bool,
 }
 
 impl IndexEntry {
@@ -417,14 +430,40 @@ impl RingIndex {
             .and_then(|key| self.tree_index.get(&key))
     }
 
-    pub fn get_layers_fallback(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
+    pub fn get_layers_fallback(
+        &self,
+        coords: &WorldTileCoords,
+    ) -> Option<(&VecDeque<IndexEntry>, &IndexEntry)> {
         let mut current = *coords;
+        let mut first_mask_entry: Option<&IndexEntry> = None;
         loop {
-            if let Some(entries) = self.get_layers(&current) {
-                return Some(entries);
-            } else if let Some(parent) = current.get_parent() {
-                current = parent
+            if let Some((entries, mask_entry)) = self
+                .get_layers(&current)
+                .map(|entries| (entries, entries.front()))
+            {
+                if let Some(mask_entry) = mask_entry {
+                    if let None = first_mask_entry {
+                        first_mask_entry = Some(&mask_entry);
+                    }
+
+                    if mask_entry.empty {
+                        if let Some(parent) = current.get_parent() {
+                            // Continue with parent because there is no data in current tile
+                            current = parent
+                        } else {
+                            // We do not have a parent tile with actual data, do not render
+                            return None;
+                        }
+                    } else {
+                        // Return actual data
+                        return Some((entries, first_mask_entry.unwrap()));
+                    }
+                } else {
+                    // No data to we can not draw this tile yet
+                    return None;
+                }
             } else {
+                // No data to we can not draw this tile yet
                 return None;
             }
         }

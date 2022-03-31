@@ -48,6 +48,15 @@ pub struct OverAlignedVertexBuffer<V, I> {
     pub usable_indices: u32,
 }
 
+impl<V, I> OverAlignedVertexBuffer<V, I> {
+    pub fn empty() -> Self {
+        Self {
+            buffer: VertexBuffers::with_capacity(0, 0),
+            usable_indices: 0,
+        }
+    }
+}
+
 impl<V: Pod, I: Pod> From<VertexBuffers<V, I>> for OverAlignedVertexBuffer<V, I> {
     fn from(mut buffer: VertexBuffers<V, I>) -> Self {
         let usable_indices = buffer.indices.len() as u32;
