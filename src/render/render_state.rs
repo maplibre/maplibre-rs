@@ -16,6 +16,7 @@ use winit::window::Window;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
 use crate::render::camera;
+use crate::render::camera::ViewProjection;
 use crate::render::options::{
     DEBUG_WIREFRAME, FEATURE_METADATA_BUFFER_SIZE, INDEX_FORMAT, INDICES_BUFFER_SIZE,
     TILE_META_COUNT, VERTEX_BUFFER_SIZE,
@@ -60,7 +61,7 @@ pub struct RenderState {
         Buffer,
         ShaderVertex,
         IndexDataType,
-        ShaderTileMetadata,
+        ShaderLayerMetadata,
         ShaderFeatureStyle,
     >,
 
@@ -160,7 +161,7 @@ impl RenderState {
             cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<ShaderGlobals>() as u64);
 
         let metadata_buffer_size =
-            std::mem::size_of::<ShaderTileMetadata>() as u64 * TILE_META_COUNT;
+            std::mem::size_of::<ShaderLayerMetadata>() as u64 * TILE_META_COUNT;
         let metadata_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Tiles ubo"),
             size: metadata_buffer_size,
@@ -350,38 +351,27 @@ impl RenderState {
         self.zoom.floor() as u8
     }
 
-    // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
-    // TODO: What is StagingBelt for?
-    pub fn upload_tile_geometry(&mut self, scheduler: &mut IOScheduler) {
-        let visible_z = self.visible_z();
+    ///         Fetch tiles which are currently in view
+    fn fetch_tiles_in_view(&self, view_region: &ViewRegion, scheduler: &mut IOScheduler) {
+        let source_layers: HashSet<String> = self
+            .style
+            .layers
+            .iter()
+            .filter_map(|layer| layer.source_layer.clone())
+            .collect();
 
-        let inverted_view_proj = self.camera.calc_view_proj(&self.perspective).invert();
-        let view_region = self
-            .camera
-            .view_region_bounding_box(&inverted_view_proj)
-            .map(|bounding_box| ViewRegion::new(bounding_box, 2, self.zoom, visible_z));
-
-        // Fetch tiles which are currently in view
-        if let Some(view_region) = &view_region {
-            let source_layers: HashSet<String> = self
-                .style
-                .layers
-                .iter()
-                .filter_map(|layer| layer.source_layer.clone())
-                .collect();
-
-            for coords in view_region.iter() {
-                if let Some(_) = coords.build_quad_key() {
-                    scheduler.try_request_tile(&coords, &source_layers).unwrap();
-                }
+        for coords in view_region.iter() {
+            if let Some(_) = coords.build_quad_key() {
+                // TODO: Make tesselation depend on style?
+                scheduler.try_request_tile(&coords, &source_layers).unwrap();
             }
         }
+    }
 
-        let view_proj = self.camera.calc_view_proj(&self.perspective);
-
-        // Update tile metadata for all required tiles on the GPU according to current zoom, camera and perspective
-        // We perform the update before uploading new tessellated tiles, such that each
-        // tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
+    /// Update tile metadata for all required tiles on the GPU according to current zoom, camera and perspective
+    /// We perform the update before uploading new tessellated tiles, such that each
+    /// tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
+    fn update_metadata(&self, view_proj: &ViewProjection) {
         for entries in self.buffer_pool.index().iter() {
             for entry in entries {
                 let world_coords = entry.coords;
@@ -394,10 +384,12 @@ impl RenderState {
                     .to_model_view_projection(world_coords.transform_for_zoom(self.zoom)))
                 .downcast();
 
-                self.buffer_pool.update_tile_metadata(
+                // TODO: Update features
+
+                self.buffer_pool.update_layer_metadata(
                     &self.queue,
                     entry,
-                    ShaderTileMetadata::new(
+                    ShaderLayerMetadata::new(
                         transform.into(),
                         zoom_factor,
                         entry.style_layer.index as f32,
@@ -405,110 +397,115 @@ impl RenderState {
                 );
             }
         }
+    }
+
+    fn upload_tile_geometry(
+        &mut self,
+        view_proj: &ViewProjection,
+        view_region: &ViewRegion,
+        scheduler: &mut IOScheduler,
+    ) {
+        let visible_z = self.visible_z();
 
         // Factor which determines how much we need to adjust the width of lines for example.
         // If zoom == z -> zoom_factor == 1
         let zoom_factor = 2.0_f64.powf(visible_z as f64 - self.zoom) as f32; // TODO deduplicate
 
         // Upload all tessellated layers which are in view
-        if let Some(view_region) = &view_region {
-            for world_coords in view_region.iter() {
-                let loaded_layers = self.buffer_pool.get_loaded_layers_at(&world_coords);
+        for world_coords in view_region.iter() {
+            let loaded_layers = self
+                .buffer_pool
+                .get_loaded_layers_at(&world_coords)
+                .unwrap_or_default();
+            if let Some(available_layers) = scheduler
+                .get_tile_cache()
+                .iter_tessellated_layers_at(&world_coords, &loaded_layers)
+                .map(|layers| layers.collect::<Vec<_>>())
+            {
+                for style_layer in &self.style.layers {
+                    let source_layer = style_layer.source_layer.as_ref().unwrap();
 
-                if let Some(available_layers) = scheduler
-                    .get_tile_cache()
-                    .iter_tessellated_layers_at(&world_coords, &loaded_layers)
-                    .map(|layers| layers.collect::<Vec<_>>())
-                {
-                    for style_layer in &self.style.layers {
-                        let source_layer = style_layer.source_layer.as_ref().unwrap();
+                    if let Some(result) = available_layers
+                        .iter()
+                        .find(|layer| source_layer.as_str() == layer.layer_name())
+                    {
+                        let color: Option<Vec4f32> = style_layer
+                            .paint
+                            .as_ref()
+                            .and_then(|paint| paint.get_color())
+                            .map(|color| color.into());
 
-                        if let Some(result) = available_layers
-                            .iter()
-                            .find(|layer| source_layer.as_str() == layer.layer_name())
-                        {
-                            let color: Option<Vec4f32> = style_layer
-                                .paint
-                                .as_ref()
-                                .and_then(|paint| paint.get_color())
-                                .map(|color| color.into());
+                        match result {
+                            LayerTessellateResult::UnavailableLayer { coords, .. } => {
+                                /*self.buffer_pool.mark_layer_unavailable(*coords);*/
+                            }
+                            LayerTessellateResult::TessellatedLayer {
+                                coords,
+                                feature_indices,
+                                layer_data,
+                                buffer,
+                                ..
+                            } => {
+                                let world_coords = coords;
 
-                            match result {
-                                LayerTessellateResult::UnavailableLayer { coords, .. } => {
-                                    // We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                                    // better supported.
-                                    let transform: Matrix4<f32> = (view_proj
-                                        .to_model_view_projection(
-                                            world_coords.transform_for_zoom(self.zoom),
-                                        ))
-                                    .downcast();
-
-                                    let tile_metadata = ShaderTileMetadata::new(
-                                        transform.into(),
-                                        zoom_factor,
-                                        style_layer.index as f32,
-                                    );
-                                    println!("unavailable layer");
-                                    self.buffer_pool.allocate_tile_geometry(
-                                        &self.queue,
-                                        *coords,
-                                        style_layer.clone(),
-                                        &OverAlignedVertexBuffer::empty(),
-                                        tile_metadata,
-                                        &[],
-                                        true,
-                                    );
-                                }
-                                LayerTessellateResult::TessellatedLayer {
-                                    coords,
-                                    feature_indices,
-                                    layer_data,
-                                    buffer,
-                                    ..
-                                } => {
-                                    let world_coords = coords;
-
-                                    let feature_metadata = layer_data
-                                        .features()
-                                        .iter()
-                                        .enumerate()
-                                        .flat_map(|(i, _feature)| {
-                                            iter::repeat(ShaderFeatureStyle {
-                                                color: color.unwrap(),
-                                            })
-                                            .take(feature_indices[i] as usize)
+                                let feature_metadata = layer_data
+                                    .features()
+                                    .iter()
+                                    .enumerate()
+                                    .flat_map(|(i, _feature)| {
+                                        iter::repeat(ShaderFeatureStyle {
+                                            color: color.unwrap(),
                                         })
-                                        .collect::<Vec<_>>();
+                                        .take(feature_indices[i] as usize)
+                                    })
+                                    .collect::<Vec<_>>();
 
-                                    // We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                                    // better supported.
-                                    let transform: Matrix4<f32> = (view_proj
-                                        .to_model_view_projection(
-                                            world_coords.transform_for_zoom(self.zoom),
-                                        ))
-                                    .downcast();
+                                // We are casting here from 64bit to 32bit, because 32bit is more performant and is
+                                // better supported.
+                                let transform: Matrix4<f32> = (view_proj.to_model_view_projection(
+                                    world_coords.transform_for_zoom(self.zoom),
+                                ))
+                                .downcast();
 
-                                    let tile_metadata = ShaderTileMetadata::new(
+                                self.buffer_pool.allocate_layer_geometry(
+                                    &self.queue,
+                                    *coords,
+                                    style_layer.clone(),
+                                    buffer,
+                                    ShaderLayerMetadata::new(
                                         transform.into(),
                                         zoom_factor,
                                         style_layer.index as f32,
-                                    );
-                                    self.buffer_pool.allocate_tile_geometry(
-                                        &self.queue,
-                                        *coords,
-                                        style_layer.clone(),
-                                        buffer,
-                                        tile_metadata,
-                                        &feature_metadata,
-                                        false,
-                                    );
-                                }
+                                    ),
+                                    &feature_metadata,
+                                );
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    pub fn prepare_render_data(&mut self, scheduler: &mut IOScheduler) {
+        let visible_z = self.visible_z();
+
+        let view_region = self
+            .camera
+            .view_region_bounding_box(&self.camera.calc_view_proj(&self.perspective).invert())
+            .map(|bounding_box| ViewRegion::new(bounding_box, 2, self.zoom, visible_z));
+
+        let view_proj = self.camera.calc_view_proj(&self.perspective);
+
+        self.update_metadata(&view_proj);
+
+        if let Some(view_region) = &view_region {
+            self.upload_tile_geometry(&view_proj, &view_region, scheduler);
+            self.fetch_tiles_in_view(view_region, scheduler);
+        }
+
+        // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
+        // TODO: What is StagingBelt for?
 
         // Update globals
         self.queue.write_buffer(
@@ -587,9 +584,7 @@ impl RenderState {
                     for world_coords in view_region.iter() {
                         /*  println!("Render coordinate {:?}", world_coords);*/
 
-                        if let Some((entries, mask_entry)) =
-                            index.get_layers_fallback(&world_coords)
-                        {
+                        if let Some(entries) = index.get_layers_fallback(&world_coords) {
                             let mut to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
                             to_render.sort_by_key(|entry| entry.style_layer.index);
 
@@ -601,23 +596,21 @@ impl RenderState {
                             /* println!("Render mask");*/
 
                             // Draw mask
-                            {
-                                pass.set_pipeline(&self.mask_pipeline);
-                                pass.set_stencil_reference(reference);
-                                pass.set_vertex_buffer(
-                                    0,
-                                    self.buffer_pool
-                                        .metadata()
-                                        .slice(mask_entry.tile_metadata_buffer_range()),
-                                );
-                                pass.draw(0..6, 0..1);
+                            if let Some(mask_entry) = entries.front() {
+                                {
+                                    pass.set_pipeline(&self.mask_pipeline);
+                                    pass.set_stencil_reference(reference);
+                                    pass.set_vertex_buffer(
+                                        0,
+                                        self.buffer_pool
+                                            .metadata()
+                                            .slice(mask_entry.layer_metadata_buffer_range()),
+                                    );
+                                    pass.draw(0..6, 0..1);
+                                }
                             }
 
                             for entry in to_render {
-                                if entry.empty {
-                                    continue;
-                                }
-
                                 // Draw tile
                                 {
                                     /* println!("Render tile");*/
@@ -640,7 +633,7 @@ impl RenderState {
                                         1,
                                         self.buffer_pool
                                             .metadata()
-                                            .slice(entry.tile_metadata_buffer_range()),
+                                            .slice(entry.layer_metadata_buffer_range()),
                                     );
                                     pass.set_vertex_buffer(
                                         2,

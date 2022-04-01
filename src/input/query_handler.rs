@@ -1,10 +1,9 @@
-
 use crate::coords::WorldCoords;
 use crate::io::tile_cache::TileCache;
 
 use crate::render::render_state::RenderState;
 
-use cgmath::{Vector2};
+use cgmath::Vector2;
 use log::info;
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};

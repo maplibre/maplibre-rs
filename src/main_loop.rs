@@ -98,7 +98,7 @@ pub async fn run(
                     scheduler.try_populate_cache();
 
                     input.update_state(state, scheduler.get_tile_cache(), dt);
-                    state.upload_tile_geometry(&mut scheduler);
+                    state.prepare_render_data(&mut scheduler);
                     match state.render() {
                         Ok(_) => {}
                         Err(wgpu::SurfaceError::Lost) => {
