@@ -5,6 +5,7 @@
 
 use log::{error, info, trace};
 use style_spec::Style;
+use tracing_subscriber::fmt;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 
@@ -15,27 +16,31 @@ use crate::platform::Instant;
 use crate::render::render_state::RenderState;
 
 #[cfg(feature = "enable-tracing")]
-fn enable_tracing() {
-    use opentelemetry::sdk::export::trace::stdout;
+fn enable_tracing() -> (impl Drop) {
     use opentelemetry_jaeger;
     use tracing::{error, span};
+    use tracing_flame::FlameLayer;
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::Registry;
 
-    // Install a new OpenTelemetry trace pipeline
-    /*let tracer = stdout::new_pipeline().install_simple();*/
-    let tracer = opentelemetry_jaeger::new_pipeline()
-        .with_service_name("mapr")
-        .install_simple()
-        .unwrap();
+    let (flame_layer, _guard) = FlameLayer::with_file("./tracing.folded").unwrap();
+    let fmt_layer = tracing_subscriber::fmt::Layer::default();
 
     // Create a tracing layer with the configured tracer
-    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+    let telemetry = tracing_opentelemetry::layer().with_tracer(
+        opentelemetry_jaeger::new_pipeline()
+            .with_service_name("mapr")
+            .install_simple()
+            .unwrap(),
+    );
 
-    // Use the tracing subscriber `Registry`, or any other subscriber
-    // that impls `LookupSpan`
-    let subscriber = Registry::default().with(telemetry);
+    let subscriber = Registry::default()
+        .with(telemetry)
+        .with(flame_layer)
+        .with(fmt_layer);
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
+    (_guard)
 }
 
 pub async fn run(
@@ -46,7 +51,7 @@ pub async fn run(
     max_frames: Option<u64>,
 ) {
     #[cfg(feature = "enable-tracing")]
-    enable_tracing();
+    let _guard = enable_tracing();
     #[cfg(feature = "enable-tracing")]
     let root = tracing::span!(tracing::Level::TRACE, "app_start", work_units = 2);
     #[cfg(feature = "enable-tracing")]
@@ -122,7 +127,7 @@ pub async fn run(
                     }
                 }
                 Event::RedrawRequested(_) => {
-                    let _span_ = tracing::span!(tracing::Level::TRACE, "redraw requested").entered();
+                    let _span_ = tracing::span!(tracing::Level::TRACE, "redraw requested").enter();
                     let now = Instant::now();
                     let dt = now - last_render_time;
                     last_render_time = now;

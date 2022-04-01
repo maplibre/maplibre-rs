@@ -1799,6 +1799,7 @@ dependencies = [
  "tilejson-spec",
  "tokio",
  "tracing",
+ "tracing-flame",
  "tracing-opentelemetry",
  "tracing-subscriber",
  "vector-tile",
@@ -3483,6 +3484,17 @@ checksum = "03cfcb51380632a72d3111cb8d3447a8d908e577d31beeac006f836383d29a23"
 dependencies = [
  "lazy_static",
  "valuable",
+]
+
+[[package]]
+name = "tracing-flame"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0bae117ee14789185e129aaee5d93750abe67fdc5a9a62650452bfe4e122a3a9"
+dependencies = [
+ "lazy_static",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

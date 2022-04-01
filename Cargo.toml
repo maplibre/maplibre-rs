@@ -31,7 +31,7 @@ debug = true
 
 [features]
 web-webgl = ["wgpu/webgl"]
-enable-tracing = [ "tracing-opentelemetry", "opentelemetry", "tracing-subscriber", "opentelemetry-jaeger"]
+enable-tracing = [ "tracing-opentelemetry", "opentelemetry", "tracing-subscriber", "opentelemetry-jaeger", "tracing-flame"]
 default = []
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
@@ -73,6 +73,7 @@ tracing-opentelemetry = { version = "0.17", optional = true }
 opentelemetry = { version = "0.17", optional = true }
 tracing-subscriber = { version = "0.3", optional = true }
 opentelemetry-jaeger = { version = "0.16", optional = true }
+tracing-flame = { version = "0.2", optional = true }
 
 # Vector riles
 vector-tile = { path = "./libs/vector_tile" }
