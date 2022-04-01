@@ -14,6 +14,30 @@ use crate::io::scheduler::IOScheduler;
 use crate::platform::Instant;
 use crate::render::render_state::RenderState;
 
+#[cfg(feature = "enable-tracing")]
+fn enable_tracing() {
+    use opentelemetry::sdk::export::trace::stdout;
+    use opentelemetry_jaeger;
+    use tracing::{error, span};
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::Registry;
+
+    // Install a new OpenTelemetry trace pipeline
+    /*let tracer = stdout::new_pipeline().install_simple();*/
+    let tracer = opentelemetry_jaeger::new_pipeline()
+        .with_service_name("mapr")
+        .install_simple()
+        .unwrap();
+
+    // Create a tracing layer with the configured tracer
+    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+
+    // Use the tracing subscriber `Registry`, or any other subscriber
+    // that impls `LookupSpan`
+    let subscriber = Registry::default().with(telemetry);
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+}
+
 pub async fn run(
     window: winit::window::Window,
     event_loop: EventLoop<()>,
@@ -21,6 +45,13 @@ pub async fn run(
     style: Box<Style>,
     max_frames: Option<u64>,
 ) {
+    #[cfg(feature = "enable-tracing")]
+    enable_tracing();
+    #[cfg(feature = "enable-tracing")]
+    let root = tracing::span!(tracing::Level::TRACE, "app_start", work_units = 2);
+    #[cfg(feature = "enable-tracing")]
+    let _enter = root.enter();
+
     let mut input = InputController::new(0.2, 100.0, 0.1);
     let mut maybe_state: Option<RenderState> = {
         #[cfg(target_os = "android")]
@@ -91,6 +122,7 @@ pub async fn run(
                     }
                 }
                 Event::RedrawRequested(_) => {
+                    let _span_ = tracing::span!(tracing::Level::TRACE, "redraw requested").entered();
                     let now = Instant::now();
                     let dt = now - last_render_time;
                     last_render_time = now;

@@ -31,6 +31,8 @@ debug = true
 
 [features]
 web-webgl = ["wgpu/webgl"]
+enable-tracing = [ "tracing-opentelemetry", "opentelemetry", "tracing-subscriber", "opentelemetry-jaeger"]
+default = []
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1"
@@ -65,6 +67,12 @@ winit = { version = "0.26", default-features = false, features = ["x11", "waylan
 
 [dependencies]
 winit = { version = "0.26", default-features = false }
+
+tracing = { version = "0.1" }
+tracing-opentelemetry = { version = "0.17", optional = true }
+opentelemetry = { version = "0.17", optional = true }
+tracing-subscriber = { version = "0.3", optional = true }
+opentelemetry-jaeger = { version = "0.16", optional = true }
 
 # Vector riles
 vector-tile = { path = "./libs/vector_tile" }

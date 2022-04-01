@@ -1,7 +1,8 @@
 use cgmath::{Matrix4, Vector4};
 use std::collections::HashSet;
 use std::default::Default;
-use std::{cmp, iter};
+use std::fmt::Formatter;
+use std::{cmp, fmt, iter};
 
 use crate::coords::{ViewRegion, TILE_SIZE};
 
@@ -30,6 +31,8 @@ use super::piplines::*;
 use super::shaders;
 use super::shaders::*;
 use super::texture::Texture;
+
+use tracing;
 
 pub struct RenderState {
     instance: wgpu::Instance,
@@ -351,8 +354,9 @@ impl RenderState {
         self.zoom.floor() as u8
     }
 
-    ///         Fetch tiles which are currently in view
-    fn fetch_tiles_in_view(&self, view_region: &ViewRegion, scheduler: &mut IOScheduler) {
+    /// Request tiles which are currently in view
+    #[tracing::instrument]
+    fn request_tiles_in_view(&self, view_region: &ViewRegion, scheduler: &mut IOScheduler) {
         let source_layers: HashSet<String> = self
             .style
             .layers
@@ -371,6 +375,7 @@ impl RenderState {
     /// Update tile metadata for all required tiles on the GPU according to current zoom, camera and perspective
     /// We perform the update before uploading new tessellated tiles, such that each
     /// tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
+    #[tracing::instrument]
     fn update_metadata(&self, view_proj: &ViewProjection) {
         for entries in self.buffer_pool.index().iter() {
             for entry in entries {
@@ -399,6 +404,7 @@ impl RenderState {
         }
     }
 
+    #[tracing::instrument]
     fn upload_tile_geometry(
         &mut self,
         view_proj: &ViewProjection,
@@ -487,6 +493,7 @@ impl RenderState {
         }
     }
 
+    #[tracing::instrument]
     pub fn prepare_render_data(&mut self, scheduler: &mut IOScheduler) {
         let visible_z = self.visible_z();
 
@@ -501,7 +508,7 @@ impl RenderState {
 
         if let Some(view_region) = &view_region {
             self.upload_tile_geometry(&view_proj, &view_region, scheduler);
-            self.fetch_tiles_in_view(view_region, scheduler);
+            self.request_tiles_in_view(view_region, scheduler);
         }
 
         // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
@@ -517,6 +524,7 @@ impl RenderState {
         );
     }
 
+    #[tracing::instrument]
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let frame = self.surface.get_current_texture()?;
         let frame_view = frame
@@ -569,6 +577,8 @@ impl RenderState {
             pass.set_bind_group(0, &self.bind_group, &[]);
 
             {
+                let _span_ = tracing::span!(tracing::Level::TRACE, "render pass").entered();
+
                 let visible_z = self.visible_z();
                 let inverted_view_proj = self.camera.calc_view_proj(&self.perspective).invert();
                 let view_region = self
@@ -578,11 +588,9 @@ impl RenderState {
 
                 let index = self.buffer_pool.index();
 
-                /* println!("Render pass start");*/
-
                 if let Some(view_region) = &view_region {
                     for world_coords in view_region.iter() {
-                        /*  println!("Render coordinate {:?}", world_coords);*/
+                        tracing::trace!("Drawing tile at {world_coords}");
 
                         if let Some(entries) = index.get_layers_fallback(&world_coords) {
                             let mut to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
@@ -593,11 +601,11 @@ impl RenderState {
                                 .stencil_reference_value(&world_coords)
                                 as u32;
 
-                            /* println!("Render mask");*/
-
                             // Draw mask
                             if let Some(mask_entry) = entries.front() {
                                 {
+                                    tracing::trace!("Drawing mask {}", &mask_entry.coords);
+
                                     pass.set_pipeline(&self.mask_pipeline);
                                     pass.set_stencil_reference(reference);
                                     pass.set_vertex_buffer(
@@ -613,7 +621,11 @@ impl RenderState {
                             for entry in to_render {
                                 // Draw tile
                                 {
-                                    /* println!("Render tile");*/
+                                    tracing::trace!(
+                                        "Drawing layer {:?} at {}",
+                                        entry.style_layer.source_layer,
+                                        &entry.coords
+                                    );
 
                                     pass.set_pipeline(&self.render_pipeline);
                                     pass.set_stencil_reference(reference);
@@ -647,8 +659,6 @@ impl RenderState {
                         }
                     }
                 }
-
-                /*      println!("Render pass end");*/
             }
         }
 
@@ -665,5 +675,11 @@ impl RenderState {
 
     pub fn resume(&mut self) {
         self.suspended = false;
+    }
+}
+
+impl fmt::Debug for RenderState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "RenderState")
     }
 }

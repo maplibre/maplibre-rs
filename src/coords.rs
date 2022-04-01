@@ -361,6 +361,7 @@ impl From<Point3<f64>> for WorldCoords {
     }
 }
 
+#[derive(Debug)]
 pub struct ViewRegion {
     min_tile: WorldTileCoords,
     max_tile: WorldTileCoords,

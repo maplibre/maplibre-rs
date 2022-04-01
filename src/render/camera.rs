@@ -20,6 +20,7 @@ pub const FLIP_Y: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
     0.0, 0.0, 0.0, 1.0,
 );
 
+#[derive(Debug)]
 pub struct ViewProjection(Matrix4<f64>);
 
 impl ViewProjection {

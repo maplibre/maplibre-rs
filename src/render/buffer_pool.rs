@@ -147,6 +147,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
     /// * `layer_metadata` and
     /// * `feature_metadata` for a layer. This function is able to dynamically evict layers if there
     /// is not enough space available.
+    #[tracing::instrument(skip_all)]
     pub fn allocate_layer_geometry(
         &mut self,
         queue: &Q,

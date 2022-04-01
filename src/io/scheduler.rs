@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 
 use geozero::mvt::Tile;
 use geozero::GeozeroDatasource;
@@ -237,6 +238,12 @@ pub struct IOScheduler {
     tile_request_state: Arc<Mutex<TileRequestState>>,
     tile_cache: TileCache,
     schedule_method: ScheduleMethod,
+}
+
+impl fmt::Debug for IOScheduler {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "IOScheduler")
+    }
 }
 
 const _: () = {
