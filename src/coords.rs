@@ -384,9 +384,17 @@ impl ViewRegion {
         }
     }
 
+    pub fn is_in_view(&self, &world_coords: &WorldTileCoords) -> bool {
+        world_coords.x <= self.max_tile.x + self.padding
+            && world_coords.y <= self.max_tile.y + self.padding
+            && world_coords.x >= self.min_tile.x - self.padding
+            && world_coords.y >= self.min_tile.y - self.padding
+            && world_coords.z == self.z
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
-        (self.min_tile.x..self.max_tile.x + self.padding).flat_map(move |x| {
-            (self.min_tile.y..self.max_tile.y + self.padding).map(move |y| {
+        (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding).flat_map(move |x| {
+            (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding).map(move |y| {
                 let tile_coord: WorldTileCoords = (x, y, self.z as u8).into();
                 tile_coord
             })
