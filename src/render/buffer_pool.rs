@@ -230,6 +230,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         self.index.push_back(maybe_entry);
     }
 
+    #[tracing::instrument(skip_all)]
     pub fn update_layer_metadata(&self, queue: &Q, entry: &IndexEntry, layer_metadata: TM) {
         let layer_metadata_stride = size_of::<TM>() as wgpu::BufferAddress; // TODO: deduplicate
         let (layer_metadata_bytes, aligned_layer_metadata_bytes) =
@@ -245,6 +246,36 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
             &self.metadata.inner,
             entry.buffer_layer_metadata.start,
             &bytemuck::cast_slice(&[layer_metadata])[0..aligned_layer_metadata_bytes as usize],
+        );
+    }
+
+    #[tracing::instrument(skip_all)]
+    pub fn update_feature_metadata(&self, queue: &Q, entry: &IndexEntry, feature_metadata: &[FM]) {
+        let feature_metadata_stride = size_of::<FM>() as wgpu::BufferAddress; // TODO: deduplicate
+
+        let (feature_metadata_bytes, aligned_feature_metadata_bytes) = Self::align(
+            feature_metadata_stride,
+            feature_metadata.len() as BufferAddress,
+            feature_metadata.len() as BufferAddress,
+        );
+
+        if entry.buffer_feature_metadata.end - entry.buffer_feature_metadata.start
+            != feature_metadata_bytes
+        {
+            panic!("Updated feature metadata has wrong size!");
+        }
+
+        if feature_metadata_bytes != aligned_feature_metadata_bytes {
+            // FIXME: align if not aligned?
+            panic!(
+                "feature_metadata is not aligned. This should not happen as long as size_of::<FM>() is a multiple of the alignment."
+            )
+        }
+
+        queue.write_buffer(
+            &self.feature_metadata.inner,
+            entry.buffer_feature_metadata.start,
+            &bytemuck::cast_slice(feature_metadata)[0..aligned_feature_metadata_bytes as usize],
         );
     }
 

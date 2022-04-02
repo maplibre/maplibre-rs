@@ -67,19 +67,14 @@ impl TileCache {
         }
     }
 
-    pub fn iter_tessellated_layers_at<'b: 'a, 'a>(
-        &'b self,
+    pub fn iter_tessellated_layers_at(
+        &self,
         coords: &WorldTileCoords,
-        skip_layers: &'a HashSet<&str>,
-    ) -> Option<impl Iterator<Item = &LayerTessellateResult> + 'a> {
+    ) -> Option<impl Iterator<Item = &LayerTessellateResult> + '_> {
         coords
             .build_quad_key()
             .and_then(|key| self.cache_index.get(&key))
-            .map(|results| {
-                results
-                    .iter()
-                    .filter(|result| !skip_layers.contains(&result.layer_name()))
-            })
+            .map(|results| results.iter())
     }
 
     pub fn retain_missing_layer_names(

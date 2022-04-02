@@ -2,6 +2,8 @@ use cgmath::{Matrix4, Vector4};
 use std::collections::HashSet;
 use std::default::Default;
 use std::fmt::Formatter;
+use std::io::sink;
+use std::time::{Instant, SystemTime};
 use std::{cmp, fmt, iter};
 
 use crate::coords::{ViewRegion, TILE_SIZE};
@@ -376,20 +378,38 @@ impl RenderState {
     /// We perform the update before uploading new tessellated tiles, such that each
     /// tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
     #[tracing::instrument]
-    fn update_metadata(&self, view_proj: &ViewProjection) {
+    fn update_metadata(
+        &self,
+        _scheduler: &mut IOScheduler,
+        view_region: &ViewRegion,
+        view_proj: &ViewProjection,
+    ) {
+        /*let animated_one = 0.5
+        * (1.0
+            + ((SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs_f64()
+                * 10.0)
+                .sin()));*/
+
+        // Factor which determines how much we need to adjust the width of lines for example.
+        // If zoom == z -> zoom_factor == 1
+
         for entries in self.buffer_pool.index().iter() {
             for entry in entries {
                 let world_coords = entry.coords;
 
-                // Factor which determines how much we need to adjust the width of lines for example.
-                // If zoom == z -> zoom_factor == 1
+                // FIXME: Does not take into account rendering tiles with different z
+                if !view_region.is_in_view(&entry.coords) {
+                    continue;
+                }
+
                 let zoom_factor = 2.0_f64.powf(world_coords.z as f64 - self.zoom) as f32;
 
                 let transform: Matrix4<f32> = (view_proj
                     .to_model_view_projection(world_coords.transform_for_zoom(self.zoom)))
                 .downcast();
-
-                // TODO: Update features
 
                 self.buffer_pool.update_layer_metadata(
                     &self.queue,
@@ -400,6 +420,54 @@ impl RenderState {
                         entry.style_layer.index as f32,
                     ),
                 );
+
+                // TODO: Update features
+                /*let source_layer = entry.style_layer.source_layer.as_ref().unwrap();
+
+                if let Some(result) = scheduler
+                    .get_tile_cache()
+                    .iter_tessellated_layers_at(&world_coords)
+                    .unwrap()
+                    .find(|layer| source_layer.as_str() == layer.layer_name())
+                {
+                    let color: Option<Vec4f32> = entry
+                        .style_layer
+                        .paint
+                        .as_ref()
+                        .and_then(|paint| paint.get_color())
+                        .map(|mut color| {
+                            color.color.b = animated_one as f32;
+                            color.into()
+                        });
+
+                    match result {
+                        LayerTessellateResult::UnavailableLayer { .. } => {}
+                        LayerTessellateResult::TessellatedLayer {
+                            layer_data,
+                            feature_indices,
+                            ..
+                        } => {
+
+                            let feature_metadata = layer_data
+                                .features()
+                                .iter()
+                                .enumerate()
+                                .flat_map(|(i, _feature)| {
+                                    iter::repeat(ShaderFeatureStyle {
+                                        color: color.unwrap(),
+                                    })
+                                    .take(feature_indices[i] as usize)
+                                })
+                                .collect::<Vec<_>>();
+
+                            self.buffer_pool.update_feature_metadata(
+                                &self.queue,
+                                entry,
+                                &feature_metadata,
+                            );
+                        }
+                    }
+                }*/
             }
         }
     }
@@ -425,8 +493,12 @@ impl RenderState {
                 .unwrap_or_default();
             if let Some(available_layers) = scheduler
                 .get_tile_cache()
-                .iter_tessellated_layers_at(&world_coords, &loaded_layers)
-                .map(|layers| layers.collect::<Vec<_>>())
+                .iter_tessellated_layers_at(&world_coords)
+                .map(|layers| {
+                    layers
+                        .filter(|result| !loaded_layers.contains(&result.layer_name()))
+                        .collect::<Vec<_>>()
+                })
             {
                 for style_layer in &self.style.layers {
                     let source_layer = style_layer.source_layer.as_ref().unwrap();
@@ -500,13 +572,12 @@ impl RenderState {
         let view_region = self
             .camera
             .view_region_bounding_box(&self.camera.calc_view_proj(&self.perspective).invert())
-            .map(|bounding_box| ViewRegion::new(bounding_box, 2, self.zoom, visible_z));
+            .map(|bounding_box| ViewRegion::new(bounding_box, 1, self.zoom, visible_z));
 
         let view_proj = self.camera.calc_view_proj(&self.perspective);
 
-        self.update_metadata(&view_proj);
-
         if let Some(view_region) = &view_region {
+            self.update_metadata(scheduler, &view_region, &view_proj);
             self.upload_tile_geometry(&view_proj, &view_region, scheduler);
             self.request_tiles_in_view(view_region, scheduler);
         }
@@ -584,7 +655,7 @@ impl RenderState {
                 let view_region = self
                     .camera
                     .view_region_bounding_box(&inverted_view_proj)
-                    .map(|bounding_box| ViewRegion::new(bounding_box, 2, self.zoom, visible_z));
+                    .map(|bounding_box| ViewRegion::new(bounding_box, 1, self.zoom, visible_z));
 
                 let index = self.buffer_pool.index();
 
