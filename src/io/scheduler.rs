@@ -93,6 +93,7 @@ impl ThreadLocalTessellatorState {
             .and_then(|tile_request_state| tile_request_state.get_tile_request(request_id).cloned())
     }
 
+    #[tracing::instrument(skip(self, data))]
     pub fn process_tile(
         &self,
         request_id: TileRequestID,
@@ -126,6 +127,7 @@ impl ThreadLocalTessellatorState {
         Ok(())
     }
 
+    #[tracing::instrument(skip(self))]
     fn index_geometry(&self, request_id: TileRequestID, tile_result: &TileFetchResult) {
         match tile_result {
             TileFetchResult::Tile { data, coords } => {
@@ -153,6 +155,7 @@ impl ThreadLocalTessellatorState {
         }
     }
 
+    #[tracing::instrument(skip(self))]
     fn tessellate_layers_with_request(
         &self,
         tile_result: &TileFetchResult,
@@ -265,6 +268,7 @@ impl IOScheduler {
         }
     }
 
+    #[tracing::instrument]
     pub fn try_populate_cache(&mut self) {
         if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
             if let Ok(result) = self.tessellate_channel.1.try_recv() {

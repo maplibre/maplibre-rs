@@ -8,6 +8,7 @@ use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use crate::io::geometry_index::TileIndex;
 use std::collections::HashSet;
 use std::fmt;
+use std::fmt::{write, Formatter};
 use vector_tile::tile::Layer;
 
 mod geometry_index;
@@ -23,6 +24,19 @@ pub enum TileFetchResult {
         coords: WorldTileCoords,
         data: Box<[u8]>,
     },
+}
+
+impl fmt::Debug for TileFetchResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "TileFetchResult({})",
+            match self {
+                TileFetchResult::Unavailable { coords, .. } => coords,
+                TileFetchResult::Tile { coords, .. } => coords,
+            }
+        )
+    }
 }
 
 pub struct TileIndexResult {
@@ -76,6 +90,12 @@ impl LayerTessellateResult {
 pub struct TileRequest {
     pub coords: WorldTileCoords,
     pub layers: HashSet<String>,
+}
+
+impl fmt::Debug for TileRequest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "TileRequest({})", &self.coords)
+    }
 }
 
 pub type TileRequestID = u32;
