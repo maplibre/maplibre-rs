@@ -5,7 +5,6 @@
 
 use log::{error, info, trace};
 use style_spec::Style;
-use tracing_subscriber::fmt;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 
@@ -15,34 +14,6 @@ use crate::io::scheduler::IOScheduler;
 use crate::platform::Instant;
 use crate::render::render_state::RenderState;
 
-#[cfg(feature = "enable-tracing")]
-fn enable_tracing() -> (impl Drop) {
-    use opentelemetry_jaeger;
-    use tracing::{error, span};
-    use tracing_flame::FlameLayer;
-    use tracing_subscriber::layer::SubscriberExt;
-    use tracing_subscriber::Registry;
-
-    let (flame_layer, _guard) = FlameLayer::with_file("./tracing.folded").unwrap();
-    let fmt_layer = tracing_subscriber::fmt::Layer::default();
-
-    // Create a tracing layer with the configured tracer
-    let telemetry = tracing_opentelemetry::layer().with_tracer(
-        opentelemetry_jaeger::new_pipeline()
-            .with_service_name("mapr")
-            .install_simple()
-            .unwrap(),
-    );
-
-    let subscriber = Registry::default()
-        .with(telemetry)
-        .with(flame_layer)
-        .with(fmt_layer);
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
-    (_guard)
-}
-
 pub async fn run(
     window: winit::window::Window,
     event_loop: EventLoop<()>,
@@ -50,11 +21,7 @@ pub async fn run(
     style: Box<Style>,
     max_frames: Option<u64>,
 ) {
-    #[cfg(feature = "enable-tracing")]
-    let _guard = enable_tracing();
-    #[cfg(feature = "enable-tracing")]
     let root = tracing::span!(tracing::Level::TRACE, "app_start", work_units = 2);
-    #[cfg(feature = "enable-tracing")]
     let _enter = root.enter();
 
     let mut input = InputController::new(0.2, 100.0, 0.1);
@@ -127,7 +94,8 @@ pub async fn run(
                     }
                 }
                 Event::RedrawRequested(_) => {
-                    let _span_ = tracing::span!(tracing::Level::TRACE, "redraw requested").enter();
+                    let _span_ = tracing::span!(tracing::Level::TRACE, "redraw requested").entered();
+
                     let now = Instant::now();
                     let dt = now - last_render_time;
                     last_render_time = now;
@@ -158,6 +126,7 @@ pub async fn run(
                             *control_flow = ControlFlow::Exit;
                         }
                     }
+                    tracy_client::finish_continuous_frame!();
                 }
                 Event::Suspended => {
                     state.suspend();
