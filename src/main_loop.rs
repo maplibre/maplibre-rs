@@ -126,6 +126,8 @@ pub async fn run(
                             *control_flow = ControlFlow::Exit;
                         }
                     }
+
+                    #[cfg(feature = "enable-tracing")]
                     tracy_client::finish_continuous_frame!();
                 }
                 Event::Suspended => {
