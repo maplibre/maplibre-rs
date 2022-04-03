@@ -390,11 +390,7 @@ impl ViewRegion {
             && world_coords.y <= self.max_tile.y + self.padding
             && world_coords.x >= self.min_tile.x - self.padding
             && world_coords.y >= self.min_tile.y - self.padding
-            && (world_coords.z == self.z
-                || world_coords.z.checked_sub(1).unwrap_or(0) == self.z
-                || world_coords.z.checked_sub(2).unwrap_or(0) == self.z
-                || world_coords.z.checked_sub(3).unwrap_or(0) == self.z
-                || world_coords.z + 1 == self.z)
+            && world_coords.z == self.z
     }
 
     pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {

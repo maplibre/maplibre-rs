@@ -401,9 +401,9 @@ impl RenderState {
                 let world_coords = entry.coords;
 
                 // FIXME: Does not take into account rendering tiles with different z
-                if !view_region.is_in_view(&entry.coords) {
+                /*if !view_region.is_in_view(&entry.coords) {
                     continue;
-                }
+                }*/
 
                 let zoom_factor = 2.0_f64.powf(world_coords.z as f64 - self.zoom) as f32;
 
@@ -595,7 +595,7 @@ impl RenderState {
         );
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let frame = self.surface.get_current_texture()?;
         let frame_view = frame
