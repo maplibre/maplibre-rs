@@ -27,7 +27,7 @@ impl Queue<wgpu::Buffer> for wgpu::Queue {
 pub struct BufferPool<Q, B, V, I, M, FM> {
     vertices: BackingBuffer<B>,
     indices: BackingBuffer<B>,
-    metadata: BackingBuffer<B>,
+    layer_metadata: BackingBuffer<B>,
     feature_metadata: BackingBuffer<B>,
 
     index: RingIndex,
@@ -52,7 +52,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
     pub fn new(
         vertices: BackingBufferDescriptor<B>,
         indices: BackingBufferDescriptor<B>,
-        metadata: BackingBufferDescriptor<B>,
+        layer_metadata: BackingBufferDescriptor<B>,
         feature_metadata: BackingBufferDescriptor<B>,
     ) -> Self {
         Self {
@@ -66,9 +66,9 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
                 indices.inner_size,
                 BackingBufferType::Indices,
             ),
-            metadata: BackingBuffer::new(
-                metadata.buffer,
-                metadata.inner_size,
+            layer_metadata: BackingBuffer::new(
+                layer_metadata.buffer,
+                layer_metadata.inner_size,
                 BackingBufferType::Metadata,
             ),
             feature_metadata: BackingBuffer::new(
@@ -90,7 +90,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         let gap = match typ {
             BackingBufferType::Vertices => &self.vertices,
             BackingBufferType::Indices => &self.indices,
-            BackingBufferType::Metadata => &self.metadata,
+            BackingBufferType::Metadata => &self.layer_metadata,
             BackingBufferType::FeatureMetadata => &self.feature_metadata,
         }
         .find_largest_gap(&self.index);
@@ -107,7 +107,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
     }
 
     pub fn metadata(&self) -> &B {
-        &self.metadata.inner
+        &self.layer_metadata.inner
     }
 
     pub fn feature_metadata(&self) -> &B {
@@ -195,7 +195,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
             buffer_indices: self.indices.make_room(indices_bytes, &mut self.index),
             usable_indices: geometry.usable_indices as u32,
             buffer_layer_metadata: self
-                .metadata
+                .layer_metadata
                 .make_room(layer_metadata_bytes, &mut self.index),
             buffer_feature_metadata: self
                 .feature_metadata
@@ -216,7 +216,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         );
 
         queue.write_buffer(
-            &self.metadata.inner,
+            &self.layer_metadata.inner,
             maybe_entry.buffer_layer_metadata.start,
             &bytemuck::cast_slice(&[layer_metadata])[0..aligned_layer_metadata_bytes as usize],
         );
@@ -243,7 +243,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         }
 
         queue.write_buffer(
-            &self.metadata.inner,
+            &self.layer_metadata.inner,
             entry.buffer_layer_metadata.start,
             &bytemuck::cast_slice(&[layer_metadata])[0..aligned_layer_metadata_bytes as usize],
         );
@@ -464,10 +464,10 @@ impl RingIndex {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &VecDeque<IndexEntry>> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = impl Iterator<Item = &IndexEntry>> + '_ {
         self.linear_index
             .iter()
-            .flat_map(|key| self.tree_index.get(key))
+            .flat_map(|key| self.tree_index.get(key).map(|entries| entries.iter()))
     }
 
     fn pop_front(&mut self) -> Option<IndexEntry> {
