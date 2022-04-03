@@ -357,7 +357,7 @@ impl RenderState {
     }
 
     /// Request tiles which are currently in view
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     fn request_tiles_in_view(&self, view_region: &ViewRegion, scheduler: &mut IOScheduler) {
         let source_layers: HashSet<String> = self
             .style
@@ -377,7 +377,7 @@ impl RenderState {
     /// Update tile metadata for all required tiles on the GPU according to current zoom, camera and perspective
     /// We perform the update before uploading new tessellated tiles, such that each
     /// tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     fn update_metadata(
         &self,
         _scheduler: &mut IOScheduler,
@@ -472,7 +472,7 @@ impl RenderState {
         }
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     fn upload_tile_geometry(
         &mut self,
         view_proj: &ViewProjection,
@@ -565,7 +565,7 @@ impl RenderState {
         }
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub fn prepare_render_data(&mut self, scheduler: &mut IOScheduler) {
         let visible_z = self.visible_z();
 
@@ -746,11 +746,5 @@ impl RenderState {
 
     pub fn resume(&mut self) {
         self.suspended = false;
-    }
-}
-
-impl fmt::Debug for RenderState {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "RenderState")
     }
 }

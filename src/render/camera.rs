@@ -32,6 +32,7 @@ impl ViewProjection {
         self.0 * vector
     }
 
+    #[tracing::instrument(skip_all)]
     pub fn to_model_view_projection(&self, projection: Matrix4<f64>) -> ModelViewProjection {
         ModelViewProjection(self.0 * projection)
     }

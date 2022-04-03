@@ -243,12 +243,6 @@ pub struct IOScheduler {
     schedule_method: ScheduleMethod,
 }
 
-impl fmt::Debug for IOScheduler {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "IOScheduler")
-    }
-}
-
 const _: () = {
     fn assert_send<T: Send>() {}
 
@@ -268,7 +262,7 @@ impl IOScheduler {
         }
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub fn try_populate_cache(&mut self) {
         if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
             if let Ok(result) = self.tessellate_channel.1.try_recv() {

@@ -129,6 +129,7 @@ pub trait UpdateState {
 }
 
 impl UpdateState for InputController {
+    #[tracing::instrument(skip_all)]
     fn update_state(&mut self, state: &mut RenderState, tile_cache: &TileCache, dt: Duration) {
         self.pan_handler.update_state(state, tile_cache, dt);
         self.pinch_handler.update_state(state, tile_cache, dt);

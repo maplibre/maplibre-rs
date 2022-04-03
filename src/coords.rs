@@ -145,6 +145,7 @@ impl WorldTileCoords {
         })
     }
 
+    #[tracing::instrument(skip_all)]
     pub fn transform_for_zoom(&self, zoom: f64) -> Matrix4<f64> {
         /*
            For tile.z = zoom:
@@ -163,10 +164,10 @@ impl WorldTileCoords {
         ));
 
         // Divide by EXTENT to normalize tile
-        let normalize = Matrix4::from_nonuniform_scale(1.0 / EXTENT, 1.0 / EXTENT, 1.0);
-        // Scale tiles where the zoom level matches its z to 512x512
-        let scale = Matrix4::from_nonuniform_scale(tile_scale, tile_scale, 1.0);
-        translate * normalize * scale
+        // Scale tiles where zoom level = self.z to 512x512
+        let normalize_and_scale =
+            Matrix4::from_nonuniform_scale(tile_scale / EXTENT, tile_scale / EXTENT, 1.0);
+        translate * normalize_and_scale
     }
 
     pub fn into_aligned(self) -> AlignedWorldTileCoords {
@@ -389,7 +390,11 @@ impl ViewRegion {
             && world_coords.y <= self.max_tile.y + self.padding
             && world_coords.x >= self.min_tile.x - self.padding
             && world_coords.y >= self.min_tile.y - self.padding
-            && world_coords.z == self.z
+            && (world_coords.z == self.z
+                || world_coords.z.checked_sub(1).unwrap_or(0) == self.z
+                || world_coords.z.checked_sub(2).unwrap_or(0) == self.z
+                || world_coords.z.checked_sub(3).unwrap_or(0) == self.z
+                || world_coords.z + 1 == self.z)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
