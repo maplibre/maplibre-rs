@@ -108,7 +108,7 @@ bytemuck_derive = "1.0"
 include_dir = "0.7.2"
 
 [patch.crates-io]
-tracy-client = { git = "https://github.com/nagisa/rust_tracy_client.git", branch = "create-pull-request/patch" }
+tracy-client = { git = "https://github.com/nagisa/rust_tracy_client.git", branch = "create-pull-request/patch", optional = true }
 
 [dev-dependencies]
 criterion = "0.3"
