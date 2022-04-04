@@ -5,7 +5,6 @@ use crate::render::camera::ViewProjection;
 use crate::render::shaders::ShaderTileMetadata;
 use cgmath::Matrix4;
 
-
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;

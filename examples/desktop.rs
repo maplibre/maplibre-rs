@@ -2,7 +2,6 @@ use mapr::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
 
 #[cfg(feature = "enable-tracing")]
 fn enable_tracing() {
-    
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::Registry;
 

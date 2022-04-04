@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-
 use geozero::mvt::Tile;
 use geozero::GeozeroDatasource;
 use log::{error, info};

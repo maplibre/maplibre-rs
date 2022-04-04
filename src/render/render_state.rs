@@ -1,18 +1,14 @@
 use std::collections::HashSet;
 use std::default::Default;
 
-
-
 use std::{cmp, iter};
-
 
 use tracing;
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
-
-use style_spec::{Style};
+use style_spec::Style;
 
 use crate::coords::{ViewRegion, TILE_SIZE};
 use crate::io::scheduler::IOScheduler;
@@ -26,7 +22,7 @@ use crate::render::options::{
     TILE_META_COUNT, TILE_VIEW_BUFFER_SIZE, VERTEX_BUFFER_SIZE,
 };
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
-use crate::tessellation::{IndexDataType};
+use crate::tessellation::IndexDataType;
 use crate::util::FPSMeter;
 
 use super::piplines::*;
