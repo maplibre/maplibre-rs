@@ -1,18 +1,18 @@
 use std::collections::HashSet;
 use std::default::Default;
-use std::fmt::Formatter;
-use std::io::sink;
-use std::time::{Instant, SystemTime};
-use std::{cmp, fmt, iter};
 
-use cgmath::{Matrix4, Vector4};
+
+
+use std::{cmp, iter};
+
+
 use tracing;
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
-use style_spec::layer::{LayerPaint, StyleLayer};
-use style_spec::{EncodedSrgb, Style};
+
+use style_spec::{Style};
 
 use crate::coords::{ViewRegion, TILE_SIZE};
 use crate::io::scheduler::IOScheduler;
@@ -26,7 +26,7 @@ use crate::render::options::{
     TILE_META_COUNT, TILE_VIEW_BUFFER_SIZE, VERTEX_BUFFER_SIZE,
 };
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
+use crate::tessellation::{IndexDataType};
 use crate::util::FPSMeter;
 
 use super::piplines::*;
@@ -375,7 +375,7 @@ impl RenderState {
             .collect();
 
         for coords in view_region.iter() {
-            if let Some(_) = coords.build_quad_key() {
+            if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
                 scheduler.try_request_tile(&coords, &source_layers).unwrap();
             }
@@ -395,7 +395,7 @@ impl RenderState {
         self.tile_view_pattern
             .update_pattern(view_region, scheduler.get_tile_cache(), self.zoom);
         self.tile_view_pattern
-            .upload_pattern(&self.queue, &view_proj);
+            .upload_pattern(&self.queue, view_proj);
 
         /*let animated_one = 0.5
         * (1.0
@@ -467,11 +467,11 @@ impl RenderState {
     #[tracing::instrument(skip_all)]
     fn upload_tile_geometry(
         &mut self,
-        view_proj: &ViewProjection,
+        _view_proj: &ViewProjection,
         view_region: &ViewRegion,
         scheduler: &mut IOScheduler,
     ) {
-        let visible_z = self.visible_z();
+        let _visible_z = self.visible_z();
 
         // Upload all tessellated layers which are in view
         for world_coords in view_region.iter() {
@@ -502,7 +502,7 @@ impl RenderState {
                             .map(|color| color.into());
 
                         match result {
-                            LayerTessellateResult::UnavailableLayer { coords, .. } => {
+                            LayerTessellateResult::UnavailableLayer { coords: _, .. } => {
                                 /*self.buffer_pool.mark_layer_unavailable(*coords);*/
                             }
                             LayerTessellateResult::TessellatedLayer {
@@ -512,7 +512,7 @@ impl RenderState {
                                 buffer,
                                 ..
                             } => {
-                                let world_coords = coords;
+                                let _world_coords = coords;
 
                                 let feature_metadata = layer_data
                                     .features()
@@ -559,8 +559,8 @@ impl RenderState {
         drop(_guard);
 
         if let Some(view_region) = &view_region {
-            self.upload_tile_geometry(&view_proj, &view_region, scheduler);
-            self.update_metadata(scheduler, &view_region, &view_proj);
+            self.upload_tile_geometry(&view_proj, view_region, scheduler);
+            self.update_metadata(scheduler, view_region, &view_proj);
             self.request_tiles_in_view(view_region, scheduler);
         }
 

@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use std::fmt;
+
 
 use geozero::mvt::Tile;
 use geozero::GeozeroDatasource;

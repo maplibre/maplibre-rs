@@ -196,7 +196,7 @@ pub mod tile {
 pub mod tile_mask {
     use crate::platform::COLOR_TEXTURE_FORMAT;
     use crate::render::options::DEBUG_STENCIL_PATTERN;
-    use crate::render::shaders::{ShaderLayerMetadata, ShaderTileMetadata};
+    use crate::render::shaders::{ShaderTileMetadata};
     use wgpu::ColorWrites;
 
     use super::{FragmentShaderState, VertexShaderState};

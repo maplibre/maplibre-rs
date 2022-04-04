@@ -8,7 +8,7 @@ use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use crate::io::geometry_index::TileIndex;
 use std::collections::HashSet;
 use std::fmt;
-use std::fmt::{write, Formatter};
+
 use vector_tile::tile::Layer;
 
 mod geometry_index;

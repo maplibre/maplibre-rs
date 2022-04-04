@@ -1,11 +1,11 @@
-use crate::coords::{Quadkey, ViewRegion, WorldTileCoords};
+use crate::coords::{ViewRegion, WorldTileCoords};
 use crate::io::tile_cache::TileCache;
 use crate::render::buffer_pool::{BackingBufferDescriptor, Queue};
 use crate::render::camera::ViewProjection;
 use crate::render::shaders::ShaderTileMetadata;
 use cgmath::Matrix4;
-use lyon::geom::euclid::approxeq::ApproxEq;
-use std::collections::BTreeMap;
+
+
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
@@ -64,7 +64,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         let mut index = 0;
 
         for coords in view_region.iter() {
-            if let None = coords.build_quad_key() {
+            if coords.build_quad_key().is_none() {
                 continue;
             }
 
@@ -140,7 +140,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         queue.write_buffer(
             &self.buffer.inner,
             0,
-            &bytemuck::cast_slice(&buffer.as_slice()),
+            bytemuck::cast_slice(buffer.as_slice()),
         );
     }
 

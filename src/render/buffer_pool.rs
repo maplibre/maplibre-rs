@@ -286,9 +286,9 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
 
 pub struct BackingBufferDescriptor<B> {
     /// The buffer which is used
-    pub buffer: B,
+    pub(crate) buffer: B,
     /// The size of buffer
-    inner_size: wgpu::BufferAddress,
+    pub(crate) inner_size: wgpu::BufferAddress,
 }
 
 impl<B> BackingBufferDescriptor<B> {

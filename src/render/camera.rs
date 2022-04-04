@@ -24,6 +24,7 @@ pub const FLIP_Y: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
 pub struct ViewProjection(Matrix4<f64>);
 
 impl ViewProjection {
+    #[tracing::instrument(skip_all)]
     pub fn invert(&self) -> InvertedViewProjection {
         InvertedViewProjection(self.0.invert().expect("Unable to invert view projection"))
     }
@@ -106,6 +107,7 @@ impl Camera {
         )
     }
 
+    #[tracing::instrument(skip_all)]
     pub fn calc_view_proj(&self, perspective: &Perspective) -> ViewProjection {
         ViewProjection(FLIP_Y * perspective.calc_matrix() * self.calc_matrix())
     }

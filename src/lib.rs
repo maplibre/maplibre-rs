@@ -49,7 +49,6 @@ impl Map {
     pub fn run_sync_with_max_frames(self, max_frames: Option<u64>) {
         tokio::runtime::Builder::new_multi_thread()
             .worker_threads(2)
-            .threa
             .enable_io()
             .enable_time()
             .on_thread_start(|| {
