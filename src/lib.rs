@@ -48,8 +48,14 @@ impl Map {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn run_sync_with_max_frames(self, max_frames: Option<u64>) {
         tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .threa
             .enable_io()
             .enable_time()
+            .on_thread_start(|| {
+                #[cfg(feature = "enable-tracing")]
+                tracy_client::set_thread_name("tokio-runtime-worker");
+            })
             .build()
             .unwrap()
             .block_on(async {
