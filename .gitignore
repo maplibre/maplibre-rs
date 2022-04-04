@@ -22,4 +22,6 @@ dist/
 logs/
 
 perf.data*
-flamegraph.svg
+*.folded
+*flamegraph.svg
+*flamechart.svg
