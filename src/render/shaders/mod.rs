@@ -82,7 +82,7 @@ impl VertexShaderState {
 pub mod tile {
     use super::{ShaderLayerMetadata, ShaderVertex};
     use crate::platform::COLOR_TEXTURE_FORMAT;
-    use crate::render::shaders::ShaderFeatureStyle;
+    use crate::render::shaders::{ShaderFeatureStyle, ShaderTileMetadata};
 
     use super::{FragmentShaderState, VertexShaderState};
 
@@ -110,7 +110,7 @@ pub mod tile {
             },
             // tile metadata
             wgpu::VertexBufferLayout {
-                array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
+                array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
                 step_mode: wgpu::VertexStepMode::Instance,
                 attributes: &[
                     // translate
@@ -134,20 +134,28 @@ pub mod tile {
                         format: wgpu::VertexFormat::Float32x4,
                         shader_location: 7,
                     },
+                    // zoom_factor
                     wgpu::VertexAttribute {
                         offset: 4 * wgpu::VertexFormat::Float32x4.size(),
                         format: wgpu::VertexFormat::Float32,
                         shader_location: 9,
                     },
+                ],
+            },
+            // layer metadata
+            wgpu::VertexBufferLayout {
+                array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
+                step_mode: wgpu::VertexStepMode::Instance,
+                attributes: &[
+                    // z_index
                     wgpu::VertexAttribute {
-                        offset: 4 * wgpu::VertexFormat::Float32x4.size()
-                            + wgpu::VertexFormat::Float32.size(),
+                        offset: 0,
                         format: wgpu::VertexFormat::Float32,
                         shader_location: 10,
                     },
                 ],
             },
-            // vertex style
+            // features
             wgpu::VertexBufferLayout {
                 array_stride: std::mem::size_of::<ShaderFeatureStyle>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
@@ -188,7 +196,7 @@ pub mod tile {
 pub mod tile_mask {
     use crate::platform::COLOR_TEXTURE_FORMAT;
     use crate::render::options::DEBUG_STENCIL_PATTERN;
-    use crate::render::shaders::ShaderLayerMetadata;
+    use crate::render::shaders::{ShaderLayerMetadata, ShaderTileMetadata};
     use wgpu::ColorWrites;
 
     use super::{FragmentShaderState, VertexShaderState};
@@ -196,7 +204,7 @@ pub mod tile_mask {
     pub const VERTEX: VertexShaderState = VertexShaderState::new(
         include_str!("tile_mask.vertex.wgsl"),
         &[wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
+            array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
             step_mode: wgpu::VertexStepMode::Instance,
             attributes: &[
                 // translate
@@ -309,17 +317,27 @@ pub struct ShaderFeatureStyle {
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderLayerMetadata {
-    pub transform: Mat4x4f32,
-    pub zoom_factor: f32,
     pub z_index: f32,
 }
 
 impl ShaderLayerMetadata {
-    pub fn new(transform: Mat4x4f32, zoom_factor: f32, z_index: f32) -> Self {
+    pub fn new(z_index: f32) -> Self {
+        Self { z_index }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct ShaderTileMetadata {
+    pub transform: Mat4x4f32,
+    pub zoom_factor: f32,
+}
+
+impl ShaderTileMetadata {
+    pub fn new(transform: Mat4x4f32, zoom_factor: f32) -> Self {
         Self {
             transform,
             zoom_factor,
-            z_index,
         }
     }
 }

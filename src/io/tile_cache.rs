@@ -67,6 +67,39 @@ impl TileCache {
         }
     }
 
+    pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
+        coords
+            .build_quad_key()
+            .and_then(|key| {
+                self.cache_index.get(&key).and_then(|entries| {
+                    if entries.is_empty() {
+                        None
+                    } else if entries.iter().all(|entry| match entry {
+                        LayerTessellateResult::UnavailableLayer { .. } => true,
+                        LayerTessellateResult::TessellatedLayer { .. } => false,
+                    }) {
+                        None
+                    } else {
+                        Some(entries)
+                    }
+                })
+            })
+            .is_some()
+    }
+
+    pub fn get_tile_coords_fallback(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
+        let mut current = *coords;
+        loop {
+            if self.has_tile(&current) {
+                return Some(current);
+            } else if let Some(parent) = current.get_parent() {
+                current = parent
+            } else {
+                return None;
+            }
+        }
+    }
+
     pub fn iter_tessellated_layers_at(
         &self,
         coords: &WorldTileCoords,

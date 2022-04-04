@@ -1,4 +1,3 @@
-use cgmath::{Matrix4, Vector4};
 use std::collections::HashSet;
 use std::default::Default;
 use std::fmt::Formatter;
@@ -6,35 +5,34 @@ use std::io::sink;
 use std::time::{Instant, SystemTime};
 use std::{cmp, fmt, iter};
 
-use crate::coords::{ViewRegion, TILE_SIZE};
-
-use crate::io::scheduler::IOScheduler;
-use crate::io::LayerTessellateResult;
-use style_spec::layer::{LayerPaint, StyleLayer};
-use style_spec::{EncodedSrgb, Style};
+use cgmath::{Matrix4, Vector4};
+use tracing;
 use wgpu::{Buffer, Limits, Queue};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
+use style_spec::layer::{LayerPaint, StyleLayer};
+use style_spec::{EncodedSrgb, Style};
+
+use crate::coords::{ViewRegion, TILE_SIZE};
+use crate::io::scheduler::IOScheduler;
+use crate::io::LayerTessellateResult;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
 use crate::render::camera;
 use crate::render::camera::ViewProjection;
 use crate::render::options::{
     DEBUG_WIREFRAME, FEATURE_METADATA_BUFFER_SIZE, INDEX_FORMAT, INDICES_BUFFER_SIZE,
-    TILE_META_COUNT, VERTEX_BUFFER_SIZE,
+    TILE_META_COUNT, TILE_VIEW_BUFFER_SIZE, VERTEX_BUFFER_SIZE,
 };
-use crate::render::tile_mask_pattern::TileMaskPattern;
+use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-
 use crate::util::FPSMeter;
 
 use super::piplines::*;
 use super::shaders;
 use super::shaders::*;
 use super::texture::Texture;
-
-use tracing;
 
 pub struct RenderState {
     instance: wgpu::Instance,
@@ -70,7 +68,7 @@ pub struct RenderState {
         ShaderFeatureStyle,
     >,
 
-    tile_mask_pattern: TileMaskPattern,
+    tile_view_pattern: TileViewPattern<Queue, Buffer>,
 
     pub camera: camera::Camera,
     pub perspective: camera::Perspective,
@@ -162,14 +160,21 @@ impl RenderState {
             mapped_at_creation: false,
         });
 
+        let tile_view_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: TILE_VIEW_BUFFER_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
         let globals_buffer_byte_size =
             cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<ShaderGlobals>() as u64);
 
-        let metadata_buffer_size =
+        let layer_metadata_buffer_size =
             std::mem::size_of::<ShaderLayerMetadata>() as u64 * TILE_META_COUNT;
-        let metadata_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Tiles ubo"),
-            size: metadata_buffer_size,
+        let layer_metadata_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Layer Metadata ubo"),
+            size: layer_metadata_buffer_size,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -297,10 +302,13 @@ impl RenderState {
             buffer_pool: BufferPool::new(
                 BackingBufferDescriptor::new(vertex_buffer, VERTEX_BUFFER_SIZE),
                 BackingBufferDescriptor::new(indices_buffer, INDICES_BUFFER_SIZE),
-                BackingBufferDescriptor::new(metadata_buffer, metadata_buffer_size),
+                BackingBufferDescriptor::new(layer_metadata_buffer, layer_metadata_buffer_size),
                 BackingBufferDescriptor::new(feature_metadata_buffer, FEATURE_METADATA_BUFFER_SIZE),
             ),
-            tile_mask_pattern: TileMaskPattern::new(),
+            tile_view_pattern: TileViewPattern::new(BackingBufferDescriptor::new(
+                tile_view_buffer,
+                TILE_VIEW_BUFFER_SIZE,
+            )),
             zoom: 0.0,
             style,
         }
@@ -379,11 +387,16 @@ impl RenderState {
     /// tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
     #[tracing::instrument(skip_all)]
     fn update_metadata(
-        &self,
-        _scheduler: &mut IOScheduler,
+        &mut self,
+        scheduler: &mut IOScheduler,
         view_region: &ViewRegion,
         view_proj: &ViewProjection,
     ) {
+        self.tile_view_pattern
+            .update_pattern(view_region, scheduler.get_tile_cache(), self.zoom);
+        self.tile_view_pattern
+            .upload_pattern(&self.queue, &view_proj);
+
         /*let animated_one = 0.5
         * (1.0
             + ((SystemTime::now()
@@ -396,80 +409,59 @@ impl RenderState {
         // Factor which determines how much we need to adjust the width of lines for example.
         // If zoom == z -> zoom_factor == 1
 
-        for entries in self.buffer_pool.index().iter() {
-            for entry in entries {
-                let world_coords = entry.coords;
+        /*  for entries in self.buffer_pool.index().iter() {
+        for entry in entries {
+            let world_coords = entry.coords;*/
 
-                // FIXME: Does not take into account rendering tiles with different z
-                /*if !view_region.is_in_view(&entry.coords) {
-                    continue;
-                }*/
+        // TODO: Update features
+        /*let source_layer = entry.style_layer.source_layer.as_ref().unwrap();
 
-                let zoom_factor = 2.0_f64.powf(world_coords.z as f64 - self.zoom) as f32;
+        if let Some(result) = scheduler
+            .get_tile_cache()
+            .iter_tessellated_layers_at(&world_coords)
+            .unwrap()
+            .find(|layer| source_layer.as_str() == layer.layer_name())
+        {
+            let color: Option<Vec4f32> = entry
+                .style_layer
+                .paint
+                .as_ref()
+                .and_then(|paint| paint.get_color())
+                .map(|mut color| {
+                    color.color.b = animated_one as f32;
+                    color.into()
+                });
 
-                let transform: Matrix4<f32> = (view_proj
-                    .to_model_view_projection(world_coords.transform_for_zoom(self.zoom)))
-                .downcast();
+            match result {
+                LayerTessellateResult::UnavailableLayer { .. } => {}
+                LayerTessellateResult::TessellatedLayer {
+                    layer_data,
+                    feature_indices,
+                    ..
+                } => {
 
-                self.buffer_pool.update_layer_metadata(
-                    &self.queue,
-                    entry,
-                    ShaderLayerMetadata::new(
-                        transform.into(),
-                        zoom_factor,
-                        entry.style_layer.index as f32,
-                    ),
-                );
+                    let feature_metadata = layer_data
+                        .features()
+                        .iter()
+                        .enumerate()
+                        .flat_map(|(i, _feature)| {
+                            iter::repeat(ShaderFeatureStyle {
+                                color: color.unwrap(),
+                            })
+                            .take(feature_indices[i] as usize)
+                        })
+                        .collect::<Vec<_>>();
 
-                // TODO: Update features
-                /*let source_layer = entry.style_layer.source_layer.as_ref().unwrap();
-
-                if let Some(result) = scheduler
-                    .get_tile_cache()
-                    .iter_tessellated_layers_at(&world_coords)
-                    .unwrap()
-                    .find(|layer| source_layer.as_str() == layer.layer_name())
-                {
-                    let color: Option<Vec4f32> = entry
-                        .style_layer
-                        .paint
-                        .as_ref()
-                        .and_then(|paint| paint.get_color())
-                        .map(|mut color| {
-                            color.color.b = animated_one as f32;
-                            color.into()
-                        });
-
-                    match result {
-                        LayerTessellateResult::UnavailableLayer { .. } => {}
-                        LayerTessellateResult::TessellatedLayer {
-                            layer_data,
-                            feature_indices,
-                            ..
-                        } => {
-
-                            let feature_metadata = layer_data
-                                .features()
-                                .iter()
-                                .enumerate()
-                                .flat_map(|(i, _feature)| {
-                                    iter::repeat(ShaderFeatureStyle {
-                                        color: color.unwrap(),
-                                    })
-                                    .take(feature_indices[i] as usize)
-                                })
-                                .collect::<Vec<_>>();
-
-                            self.buffer_pool.update_feature_metadata(
-                                &self.queue,
-                                entry,
-                                &feature_metadata,
-                            );
-                        }
-                    }
-                }*/
+                    self.buffer_pool.update_feature_metadata(
+                        &self.queue,
+                        entry,
+                        &feature_metadata,
+                    );
+                }
             }
-        }
+        }*/
+        /*            }
+        }*/
     }
 
     #[tracing::instrument(skip_all)]
@@ -480,10 +472,6 @@ impl RenderState {
         scheduler: &mut IOScheduler,
     ) {
         let visible_z = self.visible_z();
-
-        // Factor which determines how much we need to adjust the width of lines for example.
-        // If zoom == z -> zoom_factor == 1
-        let zoom_factor = 2.0_f64.powf(visible_z as f64 - self.zoom) as f32; // TODO deduplicate
 
         // Upload all tessellated layers which are in view
         for world_coords in view_region.iter() {
@@ -538,23 +526,12 @@ impl RenderState {
                                     })
                                     .collect::<Vec<_>>();
 
-                                // We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                                // better supported.
-                                let transform: Matrix4<f32> = (view_proj.to_model_view_projection(
-                                    world_coords.transform_for_zoom(self.zoom),
-                                ))
-                                .downcast();
-
                                 self.buffer_pool.allocate_layer_geometry(
                                     &self.queue,
                                     *coords,
                                     style_layer.clone(),
                                     buffer,
-                                    ShaderLayerMetadata::new(
-                                        transform.into(),
-                                        zoom_factor,
-                                        style_layer.index as f32,
-                                    ),
+                                    ShaderLayerMetadata::new(style_layer.index as f32),
                                     &feature_metadata,
                                 );
                             }
@@ -567,18 +544,23 @@ impl RenderState {
 
     #[tracing::instrument(skip_all)]
     pub fn prepare_render_data(&mut self, scheduler: &mut IOScheduler) {
-        let visible_z = self.visible_z();
+        let render_setup_span = tracing::span!(tracing::Level::TRACE, "setup view region");
+        let _guard = render_setup_span.enter();
 
-        let view_region = self
-            .camera
-            .view_region_bounding_box(&self.camera.calc_view_proj(&self.perspective).invert())
-            .map(|bounding_box| ViewRegion::new(bounding_box, 1, self.zoom, visible_z));
+        let visible_z = self.visible_z();
 
         let view_proj = self.camera.calc_view_proj(&self.perspective);
 
+        let view_region = self
+            .camera
+            .view_region_bounding_box(&view_proj.invert())
+            .map(|bounding_box| ViewRegion::new(bounding_box, 1, self.zoom, visible_z));
+
+        drop(_guard);
+
         if let Some(view_region) = &view_region {
-            self.update_metadata(scheduler, &view_region, &view_proj);
             self.upload_tile_geometry(&view_proj, &view_region, scheduler);
+            self.update_metadata(scheduler, &view_region, &view_proj);
             self.request_tiles_in_view(view_region, scheduler);
         }
 
@@ -597,6 +579,9 @@ impl RenderState {
 
     #[tracing::instrument(skip_all)]
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        let render_setup_span = tracing::span!(tracing::Level::TRACE, "render prepare");
+        let _guard = render_setup_span.enter();
+
         let frame = self.surface.get_current_texture()?;
         let frame_view = frame
             .texture
@@ -608,88 +593,84 @@ impl RenderState {
                 label: Some("Encoder"),
             });
 
+        drop(_guard);
+
         {
-            let color_attachment = if let Some(multisampling_target) = &self.multisampling_texture {
-                wgpu::RenderPassColorAttachment {
-                    view: &multisampling_target.view,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
-                        store: true,
-                    },
-                    resolve_target: Some(&frame_view),
-                }
-            } else {
-                wgpu::RenderPassColorAttachment {
-                    view: &frame_view,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
-                        store: true,
-                    },
-                    resolve_target: None,
-                }
-            };
-
-            let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: None,
-                color_attachments: &[color_attachment],
-                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &self.depth_texture.view,
-                    depth_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(0.0),
-                        store: true,
-                    }),
-                    stencil_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(0),
-                        store: true,
-                    }),
-                }),
-            });
-
-            pass.set_bind_group(0, &self.bind_group, &[]);
-
+            let _span_ = tracing::span!(tracing::Level::TRACE, "render pass").entered();
             {
-                let _span_ = tracing::span!(tracing::Level::TRACE, "render pass").entered();
+                let color_attachment =
+                    if let Some(multisampling_target) = &self.multisampling_texture {
+                        wgpu::RenderPassColorAttachment {
+                            view: &multisampling_target.view,
+                            ops: wgpu::Operations {
+                                load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                                store: true,
+                            },
+                            resolve_target: Some(&frame_view),
+                        }
+                    } else {
+                        wgpu::RenderPassColorAttachment {
+                            view: &frame_view,
+                            ops: wgpu::Operations {
+                                load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                                store: true,
+                            },
+                            resolve_target: None,
+                        }
+                    };
 
-                let visible_z = self.visible_z();
-                let inverted_view_proj = self.camera.calc_view_proj(&self.perspective).invert();
-                let view_region = self
-                    .camera
-                    .view_region_bounding_box(&inverted_view_proj)
-                    .map(|bounding_box| ViewRegion::new(bounding_box, 1, self.zoom, visible_z));
+                let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    label: None,
+                    color_attachments: &[color_attachment],
+                    depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                        view: &self.depth_texture.view,
+                        depth_ops: Some(wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(0.0),
+                            store: true,
+                        }),
+                        stencil_ops: Some(wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(0),
+                            store: true,
+                        }),
+                    }),
+                });
 
-                let index = self.buffer_pool.index();
+                pass.set_bind_group(0, &self.bind_group, &[]);
 
-                if let Some(view_region) = &view_region {
-                    for world_coords in view_region.iter() {
-                        tracing::trace!("Drawing tile at {world_coords}");
+                {
+                    let index = self.buffer_pool.index();
 
-                        if let Some(entries) = index.get_layers_fallback(&world_coords) {
-                            let mut to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
-                            to_render.sort_by_key(|entry| entry.style_layer.index);
+                    for TileInView { shape, fallback } in self.tile_view_pattern.iter() {
+                        let coords = shape.coords;
+                        tracing::trace!("Drawing tile at {coords}");
 
-                            let reference = self
-                                .tile_mask_pattern
-                                .stencil_reference_value(&world_coords)
-                                as u32;
+                        let shape_to_render = fallback.as_ref().unwrap_or(shape);
 
-                            // Draw mask
-                            if let Some(mask_entry) = entries.front() {
-                                {
-                                    tracing::trace!("Drawing mask {}", &mask_entry.coords);
+                        let reference = self
+                            .tile_view_pattern
+                            .stencil_reference_value(&shape_to_render.coords)
+                            as u32;
 
-                                    pass.set_pipeline(&self.mask_pipeline);
-                                    pass.set_stencil_reference(reference);
-                                    pass.set_vertex_buffer(
-                                        0,
-                                        self.buffer_pool
-                                            .metadata()
-                                            .slice(mask_entry.layer_metadata_buffer_range()),
-                                    );
-                                    pass.draw(0..6, 0..1);
-                                }
-                            }
+                        // Draw mask
+                        {
+                            tracing::trace!("Drawing mask {}", &coords);
 
-                            for entry in to_render {
+                            pass.set_pipeline(&self.mask_pipeline);
+                            pass.set_stencil_reference(reference);
+                            pass.set_vertex_buffer(
+                                0,
+                                self.tile_view_pattern
+                                    .buffer()
+                                    .slice(shape.buffer_range.clone()),
+                            );
+                            pass.draw(0..6, 0..1);
+                        }
+
+                        if let Some(entries) = index.get_layers(&shape_to_render.coords) {
+                            let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
+                            layers_to_render.sort_by_key(|entry| entry.style_layer.index);
+
+                            for entry in layers_to_render {
                                 // Draw tile
                                 {
                                     tracing::trace!(
@@ -714,12 +695,18 @@ impl RenderState {
                                     );
                                     pass.set_vertex_buffer(
                                         1,
+                                        self.tile_view_pattern
+                                            .buffer()
+                                            .slice(shape_to_render.buffer_range.clone()),
+                                    );
+                                    pass.set_vertex_buffer(
+                                        2,
                                         self.buffer_pool
                                             .metadata()
                                             .slice(entry.layer_metadata_buffer_range()),
                                     );
                                     pass.set_vertex_buffer(
-                                        2,
+                                        3,
                                         self.buffer_pool
                                             .feature_metadata()
                                             .slice(entry.feature_metadata_buffer_range()),
@@ -733,8 +720,16 @@ impl RenderState {
             }
         }
 
-        self.queue.submit(Some(encoder.finish()));
-        frame.present();
+        {
+            let _span = tracing::span!(tracing::Level::TRACE, "render finish").entered();
+            tracing::trace!("Finished drawing");
+
+            self.queue.submit(Some(encoder.finish()));
+            tracing::trace!("Submitted queue");
+
+            frame.present();
+            tracing::trace!("Presented frame");
+        }
 
         self.fps_meter.update_and_print();
         Ok(())
