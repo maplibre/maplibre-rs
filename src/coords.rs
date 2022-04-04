@@ -385,6 +385,10 @@ impl ViewRegion {
         }
     }
 
+    pub fn zoom_level(&self) -> u8 {
+        self.z
+    }
+
     pub fn is_in_view(&self, &world_coords: &WorldTileCoords) -> bool {
         world_coords.x <= self.max_tile.x + self.padding
             && world_coords.y <= self.max_tile.y + self.padding
