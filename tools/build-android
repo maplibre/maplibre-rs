@@ -25,7 +25,7 @@ cargo install cargo-apk
 
 if [ "$run" = true ] ; then
   # -Zbuild-std is required for latest NDK: https://github.com/rust-windowing/android-ndk-rs/pull/189
-  cargo +nightly-2022-02-26 apk run --lib -Zbuild-std
+  cargo +nightly-2022-04-04 apk run --lib -Zbuild-std
 else
-  cargo +nightly-2022-02-26 apk build --lib -Zbuild-std
+  cargo +nightly-2022-04-04 apk build --lib -Zbuild-std
 fi
