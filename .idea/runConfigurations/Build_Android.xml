@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Build Android" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="apk build" />
+    <option name="command" value="+nightly-2022-02-26 apk build -Zbuild-std" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />
@@ -9,7 +9,7 @@
     <option name="withSudo" value="false" />
     <option name="backtrace" value="SHORT" />
     <envs>
-      <env name="ANDROID_NDK_ROOT" value="$ANDROID_HOME/ndk/21.1.6352462" />
+      <env name="ANDROID_NDK_ROOT" value="$NDK_PATH$" />
     </envs>
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
