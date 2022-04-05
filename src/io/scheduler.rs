@@ -205,7 +205,12 @@ impl ThreadLocalState {
             }
             TileFetchResult::Tile { data, coords } => {
                 info!("parsing tile {} with {}bytes", &coords, data.len());
-                let tile = parse_tile_bytes(data).expect("failed to load tile");
+
+                let tile = {
+                    let _span_ =
+                        tracing::span!(tracing::Level::TRACE, "parse_tile_bytes").entered();
+                    parse_tile_bytes(data).expect("failed to load tile")
+                };
 
                 for to_load in &tile_request.layers {
                     if let Some(layer) = tile

@@ -18,6 +18,7 @@ use crate::render::ShaderVertex;
 use crate::tessellation::{Tessellated, VertexConstructor, DEFAULT_TOLERANCE};
 
 impl<I: Add + From<lyon::lyon_tessellation::VertexId> + MaxIndex + Pod> Tessellated<I> for Layer {
+    #[tracing::instrument(skip_all)]
     fn tessellate(&self) -> Result<(VertexBuffers<ShaderVertex, I>, Vec<u32>), Error> {
         let mut buffer: VertexBuffers<ShaderVertex, I> = VertexBuffers::new();
         let mut feature_indices: Vec<u32> = Vec::new();
