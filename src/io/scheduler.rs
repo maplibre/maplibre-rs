@@ -105,7 +105,7 @@ impl ThreadLocalState {
             .and_then(|tile_request_state| tile_request_state.get_tile_request(request_id).cloned())
     }
 
-    #[tracing::instrument(skip(self, data))]
+    #[tracing::instrument(skip_all)]
     pub fn process_tile(
         &self,
         request_id: TileRequestID,
@@ -138,7 +138,7 @@ impl ThreadLocalState {
         Ok(())
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip_all)]
     fn index_geometry(&self, tile_result: &TileFetchResult) {
         match tile_result {
             TileFetchResult::Tile { data, coords } => {
@@ -162,7 +162,7 @@ impl ThreadLocalState {
         }
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip_all)]
     pub fn query_point(
         &self,
         world_coords: &WorldCoords,
@@ -184,7 +184,7 @@ impl ThreadLocalState {
         }
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip_all)]
     fn tessellate_layers_with_request(
         &self,
         tile_result: &TileFetchResult,
