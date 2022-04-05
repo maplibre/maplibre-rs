@@ -13,7 +13,7 @@ use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
 
 use crate::render::render_state::RenderState;
-use crate::IOScheduler;
+use crate::Scheduler;
 
 mod pan_handler;
 mod pinch_handler;
@@ -126,12 +126,12 @@ impl InputController {
 }
 
 pub trait UpdateState {
-    fn update_state(&mut self, state: &mut RenderState, scheduler: &IOScheduler, dt: Duration);
+    fn update_state(&mut self, state: &mut RenderState, scheduler: &Scheduler, dt: Duration);
 }
 
 impl UpdateState for InputController {
     #[tracing::instrument(skip_all)]
-    fn update_state(&mut self, state: &mut RenderState, scheduler: &IOScheduler, dt: Duration) {
+    fn update_state(&mut self, state: &mut RenderState, scheduler: &Scheduler, dt: Duration) {
         self.pan_handler.update_state(state, scheduler, dt);
         self.pinch_handler.update_state(state, scheduler, dt);
         self.zoom_handler.update_state(state, scheduler, dt);

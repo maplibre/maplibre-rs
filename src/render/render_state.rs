@@ -11,7 +11,7 @@ use winit::window::Window;
 use style_spec::Style;
 
 use crate::coords::{ViewRegion, TILE_SIZE};
-use crate::io::scheduler::IOScheduler;
+use crate::io::scheduler::Scheduler;
 use crate::io::LayerTessellateMessage;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
@@ -362,7 +362,7 @@ impl RenderState {
 
     /// Request tiles which are currently in view
     #[tracing::instrument(skip_all)]
-    fn request_tiles_in_view(&self, view_region: &ViewRegion, scheduler: &mut IOScheduler) {
+    fn request_tiles_in_view(&self, view_region: &ViewRegion, scheduler: &mut Scheduler) {
         let source_layers: HashSet<String> = self
             .style
             .layers
@@ -384,7 +384,7 @@ impl RenderState {
     #[tracing::instrument(skip_all)]
     fn update_metadata(
         &mut self,
-        scheduler: &mut IOScheduler,
+        scheduler: &mut Scheduler,
         view_region: &ViewRegion,
         view_proj: &ViewProjection,
     ) {
@@ -465,7 +465,7 @@ impl RenderState {
         &mut self,
         _view_proj: &ViewProjection,
         view_region: &ViewRegion,
-        scheduler: &mut IOScheduler,
+        scheduler: &mut Scheduler,
     ) {
         let _visible_z = self.visible_z();
 
@@ -539,7 +539,7 @@ impl RenderState {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn prepare_render_data(&mut self, scheduler: &mut IOScheduler) {
+    pub fn prepare_render_data(&mut self, scheduler: &mut Scheduler) {
         let render_setup_span = tracing::span!(tracing::Level::TRACE, "setup view region");
         let _guard = render_setup_span.enter();
 

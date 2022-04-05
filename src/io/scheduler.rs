@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::future::Future;
 
 use geozero::mvt::Tile;
 use geozero::GeozeroDatasource;
@@ -9,7 +10,7 @@ use std::sync::{Arc, Mutex};
 use vector_tile::parse_tile_bytes;
 
 /// Describes through which channels work-requests travel. It describes the flow of work.
-use crate::coords::WorldTileCoords;
+use crate::coords::{WorldCoords, WorldTileCoords};
 use crate::io::tile_cache::TileCache;
 use crate::io::{
     LayerTessellateMessage, TessellateMessage, TileFetchResult, TileRequest, TileRequestID,
@@ -17,7 +18,7 @@ use crate::io::{
 };
 
 use crate::error::Error;
-use crate::io::geometry_index::{GeometryIndex, IndexProcessor, TileIndex};
+use crate::io::geometry_index::{GeometryIndex, IndexGeometry, IndexProcessor, TileIndex};
 use crate::io::source_client::{HttpSourceClient, SourceClient};
 use crate::tessellation::Tessellated;
 use prost::Message;
@@ -46,8 +47,8 @@ impl ScheduleMethod {
     #[cfg(target_arch = "wasm32")]
     pub fn schedule<T>(
         &self,
-        scheduler: &IOScheduler,
-        future_factory: impl (FnOnce(ThreadLocalTessellatorState) -> T) + Send + 'static,
+        scheduler: &Scheduler,
+        future_factory: impl (FnOnce(ThreadLocalState) -> T) + Send + 'static,
     ) -> Result<(), Error>
     where
         T: Future<Output = ()> + 'static,
@@ -61,11 +62,11 @@ impl ScheduleMethod {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn schedule<T>(
         &self,
-        scheduler: &IOScheduler,
-        future_factory: impl (FnOnce(ThreadLocalTessellatorState) -> T) + Send + 'static,
+        scheduler: &Scheduler,
+        future_factory: impl (FnOnce(ThreadLocalState) -> T) + Send + 'static,
     ) -> Result<(), Error>
     where
-        T: std::future::Future + Send + 'static,
+        T: Future + Send + 'static,
         T::Output: Send + 'static,
     {
         match self {
@@ -78,14 +79,14 @@ impl ScheduleMethod {
     }
 }
 
-pub struct ThreadLocalTessellatorState {
+pub struct ThreadLocalState {
     tile_request_state: Arc<Mutex<TileRequestState>>,
     tessellate_result_sender: Sender<TessellateMessage>,
     geometry_index: Arc<Mutex<GeometryIndex>>,
 }
 
 #[cfg(target_arch = "wasm32")]
-impl Drop for ThreadLocalTessellatorState {
+impl Drop for ThreadLocalState {
     fn drop(&mut self) {
         use log::warn;
         warn!(
@@ -95,7 +96,7 @@ impl Drop for ThreadLocalTessellatorState {
     }
 }
 
-impl ThreadLocalTessellatorState {
+impl ThreadLocalState {
     fn get_tile_request(&self, request_id: TileRequestID) -> Option<TileRequest> {
         self.tile_request_state
             .lock()
@@ -157,6 +158,28 @@ impl ThreadLocalTessellatorState {
                 }
             }
             _ => {}
+        }
+    }
+
+    #[tracing::instrument(skip(self))]
+    pub fn query_point(
+        &self,
+        world_coords: &WorldCoords,
+        z: u8,
+        zoom: f64,
+    ) -> Option<Vec<IndexGeometry<f64>>> {
+        if let Ok(mut geometry_index) = self.geometry_index.lock() {
+            geometry_index
+                .query_point(world_coords, z, zoom)
+                .map(|geometries| {
+                    geometries
+                        .iter()
+                        .cloned()
+                        .cloned()
+                        .collect::<Vec<IndexGeometry<f64>>>()
+                })
+        } else {
+            unimplemented!()
         }
     }
 
@@ -242,7 +265,7 @@ impl ThreadLocalTessellatorState {
     }
 }
 
-pub struct IOScheduler {
+pub struct Scheduler {
     tessellate_channel: (Sender<TessellateMessage>, Receiver<TessellateMessage>),
     tile_request_state: Arc<Mutex<TileRequestState>>,
     geometry_index: Arc<Mutex<GeometryIndex>>,
@@ -254,11 +277,11 @@ const _: () = {
     fn assert_send<T: Send>() {}
 
     fn assert_all() {
-        assert_send::<ThreadLocalTessellatorState>();
+        assert_send::<ThreadLocalState>();
     }
 };
 
-impl IOScheduler {
+impl Scheduler {
     pub fn new(schedule_method: ScheduleMethod) -> Self {
         Self {
             tessellate_channel: channel(),
@@ -285,8 +308,8 @@ impl IOScheduler {
         }
     }
 
-    pub fn new_tessellator_state(&self) -> ThreadLocalTessellatorState {
-        ThreadLocalTessellatorState {
+    pub fn new_tessellator_state(&self) -> ThreadLocalState {
+        ThreadLocalState {
             tile_request_state: self.tile_request_state.clone(),
             tessellate_result_sender: self.tessellate_channel.0.clone(),
             geometry_index: self.geometry_index.clone(),
@@ -323,7 +346,7 @@ impl IOScheduler {
                     let client = SourceClient::Http(HttpSourceClient::new());
                     let copied_coords = *coords;
 
-                    let future_fn = move |thread_local_state: ThreadLocalTessellatorState| async move {
+                    let future_fn = move |thread_local_state: ThreadLocalState| async move {
                         if let Ok(data) = client.fetch(&copied_coords).await {
                             thread_local_state
                                 .process_tile(request_id, data.into_boxed_slice())
@@ -334,9 +357,9 @@ impl IOScheduler {
                     };
 
                     #[cfg(target_arch = "wasm32")]
-                    self.schedule_method.schedule(self, future_fn);
+                    self.schedule_method.schedule(self, future_fn).unwrap();
                     #[cfg(not(target_arch = "wasm32"))]
-                    self.schedule_method.schedule(self, future_fn);
+                    self.schedule_method.schedule(self, future_fn).unwrap();
                 }
             }
         }
@@ -346,6 +369,10 @@ impl IOScheduler {
 
     pub fn get_tile_cache(&self) -> &TileCache {
         &self.tile_cache
+    }
+
+    pub fn get_method(&self) -> &ScheduleMethod {
+        &self.schedule_method
     }
 }
 

@@ -18,9 +18,9 @@ use wasm_bindgen::JsCast;
 use web_sys::Window as WebSysWindow;
 use web_sys::Worker;
 
-use crate::io::scheduler::IOScheduler;
 use crate::io::scheduler::ScheduleMethod;
-use crate::io::scheduler::ThreadLocalTessellatorState;
+use crate::io::scheduler::Scheduler;
+use crate::io::scheduler::ThreadLocalState;
 use crate::MapBuilder;
 
 pub mod http_client;
@@ -45,8 +45,8 @@ pub fn wasm_bindgen_start() {
 }
 
 #[wasm_bindgen]
-pub fn create_pool_scheduler(new_worker: js_sys::Function) -> *mut IOScheduler {
-    let scheduler = Box::new(IOScheduler::new(ScheduleMethod::WebWorkerPool(
+pub fn create_pool_scheduler(new_worker: js_sys::Function) -> *mut Scheduler {
+    let scheduler = Box::new(Scheduler::new(ScheduleMethod::WebWorkerPool(
         WebWorkerPoolScheduleMethod::new(new_worker),
     )));
     let scheduler_ptr = Box::into_raw(scheduler);
@@ -74,8 +74,8 @@ pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
 }
 
 #[wasm_bindgen]
-pub async fn run(scheduler_ptr: *mut IOScheduler) {
-    let scheduler: Box<IOScheduler> = unsafe { Box::from_raw(scheduler_ptr) };
+pub async fn run(scheduler_ptr: *mut Scheduler) {
+    let scheduler: Box<Scheduler> = unsafe { Box::from_raw(scheduler_ptr) };
 
     // Either call forget or the main loop to keep worker loop alive
     MapBuilder::from_canvas("mapr")

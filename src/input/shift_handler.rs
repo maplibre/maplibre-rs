@@ -1,7 +1,7 @@
 use super::UpdateState;
 
 use crate::render::render_state::RenderState;
-use crate::IOScheduler;
+use crate::Scheduler;
 use cgmath::{Vector3, Zero};
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ pub struct ShiftHandler {
 }
 
 impl UpdateState for ShiftHandler {
-    fn update_state(&mut self, state: &mut RenderState, _scheduler: &IOScheduler, dt: Duration) {
+    fn update_state(&mut self, state: &mut RenderState, _scheduler: &Scheduler, dt: Duration) {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.camera_translate * dt;

@@ -1,4 +1,4 @@
-use crate::io::scheduler::IOScheduler;
+use crate::io::scheduler::Scheduler;
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
 
@@ -24,7 +24,7 @@ pub struct Map {
     style: Style,
     window: winit::window::Window,
     event_loop: EventLoop<()>,
-    scheduler: Box<IOScheduler>,
+    scheduler: Box<Scheduler>,
 }
 
 impl Map {
@@ -73,7 +73,7 @@ impl Map {
 pub struct MapBuilder {
     create_window: Box<dyn FnOnce(&EventLoop<()>) -> winit::window::Window>,
     schedule_method: Option<ScheduleMethod>,
-    scheduler: Option<Box<IOScheduler>>,
+    scheduler: Option<Box<Scheduler>>,
     style: Option<Style>,
 }
 
@@ -83,7 +83,7 @@ impl MapBuilder {
         self
     }
 
-    pub fn with_existing_scheduler(mut self, scheduler: Box<IOScheduler>) -> Self {
+    pub fn with_existing_scheduler(mut self, scheduler: Box<Scheduler>) -> Self {
         self.scheduler = Some(scheduler);
         self
     }
@@ -137,7 +137,7 @@ impl MapBuilder {
             window: (self.create_window)(&event_loop),
             event_loop,
             scheduler: self.scheduler.unwrap_or_else(|| {
-                Box::new(IOScheduler::new(self.schedule_method.unwrap_or_default()))
+                Box::new(Scheduler::new(self.schedule_method.unwrap_or_default()))
             }),
         }
     }

@@ -1,8 +1,10 @@
 use crate::render::render_state::RenderState;
 
-use crate::IOScheduler;
+use crate::Scheduler;
 use cgmath::Vector2;
 
+use crate::coords::WorldCoords;
+use log::info;
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
 
@@ -55,38 +57,41 @@ impl QueryHandler {
         true
     }
 
-    pub fn update_state(
-        &mut self,
-        state: &mut RenderState,
-        _scheduler: &IOScheduler,
-        _dt: Duration,
-    ) {
+    pub fn update_state(&mut self, state: &mut RenderState, scheduler: &Scheduler, _dt: Duration) {
         if self.clicking {
             if let Some(window_position) = self.window_position {
                 let perspective = &state.perspective;
                 let view_proj = state.camera.calc_view_proj(perspective);
                 let inverted_view_proj = view_proj.invert();
 
-                if let Some(_coordinates) = state
+                let z = state.visible_z();
+                let zoom = state.zoom;
+
+                if let Some(coordinates) = state
                     .camera
                     .window_to_world_at_ground(&window_position, &inverted_view_proj)
                 {
-                    /*let option = tile_cache.query_point(
-                        &WorldCoords {
-                            x: coordinates.x,
-                            y: coordinates.y,
-                        },
-                        state.visible_z(),
-                        state.zoom,
-                    );
-
-                    info!(
-                        "{:?}",
-                        option.map(|geometries| geometries
-                            .iter()
-                            .map(|geometry| &geometry.properties)
-                            .collect::<Vec<_>>())
-                    );*/
+                    scheduler
+                        .get_method()
+                        .schedule(scheduler, move |thread_local| async move {
+                            if let Some(geometries) = thread_local.query_point(
+                                &WorldCoords {
+                                    x: coordinates.x,
+                                    y: coordinates.y,
+                                },
+                                z,
+                                zoom,
+                            ) {
+                                info!(
+                                    "{:?}",
+                                    geometries
+                                        .iter()
+                                        .map(|geometry| &geometry.properties)
+                                        .collect::<Vec<_>>()
+                                );
+                            }
+                        })
+                        .unwrap();
                 }
             }
             self.clicking = false;

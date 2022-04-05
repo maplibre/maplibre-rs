@@ -10,14 +10,14 @@ use winit::event_loop::{ControlFlow, EventLoop};
 
 use crate::input::{InputController, UpdateState};
 
-use crate::io::scheduler::IOScheduler;
+use crate::io::scheduler::Scheduler;
 use crate::platform::Instant;
 use crate::render::render_state::RenderState;
 
 pub async fn run(
     window: winit::window::Window,
     event_loop: EventLoop<()>,
-    mut scheduler: Box<IOScheduler>,
+    mut scheduler: Box<Scheduler>,
     style: Box<Style>,
     max_frames: Option<u64>,
 ) {

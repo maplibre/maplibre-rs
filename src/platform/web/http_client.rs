@@ -11,7 +11,7 @@ use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
 
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::error::Error;
-use crate::io::scheduler::{IOScheduler, ScheduleMethod, ThreadLocalTessellatorState};
+use crate::io::scheduler::{ScheduleMethod, Scheduler, ThreadLocalState};
 use crate::io::tile_cache::TileCache;
 use crate::io::TileRequestID;
 

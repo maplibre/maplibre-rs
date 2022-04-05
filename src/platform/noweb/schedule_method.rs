@@ -1,4 +1,4 @@
-use crate::io::scheduler::{IOScheduler, ThreadLocalTessellatorState};
+use crate::io::scheduler::{Scheduler, ThreadLocalState};
 
 pub struct TokioScheduleMethod;
 
@@ -9,8 +9,8 @@ impl TokioScheduleMethod {
 
     pub fn schedule<T>(
         &self,
-        scheduler: &IOScheduler,
-        future_factory: impl (FnOnce(ThreadLocalTessellatorState) -> T) + Send + 'static,
+        scheduler: &Scheduler,
+        future_factory: impl (FnOnce(ThreadLocalState) -> T) + Send + 'static,
     ) where
         T: std::future::Future + Send + 'static,
         T::Output: Send + 'static,

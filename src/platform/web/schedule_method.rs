@@ -11,7 +11,7 @@ use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
 
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::error::Error;
-use crate::io::scheduler::{IOScheduler, ScheduleMethod, ThreadLocalTessellatorState};
+use crate::io::scheduler::{ScheduleMethod, Scheduler, ThreadLocalState};
 use crate::io::tile_cache::TileCache;
 use crate::io::TileRequestID;
 
@@ -40,8 +40,8 @@ impl WebWorkerPoolScheduleMethod {
 
     pub fn schedule<T>(
         &self,
-        scheduler: &IOScheduler,
-        future_factory: impl (FnOnce(ThreadLocalTessellatorState) -> T) + Send + 'static,
+        scheduler: &Scheduler,
+        future_factory: impl (FnOnce(ThreadLocalState) -> T) + Send + 'static,
     ) where
         T: std::future::Future + 'static,
         T::Output: Send + 'static,

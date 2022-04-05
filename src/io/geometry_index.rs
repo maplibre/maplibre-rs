@@ -85,7 +85,7 @@ impl TileIndex {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IndexGeometry<T>
 where
     T: CoordFloat + Bounded + Signed,
@@ -95,7 +95,7 @@ where
     pub properties: HashMap<String, String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExactGeometry<T>
 where
     T: CoordFloat + Bounded + Signed,

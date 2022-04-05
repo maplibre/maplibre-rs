@@ -1,7 +1,7 @@
 use super::UpdateState;
 
 use crate::render::render_state::RenderState;
-use crate::IOScheduler;
+use crate::Scheduler;
 use cgmath::{Deg, Rad, Zero};
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ pub struct TiltHandler {
 }
 
 impl UpdateState for TiltHandler {
-    fn update_state(&mut self, state: &mut RenderState, _scheduler: &IOScheduler, dt: Duration) {
+    fn update_state(&mut self, state: &mut RenderState, _scheduler: &Scheduler, dt: Duration) {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.delta_pitch * dt;

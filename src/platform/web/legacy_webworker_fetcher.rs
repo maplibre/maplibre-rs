@@ -24,9 +24,9 @@ use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
 
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::error::Error;
-use crate::io::scheduler::IOScheduler;
 use crate::io::scheduler::ScheduleMethod;
-use crate::io::scheduler::ThreadLocalTessellatorState;
+use crate::io::scheduler::Scheduler;
+use crate::io::scheduler::ThreadLocalState;
 use crate::io::tile_cache::TileCache;
 use crate::io::TileRequestID;
 use crate::MapBuilder;
@@ -39,8 +39,8 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub fn new_tessellator_state(scheduler_ptr: *mut IOScheduler) -> *mut ThreadLocalTessellatorState {
-    let scheduler: Box<IOScheduler> = unsafe { Box::from_raw(scheduler_ptr) };
+pub fn new_tessellator_state(scheduler_ptr: *mut Scheduler) -> *mut ThreadLocalState {
+    let scheduler: Box<Scheduler> = unsafe { Box::from_raw(scheduler_ptr) };
     let tessellator_state = Box::new(scheduler.new_tessellator_state());
     let tessellator_state_ptr = Box::into_raw(tessellator_state);
     // Call forget such that scheduler does not get deallocated
@@ -50,12 +50,11 @@ pub fn new_tessellator_state(scheduler_ptr: *mut IOScheduler) -> *mut ThreadLoca
 
 #[wasm_bindgen]
 pub fn tessellate_layers(
-    tessellator_state_ptr: *mut ThreadLocalTessellatorState,
+    tessellator_state_ptr: *mut ThreadLocalState,
     request_id: u32,
     data: Box<[u8]>,
 ) {
-    let tessellator_state: Box<ThreadLocalTessellatorState> =
-        unsafe { Box::from_raw(tessellator_state_ptr) };
+    let tessellator_state: Box<ThreadLocalState> = unsafe { Box::from_raw(tessellator_state_ptr) };
 
     tessellator_state.process_tile(request_id, data).unwrap();
 
