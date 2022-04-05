@@ -4,9 +4,21 @@ use crate::io::LayerTessellateMessage;
 
 use std::collections::{btree_map, BTreeMap, HashSet};
 
+pub struct CachedTile {
+    layers: Vec<LayerTessellateMessage>,
+}
+
+impl CachedTile {
+    pub fn new(first_layer: LayerTessellateMessage) -> Self {
+        Self {
+            layers: vec![first_layer],
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct TileCache {
-    cache: BTreeMap<Quadkey, Vec<LayerTessellateMessage>>,
+    cache: BTreeMap<Quadkey, CachedTile>,
 }
 
 impl TileCache {
@@ -24,44 +36,11 @@ impl TileCache {
         {
             match entry {
                 btree_map::Entry::Vacant(entry) => {
-                    entry.insert(vec![message]);
+                    entry.insert(CachedTile::new(message));
                 }
                 btree_map::Entry::Occupied(mut entry) => {
-                    entry.get_mut().push(message);
+                    entry.get_mut().layers.push(message);
                 }
-            }
-        }
-    }
-
-    pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
-        coords
-            .build_quad_key()
-            .and_then(|key| {
-                self.cache.get(&key).and_then(|entries| {
-                    if entries.is_empty() {
-                        None
-                    } else if entries.iter().all(|entry| match entry {
-                        LayerTessellateMessage::UnavailableLayer { .. } => true,
-                        LayerTessellateMessage::TessellatedLayer { .. } => false,
-                    }) {
-                        None
-                    } else {
-                        Some(entries)
-                    }
-                })
-            })
-            .is_some()
-    }
-
-    pub fn get_tile_coords_fallback(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
-        let mut current = *coords;
-        loop {
-            if self.has_tile(&current) {
-                return Some(current);
-            } else if let Some(parent) = current.get_parent() {
-                current = parent
-            } else {
-                return None;
             }
         }
     }
@@ -73,7 +52,7 @@ impl TileCache {
         coords
             .build_quad_key()
             .and_then(|key| self.cache.get(&key))
-            .map(|results| results.iter())
+            .map(|results| results.layers.iter())
     }
 
     pub fn retain_missing_layer_names(
@@ -81,8 +60,9 @@ impl TileCache {
         coords: &WorldTileCoords,
         layers: &mut HashSet<String>,
     ) {
-        if let Some(results) = coords.build_quad_key().and_then(|key| self.cache.get(&key)) {
-            let tessellated_set: HashSet<String> = results
+        if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.cache.get(&key)) {
+            let tessellated_set: HashSet<String> = cached_tile
+                .layers
                 .iter()
                 .map(|tessellated_layer| tessellated_layer.layer_name().to_string())
                 .collect();
@@ -92,8 +72,9 @@ impl TileCache {
     }
 
     pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
-        if let Some(results) = coords.build_quad_key().and_then(|key| self.cache.get(&key)) {
-            let tessellated_set: HashSet<&str> = results
+        if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.cache.get(&key)) {
+            let tessellated_set: HashSet<&str> = cached_tile
+                .layers
                 .iter()
                 .map(|tessellated_layer| tessellated_layer.layer_name())
                 .collect();

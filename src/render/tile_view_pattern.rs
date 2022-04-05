@@ -1,13 +1,16 @@
 use crate::coords::{ViewRegion, WorldTileCoords};
 use crate::io::tile_cache::TileCache;
-use crate::render::buffer_pool::{BackingBufferDescriptor, Queue};
+use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, Queue};
 use crate::render::camera::ViewProjection;
-use crate::render::shaders::ShaderTileMetadata;
+use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata};
 use cgmath::Matrix4;
 
+use crate::render::ShaderVertex;
+use crate::tessellation::IndexDataType;
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
+use wgpu::Buffer;
 
 /// The tile mask pattern assigns each tile a value which can be used for stencil testing.
 pub struct TileViewPattern<Q, B> {
@@ -55,7 +58,20 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn update_pattern(&mut self, view_region: &ViewRegion, tile_cache: &TileCache, zoom: f64) {
+    pub fn update_pattern(
+        &mut self,
+        view_region: &ViewRegion,
+        tile_cache: &TileCache,
+        buffer_pool: &BufferPool<
+            wgpu::Queue,
+            Buffer,
+            ShaderVertex,
+            IndexDataType,
+            ShaderLayerMetadata,
+            ShaderFeatureStyle,
+        >,
+        zoom: f64,
+    ) {
         self.in_view.clear();
 
         let stride = size_of::<ShaderTileMetadata>() as u64;
@@ -77,8 +93,14 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             index += 1;
 
             let fallback = {
-                if !tile_cache.has_tile(&coords) {
-                    if let Some(fallback_coords) = tile_cache.get_tile_coords_fallback(&coords) {
+                if !buffer_pool.index().has_tile(&coords) {
+                    if let Some(fallback_coords) =
+                        buffer_pool.index().get_tile_coords_fallback(&coords)
+                    {
+                        tracing::trace!(
+                            "Could not find data at {coords}. Falling back to {fallback_coords}"
+                        );
+
                         let shape = TileShape {
                             coords: fallback_coords,
                             zoom_factor: 2.0_f64.powf(fallback_coords.z as f64 - zoom),

@@ -118,7 +118,7 @@ impl ThreadLocalState {
             };
 
             self.tessellate_layers_with_request(&tile_result, &tile_request, request_id)?;
-            self.index_geometry(&tile_result);
+            /*self.index_geometry(&tile_result);*/
         }
 
         Ok(())
@@ -298,11 +298,11 @@ impl Scheduler {
         if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
             if let Ok(result) = self.tessellate_channel.1.try_recv() {
                 match result {
-                    TessellateMessage::Tile(TileTessellateMessage { request_id }) => {
-                        tile_request_state.finish_tile_request(request_id);
-                    }
                     TessellateMessage::Layer(layer_result) => {
                         self.tile_cache.put_tessellated_layer(layer_result);
+                    }
+                    TessellateMessage::Tile(TileTessellateMessage { request_id }) => {
+                        tile_request_state.finish_tile_request(request_id);
                     }
                 }
             }

@@ -19,7 +19,7 @@ use crate::render::camera;
 use crate::render::camera::ViewProjection;
 use crate::render::options::{
     DEBUG_WIREFRAME, FEATURE_METADATA_BUFFER_SIZE, INDEX_FORMAT, INDICES_BUFFER_SIZE,
-    TILE_META_COUNT, TILE_VIEW_BUFFER_SIZE, VERTEX_BUFFER_SIZE,
+    LAYER_METADATA_BUFFER_SIZE, TILE_VIEW_BUFFER_SIZE, VERTEX_BUFFER_SIZE,
 };
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
 use crate::tessellation::IndexDataType;
@@ -167,7 +167,7 @@ impl RenderState {
             cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<ShaderGlobals>() as u64);
 
         let layer_metadata_buffer_size =
-            std::mem::size_of::<ShaderLayerMetadata>() as u64 * TILE_META_COUNT;
+            std::mem::size_of::<ShaderLayerMetadata>() as u64 * LAYER_METADATA_BUFFER_SIZE;
         let layer_metadata_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Layer Metadata ubo"),
             size: layer_metadata_buffer_size,
@@ -388,8 +388,12 @@ impl RenderState {
         view_region: &ViewRegion,
         view_proj: &ViewProjection,
     ) {
-        self.tile_view_pattern
-            .update_pattern(view_region, scheduler.get_tile_cache(), self.zoom);
+        self.tile_view_pattern.update_pattern(
+            view_region,
+            scheduler.get_tile_cache(),
+            &self.buffer_pool,
+            self.zoom,
+        );
         self.tile_view_pattern
             .upload_pattern(&self.queue, view_proj);
 
@@ -520,6 +524,7 @@ impl RenderState {
                                     })
                                     .collect::<Vec<_>>();
 
+                                tracing::trace!("Allocating geometry at {}", &coords);
                                 self.buffer_pool.allocate_layer_geometry(
                                     &self.queue,
                                     *coords,
@@ -708,6 +713,8 @@ impl RenderState {
                                     pass.draw_indexed(entry.indices_range(), 0, 0..1);
                                 }
                             }
+                        } else {
+                            tracing::trace!("No layers found at {}", &shape_to_render.coords);
                         }
                     }
                 }

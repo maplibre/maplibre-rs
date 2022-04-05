@@ -464,6 +464,26 @@ impl RingIndex {
         }
     }
 
+    pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
+        coords
+            .build_quad_key()
+            .and_then(|key| self.tree_index.get(&key))
+            .is_some()
+    }
+
+    pub fn get_tile_coords_fallback(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
+        let mut current = *coords;
+        loop {
+            if self.has_tile(&current) {
+                return Some(current);
+            } else if let Some(parent) = current.get_parent() {
+                current = parent
+            } else {
+                return None;
+            }
+        }
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = impl Iterator<Item = &IndexEntry>> + '_ {
         self.linear_index
             .iter()

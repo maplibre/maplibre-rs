@@ -6,7 +6,7 @@ pub const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must m
 
 pub const VERTEX_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 32;
 pub const FEATURE_METADATA_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 32;
-pub const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 16;
-pub const TILE_VIEW_BUFFER_SIZE: BufferAddress = 4096;
+pub const INDICES_BUFFER_SIZE: BufferAddress = 1024 * 1024 * 32;
+pub const LAYER_METADATA_BUFFER_SIZE: BufferAddress = 1024 * 24;
 
-pub const TILE_META_COUNT: BufferAddress = 1024 * 24;
+pub const TILE_VIEW_BUFFER_SIZE: BufferAddress = 4096;
