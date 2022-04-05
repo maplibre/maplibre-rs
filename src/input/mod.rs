@@ -11,7 +11,7 @@ use crate::input::query_handler::QueryHandler;
 use crate::input::shift_handler::ShiftHandler;
 use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
-use crate::io::tile_cache::TileCache;
+
 use crate::render::render_state::RenderState;
 use crate::IOScheduler;
 

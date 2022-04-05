@@ -1,5 +1,5 @@
 use super::UpdateState;
-use crate::io::tile_cache::TileCache;
+
 use crate::render::render_state::RenderState;
 use crate::IOScheduler;
 use cgmath::{Vector3, Zero};

@@ -1,5 +1,4 @@
 use std::collections::{HashMap, HashSet};
-use std::future::Future;
 
 use geozero::mvt::Tile;
 use geozero::GeozeroDatasource;
@@ -7,11 +6,10 @@ use log::{error, info};
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
 
-use style_spec::source::TileAddressingScheme;
 use vector_tile::parse_tile_bytes;
 
 /// Describes through which channels work-requests travel. It describes the flow of work.
-use crate::coords::{TileCoords, WorldTileCoords};
+use crate::coords::WorldTileCoords;
 use crate::io::tile_cache::TileCache;
 use crate::io::{
     LayerTessellateMessage, TessellateMessage, TileFetchResult, TileRequest, TileRequestID,
@@ -71,7 +69,10 @@ impl ScheduleMethod {
         T::Output: Send + 'static,
     {
         match self {
-            ScheduleMethod::Tokio(method) => Ok(method.schedule(scheduler, future_factory)),
+            ScheduleMethod::Tokio(method) => {
+                method.schedule(scheduler, future_factory);
+                Ok(())
+            }
             _ => Err(Error::Schedule),
         }
     }
@@ -146,7 +147,7 @@ impl ThreadLocalTessellatorState {
                     layer.process(&mut processor).unwrap();
                 }
 
-                if let Some(mut geometry_index) = self.geometry_index.lock().ok() {
+                if let Ok(mut geometry_index) = self.geometry_index.lock() {
                     geometry_index.index_tile(
                         &coords,
                         TileIndex::Linear {

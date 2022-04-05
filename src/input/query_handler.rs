@@ -1,11 +1,8 @@
-use crate::coords::WorldCoords;
-use crate::io::tile_cache::TileCache;
-
 use crate::render::render_state::RenderState;
 
 use crate::IOScheduler;
 use cgmath::Vector2;
-use log::info;
+
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
 
@@ -58,14 +55,19 @@ impl QueryHandler {
         true
     }
 
-    pub fn update_state(&mut self, state: &mut RenderState, scheduler: &IOScheduler, dt: Duration) {
+    pub fn update_state(
+        &mut self,
+        state: &mut RenderState,
+        _scheduler: &IOScheduler,
+        _dt: Duration,
+    ) {
         if self.clicking {
             if let Some(window_position) = self.window_position {
                 let perspective = &state.perspective;
                 let view_proj = state.camera.calc_view_proj(perspective);
                 let inverted_view_proj = view_proj.invert();
 
-                if let Some(coordinates) = state
+                if let Some(_coordinates) = state
                     .camera
                     .window_to_world_at_ground(&window_position, &inverted_view_proj)
                 {

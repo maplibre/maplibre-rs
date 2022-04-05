@@ -1,4 +1,4 @@
-use crate::coords::{TileCoords, WorldTileCoords};
+use crate::coords::WorldTileCoords;
 use crate::error::Error;
 use style_spec::source::TileAddressingScheme;
 

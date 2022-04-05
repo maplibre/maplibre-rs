@@ -1,7 +1,7 @@
-use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, EXTENT, TILE_SIZE};
-use crate::io::geometry_index::IndexGeometry;
+use crate::coords::{Quadkey, WorldTileCoords};
+
 use crate::io::LayerTessellateMessage;
-use cgmath::num_traits::Pow;
+
 use std::collections::{btree_map, BTreeMap, HashSet};
 
 #[derive(Default)]

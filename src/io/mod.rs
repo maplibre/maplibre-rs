@@ -5,7 +5,6 @@ use crate::coords::WorldTileCoords;
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 
-use crate::io::geometry_index::TileIndex;
 use std::collections::HashSet;
 use std::fmt;
 
