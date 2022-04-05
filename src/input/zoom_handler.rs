@@ -2,6 +2,7 @@ use super::UpdateState;
 
 use crate::io::tile_cache::TileCache;
 use crate::render::render_state::RenderState;
+use crate::IOScheduler;
 use cgmath::num_traits::Pow;
 use cgmath::{Vector2, Vector3};
 use std::time::Duration;
@@ -13,7 +14,7 @@ pub struct ZoomHandler {
 }
 
 impl UpdateState for ZoomHandler {
-    fn update_state(&mut self, state: &mut RenderState, _tile_cache: &TileCache, _dt: Duration) {
+    fn update_state(&mut self, state: &mut RenderState, _scheduler: &IOScheduler, _dt: Duration) {
         if self.zoom_delta != 0.0 {
             if let Some(window_position) = self.window_position {
                 let current_zoom = state.zoom;

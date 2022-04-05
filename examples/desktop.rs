@@ -17,9 +17,7 @@ fn main() {
     enable_tracing();
 
     MapBuilder::from_window("A fantastic window!")
-        .with_schedule_method(ScheduleMethod::Tokio(TokioScheduleMethod::new(Some(
-            "/tmp/mapr_cache".to_string(),
-        ))))
+        .with_schedule_method(ScheduleMethod::Tokio(TokioScheduleMethod::new()))
         .build()
         .run_sync();
 }

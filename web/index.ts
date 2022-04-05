@@ -1,4 +1,4 @@
-import init, {create_pool_scheduler, create_scheduler, new_tessellator_state, run} from "./dist/libs/mapr"
+import init, {create_pool_scheduler, new_tessellator_state, run} from "./dist/libs/mapr"
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 
@@ -72,28 +72,7 @@ const registerServiceWorker = () => {
     }
 }
 
-
-const start = async () => {
-    if (!checkRequirements()) {
-        return
-    }
-
-    registerServiceWorker()
-
-    preventDefaultTouchActions();
-
-    let MEMORY_PAGES = 16 * 1024
-
-    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
-    await init(undefined, memory)
-    /*const schedulerPtr = create_pool_scheduler(() => {
-        return new Worker(new URL('./pool_worker.ts', import.meta.url), {
-            type: 'module'
-        });
-    })*/
-
-    const schedulerPtr = create_scheduler()
-
+const setupLegacyWebWorker = (schedulerPtr: number, memory:  WebAssembly.Memory) => {
     let WORKER_COUNT = 4
     const createWorker = (id: number) => {
         const worker = new Worker(new URL('./worker.ts', import.meta.url), {
@@ -119,6 +98,28 @@ const start = async () => {
             request_id
         } as WebWorkerMessageType)
     }
+}
+
+const start = async () => {
+    if (!checkRequirements()) {
+        return
+    }
+
+    registerServiceWorker()
+
+    preventDefaultTouchActions();
+
+    let MEMORY_PAGES = 16 * 1024
+
+    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
+    await init(undefined, memory)
+    const schedulerPtr = create_pool_scheduler(() => {
+        return new Worker(new URL('./pool_worker.ts', import.meta.url), {
+            type: 'module'
+        });
+    })
+
+    setupLegacyWebWorker(schedulerPtr, memory)
 
     await run(schedulerPtr)
 }

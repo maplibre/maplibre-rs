@@ -1,12 +1,13 @@
 use super::UpdateState;
 use crate::io::tile_cache::TileCache;
 use crate::render::render_state::RenderState;
+use crate::IOScheduler;
 use std::time::Duration;
 
 pub struct PinchHandler {}
 
 impl UpdateState for PinchHandler {
-    fn update_state(&mut self, _state: &mut RenderState, _tile_cache: &TileCache, _dt: Duration) {
+    fn update_state(&mut self, _state: &mut RenderState, _scheduler: &IOScheduler, _dt: Duration) {
         // TODO
     }
 }

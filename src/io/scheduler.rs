@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::future::Future;
 
 use geozero::mvt::Tile;
 use geozero::GeozeroDatasource;
@@ -13,62 +14,67 @@ use vector_tile::parse_tile_bytes;
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::io::tile_cache::TileCache;
 use crate::io::{
-    LayerTessellateResult, TileFetchResult, TileIndexResult, TileRequest, TileRequestID,
-    TileTessellateResult,
+    LayerTessellateMessage, TessellateMessage, TileFetchResult, TileRequest, TileRequestID,
+    TileTessellateMessage,
 };
 
+use crate::error::Error;
+use crate::io::geometry_index::{GeometryIndex, IndexProcessor, TileIndex};
+use crate::io::source_client::{HttpSourceClient, SourceClient};
 use crate::tessellation::Tessellated;
+use prost::Message;
 
 pub enum ScheduleMethod {
     #[cfg(not(target_arch = "wasm32"))]
-    Tokio(crate::platform::scheduler::TokioScheduleMethod),
+    Tokio(crate::platform::schedule_method::TokioScheduleMethod),
     #[cfg(target_arch = "wasm32")]
-    WebWorker(crate::platform::scheduler::WebWorkerScheduleMethod),
-    #[cfg(target_arch = "wasm32")]
-    WebWorkerPool(crate::platform::scheduler::WebWorkerPoolScheduleMethod),
+    WebWorkerPool(crate::platform::schedule_method::WebWorkerPoolScheduleMethod),
 }
 
 impl Default for ScheduleMethod {
     fn default() -> Self {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            ScheduleMethod::Tokio(crate::platform::scheduler::TokioScheduleMethod::new(None))
+            ScheduleMethod::Tokio(crate::platform::schedule_method::TokioScheduleMethod::new())
         }
         #[cfg(target_arch = "wasm32")]
         {
-            ScheduleMethod::WebWorker(crate::platform::scheduler::WebWorkerScheduleMethod::new())
+            panic!("No default ScheduleMethod on web")
         }
     }
 }
 
 impl ScheduleMethod {
-    pub fn schedule_tile_request(
+    pub fn schedule_fn<T>(
         &self,
-        scheduler: &IOScheduler,
-        request_id: TileRequestID,
-        coords: TileCoords,
-    ) {
+        future_factory: impl (FnOnce() -> T) + Send + 'static,
+    ) -> Result<(), Error>
+    where
+        T: Future<Output = ()> + 'static,
+    {
+        match self {
+            #[cfg(target_arch = "wasm32")]
+            ScheduleMethod::WebWorkerPool(method) => Ok(method.schedule(future_factory)),
+            _ => Err(Error::Schedule),
+        }
+    }
+
+    pub fn schedule<T>(&self, future: T) -> Result<(), Error>
+    where
+        T: Future<Output = ()> + Send + 'static,
+    {
         match self {
             #[cfg(not(target_arch = "wasm32"))]
-            ScheduleMethod::Tokio(method) => {
-                method.schedule_tile_request(scheduler, request_id, coords)
-            }
-            #[cfg(target_arch = "wasm32")]
-            ScheduleMethod::WebWorker(method) => {
-                method.schedule_tile_request(scheduler, request_id, coords)
-            }
-            #[cfg(target_arch = "wasm32")]
-            ScheduleMethod::WebWorkerPool(method) => {
-                method.schedule_tile_request(scheduler, request_id, coords)
-            }
+            ScheduleMethod::Tokio(method) => Ok(method.schedule(future)),
+            _ => Err(Error::Schedule),
         }
     }
 }
 
 pub struct ThreadLocalTessellatorState {
     tile_request_state: Arc<Mutex<TileRequestState>>,
-    tessellate_result_sender: Sender<TileTessellateResult>,
-    index_result_sender: Sender<TileIndexResult>,
+    tessellate_result_sender: Sender<TessellateMessage>,
+    geometry_index: Arc<Mutex<GeometryIndex>>,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -81,8 +87,6 @@ impl Drop for ThreadLocalTessellatorState {
         );
     }
 }
-use crate::io::geometry_index::{IndexProcessor, TileIndex};
-use prost::Message;
 
 impl ThreadLocalTessellatorState {
     fn get_tile_request(&self, request_id: TileRequestID) -> Option<TileRequest> {
@@ -97,7 +101,7 @@ impl ThreadLocalTessellatorState {
         &self,
         request_id: TileRequestID,
         data: Box<[u8]>,
-    ) -> Result<(), SendError<TileTessellateResult>> {
+    ) -> Result<(), SendError<TessellateMessage>> {
         if let Some(tile_request) = self.get_tile_request(request_id) {
             let tile_result = TileFetchResult::Tile {
                 coords: tile_request.coords,
@@ -105,8 +109,7 @@ impl ThreadLocalTessellatorState {
             };
 
             self.tessellate_layers_with_request(&tile_result, &tile_request, request_id)?;
-
-            self.index_geometry(request_id, &tile_result);
+            self.index_geometry(&tile_result);
         }
 
         Ok(())
@@ -115,7 +118,7 @@ impl ThreadLocalTessellatorState {
     pub fn tile_unavailable(
         &self,
         request_id: TileRequestID,
-    ) -> Result<(), SendError<TileTessellateResult>> {
+    ) -> Result<(), SendError<TessellateMessage>> {
         if let Some(tile_request) = self.get_tile_request(request_id) {
             let tile_result = TileFetchResult::Unavailable {
                 coords: tile_request.coords,
@@ -127,7 +130,7 @@ impl ThreadLocalTessellatorState {
     }
 
     #[tracing::instrument(skip(self))]
-    fn index_geometry(&self, request_id: TileRequestID, tile_result: &TileFetchResult) {
+    fn index_geometry(&self, tile_result: &TileFetchResult) {
         match tile_result {
             TileFetchResult::Tile { data, coords } => {
                 let tile: Tile = Tile::decode(data.as_ref()).unwrap();
@@ -137,18 +140,14 @@ impl ThreadLocalTessellatorState {
                     layer.process(&mut processor).unwrap();
                 }
 
-                self.index_result_sender
-                    .send(TileIndexResult {
-                        request_id,
-                        coords: *coords,
-                        /*index: TileIndex::Spatial {
-                            tree: processor.build_tree(),
-                        },*/
-                        index: TileIndex::Linear {
+                if let Some(mut geometry_index) = self.geometry_index.lock().ok() {
+                    geometry_index.index_tile(
+                        &coords,
+                        TileIndex::Linear {
                             list: processor.get_geometries(),
                         },
-                    })
-                    .unwrap();
+                    )
+                }
             }
             _ => {}
         }
@@ -160,13 +159,13 @@ impl ThreadLocalTessellatorState {
         tile_result: &TileFetchResult,
         tile_request: &TileRequest,
         request_id: TileRequestID,
-    ) -> Result<(), SendError<TileTessellateResult>> {
+    ) -> Result<(), SendError<TessellateMessage>> {
         match tile_result {
             TileFetchResult::Unavailable { coords } => {
                 for to_load in &tile_request.layers {
                     self.tessellate_result_sender
-                        .send(TileTessellateResult::Layer(
-                            LayerTessellateResult::UnavailableLayer {
+                        .send(TessellateMessage::Layer(
+                            LayerTessellateMessage::UnavailableLayer {
                                 coords: *coords,
                                 layer_name: to_load.to_string(),
                             },
@@ -186,8 +185,8 @@ impl ThreadLocalTessellatorState {
                         match layer.tessellate() {
                             Ok((buffer, feature_indices)) => {
                                 self.tessellate_result_sender
-                                    .send(TileTessellateResult::Layer(
-                                        LayerTessellateResult::TessellatedLayer {
+                                    .send(TessellateMessage::Layer(
+                                        LayerTessellateMessage::TessellatedLayer {
                                             coords: *coords,
                                             buffer: buffer.into(),
                                             feature_indices,
@@ -197,8 +196,8 @@ impl ThreadLocalTessellatorState {
                             }
                             Err(e) => {
                                 self.tessellate_result_sender
-                                    .send(TileTessellateResult::Layer(
-                                        LayerTessellateResult::UnavailableLayer {
+                                    .send(TessellateMessage::Layer(
+                                        LayerTessellateMessage::UnavailableLayer {
                                             coords: *coords,
                                             layer_name: to_load.to_string(),
                                         },
@@ -214,8 +213,8 @@ impl ThreadLocalTessellatorState {
                         info!("layer {} ready: {}", to_load, &coords);
                     } else {
                         self.tessellate_result_sender
-                            .send(TileTessellateResult::Layer(
-                                LayerTessellateResult::UnavailableLayer {
+                            .send(TessellateMessage::Layer(
+                                LayerTessellateMessage::UnavailableLayer {
                                     coords: *coords,
                                     layer_name: to_load.to_string(),
                                 },
@@ -228,16 +227,18 @@ impl ThreadLocalTessellatorState {
         }
 
         self.tessellate_result_sender
-            .send(TileTessellateResult::Tile { request_id })?;
+            .send(TessellateMessage::Tile(TileTessellateMessage {
+                request_id,
+            }))?;
 
         Ok(())
     }
 }
 
 pub struct IOScheduler {
-    index_channel: (Sender<TileIndexResult>, Receiver<TileIndexResult>),
-    tessellate_channel: (Sender<TileTessellateResult>, Receiver<TileTessellateResult>),
+    tessellate_channel: (Sender<TessellateMessage>, Receiver<TessellateMessage>),
     tile_request_state: Arc<Mutex<TileRequestState>>,
+    geometry_index: Arc<Mutex<GeometryIndex>>,
     tile_cache: TileCache,
     schedule_method: ScheduleMethod,
 }
@@ -253,9 +254,9 @@ const _: () = {
 impl IOScheduler {
     pub fn new(schedule_method: ScheduleMethod) -> Self {
         Self {
-            index_channel: channel(),
             tessellate_channel: channel(),
             tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
+            geometry_index: Arc::new(Mutex::new(GeometryIndex::new())),
             tile_cache: TileCache::new(),
             schedule_method,
         }
@@ -266,18 +267,14 @@ impl IOScheduler {
         if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
             if let Ok(result) = self.tessellate_channel.1.try_recv() {
                 match result {
-                    TileTessellateResult::Tile { request_id } => {
+                    TessellateMessage::Tile(TileTessellateMessage { request_id }) => {
                         tile_request_state.finish_tile_request(request_id);
                     }
-                    TileTessellateResult::Layer(layer_result) => {
-                        self.tile_cache.put_tessellation_result(layer_result);
+                    TessellateMessage::Layer(layer_result) => {
+                        self.tile_cache.put_tesselated_layer(layer_result);
                     }
                 }
             }
-        }
-
-        if let Ok(result) = self.index_channel.1.try_recv() {
-            self.tile_cache.put_index_result(result);
         }
     }
 
@@ -285,7 +282,7 @@ impl IOScheduler {
         ThreadLocalTessellatorState {
             tile_request_state: self.tile_request_state.clone(),
             tessellate_result_sender: self.tessellate_channel.0.clone(),
-            index_result_sender: self.index_channel.0.clone(),
+            geometry_index: self.geometry_index.clone(),
         }
     }
 
@@ -299,15 +296,41 @@ impl IOScheduler {
         }
 
         if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
-            if let Some(id) = tile_request_state.start_tile_request(TileRequest {
+            if let Some(request_id) = tile_request_state.start_tile_request(TileRequest {
                 coords: *coords,
                 layers: layers.clone(),
             }) {
-                if let Some(tile_coords) = coords.into_tile(TileAddressingScheme::TMS) {
-                    info!("new tile request: {}", &tile_coords);
+                info!("new tile request: {}", &coords);
 
-                    self.schedule_method
-                        .schedule_tile_request(self, id, tile_coords);
+                // The following snippet can be added instead of the next code block to demonstrate
+                // an understanable approach of fetching
+                /*#[cfg(target_arch = "wasm32")]
+                if let Some(tile_coords) = coords.into_tile(TileAddressingScheme::TMS) {
+                    crate::platform::legacy_webworker_fetcher::request_tile(
+                        request_id,
+                        tile_coords,
+                    );
+                }*/
+
+                {
+                    let state = self.new_tessellator_state();
+                    let client = SourceClient::Http(HttpSourceClient::new());
+                    let copied_coords = *coords;
+
+                    let future_fn = move || async move {
+                        if let Ok(data) = client.fetch(&copied_coords).await {
+                            state
+                                .process_tile(request_id, data.into_boxed_slice())
+                                .unwrap();
+                        } else {
+                            state.tile_unavailable(request_id).unwrap();
+                        }
+                    };
+
+                    #[cfg(target_arch = "wasm32")]
+                    self.schedule_method.schedule_fn(future_fn);
+                    #[cfg(not(target_arch = "wasm32"))]
+                    self.schedule_method.schedule(future_fn());
                 }
             }
         }

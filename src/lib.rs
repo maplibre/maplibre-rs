@@ -17,7 +17,7 @@ pub(crate) mod util;
 pub mod benchmarking;
 
 pub use io::scheduler::ScheduleMethod;
-pub use platform::scheduler::*;
+pub use platform::schedule_method::*;
 use style_spec::Style;
 
 pub struct Map {

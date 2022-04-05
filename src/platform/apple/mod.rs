@@ -1,5 +1,5 @@
 use crate::io::scheduler::ScheduleMethod;
-use crate::platform::scheduler::TokioScheduleMethod;
+use crate::platform::schedule_method::TokioScheduleMethod;
 use crate::MapBuilder;
 pub use std::time::Instant;
 

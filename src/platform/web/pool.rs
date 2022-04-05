@@ -2,11 +2,13 @@
 //! web workers which can be used to execute work.
 //! Adopted from [wasm-bindgen example](https://github.com/rustwasm/wasm-bindgen/blob/0eba2efe45801b71f8873bc368c58a8ed8e894ff/examples/raytrace-parallel/src/pool.rs)
 
-use js_sys::Promise;
-use log::{info, warn};
 use std::cell::RefCell;
 use std::future::Future;
 use std::rc::Rc;
+
+use log::{info, warn};
+
+use js_sys::Promise;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;

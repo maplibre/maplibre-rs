@@ -4,6 +4,7 @@ use lyon::tessellation::TessellationError;
 
 #[derive(Debug)]
 pub enum Error {
+    Schedule,
     Network(String),
     File(String),
     Tesselation(TessellationError),

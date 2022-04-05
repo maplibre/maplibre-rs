@@ -3,6 +3,7 @@ use crate::io::tile_cache::TileCache;
 
 use crate::render::render_state::RenderState;
 
+use crate::IOScheduler;
 use cgmath::Vector2;
 use log::info;
 use std::time::Duration;
@@ -57,7 +58,7 @@ impl QueryHandler {
         true
     }
 
-    pub fn update_state(&mut self, state: &mut RenderState, tile_cache: &TileCache, _dt: Duration) {
+    pub fn update_state(&mut self, state: &mut RenderState, scheduler: &IOScheduler, dt: Duration) {
         if self.clicking {
             if let Some(window_position) = self.window_position {
                 let perspective = &state.perspective;
@@ -68,7 +69,7 @@ impl QueryHandler {
                     .camera
                     .window_to_world_at_ground(&window_position, &inverted_view_proj)
                 {
-                    let option = tile_cache.query_point(
+                    /*let option = tile_cache.query_point(
                         &WorldCoords {
                             x: coordinates.x,
                             y: coordinates.y,
@@ -83,7 +84,7 @@ impl QueryHandler {
                             .iter()
                             .map(|geometry| &geometry.properties)
                             .collect::<Vec<_>>())
-                    );
+                    );*/
                 }
             }
             self.clicking = false;

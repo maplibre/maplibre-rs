@@ -102,7 +102,7 @@ pub async fn run(
 
                     scheduler.try_populate_cache();
 
-                    input.update_state(state, scheduler.get_tile_cache(), dt);
+                    input.update_state(state, &scheduler, dt);
                     state.prepare_render_data(&mut scheduler);
                     match state.render() {
                         Ok(_) => {}

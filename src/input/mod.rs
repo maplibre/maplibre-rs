@@ -13,6 +13,7 @@ use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
 use crate::io::tile_cache::TileCache;
 use crate::render::render_state::RenderState;
+use crate::IOScheduler;
 
 mod pan_handler;
 mod pinch_handler;
@@ -125,17 +126,17 @@ impl InputController {
 }
 
 pub trait UpdateState {
-    fn update_state(&mut self, state: &mut RenderState, tile_cache: &TileCache, dt: Duration);
+    fn update_state(&mut self, state: &mut RenderState, scheduler: &IOScheduler, dt: Duration);
 }
 
 impl UpdateState for InputController {
     #[tracing::instrument(skip_all)]
-    fn update_state(&mut self, state: &mut RenderState, tile_cache: &TileCache, dt: Duration) {
-        self.pan_handler.update_state(state, tile_cache, dt);
-        self.pinch_handler.update_state(state, tile_cache, dt);
-        self.zoom_handler.update_state(state, tile_cache, dt);
-        self.tilt_handler.update_state(state, tile_cache, dt);
-        self.shift_handler.update_state(state, tile_cache, dt);
-        self.query_handler.update_state(state, tile_cache, dt);
+    fn update_state(&mut self, state: &mut RenderState, scheduler: &IOScheduler, dt: Duration) {
+        self.pan_handler.update_state(state, scheduler, dt);
+        self.pinch_handler.update_state(state, scheduler, dt);
+        self.zoom_handler.update_state(state, scheduler, dt);
+        self.tilt_handler.update_state(state, scheduler, dt);
+        self.shift_handler.update_state(state, scheduler, dt);
+        self.query_handler.update_state(state, scheduler, dt);
     }
 }

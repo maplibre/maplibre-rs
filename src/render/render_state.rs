@@ -12,7 +12,7 @@ use style_spec::Style;
 
 use crate::coords::{ViewRegion, TILE_SIZE};
 use crate::io::scheduler::IOScheduler;
-use crate::io::LayerTessellateResult;
+use crate::io::LayerTessellateMessage;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
 use crate::render::camera;
@@ -487,7 +487,7 @@ impl RenderState {
                 for style_layer in &self.style.layers {
                     let source_layer = style_layer.source_layer.as_ref().unwrap();
 
-                    if let Some(result) = available_layers
+                    if let Some(message) = available_layers
                         .iter()
                         .find(|layer| source_layer.as_str() == layer.layer_name())
                     {
@@ -497,11 +497,11 @@ impl RenderState {
                             .and_then(|paint| paint.get_color())
                             .map(|color| color.into());
 
-                        match result {
-                            LayerTessellateResult::UnavailableLayer { coords: _, .. } => {
+                        match message {
+                            LayerTessellateMessage::UnavailableLayer { coords: _, .. } => {
                                 /*self.buffer_pool.mark_layer_unavailable(*coords);*/
                             }
-                            LayerTessellateResult::TessellatedLayer {
+                            LayerTessellateMessage::TessellatedLayer {
                                 coords,
                                 feature_indices,
                                 layer_data,

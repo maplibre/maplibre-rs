@@ -13,6 +13,7 @@ use vector_tile::tile::Layer;
 
 mod geometry_index;
 pub mod scheduler;
+mod source_client;
 pub mod static_tile_fetcher;
 pub mod tile_cache;
 
@@ -39,18 +40,16 @@ impl fmt::Debug for TileFetchResult {
     }
 }
 
-pub struct TileIndexResult {
+pub enum TessellateMessage {
+    Tile(TileTessellateMessage),
+    Layer(LayerTessellateMessage),
+}
+
+pub struct TileTessellateMessage {
     request_id: TileRequestID,
-    coords: WorldTileCoords,
-    index: TileIndex,
 }
 
-pub enum TileTessellateResult {
-    Tile { request_id: TileRequestID },
-    Layer(LayerTessellateResult),
-}
-
-pub enum LayerTessellateResult {
+pub enum LayerTessellateMessage {
     UnavailableLayer {
         coords: WorldTileCoords,
         layer_name: String,
@@ -64,24 +63,24 @@ pub enum LayerTessellateResult {
     },
 }
 
-impl fmt::Debug for LayerTessellateResult {
+impl fmt::Debug for LayerTessellateMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "LayerResult{}", self.get_coords())
+        write!(f, "LayerTessellateMessage{}", self.get_coords())
     }
 }
 
-impl LayerTessellateResult {
+impl LayerTessellateMessage {
     pub fn get_coords(&self) -> WorldTileCoords {
         match self {
-            LayerTessellateResult::UnavailableLayer { coords, .. } => *coords,
-            LayerTessellateResult::TessellatedLayer { coords, .. } => *coords,
+            LayerTessellateMessage::UnavailableLayer { coords, .. } => *coords,
+            LayerTessellateMessage::TessellatedLayer { coords, .. } => *coords,
         }
     }
 
     pub fn layer_name(&self) -> &str {
         match self {
-            LayerTessellateResult::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
-            LayerTessellateResult::TessellatedLayer { layer_data, .. } => layer_data.name(),
+            LayerTessellateMessage::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
+            LayerTessellateMessage::TessellatedLayer { layer_data, .. } => layer_data.name(),
         }
     }
 }
@@ -94,7 +93,7 @@ pub struct TileRequest {
 
 impl fmt::Debug for TileRequest {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "TileRequest({})", &self.coords)
+        write!(f, "TileRequest({}, {:?})", &self.coords, &self.layers)
     }
 }
 

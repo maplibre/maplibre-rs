@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
-use cgmath::num_traits::Signed;
+use cgmath::num_traits::{Pow, Signed};
 use cgmath::Bounded;
 use geo::prelude::*;
 use geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
@@ -9,8 +9,51 @@ use geozero::geo_types::GeoWriter;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
-use crate::coords::InnerCoords;
+use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, EXTENT, TILE_SIZE};
 use crate::util::math::bounds_from_points;
+
+pub struct GeometryIndex {
+    index: BTreeMap<Quadkey, TileIndex>,
+}
+
+impl GeometryIndex {
+    pub fn new() -> Self {
+        Self {
+            index: Default::default(),
+        }
+    }
+
+    pub fn index_tile(&mut self, coords: &&WorldTileCoords, tile_index: TileIndex) {
+        coords
+            .build_quad_key()
+            .and_then(|key| self.index.insert(key, tile_index));
+    }
+
+    pub fn query_point(
+        &self,
+        world_coords: &WorldCoords,
+        z: u8,
+        zoom: f64,
+    ) -> Option<Vec<&IndexGeometry<f64>>> {
+        let world_tile_coords = world_coords.into_world_tile(z, zoom);
+
+        if let Some(index) = world_tile_coords
+            .build_quad_key()
+            .and_then(|key| self.index.get(&key))
+        {
+            let scale = 2.0f64.pow(z as f64 - zoom); // TODO deduplicate
+
+            let delta_x = world_coords.x / TILE_SIZE * scale - world_tile_coords.x as f64;
+            let delta_y = world_coords.y / TILE_SIZE * scale - world_tile_coords.y as f64;
+
+            let x = delta_x * EXTENT;
+            let y = delta_y * EXTENT;
+            Some(index.point_query(InnerCoords { x, y }))
+        } else {
+            None
+        }
+    }
+}
 
 pub enum TileIndex {
     Spatial { tree: RTree<IndexGeometry<f64>> },

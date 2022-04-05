@@ -2,6 +2,7 @@ use super::UpdateState;
 use crate::io::tile_cache::TileCache;
 use crate::render::camera::Camera;
 use crate::render::render_state::RenderState;
+use crate::IOScheduler;
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
@@ -15,7 +16,7 @@ pub struct PanHandler {
 }
 
 impl UpdateState for PanHandler {
-    fn update_state(&mut self, state: &mut RenderState, _tile_cache: &TileCache, _dt: Duration) {
+    fn update_state(&mut self, state: &mut RenderState, _scheduler: &IOScheduler, _dt: Duration) {
         if !self.is_panning {
             return;
         }
