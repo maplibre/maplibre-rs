@@ -16,7 +16,7 @@ impl TileCache {
         }
     }
 
-    pub fn put_tesselated_layer(&mut self, message: LayerTessellateMessage) {
+    pub fn put_tessellated_layer(&mut self, message: LayerTessellateMessage) {
         if let Some(entry) = message
             .get_coords()
             .build_quad_key()

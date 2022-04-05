@@ -508,8 +508,6 @@ impl RenderState {
                                 buffer,
                                 ..
                             } => {
-                                let _world_coords = coords;
-
                                 let feature_metadata = layer_data
                                     .features()
                                     .iter()

@@ -302,7 +302,7 @@ impl Scheduler {
                         tile_request_state.finish_tile_request(request_id);
                     }
                     TessellateMessage::Layer(layer_result) => {
-                        self.tile_cache.put_tesselated_layer(layer_result);
+                        self.tile_cache.put_tessellated_layer(layer_result);
                     }
                 }
             }
