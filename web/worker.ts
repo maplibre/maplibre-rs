@@ -15,7 +15,7 @@ onmessage = async message => {
             module = init(undefined, messageData.memory)
             break
         case "fetch_tile":
-            let {tessellatorState, url, request_id} = messageData
+            let {threadLocalState, url, request_id} = messageData
             await module
 
             console.log("Fetching from " + self.name)
@@ -23,7 +23,7 @@ onmessage = async message => {
             let result = await fetch(url)
             let buffer = await result.arrayBuffer()
 
-            tessellate_layers(tessellatorState, request_id, new Uint8Array(buffer))
+            tessellate_layers(threadLocalState, request_id, new Uint8Array(buffer))
             break
         default:
             console.warn("WebWorker received unknown message!")

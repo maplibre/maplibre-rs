@@ -39,27 +39,23 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub fn new_tessellator_state(scheduler_ptr: *mut Scheduler) -> *mut ThreadLocalState {
+pub fn new_thread_local_state(scheduler_ptr: *mut Scheduler) -> *mut ThreadLocalState {
     let scheduler: Box<Scheduler> = unsafe { Box::from_raw(scheduler_ptr) };
-    let tessellator_state = Box::new(scheduler.new_tessellator_state());
-    let tessellator_state_ptr = Box::into_raw(tessellator_state);
+    let state = Box::new(scheduler.new_thread_local_state());
+    let state_ptr = Box::into_raw(state);
     // Call forget such that scheduler does not get deallocated
     std::mem::forget(scheduler);
-    return tessellator_state_ptr;
+    return state_ptr;
 }
 
 #[wasm_bindgen]
-pub fn tessellate_layers(
-    tessellator_state_ptr: *mut ThreadLocalState,
-    request_id: u32,
-    data: Box<[u8]>,
-) {
-    let tessellator_state: Box<ThreadLocalState> = unsafe { Box::from_raw(tessellator_state_ptr) };
+pub fn tessellate_layers(state_ptr: *mut ThreadLocalState, request_id: u32, data: Box<[u8]>) {
+    let state: Box<ThreadLocalState> = unsafe { Box::from_raw(state_ptr) };
 
-    tessellator_state.process_tile(request_id, data).unwrap();
+    state.process_tile(request_id, data).unwrap();
 
     // Call forget such that scheduler does not get deallocated
-    std::mem::forget(tessellator_state);
+    std::mem::forget(state);
 }
 
 pub fn request_tile(request_id: TileRequestID, coords: TileCoords) {

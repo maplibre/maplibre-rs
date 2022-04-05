@@ -15,6 +15,7 @@ pub mod scheduler;
 mod source_client;
 pub mod static_tile_fetcher;
 pub mod tile_cache;
+mod tile_request_state;
 
 pub enum TileFetchResult {
     Unavailable {

@@ -46,7 +46,7 @@ impl WebWorkerPoolScheduleMethod {
         T: std::future::Future + 'static,
         T::Output: Send + 'static,
     {
-        let state = scheduler.new_tessellator_state();
+        let state = scheduler.new_thread_local_state();
         self.pool
             .run(move || {
                 wasm_bindgen_futures::future_to_promise(async move {

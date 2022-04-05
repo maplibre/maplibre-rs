@@ -3,7 +3,7 @@ export type WebWorkerMessageType = {
     memory: WebAssembly.Memory
 } | {
     type: 'fetch_tile',
-    tessellatorState: number,
+    threadLocalState: number,
     url: string,
     request_id: number,
 }

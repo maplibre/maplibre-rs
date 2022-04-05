@@ -1,4 +1,4 @@
-import init, {create_pool_scheduler, new_tessellator_state, run} from "./dist/libs/mapr"
+import init, {create_pool_scheduler, new_thread_local_state, run} from "./dist/libs/mapr"
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 
@@ -86,14 +86,14 @@ const setupLegacyWebWorker = (schedulerPtr: number, memory:  WebAssembly.Memory)
 
     let workers: [number, Worker][] = Array.from(
         new Array(WORKER_COUNT).keys(),
-        (id) => [new_tessellator_state(schedulerPtr), createWorker(id)]
+        (id) => [new_thread_local_state(schedulerPtr), createWorker(id)]
     )
 
     window.schedule_tile_request = (url: string, request_id: number) => {
-        const [tessellatorState, worker] = workers[Math.floor(Math.random() * workers.length)]
+        const [state, worker] = workers[Math.floor(Math.random() * workers.length)]
         worker.postMessage({
             type: "fetch_tile",
-            tessellatorState: tessellatorState,
+            threadLocalState: state,
             url,
             request_id
         } as WebWorkerMessageType)

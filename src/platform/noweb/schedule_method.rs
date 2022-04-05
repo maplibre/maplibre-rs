@@ -15,6 +15,6 @@ impl TokioScheduleMethod {
         T: std::future::Future + Send + 'static,
         T::Output: Send + 'static,
     {
-        tokio::task::spawn(future_factory(scheduler.new_tessellator_state()));
+        tokio::task::spawn(future_factory(scheduler.new_thread_local_state()));
     }
 }
