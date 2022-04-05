@@ -34,7 +34,7 @@ impl GeometryIndex {
         world_coords: &WorldCoords,
         z: u8,
         zoom: f64,
-    ) -> Option<Vec<&IndexGeometry<f64>>> {
+    ) -> Option<Vec<&IndexedGeometry<f64>>> {
         let world_tile_coords = world_coords.into_world_tile(z, zoom);
 
         if let Some(index) = world_tile_coords
@@ -56,12 +56,12 @@ impl GeometryIndex {
 }
 
 pub enum TileIndex {
-    Spatial { tree: RTree<IndexGeometry<f64>> },
-    Linear { list: Vec<IndexGeometry<f64>> },
+    Spatial { tree: RTree<IndexedGeometry<f64>> },
+    Linear { list: Vec<IndexedGeometry<f64>> },
 }
 
 impl TileIndex {
-    pub fn point_query(&self, inner_coords: InnerCoords) -> Vec<&IndexGeometry<f64>> {
+    pub fn point_query(&self, inner_coords: InnerCoords) -> Vec<&IndexedGeometry<f64>> {
         let point = geo_types::Point::new(inner_coords.x, inner_coords.y);
         let coordinate: Coordinate<_> = point.into();
 
@@ -86,7 +86,7 @@ impl TileIndex {
 }
 
 #[derive(Debug, Clone)]
-pub struct IndexGeometry<T>
+pub struct IndexedGeometry<T>
 where
     T: CoordFloat + Bounded + Signed,
 {
@@ -104,7 +104,7 @@ where
     LineString(LineString<T>),
 }
 
-impl<T> IndexGeometry<T>
+impl<T> IndexedGeometry<T>
 where
     T: CoordFloat + Bounded + Signed + PartialOrd,
 {
@@ -131,7 +131,7 @@ where
     }
 }
 
-impl<T> RTreeObject for IndexGeometry<T>
+impl<T> RTreeObject for IndexedGeometry<T>
 where
     T: CoordFloat + Bounded + Signed + PartialOrd,
 {
@@ -142,7 +142,7 @@ where
     }
 }
 
-impl<T> PointDistance for IndexGeometry<T>
+impl<T> PointDistance for IndexedGeometry<T>
 where
     T: CoordFloat + Bounded + Signed + PartialOrd,
 {
@@ -160,7 +160,7 @@ where
 
 pub struct IndexProcessor {
     geo_writer: GeoWriter,
-    geometries: Vec<IndexGeometry<f64>>,
+    geometries: Vec<IndexedGeometry<f64>>,
     properties: Option<HashMap<String, String>>,
 }
 
@@ -173,11 +173,11 @@ impl IndexProcessor {
         }
     }
 
-    pub fn build_tree(self) -> RTree<IndexGeometry<f64>> {
+    pub fn build_tree(self) -> RTree<IndexedGeometry<f64>> {
         RTree::bulk_load(self.geometries)
     }
 
-    pub fn get_geometries(self) -> Vec<IndexGeometry<f64>> {
+    pub fn get_geometries(self) -> Vec<IndexedGeometry<f64>> {
         self.geometries
     }
 }
@@ -271,10 +271,10 @@ impl FeatureProcessor for IndexProcessor {
 
         match geometry {
             Geometry::Polygon(polygon) => self.geometries.push(
-                IndexGeometry::from_polygon(polygon, self.properties.take().unwrap()).unwrap(),
+                IndexedGeometry::from_polygon(polygon, self.properties.take().unwrap()).unwrap(),
             ),
             Geometry::LineString(linestring) => self.geometries.push(
-                IndexGeometry::from_linestring(linestring, self.properties.take().unwrap())
+                IndexedGeometry::from_linestring(linestring, self.properties.take().unwrap())
                     .unwrap(),
             ),
             _ => {}

@@ -18,7 +18,7 @@ use crate::io::{
 };
 
 use crate::error::Error;
-use crate::io::geometry_index::{GeometryIndex, IndexGeometry, IndexProcessor, TileIndex};
+use crate::io::geometry_index::{GeometryIndex, IndexProcessor, IndexedGeometry, TileIndex};
 use crate::io::source_client::{HttpSourceClient, SourceClient};
 use crate::io::tile_request_state::TileRequestState;
 use crate::tessellation::Tessellated;
@@ -168,7 +168,7 @@ impl ThreadLocalState {
         world_coords: &WorldCoords,
         z: u8,
         zoom: f64,
-    ) -> Option<Vec<IndexGeometry<f64>>> {
+    ) -> Option<Vec<IndexedGeometry<f64>>> {
         if let Ok(mut geometry_index) = self.geometry_index.lock() {
             geometry_index
                 .query_point(world_coords, z, zoom)
@@ -177,7 +177,7 @@ impl ThreadLocalState {
                         .iter()
                         .cloned()
                         .cloned()
-                        .collect::<Vec<IndexGeometry<f64>>>()
+                        .collect::<Vec<IndexedGeometry<f64>>>()
                 })
         } else {
             unimplemented!()
