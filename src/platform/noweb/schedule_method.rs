@@ -1,4 +1,3 @@
-
 use reqwest::{Client, StatusCode};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_middleware_cache::managers::CACacheManager;
@@ -7,7 +6,7 @@ use std::future::Future;
 
 use crate::coords::TileCoords;
 use crate::error::Error;
-use crate::io::scheduler::IOScheduler;
+use crate::io::scheduler::{IOScheduler, ThreadLocalTessellatorState};
 use crate::io::TileRequestID;
 
 pub struct TokioScheduleMethod;
@@ -17,10 +16,14 @@ impl TokioScheduleMethod {
         Self {}
     }
 
-    pub fn schedule<T>(&self, future: T)
-    where
-        T: Future<Output = ()> + Send + 'static,
+    pub fn schedule<T>(
+        &self,
+        scheduler: &IOScheduler,
+        future_factory: impl (FnOnce(ThreadLocalTessellatorState) -> T) + Send + 'static,
+    ) where
+        T: std::future::Future + Send + 'static,
+        T::Output: Send + 'static,
     {
-        tokio::task::spawn(future);
+        tokio::task::spawn(future_factory(scheduler.new_tessellator_state()));
     }
 }

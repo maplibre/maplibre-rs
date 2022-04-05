@@ -38,15 +38,19 @@ impl WebWorkerPoolScheduleMethod {
         }
     }
 
-    pub fn schedule<T>(&self, future_factory: impl (FnOnce() -> T) + Send + 'static)
-    where
+    pub fn schedule<T>(
+        &self,
+        scheduler: &IOScheduler,
+        future_factory: impl (FnOnce(ThreadLocalTessellatorState) -> T) + Send + 'static,
+    ) where
         T: std::future::Future + 'static,
         T::Output: Send + 'static,
     {
+        let state = scheduler.new_tessellator_state();
         self.pool
             .run(move || {
                 wasm_bindgen_futures::future_to_promise(async move {
-                    future_factory().await;
+                    future_factory(state).await;
                     Ok(JsValue::undefined())
                 })
             })

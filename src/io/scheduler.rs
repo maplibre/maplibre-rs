@@ -45,27 +45,33 @@ impl Default for ScheduleMethod {
 }
 
 impl ScheduleMethod {
-    pub fn schedule_fn<T>(
+    #[cfg(target_arch = "wasm32")]
+    pub fn schedule<T>(
         &self,
-        future_factory: impl (FnOnce() -> T) + Send + 'static,
+        scheduler: &IOScheduler,
+        future_factory: impl (FnOnce(ThreadLocalTessellatorState) -> T) + Send + 'static,
     ) -> Result<(), Error>
     where
         T: Future<Output = ()> + 'static,
     {
         match self {
-            #[cfg(target_arch = "wasm32")]
-            ScheduleMethod::WebWorkerPool(method) => Ok(method.schedule(future_factory)),
+            ScheduleMethod::WebWorkerPool(method) => Ok(method.schedule(scheduler, future_factory)),
             _ => Err(Error::Schedule),
         }
     }
 
-    pub fn schedule<T>(&self, future: T) -> Result<(), Error>
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn schedule<T>(
+        &self,
+        scheduler: &IOScheduler,
+        future_factory: impl (FnOnce(ThreadLocalTessellatorState) -> T) + Send + 'static,
+    ) -> Result<(), Error>
     where
-        T: Future<Output = ()> + Send + 'static,
+        T: std::future::Future + Send + 'static,
+        T::Output: Send + 'static,
     {
         match self {
-            #[cfg(not(target_arch = "wasm32"))]
-            ScheduleMethod::Tokio(method) => Ok(method.schedule(future)),
+            ScheduleMethod::Tokio(method) => Ok(method.schedule(scheduler, future_factory)),
             _ => Err(Error::Schedule),
         }
     }
@@ -313,24 +319,23 @@ impl IOScheduler {
                 }*/
 
                 {
-                    let state = self.new_tessellator_state();
                     let client = SourceClient::Http(HttpSourceClient::new());
                     let copied_coords = *coords;
 
-                    let future_fn = move || async move {
+                    let future_fn = move |thread_local_state: ThreadLocalTessellatorState| async move {
                         if let Ok(data) = client.fetch(&copied_coords).await {
-                            state
+                            thread_local_state
                                 .process_tile(request_id, data.into_boxed_slice())
                                 .unwrap();
                         } else {
-                            state.tile_unavailable(request_id).unwrap();
+                            thread_local_state.tile_unavailable(request_id).unwrap();
                         }
                     };
 
                     #[cfg(target_arch = "wasm32")]
-                    self.schedule_method.schedule_fn(future_fn);
+                    self.schedule_method.schedule(self, future_fn);
                     #[cfg(not(target_arch = "wasm32"))]
-                    self.schedule_method.schedule(future_fn());
+                    self.schedule_method.schedule(self, future_fn);
                 }
             }
         }
