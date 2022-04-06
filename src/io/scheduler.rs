@@ -106,7 +106,7 @@ impl ThreadLocalState {
             };
 
             self.tessellate_layers_with_request(&tile_result, &tile_request, request_id)?;
-            /*self.index_geometry(&tile_result);*/
+            self.index_geometry(&tile_result);
         }
 
         Ok(())
