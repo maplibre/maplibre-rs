@@ -9,7 +9,7 @@ use geozero::geo_types::GeoWriter;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
-use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, EXTENT, TILE_SIZE};
+use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, Zoom, EXTENT, TILE_SIZE};
 use crate::util::math::bounds_from_points;
 
 pub struct GeometryIndex {
@@ -33,7 +33,7 @@ impl GeometryIndex {
         &self,
         world_coords: &WorldCoords,
         z: u8,
-        zoom: f64,
+        zoom: Zoom,
     ) -> Option<Vec<&IndexedGeometry<f64>>> {
         let world_tile_coords = world_coords.into_world_tile(z, zoom);
 
@@ -41,7 +41,7 @@ impl GeometryIndex {
             .build_quad_key()
             .and_then(|key| self.index.get(&key))
         {
-            let scale = 2.0f64.pow(z as f64 - zoom); // TODO deduplicate
+            let scale = zoom.scale_delta(&Zoom::new(z as f64)); // FIXME: can be wrong, if tiles of different z are visible
 
             let delta_x = world_coords.x / TILE_SIZE * scale - world_tile_coords.x as f64;
             let delta_y = world_coords.y / TILE_SIZE * scale - world_tile_coords.y as f64;

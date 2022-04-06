@@ -5,6 +5,7 @@ pub mod math;
 
 use crate::coords::WorldTileCoords;
 pub use fps_meter::FPSMeter;
+use std::ops::{Deref, DerefMut};
 
 struct MinMaxBoundingBox {
     min_x: i32,
@@ -47,5 +48,63 @@ impl MinMaxBoundingBox {
         if world_coords.y > self.max_y {
             self.max_y = world_coords.y;
         }
+    }
+}
+
+pub struct ChangeObserver<T> {
+    inner: T,
+    last_value: Option<T>,
+}
+
+impl<T> ChangeObserver<T> {
+    pub fn new(value: T) -> Self {
+        Self {
+            inner: value,
+            last_value: None,
+        }
+    }
+}
+
+impl<T> ChangeObserver<T>
+where
+    T: Clone + Eq,
+{
+    pub fn finished_observing(&mut self) {
+        self.last_value = Some(self.inner.clone());
+    }
+
+    pub fn did_change(&self) -> bool {
+        if let Some(last_value) = &self.last_value {
+            if !last_value.eq(&self.inner) {
+                true
+            } else {
+                false
+            }
+        } else {
+            true
+        }
+    }
+}
+
+impl<T> Default for ChangeObserver<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        ChangeObserver::new(T::default())
+    }
+}
+
+impl<T> Deref for ChangeObserver<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> DerefMut for ChangeObserver<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
     }
 }

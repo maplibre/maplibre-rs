@@ -1,4 +1,4 @@
-use crate::coords::{ViewRegion, WorldTileCoords};
+use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
 use crate::io::tile_cache::TileCache;
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, Queue};
 use crate::render::camera::ViewProjection;
@@ -26,6 +26,18 @@ pub struct TileShape {
 
     pub transform: Matrix4<f64>,
     pub buffer_range: Range<wgpu::BufferAddress>,
+}
+
+impl TileShape {
+    fn new(coords: WorldTileCoords, zoom: Zoom, index: u64) -> Self {
+        const STRIDE: u64 = size_of::<ShaderTileMetadata>() as u64;
+        Self {
+            coords,
+            zoom_factor: zoom.scale_to_tile(&coords),
+            transform: coords.transform_for_zoom(zoom),
+            buffer_range: index as u64 * STRIDE..(index as u64 + 1) * STRIDE,
+        }
+    }
 }
 
 pub struct TileInView {
@@ -61,7 +73,6 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     pub fn update_pattern(
         &mut self,
         view_region: &ViewRegion,
-        tile_cache: &TileCache,
         buffer_pool: &BufferPool<
             wgpu::Queue,
             Buffer,
@@ -70,43 +81,31 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             ShaderLayerMetadata,
             ShaderFeatureStyle,
         >,
-        zoom: f64,
+        zoom: Zoom,
     ) {
         self.in_view.clear();
 
-        let stride = size_of::<ShaderTileMetadata>() as u64;
-
         let mut index = 0;
+
+        let pool_index = buffer_pool.index();
 
         for coords in view_region.iter() {
             if coords.build_quad_key().is_none() {
                 continue;
             }
 
-            let shape = TileShape {
-                coords,
-                zoom_factor: 2.0_f64.powf(coords.z as f64 - zoom),
-                transform: coords.transform_for_zoom(zoom),
-                buffer_range: index as u64 * stride..(index as u64 + 1) * stride,
-            };
+            let shape = TileShape::new(coords, zoom, index);
 
             index += 1;
 
             let fallback = {
-                if !buffer_pool.index().has_tile(&coords) {
-                    if let Some(fallback_coords) =
-                        buffer_pool.index().get_tile_coords_fallback(&coords)
-                    {
+                if !pool_index.has_tile(&coords) {
+                    if let Some(fallback_coords) = pool_index.get_tile_coords_fallback(&coords) {
                         tracing::trace!(
                             "Could not find data at {coords}. Falling back to {fallback_coords}"
                         );
 
-                        let shape = TileShape {
-                            coords: fallback_coords,
-                            zoom_factor: 2.0_f64.powf(fallback_coords.z as f64 - zoom),
-                            transform: fallback_coords.transform_for_zoom(zoom),
-                            buffer_range: index as u64 * stride..(index as u64 + 1) * stride,
-                        };
+                        let shape = TileShape::new(fallback_coords, zoom, index);
 
                         index += 1;
                         Some(shape)

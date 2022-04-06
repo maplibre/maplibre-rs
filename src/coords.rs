@@ -2,9 +2,10 @@
 
 use std::fmt;
 use std::fmt::Formatter;
+use std::ops::Add;
 
 use cgmath::num_traits::Pow;
-use cgmath::{Matrix4, Point3, Vector3};
+use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
 
 use style_spec::source::TileAddressingScheme;
 
@@ -37,6 +38,68 @@ impl fmt::Debug for Quadkey {
             write!(f, "{:?}", part)?;
         }
         Ok(())
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Zoom(f64);
+
+impl Zoom {
+    pub fn new(zoom: f64) -> Self {
+        Zoom(zoom)
+    }
+}
+
+impl Default for Zoom {
+    fn default() -> Self {
+        Zoom(0.0)
+    }
+}
+
+impl fmt::Display for Zoom {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", (self.0 * 100.0).round() / 100.0)
+    }
+}
+
+impl std::ops::Add for Zoom {
+    type Output = Zoom;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Zoom(self.0 + rhs.0)
+    }
+}
+
+impl std::ops::Sub for Zoom {
+    type Output = Zoom;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Zoom(self.0 - rhs.0)
+    }
+}
+
+impl Zoom {
+    pub fn scale_to_tile(&self, coords: &WorldTileCoords) -> f64 {
+        2.0_f64.powf(coords.z as f64 - self.0)
+    }
+
+    pub fn scale_to_zoom_level(&self, z: u8) -> f64 {
+        2.0_f64.powf(z as f64 - self.0)
+    }
+
+    pub fn scale_delta(&self, zoom: &Zoom) -> f64 {
+        2.0_f64.powf(zoom.0 - self.0)
+    }
+
+    pub fn level(&self) -> u8 {
+        self.0.floor() as u8
+    }
+}
+
+impl Eq for Zoom {}
+impl PartialEq for Zoom {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.abs_diff_eq(&other.0, 0.05)
     }
 }
 
@@ -146,7 +209,7 @@ impl WorldTileCoords {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn transform_for_zoom(&self, zoom: f64) -> Matrix4<f64> {
+    pub fn transform_for_zoom(&self, zoom: Zoom) -> Matrix4<f64> {
         /*
            For tile.z = zoom:
                => scale = 512
@@ -155,7 +218,7 @@ impl WorldTileCoords {
            If tile.z > zoom:
                => scale < 512
         */
-        let tile_scale = TILE_SIZE * 2.0.pow(zoom - self.z as f64);
+        let tile_scale = TILE_SIZE * Zoom::new(self.z as f64).scale_delta(&zoom);
 
         let translate = Matrix4::from_translation(Vector3::new(
             self.x as f64 * tile_scale,
@@ -309,10 +372,6 @@ pub struct WorldCoords {
     pub y: f64,
 }
 
-fn world_size_at_zoom(zoom: f64) -> f64 {
-    TILE_SIZE * 2.0.pow(zoom)
-}
-
 fn tiles_with_z(z: u8) -> f64 {
     2.0.pow(z)
 }
@@ -322,8 +381,8 @@ impl WorldCoords {
         Self { x, y }
     }
 
-    pub fn into_world_tile(self, z: u8, zoom: f64) -> WorldTileCoords {
-        let tile_scale = 2.0.pow(z as f64 - zoom) / TILE_SIZE; // TODO: Deduplicate
+    pub fn into_world_tile(self, z: u8, zoom: Zoom) -> WorldTileCoords {
+        let tile_scale = zoom.scale_to_zoom_level(z) / TILE_SIZE; // TODO: Deduplicate
         let x = self.x * tile_scale;
         let y = self.y * tile_scale;
 
@@ -371,7 +430,7 @@ pub struct ViewRegion {
 }
 
 impl ViewRegion {
-    pub fn new(view_region: Aabb2<f64>, padding: i32, zoom: f64, z: u8) -> Self {
+    pub fn new(view_region: Aabb2<f64>, padding: i32, zoom: Zoom, z: u8) -> Self {
         let min_world: WorldCoords = WorldCoords::at_ground(view_region.min.x, view_region.min.y);
         let min_world_tile: WorldTileCoords = min_world.into_world_tile(z, zoom);
         let max_world: WorldCoords = WorldCoords::at_ground(view_region.max.x, view_region.max.y);
@@ -439,6 +498,7 @@ impl fmt::Display for WorldCoords {
 #[cfg(test)]
 mod tests {
     use cgmath::{Point2, Vector4};
+
     use style_spec::source::TileAddressingScheme;
 
     use crate::coords::{Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, EXTENT};
@@ -447,7 +507,7 @@ mod tests {
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
     const BOTTOM_RIGHT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
 
-    fn to_from_world(tile: (i32, i32, u8), zoom: f64) {
+    fn to_from_world(tile: (i32, i32, u8), zoom: Zoom) {
         let tile = WorldTileCoords::from(tile);
         let p1 = tile.transform_for_zoom(zoom) * TOP_LEFT;
         let p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT;

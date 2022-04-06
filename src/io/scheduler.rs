@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use vector_tile::parse_tile_bytes;
 
 /// Describes through which channels work-requests travel. It describes the flow of work.
-use crate::coords::{WorldCoords, WorldTileCoords};
+use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
 use crate::io::tile_cache::TileCache;
 use crate::io::{
     LayerTessellateMessage, TessellateMessage, TileFetchResult, TileRequest, TileRequestID,
@@ -155,7 +155,7 @@ impl ThreadLocalState {
         &self,
         world_coords: &WorldCoords,
         z: u8,
-        zoom: f64,
+        zoom: Zoom,
     ) -> Option<Vec<IndexedGeometry<f64>>> {
         if let Ok(mut geometry_index) = self.geometry_index.lock() {
             geometry_index
@@ -256,7 +256,7 @@ impl ThreadLocalState {
             }
         }
 
-        tracing::info!("tile at {} finished", &coords);
+        tracing::info!("tile at {} finished", &tile_request.coords);
 
         self.tessellate_result_sender
             .send(TessellateMessage::Tile(TileTessellateMessage {
@@ -330,9 +330,9 @@ impl Scheduler {
         &mut self,
         coords: &WorldTileCoords,
         layers: &HashSet<String>,
-    ) -> Result<(), SendError<TileRequest>> {
+    ) -> Result<bool, SendError<TileRequest>> {
         if !self.tile_cache.is_layers_missing(coords, layers) {
-            return Ok(());
+            return Ok(false);
         }
 
         if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
@@ -372,9 +372,11 @@ impl Scheduler {
                     self.schedule_method.schedule(self, future_fn).unwrap();
                 }
             }
-        }
 
-        Ok(())
+            Ok(false)
+        } else {
+            Ok(true)
+        }
     }
 
     pub fn get_tile_cache(&self) -> &TileCache {

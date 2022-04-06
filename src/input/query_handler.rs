@@ -63,8 +63,8 @@ impl QueryHandler {
                 let view_proj = state.camera.calc_view_proj(perspective);
                 let inverted_view_proj = view_proj.invert();
 
-                let z = state.visible_z();
-                let zoom = state.zoom;
+                let z = state.visible_z(); // FIXME: can be wrong, if tiles of different z are visible
+                let zoom = state.zoom();
 
                 if let Some(coordinates) = state
                     .camera

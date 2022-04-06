@@ -1,5 +1,5 @@
 use cgmath::prelude::*;
-use cgmath::{Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
+use cgmath::{AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
 use crate::render::shaders::ShaderCamera;
 use crate::util::math::{bounds_from_points, Aabb2, Aabb3, Plane};
@@ -71,6 +71,15 @@ pub struct Camera {
 
     pub width: f64,
     pub height: f64,
+}
+
+impl Eq for Camera {}
+impl PartialEq for Camera {
+    fn eq(&self, other: &Self) -> bool {
+        self.position.abs_diff_eq(&other.position, 0.05)
+            && self.yaw.abs_diff_eq(&other.yaw, 0.05)
+            && self.pitch.abs_diff_eq(&other.pitch, 0.05)
+    }
 }
 
 impl Camera {

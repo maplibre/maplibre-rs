@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::default::Default;
 
+use cgmath::AbsDiffEq;
 use std::{cmp, iter};
 
 use tracing;
@@ -10,7 +11,7 @@ use winit::window::Window;
 
 use style_spec::Style;
 
-use crate::coords::{ViewRegion, TILE_SIZE};
+use crate::coords::{ViewRegion, Zoom, TILE_SIZE};
 use crate::io::scheduler::Scheduler;
 use crate::io::LayerTessellateMessage;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
@@ -23,7 +24,7 @@ use crate::render::options::{
 };
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
 use crate::tessellation::IndexDataType;
-use crate::util::FPSMeter;
+use crate::util::{ChangeObserver, FPSMeter};
 
 use super::piplines::*;
 use super::shaders;
@@ -66,14 +67,24 @@ pub struct RenderState {
 
     tile_view_pattern: TileViewPattern<Queue, Buffer>,
 
-    pub camera: camera::Camera,
+    pub camera: ChangeObserver<camera::Camera>,
     pub perspective: camera::Perspective,
-    pub zoom: f64,
+    zoom: ChangeObserver<Zoom>,
+    try_failed: bool,
 
     style: Box<Style>,
 }
 
 impl RenderState {
+    pub fn zoom(&self) -> Zoom {
+        *self.zoom
+    }
+
+    pub fn update_zoom(&mut self, new_zoom: Zoom) {
+        *self.zoom = new_zoom;
+        log::info!("zoom: {}", new_zoom);
+    }
+
     pub async fn new(window: &Window, style: Box<Style>) -> Self {
         let sample_count = 4;
 
@@ -292,7 +303,7 @@ impl RenderState {
             sample_count,
             globals_uniform_buffer,
             fps_meter: FPSMeter::new(),
-            camera,
+            camera: ChangeObserver::new(camera),
             perspective: projection,
             suspended: false, // Initially the app is not suspended
             buffer_pool: BufferPool::new(
@@ -305,7 +316,8 @@ impl RenderState {
                 tile_view_buffer,
                 TILE_VIEW_BUFFER_SIZE,
             )),
-            zoom: 0.0,
+            zoom: ChangeObserver::default(),
+            try_failed: false,
             style,
         }
     }
@@ -356,12 +368,13 @@ impl RenderState {
     }
 
     pub fn visible_z(&self) -> u8 {
-        self.zoom.floor() as u8
+        self.zoom.level()
     }
 
     /// Request tiles which are currently in view
     #[tracing::instrument(skip_all)]
-    fn request_tiles_in_view(&self, view_region: &ViewRegion, scheduler: &mut Scheduler) {
+    fn request_tiles_in_view(&self, view_region: &ViewRegion, scheduler: &mut Scheduler) -> bool {
+        let mut try_failed = false;
         let source_layers: HashSet<String> = self
             .style
             .layers
@@ -372,9 +385,10 @@ impl RenderState {
         for coords in view_region.iter() {
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
-                scheduler.try_request_tile(&coords, &source_layers).unwrap();
+                try_failed = scheduler.try_request_tile(&coords, &source_layers).unwrap();
             }
         }
+        try_failed
     }
 
     /// Update tile metadata for all required tiles on the GPU according to current zoom, camera and perspective
@@ -383,16 +397,12 @@ impl RenderState {
     #[tracing::instrument(skip_all)]
     fn update_metadata(
         &mut self,
-        scheduler: &mut Scheduler,
+        _scheduler: &mut Scheduler,
         view_region: &ViewRegion,
         view_proj: &ViewProjection,
     ) {
-        self.tile_view_pattern.update_pattern(
-            view_region,
-            scheduler.get_tile_cache(),
-            &self.buffer_pool,
-            self.zoom,
-        );
+        self.tile_view_pattern
+            .update_pattern(view_region, &self.buffer_pool, *self.zoom);
         self.tile_view_pattern
             .upload_pattern(&self.queue, view_proj);
 
@@ -511,6 +521,12 @@ impl RenderState {
                                 buffer,
                                 ..
                             } => {
+                                let allocate_feature_metadata = tracing::span!(
+                                    tracing::Level::TRACE,
+                                    "allocate_feature_metadata"
+                                );
+
+                                let guard = allocate_feature_metadata.enter();
                                 let feature_metadata = layer_data
                                     .features()
                                     .iter()
@@ -522,6 +538,7 @@ impl RenderState {
                                         .take(feature_indices[i] as usize)
                                     })
                                     .collect::<Vec<_>>();
+                                drop(guard);
 
                                 tracing::trace!("Allocating geometry at {}", &coords);
                                 self.buffer_pool.allocate_layer_geometry(
@@ -552,27 +569,36 @@ impl RenderState {
         let view_region = self
             .camera
             .view_region_bounding_box(&view_proj.invert())
-            .map(|bounding_box| ViewRegion::new(bounding_box, 1, self.zoom, visible_z));
+            .map(|bounding_box| ViewRegion::new(bounding_box, 0, *self.zoom, visible_z));
 
         drop(_guard);
 
         if let Some(view_region) = &view_region {
             self.upload_tile_geometry(&view_proj, view_region, scheduler);
             self.update_metadata(scheduler, view_region, &view_proj);
-            self.request_tiles_in_view(view_region, scheduler);
         }
 
         // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
         // TODO: What is StagingBelt for?
 
-        // Update globals
-        self.queue.write_buffer(
-            &self.globals_uniform_buffer,
-            0,
-            bytemuck::cast_slice(&[ShaderGlobals::new(
-                self.camera.create_camera_uniform(&self.perspective),
-            )]),
-        );
+        if self.camera.did_change() || self.zoom.did_change() || self.try_failed {
+            if let Some(view_region) = &view_region {
+                // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
+                self.try_failed = self.request_tiles_in_view(view_region, scheduler);
+            }
+
+            // Update globals
+            self.queue.write_buffer(
+                &self.globals_uniform_buffer,
+                0,
+                bytemuck::cast_slice(&[ShaderGlobals::new(
+                    self.camera.create_camera_uniform(&self.perspective),
+                )]),
+            );
+        }
+
+        self.camera.finished_observing();
+        self.zoom.finished_observing();
     }
 
     #[tracing::instrument(skip_all)]

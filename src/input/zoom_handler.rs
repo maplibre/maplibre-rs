@@ -1,5 +1,6 @@
 use super::UpdateState;
 
+use crate::coords::Zoom;
 use crate::render::render_state::RenderState;
 use crate::Scheduler;
 use cgmath::num_traits::Pow;
@@ -8,20 +9,19 @@ use std::time::Duration;
 
 pub struct ZoomHandler {
     window_position: Option<Vector2<f64>>,
-    zoom_delta: f64,
+    zoom_delta: Option<Zoom>,
     sensitivity: f64,
 }
 
 impl UpdateState for ZoomHandler {
     fn update_state(&mut self, state: &mut RenderState, _scheduler: &Scheduler, _dt: Duration) {
-        if self.zoom_delta != 0.0 {
+        if let Some(zoom_delta) = self.zoom_delta {
             if let Some(window_position) = self.window_position {
-                let current_zoom = state.zoom;
-                let next_zoom = current_zoom + self.zoom_delta;
+                let current_zoom = state.zoom();
+                let next_zoom = current_zoom + zoom_delta;
 
-                state.zoom = next_zoom;
-                self.zoom_delta = 0.0;
-                println!("zoom: {}", state.zoom);
+                state.update_zoom(next_zoom);
+                self.zoom_delta = None;
 
                 let perspective = &state.perspective;
                 let view_proj = state.camera.calc_view_proj(perspective);
@@ -31,7 +31,7 @@ impl UpdateState for ZoomHandler {
                     .camera
                     .window_to_world_at_ground(&window_position, &inverted_view_proj)
                 {
-                    let scale = 2.0.pow(next_zoom - current_zoom);
+                    let scale = current_zoom.scale_delta(&next_zoom);
 
                     let delta = Vector3::new(
                         cursor_position.x * scale,
@@ -50,7 +50,7 @@ impl ZoomHandler {
     pub fn new(sensitivity: f64) -> Self {
         Self {
             window_position: None,
-            zoom_delta: 0.0,
+            zoom_delta: None,
             sensitivity,
         }
     }
@@ -64,14 +64,22 @@ impl ZoomHandler {
         true
     }
 
+    pub fn update_zoom(&mut self, delta: f64) {
+        self.zoom_delta = Some(self.zoom_delta.unwrap_or_default() + Zoom::new(delta));
+    }
+
     pub fn process_scroll(&mut self, delta: &winit::event::MouseScrollDelta) {
-        self.zoom_delta += match delta {
-            winit::event::MouseScrollDelta::LineDelta(_horizontal, vertical) => *vertical as f64,
-            winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
-                y: scroll,
-                ..
-            }) => *scroll / 100.0,
-        } * self.sensitivity;
+        self.update_zoom(
+            match delta {
+                winit::event::MouseScrollDelta::LineDelta(_horizontal, vertical) => {
+                    *vertical as f64
+                }
+                winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition {
+                    y: scroll,
+                    ..
+                }) => *scroll / 100.0,
+            } * self.sensitivity,
+        );
     }
 
     pub fn process_key_press(
@@ -87,11 +95,11 @@ impl ZoomHandler {
 
         match key {
             winit::event::VirtualKeyCode::Plus | winit::event::VirtualKeyCode::I => {
-                self.zoom_delta += amount;
+                self.update_zoom(amount);
                 true
             }
             winit::event::VirtualKeyCode::Minus | winit::event::VirtualKeyCode::K => {
-                self.zoom_delta -= amount;
+                self.update_zoom(-amount);
                 true
             }
             _ => false,
