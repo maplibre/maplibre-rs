@@ -109,7 +109,7 @@ graphics are achievable using the current stack.
 Now, to clone the project:
 
 ```bash
-git clone git@github.com/maxammann/mapr
+git clone --recursive git@github.com/maxammann/mapr
 ```
 
 and then build it for running on a desktop:
@@ -126,6 +126,12 @@ cargo run --example desktop --
 
 More information about building for different platforms can be
 found [here](https://maxammann.org/mapr-docs/building.html).
+
+> __Note for Mac__: Before opening the XCode project, you need to build manually using the following command:
+> `cargo build --target aarch64-apple-darwin --lib`
+>
+> After that, open the XCode project and run it.
+> (XCode seems to set some environment variables which cause problems with the build directly within XCode)
 
 ## Rust Setup
 
