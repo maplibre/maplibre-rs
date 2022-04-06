@@ -50,7 +50,7 @@ impl WorkerPool {
             state: Rc::new(PoolState {
                 workers: RefCell::new(Vec::with_capacity(initial)),
                 callback: Closure::wrap(Box::new(|event: Event| {
-                    warn!("unhandled event: {}", event.type_());
+                    log::error!("unhandled event: {}", event.type_());
                 }) as Box<dyn FnMut(Event)>),
             }),
         };
@@ -72,17 +72,14 @@ impl WorkerPool {
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
     fn spawn(&self) -> Result<Worker, JsValue> {
-        info!("spawning new worker");
+        log::info!("spawning new worker");
         // TODO: what do do about `./worker.js`:
         //
         // * the path is only known by the bundler. How can we, as a
         //   library, know what's going on?
         // * How do we not fetch a script N times? It internally then
         //   causes another script to get fetched N times...
-        warn!("New worker spawned");
-        /*let maybe_worker = new_worker();
-        assert!(maybe_worker.is_instance_of::<Worker>());
-        let worker: Worker = maybe_worker.dyn_into().unwrap();*/
+
         let worker = (self.new_worker)();
 
         // With a worker spun up send it the module/memory so it can start
@@ -159,7 +156,7 @@ impl WorkerPool {
         let slot2 = reclaim_slot.clone();
         let reclaim = Closure::wrap(Box::new(move |event: Event| {
             if let Some(error) = event.dyn_ref::<ErrorEvent>() {
-                warn!("error in worker: {}", error.message());
+                log::error!("error in worker: {}", error.message());
                 // TODO: this probably leaks memory somehow? It's sort of
                 // unclear what to do about errors in workers right now.
                 return;
@@ -175,7 +172,7 @@ impl WorkerPool {
                 return;
             }
 
-            warn!("unhandled event: {}", event.type_());
+            log::error!("unhandled event: {}", event.type_());
             // TODO: like above, maybe a memory leak here?
         }) as Box<dyn FnMut(Event)>);
         worker.set_onmessage(Some(reclaim.as_ref().unchecked_ref()));

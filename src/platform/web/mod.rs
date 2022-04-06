@@ -35,7 +35,7 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8
 
 #[wasm_bindgen(start)]
 pub fn wasm_bindgen_start() {
-    if let Err(_) = console_log::init_with_level(Level::Info) {
+    if let Err(_) = console_log::init_with_level(log::Level::Info) {
         // Failed to initialize logging. No need to log a message.
     }
     panic::set_hook(Box::new(console_error_panic_hook::hook));
