@@ -4,7 +4,6 @@ use crate::Scheduler;
 use cgmath::Vector2;
 
 use crate::coords::WorldCoords;
-use log::info;
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
 
@@ -82,7 +81,7 @@ impl QueryHandler {
                                 z,
                                 zoom,
                             ) {
-                                info!(
+                                log::info!(
                                     "{:?}",
                                     geometries
                                         .iter()

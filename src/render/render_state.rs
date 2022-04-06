@@ -85,6 +85,7 @@ impl RenderState {
         };
 
         // create an instance
+        //let instance = wgpu::Instance::new(wgpu::Backends::GL);
         let instance = wgpu::Instance::new(wgpu::Backends::all());
 
         // create an surface
@@ -249,8 +250,7 @@ impl RenderState {
 
         surface.configure(&device, &surface_config);
 
-        let depth_texture =
-            Texture::create_depth_texture(&device, &surface_config, "depth_texture", sample_count);
+        let depth_texture = Texture::create_depth_texture(&device, &surface_config, sample_count);
 
         let multisampling_texture = if sample_count > 1 {
             Some(Texture::create_multisampling_texture(
@@ -339,7 +339,6 @@ impl RenderState {
             self.depth_texture = Texture::create_depth_texture(
                 &self.device,
                 &self.surface_config,
-                "depth_texture",
                 self.sample_count,
             );
 

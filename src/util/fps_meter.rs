@@ -1,7 +1,5 @@
 use std::time::Duration;
 
-use log::info;
-
 use crate::platform::Instant;
 
 /// Measures the frames per second.
@@ -33,7 +31,7 @@ impl FPSMeter {
         self.frame_count += 1;
         let now = Instant::now();
         if now >= self.next_report {
-            info!("{} FPS", self.frame_count);
+            log::info!("{} FPS", self.frame_count);
             self.frame_count = 0;
             self.next_report = now + Duration::from_secs(1);
         }

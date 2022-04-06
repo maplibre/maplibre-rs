@@ -6,8 +6,6 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::rc::Rc;
 
-use log::{info, warn};
-
 use js_sys::Promise;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;

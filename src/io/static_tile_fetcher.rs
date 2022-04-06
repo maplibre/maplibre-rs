@@ -2,7 +2,6 @@ use std::concat;
 use std::env;
 
 use include_dir::Dir;
-use log::error;
 
 use crate::coords::TileCoords;
 use crate::error::Error;
@@ -32,7 +31,7 @@ impl StaticTileFetcher {
 
     pub fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
         if TILES.entries().is_empty() {
-            error!(
+            log::error!(
                 "There are not tiles statically embedded in this binary! StaticTileFetcher will \
                 not return any tiles!"
             )

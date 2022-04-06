@@ -9,7 +9,6 @@ impl Texture {
     pub fn create_depth_texture(
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
-        _label: &str,
         sample_count: u32,
     ) -> Self {
         let depth_texture = device.create_texture(&wgpu::TextureDescriptor {

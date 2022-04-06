@@ -1,8 +1,5 @@
 use std::panic;
 
-use log::error;
-use log::info;
-use log::Level;
 use winit::dpi::LogicalSize;
 use winit::event_loop::EventLoop;
 use winit::platform::web::WindowBuilderExtWebSys;

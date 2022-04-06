@@ -1,7 +1,5 @@
 use std::thread::Thread;
 
-use log::warn;
-
 use js_sys::{ArrayBuffer, Error as JSError, Uint8Array};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;

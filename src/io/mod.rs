@@ -47,6 +47,7 @@ pub enum TessellateMessage {
 
 pub struct TileTessellateMessage {
     request_id: TileRequestID,
+    coords: WorldTileCoords,
 }
 
 pub enum LayerTessellateMessage {

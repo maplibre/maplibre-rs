@@ -3,7 +3,6 @@ use std::future::Future;
 
 use geozero::mvt::Tile;
 use geozero::GeozeroDatasource;
-use log::{error, info};
 use std::sync::mpsc::{channel, Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
 
@@ -84,17 +83,6 @@ pub struct ThreadLocalState {
     tile_request_state: Arc<Mutex<TileRequestState>>,
     tessellate_result_sender: Sender<TessellateMessage>,
     geometry_index: Arc<Mutex<GeometryIndex>>,
-}
-
-#[cfg(target_arch = "wasm32")]
-impl Drop for ThreadLocalState {
-    fn drop(&mut self) {
-        use log::warn;
-        warn!(
-            "ThreadLocalTessellatorState dropped. \
-            On web this should only happen when the application is stopped!"
-        );
-    }
 }
 
 impl ThreadLocalState {
@@ -194,6 +182,7 @@ impl ThreadLocalState {
         match tile_result {
             TileFetchResult::Unavailable { coords } => {
                 for to_load in &tile_request.layers {
+                    tracing::warn!("layer {} at {} unavailable", to_load, &coords);
                     self.tessellate_result_sender
                         .send(TessellateMessage::Layer(
                             LayerTessellateMessage::UnavailableLayer {
@@ -204,7 +193,7 @@ impl ThreadLocalState {
                 }
             }
             TileFetchResult::Tile { data, coords } => {
-                info!("parsing tile {} with {}bytes", &coords, data.len());
+                tracing::info!("parsing tile {} with {}bytes", &coords, data.len());
 
                 let tile = {
                     let _span_ =
@@ -220,6 +209,7 @@ impl ThreadLocalState {
                     {
                         match layer.tessellate() {
                             Ok((buffer, feature_indices)) => {
+                                tracing::info!("layer {} at {} ready", to_load, &coords);
                                 self.tessellate_result_sender
                                     .send(TessellateMessage::Layer(
                                         LayerTessellateMessage::TessellatedLayer {
@@ -239,14 +229,14 @@ impl ThreadLocalState {
                                         },
                                     ))?;
 
-                                error!(
-                                    "tesselation for layer {} failed: {} {:?}",
-                                    to_load, &coords, e
+                                tracing::error!(
+                                    "layer {} at {} tesselation failed {:?}",
+                                    to_load,
+                                    &coords,
+                                    e
                                 );
                             }
                         }
-
-                        info!("layer {} ready: {}", to_load, &coords);
                     } else {
                         self.tessellate_result_sender
                             .send(TessellateMessage::Layer(
@@ -256,15 +246,22 @@ impl ThreadLocalState {
                                 },
                             ))?;
 
-                        info!("layer {} not found: {}", to_load, &coords);
+                        tracing::info!(
+                            "requested layer {} at {} not found in tile",
+                            to_load,
+                            &coords
+                        );
                     }
                 }
             }
         }
 
+        tracing::info!("tile at {} finished", &coords);
+
         self.tessellate_result_sender
             .send(TessellateMessage::Tile(TileTessellateMessage {
                 request_id,
+                coords: tile_request.coords,
             }))?;
 
         Ok(())
@@ -300,16 +297,23 @@ impl Scheduler {
 
     #[tracing::instrument(skip_all)]
     pub fn try_populate_cache(&mut self) {
-        if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
-            if let Ok(result) = self.tessellate_channel.1.try_recv() {
-                match result {
-                    TessellateMessage::Layer(layer_result) => {
-                        self.tile_cache.put_tessellated_layer(layer_result);
-                    }
-                    TessellateMessage::Tile(TileTessellateMessage { request_id }) => {
-                        tile_request_state.finish_tile_request(request_id);
-                    }
+        if let Ok(result) = self.tessellate_channel.1.try_recv() {
+            match result {
+                TessellateMessage::Layer(layer_result) => {
+                    tracing::trace!(
+                        "Layer {} at {} reached main thread",
+                        layer_result.layer_name(),
+                        layer_result.get_coords()
+                    );
+                    self.tile_cache.put_tessellated_layer(layer_result);
                 }
+                TessellateMessage::Tile(TileTessellateMessage { request_id, coords }) => loop {
+                    if let Ok(mut tile_request_state) = self.tile_request_state.try_lock() {
+                        tile_request_state.finish_tile_request(request_id);
+                        tracing::trace!("Tile at {} finished loading", coords);
+                        break;
+                    }
+                },
             }
         }
     }
@@ -336,7 +340,7 @@ impl Scheduler {
                 coords: *coords,
                 layers: layers.clone(),
             }) {
-                info!("new tile request: {}", &coords);
+                tracing::info!("new tile request: {}", &coords);
 
                 // The following snippet can be added instead of the next code block to demonstrate
                 // an understanable approach of fetching

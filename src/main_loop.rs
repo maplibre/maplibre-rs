@@ -3,7 +3,6 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
-use log::{error, info, trace};
 use style_spec::Style;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -21,7 +20,7 @@ pub async fn run(
     style: Box<Style>,
     max_frames: Option<u64>,
 ) {
-    let root = tracing::span!(tracing::Level::TRACE, "app_start", work_units = 2);
+    let root = tracing::span!(tracing::Level::TRACE, "app_start");
     let _enter = root.enter();
 
     let mut input = InputController::new(0.2, 100.0, 0.1);
@@ -62,7 +61,6 @@ pub async fn run(
                     ref event,
                     .. // We're not using device_id currently
                 } => {
-                    trace!("{:?}", event);
                     input.device_input(event);
                 }
 
@@ -107,11 +105,11 @@ pub async fn run(
                     match state.render() {
                         Ok(_) => {}
                         Err(wgpu::SurfaceError::Lost) => {
-                            error!("Surface Lost");
+                            log::error!("Surface Lost");
                         },
                         // The system is out of memory, we should probably quit
                         Err(wgpu::SurfaceError::OutOfMemory) => {
-                            error!("Out of Memory");
+                            log::error!("Out of Memory");
                             *control_flow = ControlFlow::Exit;
                         },
                         // All other errors (Outdated, Timeout) should be resolved by the next frame
@@ -122,7 +120,7 @@ pub async fn run(
 
                     if let Some(max_frames) = max_frames {
                         if current_frame >= max_frames {
-                            info!("Exiting because maximum frames reached.");
+                            log::info!("Exiting because maximum frames reached.");
                             *control_flow = ControlFlow::Exit;
                         }
                     }
