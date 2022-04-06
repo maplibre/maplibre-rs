@@ -11,8 +11,6 @@ onmessage = async message => {
     });
 
     self.onmessage = async message => {
-        console.warn(message.data)
-
         // This will queue further commands up until the module is fully initialised:
         await initialised;
         child_entry_point(message.data);
