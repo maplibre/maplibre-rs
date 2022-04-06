@@ -125,7 +125,7 @@ pub async fn run(
                         }
                     }
 
-                    #[cfg(feature = "enable-tracing")]
+                    #[cfg(all(feature = "enable-tracing", not(target_arch = "wasm32")))]
                     tracy_client::finish_continuous_frame!();
                 }
                 Event::Suspended => {

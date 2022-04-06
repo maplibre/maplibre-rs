@@ -31,7 +31,8 @@ debug = true
 
 [features]
 web-webgl = ["wgpu/webgl"]
-enable-tracing = [ "tracing-subscriber", "tracing-tracy", "tracy-client"]
+# Enable tracing using tracy on desktop/mobile and the chrome profiler on web
+enable-tracing = [ "tracing-subscriber", "tracing-tracy", "tracy-client", "tracing-wasm"]
 default = []
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
@@ -46,6 +47,7 @@ js-sys = "0.3"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 console_log = { version = "0.2", features = ["color"] }
+tracing-wasm = { version = "0.2", optional = true }
 # stdweb variant is way faster!
 instant = { version = "0.1", features = ["stdweb"] } # FIXME: Untrusted dependency
 
@@ -55,6 +57,8 @@ env_logger = "0.9"
 reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "gzip"] }
 reqwest-middleware-cache = "0.1" # FIXME: Untrusted dependency
 reqwest-middleware = { version = "0.1" } # FIXME: Untrusted dependency
+tracing-tracy = { version = "0.8", optional = true }
+tracy-client = { git = "https://github.com/nagisa/rust_tracy_client.git", branch = "create-pull-request/patch", optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 ndk-glue = "0.5.0" # version is required by winit
@@ -70,8 +74,6 @@ winit = { version = "0.26", default-features = false }
 
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", optional = true }
-tracing-tracy = { version = "0.8", optional = true }
-tracy-client = { git = "https://github.com/nagisa/rust_tracy_client.git", branch = "create-pull-request/patch", optional = true }
 
 
 # Vector riles

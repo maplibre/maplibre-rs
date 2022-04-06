@@ -33,12 +33,29 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 #[cfg(feature = "web-webgl")]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
 
+#[cfg(feature = "enable-tracing")]
+fn enable_tracing() {
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::Registry;
+
+    let mut builder = tracing_wasm::WASMLayerConfigBuilder::new();
+    builder.set_report_logs_in_timings(true);
+    builder.set_console_config(tracing_wasm::ConsoleConfig::NoReporting);
+
+    tracing::subscriber::set_global_default(
+        Registry::default().with(tracing_wasm::WASMLayer::new(builder.build())),
+    );
+}
+
 #[wasm_bindgen(start)]
 pub fn wasm_bindgen_start() {
     if let Err(_) = console_log::init_with_level(log::Level::Info) {
         // Failed to initialize logging. No need to log a message.
     }
     panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+    #[cfg(any(feature = "enable-tracing"))]
+    enable_tracing();
 }
 
 #[wasm_bindgen]
