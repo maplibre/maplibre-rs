@@ -10,6 +10,7 @@ use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
 use style_spec::source::TileAddressingScheme;
 
 use crate::util::math::{div_floor, Aabb2};
+use crate::util::SignificantlyDifferent;
 
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
@@ -96,10 +97,11 @@ impl Zoom {
     }
 }
 
-impl Eq for Zoom {}
-impl PartialEq for Zoom {
-    fn eq(&self, other: &Self) -> bool {
-        self.0.abs_diff_eq(&other.0, 0.05)
+impl SignificantlyDifferent for Zoom {
+    type Epsilon = f64;
+
+    fn ne(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.0.abs_diff_eq(&other.0, epsilon)
     }
 }
 

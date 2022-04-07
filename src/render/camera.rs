@@ -3,6 +3,7 @@ use cgmath::{AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
 use crate::render::shaders::ShaderCamera;
 use crate::util::math::{bounds_from_points, Aabb2, Aabb3, Plane};
+use crate::util::SignificantlyDifferent;
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
@@ -73,12 +74,13 @@ pub struct Camera {
     pub height: f64,
 }
 
-impl Eq for Camera {}
-impl PartialEq for Camera {
-    fn eq(&self, other: &Self) -> bool {
-        self.position.abs_diff_eq(&other.position, 0.05)
-            && self.yaw.abs_diff_eq(&other.yaw, 0.05)
-            && self.pitch.abs_diff_eq(&other.pitch, 0.05)
+impl SignificantlyDifferent for Camera {
+    type Epsilon = f64;
+
+    fn ne(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.position.abs_diff_ne(&other.position, epsilon)
+            || self.yaw.abs_diff_ne(&other.yaw, epsilon)
+            || self.pitch.abs_diff_ne(&other.pitch, epsilon)
     }
 }
 

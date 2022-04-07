@@ -581,7 +581,7 @@ impl RenderState {
         // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
         // TODO: What is StagingBelt for?
 
-        if self.camera.did_change() || self.zoom.did_change() || self.try_failed {
+        if self.camera.did_change(0.05) || self.zoom.did_change(0.05) || self.try_failed {
             if let Some(view_region) = &view_region {
                 // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
                 self.try_failed = self.request_tiles_in_view(view_region, scheduler);
@@ -597,8 +597,8 @@ impl RenderState {
             );
         }
 
-        self.camera.finished_observing();
-        self.zoom.finished_observing();
+        self.camera.update_reference();
+        self.zoom.update_reference();
     }
 
     #[tracing::instrument(skip_all)]

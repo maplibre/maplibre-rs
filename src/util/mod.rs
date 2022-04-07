@@ -51,31 +51,39 @@ impl MinMaxBoundingBox {
     }
 }
 
+pub trait SignificantlyDifferent<Rhs: ?Sized = Self> {
+    type Epsilon;
+
+    /// This method tests for `self` and `other` values to be significantly different
+    #[must_use]
+    fn ne(&self, other: &Rhs, epsilon: Self::Epsilon) -> bool;
+}
+
 pub struct ChangeObserver<T> {
     inner: T,
-    last_value: Option<T>,
+    reference_value: Option<T>,
 }
 
 impl<T> ChangeObserver<T> {
     pub fn new(value: T) -> Self {
         Self {
             inner: value,
-            last_value: None,
+            reference_value: None,
         }
     }
 }
 
 impl<T> ChangeObserver<T>
 where
-    T: Clone + Eq,
+    T: Clone + SignificantlyDifferent,
 {
-    pub fn finished_observing(&mut self) {
-        self.last_value = Some(self.inner.clone());
+    pub fn update_reference(&mut self) {
+        self.reference_value = Some(self.inner.clone());
     }
 
-    pub fn did_change(&self) -> bool {
-        if let Some(last_value) = &self.last_value {
-            if !last_value.eq(&self.inner) {
+    pub fn did_change(&self, epsilon: T::Epsilon) -> bool {
+        if let Some(reference_value) = &self.reference_value {
+            if reference_value.ne(&self.inner, epsilon) {
                 true
             } else {
                 false
