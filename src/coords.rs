@@ -501,7 +501,9 @@ mod tests {
 
     use style_spec::source::TileAddressingScheme;
 
-    use crate::coords::{Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, EXTENT};
+    use crate::coords::{
+        Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, EXTENT,
+    };
     use crate::util::math::Aabb2;
 
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
@@ -514,16 +516,16 @@ mod tests {
         println!("{:?}\n{:?}", p1, p2);
 
         assert_eq!(
-            WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.floor() as u8, zoom),
+            WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.level(), zoom),
             tile
         );
     }
 
     #[test]
     fn world_coords_tests() {
-        to_from_world((1, 0, 1), 1.0);
-        to_from_world((67, 42, 7), 7.0);
-        to_from_world((17421, 11360, 15), 15.0);
+        to_from_world((1, 0, 1), Zoom::new(1.0));
+        to_from_world((67, 42, 7), Zoom::new(7.0));
+        to_from_world((17421, 11360, 15), Zoom::new(15.0));
     }
 
     #[test]
@@ -563,7 +565,7 @@ mod tests {
         for tile_coords in ViewRegion::new(
             Aabb2::new(Point2::new(0.0, 0.0), Point2::new(2000.0, 2000.0)),
             1,
-            0.0,
+            Zoom::default(),
             0,
         )
         .iter()
