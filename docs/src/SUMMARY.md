@@ -2,19 +2,26 @@
 
 [Introduction](./introduction.md)
 [Supported Platforms](./supported-platforms.md)
-[Building](./building.md)
+[Developer Log](./developer-log.md)
 
-## Developer Resources
 
-- [Developer Resources](./developer-resources.md)
-  - [Architecture](./architecture.md)
-  - [Caching](./caching.md)
-  - [Stencil Masking](./stencil-masking.md)
-  - [Developer Log](./developer-log.md)
+- [User Guide](./user-guide/index.md)
 
-## Appendix
 
-- [Appendix](./appendix.md)
-  - [Further Technical Reading](./further_technical_reading.md)
+- [Development Guide](./development-guide/index.md)
+  - [Building](./development-guide/building.md)
+  - [Debugging](./development-guide/debugging.md)
+
+
+- [Development Documents](./development-documents/index.md)
+  - [Architecture](./development-documents/architecture.md)
+  - [Design](./development-documents/design.md)
+  - [Caching](./development-documents/caching.md)
+  - [Stencil Masking](./development-documents/stencil-masking.md)
+  - [Font Rendering](./development-documents/font-rendering.md)
+
+
+- [Appendix](./appendix/index.md)
+  - [Link Collection](./appendix/link-collection.md)
 
 

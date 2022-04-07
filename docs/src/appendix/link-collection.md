@@ -109,12 +109,11 @@ Projects:
 ## Specifications
 
 * [TileJSON](https://github.com/mapbox/tilejson-spec)
-* 
+
 
 ## Render Graphs
 
 * https://github.com/metal-by-example/simple-instancing/blob/master/MetalSimpleInstancing/Renderer.swift
-
 * https://github.com/troughton/Substrate
 * https://de.slideshare.net/DICEStudio/framegraph-extensible-rendering-architecture-in-frostbite
 * http://themaister.net/blog/2017/08/15/render-graphs-and-vulkan-a-deep-dive/

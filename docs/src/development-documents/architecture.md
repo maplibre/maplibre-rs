@@ -1,7 +1,6 @@
 # Architecture
 
-
-## GPU Architecture
+## Rendering Architecture
 
 The big picture of wgpu is as follows:
 
