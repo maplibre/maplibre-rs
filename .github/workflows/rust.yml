@@ -186,7 +186,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-1
       - name: Install mdbook
         run: |
-          cargo install mdbook --no-default-features --features output --vers "^0.1.0"
+          cargo install mdbook --no-default-features --vers "^0.4.0"
       - name: Build
         run: mdbook build
       - name: Deploy to maxammann.org
