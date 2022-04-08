@@ -80,17 +80,14 @@ impl Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Wind
                             Err(e) => eprintln!("{:?}", e),
                         };
 
-                        current_frame += 1;
-
                         if let Some(max_frames) = max_frames {
                             if current_frame >= max_frames {
                                 log::info!("Exiting because maximum frames reached.");
                                 *control_flow = ControlFlow::Exit;
                             }
-                        }
 
-                        #[cfg(all(feature = "enable-tracing", not(target_arch = "wasm32")))]
-                        tracy_client::finish_continuous_frame!();
+                            current_frame += 1;
+                        }
                     }
                     Event::Suspended => {
                         self.suspend();

@@ -24,8 +24,6 @@ pub trait Runnable<E> {
     fn run(self, event_loop: E, max_frames: Option<u64>);
 }
 
-pub type Channel<T> = (mpsc::Sender<T>, mpsc::Receiver<T>);
-
 pub struct MapState<W> {
     window: W,
 
@@ -71,33 +69,47 @@ impl<W> MapState<W> {
         let (message_sender, message_receiver) = mpsc::channel();
 
         Self {
-            render_state,
             window,
+
             zoom: ChangeObserver::default(),
-            try_failed: false,
-            style,
-            scheduler,
             camera: ChangeObserver::new(camera),
             perspective,
-            message_receiver,
+
+            render_state,
+            scheduler,
+
             tile_cache: TileCache::new(),
+            message_receiver,
             shared_thread_state: SharedThreadState {
                 tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
                 message_sender,
                 geometry_index: Arc::new(Mutex::new(GeometryIndex::new())),
             },
+
+            style,
+
+            try_failed: false,
         }
     }
 
     pub fn update_and_redraw(&mut self) -> Result<(), SurfaceError> {
+        // Get data from other threads
         self.try_populate_cache();
 
+        // Update buffers
         self.prepare_render();
-        self.render_state.render()
+
+        // Render buffers
+        let result = self.render_state.render();
+
+        #[cfg(all(feature = "enable-tracing", not(target_arch = "wasm32")))]
+        tracy_client::finish_continuous_frame!();
+
+        result
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn try_populate_cache(&mut self) {
+    fn try_populate_cache(&mut self) {
         if let Ok(result) = self.message_receiver.try_recv() {
             match result {
                 TessellateMessage::Layer(layer_result) => {
@@ -142,7 +154,7 @@ impl<W> MapState<W> {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn prepare_render(&mut self) {
+    fn prepare_render(&mut self) {
         let render_setup_span = tracing::span!(tracing::Level::TRACE, "setup view region");
         let _guard = render_setup_span.enter();
 
@@ -183,7 +195,7 @@ impl<W> MapState<W> {
         self.zoom.update_reference();
     }
 
-    pub fn try_request_tile(
+    fn try_request_tile(
         &mut self,
         coords: &WorldTileCoords,
         layers: &HashSet<String>,
@@ -209,31 +221,24 @@ impl<W> MapState<W> {
                     );
                 }*/
 
-                {
-                    let client = SourceClient::Http(HttpSourceClient::new());
-                    let copied_coords = *coords;
+                let client = SourceClient::Http(HttpSourceClient::new());
+                let coords = *coords;
 
-                    let future_fn = move |state: SharedThreadState| async move {
-                        if let Ok(data) = client.fetch(&copied_coords).await {
-                            state
-                                .process_tile(request_id, data.into_boxed_slice())
-                                .unwrap();
-                        } else {
-                            state.tile_unavailable(request_id).unwrap();
-                        }
-                    };
-
-                    #[cfg(target_arch = "wasm32")]
-                    self.scheduler
-                        .schedule_method()
-                        .schedule(self.shared_thread_state.clone(), future_fn)
-                        .unwrap();
-                    #[cfg(not(target_arch = "wasm32"))]
-                    self.scheduler
-                        .schedule_method()
-                        .schedule(self.shared_thread_state.clone(), future_fn)
-                        .unwrap();
-                }
+                self.scheduler
+                    .schedule_method()
+                    .schedule(
+                        self.shared_thread_state.clone(),
+                        move |state: SharedThreadState| async move {
+                            if let Ok(data) = client.fetch(&coords).await {
+                                state
+                                    .process_tile(request_id, data.into_boxed_slice())
+                                    .unwrap();
+                            } else {
+                                state.tile_unavailable(request_id).unwrap();
+                            }
+                        },
+                    )
+                    .unwrap();
             }
 
             Ok(false)

@@ -7,7 +7,7 @@ use crate::io::{
     TileTessellateMessage,
 };
 use crate::tessellation::Tessellated;
-use std::sync::mpsc::SendError;
+
 use std::sync::{mpsc, Arc, Mutex};
 
 #[derive(Clone)]
