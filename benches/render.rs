@@ -1,5 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use mapr::{FromWindow, MapBuilder, ScheduleMethod, TokioScheduleMethod};
+use mapr::window::FromWindow;
+use mapr::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
 
 fn render(c: &mut Criterion) {
     c.bench_function("render", |b| {
