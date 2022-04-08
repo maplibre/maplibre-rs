@@ -1,4 +1,5 @@
-use crate::io::scheduler::{Scheduler, ThreadLocalState};
+use crate::io::scheduler::Scheduler;
+use crate::io::shared_thread_state::SharedThreadState;
 
 pub struct TokioScheduleMethod;
 
@@ -9,12 +10,12 @@ impl TokioScheduleMethod {
 
     pub fn schedule<T>(
         &self,
-        scheduler: &Scheduler,
-        future_factory: impl (FnOnce(ThreadLocalState) -> T) + Send + 'static,
+        shared_thread_state: SharedThreadState,
+        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
     ) where
         T: std::future::Future + Send + 'static,
         T::Output: Send + 'static,
     {
-        tokio::task::spawn(future_factory(scheduler.new_thread_local_state()));
+        tokio::task::spawn(future_factory(shared_thread_state));
     }
 }

@@ -1,4 +1,4 @@
-use crate::coords::{ViewRegion, Zoom, TILE_SIZE};
+use crate::coords::{ViewRegion, WorldTileCoords, Zoom, TILE_SIZE};
 
 use crate::io::scheduler::Scheduler;
 
@@ -8,7 +8,14 @@ use crate::render::render_state::RenderState;
 use crate::util::ChangeObserver;
 use crate::WindowSize;
 use std::collections::HashSet;
+use std::sync::{mpsc, Arc, Mutex};
 
+use crate::io::geometry_index::GeometryIndex;
+use crate::io::shared_thread_state::SharedThreadState;
+use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::io::tile_cache::TileCache;
+use crate::io::tile_request_state::TileRequestState;
+use crate::io::{TessellateMessage, TileRequest, TileTessellateMessage};
 use style_spec::Style;
 use wgpu::SurfaceError;
 
@@ -16,21 +23,24 @@ pub trait Runnable<E> {
     fn run(self, event_loop: E, max_frames: Option<u64>);
 }
 
-pub struct MapState<W> {
-    render_state: RenderState,
+pub type Channel<T> = (mpsc::Sender<T>, mpsc::Receiver<T>);
 
+pub struct MapState<W> {
     window: W,
 
     zoom: ChangeObserver<Zoom>,
+    camera: ChangeObserver<camera::Camera>,
+    perspective: camera::Perspective,
 
+    render_state: RenderState,
     scheduler: Scheduler,
-
-    try_failed: bool,
+    message_receiver: mpsc::Receiver<TessellateMessage>,
+    shared_thread_state: SharedThreadState,
+    tile_cache: TileCache,
 
     style: Style,
 
-    camera: ChangeObserver<camera::Camera>,
-    perspective: camera::Perspective,
+    try_failed: bool,
 }
 
 impl<W> MapState<W> {
@@ -57,6 +67,8 @@ impl<W> MapState<W> {
             2000.0,
         );
 
+        let (message_sender, message_receiver) = mpsc::channel();
+
         Self {
             render_state,
             window,
@@ -66,14 +78,46 @@ impl<W> MapState<W> {
             scheduler,
             camera: ChangeObserver::new(camera),
             perspective,
+            message_receiver,
+            tile_cache: TileCache::new(),
+            shared_thread_state: SharedThreadState {
+                tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
+                message_sender,
+                geometry_index: Arc::new(Mutex::new(GeometryIndex::new())),
+            },
         }
     }
 
     pub fn update_and_redraw(&mut self) -> Result<(), SurfaceError> {
-        self.scheduler.try_populate_cache();
+        self.try_populate_cache();
 
         self.prepare_render();
         self.render_state.render()
+    }
+
+    #[tracing::instrument(skip_all)]
+    pub fn try_populate_cache(&mut self) {
+        if let Ok(result) = self.message_receiver.try_recv() {
+            match result {
+                TessellateMessage::Layer(layer_result) => {
+                    tracing::trace!(
+                        "Layer {} at {} reached main thread",
+                        layer_result.layer_name(),
+                        layer_result.get_coords()
+                    );
+                    self.tile_cache.put_tessellated_layer(layer_result);
+                }
+                TessellateMessage::Tile(TileTessellateMessage { request_id, coords }) => loop {
+                    if let Ok(mut tile_request_state) =
+                        self.shared_thread_state.tile_request_state.try_lock()
+                    {
+                        tile_request_state.finish_tile_request(request_id);
+                        tracing::trace!("Tile at {} finished loading", coords);
+                        break;
+                    }
+                },
+            }
+        }
     }
 
     /// Request tiles which are currently in view
@@ -90,10 +134,7 @@ impl<W> MapState<W> {
         for coords in view_region.iter() {
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
-                try_failed = self
-                    .scheduler
-                    .try_request_tile(&coords, &source_layers)
-                    .unwrap();
+                try_failed = self.try_request_tile(&coords, &source_layers).unwrap();
             }
         }
         try_failed
@@ -116,11 +157,8 @@ impl<W> MapState<W> {
         drop(_guard);
 
         if let Some(view_region) = &view_region {
-            self.render_state.upload_tile_geometry(
-                view_region,
-                &self.style,
-                self.scheduler.get_tile_cache(),
-            );
+            self.render_state
+                .upload_tile_geometry(view_region, &self.style, &self.tile_cache);
 
             self.render_state
                 .update_tile_view_pattern(view_region, &view_proj, self.zoom());
@@ -144,6 +182,76 @@ impl<W> MapState<W> {
         self.zoom.update_reference();
     }
 
+    pub fn try_request_tile(
+        &mut self,
+        coords: &WorldTileCoords,
+        layers: &HashSet<String>,
+    ) -> Result<bool, mpsc::SendError<TileRequest>> {
+        if !self.tile_cache.is_layers_missing(coords, layers) {
+            return Ok(false);
+        }
+
+        if let Ok(mut tile_request_state) = self.shared_thread_state.tile_request_state.try_lock() {
+            if let Some(request_id) = tile_request_state.start_tile_request(TileRequest {
+                coords: *coords,
+                layers: layers.clone(),
+            }) {
+                tracing::info!("new tile request: {}", &coords);
+
+                // The following snippet can be added instead of the next code block to demonstrate
+                // an understanable approach of fetching
+                /*#[cfg(target_arch = "wasm32")]
+                if let Some(tile_coords) = coords.into_tile(TileAddressingScheme::TMS) {
+                    crate::platform::legacy_webworker_fetcher::request_tile(
+                        request_id,
+                        tile_coords,
+                    );
+                }*/
+
+                {
+                    let client = SourceClient::Http(HttpSourceClient::new());
+                    let copied_coords = *coords;
+
+                    let future_fn = move |state: SharedThreadState| async move {
+                        if let Ok(data) = client.fetch(&copied_coords).await {
+                            state
+                                .process_tile(request_id, data.into_boxed_slice())
+                                .unwrap();
+                        } else {
+                            state.tile_unavailable(request_id).unwrap();
+                        }
+                    };
+
+                    #[cfg(target_arch = "wasm32")]
+                    self.scheduler
+                        .schedule_method()
+                        .schedule(self.shared_thread_state.clone(), future_fn)
+                        .unwrap();
+                    #[cfg(not(target_arch = "wasm32"))]
+                    self.scheduler
+                        .schedule_method()
+                        .schedule(self.shared_thread_state.clone(), future_fn)
+                        .unwrap();
+                }
+            }
+
+            Ok(false)
+        } else {
+            Ok(true)
+        }
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        if width <= 0 || height <= 0 {
+            return;
+        }
+
+        self.perspective.resize(width, height);
+        self.camera.resize(width, height);
+
+        self.render_state.resize(width, height)
+    }
+
     pub fn scheduler(&self) -> &Scheduler {
         &self.scheduler
     }
@@ -162,17 +270,6 @@ impl<W> MapState<W> {
 
     pub fn perspective(&self) -> &Perspective {
         &self.perspective
-    }
-
-    pub fn resize(&mut self, width: u32, height: u32) {
-        if width <= 0 || height <= 0 {
-            return;
-        }
-
-        self.perspective.resize(width, height);
-        self.camera.resize(width, height);
-
-        self.render_state.resize(width, height)
     }
 
     pub fn zoom(&self) -> Zoom {

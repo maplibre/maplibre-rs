@@ -64,8 +64,6 @@ pub struct RenderState {
     tile_view_pattern: TileViewPattern<Queue, Buffer>,
 }
 
-pub type SurfaceFactory = dyn FnOnce(&wgpu::Instance) -> (Surface, SurfaceConfiguration);
-
 impl RenderState {
     pub async fn initialize<W: raw_window_handle::HasRawWindowHandle>(
         window: &W,

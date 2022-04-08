@@ -71,28 +71,28 @@ impl UpdateState for QueryHandler {
                     .camera()
                     .window_to_world_at_ground(&window_position, &inverted_view_proj)
                 {
-                    state
-                        .scheduler()
-                        .get_method()
-                        .schedule(state.scheduler(), move |thread_local| async move {
-                            if let Some(geometries) = thread_local.query_point(
-                                &WorldCoords {
-                                    x: coordinates.x,
-                                    y: coordinates.y,
-                                },
-                                z,
-                                zoom,
-                            ) {
-                                log::info!(
-                                    "{:?}",
-                                    geometries
-                                        .iter()
-                                        .map(|geometry| &geometry.properties)
-                                        .collect::<Vec<_>>()
-                                );
-                            }
-                        })
-                        .unwrap();
+                    /*state
+                    .scheduler()
+                    .schedule_method()
+                    .schedule(state.scheduler(), move |thread_local| async move {
+                        if let Some(geometries) = thread_local.query_point(
+                            &WorldCoords {
+                                x: coordinates.x,
+                                y: coordinates.y,
+                            },
+                            z,
+                            zoom,
+                        ) {
+                            log::info!(
+                                "{:?}",
+                                geometries
+                                    .iter()
+                                    .map(|geometry| &geometry.properties)
+                                    .collect::<Vec<_>>()
+                            );
+                        }
+                    })
+                    .unwrap();*/
                 }
             }
             self.clicking = false;

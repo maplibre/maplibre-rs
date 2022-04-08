@@ -10,12 +10,14 @@ use std::fmt;
 
 use vector_tile::tile::Layer;
 
-mod geometry_index;
 pub mod scheduler;
-mod source_client;
+pub mod source_client;
 pub mod static_tile_fetcher;
+
+pub mod geometry_index;
+pub mod shared_thread_state;
 pub mod tile_cache;
-mod tile_request_state;
+pub mod tile_request_state;
 
 pub enum TileFetchResult {
     Unavailable {
@@ -46,8 +48,8 @@ pub enum TessellateMessage {
 }
 
 pub struct TileTessellateMessage {
-    request_id: TileRequestID,
-    coords: WorldTileCoords,
+    pub request_id: TileRequestID,
+    pub coords: WorldTileCoords,
 }
 
 pub enum LayerTessellateMessage {
