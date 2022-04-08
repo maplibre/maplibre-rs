@@ -1784,6 +1784,7 @@ dependencies = [
  "mbtiles",
  "ndk-glue",
  "prost",
+ "raw-window-handle",
  "reqwest",
  "reqwest-middleware",
  "reqwest-middleware-cache",

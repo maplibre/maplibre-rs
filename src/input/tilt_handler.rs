@@ -1,5 +1,6 @@
 use super::UpdateState;
 
+use crate::map_state::MapState;
 use crate::render::render_state::RenderState;
 use crate::Scheduler;
 use cgmath::{Deg, Rad, Zero};
@@ -13,11 +14,11 @@ pub struct TiltHandler {
 }
 
 impl UpdateState for TiltHandler {
-    fn update_state(&mut self, state: &mut RenderState, _scheduler: &Scheduler, dt: Duration) {
+    fn update_state<W>(&mut self, state: &mut MapState<W>, dt: Duration) {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.delta_pitch * dt;
-        state.camera.pitch += Rad::from(delta);
+        state.camera_mut().pitch += Rad::from(delta);
         self.delta_pitch -= delta;
     }
 }

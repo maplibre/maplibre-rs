@@ -123,14 +123,6 @@ impl Camera {
         ViewProjection(FLIP_Y * perspective.calc_matrix() * self.calc_matrix())
     }
 
-    pub fn create_camera_uniform(&self, perspective: &Perspective) -> ShaderCamera {
-        let view_proj = self.calc_view_proj(perspective);
-        ShaderCamera::new(
-            view_proj.downcast().into(),
-            self.position.to_homogeneous().cast::<f32>().unwrap().into(),
-        )
-    }
-
     /// A transform which can be used to transfrom between clip and window space.
     /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle) (Direct3D).
     fn clip_to_window_transform(&self) -> Matrix4<f64> {

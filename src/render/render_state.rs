@@ -5,19 +5,18 @@ use cgmath::AbsDiffEq;
 use std::{cmp, iter};
 
 use tracing;
-use wgpu::{Buffer, Limits, Queue};
-use winit::dpi::PhysicalSize;
-use winit::window::Window;
+use wgpu::{Buffer, Limits, Queue, Surface, SurfaceConfiguration};
 
 use style_spec::Style;
 
 use crate::coords::{ViewRegion, Zoom, TILE_SIZE};
 use crate::io::scheduler::Scheduler;
+use crate::io::tile_cache::TileCache;
 use crate::io::LayerTessellateMessage;
 use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
 use crate::render::camera;
-use crate::render::camera::ViewProjection;
+use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::render::options::{
     DEBUG_WIREFRAME, FEATURE_METADATA_BUFFER_SIZE, INDEX_FORMAT, INDICES_BUFFER_SIZE,
     LAYER_METADATA_BUFFER_SIZE, TILE_VIEW_BUFFER_SIZE, VERTEX_BUFFER_SIZE,
@@ -25,6 +24,7 @@ use crate::render::options::{
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
 use crate::tessellation::IndexDataType;
 use crate::util::{ChangeObserver, FPSMeter};
+use crate::WindowSize;
 
 use super::piplines::*;
 use super::shaders;
@@ -42,8 +42,6 @@ pub struct RenderState {
     surface: wgpu::Surface,
     surface_config: wgpu::SurfaceConfiguration,
     suspended: bool,
-
-    pub size: winit::dpi::PhysicalSize<u32>,
 
     render_pipeline: wgpu::RenderPipeline,
     mask_pipeline: wgpu::RenderPipeline,
@@ -66,43 +64,30 @@ pub struct RenderState {
     >,
 
     tile_view_pattern: TileViewPattern<Queue, Buffer>,
-
-    pub camera: ChangeObserver<camera::Camera>,
-    pub perspective: camera::Perspective,
-    zoom: ChangeObserver<Zoom>,
-    try_failed: bool,
-
-    style: Box<Style>,
 }
 
+pub type SurfaceFactory = dyn FnOnce(&wgpu::Instance) -> (Surface, SurfaceConfiguration);
+
 impl RenderState {
-    pub fn zoom(&self) -> Zoom {
-        *self.zoom
-    }
-
-    pub fn update_zoom(&mut self, new_zoom: Zoom) {
-        *self.zoom = new_zoom;
-        log::info!("zoom: {}", new_zoom);
-    }
-
-    pub async fn new(window: &Window, style: Box<Style>) -> Self {
+    pub async fn initialize<W: raw_window_handle::HasRawWindowHandle>(
+        window: &W,
+        window_size: WindowSize,
+    ) -> Self {
         let sample_count = 4;
 
-        let size = if cfg!(target_os = "android") {
-            // FIXME: inner_size() is only working AFTER Event::Resumed on Android
-            PhysicalSize::new(500, 500)
-        } else {
-            window.inner_size()
-        };
-
-        // create an instance
         //let instance = wgpu::Instance::new(wgpu::Backends::GL);
         let instance = wgpu::Instance::new(wgpu::Backends::all());
 
-        // create an surface
-        let surface = unsafe { instance.create_surface(window) };
+        let surface = unsafe { instance.create_surface(&window) };
+        let surface_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: crate::platform::COLOR_TEXTURE_FORMAT,
+            width: window_size.width,
+            height: window_size.height,
+            // present_mode: wgpu::PresentMode::Mailbox,
+            present_mode: wgpu::PresentMode::Fifo, // VSync
+        };
 
-        // create an adapter
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::LowPower,
@@ -146,6 +131,8 @@ impl RenderState {
             )
             .await
             .unwrap();
+
+        surface.configure(&device, &surface_config);
 
         let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
@@ -250,17 +237,6 @@ impl RenderState {
         let render_pipeline = device.create_render_pipeline(&render_pipeline_descriptor);
         let mask_pipeline = device.create_render_pipeline(&mask_pipeline_descriptor);
 
-        let surface_config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: COLOR_TEXTURE_FORMAT,
-            width: size.width,
-            height: size.height,
-            // present_mode: wgpu::PresentMode::Mailbox,
-            present_mode: wgpu::PresentMode::Fifo, // VSync
-        };
-
-        surface.configure(&device, &surface_config);
-
         let depth_texture = Texture::create_depth_texture(&device, &surface_config, sample_count);
 
         let multisampling_texture = if sample_count > 1 {
@@ -273,27 +249,11 @@ impl RenderState {
             None
         };
 
-        let camera = camera::Camera::new(
-            (TILE_SIZE / 2.0, TILE_SIZE / 2.0, 150.0),
-            cgmath::Deg(-90.0),
-            cgmath::Deg(0.0),
-            size.width,
-            size.height,
-        );
-        let projection = camera::Perspective::new(
-            surface_config.width,
-            surface_config.height,
-            cgmath::Deg(110.0),
-            100.0,
-            2000.0,
-        );
-
         Self {
             instance,
             surface,
             device,
             queue,
-            size,
             surface_config,
             render_pipeline,
             mask_pipeline,
@@ -303,9 +263,7 @@ impl RenderState {
             sample_count,
             globals_uniform_buffer,
             fps_meter: FPSMeter::new(),
-            camera: ChangeObserver::new(camera),
-            perspective: projection,
-            suspended: false, // Initially the app is not suspended
+            suspended: false, // Initially rendering is not suspended
             buffer_pool: BufferPool::new(
                 BackingBufferDescriptor::new(vertex_buffer, VERTEX_BUFFER_SIZE),
                 BackingBufferDescriptor::new(indices_buffer, INDICES_BUFFER_SIZE),
@@ -316,13 +274,10 @@ impl RenderState {
                 tile_view_buffer,
                 TILE_VIEW_BUFFER_SIZE,
             )),
-            zoom: ChangeObserver::default(),
-            try_failed: false,
-            style,
         }
     }
 
-    pub fn recreate_surface(&mut self, window: &winit::window::Window) {
+    pub fn recreate_surface<W: raw_window_handle::HasRawWindowHandle>(&mut self, window: &W) {
         // We only create a new surface if we are currently suspended. On Android (and probably iOS)
         // the surface gets invalid after the app has been suspended.
         if self.suspended {
@@ -332,80 +287,52 @@ impl RenderState {
         }
     }
 
-    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+    pub fn resize(&mut self, width: u32, height: u32) {
         // While the app is suspended we can not re-configure a surface
         if self.suspended {
             return;
         }
 
-        if new_size.width > 0 && new_size.height > 0 {
-            self.size = new_size;
-            self.surface_config.width = new_size.width;
-            self.surface_config.height = new_size.height;
-            self.surface.configure(&self.device, &self.surface_config);
+        self.surface_config.width = width;
+        self.surface_config.height = height;
 
-            self.perspective.resize(new_size.width, new_size.height);
-            self.camera.resize(new_size.width, new_size.height);
+        self.surface.configure(&self.device, &self.surface_config);
 
-            // Re-configure depth buffer
-            self.depth_texture = Texture::create_depth_texture(
+        // Re-configure depth buffer
+        self.depth_texture =
+            Texture::create_depth_texture(&self.device, &self.surface_config, self.sample_count);
+
+        // Re-configure multi-sampling buffer
+        self.multisampling_texture = if self.sample_count > 1 {
+            Some(Texture::create_multisampling_texture(
                 &self.device,
                 &self.surface_config,
                 self.sample_count,
-            );
-
-            // Re-configure multi-sampling buffer
-            self.multisampling_texture = if self.sample_count > 1 {
-                Some(Texture::create_multisampling_texture(
-                    &self.device,
-                    &self.surface_config,
-                    self.sample_count,
-                ))
-            } else {
-                None
-            };
-        }
+            ))
+        } else {
+            None
+        };
     }
 
-    pub fn visible_z(&self) -> u8 {
-        self.zoom.level()
+    pub fn update_globals(&self, view_proj: &ViewProjection, camera: &Camera) {
+        // Update globals
+        self.queue.write_buffer(
+            &self.globals_uniform_buffer,
+            0,
+            bytemuck::cast_slice(&[ShaderGlobals::new(ShaderCamera::new(
+                view_proj.downcast().into(),
+                camera
+                    .position
+                    .to_homogeneous()
+                    .cast::<f32>()
+                    .unwrap()
+                    .into(),
+            ))]),
+        );
     }
 
-    /// Request tiles which are currently in view
     #[tracing::instrument(skip_all)]
-    fn request_tiles_in_view(&self, view_region: &ViewRegion, scheduler: &mut Scheduler) -> bool {
-        let mut try_failed = false;
-        let source_layers: HashSet<String> = self
-            .style
-            .layers
-            .iter()
-            .filter_map(|layer| layer.source_layer.clone())
-            .collect();
-
-        for coords in view_region.iter() {
-            if coords.build_quad_key().is_some() {
-                // TODO: Make tesselation depend on style?
-                try_failed = scheduler.try_request_tile(&coords, &source_layers).unwrap();
-            }
-        }
-        try_failed
-    }
-
-    /// Update tile metadata for all required tiles on the GPU according to current zoom, camera and perspective
-    /// We perform the update before uploading new tessellated tiles, such that each
-    /// tile metadata in the the `buffer_pool` gets updated exactly once and not twice.
-    #[tracing::instrument(skip_all)]
-    fn update_metadata(
-        &mut self,
-        _scheduler: &mut Scheduler,
-        view_region: &ViewRegion,
-        view_proj: &ViewProjection,
-    ) {
-        self.tile_view_pattern
-            .update_pattern(view_region, &self.buffer_pool, *self.zoom);
-        self.tile_view_pattern
-            .upload_pattern(&self.queue, view_proj);
-
+    pub(crate) fn update_metadata(&mut self) {
         /*let animated_one = 0.5
         * (1.0
             + ((SystemTime::now()
@@ -474,22 +401,32 @@ impl RenderState {
     }
 
     #[tracing::instrument(skip_all)]
-    fn upload_tile_geometry(
+    pub fn update_tile_view_pattern(
         &mut self,
-        _view_proj: &ViewProjection,
         view_region: &ViewRegion,
-        scheduler: &mut Scheduler,
+        view_proj: &ViewProjection,
+        zoom: Zoom,
     ) {
-        let _visible_z = self.visible_z();
+        self.tile_view_pattern
+            .update_pattern(view_region, &self.buffer_pool, zoom);
+        self.tile_view_pattern
+            .upload_pattern(&self.queue, view_proj);
+    }
 
+    #[tracing::instrument(skip_all)]
+    pub fn upload_tile_geometry(
+        &mut self,
+        view_region: &ViewRegion,
+        style: &Style,
+        tile_cache: &TileCache,
+    ) {
         // Upload all tessellated layers which are in view
         for world_coords in view_region.iter() {
             let loaded_layers = self
                 .buffer_pool
                 .get_loaded_layers_at(&world_coords)
                 .unwrap_or_default();
-            if let Some(available_layers) = scheduler
-                .get_tile_cache()
+            if let Some(available_layers) = tile_cache
                 .iter_tessellated_layers_at(&world_coords)
                 .map(|layers| {
                     layers
@@ -497,7 +434,7 @@ impl RenderState {
                         .collect::<Vec<_>>()
                 })
             {
-                for style_layer in &self.style.layers {
+                for style_layer in &style.layers {
                     let source_layer = style_layer.source_layer.as_ref().unwrap();
 
                     if let Some(message) = available_layers
@@ -555,50 +492,6 @@ impl RenderState {
                 }
             }
         }
-    }
-
-    #[tracing::instrument(skip_all)]
-    pub fn prepare_render_data(&mut self, scheduler: &mut Scheduler) {
-        let render_setup_span = tracing::span!(tracing::Level::TRACE, "setup view region");
-        let _guard = render_setup_span.enter();
-
-        let visible_z = self.visible_z();
-
-        let view_proj = self.camera.calc_view_proj(&self.perspective);
-
-        let view_region = self
-            .camera
-            .view_region_bounding_box(&view_proj.invert())
-            .map(|bounding_box| ViewRegion::new(bounding_box, 0, *self.zoom, visible_z));
-
-        drop(_guard);
-
-        if let Some(view_region) = &view_region {
-            self.upload_tile_geometry(&view_proj, view_region, scheduler);
-            self.update_metadata(scheduler, view_region, &view_proj);
-        }
-
-        // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
-        // TODO: What is StagingBelt for?
-
-        if self.camera.did_change(0.05) || self.zoom.did_change(0.05) || self.try_failed {
-            if let Some(view_region) = &view_region {
-                // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
-                self.try_failed = self.request_tiles_in_view(view_region, scheduler);
-            }
-
-            // Update globals
-            self.queue.write_buffer(
-                &self.globals_uniform_buffer,
-                0,
-                bytemuck::cast_slice(&[ShaderGlobals::new(
-                    self.camera.create_camera_uniform(&self.perspective),
-                )]),
-            );
-        }
-
-        self.camera.update_reference();
-        self.zoom.update_reference();
     }
 
     #[tracing::instrument(skip_all)]

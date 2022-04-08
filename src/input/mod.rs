@@ -11,6 +11,7 @@ use crate::input::query_handler::QueryHandler;
 use crate::input::shift_handler::ShiftHandler;
 use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
+use crate::map_state::MapState;
 
 use crate::render::render_state::RenderState;
 use crate::Scheduler;
@@ -57,7 +58,7 @@ impl InputController {
         false
     }
 
-    pub fn window_input(&mut self, event: &WindowEvent, _render_state: &RenderState) -> bool {
+    pub fn window_input(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
                 let position: (f64, f64) = position.to_owned().into();
@@ -126,17 +127,17 @@ impl InputController {
 }
 
 pub trait UpdateState {
-    fn update_state(&mut self, state: &mut RenderState, scheduler: &Scheduler, dt: Duration);
+    fn update_state<W>(&mut self, state: &mut MapState<W>, dt: Duration);
 }
 
 impl UpdateState for InputController {
     #[tracing::instrument(skip_all)]
-    fn update_state(&mut self, state: &mut RenderState, scheduler: &Scheduler, dt: Duration) {
-        self.pan_handler.update_state(state, scheduler, dt);
-        self.pinch_handler.update_state(state, scheduler, dt);
-        self.zoom_handler.update_state(state, scheduler, dt);
-        self.tilt_handler.update_state(state, scheduler, dt);
-        self.shift_handler.update_state(state, scheduler, dt);
-        self.query_handler.update_state(state, scheduler, dt);
+    fn update_state<W>(&mut self, state: &mut MapState<W>, dt: Duration) {
+        self.pan_handler.update_state(state, dt);
+        self.pinch_handler.update_state(state, dt);
+        self.zoom_handler.update_state(state, dt);
+        self.tilt_handler.update_state(state, dt);
+        self.shift_handler.update_state(state, dt);
+        self.query_handler.update_state(state, dt);
     }
 }

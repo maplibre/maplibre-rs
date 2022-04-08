@@ -1,9 +1,5 @@
 use std::panic;
 use std::thread::Thread;
-use winit::dpi::LogicalSize;
-use winit::event_loop::EventLoop;
-use winit::platform::web::WindowBuilderExtWebSys;
-use winit::window::{Window, WindowBuilder};
 
 use super::schedule_method::WebWorkerPoolScheduleMethod;
 use console_error_panic_hook;

@@ -1,52 +1,107 @@
 use crate::io::scheduler::Scheduler;
-use winit::event_loop::EventLoop;
-use winit::window::WindowBuilder;
+use std::future::Future;
 
 mod input;
 
 pub(crate) mod coords;
 pub(crate) mod error;
 pub(crate) mod io;
-pub(crate) mod main_loop;
+pub(crate) mod map_state;
 pub(crate) mod platform;
 pub(crate) mod render;
 pub(crate) mod tessellation;
 pub(crate) mod util;
+pub(crate) mod winit;
 
 // Used for benchmarking
 pub mod benchmarking;
 
+use crate::map_state::{MapState, Runnable};
+use crate::render::render_state::{RenderState, SurfaceFactory};
 pub use io::scheduler::ScheduleMethod;
 pub use platform::schedule_method::*;
 use style_spec::Style;
 
-pub struct Map {
-    style: Style,
-    window: winit::window::Window,
-    event_loop: EventLoop<()>,
-    scheduler: Box<Scheduler>,
+#[derive(Clone, Copy)]
+pub struct WindowSize {
+    pub width: u32,
+    pub height: u32,
 }
 
-impl Map {
-    #[cfg(target_arch = "wasm32")]
-    pub async fn run_async(self) {
-        main_loop::run(
-            self.window,
-            self.event_loop,
-            self.scheduler,
-            Box::new(self.style),
-            None,
-        )
-        .await;
+pub type WindowFactory<W, E> = dyn FnOnce() -> (W, WindowSize, E);
+
+pub trait FromWindow {
+    fn from_window(title: &'static str) -> Self;
+}
+
+pub trait FromCanvas {
+    fn from_canvas(dom_id: &'static str) -> Self;
+}
+
+pub struct Map<W, E> {
+    map_state: MapState<W>,
+    event_loop: E,
+}
+
+impl<W, E> Map<W, E>
+where
+    MapState<W>: Runnable<E>,
+{
+    pub fn run(self) {
+        self.run_with_optionally_max_frames(None);
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    pub fn run_with_max_frames(self, max_frames: u64) {
+        self.run_with_optionally_max_frames(Some(max_frames));
+    }
+
+    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
+        self.map_state.run(self.event_loop, max_frames);
+    }
+}
+
+pub struct UninitializedMap<W, E> {
+    window: W,
+    window_size: WindowSize,
+    event_loop: E,
+    scheduler: Scheduler,
+    style: Style,
+}
+
+impl<W, E> UninitializedMap<W, E>
+where
+    W: raw_window_handle::HasRawWindowHandle,
+{
+    pub async fn initialize(self) -> Map<W, E> {
+        let render_state = RenderState::initialize(&self.window, self.window_size).await;
+        Map {
+            map_state: MapState::new(
+                self.window,
+                self.window_size,
+                render_state,
+                self.scheduler,
+                self.style,
+            ),
+            event_loop: self.event_loop,
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<W, E> UninitializedMap<W, E>
+where
+    W: raw_window_handle::HasRawWindowHandle,
+    MapState<W>: Runnable<E>,
+{
     pub fn run_sync(self) {
-        self.run_sync_with_max_frames(None);
+        self.run_sync_with_optionally_max_frames(None);
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn run_sync_with_max_frames(self, max_frames: Option<u64>) {
+    pub fn run_sync_with_max_frames(self, max_frames: u64) {
+        self.run_sync_with_optionally_max_frames(Some(max_frames))
+    }
+
+    fn run_sync_with_optionally_max_frames(self, max_frames: Option<u64>) {
         tokio::runtime::Builder::new_multi_thread()
             .worker_threads(4)
             .enable_io()
@@ -58,32 +113,40 @@ impl Map {
             .build()
             .unwrap()
             .block_on(async {
-                main_loop::run(
-                    self.window,
-                    self.event_loop,
-                    self.scheduler,
-                    Box::new(self.style),
-                    max_frames,
-                )
-                .await;
+                self.initialize()
+                    .await
+                    .run_with_optionally_max_frames(max_frames);
             })
     }
 }
 
-pub struct MapBuilder {
-    create_window: Box<dyn FnOnce(&EventLoop<()>) -> winit::window::Window>,
+pub struct MapBuilder<W, E> {
+    window_factory: Box<WindowFactory<W, E>>,
     schedule_method: Option<ScheduleMethod>,
-    scheduler: Option<Box<Scheduler>>,
+    scheduler: Option<Scheduler>,
     style: Option<Style>,
 }
 
-impl MapBuilder {
+impl<W, E> MapBuilder<W, E>
+where
+    MapState<W>: Runnable<E>,
+    W: raw_window_handle::HasRawWindowHandle,
+{
+    pub(crate) fn new(create_window: Box<WindowFactory<W, E>>) -> Self {
+        Self {
+            window_factory: create_window,
+            schedule_method: None,
+            scheduler: None,
+            style: None,
+        }
+    }
+
     pub fn with_schedule_method(mut self, schedule_method: ScheduleMethod) -> Self {
         self.schedule_method = Some(schedule_method);
         self
     }
 
-    pub fn with_existing_scheduler(mut self, scheduler: Box<Scheduler>) -> Self {
+    pub fn with_existing_scheduler(mut self, scheduler: Scheduler) -> Self {
         self.scheduler = Some(scheduler);
         self
     }
@@ -93,52 +156,20 @@ impl MapBuilder {
         self
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn from_window(title: &'static str) -> Self {
-        Self {
-            create_window: Box::new(move |event_loop| {
-                WindowBuilder::new()
-                    .with_title(title)
-                    .build(event_loop)
-                    .unwrap()
-            }),
-            schedule_method: None,
-            scheduler: None,
-            style: None,
-        }
-    }
+    pub fn build(self) -> UninitializedMap<W, E> {
+        let (window, window_size, event_loop) = (self.window_factory)();
 
-    #[cfg(target_arch = "wasm32")]
-    pub fn from_canvas(dom_id: &'static str) -> Self {
-        Self {
-            create_window: Box::new(move |event_loop| {
-                use crate::platform::{get_body_size, get_canvas};
-                use winit::platform::web::WindowBuilderExtWebSys;
+        let scheduler = self
+            .scheduler
+            .unwrap_or_else(|| Scheduler::new(self.schedule_method.unwrap_or_default()));
+        let style = self.style.unwrap_or_default();
 
-                let window: winit::window::Window = WindowBuilder::new()
-                    .with_canvas(Some(get_canvas(dom_id)))
-                    .build(&event_loop)
-                    .unwrap();
-
-                window.set_inner_size(get_body_size().unwrap());
-                window
-            }),
-            schedule_method: None,
-            scheduler: None,
-            style: None,
-        }
-    }
-
-    pub fn build(self) -> Map {
-        let event_loop = EventLoop::new();
-
-        Map {
-            style: self.style.unwrap_or_default(),
-            window: (self.create_window)(&event_loop),
+        UninitializedMap {
+            window,
+            window_size,
             event_loop,
-            scheduler: self.scheduler.unwrap_or_else(|| {
-                Box::new(Scheduler::new(self.schedule_method.unwrap_or_default()))
-            }),
+            scheduler,
+            style,
         }
     }
 }

@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use mapr::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
+use mapr::{FromWindow, MapBuilder, ScheduleMethod, TokioScheduleMethod};
 
 fn render(c: &mut Criterion) {
     c.bench_function("render", |b| {
@@ -9,7 +9,7 @@ fn render(c: &mut Criterion) {
             MapBuilder::from_window("A fantastic window!")
                 .with_schedule_method(ScheduleMethod::Tokio(TokioScheduleMethod::new()))
                 .build()
-                .run_sync_with_max_frames(Some(1000));
+                .run_sync_with_max_frames(1000);
         })
     });
 }

@@ -1,10 +1,5 @@
 use std::panic;
 
-use winit::dpi::LogicalSize;
-use winit::event_loop::EventLoop;
-use winit::platform::web::WindowBuilderExtWebSys;
-use winit::window::{Window, WindowBuilder};
-
 use console_error_panic_hook;
 pub use instant::Instant;
 use schedule_method::WebWorkerPoolScheduleMethod;
@@ -18,6 +13,7 @@ use web_sys::Worker;
 use crate::io::scheduler::ScheduleMethod;
 use crate::io::scheduler::Scheduler;
 use crate::io::scheduler::ThreadLocalState;
+use crate::FromCanvas;
 use crate::MapBuilder;
 
 pub mod http_client;
@@ -67,36 +63,17 @@ pub fn create_pool_scheduler(new_worker: js_sys::Function) -> *mut Scheduler {
     return scheduler_ptr;
 }
 
-pub fn get_body_size() -> Option<LogicalSize<i32>> {
-    let web_window: WebSysWindow = web_sys::window().unwrap();
-    let document = web_window.document().unwrap();
-    let body = document.body().unwrap();
-    Some(LogicalSize {
-        width: body.client_width(),
-        height: body.client_height(),
-    })
-}
-
-pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
-    let web_window: WebSysWindow = web_sys::window().unwrap();
-    let document = web_window.document().unwrap();
-    document
-        .get_element_by_id(element_id)
-        .unwrap()
-        .dyn_into::<web_sys::HtmlCanvasElement>()
-        .unwrap()
-}
-
 #[wasm_bindgen]
 pub async fn run(scheduler_ptr: *mut Scheduler) {
     let scheduler: Box<Scheduler> = unsafe { Box::from_raw(scheduler_ptr) };
 
     // Either call forget or the main loop to keep worker loop alive
     MapBuilder::from_canvas("mapr")
-        .with_existing_scheduler(scheduler)
+        .with_existing_scheduler(*scheduler)
         .build()
-        .run_async()
-        .await;
+        .initialize()
+        .await
+        .run();
 
     // std::mem::forget(scheduler);
 }

@@ -1,4 +1,4 @@
-use mapr::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
+use mapr::{FromWindow, MapBuilder, ScheduleMethod, TokioScheduleMethod};
 
 #[cfg(feature = "enable-tracing")]
 fn enable_tracing() {
