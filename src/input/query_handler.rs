@@ -1,6 +1,5 @@
 use cgmath::Vector2;
 
-
 use crate::input::UpdateState;
 use crate::map_state::MapState;
 use std::time::Duration;
