@@ -1,7 +1,7 @@
 use cgmath::prelude::*;
 use cgmath::{AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
-use crate::render::shaders::ShaderCamera;
+
 use crate::util::math::{bounds_from_points, Aabb2, Aabb3, Plane};
 use crate::util::SignificantlyDifferent;
 

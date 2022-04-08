@@ -1,7 +1,7 @@
-use std::collections::HashSet;
+
 use std::default::Default;
 
-use cgmath::AbsDiffEq;
+
 use std::{cmp, iter};
 
 use tracing;
@@ -9,21 +9,21 @@ use wgpu::{Buffer, Limits, Queue, Surface, SurfaceConfiguration};
 
 use style_spec::Style;
 
-use crate::coords::{ViewRegion, Zoom, TILE_SIZE};
-use crate::io::scheduler::Scheduler;
+use crate::coords::{ViewRegion, Zoom};
+
 use crate::io::tile_cache::TileCache;
 use crate::io::LayerTessellateMessage;
-use crate::platform::{COLOR_TEXTURE_FORMAT, MIN_BUFFER_SIZE};
+use crate::platform::{MIN_BUFFER_SIZE};
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
-use crate::render::camera;
-use crate::render::camera::{Camera, Perspective, ViewProjection};
+
+use crate::render::camera::{Camera, ViewProjection};
 use crate::render::options::{
     DEBUG_WIREFRAME, FEATURE_METADATA_BUFFER_SIZE, INDEX_FORMAT, INDICES_BUFFER_SIZE,
     LAYER_METADATA_BUFFER_SIZE, TILE_VIEW_BUFFER_SIZE, VERTEX_BUFFER_SIZE,
 };
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
 use crate::tessellation::IndexDataType;
-use crate::util::{ChangeObserver, FPSMeter};
+use crate::util::{FPSMeter};
 use crate::WindowSize;
 
 use super::piplines::*;

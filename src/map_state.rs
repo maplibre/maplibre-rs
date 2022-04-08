@@ -1,15 +1,15 @@
 use crate::coords::{ViewRegion, Zoom, TILE_SIZE};
-use crate::input::{InputController, UpdateState};
+
 use crate::io::scheduler::Scheduler;
-use crate::io::LayerTessellateMessage;
+
 use crate::render::camera;
-use crate::render::camera::{Camera, Perspective, ViewProjection};
+use crate::render::camera::{Camera, Perspective};
 use crate::render::render_state::RenderState;
 use crate::util::ChangeObserver;
-use crate::{SurfaceFactory, WindowSize};
+use crate::{WindowSize};
 use std::collections::HashSet;
-use std::iter;
-use std::time::Duration;
+
+
 use style_spec::Style;
 use wgpu::SurfaceError;
 

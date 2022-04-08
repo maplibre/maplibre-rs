@@ -13,8 +13,8 @@ use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
 use crate::map_state::MapState;
 
-use crate::render::render_state::RenderState;
-use crate::Scheduler;
+
+
 
 mod pan_handler;
 mod pinch_handler;

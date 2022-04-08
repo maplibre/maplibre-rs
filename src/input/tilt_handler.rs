@@ -1,8 +1,8 @@
 use super::UpdateState;
 
 use crate::map_state::MapState;
-use crate::render::render_state::RenderState;
-use crate::Scheduler;
+
+
 use cgmath::{Deg, Rad, Zero};
 use std::time::Duration;
 

@@ -1,6 +1,6 @@
-use crate::render::render_state::RenderState;
 
-use crate::Scheduler;
+
+
 use cgmath::Vector2;
 
 use crate::coords::WorldCoords;
@@ -60,7 +60,7 @@ impl QueryHandler {
 }
 
 impl UpdateState for QueryHandler {
-    fn update_state<W>(&mut self, state: &mut MapState<W>, dt: Duration) {
+    fn update_state<W>(&mut self, state: &mut MapState<W>, _dt: Duration) {
         if self.clicking {
             if let Some(window_position) = self.window_position {
                 let perspective = &state.perspective();

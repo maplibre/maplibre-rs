@@ -7,14 +7,12 @@ use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEve
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
-use style_spec::Style;
-
 use crate::input::{InputController, UpdateState};
-use crate::io::scheduler::Scheduler;
+
 use crate::map_state::{MapState, Runnable};
 use crate::platform::Instant;
-use crate::render::render_state::RenderState;
-use crate::{FromCanvas, FromWindow, MapBuilder, WindowSize};
+
+use crate::{FromWindow, MapBuilder, WindowSize};
 
 impl Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Window> {
     fn run(mut self, event_loop: winit::event_loop::EventLoop<()>, max_frames: Option<u64>) {
@@ -160,7 +158,7 @@ pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
 }
 
 #[cfg(target_arch = "wasm32")]
-impl FromCanvas for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>> {
+impl crate::FromCanvas for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>> {
     fn from_canvas(dom_id: &'static str) -> Self {
         let event_loop = EventLoop::new();
         Self::new(Box::new(move || {

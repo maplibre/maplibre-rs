@@ -83,11 +83,7 @@ where
 
     pub fn did_change(&self, epsilon: T::Epsilon) -> bool {
         if let Some(reference_value) = &self.reference_value {
-            if reference_value.ne(&self.inner, epsilon) {
-                true
-            } else {
-                false
-            }
+            reference_value.ne(&self.inner, epsilon)
         } else {
             true
         }

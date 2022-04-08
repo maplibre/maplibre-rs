@@ -1,5 +1,5 @@
 use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
-use crate::io::tile_cache::TileCache;
+
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, Queue};
 use crate::render::camera::ViewProjection;
 use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata};

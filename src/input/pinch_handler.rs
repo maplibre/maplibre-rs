@@ -1,13 +1,13 @@
 use super::UpdateState;
 
-use crate::render::render_state::RenderState;
-use crate::{MapState, Scheduler};
+
+use crate::{MapState};
 use std::time::Duration;
 
 pub struct PinchHandler {}
 
 impl UpdateState for PinchHandler {
-    fn update_state<W>(&mut self, state: &mut MapState<W>, dt: Duration) {
+    fn update_state<W>(&mut self, _state: &mut MapState<W>, _dt: Duration) {
         // TODO
     }
 }

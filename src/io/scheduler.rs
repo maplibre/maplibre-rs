@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
 use std::future::Future;
 
 use geozero::mvt::Tile;
@@ -157,7 +157,7 @@ impl ThreadLocalState {
         z: u8,
         zoom: Zoom,
     ) -> Option<Vec<IndexedGeometry<f64>>> {
-        if let Ok(mut geometry_index) = self.geometry_index.lock() {
+        if let Ok(geometry_index) = self.geometry_index.lock() {
             geometry_index
                 .query_point(world_coords, z, zoom)
                 .map(|geometries| {

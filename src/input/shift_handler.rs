@@ -1,7 +1,7 @@
 use super::UpdateState;
 
-use crate::render::render_state::RenderState;
-use crate::{MapState, Scheduler};
+
+use crate::{MapState};
 use cgmath::{Vector3, Zero};
 use std::time::Duration;
 

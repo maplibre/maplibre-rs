@@ -1,5 +1,5 @@
 use crate::io::scheduler::Scheduler;
-use std::future::Future;
+
 
 mod input;
 
@@ -17,7 +17,7 @@ pub(crate) mod winit;
 pub mod benchmarking;
 
 use crate::map_state::{MapState, Runnable};
-use crate::render::render_state::{RenderState, SurfaceFactory};
+use crate::render::render_state::{RenderState};
 pub use io::scheduler::ScheduleMethod;
 pub use platform::schedule_method::*;
 use style_spec::Style;
