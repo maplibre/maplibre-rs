@@ -173,10 +173,11 @@ impl crate::window::FromCanvas
             window.set_inner_size(size);
             (
                 window,
-                WindowSize {
-                    width: size.width as u32,
-                    height: size.height as u32,
-                },
+                WindowSize::new(
+                    size.width.try_into().unwrap(),
+                    size.height.try_into().unwrap(),
+                )
+                .unwrap(),
                 event_loop,
             )
         }))

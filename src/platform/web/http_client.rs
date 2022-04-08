@@ -9,7 +9,7 @@ use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
 
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::error::Error;
-use crate::io::scheduler::{ScheduleMethod, Scheduler, ThreadLocalState};
+use crate::io::scheduler::{ScheduleMethod, Scheduler};
 use crate::io::tile_cache::TileCache;
 use crate::io::TileRequestID;
 

@@ -9,7 +9,8 @@ use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
 
 use crate::coords::{TileCoords, WorldTileCoords};
 use crate::error::Error;
-use crate::io::scheduler::{ScheduleMethod, Scheduler, ThreadLocalState};
+use crate::io::scheduler::{ScheduleMethod, Scheduler};
+use crate::io::shared_thread_state::SharedThreadState;
 use crate::io::tile_cache::TileCache;
 use crate::io::TileRequestID;
 
@@ -39,7 +40,7 @@ impl WebWorkerPoolScheduleMethod {
     pub fn schedule<T>(
         &self,
         shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(ThreadLocalState) -> T) + Send + 'static,
+        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
     ) where
         T: std::future::Future + 'static,
         T::Output: Send + 'static,

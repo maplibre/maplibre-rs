@@ -6,7 +6,7 @@ pub struct WindowSize {
 
 impl WindowSize {
     pub fn new(width: u32, height: u32) -> Option<Self> {
-        if width <= 0 || height <= 0 {
+        if width == 0 || height == 0 {
             return None;
         }
 
