@@ -1,6 +1,3 @@
-
-
-
 use cgmath::Vector2;
 
 use crate::coords::WorldCoords;

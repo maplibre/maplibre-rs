@@ -2,7 +2,6 @@ use super::UpdateState;
 
 use crate::map_state::MapState;
 
-
 use cgmath::{Deg, Rad, Zero};
 use std::time::Duration;
 

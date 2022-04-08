@@ -1,6 +1,5 @@
 use crate::io::scheduler::Scheduler;
 
-
 mod input;
 
 pub(crate) mod coords;
@@ -17,7 +16,7 @@ pub(crate) mod winit;
 pub mod benchmarking;
 
 use crate::map_state::{MapState, Runnable};
-use crate::render::render_state::{RenderState};
+use crate::render::render_state::RenderState;
 pub use io::scheduler::ScheduleMethod;
 pub use platform::schedule_method::*;
 use style_spec::Style;

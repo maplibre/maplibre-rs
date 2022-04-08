@@ -1,4 +1,4 @@
-use std::collections::{HashSet};
+use std::collections::HashSet;
 use std::future::Future;
 
 use geozero::mvt::Tile;

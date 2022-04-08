@@ -3,8 +3,6 @@ use super::UpdateState;
 use crate::coords::Zoom;
 use crate::map_state::MapState;
 
-
-
 use cgmath::{Vector2, Vector3};
 use std::time::Duration;
 

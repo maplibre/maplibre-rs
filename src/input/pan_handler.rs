@@ -3,7 +3,6 @@ use super::UpdateState;
 use crate::map_state::MapState;
 use crate::render::camera::Camera;
 
-
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};

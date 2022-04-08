@@ -3396,8 +3396,9 @@ dependencies = [
 
 [[package]]
 name = "tracy-client"
-version = "0.12.8"
-source = "git+https://github.com/nagisa/rust_tracy_client.git?branch=create-pull-request/patch#8be199c0fce3ae8df5c09dadc0c0b21be9b90ae2"
+version = "0.12.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dffcb26a0c786a0e154afdf21284969ff23759f42f156bcfddddae1a3c2404f2"
 dependencies = [
  "once_cell",
  "tracy-client-sys",
@@ -3405,8 +3406,9 @@ dependencies = [
 
 [[package]]
 name = "tracy-client-sys"
-version = "0.17.0"
-source = "git+https://github.com/nagisa/rust_tracy_client.git?branch=create-pull-request/patch#8be199c0fce3ae8df5c09dadc0c0b21be9b90ae2"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6226e4e77f0d46ce7ebb0a4b1daa82790035248b75bbf605b932a1d7b3b22b6d"
 dependencies = [
  "cc",
 ]

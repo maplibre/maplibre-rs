@@ -6,9 +6,8 @@ use crate::render::camera;
 use crate::render::camera::{Camera, Perspective};
 use crate::render::render_state::RenderState;
 use crate::util::ChangeObserver;
-use crate::{WindowSize};
+use crate::WindowSize;
 use std::collections::HashSet;
-
 
 use style_spec::Style;
 use wgpu::SurfaceError;

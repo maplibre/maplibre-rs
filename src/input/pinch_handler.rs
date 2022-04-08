@@ -1,7 +1,6 @@
 use super::UpdateState;
 
-
-use crate::{MapState};
+use crate::MapState;
 use std::time::Duration;
 
 pub struct PinchHandler {}

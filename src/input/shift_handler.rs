@@ -1,7 +1,6 @@
 use super::UpdateState;
 
-
-use crate::{MapState};
+use crate::MapState;
 use cgmath::{Vector3, Zero};
 use std::time::Duration;
 

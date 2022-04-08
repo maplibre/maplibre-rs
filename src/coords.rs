@@ -3,7 +3,6 @@
 use std::fmt;
 use std::fmt::Formatter;
 
-
 use cgmath::num_traits::Pow;
 use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
 

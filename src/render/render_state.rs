@@ -1,6 +1,4 @@
-
 use std::default::Default;
-
 
 use std::{cmp, iter};
 
@@ -13,7 +11,7 @@ use crate::coords::{ViewRegion, Zoom};
 
 use crate::io::tile_cache::TileCache;
 use crate::io::LayerTessellateMessage;
-use crate::platform::{MIN_BUFFER_SIZE};
+use crate::platform::MIN_BUFFER_SIZE;
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
 
 use crate::render::camera::{Camera, ViewProjection};
@@ -23,7 +21,7 @@ use crate::render::options::{
 };
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
 use crate::tessellation::IndexDataType;
-use crate::util::{FPSMeter};
+use crate::util::FPSMeter;
 use crate::WindowSize;
 
 use super::piplines::*;

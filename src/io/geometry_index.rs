@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 
-use cgmath::num_traits::{Signed};
+use cgmath::num_traits::Signed;
 use cgmath::Bounded;
 use geo::prelude::*;
 use geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
