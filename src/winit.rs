@@ -12,7 +12,8 @@ use crate::input::{InputController, UpdateState};
 use crate::map_state::{MapState, Runnable};
 use crate::platform::Instant;
 
-use crate::{FromWindow, MapBuilder, WindowSize};
+use crate::window::FromWindow;
+use crate::{MapBuilder, WindowSize};
 
 impl Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Window> {
     fn run(mut self, event_loop: winit::event_loop::EventLoop<()>, max_frames: Option<u64>) {
@@ -123,10 +124,7 @@ impl FromWindow for MapBuilder<winit::window::Window, winit::event_loop::EventLo
             let size = window.inner_size();
             (
                 window,
-                WindowSize {
-                    width: size.width,
-                    height: size.height,
-                },
+                WindowSize::new(size.width, size.height).unwrap(),
                 event_loop,
             )
         }))
@@ -158,7 +156,9 @@ pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
 }
 
 #[cfg(target_arch = "wasm32")]
-impl crate::FromCanvas for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>> {
+impl crate::window::FromCanvas
+    for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>>
+{
     fn from_canvas(dom_id: &'static str) -> Self {
         let event_loop = EventLoop::new();
         Self::new(Box::new(move || {

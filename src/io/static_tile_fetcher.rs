@@ -39,7 +39,9 @@ impl StaticTileFetcher {
 
         let tile = TILES
             .get_file(format!("{}/{}/{}.{}", coords.z, coords.x, coords.y, "pbf"))
-            .ok_or_else(|| Error::File("Failed to load tile from within the binary".to_string()))?;
+            .ok_or_else(|| {
+                Error::Network("Failed to load tile from within the binary".to_string())
+            })?;
         Ok(Vec::from(tile.contents())) // TODO: Unnecessary copy
     }
 }

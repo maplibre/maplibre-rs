@@ -78,8 +78,8 @@ impl RenderState {
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: crate::platform::COLOR_TEXTURE_FORMAT,
-            width: window_size.width,
-            height: window_size.height,
+            width: window_size.width(),
+            height: window_size.height(),
             // present_mode: wgpu::PresentMode::Mailbox,
             present_mode: wgpu::PresentMode::Fifo, // VSync
         };

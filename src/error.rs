@@ -1,17 +1,23 @@
 //! Errors which can happen in various parts of the library.
 
 use lyon::tessellation::TessellationError;
+use std::sync::mpsc::SendError;
 
 #[derive(Debug)]
 pub enum Error {
     Schedule,
     Network(String),
-    File(String),
     Tesselation(TessellationError),
 }
 
 impl From<TessellationError> for Error {
     fn from(e: TessellationError) -> Self {
         Error::Tesselation(e)
+    }
+}
+
+impl<T> From<SendError<T>> for Error {
+    fn from(_e: SendError<T>) -> Self {
+        Error::Schedule
     }
 }

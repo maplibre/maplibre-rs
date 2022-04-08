@@ -13,7 +13,7 @@ use web_sys::Worker;
 use crate::io::scheduler::ScheduleMethod;
 use crate::io::scheduler::Scheduler;
 use crate::io::scheduler::ThreadLocalState;
-use crate::FromCanvas;
+use crate::window::FromCanvas;
 use crate::MapBuilder;
 
 pub mod http_client;

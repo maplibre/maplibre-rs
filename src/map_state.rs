@@ -10,6 +10,7 @@ use crate::WindowSize;
 use std::collections::HashSet;
 use std::sync::{mpsc, Arc, Mutex};
 
+use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
 use crate::io::shared_thread_state::SharedThreadState;
 use crate::io::source_client::{HttpSourceClient, SourceClient};
@@ -55,13 +56,13 @@ impl<W> MapState<W> {
             (TILE_SIZE / 2.0, TILE_SIZE / 2.0, 150.0),
             cgmath::Deg(-90.0),
             cgmath::Deg(0.0),
-            window_size.width,
-            window_size.height,
+            window_size.width(),
+            window_size.height(),
         );
 
         let perspective = camera::Perspective::new(
-            window_size.width,
-            window_size.height,
+            window_size.width(),
+            window_size.height(),
             cgmath::Deg(110.0),
             100.0,
             2000.0,
@@ -186,7 +187,7 @@ impl<W> MapState<W> {
         &mut self,
         coords: &WorldTileCoords,
         layers: &HashSet<String>,
-    ) -> Result<bool, mpsc::SendError<TileRequest>> {
+    ) -> Result<bool, Error> {
         if !self.tile_cache.is_layers_missing(coords, layers) {
             return Ok(false);
         }
@@ -242,10 +243,6 @@ impl<W> MapState<W> {
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        if width <= 0 || height <= 0 {
-            return;
-        }
-
         self.perspective.resize(width, height);
         self.camera.resize(width, height);
 

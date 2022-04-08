@@ -14,28 +14,14 @@ pub(crate) mod winit;
 
 // Used for benchmarking
 pub mod benchmarking;
+pub mod window;
 
 use crate::map_state::{MapState, Runnable};
 use crate::render::render_state::RenderState;
+use crate::window::{WindowFactory, WindowSize};
 pub use io::scheduler::ScheduleMethod;
 pub use platform::schedule_method::*;
 use style_spec::Style;
-
-#[derive(Clone, Copy)]
-pub struct WindowSize {
-    pub width: u32,
-    pub height: u32,
-}
-
-pub type WindowFactory<W, E> = dyn FnOnce() -> (W, WindowSize, E);
-
-pub trait FromWindow {
-    fn from_window(title: &'static str) -> Self;
-}
-
-pub trait FromCanvas {
-    fn from_canvas(dom_id: &'static str) -> Self;
-}
 
 pub struct Map<W, E> {
     map_state: MapState<W>,

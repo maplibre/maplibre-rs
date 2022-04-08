@@ -1,4 +1,5 @@
 use crate::coords::{WorldCoords, Zoom};
+use crate::error::Error;
 use crate::io::geometry_index::{GeometryIndex, IndexProcessor, IndexedGeometry, TileIndex};
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{
@@ -6,7 +7,7 @@ use crate::io::{
     TileTessellateMessage,
 };
 use crate::tessellation::Tessellated;
-use std::sync::mpsc::{SendError};
+use std::sync::mpsc::SendError;
 use std::sync::{mpsc, Arc, Mutex};
 
 #[derive(Clone)]
@@ -25,11 +26,7 @@ impl SharedThreadState {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn process_tile(
-        &self,
-        request_id: TileRequestID,
-        data: Box<[u8]>,
-    ) -> Result<(), SendError<TessellateMessage>> {
+    pub fn process_tile(&self, request_id: TileRequestID, data: Box<[u8]>) -> Result<(), Error> {
         if let Some(tile_request) = self.get_tile_request(request_id) {
             let tile_result = TileFetchResult::Tile {
                 coords: tile_request.coords,
@@ -43,10 +40,7 @@ impl SharedThreadState {
         Ok(())
     }
 
-    pub fn tile_unavailable(
-        &self,
-        request_id: TileRequestID,
-    ) -> Result<(), SendError<TessellateMessage>> {
+    pub fn tile_unavailable(&self, request_id: TileRequestID) -> Result<(), Error> {
         if let Some(tile_request) = self.get_tile_request(request_id) {
             let tile_result = TileFetchResult::Unavailable {
                 coords: tile_request.coords,
@@ -112,7 +106,7 @@ impl SharedThreadState {
         tile_result: &TileFetchResult,
         tile_request: &TileRequest,
         request_id: TileRequestID,
-    ) -> Result<(), SendError<TessellateMessage>> {
+    ) -> Result<(), Error> {
         match tile_result {
             TileFetchResult::Unavailable { coords } => {
                 for to_load in &tile_request.layers {
