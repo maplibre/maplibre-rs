@@ -3,7 +3,7 @@ use std::default::Default;
 use std::{cmp, iter};
 
 use tracing;
-use wgpu::{Buffer, Limits, Queue, Surface, SurfaceConfiguration};
+use wgpu::{Buffer, Limits, Queue};
 
 use style_spec::Style;
 

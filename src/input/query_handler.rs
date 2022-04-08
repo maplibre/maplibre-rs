@@ -1,6 +1,6 @@
 use cgmath::Vector2;
 
-use crate::coords::WorldCoords;
+
 use crate::input::UpdateState;
 use crate::map_state::MapState;
 use std::time::Duration;
@@ -64,10 +64,10 @@ impl UpdateState for QueryHandler {
                 let view_proj = state.camera().calc_view_proj(perspective);
                 let inverted_view_proj = view_proj.invert();
 
-                let z = state.visible_level(); // FIXME: can be wrong, if tiles of different z are visible
-                let zoom = state.zoom();
+                let _z = state.visible_level(); // FIXME: can be wrong, if tiles of different z are visible
+                let _zoom = state.zoom();
 
-                if let Some(coordinates) = state
+                if let Some(_coordinates) = state
                     .camera()
                     .window_to_world_at_ground(&window_position, &inverted_view_proj)
                 {

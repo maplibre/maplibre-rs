@@ -1,27 +1,24 @@
-use std::collections::HashSet;
+
 use std::future::Future;
 
-use geozero::mvt::Tile;
-use geozero::GeozeroDatasource;
-use std::sync::mpsc::{channel, Receiver, SendError, Sender};
-use std::sync::{Arc, Mutex};
 
-use vector_tile::parse_tile_bytes;
 
-use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
-use crate::io::tile_cache::TileCache;
-use crate::io::{
-    LayerTessellateMessage, TessellateMessage, TileFetchResult, TileRequest, TileRequestID,
-    TileTessellateMessage,
-};
+
+
+
+
+
+
+
+
 
 use crate::error::Error;
-use crate::io::geometry_index::{GeometryIndex, IndexProcessor, IndexedGeometry, TileIndex};
+
 use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::source_client::{HttpSourceClient, SourceClient};
-use crate::io::tile_request_state::TileRequestState;
-use crate::tessellation::Tessellated;
-use prost::Message;
+
+
+
+
 
 pub struct Scheduler {
     schedule_method: ScheduleMethod,
