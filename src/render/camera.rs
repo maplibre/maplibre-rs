@@ -1,7 +1,6 @@
 use cgmath::prelude::*;
 use cgmath::{AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
-
 use crate::util::math::{bounds_from_points, Aabb2, Aabb3, Plane};
 use crate::util::SignificantlyDifferent;
 
@@ -120,7 +119,7 @@ impl Camera {
 
     #[tracing::instrument(skip_all)]
     pub fn calc_view_proj(&self, perspective: &Perspective) -> ViewProjection {
-        ViewProjection(FLIP_Y * perspective.calc_matrix() * self.calc_matrix())
+        ViewProjection(FLIP_Y * perspective.current_projection * self.calc_matrix())
     }
 
     /// A transform which can be used to transfrom between clip and window space.
@@ -351,10 +350,11 @@ impl Camera {
 }
 
 pub struct Perspective {
-    aspect: f64,
     fovy: cgmath::Rad<f64>,
     znear: f64,
     zfar: f64,
+
+    current_projection: cgmath::Matrix4<f64>,
 }
 
 impl Perspective {
@@ -365,27 +365,39 @@ impl Perspective {
         znear: f64,
         zfar: f64,
     ) -> Self {
+        let rad = fovy.into();
         Self {
-            aspect: width as f64 / height as f64,
-            fovy: fovy.into(),
+            current_projection: Self::calc_matrix(width as f64 / height as f64, rad, znear, zfar),
+            fovy: rad,
             znear,
             zfar,
         }
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.aspect = width as f64 / height as f64;
+        self.current_projection = Self::calc_matrix(
+            width as f64 / height as f64,
+            self.fovy,
+            self.znear,
+            self.zfar,
+        );
     }
 
-    pub fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
-        OPENGL_TO_WGPU_MATRIX * cgmath::perspective(self.fovy, self.aspect, self.znear, self.zfar)
+    fn calc_matrix(
+        aspect: f64,
+        fovy: cgmath::Rad<f64>,
+        znear: f64,
+        zfar: f64,
+    ) -> cgmath::Matrix4<f64> {
+        OPENGL_TO_WGPU_MATRIX * cgmath::perspective(fovy, aspect, znear, zfar)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::render::camera::{InvertedViewProjection, ViewProjection};
     use cgmath::{AbsDiffEq, Vector2, Vector3, Vector4};
+
+    use crate::render::camera::{InvertedViewProjection, ViewProjection};
 
     use super::{Camera, Perspective};
 
