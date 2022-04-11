@@ -1,6 +1,19 @@
 import init, {create_pool_scheduler, new_thread_local_state, run} from "./dist/libs/mapr"
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
+import {
+    bigInt,
+    bulkMemory,
+    exceptions,
+    multiValue,
+    mutableGlobals,
+    referenceTypes,
+    saturatedFloatToInt,
+    signExtensions,
+    simd,
+    tailCall,
+    threads
+} from "wasm-feature-detect"
 
 declare global {
     interface Window {
@@ -17,6 +30,30 @@ const isWebGLSupported = () => {
     } catch (x) {
         return false
     }
+}
+
+const checkWasmFeatures = async () => {
+    const checkFeature = async function (feature: () => Promise<boolean>) {
+        let result = await  feature();
+        let msg = `The feature ${feature.name} returned: ${result}`;
+       if (result) {
+           console.log(msg);
+       } else {
+           console.warn(msg);
+       }
+    }
+
+    await checkFeature(bulkMemory);
+    await checkFeature(exceptions);
+    await checkFeature(multiValue);
+    await checkFeature(mutableGlobals);
+    await checkFeature(referenceTypes);
+    await checkFeature(saturatedFloatToInt);
+    await checkFeature(signExtensions);
+    await checkFeature(simd);
+    await checkFeature(tailCall);
+    await checkFeature(threads);
+    await checkFeature(bigInt);
 }
 
 const alertUser = (message: string) => {
@@ -72,7 +109,7 @@ const registerServiceWorker = () => {
     }
 }
 
-const setupLegacyWebWorker = (schedulerPtr: number, memory:  WebAssembly.Memory) => {
+const setupLegacyWebWorker = (schedulerPtr: number, memory: WebAssembly.Memory) => {
     let WORKER_COUNT = 4
     const createWorker = (id: number) => {
         const worker = new Worker(new URL('./worker.ts', import.meta.url), {
@@ -101,6 +138,8 @@ const setupLegacyWebWorker = (schedulerPtr: number, memory:  WebAssembly.Memory)
 }
 
 const start = async () => {
+    await checkWasmFeatures()
+
     if (!checkRequirements()) {
         return
     }

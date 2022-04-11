@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "spectorjs": "^0.9.27",
+    "wasm-feature-detect": "^1.2.11",
     "workbox-cacheable-response": "^6.4.2",
     "workbox-routing": "^6.4.2",
     "workbox-strategies": "^6.4.2"
