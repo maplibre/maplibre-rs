@@ -229,12 +229,14 @@ impl<W> MapState<W> {
                     .schedule(
                         self.shared_thread_state.clone(),
                         move |state: SharedThreadState| async move {
-                            if let Ok(data) = client.fetch(&coords).await {
-                                state
+                            match client.fetch(&coords).await {
+                                Ok(data) => state
                                     .process_tile(request_id, data.into_boxed_slice())
-                                    .unwrap();
-                            } else {
-                                state.tile_unavailable(request_id).unwrap();
+                                    .unwrap(),
+                                Err(e) => {
+                                    log::error!("{:?}", &e);
+                                    state.tile_unavailable(request_id).unwrap()
+                                }
                             }
                         },
                     )
