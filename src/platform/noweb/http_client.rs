@@ -38,10 +38,16 @@ impl ReqwestHttpClient {
 
     pub async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
         let response = self.client.get(url).send().await?;
-        if response.status() != StatusCode::OK {
-            return Err(Error::Network("response code not 200".to_string()));
+        match response.error_for_status() {
+            Ok(response) => {
+                if response.status() == StatusCode::NOT_MODIFIED {
+                    log::info!("Using data from cache");
+                }
+
+                let body = response.bytes().await?;
+                Ok(Vec::from(body.as_ref()))
+            }
+            Err(e) => Err(Error::Network(e.to_string())),
         }
-        let body = response.bytes().await?;
-        Ok(Vec::from(body.as_ref()))
     }
 }

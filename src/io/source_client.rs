@@ -30,7 +30,7 @@ impl HttpSourceClient {
         Self {
             #[cfg(not(target_arch = "wasm32"))]
             inner_client: crate::platform::http_client::ReqwestHttpClient::new(Some(
-                "/tmp/mapr-cache".to_string(), // TODO make path  dynamic
+                "./mapr-cache".to_string(), // TODO make path  dynamic
             )),
             #[cfg(target_arch = "wasm32")]
             inner_client: crate::platform::http_client::WHATWGFetchHttpClient::new(),
