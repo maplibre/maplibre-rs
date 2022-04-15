@@ -33,9 +33,9 @@ const isWebGLSupported = () => {
 }
 
 const checkWasmFeatures = async () => {
-    const checkFeature = async function (feature: () => Promise<boolean>) {
+    const checkFeature = async function (featureName: string, feature: () => Promise<boolean>) {
         let result = await  feature();
-        let msg = `The feature ${feature.name} returned: ${result}`;
+        let msg = `The feature ${featureName} returned: ${result}`;
        if (result) {
            console.log(msg);
        } else {
@@ -43,17 +43,17 @@ const checkWasmFeatures = async () => {
        }
     }
 
-    await checkFeature(bulkMemory);
-    await checkFeature(exceptions);
-    await checkFeature(multiValue);
-    await checkFeature(mutableGlobals);
-    await checkFeature(referenceTypes);
-    await checkFeature(saturatedFloatToInt);
-    await checkFeature(signExtensions);
-    await checkFeature(simd);
-    await checkFeature(tailCall);
-    await checkFeature(threads);
-    await checkFeature(bigInt);
+    await checkFeature("bulkMemory", bulkMemory);
+    await checkFeature("exceptions", exceptions);
+    await checkFeature("multiValue", multiValue);
+    await checkFeature("mutableGlobals", mutableGlobals);
+    await checkFeature("referenceTypes", referenceTypes);
+    await checkFeature("saturatedFloatToInt", saturatedFloatToInt);
+    await checkFeature("signExtensions", signExtensions);
+    await checkFeature("simd", simd);
+    await checkFeature("tailCall", tailCall);
+    await checkFeature("threads", threads);
+    await checkFeature("bigInt", bigInt);
 }
 
 const alertUser = (message: string) => {
@@ -158,7 +158,7 @@ const start = async () => {
         });
     })
 
-    setupLegacyWebWorker(schedulerPtr, memory)
+    // setupLegacyWebWorker(schedulerPtr, memory)
 
     await run(schedulerPtr)
 }

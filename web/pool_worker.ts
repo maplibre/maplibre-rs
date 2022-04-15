@@ -1,7 +1,7 @@
 import init, {child_entry_point} from "./dist/libs/mapr"
 
 onmessage = async message => {
-    const initialised = init(undefined, message.data[1]).catch(err => {
+    const initialised = init(message.data[0], message.data[1]).catch(err => {
         // Propagate to main `onerror`:
         setTimeout(() => {
             throw err;
