@@ -59,6 +59,13 @@ vector map renderers like Google Maps, Apple Maps or MapLibre. The current imple
 of the used technology stack. It is unclear whether the high-performance requirements of rendering maps using vector
 graphics are achievable using the current stack.
 
+## Talk: World in Vectors
+
+https://user-images.githubusercontent.com/905221/163552617-5db04c66-23e3-4915-87c1-25185d96730a.mp4
+
+
+([YouTube](https://www.youtube.com/watch?v=KFk8bOtJzCM))
+
 ## Current Features
 
 * [x] Render single vector tiles
