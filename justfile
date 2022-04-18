@@ -63,6 +63,11 @@ print-android-env:
   echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
   echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
 
+
+# FIXME
+profile-bench:
+ cargo flamegraph --bench render -- --bench
+
 # language=bash
 extract-tiles:
   #!/usr/bin/env bash
