@@ -111,7 +111,7 @@ jobs:
       - name: Install just
         run: cargo install just
       - name: Build
-        run: just build-webpack-webgl-production
+        run: just webpack-webgl-production
       - name: Deploy to maxammann.org
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
@@ -144,7 +144,7 @@ jobs:
       - name: Install just
         run: cargo install just
       - name: Build
-        run: just build-webpack-production
+        run: just webpack-production
       - name: Deploy to maxammann.org
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
