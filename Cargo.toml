@@ -104,8 +104,6 @@ include_dir = "0.7.2"
 
 [dev-dependencies]
 criterion = "0.3"
-# Support logging in tests
-test-env-log = "0.2"
 
 [build-dependencies]
 wgsl-validate = { path = "./libs/wgsl_validate" }

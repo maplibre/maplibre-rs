@@ -79,12 +79,11 @@ jobs:
             ~/.cargo/.crates*
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Prepare Rust Toolchain # This is required because we are recompiling the stdlib
+      - name: Install cargo-make
         run: |
-          rustup install nightly-2022-04-04-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-2022-04-04-x86_64-unknown-linux-gnu
+          cargo install cargo-make
       - name: Build
-        run: tools/build-android
+        run: cargo make --no-workspace build-apk
       - uses: actions/upload-artifact@v2
         with:
           name: mapr.apk
@@ -110,14 +109,13 @@ jobs:
             ~/.cargo/.crates*
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Prepare Rust Toolchain # This is required because we are recompiling the stdlib
+      - name: Install cargo-make
         run: |
-          rustup install nightly-2022-04-04-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-2022-04-04-x86_64-unknown-linux-gnu
+          cargo install cargo-make
       - name: NPM Install
         run: npm install
       - name: Build
-        run: npm run webgl-production-build
+        run: cargo make --cwd ../ --no-workspace build-webpack-webgl-production
       - name: Deploy to maxammann.org
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
@@ -147,14 +145,13 @@ jobs:
             ~/.cargo/.crates*
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Prepare Rust Toolchain # This is required because we are recompiling the stdlib
+      - name: Install cargo-make
         run: |
-          rustup install nightly-2022-04-04-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-2022-04-04-x86_64-unknown-linux-gnu
+          cargo install cargo-make
       - name: NPM Install
         run: npm install
       - name: Build
-        run: npm run production-build
+        run: cargo make --cwd ../ --no-workspace build-webpack-production
       - name: Deploy to maxammann.org
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}

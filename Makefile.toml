@@ -1,0 +1,113 @@
+[config]
+skip_core_tasks = true
+
+[tasks.format]
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--all", "--"]
+
+[tasks.clippy]
+command = "cargo"
+args = ["clippy", "--all-targets", "--all-features"]
+
+[tasks.build-webpack-webgl-production]
+cwd = "./web"
+toolchain = "nightly-2022-04-04"
+install_crate = { rustup_component_name = "rust-src" }
+command = "npm"
+args = ["run", "webgl-production-build"]
+
+[tasks.build-webpack-production]
+cwd = "./web"
+toolchain = "nightly-2022-04-04"
+install_crate = { rustup_component_name = "rust-src" }
+command = "npm"
+args = ["run", "production-build"]
+
+[tasks.wasm-pack-webgl]
+script_runner = "bash"
+# language=bash
+script = '''
+./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
+  --release --target web --out-dir dist/mapr -- \
+  --features "web-webgl" -Z build-std=std,panic_abort
+'''
+
+[tasks.wasm-pack]
+script_runner = "bash"
+# language=bash
+script = '''
+./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
+  --release --target web --out-dir dist/mapr -- \
+  -Z build-std=std,panic_abort
+'''
+
+[tasks.build-web-webgl]
+toolchain = "nightly-2022-04-04"
+install_crate = { rustup_component_name = "rust-src" }
+command = "cargo"
+# -Zbuild-std is required for shared memory/atomics support
+args = ["build", "--features", "web-webgl", "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort"]
+run_task = "wasm-bindgen"
+
+[tasks.build-web]
+toolchain = "nightly-2022-04-04"
+install_crate = { rustup_component_name = "rust-src" }
+command = "cargo"
+# -Zbuild-std is required for shared memory/atomics support
+args = ["build", "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort"]
+run_task = "wasm-bindgen"
+
+[tasks.wasm-bindgen]
+script_runner = "bash"
+# language=bash
+script = '''
+# TODO: Untested: --reference-types
+wasm-bindgen --target web --out-dir dist/mapr-pain-bindgen target/wasm32-unknown-unknown/debug/mapr.wasm
+'''
+
+[tasks.extract-tiles]
+script_runner = "bash"
+# language=bash
+script = '''
+if ! command -v tilelive-copy &> /dev/null
+then
+    echo "tilelive-copy could not be found. Install it with 'yarn global add @mapbox/tilelive @mapbox/mbtiles'"
+    exit 1
+fi
+
+# Bounds copied from https://boundingbox.klokantech.com/
+tilelive-copy \
+    --minzoom=12 --maxzoom=12 \
+    --bounds="11.395769,48.083436,11.618242,48.220866" \
+    test-data/europe_germany-2020-02-13-openmaptiles-v3.12.1.mbtiles test-data/munich-12.mbtiles
+
+tilelive-copy \
+    --minzoom=15 --maxzoom=15 \
+    --bounds="11.395769,48.083436,11.618242,48.220866" \
+    test-data/europe_germany-2020-02-13-openmaptiles-v3.12.1.mbtiles test-data/munich-15.mbtiles
+'''
+
+[tasks.print-android-env]
+script_runner = "bash"
+# language=bash
+script = '''
+echo "ANDROID_HOME: $ANDROID_HOME"
+echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
+'''
+
+[tasks.build-apk]
+toolchain = "nightly-2022-04-04"
+install_crate = { rustup_component_name = "rust-src" }
+command = "cargo"
+# -Zbuild-std is required for latest NDK: https://github.com/rust-windowing/android-ndk-rs/pull/189
+args = ["apk", "run", "--lib", "-Zbuild-std"]
+dependencies = [ "print-android-env" ]
+
+[tasks.run-apk]
+toolchain = "nightly-2022-04-04"
+install_crate = { rustup_component_name = "rust-src" }
+command = "cargo"
+args = ["apk", "build", "--lib", "-Zbuild-std"]
+dependencies = [ "print-android-env" ]
