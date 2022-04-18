@@ -1,3 +1,0 @@
-[submodule "libs/vector_tile/spec"]
-	path = libs/vector_tile/spec
-	url = git@github.com:mapbox/vector-tile-spec.git
