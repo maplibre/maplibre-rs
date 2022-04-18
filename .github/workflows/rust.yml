@@ -79,11 +79,10 @@ jobs:
             ~/.cargo/.crates*
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install cargo-make
-        run: |
-          cargo install cargo-make
+      - name: Install just
+        run: cargo install just
       - name: Build
-        run: cargo make --no-workspace build-apk
+        run: just build-apk
       - uses: actions/upload-artifact@v2
         with:
           name: mapr.apk
@@ -109,13 +108,10 @@ jobs:
             ~/.cargo/.crates*
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install cargo-make
-        run: |
-          cargo install cargo-make
-      - name: NPM Install
-        run: npm install
+      - name: Install just
+        run: cargo install just
       - name: Build
-        run: cargo make --cwd ../ --no-workspace build-webpack-webgl-production
+        run: just build-webpack-webgl-production
       - name: Deploy to maxammann.org
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
@@ -145,13 +141,10 @@ jobs:
             ~/.cargo/.crates*
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install cargo-make
-        run: |
-          cargo install cargo-make
-      - name: NPM Install
-        run: npm install
+      - name: Install just
+        run: cargo install just
       - name: Build
-        run: cargo make --cwd ../ --no-workspace build-webpack-production
+        run: just build-webpack-production
       - name: Deploy to maxammann.org
         env:
           SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
