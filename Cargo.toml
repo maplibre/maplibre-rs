@@ -1,7 +1,6 @@
 [workspace]
 
 members = [
-    "libs/vector_tile",
     "libs/style_spec",
     "libs/tilejson_spec",
     "libs/wgsl_validate",
@@ -86,6 +85,8 @@ geo-types = { version = "0.7", features = ["use-rstar_0_9"] }
 rstar = { version = "0.9" }
 prost = "0.9"
 geozero = { git = "https://github.com/georust/geozero", rev = "373b731", default-features = false, features = ["with-mvt", "with-geo"]}
+
+tile-grid = "0.3"
 
 # Rendering
 wgpu = { version = "0.12" }

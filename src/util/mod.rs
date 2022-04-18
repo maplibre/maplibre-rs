@@ -1,6 +1,7 @@
 //! Utils which are used internally
 
 mod fps_meter;
+pub mod grid;
 pub mod math;
 
 use crate::coords::WorldTileCoords;
