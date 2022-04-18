@@ -14,7 +14,6 @@ use geozero::mvt::tile;
 use geozero::GeozeroDatasource;
 use prost::Message;
 use std::sync::{mpsc, Arc, Mutex};
-use tracing_subscriber::fmt::layer;
 
 #[derive(Clone)]
 pub struct SharedThreadState {
