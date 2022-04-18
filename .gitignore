@@ -18,6 +18,7 @@ dist/
 
 # Cache by reqwest-middleware-cache
 *reqwest*cache*
+*mapr*cache*
 
 logs/
 
