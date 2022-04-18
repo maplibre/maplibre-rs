@@ -1219,7 +1219,7 @@ dependencies = [
 [[package]]
 name = "geozero"
 version = "0.8.0"
-source = "git+https://github.com/georust/geozero?rev=24973aa#24973aa93ca2b8783d0d89c2652de11fdfb569ae"
+source = "git+https://github.com/georust/geozero?rev=373b731#373b731e3c3deb367ad13eb3babdbcee4b7f0010"
 dependencies = [
  "geo-types",
  "prost",
@@ -1785,7 +1785,6 @@ dependencies = [
  "tracing-tracy",
  "tracing-wasm",
  "tracy-client",
- "vector-tile",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",

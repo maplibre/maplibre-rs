@@ -235,7 +235,7 @@ impl<W> MapState<W> {
                                     .unwrap(),
                                 Err(e) => {
                                     log::error!("{:?}", &e);
-                                    state.tile_unavailable(request_id).unwrap()
+                                    state.tile_unavailable(&coords, request_id).unwrap()
                                 }
                             }
                         },

@@ -5,10 +5,9 @@ use crate::coords::WorldTileCoords;
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 
+use geozero::mvt::tile;
 use std::collections::HashSet;
 use std::fmt;
-
-use vector_tile::tile::Layer;
 
 pub mod scheduler;
 pub mod source_client;
@@ -62,7 +61,7 @@ pub enum LayerTessellateMessage {
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         /// Holds for each feature the count of indices
         feature_indices: Vec<u32>,
-        layer_data: Layer,
+        layer_data: tile::Layer,
     },
 }
 
@@ -83,7 +82,7 @@ impl LayerTessellateMessage {
     pub fn layer_name(&self) -> &str {
         match self {
             LayerTessellateMessage::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
-            LayerTessellateMessage::TessellatedLayer { layer_data, .. } => layer_data.name(),
+            LayerTessellateMessage::TessellatedLayer { layer_data, .. } => &layer_data.name,
         }
     }
 }

@@ -76,9 +76,6 @@ raw-window-handle = "0.4"
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", optional = true }
 
-
-# Vector riles
-vector-tile = { path = "./libs/vector_tile" }
 style-spec = { path = "./libs/style_spec" }
 tilejson-spec = { path = "./libs/tilejson_spec" }
 
@@ -88,7 +85,7 @@ geo = { version = "0.19" }
 geo-types = { version = "0.7", features = ["use-rstar_0_9"] }
 rstar = { version = "0.9" }
 prost = "0.9"
-geozero = { git = "https://github.com/georust/geozero", rev = "24973aa", default-features = false, features = ["with-mvt", "with-geo"]}
+geozero = { git = "https://github.com/georust/geozero", rev = "373b731", default-features = false, features = ["with-mvt", "with-geo"]}
 
 # Rendering
 wgpu = { version = "0.12" }

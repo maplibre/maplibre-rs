@@ -23,7 +23,7 @@ impl GeometryIndex {
         }
     }
 
-    pub fn index_tile(&mut self, coords: &&WorldTileCoords, tile_index: TileIndex) {
+    pub fn index_tile(&mut self, coords: &WorldTileCoords, tile_index: TileIndex) {
         coords
             .build_quad_key()
             .and_then(|key| self.index.insert(key, tile_index));

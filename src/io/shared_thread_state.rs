@@ -1,4 +1,4 @@
-use crate::coords::{WorldCoords, Zoom};
+use crate::coords::{TileCoords, WorldCoords, WorldTileCoords, Zoom};
 use crate::error::Error;
 use crate::io::geometry_index::{GeometryIndex, IndexProcessor, IndexedGeometry, TileIndex};
 use crate::io::tile_request_state::TileRequestState;
@@ -7,8 +7,14 @@ use crate::io::{
     TileTessellateMessage,
 };
 use crate::tessellation::Tessellated;
+use std::collections::HashSet;
 
+use crate::tessellation::zero_tessellator::ZeroTessellator;
+use geozero::mvt::tile;
+use geozero::GeozeroDatasource;
+use prost::Message;
 use std::sync::{mpsc, Arc, Mutex};
+use tracing_subscriber::fmt::layer;
 
 #[derive(Clone)]
 pub struct SharedThreadState {
@@ -28,54 +34,115 @@ impl SharedThreadState {
     #[tracing::instrument(skip_all)]
     pub fn process_tile(&self, request_id: TileRequestID, data: Box<[u8]>) -> Result<(), Error> {
         if let Some(tile_request) = self.get_tile_request(request_id) {
-            let tile_result = TileFetchResult::Tile {
-                coords: tile_request.coords,
-                data,
-            };
+            let coords = tile_request.coords;
 
-            self.tessellate_layers_with_request(&tile_result, &tile_request, request_id)?;
-            self.index_geometry(&tile_result);
-        }
+            tracing::info!("parsing tile {} with {}bytes", &coords, data.len());
 
-        Ok(())
-    }
+            let _span_ = tracing::span!(tracing::Level::TRACE, "parse_tile_bytes").entered();
 
-    pub fn tile_unavailable(&self, request_id: TileRequestID) -> Result<(), Error> {
-        if let Some(tile_request) = self.get_tile_request(request_id) {
-            let tile_result = TileFetchResult::Unavailable {
-                coords: tile_request.coords,
-            };
-            self.tessellate_layers_with_request(&tile_result, &tile_request, request_id)?;
-        }
+            let mut tile = geozero::mvt::Tile::decode(data.as_ref()).expect("failed to load tile");
 
-        Ok(())
-    }
+            let mut index = IndexProcessor::new();
 
-    #[tracing::instrument(skip_all)]
-    fn index_geometry(&self, tile_result: &TileFetchResult) {
-        match tile_result {
-            TileFetchResult::Tile { data, coords } => {
-                use geozero::GeozeroDatasource;
-                use prost::Message;
-
-                let tile = geozero::mvt::Tile::decode(data.as_ref()).unwrap();
-
-                let mut processor = IndexProcessor::new();
-                for mut layer in tile.layers {
-                    layer.process(&mut processor).unwrap();
+            for mut layer in &mut tile.layers {
+                let cloned_layer = layer.clone();
+                let layer_name: &str = &cloned_layer.name;
+                if !tile_request.layers.contains(layer_name) {
+                    continue;
                 }
 
-                if let Ok(mut geometry_index) = self.geometry_index.lock() {
-                    geometry_index.index_tile(
-                        &coords,
-                        TileIndex::Linear {
-                            list: processor.get_geometries(),
+                tracing::info!("layer {} at {} ready", layer_name, &coords);
+
+                let mut tessellator = ZeroTessellator::default();
+                if let Err(e) = layer.process(&mut tessellator) {
+                    self.message_sender.send(TessellateMessage::Layer(
+                        LayerTessellateMessage::UnavailableLayer {
+                            coords,
+                            layer_name: layer_name.to_owned(),
                         },
-                    )
+                    ))?;
+
+                    tracing::error!(
+                        "layer {} at {} tesselation failed {:?}",
+                        layer_name,
+                        &coords,
+                        e
+                    );
+                } else {
+                    self.message_sender.send(TessellateMessage::Layer(
+                        LayerTessellateMessage::TessellatedLayer {
+                            coords,
+                            buffer: tessellator.buffer.into(),
+                            feature_indices: tessellator.feature_indices,
+                            layer_data: cloned_layer,
+                        },
+                    ))?;
                 }
+
+                // TODO
+                // layer.process(&mut index).unwrap();
             }
-            _ => {}
+
+            let available_layers: HashSet<_> = tile
+                .layers
+                .iter()
+                .map(|layer| layer.name.clone())
+                .collect::<HashSet<_>>();
+
+            for missing_layer in tile_request.layers.difference(&available_layers) {
+                self.message_sender.send(TessellateMessage::Layer(
+                    LayerTessellateMessage::UnavailableLayer {
+                        coords,
+                        layer_name: missing_layer.to_owned(),
+                    },
+                ))?;
+
+                tracing::info!(
+                    "requested layer {} at {} not found in tile",
+                    missing_layer,
+                    &coords
+                );
+            }
+
+            tracing::info!("tile tessellated at {} finished", &tile_request.coords);
+
+            self.message_sender
+                .send(TessellateMessage::Tile(TileTessellateMessage {
+                    request_id,
+                    coords: tile_request.coords,
+                }))?;
+
+            if let Ok(mut geometry_index) = self.geometry_index.lock() {
+                geometry_index.index_tile(
+                    &coords,
+                    TileIndex::Linear {
+                        list: index.get_geometries(),
+                    },
+                )
+            }
         }
+
+        Ok(())
+    }
+
+    pub fn tile_unavailable(
+        &self,
+        coords: &WorldTileCoords,
+        request_id: TileRequestID,
+    ) -> Result<(), Error> {
+        if let Some(tile_request) = self.get_tile_request(request_id) {
+            for to_load in &tile_request.layers {
+                tracing::warn!("layer {} at {} unavailable", to_load, coords);
+                self.message_sender.send(TessellateMessage::Layer(
+                    LayerTessellateMessage::UnavailableLayer {
+                        coords: tile_request.coords,
+                        layer_name: to_load.to_string(),
+                    },
+                ))?;
+            }
+        }
+
+        Ok(())
     }
 
     #[tracing::instrument(skip_all)]
@@ -98,96 +165,5 @@ impl SharedThreadState {
         } else {
             unimplemented!()
         }
-    }
-
-    #[tracing::instrument(skip_all)]
-    fn tessellate_layers_with_request(
-        &self,
-        tile_result: &TileFetchResult,
-        tile_request: &TileRequest,
-        request_id: TileRequestID,
-    ) -> Result<(), Error> {
-        match tile_result {
-            TileFetchResult::Unavailable { coords } => {
-                for to_load in &tile_request.layers {
-                    tracing::warn!("layer {} at {} unavailable", to_load, &coords);
-                    self.message_sender.send(TessellateMessage::Layer(
-                        LayerTessellateMessage::UnavailableLayer {
-                            coords: *coords,
-                            layer_name: to_load.to_string(),
-                        },
-                    ))?;
-                }
-            }
-            TileFetchResult::Tile { data, coords } => {
-                tracing::info!("parsing tile {} with {}bytes", &coords, data.len());
-
-                let tile = {
-                    let _span_ =
-                        tracing::span!(tracing::Level::TRACE, "parse_tile_bytes").entered();
-                    vector_tile::parse_tile_bytes(data).expect("failed to load tile")
-                };
-
-                for to_load in &tile_request.layers {
-                    if let Some(layer) = tile
-                        .layers()
-                        .iter()
-                        .find(|layer| to_load.as_str() == layer.name())
-                    {
-                        match layer.tessellate() {
-                            Ok((buffer, feature_indices)) => {
-                                tracing::info!("layer {} at {} ready", to_load, &coords);
-                                self.message_sender.send(TessellateMessage::Layer(
-                                    LayerTessellateMessage::TessellatedLayer {
-                                        coords: *coords,
-                                        buffer: buffer.into(),
-                                        feature_indices,
-                                        layer_data: layer.clone(),
-                                    },
-                                ))?;
-                            }
-                            Err(e) => {
-                                self.message_sender.send(TessellateMessage::Layer(
-                                    LayerTessellateMessage::UnavailableLayer {
-                                        coords: *coords,
-                                        layer_name: to_load.to_string(),
-                                    },
-                                ))?;
-
-                                tracing::error!(
-                                    "layer {} at {} tesselation failed {:?}",
-                                    to_load,
-                                    &coords,
-                                    e
-                                );
-                            }
-                        }
-                    } else {
-                        self.message_sender.send(TessellateMessage::Layer(
-                            LayerTessellateMessage::UnavailableLayer {
-                                coords: *coords,
-                                layer_name: to_load.to_string(),
-                            },
-                        ))?;
-
-                        tracing::info!(
-                            "requested layer {} at {} not found in tile",
-                            to_load,
-                            &coords
-                        );
-                    }
-                }
-            }
-        }
-
-        tracing::info!("tile at {} finished", &tile_request.coords);
-
-        self.message_sender
-            .send(TessellateMessage::Tile(TileTessellateMessage {
-                request_id,
-                coords: tile_request.coords,
-            }))?;
-
-        Ok(())
     }
 }

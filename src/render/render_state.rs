@@ -461,7 +461,7 @@ impl RenderState {
 
                                 let guard = allocate_feature_metadata.enter();
                                 let feature_metadata = layer_data
-                                    .features()
+                                    .features
                                     .iter()
                                     .enumerate()
                                     .flat_map(|(i, _feature)| {

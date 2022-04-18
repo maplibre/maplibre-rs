@@ -11,7 +11,7 @@ use lyon::tessellation::{
 use crate::error::Error;
 use wgpu::BufferAddress;
 
-mod layer;
+pub mod zero_tessellator;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 

@@ -11,8 +11,6 @@ use lyon::tessellation::{
 };
 
 use crate::error::Error;
-use vector_tile::geometry::{Command, Geometry};
-use vector_tile::tile::Layer;
 
 use crate::render::ShaderVertex;
 use crate::tessellation::{Tessellated, VertexConstructor, DEFAULT_TOLERANCE};
