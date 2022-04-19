@@ -43,6 +43,14 @@
   </h3>
 </div>
 
+## Project State
+
+This project is in a proof-of-concept state. The proof of concept is done except for text rendering.
+The Rust ecosystem is suited very well for this project.
+
+In the future this project could be adopted and supported by [Maplibre](https://github.com/maplibre) to implement a
+next-gen mapping solution.
+
 ## Description
 
 mapr is a portable and performant vector maps renderer. We aim to support the web, mobile and desktop applications. This
@@ -63,33 +71,34 @@ graphics are achievable using the current stack.
 
 https://user-images.githubusercontent.com/905221/163552617-5db04c66-23e3-4915-87c1-25185d96730a.mp4
 
-
 ([YouTube](https://www.youtube.com/watch?v=KFk8bOtJzCM))
 
 ## Current Features
 
-* [x] Render single vector tiles
-* [x] Render multiple vector tiles
-* [x] Runs on Linux, Android, iOS, MacOS, Firefox and Chrome
-* [ ] Simple navigations by translating the camera
-* [ ] Load and tessellate vector tiles on demand
-* [ ] Navigation which "feels good"
+* Runs on Linux, Android, iOS, MacOS, Firefox and Chrome
+* Render a vector tile dataset
+* Simple navigation powered by winit
+* Multithreaded on all platforms
+* Querying feature data
 
-### Goals
+## Missing Features
 
-* Renders [vector tiles](https://docs.mapbox.com/vector-tiles/specification/).
-* Runs on:
-    * Web via WebAssembly and WebGPU,
-    * Linux (Xorg/Wayland) via Vulkan,
-    * Android via OpenGL,
-    * iOS via Metal.
-* Supports the [TileJSON](https://docs.mapbox.com/help/glossary/tilejson/) standard
-
-### Non-Goals
-
-* Rendering any kind of rasterized data
+* Rendering Text
+* Per-Feature Rendering
+* Rendering:
+    * Raster data
+    * 3D terrain
+    * Hill-shade (DEM)
+* Support for:
+    * GeoJSON
+* API for:
+    * TypeScript
+    * Swift
+    * Java/Kotlin
 
 ## Repository Layout
+
+(Note: to be changed)
 
 ```bash
 .
@@ -98,17 +107,12 @@ https://user-images.githubusercontent.com/905221/163552617-5db04c66-23e3-4915-87
 ├── libs                # Libraries which will eventually be published as separate crates
 │   ├── mbtiles         # Library for extracting .mbtiles files
 │   ├── style_spec      # Library for interpreting MapLibre style specifications
-│   ├── vector_tile     # Library for parsing vector tile shaders
 │   └── wgsl_validate   # Library for validating WGSL shaders
 ├── apple               # Platform specific files for Apple (iOS and MacOS)
 ├── web                 # Platform specific files for Web (WebGL and WebGPU)
 ├── benches             # Benchmarks for specific parts of the library
 ├── examples            # Examples which can be run
-├── test-data           # Geo data which can be used for tests (Usually as .mbtiles)
-└── tools
-│   ├── build-android   # Script which helps building for Android
-│   ├── build-web       # Script which helps building for Web
-│   └── extract-region  # Script can extract data from a .mbtiles file
+└── test-data           # Geo data which can be used for tests (Usually as .mbtiles)
 ```
 
 ## Building & Running
