@@ -1,0 +1,32 @@
+name: android
+
+on: [ workflow_dispatch ]
+
+jobs:
+  build-aarch64-android:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.cargo/.crates*
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install just
+        run: cargo install just
+      - name: Build
+        run: just build-apk
+      - uses: actions/upload-artifact@v2
+        with:
+          name: maplibre-rs.apk
+          path: target/debug/apk/maplibre-rs-demo.apk

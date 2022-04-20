@@ -1,0 +1,26 @@
+name: Pull Request
+
+on: [ workflow_dispatch, pull_request ]
+
+jobs:
+  run-check:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/check.yml
+  build-desktop:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/desktop.yml
+  build-android:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/android.yml
+  build-web:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/webgpu.yml
+      - uses: ./.github/workflows/webgl.yml
+  build-docs:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/docs.yml

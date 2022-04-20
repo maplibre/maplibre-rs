@@ -1,0 +1,45 @@
+name: Rust
+
+on: [ workflow_dispatch, push ]
+
+jobs:
+  run-check:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/check.yml
+  build-desktop:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/desktop.yml
+  build-android:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/android.yml
+  build-web:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/webgpu.yml
+      - uses: ./.github/workflows/deploy.yml
+        with:
+          source: dist/demo/.
+          destination: webgpu
+      - uses: ./.github/workflows/webgl.yml
+      - uses: ./.github/workflows/deploy.yml
+        with:
+          source: dist/demo/.
+          destination: webgl
+  build-docs:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: ./.github/workflows/docs.yml
+      - uses: ./.github/workflows/deploy.yml
+        with:
+          source: target/x86_64-unknown-linux-gnu/doc/.
+          destination: api-docs
+      - uses: ./.github/workflows/deploy.yml
+        with:
+          source: book/.
+          destination: docs
+
+
+

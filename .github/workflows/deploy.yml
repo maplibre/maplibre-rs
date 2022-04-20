@@ -1,0 +1,22 @@
+on:
+  workflow_call:
+    inputs:
+      source:
+        required: true
+        type: string
+      destination:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Deploy to maxammann.org
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+        run: |
+          echo "$SSH_KEY" > id_rsa
+          chmod 600 id_rsa
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/maplibre-rs/${{ inputs.destination }} && find ~/public_html/maplibre-rs/${{ inputs.destination }} -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "${{ inputs.source }}" max@maxammann.org:~/public_html/maplibre-rs/${{ inputs.destination }}/
