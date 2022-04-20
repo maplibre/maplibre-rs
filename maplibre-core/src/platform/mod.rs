@@ -32,9 +32,6 @@ pub use web::*;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 pub use apple::*;
 
-#[cfg(target_os = "android")]
-pub use android::*;
-
 #[cfg(not(target_arch = "wasm32"))]
 pub use noweb::*;
 
