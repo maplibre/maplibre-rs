@@ -104,7 +104,7 @@ https://user-images.githubusercontent.com/905221/163552617-5db04c66-23e3-4915-87
 Now, to clone the project:
 
 ```bash
-git clone --recursive git@github.com/maplibre/maplibre-rs
+git clone --recursive git@github.com:maplibre/maplibre-rs
 ```
 
 and then build it for running on a desktop:
