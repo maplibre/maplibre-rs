@@ -6,7 +6,7 @@ categories = []
 edition = "2021"
 
 [dependencies]
-
+maplibre = { path = "../maplibre" }
 
 [lib]
 crate-type = ["staticlib"]

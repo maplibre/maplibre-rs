@@ -20,14 +20,6 @@ pub mod legacy_webworker_fetcher;
 mod pool;
 pub mod schedule_method;
 
-// WebGPU
-#[cfg(not(feature = "web-webgl"))]
-pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8Unorm;
-
-// WebGL
-#[cfg(feature = "web-webgl")]
-pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
-
 #[cfg(feature = "enable-tracing")]
 fn enable_tracing() {
     use tracing_subscriber::layer::SubscriberExt;

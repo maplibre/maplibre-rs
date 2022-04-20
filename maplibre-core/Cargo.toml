@@ -86,4 +86,3 @@ criterion = "0.3"
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools" }
-
