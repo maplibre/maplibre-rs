@@ -67,7 +67,7 @@ pub async fn run(scheduler_ptr: *mut Scheduler) {
     let scheduler: Box<Scheduler> = unsafe { Box::from_raw(scheduler_ptr) };
 
     // Either call forget or the main loop to keep worker loop alive
-    MapBuilder::from_canvas("mapr")
+    MapBuilder::from_canvas("maplibre")
         .with_existing_scheduler(*scheduler)
         .build()
         .initialize()

@@ -1,7 +1,7 @@
 {
   "name": "web",
   "version": "0.0.1",
-  "description": "A mapr demo",
+  "description": "A maplibre demo",
   "main": "index.js",
   "scripts": {
     "start": "RUSTUP_TOOLCHAIN=nightly-2022-04-04-x86_64-unknown-linux-gnu webpack-dev-server --mode=development",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/maxammann/mapr"
+    "url": "https://github.com/maplibre/maplibre-rs"
   },
   "dependencies": {
     "spectorjs": "^0.9.27",

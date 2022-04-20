@@ -1,4 +1,4 @@
-# mapr documentation
+# maplibre-rs documentation
 
 [Introduction](./introduction.md)
 [Supported Platforms](./supported-platforms.md)
