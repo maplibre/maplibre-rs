@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Render" type="CargoCommandRunConfiguration" factoryName="Cargo Command" folderName="Benches">
+  <configuration default="false" name="Render" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
     <option name="command" value="bench --bench render" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
