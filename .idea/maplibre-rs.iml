@@ -15,6 +15,7 @@
       <sourceFolder url="file://$MODULE_DIR$/maplibre-style/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-tilejson/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-web/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/maplibre/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
