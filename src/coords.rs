@@ -1,4 +1,4 @@
-//! File which exposes all kinds of coordinates used throughout mapr
+//! File which exposes all kinds of coordinates used throughout maplibre-rs
 
 use std::fmt;
 use std::fmt::Formatter;

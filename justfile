@@ -25,12 +25,12 @@ webpack-production: nightly-toolchain
 
 wasm-pack-webgl: nightly-toolchain
   ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
-    --release --target web --out-dir dist/mapr -- \
+    --release --target web --out-dir web/dist/maplibre-rs -- \
     --features "web-webgl" -Z build-std=std,panic_abort
 
 wasm-pack: nightly-toolchain
   ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
-    --release --target web --out-dir dist/mapr -- \
+    --release --target web --out-dir web/dist/maplibre-rs -- \
     -Z build-std=std,panic_abort
 
 build-web-webgl: nightly-toolchain
@@ -42,7 +42,7 @@ build-web: nightly-toolchain
 wasm-bindgen:
   cargo install wasm-bindgen-cli
   # TODO: Untested: --reference-types
-  wasm-bindgen --target web --out-dir dist/mapr-pain-bindgen target/wasm32-unknown-unknown/debug/mapr.wasm
+  wasm-bindgen --target web --out-dir web/dist/maplibre-rs-plain-bindgen target/wasm32-unknown-unknown/debug/maplibre.wasm
 
 build-wasm-bindgen: build-web wasm-bindgen
 

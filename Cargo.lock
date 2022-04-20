@@ -1750,7 +1750,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mapr"
+name = "maplibre"
 version = "0.1.0"
 dependencies = [
  "bytemuck",

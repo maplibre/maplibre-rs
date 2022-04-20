@@ -8,7 +8,7 @@ members = [
 ]
 
 [package]
-name = "mapr"
+name = "maplibre"
 version = "0.1.0"
 authors = ["Maximilian Ammann <max@maxammann.org>"]
 edition = "2021"
@@ -126,7 +126,7 @@ name = "render"
 harness = false
 
 [package.metadata.android]
-apk_name = "mapr-demo"
+apk_name = "maplibre-rs-demo"
 [[package.metadata.android.uses_permission]]
 name = "android.permission.INTERNET"
 [[package.metadata.android.uses_permission]]

@@ -52,7 +52,7 @@ module.exports = (env) => ({
             WEBGL: !!env.webgl
         }),
         new HtmlWebpackPlugin({
-            title: 'mapr',
+            title: 'maplibre demo',
         }),
         new WasmPackPlugin({
             crateDirectory: path.resolve(__dirname, '../'),
@@ -73,7 +73,7 @@ module.exports = (env) => ({
             // ],
 
             // The same as the `--out-dir` option for `wasm-pack`
-            outDir: path.resolve(__dirname, 'dist/libs/mapr'),
+            outDir: path.resolve(__dirname, 'dist/libs/maplibre'),
 
             // The same as the `--out-name` option for `wasm-pack`
             // outName: "index",
