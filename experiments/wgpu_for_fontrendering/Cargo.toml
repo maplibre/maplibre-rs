@@ -1,0 +1,19 @@
+[package]
+name = "wgpu_for_fontrendering"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+winit = "0.26"
+env_logger = "0.9"
+log = "0.4"
+wgpu = "0.12"
+pollster = "0.2.5"
+bytemuck = { version = "1.4", features = [ "derive" ] }
+cgmath = "0.18"
+ttf-parser = "0.15.0"
