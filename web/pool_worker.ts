@@ -1,4 +1,4 @@
-import init, {child_entry_point} from "./dist/libs/mapr"
+import init, {child_entry_point} from "./dist/libs/maplibre"
 
 onmessage = async message => {
     const initialised = init(message.data[0], message.data[1]).catch(err => {

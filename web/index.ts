@@ -1,4 +1,4 @@
-import init, {create_pool_scheduler, new_thread_local_state, run} from "./dist/libs/mapr"
+import init, {create_pool_scheduler, new_thread_local_state, run} from "./dist/libs/maplibre"
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 import {

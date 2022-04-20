@@ -1,5 +1,5 @@
-use mapr::window::FromWindow;
-use mapr::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
+use maplibre::window::FromWindow;
+use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
 
 #[cfg(feature = "enable-tracing")]
 fn enable_tracing() {

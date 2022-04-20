@@ -1,4 +1,4 @@
-import init, {InitOutput, tessellate_layers} from "./dist/libs/mapr"
+import init, {InitOutput, tessellate_layers} from "./dist/libs/maplibre"
 import {WebWorkerMessageType} from "./types"
 
 let module: Promise<InitOutput> = null
