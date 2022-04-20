@@ -31,13 +31,13 @@ cargo apk run --lib
 
 ## iOS
 
-In order to run this app on iOS you have to open the Xcode project at `./apple/mapr/mapr.xcodeproj`.
+In order to run this app on iOS you have to open the Xcode project at `./maplibre-apple/xcode-project`.
 You can then run the app on an iOS Simulator or a real device. During the Xcode build process cargo is used to build
 a static library for the required architecture.
 
 ## Desktop (macOS)
 
-In order to run this app on macOS you have to open the Xcode project at `./apple/mapr/mapr.xcodeproj`.
+In order to run this app on macOS you have to open the Xcode project at `./maplibre-apple/xcode-project`.
 You can then run the app on a macOS. During the Xcode build process cargo is used to build
 a static library for the required architecture.
 

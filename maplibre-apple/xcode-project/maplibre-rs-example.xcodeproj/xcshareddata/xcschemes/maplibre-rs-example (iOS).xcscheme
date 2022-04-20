@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0BC8882B2770FD64004AAD56"
-               BuildableName = "mapr.app"
-               BlueprintName = "mapr (iOS)"
-               ReferencedContainer = "container:mapr.xcodeproj">
+               BuildableName = "maplibre-rs-example.app"
+               BlueprintName = "maplibre-rs-example (iOS)"
+               ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -35,7 +35,7 @@
                BlueprintIdentifier = "0BC888382770FD64004AAD56"
                BuildableName = "Tests iOS.xctest"
                BlueprintName = "Tests iOS"
-               ReferencedContainer = "container:mapr.xcodeproj">
+               ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0BC8882B2770FD64004AAD56"
-            BuildableName = "mapr.app"
-            BlueprintName = "mapr (iOS)"
-            ReferencedContainer = "container:mapr.xcodeproj">
+            BuildableName = "maplibre-rs-example.app"
+            BlueprintName = "maplibre-rs-example (iOS)"
+            ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0BC8882B2770FD64004AAD56"
-            BuildableName = "mapr.app"
-            BlueprintName = "mapr (iOS)"
-            ReferencedContainer = "container:mapr.xcodeproj">
+            BuildableName = "maplibre-rs-example.app"
+            BlueprintName = "maplibre-rs-example (iOS)"
+            ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
