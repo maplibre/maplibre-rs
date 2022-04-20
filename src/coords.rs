@@ -6,7 +6,7 @@ use std::fmt::Formatter;
 use cgmath::num_traits::Pow;
 use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
 
-use style_spec::source::TileAddressingScheme;
+use maplibre_style::source::TileAddressingScheme;
 
 use crate::util::math::{div_floor, Aabb2};
 use crate::util::SignificantlyDifferent;
@@ -500,7 +500,7 @@ impl fmt::Display for WorldCoords {
 mod tests {
     use cgmath::{Point2, Vector4};
 
-    use style_spec::source::TileAddressingScheme;
+    use maplibre_style::source::TileAddressingScheme;
 
     use crate::coords::{
         Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, EXTENT,

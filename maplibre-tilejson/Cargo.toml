@@ -1,9 +1,8 @@
 [package]
-name = "tilejson-spec"
+name = "maplibre-tilejson"
 version = "0.1.0"
 description = "A library for decoding and encoding tilejson specs"
-readme = "README.md"
-categories = ["encoding"]
+categories = []
 edition = "2021"
 
 [dependencies]

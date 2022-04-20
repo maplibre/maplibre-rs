@@ -1,10 +1,19 @@
 [workspace]
 
 members = [
-    "libs/style_spec",
-    "libs/tilejson_spec",
-    "libs/wgsl_validate",
-    "libs/mbtiles",
+    #"maplibre",
+    "maplibre-core",
+    "maplibre-android",
+    "maplibre-apple",
+    "maplibre-web",
+
+    "maplibre-style",
+    "maplibre-tilejson",
+
+    "maplibre-benchmark",
+    "maplibre-build-tools",
+
+    "maplibre-example",
 ]
 
 [package]
@@ -75,8 +84,8 @@ raw-window-handle = "0.4"
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", optional = true }
 
-style-spec = { path = "./libs/style_spec" }
-tilejson-spec = { path = "./libs/tilejson_spec" }
+maplibre-style = { path = "./maplibre-style" }
+maplibre-tilejson =  { path = "./maplibre-tilejson" }
 
 cgmath = "0.18"
 
@@ -107,23 +116,10 @@ include_dir = "0.7.2"
 criterion = "0.3"
 
 [build-dependencies]
-wgsl-validate = { path = "./libs/wgsl_validate" }
-mbtiles = { path = "./libs/mbtiles" }
+maplibre-build-tools = { path = "./maplibre-build-tools" }
 
 [lib]
 crate-type = ["rlib", "cdylib", "staticlib"] # staticlib is used for apple
-
-[[example]]
-name = "desktop"
-crate-type = ["bin"]
-
-[[bench]]
-name = "tessellation"
-harness = false
-
-[[bench]]
-name = "render"
-harness = false
 
 [package.metadata.android]
 apk_name = "maplibre-rs-demo"

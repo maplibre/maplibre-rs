@@ -48,7 +48,7 @@ impl StaticTileFetcher {
 
 #[cfg(test)]
 mod tests {
-    use style_spec::source::TileAddressingScheme;
+    use maplibre_style::source::TileAddressingScheme;
 
     use crate::coords::WorldTileCoords;
 

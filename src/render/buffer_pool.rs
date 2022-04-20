@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
 
-use style_spec::layer::StyleLayer;
+use maplibre_style::layer::StyleLayer;
 use wgpu::BufferAddress;
 
 use crate::coords::{Quadkey, WorldTileCoords};
@@ -523,7 +523,7 @@ impl RingIndex {
 #[cfg(test)]
 mod tests {
     use lyon::tessellation::VertexBuffers;
-    use style_spec::layer::StyleLayer;
+    use maplibre_style::layer::StyleLayer;
     use wgpu::BufferAddress;
 
     use crate::render::buffer_pool::{

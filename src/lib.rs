@@ -21,7 +21,7 @@ use crate::render::render_state::RenderState;
 use crate::window::{WindowFactory, WindowSize};
 pub use io::scheduler::ScheduleMethod;
 pub use platform::schedule_method::*;
-use style_spec::Style;
+use maplibre_style::Style;
 
 pub struct Map<W, E> {
     map_state: MapState<W>,

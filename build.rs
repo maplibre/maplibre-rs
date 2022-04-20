@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 use std::{env, fs};
 
-use mbtiles::extract;
-use wgsl_validate::validate_project_wgsl;
+use maplibre_build_tools::mbtiles::extract;
+use maplibre_build_tools::wgsl::validate_project_wgsl;
 
 const MUNICH_X: u32 = 17425;
 const MUNICH_Y: u32 = 11365;

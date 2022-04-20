@@ -3,7 +3,7 @@ use std::panic;
 use console_error_panic_hook;
 pub use instant::Instant;
 use schedule_method::WebWorkerPoolScheduleMethod;
-use style_spec::source::TileAddressingScheme;
+use maplibre_style::source::TileAddressingScheme;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
