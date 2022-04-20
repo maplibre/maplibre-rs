@@ -2,8 +2,9 @@ use maplibre::window::FromWindow;
 use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
 pub use std::time::Instant;
 
-#[cfg(not(any(target_os = "macos", target_os = "ios")))]
-compile_error!("maplibre-apple works only on macOS and iOS.");
+// TODO clippy
+// #[cfg(not(any(target_os = "macos", target_os = "ios")))]
+// compile_error!("maplibre-apple works only on macOS and iOS.");
 
 #[no_mangle]
 pub fn maplibre_apple_main() {

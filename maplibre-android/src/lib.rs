@@ -2,8 +2,9 @@ use maplibre::window::FromWindow;
 use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
 pub use std::time::Instant;
 
-#[cfg(not(target_os = "android"))]
-compile_error!("maplibre-android works only on android.");
+// TODO clippy
+// #[cfg(not(target_os = "android"))]
+// compile_error!("maplibre-android works only on android.");
 
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
 pub fn main() {

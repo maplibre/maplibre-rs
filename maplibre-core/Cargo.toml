@@ -80,8 +80,5 @@ bytemuck_derive = "1.0"
 
 include_dir = "0.7.2"
 
-[dev-dependencies]
-criterion = "0.3"
-
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools" }

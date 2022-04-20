@@ -5,8 +5,6 @@ use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
 fn render(c: &mut Criterion) {
     c.bench_function("render", |b| {
         b.iter(|| {
-            env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
-
             MapBuilder::from_window("A fantastic window!")
                 .with_schedule_method(ScheduleMethod::Tokio(TokioScheduleMethod::new()))
                 .build()

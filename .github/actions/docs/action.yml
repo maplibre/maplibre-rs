@@ -27,4 +27,4 @@ runs:
       run: mdbook build
     - name: API Documentation
       shell: bash
-      run: cargo doc --no-deps --workspace --lib --all-features --document-private-items
+      run: cargo doc -p maplibre --no-deps --lib --all-features --document-private-items

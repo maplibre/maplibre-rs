@@ -11,7 +11,7 @@ install-clippy:
   rustup component add clippy
 
 clippy: install-clippy
-  cargo clippy --all-targets --all-features
+  cargo clippy --all-targets --all-features --no-deps
 
 install-rustfmt:
   rustup component add rustfmt

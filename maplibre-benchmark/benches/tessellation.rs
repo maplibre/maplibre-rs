@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use lyon::tessellation::VertexBuffers;
+// use lyon::tessellation::VertexBuffers;
 use maplibre::benchmarking::io::static_tile_fetcher::StaticTileFetcher;
 use maplibre::benchmarking::tessellation::Tessellated;
 use std::io::Cursor;
