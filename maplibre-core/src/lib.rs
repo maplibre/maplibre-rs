@@ -20,8 +20,8 @@ use crate::map_state::{MapState, Runnable};
 use crate::render::render_state::RenderState;
 use crate::window::{WindowFactory, WindowSize};
 pub use io::scheduler::ScheduleMethod;
-pub use platform::schedule_method::*;
 use maplibre_style::Style;
+pub use platform::schedule_method::*;
 
 pub struct Map<W, E> {
     map_state: MapState<W>,

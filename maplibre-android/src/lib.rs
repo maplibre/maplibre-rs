@@ -1,5 +1,5 @@
-use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
 use maplibre::window::FromWindow;
+use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
 pub use std::time::Instant;
 
 #[cfg(not(target_os = "android"))]
