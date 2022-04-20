@@ -1,20 +1,10 @@
 [package]
-name = "maplibre"
+name = "maplibre-core"
 version = "0.1.0"
 authors = ["Maximilian Ammann <max@maxammann.org>"]
 edition = "2021"
-resolver = "2"
 build = "build.rs"
 license = "MIT OR Apache-2.0"
-
-[profile.release]
-lto = true
-codegen-units = 1
-opt-level = 's'
-panic = "abort"
-
-[profile.bench]
-debug = true
 
 [features]
 web-webgl = ["wgpu/webgl"]

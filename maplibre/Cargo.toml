@@ -5,4 +5,9 @@ description = ""
 categories = []
 edition = "2021"
 
+[features]
+web-webgl = ["maplibre-core/web-webgl"]
+enable-tracing = ["maplibre-core/enable-tracing"]
+
 [dependencies]
+maplibre-core = { path = "../maplibre-core" }

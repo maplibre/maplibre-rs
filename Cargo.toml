@@ -1,7 +1,9 @@
 [workspace]
 
+resolver = "2"
+
 members = [
-    #"maplibre",
+    "maplibre",
     "maplibre-core",
     "maplibre-android",
     "maplibre-apple",
@@ -15,3 +17,12 @@ members = [
 
     "maplibre-example",
 ]
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 's'
+panic = "abort"
+
+[profile.bench]
+debug = true

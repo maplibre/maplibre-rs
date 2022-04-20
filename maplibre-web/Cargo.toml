@@ -5,10 +5,16 @@ description = ""
 categories = []
 edition = "2021"
 
+[features]
+web-webgl = ["maplibre-core/web-webgl"]
+enable-tracing = ["maplibre-core/enable-tracing"]
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = true
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 
-
+maplibre-core = { path = "../maplibre-core" }
