@@ -53,7 +53,7 @@ cd web
 npm run start
 ```
 
-If you want to run mapr with WebGL which is supported on every major browser, then you have to use the following
+If you want to run maplibre-rs with WebGL which is supported on every major browser, then you have to use the following
 command.
 
 ```bash

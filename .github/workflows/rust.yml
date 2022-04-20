@@ -53,12 +53,12 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr/api-docs && find ~/public_html/mapr/api-docs -type f -not -name ".htaccess" -delete'
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "target/x86_64-unknown-linux-gnu/doc/." max@maxammann.org:~/public_html/mapr/api-docs/
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/maplibre-rs/api-docs && find ~/public_html/maplibre-rs/api-docs -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "target/x86_64-unknown-linux-gnu/doc/." max@maxammann.org:~/public_html/maplibre-rs/api-docs/
       - uses: actions/upload-artifact@v2
         with:
-          name: mapr
-          path: target/debug/mapr
+          name: maplibre-rs
+          path: target/debug/maplibre
 
   build-aarch64-android:
     runs-on: ubuntu-20.04
@@ -85,8 +85,8 @@ jobs:
         run: just build-apk
       - uses: actions/upload-artifact@v2
         with:
-          name: mapr.apk
-          path: target/debug/apk/mapr-demo.apk
+          name: maplibre-rs.apk
+          path: target/debug/apk/maplibre-rs-demo.apk
 
   build-wasm-webgl:
     runs-on: ubuntu-20.04
@@ -118,8 +118,8 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr/webgl && find ~/public_html/mapr/webgl -type f -not -name ".htaccess" -delete'
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/webgl/
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/maplibre-rs/webgl && find ~/public_html/maplibre-rs/webgl -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/maplibre-rs/webgl/
 
   build-wasm-webgpu:
     runs-on: ubuntu-20.04
@@ -151,8 +151,8 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr/webgpu && find ~/public_html/mapr/webgpu -type f -not -name ".htaccess" -delete'
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/mapr/webgpu/
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/maplibre-rs/webgpu && find ~/public_html/maplibre-rs/webgpu -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "dist/demo/." max@maxammann.org:~/public_html/maplibre-rs/webgpu/
 
   book:
     runs-on: ubuntu-20.04
@@ -185,5 +185,5 @@ jobs:
         run: |
           echo "$SSH_KEY" > id_rsa
           chmod 600 id_rsa
-          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/mapr/docs && find ~/public_html/mapr/docs -type f -not -name ".htaccess" -delete'
-          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "book/." max@maxammann.org:~/public_html/mapr/docs/
+          ssh -o StrictHostKeyChecking=no -i id_rsa max@maxammann.org 'mkdir -p ~/public_html/maplibre-rs/docs && find ~/public_html/maplibre-rs/docs -type f -not -name ".htaccess" -delete'
+          rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "book/." max@maxammann.org:~/public_html/maplibre-rs/docs/

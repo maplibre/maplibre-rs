@@ -8,7 +8,7 @@ pub use std::time::Instant;
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
 
 #[no_mangle]
-pub fn mapr_apple_main() {
+pub fn maplibre_apple_main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
     MapBuilder::from_window("A fantastic window!")
