@@ -19,8 +19,8 @@ runs:
       run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
     - name: Build
       shell: bash
-      run: cargo build --example desktop
+      run: cargo build -p maplibre-example
     - uses: actions/upload-artifact@v2
       with:
         name: maplibre-rs
-        path: target/debug/maplibre
+        path: target/x86_64-unknown-linux-gnu/debug/maplibre-example
