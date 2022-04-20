@@ -1,0 +1,26 @@
+name: desktop
+description: Build for desktop
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ~/.cargo/.crates*
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Install Dependencies
+      shell: bash
+      run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
+    - name: Build
+      shell: bash
+      run: cargo build --example desktop
+    - uses: actions/upload-artifact@v2
+      with:
+        name: maplibre-rs
+        path: target/debug/maplibre

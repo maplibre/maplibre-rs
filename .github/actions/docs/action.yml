@@ -1,0 +1,30 @@
+name: docs
+description: Build documentation
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ~/.cargo/.crates*
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-1
+    - name: Install mdbook
+      shell: bash
+      run: |
+        cargo install mdbook --no-default-features --vers "^0.4.0"
+    - name: Install Dependencies
+      shell: bash
+      run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
+    - name: Build
+      working-directory: docs
+      shell: bash
+      run: mdbook build
+    - name: API Documentation
+      shell: bash
+      run: cargo doc --no-deps --workspace --lib --all-features --document-private-items
