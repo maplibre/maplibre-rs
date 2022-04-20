@@ -1817,10 +1817,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "maplibre-core"
-version = "0.1.0"
-
-[[package]]
 name = "maplibre-example"
 version = "0.1.0"
 

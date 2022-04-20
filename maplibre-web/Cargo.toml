@@ -5,4 +5,10 @@ description = ""
 categories = []
 edition = "2021"
 
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = true
+
 [dependencies]
+
+

@@ -6,3 +6,14 @@ categories = []
 edition = "2021"
 
 [dependencies]
+
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[package.metadata.android]
+apk_name = "maplibre-rs-demo"
+[[package.metadata.android.uses_permission]]
+name = "android.permission.INTERNET"
+[[package.metadata.android.uses_permission]]
+name = "android.permission.ACCESS_NETWORK_STATE"

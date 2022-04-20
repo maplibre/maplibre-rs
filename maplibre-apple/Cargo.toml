@@ -6,3 +6,7 @@ categories = []
 edition = "2021"
 
 [dependencies]
+
+
+[lib]
+crate-type = ["staticlib"]
