@@ -1,0 +1,26 @@
+name: android
+description: Build for android
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ~/.cargo/.crates*
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Install just
+      shell: bash
+      run: cargo install just
+    - name: Build
+      shell: bash
+      run: just build-apk
+    - uses: actions/upload-artifact@v2
+      with:
+        name: maplibre-rs.apk
+        path: target/debug/apk/maplibre-rs-demo.apk
