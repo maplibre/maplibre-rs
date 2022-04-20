@@ -1,45 +1,58 @@
-name: Rust
+name: Build & Deploy
 
-on: [ workflow_dispatch, push ]
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   run-check:
     runs-on: ubuntu-20.04
     steps:
-      - uses: ./.github/workflows/check.yml
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/check
   build-desktop:
     runs-on: ubuntu-20.04
     steps:
-      - uses: ./.github/workflows/desktop.yml
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/desktop
   build-android:
     runs-on: ubuntu-20.04
     steps:
-      - uses: ./.github/workflows/android.yml
-  build-web:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/android
+  build-deploy-web:
     runs-on: ubuntu-20.04
     steps:
-      - uses: ./.github/workflows/webgpu.yml
-      - uses: ./.github/workflows/deploy.yml
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/webgpu
+      - uses: ./.github/actions/deploy
         with:
-          source: dist/demo/.
+          source: web/dist/demo/.
           destination: webgpu
-      - uses: ./.github/workflows/webgl.yml
-      - uses: ./.github/workflows/deploy.yml
+          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+      - uses: ./.github/actions/webgl
+      - uses: ./.github/actions/deploy
         with:
-          source: dist/demo/.
+          source: web/dist/demo/.
           destination: webgl
-  build-docs:
+          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+  build-deploy-docs:
     runs-on: ubuntu-20.04
     steps:
-      - uses: ./.github/workflows/docs.yml
-      - uses: ./.github/workflows/deploy.yml
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/docs
+      - uses: ./.github/actions/deploy
         with:
           source: target/x86_64-unknown-linux-gnu/doc/.
           destination: api-docs
-      - uses: ./.github/workflows/deploy.yml
+          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+      - uses: ./.github/actions/deploy
         with:
-          source: book/.
+          source: docs/book/.
           destination: docs
+          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
 
 
 
