@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img width="350px" alt="maplibre-rs" src="./docs/src/figures/maplibre-rs-5.svg">
+  <img width="350px" alt="maplibre-rs" src="./docs/src/figures/maplibre-rs-light.svg">
 </h1>
 <div align="center">
   <strong>Native Maps for Web, Mobile and Linux</strong>
@@ -23,8 +23,8 @@
 
 <div align="center">
   <h3>
-    <a href="https://">
-      Example
+    <a href="https://maxammann.org/maplibre-rs/webgl">
+      WebGL Demo
     </a>
     <span> | </span>
     <a href="https://maxammann.org/maplibre-rs/docs">
