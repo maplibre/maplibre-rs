@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0B571A8F281170B000874B51"
-               BuildableName = "maplibre_rs_framework.framework"
-               BlueprintName = "maplibre-rs-framework"
-               ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
+               BlueprintIdentifier = "0B164D062811A04B00E619A5"
+               BuildableName = "maplibre_rs.framework"
+               BlueprintName = "maplibre-rs"
+               ReferencedContainer = "container:maplibre-rs.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -50,10 +50,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0B571A8F281170B000874B51"
-            BuildableName = "maplibre_rs_framework.framework"
-            BlueprintName = "maplibre-rs-framework"
-            ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
+            BlueprintIdentifier = "0B164D062811A04B00E619A5"
+            BuildableName = "maplibre_rs.framework"
+            BlueprintName = "maplibre-rs"
+            ReferencedContainer = "container:maplibre-rs.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>
