@@ -7,6 +7,10 @@ members = [
     "libs/mbtiles",
 ]
 
+exclude = [
+    "experiments"
+]
+
 [package]
 name = "maplibre"
 version = "0.1.0"
