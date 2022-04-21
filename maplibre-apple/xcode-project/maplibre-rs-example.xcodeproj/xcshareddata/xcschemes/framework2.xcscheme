@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0BC888312770FD64004AAD56"
-               BuildableName = "maplibre-rs-example.app"
-               BlueprintName = "maplibre-rs-example (macOS)"
+               BlueprintIdentifier = "0B571AF5281191E600874B51"
+               BuildableName = "framework2.framework"
+               BlueprintName = "framework2"
                ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,16 +28,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0BC888442770FD64004AAD56"
-               BuildableName = "Tests macOS.xctest"
-               BlueprintName = "Tests macOS"
-               ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
@@ -50,16 +40,6 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0BC888312770FD64004AAD56"
-            BuildableName = "maplibre-rs-example.app"
-            BlueprintName = "maplibre-rs-example (macOS)"
-            ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -67,22 +47,21 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0BC888312770FD64004AAD56"
-            BuildableName = "maplibre-rs-example.app"
-            BlueprintName = "maplibre-rs-example (macOS)"
+            BlueprintIdentifier = "0B571AF5281191E600874B51"
+            BuildableName = "framework2.framework"
+            BlueprintName = "framework2"
             ReferencedContainer = "container:maplibre-rs-example.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
    </AnalyzeAction>
    <ArchiveAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

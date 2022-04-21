@@ -7,10 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0BC8883E2770FD64004AAD56 /* Tests_iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC8883D2770FD64004AAD56 /* Tests_iOS.swift */; };
-		0BC888402770FD64004AAD56 /* Tests_iOSLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC8883F2770FD64004AAD56 /* Tests_iOSLaunchTests.swift */; };
-		0BC8884A2770FD64004AAD56 /* Tests_macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC888492770FD64004AAD56 /* Tests_macOS.swift */; };
-		0BC8884C2770FD64004AAD56 /* Tests_macOSLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC8884B2770FD64004AAD56 /* Tests_macOSLaunchTests.swift */; };
+		0B571A94281170B000874B51 /* maplibre_rs_framework.docc in Sources */ = {isa = PBXBuildFile; fileRef = 0B571A93281170B000874B51 /* maplibre_rs_framework.docc */; };
+		0B571AA0281170B100874B51 /* maplibre_rs_framework.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B571A92281170B000874B51 /* maplibre_rs_framework.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0B571AD92811722500874B51 /* libmaplibre_apple.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B571AD72811710C00874B51 /* libmaplibre_apple.a */; };
+		0B571AE52811775600874B51 /* libmaplibre_apple.a in Resources */ = {isa = PBXBuildFile; fileRef = 0B571AD72811710C00874B51 /* libmaplibre_apple.a */; };
+		0B571AE828118D8500874B51 /* maplibre_rs_framework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B571A90281170B000874B51 /* maplibre_rs_framework.framework */; };
+		0B571AE928118D8500874B51 /* maplibre_rs_framework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0B571A90281170B000874B51 /* maplibre_rs_framework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		0B571AF0281191A500874B51 /* maplibre.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B571AEF281191A500874B51 /* maplibre.h */; };
+		0B571AF9281191E600874B51 /* framework2.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B571AF8281191E600874B51 /* framework2.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0B571AFE2811924300874B51 /* framework2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B571AFD2811924300874B51 /* framework2.swift */; };
+		0B571B042811929C00874B51 /* libmaplibre_apple.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B571AD72811710C00874B51 /* libmaplibre_apple.a */; };
+		0B571B05281193BD00874B51 /* framework2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B571AF6281191E600874B51 /* framework2.framework */; };
+		0B571B06281193BD00874B51 /* framework2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0B571AF6281191E600874B51 /* framework2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0BC8884D2770FD64004AAD56 /* app.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC888252770FD63004AAD56 /* app.swift */; };
 		0BC8884E2770FD64004AAD56 /* app.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC888252770FD63004AAD56 /* app.swift */; };
 		0BC888512770FD64004AAD56 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BC888272770FD64004AAD56 /* Assets.xcassets */; };
@@ -18,42 +26,87 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		0BC8883A2770FD64004AAD56 /* PBXContainerItemProxy */ = {
+		0B571AEA28118D8500874B51 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0BC888202770FD63004AAD56 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 0BC8882B2770FD64004AAD56;
-			remoteInfo = "maplibre (iOS)";
+			remoteGlobalIDString = 0B571A8F281170B000874B51;
+			remoteInfo = "maplibre-rs-framework";
 		};
-		0BC888462770FD64004AAD56 /* PBXContainerItemProxy */ = {
+		0B571B07281193BD00874B51 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0BC888202770FD63004AAD56 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 0BC888312770FD64004AAD56;
-			remoteInfo = "maplibre (macOS)";
+			remoteGlobalIDString = 0B571AF5281191E600874B51;
+			remoteInfo = framework2;
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		0B571AEC28118D8500874B51 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				0B571AE928118D8500874B51 /* maplibre_rs_framework.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0B571B09281193BD00874B51 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				0B571B06281193BD00874B51 /* framework2.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		0B571A90281170B000874B51 /* maplibre_rs_framework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = maplibre_rs_framework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B571A92281170B000874B51 /* maplibre_rs_framework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = maplibre_rs_framework.h; sourceTree = "<group>"; };
+		0B571A93281170B000874B51 /* maplibre_rs_framework.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = maplibre_rs_framework.docc; sourceTree = "<group>"; };
+		0B571AD72811710C00874B51 /* libmaplibre_apple.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmaplibre_apple.a; path = "../../target/aarch64-apple-darwin/debug/libmaplibre_apple.a"; sourceTree = "<group>"; };
+		0B571AE3281175BE00874B51 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		0B571AEF281191A500874B51 /* maplibre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = maplibre.h; sourceTree = "<group>"; };
+		0B571AF6281191E600874B51 /* framework2.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = framework2.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B571AF8281191E600874B51 /* framework2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = framework2.h; sourceTree = "<group>"; };
+		0B571AFD2811924300874B51 /* framework2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = framework2.swift; sourceTree = "<group>"; };
 		0BC888252770FD63004AAD56 /* app.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = app.swift; sourceTree = "<group>"; };
 		0BC888272770FD64004AAD56 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0BC8882C2770FD64004AAD56 /* maplibre-rs-example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "maplibre-rs-example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0BC888322770FD64004AAD56 /* maplibre-rs-example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "maplibre-rs-example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0BC888342770FD64004AAD56 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
-		0BC888392770FD64004AAD56 /* Tests iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0BC8883D2770FD64004AAD56 /* Tests_iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_iOS.swift; sourceTree = "<group>"; };
-		0BC8883F2770FD64004AAD56 /* Tests_iOSLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_iOSLaunchTests.swift; sourceTree = "<group>"; };
-		0BC888452770FD64004AAD56 /* Tests macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0BC888492770FD64004AAD56 /* Tests_macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOS.swift; sourceTree = "<group>"; };
-		0BC8884B2770FD64004AAD56 /* Tests_macOSLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOSLaunchTests.swift; sourceTree = "<group>"; };
 		0BC888612770FDCC004AAD56 /* maplibre.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = maplibre.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0B571A8D281170B000874B51 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B571AD92811722500874B51 /* libmaplibre_apple.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0B571AF3281191E600874B51 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B571B042811929C00874B51 /* libmaplibre_apple.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0BC888292770FD64004AAD56 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B571AE828118D8500874B51 /* maplibre_rs_framework.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,34 +114,50 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0BC888362770FD64004AAD56 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0BC888422770FD64004AAD56 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				0B571B05281193BD00874B51 /* framework2.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0B571A91281170B000874B51 /* maplibre-rs-framework */ = {
+			isa = PBXGroup;
+			children = (
+				0B571AEF281191A500874B51 /* maplibre.h */,
+				0B571A92281170B000874B51 /* maplibre_rs_framework.h */,
+				0B571A93281170B000874B51 /* maplibre_rs_framework.docc */,
+			);
+			path = "maplibre-rs-framework";
+			sourceTree = "<group>";
+		};
+		0B571AD62811710B00874B51 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0B571AE3281175BE00874B51 /* AppKit.framework */,
+				0B571AD72811710C00874B51 /* libmaplibre_apple.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		0B571AF7281191E600874B51 /* framework2 */ = {
+			isa = PBXGroup;
+			children = (
+				0B571AF8281191E600874B51 /* framework2.h */,
+				0B571AFD2811924300874B51 /* framework2.swift */,
+			);
+			path = framework2;
+			sourceTree = "<group>";
+		};
 		0BC8881F2770FD63004AAD56 = {
 			isa = PBXGroup;
 			children = (
 				0BC888242770FD63004AAD56 /* Shared */,
 				0BC888332770FD64004AAD56 /* macOS */,
-				0BC8883C2770FD64004AAD56 /* Tests iOS */,
-				0BC888482770FD64004AAD56 /* Tests macOS */,
+				0B571A91281170B000874B51 /* maplibre-rs-framework */,
+				0B571AF7281191E600874B51 /* framework2 */,
 				0BC8882D2770FD64004AAD56 /* Products */,
+				0B571AD62811710B00874B51 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -107,8 +176,8 @@
 			children = (
 				0BC8882C2770FD64004AAD56 /* maplibre-rs-example.app */,
 				0BC888322770FD64004AAD56 /* maplibre-rs-example.app */,
-				0BC888392770FD64004AAD56 /* Tests iOS.xctest */,
-				0BC888452770FD64004AAD56 /* Tests macOS.xctest */,
+				0B571A90281170B000874B51 /* maplibre_rs_framework.framework */,
+				0B571AF6281191E600874B51 /* framework2.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -121,27 +190,65 @@
 			path = macOS;
 			sourceTree = "<group>";
 		};
-		0BC8883C2770FD64004AAD56 /* Tests iOS */ = {
-			isa = PBXGroup;
-			children = (
-				0BC8883D2770FD64004AAD56 /* Tests_iOS.swift */,
-				0BC8883F2770FD64004AAD56 /* Tests_iOSLaunchTests.swift */,
-			);
-			path = "Tests iOS";
-			sourceTree = "<group>";
-		};
-		0BC888482770FD64004AAD56 /* Tests macOS */ = {
-			isa = PBXGroup;
-			children = (
-				0BC888492770FD64004AAD56 /* Tests_macOS.swift */,
-				0BC8884B2770FD64004AAD56 /* Tests_macOSLaunchTests.swift */,
-			);
-			path = "Tests macOS";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		0B571A8B281170B000874B51 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B571AF0281191A500874B51 /* maplibre.h in Headers */,
+				0B571AA0281170B100874B51 /* maplibre_rs_framework.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0B571AF1281191E600874B51 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B571AF9281191E600874B51 /* framework2.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
+		0B571A8F281170B000874B51 /* maplibre-rs-framework */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0B571AA1281170B100874B51 /* Build configuration list for PBXNativeTarget "maplibre-rs-framework" */;
+			buildPhases = (
+				0B571A8B281170B000874B51 /* Headers */,
+				0B571A8C281170B000874B51 /* Sources */,
+				0B571A8D281170B000874B51 /* Frameworks */,
+				0B571A8E281170B000874B51 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "maplibre-rs-framework";
+			productName = "maplibre-rs-framework";
+			productReference = 0B571A90281170B000874B51 /* maplibre_rs_framework.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		0B571AF5281191E600874B51 /* framework2 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0B571AFA281191E600874B51 /* Build configuration list for PBXNativeTarget "framework2" */;
+			buildPhases = (
+				0B571AF1281191E600874B51 /* Headers */,
+				0B571AF2281191E600874B51 /* Sources */,
+				0B571AF3281191E600874B51 /* Frameworks */,
+				0B571AF4281191E600874B51 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = framework2;
+			productName = framework2;
+			productReference = 0B571AF6281191E600874B51 /* framework2.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		0BC8882B2770FD64004AAD56 /* maplibre-rs-example (iOS) */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0BC888552770FD64004AAD56 /* Build configuration list for PBXNativeTarget "maplibre-rs-example (iOS)" */;
@@ -150,10 +257,12 @@
 				0BC888282770FD64004AAD56 /* Sources */,
 				0BC888292770FD64004AAD56 /* Frameworks */,
 				0BC8882A2770FD64004AAD56 /* Resources */,
+				0B571AEC28118D8500874B51 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				0B571AEB28118D8500874B51 /* PBXTargetDependency */,
 			);
 			name = "maplibre-rs-example (iOS)";
 			productName = "maplibre (iOS)";
@@ -168,51 +277,17 @@
 				0BC8882E2770FD64004AAD56 /* Sources */,
 				0BC8882F2770FD64004AAD56 /* Frameworks */,
 				0BC888302770FD64004AAD56 /* Resources */,
+				0B571B09281193BD00874B51 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				0B571B08281193BD00874B51 /* PBXTargetDependency */,
 			);
 			name = "maplibre-rs-example (macOS)";
 			productName = "maplibre (macOS)";
 			productReference = 0BC888322770FD64004AAD56 /* maplibre-rs-example.app */;
 			productType = "com.apple.product-type.application";
-		};
-		0BC888382770FD64004AAD56 /* Tests iOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 0BC8885B2770FD64004AAD56 /* Build configuration list for PBXNativeTarget "Tests iOS" */;
-			buildPhases = (
-				0BC888352770FD64004AAD56 /* Sources */,
-				0BC888362770FD64004AAD56 /* Frameworks */,
-				0BC888372770FD64004AAD56 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				0BC8883B2770FD64004AAD56 /* PBXTargetDependency */,
-			);
-			name = "Tests iOS";
-			productName = "Tests iOS";
-			productReference = 0BC888392770FD64004AAD56 /* Tests iOS.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
-		0BC888442770FD64004AAD56 /* Tests macOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 0BC8885E2770FD64004AAD56 /* Build configuration list for PBXNativeTarget "Tests macOS" */;
-			buildPhases = (
-				0BC888412770FD64004AAD56 /* Sources */,
-				0BC888422770FD64004AAD56 /* Frameworks */,
-				0BC888432770FD64004AAD56 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				0BC888472770FD64004AAD56 /* PBXTargetDependency */,
-			);
-			name = "Tests macOS";
-			productName = "Tests macOS";
-			productReference = 0BC888452770FD64004AAD56 /* Tests macOS.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -224,19 +299,18 @@
 				LastSwiftUpdateCheck = 1300;
 				LastUpgradeCheck = 1300;
 				TargetAttributes = {
+					0B571A8F281170B000874B51 = {
+						CreatedOnToolsVersion = 13.0;
+					};
+					0B571AF5281191E600874B51 = {
+						CreatedOnToolsVersion = 13.0;
+						LastSwiftMigration = 1300;
+					};
 					0BC8882B2770FD64004AAD56 = {
 						CreatedOnToolsVersion = 13.0;
 					};
 					0BC888312770FD64004AAD56 = {
 						CreatedOnToolsVersion = 13.0;
-					};
-					0BC888382770FD64004AAD56 = {
-						CreatedOnToolsVersion = 13.0;
-						TestTargetID = 0BC8882B2770FD64004AAD56;
-					};
-					0BC888442770FD64004AAD56 = {
-						CreatedOnToolsVersion = 13.0;
-						TestTargetID = 0BC888312770FD64004AAD56;
 					};
 				};
 			};
@@ -255,13 +329,28 @@
 			targets = (
 				0BC8882B2770FD64004AAD56 /* maplibre-rs-example (iOS) */,
 				0BC888312770FD64004AAD56 /* maplibre-rs-example (macOS) */,
-				0BC888382770FD64004AAD56 /* Tests iOS */,
-				0BC888442770FD64004AAD56 /* Tests macOS */,
+				0B571A8F281170B000874B51 /* maplibre-rs-framework */,
+				0B571AF5281191E600874B51 /* framework2 */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0B571A8E281170B000874B51 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B571AE52811775600874B51 /* libmaplibre_apple.a in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0B571AF4281191E600874B51 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0BC8882A2770FD64004AAD56 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -275,20 +364,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0BC888522770FD64004AAD56 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0BC888372770FD64004AAD56 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0BC888432770FD64004AAD56 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -334,6 +409,22 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0B571A8C281170B000874B51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B571A94281170B000874B51 /* maplibre_rs_framework.docc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0B571AF2281191E600874B51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B571AFE2811924300874B51 /* framework2.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0BC888282770FD64004AAD56 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -350,40 +441,169 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0BC888352770FD64004AAD56 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0BC888402770FD64004AAD56 /* Tests_iOSLaunchTests.swift in Sources */,
-				0BC8883E2770FD64004AAD56 /* Tests_iOS.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0BC888412770FD64004AAD56 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0BC8884C2770FD64004AAD56 /* Tests_macOSLaunchTests.swift in Sources */,
-				0BC8884A2770FD64004AAD56 /* Tests_macOS.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		0BC8883B2770FD64004AAD56 /* PBXTargetDependency */ = {
+		0B571AEB28118D8500874B51 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 0BC8882B2770FD64004AAD56 /* maplibre-rs-example (iOS) */;
-			targetProxy = 0BC8883A2770FD64004AAD56 /* PBXContainerItemProxy */;
+			target = 0B571A8F281170B000874B51 /* maplibre-rs-framework */;
+			targetProxy = 0B571AEA28118D8500874B51 /* PBXContainerItemProxy */;
 		};
-		0BC888472770FD64004AAD56 /* PBXTargetDependency */ = {
+		0B571B08281193BD00874B51 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 0BC888312770FD64004AAD56 /* maplibre-rs-example (macOS) */;
-			targetProxy = 0BC888462770FD64004AAD56 /* PBXContainerItemProxy */;
+			target = 0B571AF5281191E600874B51 /* framework2 */;
+			targetProxy = 0B571B07281193BD00874B51 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		0B571AA2281170B100874B51 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = KM8X78T35K;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				EXCLUDED_ARCHS = x86_64;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = mh_dylib;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.maplibre.framework.maplibre-rs-framework";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		0B571AA3281170B100874B51 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = KM8X78T35K;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				EXCLUDED_ARCHS = x86_64;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=*]" = "$(PROJECT_DIR)/../../target/aarch64-apple-darwin/debug";
+				MACH_O_TYPE = mh_dylib;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "org.maplibre.framework.maplibre-rs-framework";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		0B571AFB281191E600874B51 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = KM8X78T35K;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				EXCLUDED_ARCHS = x86_64;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.maplibre.framework.framework2;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		0B571AFC281191E600874B51 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = KM8X78T35K;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				EXCLUDED_ARCHS = x86_64;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=*]" = "$(PROJECT_DIR)/../../target/aarch64-apple-darwin/release";
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.maplibre.framework.framework2;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 		0BC888532770FD64004AAD56 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -438,10 +658,11 @@
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=arm64]" = "$(PROJECT_DIR)/../../target/aarch64-apple-ios/debug";
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/../../target/aarch64-apple-ios-sim/debug";
 				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=arm64]" = "$(PROJECT_DIR)/../../target/aarch64-apple-darwin/debug";
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "-lmaplibre_apple";
+				OTHER_LDFLAGS = "";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Shared/maplibre.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -493,9 +714,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				OTHER_LDFLAGS = "-lmaplibre_apple";
+				OTHER_LDFLAGS = "";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/Shared/maplibre.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -623,110 +845,27 @@
 			};
 			name = Release;
 		};
-		0BC8885C2770FD64004AAD56 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KM8X78T35K;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "maplibre.Tests-iOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "maplibre (iOS)";
-			};
-			name = Debug;
-		};
-		0BC8885D2770FD64004AAD56 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KM8X78T35K;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "maplibre.Tests-iOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "maplibre (iOS)";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		0BC8885F2770FD64004AAD56 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KM8X78T35K;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 11.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "maplibre.Tests-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "maplibre (macOS)";
-			};
-			name = Debug;
-		};
-		0BC888602770FD64004AAD56 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KM8X78T35K;
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 11.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "maplibre.Tests-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "maplibre (macOS)";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0B571AA1281170B100874B51 /* Build configuration list for PBXNativeTarget "maplibre-rs-framework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0B571AA2281170B100874B51 /* Debug */,
+				0B571AA3281170B100874B51 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0B571AFA281191E600874B51 /* Build configuration list for PBXNativeTarget "framework2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0B571AFB281191E600874B51 /* Debug */,
+				0B571AFC281191E600874B51 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		0BC888232770FD63004AAD56 /* Build configuration list for PBXProject "maplibre-rs-example" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -750,24 +889,6 @@
 			buildConfigurations = (
 				0BC888592770FD64004AAD56 /* Debug */,
 				0BC8885A2770FD64004AAD56 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		0BC8885B2770FD64004AAD56 /* Build configuration list for PBXNativeTarget "Tests iOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0BC8885C2770FD64004AAD56 /* Debug */,
-				0BC8885D2770FD64004AAD56 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		0BC8885E2770FD64004AAD56 /* Build configuration list for PBXNativeTarget "Tests macOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0BC8885F2770FD64004AAD56 /* Debug */,
-				0BC888602770FD64004AAD56 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

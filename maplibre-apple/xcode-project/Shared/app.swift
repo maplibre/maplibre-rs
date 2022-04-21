@@ -1,8 +1,10 @@
 import SwiftUI
 
+import framework2
+
 @main
 struct App {
     static func main() {
-        maplibre_apple_main();
+        Maplibre.main();
     }
 }

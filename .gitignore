@@ -21,6 +21,8 @@ dist/
 
 logs/
 
+.DS_Store
+
 perf.data*
 *.folded
 *flamegraph.svg
