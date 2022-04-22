@@ -12,4 +12,4 @@ runs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           ~/.cargo/.crates*
-        key: ${{ runner.os }}-cargo
+        key: 1-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
