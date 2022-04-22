@@ -65,10 +65,10 @@ install-cargo-apk:
   cargo install cargo-apk
 
 run-apk: nightly-toolchain install-cargo-apk
-  cargo apk run -p android --lib -Zbuild-std
+  cargo apk run -p maplibre-android --lib -Zbuild-std
 
 build-apk: nightly-toolchain install-cargo-apk
-  cargo apk build -p android --lib -Zbuild-std
+  cargo apk build -p maplibre-android --lib -Zbuild-std
 
 # language=bash
 print-android-env:
