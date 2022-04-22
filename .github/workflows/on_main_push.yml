@@ -58,7 +58,7 @@ jobs:
           destination: docs
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-ios:
-    runs-on: macOS-12
+    runs-on: macOS-11
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/apple

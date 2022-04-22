@@ -91,7 +91,7 @@ BINARY_NAME := "maplibre_rs"
 BUILD_DIR := "./apple/build"
 
 xcodebuild-archive ARCH PLATFORM:
-  xcodebuild -quiet ARCHS="{{ARCH}}" archive -project "{{PROJECT_DIR}}" \
+  xcodebuild ARCHS="{{ARCH}}" archive -project "{{PROJECT_DIR}}" \
                                     -scheme "maplibre-rs" \
                                     -destination "generic/platform={{PLATFORM}}" \
                                     -archivePath "{{BUILD_DIR}}/{{ARCH}}-apple-{{PLATFORM}}"
@@ -119,7 +119,7 @@ xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (
   framework_args=$(for i in "${tuples[@]}"; do IFS=","; set -- $i; echo -n "-framework \"{{BUILD_DIR}}/$1-apple-$2.xcarchive/{{INNER_FRAMEWORK_PATH}}\" "; done)
   echo "$framework_args"
   echo  "$XC_FRAMEWORK_PATH"
-  echo "$framework_args" | xargs xcodebuild -quiet -create-xcframework -output "$XC_FRAMEWORK_PATH"
+  echo "$framework_args" | xargs xcodebuild -create-xcframework -output "$XC_FRAMEWORK_PATH"
   cat "$XC_FRAMEWORK_PATH/Info.plist"
 
 # language=bash
