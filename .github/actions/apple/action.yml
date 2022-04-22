@@ -4,7 +4,9 @@ description: Build for desktop
 runs:
   using: "composite"
   steps:
-    - uses: extractions/setup-just@v1
+    - name: Install just
+      shell: bash
+      run: cargo install just
     - name: Install toolchain
       shell: bash
       run: just default-toolchain
