@@ -1,13 +1,85 @@
 [package]
 name = "maplibre"
 version = "0.1.0"
-description = ""
-categories = []
+authors = ["Maximilian Ammann <max@maxammann.org>"]
 edition = "2021"
+build = "build.rs"
+license = "MIT OR Apache-2.0"
 
 [features]
-web-webgl = ["maplibre-core/web-webgl"]
-enable-tracing = ["maplibre-core/enable-tracing"]
+web-webgl = ["wgpu/webgl"]
+# Enable tracing using tracy on desktop/mobile and the chrome profiler on web
+enable-tracing = [ "tracing-subscriber", "tracing-tracy", "tracy-client", "tracing-wasm"]
+default = []
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1"
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Headers",
+    "WorkerGlobalScope", "Request", "RequestInit", "RequestMode", "Response",
+    "ErrorEvent", "DedicatedWorkerGlobalScope"
+] }
+js-sys = "0.3"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+console_log = { version = "0.2", features = ["color"] }
+tracing-wasm = { version = "0.2", optional = true } # FIXME: Low quality dependency
+instant = { version = "0.1", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
+
+[target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android"))'.dependencies]
+tokio = { version = "1.17", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+env_logger = "0.9"
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "gzip"] }
+reqwest-middleware-cache = "0.1" # FIXME: Untrusted dependency
+reqwest-middleware = { version = "0.1" } # FIXME: Untrusted dependency
+tracing-tracy = { version = "0.8", optional = true }
+tracy-client = { version = "0.12.7", optional = true }
+
+[target.'cfg(target_os = "android")'.dependencies]
+winit = { version = "0.26", default-features = false }
+# Use rusttls on android because cross compiling is difficult
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "gzip"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+winit = { version = "0.26", default-features = false, features = ["x11", "wayland"] }
 
 [dependencies]
-maplibre-core = { path = "../maplibre-core" }
+winit = { version = "0.26", default-features = false }
+
+raw-window-handle = "0.4"
+
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", optional = true }
+
+cgmath = "0.18"
+
+geo = { version = "0.19" }
+geo-types = { version = "0.7", features = ["use-rstar_0_9"] }
+rstar = { version = "0.9" }
+prost = "0.9"
+geozero = { git = "https://github.com/georust/geozero", rev = "373b731", default-features = false, features = ["with-mvt", "with-geo"]}
+
+tile-grid = "0.3"
+
+# Rendering
+wgpu = { version = "0.12" }
+lyon = { version = "0.17", features = [] }
+
+# cached = "0.32"
+
+# Logging
+log = "0.4"
+
+# Utils
+bytemuck = "1.2.0"
+bytemuck_derive = "1.0"
+
+include_dir = "0.7.2"
+
+serde = { version = "1.0", features = ["derive"] }
+csscolorparser = { version = "0.5", features = ["serde", "cint"]}
+cint = "0.2"
+
+[build-dependencies]
+maplibre-build-tools = { path = "../maplibre-build-tools" }

@@ -6,9 +6,9 @@
       <sourceFolder url="file://$MODULE_DIR$/libs/mbtiles/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-build-tools/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/maplibre-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-style/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-tilejson/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/maplibre/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/android/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/apple/src" isTestSource="false" />

@@ -4,7 +4,6 @@ resolver = "2"
 
 members = [
     "maplibre",
-    "maplibre-core",
     "maplibre-build-tools",
     "maplibre-demo",
 
