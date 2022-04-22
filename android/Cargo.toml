@@ -1,5 +1,5 @@
 [package]
-name = "android"
+name = "maplibre-android"
 version = "0.1.0"
 description = ""
 categories = []
