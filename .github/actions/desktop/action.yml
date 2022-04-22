@@ -4,16 +4,7 @@ description: Build for desktop
 runs:
   using: "composite"
   steps:
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          ~/.cargo/.crates*
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - uses: ./.github/actions/rust-cache
     - name: Install Dependencies
       shell: bash
       run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit

@@ -4,16 +4,7 @@ description: Build for android
 runs:
   using: "composite"
   steps:
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          ~/.cargo/.crates*
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - uses: ./.github/actions/rust-cache
     - name: Install just
       shell: bash
       run: cargo install just

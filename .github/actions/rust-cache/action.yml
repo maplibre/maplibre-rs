@@ -1,0 +1,15 @@
+name: rust-cache
+description: Cache for rust
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ~/.cargo/.crates*
+        key: ${{ runner.os }}-cargo
