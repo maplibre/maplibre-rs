@@ -2,7 +2,7 @@
 # ^ A shebang isn't required, but allows a justfile to be executed
 #   like a script, with `./justfile test`, for example.
 
-export RUSTUP_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
+export NIGHTLY_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
 
 test:
   cargo test
@@ -23,8 +23,8 @@ fmt-check: install-rustfmt
   cargo fmt --all -- --check
 
 nightly-toolchain:
-  rustup install $RUSTUP_TOOLCHAIN
-  rustup component add rust-src --toolchain $RUSTUP_TOOLCHAIN
+  rustup install $NIGHTLY_TOOLCHAIN
+  rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
 
 webpack-webgl-production: nightly-toolchain
   cd web/web && npm install && npm run webgl-production-build

@@ -15,9 +15,9 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
-      - uses: ./.github/actions/rust-cache
+      - uses: extractions/setup-just@v1
+      - uses: actions-rs/toolchain@v1
+      - uses: Swatinem/rust-cache@v1
       - name: Build xcframework
         run: just xcodebuild-xcframework
       - name: Build Example

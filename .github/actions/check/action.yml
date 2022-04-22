@@ -4,10 +4,9 @@ description: Check
 runs:
   using: "composite"
   steps:
-    - uses: ./.github/actions/rust-cache
-    - name: Install just
-      shell: bash
-      run: cargo install just
+    - uses: extractions/setup-just@v1
+    - uses: actions-rs/toolchain@v1
+    - uses: Swatinem/rust-cache@v1
     - name: Format
       shell: bash
       run: just fmt-check

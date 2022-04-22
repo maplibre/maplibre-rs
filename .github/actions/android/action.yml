@@ -4,10 +4,11 @@ description: Build for android
 runs:
   using: "composite"
   steps:
-    - uses: ./.github/actions/rust-cache
-    - name: Install just
+    - uses: extractions/setup-just@v1
+    - name: Install nightly toolchain
       shell: bash
-      run: cargo install just
+      run: just nightly-toolchain
+    - uses: Swatinem/rust-cache@v1
     - name: Build
       shell: bash
       run: just build-apk

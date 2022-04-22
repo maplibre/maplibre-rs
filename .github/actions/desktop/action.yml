@@ -4,7 +4,8 @@ description: Build for desktop
 runs:
   using: "composite"
   steps:
-    - uses: ./.github/actions/rust-cache
+    - uses: actions-rs/toolchain@v1
+    - uses: Swatinem/rust-cache@v1
     - name: Install Dependencies
       shell: bash
       run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
