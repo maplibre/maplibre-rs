@@ -3,5 +3,5 @@ import Metal
 import AppKit
 import QuartzCore
 
-maplibre_rs.Maplibre.start()
+maplibre_rs.MapLibre.start()
 

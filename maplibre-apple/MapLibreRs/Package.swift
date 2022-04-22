@@ -3,13 +3,14 @@
 
 import PackageDescription
 
+
 let package = Package(
-    name: "MapLibre",
+    name: "MapLibreRs",
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
-            name: "MapLibreFramework",
-            targets: ["MapLibreFramework"]),
+            name: "MapLibreRs",
+            targets: ["MapLibreRs"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -19,16 +20,16 @@ let package = Package(
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .executableTarget(
-                    name: "MapLibreExample",
-                    dependencies: ["MapLibreFramework"]
+            name: "MapLibreRsExample",
+            dependencies: ["MapLibreRs"]
         ),
         .testTarget(
-            name: "MapLibreTests",
-            dependencies: ["MapLibreFramework"]
+            name: "MapLibreRsTests",
+            dependencies: ["MapLibreRs"]
         ),
         .binaryTarget(
-            name: "MapLibreFramework",
-            path: "maplibre-rs.xcframework"
+            name: "MapLibreRs",
+            path: "MapLibreRs.xcframework"
         ),
     ]
 )
