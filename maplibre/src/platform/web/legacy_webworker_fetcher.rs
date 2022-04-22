@@ -2,10 +2,10 @@ use std::panic;
 use std::thread::Thread;
 
 use super::schedule_method::WebWorkerPoolScheduleMethod;
+use crate::style::source::TileAddressingScheme;
 use console_error_panic_hook;
 pub use instant::Instant;
 use js_sys::{ArrayBuffer, Error as JSError, Uint8Array};
-use crate::style::source::TileAddressingScheme;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;

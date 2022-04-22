@@ -1,8 +1,8 @@
 use std::panic;
 
+use crate::style::source::TileAddressingScheme;
 use console_error_panic_hook;
 pub use instant::Instant;
-use crate::style::source::TileAddressingScheme;
 use schedule_method::WebWorkerPoolScheduleMethod;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::prelude::*;
