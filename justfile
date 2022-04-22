@@ -2,71 +2,84 @@
 # ^ A shebang isn't required, but allows a justfile to be executed
 #   like a script, with `./justfile test`, for example.
 
-export RUSTUP_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
+export NIGHTLY_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
 
 test:
   cargo test
 
-clippy:
-  cargo clippy --all-targets --all-features
+install-clippy:
+  rustup component add clippy
 
-fmt:
+clippy: install-clippy
+  cargo clippy --all-targets --all-features --no-deps
+
+install-rustfmt:
+  rustup component add rustfmt
+
+fmt: install-rustfmt
   cargo fmt --all --
 
+fmt-check: install-rustfmt
+  cargo fmt --all -- --check
+
+default-toolchain:
+  # Setups the toolchain from rust-toolchain.toml
+  cargo --version > /dev/null
+
 nightly-toolchain:
-  rustup install $RUSTUP_TOOLCHAIN
-  rustup component add rust-src --toolchain $RUSTUP_TOOLCHAIN
+  rustup install $NIGHTLY_TOOLCHAIN
+  rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
+  rustup override set $NIGHTLY_TOOLCHAIN
 
 webpack-webgl-production: nightly-toolchain
-  cd web && npm install && npm run webgl-production-build
+  cd web/web && npm install && npm run webgl-production-build
 
 webpack-production: nightly-toolchain
-  cd web && npm install && npm run production-build
+  cd web/web && npm install && npm run production-build
 
-wasm-pack-webgl: nightly-toolchain
-  ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
-    --release --target web --out-dir web/dist/maplibre-rs -- \
-    --features "web-webgl" -Z build-std=std,panic_abort
-
-wasm-pack: nightly-toolchain
-  ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
-    --release --target web --out-dir web/dist/maplibre-rs -- \
-    -Z build-std=std,panic_abort
-
-build-web-webgl: nightly-toolchain
-  cargo build --features web-webgl --target wasm32-unknown-unknown -Z build-std=std,panic_abort
-
-build-web: nightly-toolchain
-  cargo build --features "" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
-
-wasm-bindgen:
-  cargo install wasm-bindgen-cli
-  # TODO: Untested: --reference-types
-  wasm-bindgen --target web --out-dir web/dist/maplibre-rs-plain-bindgen target/wasm32-unknown-unknown/debug/maplibre.wasm
-
-build-wasm-bindgen: build-web wasm-bindgen
-
-build-wasm-bindgen-webgpu: build-web wasm-bindgen
+# TODO
+# wasm-pack-webgl: nightly-toolchain
+#   ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
+#     --release --target web --out-dir web/dist/maplibre-rs -- \
+#     --features "web-webgl" -Z build-std=std,panic_abort
+#
+# wasm-pack: nightly-toolchain
+#   ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
+#     --release --target web --out-dir web/dist/maplibre-rs -- \
+#     -Z build-std=std,panic_abort
+#
+# build-web-webgl: nightly-toolchain
+#   cargo build --features web-webgl --target wasm32-unknown-unknown -Z build-std=std,panic_abort
+#
+# build-web: nightly-toolchain
+#   cargo build --features "" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
+#
+# wasm-bindgen:
+#   cargo install wasm-bindgen-cli
+#   # TODO: Untested: --reference-types
+#   wasm-bindgen --target web --out-dir web/dist/maplibre-rs-plain-bindgen target/wasm32-unknown-unknown/debug/maplibre.wasm
+#
+# build-wasm-bindgen: build-web wasm-bindgen
+#
+# build-wasm-bindgen-webgpu: build-web wasm-bindgen
+# TODO
+#profile-bench:
+# cargo flamegraph --bench render -- --bench
 
 install-cargo-apk:
   cargo install cargo-apk
 
 run-apk: nightly-toolchain install-cargo-apk
-  cargo apk run --lib -Zbuild-std
+  cargo apk run -p maplibre-android --lib -Zbuild-std
 
 build-apk: nightly-toolchain install-cargo-apk
-  cargo apk build --lib -Zbuild-std
+  cargo apk build -p maplibre-android --lib -Zbuild-std
 
 # language=bash
 print-android-env:
   echo "ANDROID_HOME: $ANDROID_HOME"
   echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
   echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
-
-
-# FIXME
-profile-bench:
- cargo flamegraph --bench render -- --bench
 
 # language=bash
 extract-tiles:

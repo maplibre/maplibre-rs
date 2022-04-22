@@ -1,0 +1,26 @@
+[package]
+name = "maplibre-android" # Naming this "android" is not possible. Compilation fails.
+version = "0.1.0"
+description = ""
+categories = []
+edition = "2021"
+publish = false
+
+[dependencies]
+maplibre = { path = "../maplibre" }
+env_logger = "0.9"
+
+[target.'cfg(target_os = "android")'.dependencies]
+ndk-glue = "0.5.0" # version is required by winit
+
+[lib]
+#name = "maplibre_android" Currently not supported: https://github.com/rust-windowing/android-ndk-rs/issues/136
+crate-type = ["rlib", "cdylib"]
+
+[package.metadata.android]
+apk_name = "maplibre-rs-demo"
+
+[[package.metadata.android.uses_permission]]
+name = "android.permission.INTERNET"
+[[package.metadata.android.uses_permission]]
+name = "android.permission.ACCESS_NETWORK_STATE"

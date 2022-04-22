@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/android
-  build-deploy-web:
+  build-deploy-webgpu:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -32,6 +32,10 @@ jobs:
           source: web/dist/demo/.
           destination: webgpu
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+  build-deploy-webgl:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
       - uses: ./.github/actions/webgl
       - uses: ./.github/actions/deploy
         with:

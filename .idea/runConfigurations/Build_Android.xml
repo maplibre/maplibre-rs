@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Build Android" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="+nightly-2022-02-26 apk build -Zbuild-std" />
+    <option name="command" value="+nightly-2022-02-26 apk build -p maplibre-android -Zbuild-std" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

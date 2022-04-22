@@ -1,0 +1,15 @@
+[package]
+name = "apple"
+version = "0.1.0"
+description = ""
+categories = []
+edition = "2021"
+publish = false
+
+[dependencies]
+maplibre = { path = "../maplibre" }
+env_logger = "0.9"
+
+[lib]
+name = "maplibre_apple"
+crate-type = ["staticlib"]

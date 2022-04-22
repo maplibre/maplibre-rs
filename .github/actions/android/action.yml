@@ -4,19 +4,13 @@ description: Build for android
 runs:
   using: "composite"
   steps:
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          ~/.cargo/.crates*
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Install just
+    - uses: extractions/setup-just@v1
+    - name: Install nightly toolchain
       shell: bash
-      run: cargo install just
+      run: just nightly-toolchain
+    - uses: Swatinem/rust-cache@v1
+      with:
+        toolchain: nightly
     - name: Build
       shell: bash
       run: just build-apk

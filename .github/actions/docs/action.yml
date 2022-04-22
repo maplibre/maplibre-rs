@@ -4,16 +4,11 @@ description: Build documentation
 runs:
   using: "composite"
   steps:
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          ~/.cargo/.crates*
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-1
+    - uses: extractions/setup-just@v1
+    - name: Install toolchain
+      shell: bash
+      run: just default-toolchain
+    - uses: Swatinem/rust-cache@v1
     - name: Install mdbook
       shell: bash
       run: |
@@ -27,4 +22,4 @@ runs:
       run: mdbook build
     - name: API Documentation
       shell: bash
-      run: cargo doc --no-deps --workspace --lib --all-features --document-private-items
+      run: cargo doc -p maplibre --no-deps --lib --all-features --document-private-items
