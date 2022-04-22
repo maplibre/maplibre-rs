@@ -22,6 +22,10 @@ fmt: install-rustfmt
 fmt-check: install-rustfmt
   cargo fmt --all -- --check
 
+default-toolchain:
+  # Setups the toolchain from rust-toolchain.toml
+  cargo --version > /dev/null
+
 nightly-toolchain:
   rustup install $NIGHTLY_TOOLCHAIN
   rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
