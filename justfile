@@ -84,11 +84,11 @@ print-android-env:
   echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
 
 INNER_FRAMEWORK_PATH := "Products/Library/Frameworks/maplibre_rs.framework"
-XC_FRAMEWORK_DIRECTORY := "./maplibre-apple/MapLibreRs/"
-export XC_FRAMEWORK_PATH := "./maplibre-apple/MapLibreRs/MapLibreRs.xcframework"
-PROJECT_DIR := "./maplibre-apple/xcode/maplibre-rs.xcodeproj"
+XC_FRAMEWORK_DIRECTORY := "./apple/MapLibreRs/"
+export XC_FRAMEWORK_PATH := "./apple/MapLibreRs/MapLibreRs.xcframework"
+PROJECT_DIR := "./apple/xcode/maplibre-rs.xcodeproj"
 BINARY_NAME := "maplibre_rs"
-BUILD_DIR := "./maplibre-apple/build"
+BUILD_DIR := "./apple/build"
 
 xcodebuild-archive ARCH PLATFORM:
   xcodebuild -quiet ARCHS="{{ARCH}}" archive -project "{{PROJECT_DIR}}" \
