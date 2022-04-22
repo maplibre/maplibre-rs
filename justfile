@@ -29,6 +29,7 @@ default-toolchain:
 nightly-toolchain:
   rustup install $NIGHTLY_TOOLCHAIN
   rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
+  rustup override set $NIGHTLY_TOOLCHAIN
 
 webpack-webgl-production: nightly-toolchain
   cd web/web && npm install && npm run webgl-production-build
