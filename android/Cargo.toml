@@ -14,11 +14,12 @@ env_logger = "0.9"
 ndk-glue = "0.5.0" # version is required by winit
 
 [lib]
-name = "maplibre_android"
+#name = "maplibre_android" Currently not supported: https://github.com/rust-windowing/android-ndk-rs/issues/136
 crate-type = ["rlib", "cdylib"]
 
 [package.metadata.android]
 apk_name = "maplibre-rs-demo"
+
 [[package.metadata.android.uses_permission]]
 name = "android.permission.INTERNET"
 [[package.metadata.android.uses_permission]]
