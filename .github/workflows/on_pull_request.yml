@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/docs
   build-ios:
-    runs-on: macOS-11
+    runs-on: macOS-12
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/apple
