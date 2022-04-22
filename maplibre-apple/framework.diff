@@ -1,0 +1,970 @@
+diff --git a/diff/maplibre-rs/Shared/Assets.xcassets/AccentColor.colorset/Contents.json b/xcode/Shared/Assets.xcassets/AccentColor.colorset/Contents.json
+similarity index 100%
+rename from diff/maplibre-rs/Shared/Assets.xcassets/AccentColor.colorset/Contents.json
+rename to xcode/Shared/Assets.xcassets/AccentColor.colorset/Contents.json
+diff --git a/diff/maplibre-rs/Shared/Assets.xcassets/AppIcon.appiconset/Contents.json b/xcode/Shared/Assets.xcassets/AppIcon.appiconset/Contents.json
+similarity index 96%
+rename from diff/maplibre-rs/Shared/Assets.xcassets/AppIcon.appiconset/Contents.json
+rename to xcode/Shared/Assets.xcassets/AppIcon.appiconset/Contents.json
+index 63efdb0..c136eaf 100644
+--- a/diff/maplibre-rs/Shared/Assets.xcassets/AppIcon.appiconset/Contents.json
++++ b/xcode/Shared/Assets.xcassets/AppIcon.appiconset/Contents.json
+@@ -70,6 +70,11 @@
+       "scale" : "2x",
+       "size" : "40x40"
+     },
++    {
++      "idiom" : "ipad",
++      "scale" : "1x",
++      "size" : "76x76"
++    },
+     {
+       "idiom" : "ipad",
+       "scale" : "2x",
+diff --git a/diff/maplibre-rs/Shared/Assets.xcassets/Contents.json b/xcode/Shared/Assets.xcassets/Contents.json
+similarity index 100%
+rename from diff/maplibre-rs/Shared/Assets.xcassets/Contents.json
+rename to xcode/Shared/Assets.xcassets/Contents.json
+diff --git a/xcode/Shared/exampleApp.swift b/xcode/Shared/exampleApp.swift
+new file mode 100644
+index 0000000..b44efd8
+--- /dev/null
++++ b/xcode/Shared/exampleApp.swift
+@@ -0,0 +1,9 @@
++import SwiftUI
++import maplibre_rs
++
++@main
++struct App {
++    static func main() {
++       maplibre_rs.MapLibre.start();
++    }
++}
+diff --git a/diff/maplibre-rs/macOS/macOS.entitlements b/xcode/example--iOS--Info.plist
+similarity index 58%
+rename from diff/maplibre-rs/macOS/macOS.entitlements
+rename to xcode/example--iOS--Info.plist
+index f2ef3ae..97ff79d 100644
+--- a/diff/maplibre-rs/macOS/macOS.entitlements
++++ b/xcode/example--iOS--Info.plist
+@@ -2,9 +2,10 @@
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0">
+ <dict>
+-    <key>com.apple.security.app-sandbox</key>
+-    <true/>
+-    <key>com.apple.security.files.user-selected.read-only</key>
+-    <true/>
++	<key>UIApplicationSceneManifest</key>
++	<dict>
++		<key>UIApplicationSupportsMultipleScenes</key>
++		<false/>
++	</dict>
+ </dict>
+ </plist>
+diff --git a/xcode/libs/aarch64-apple-darwin b/xcode/libs/aarch64-apple-darwin
+new file mode 120000
+index 0000000..9d3f51d
+--- /dev/null
++++ b/xcode/libs/aarch64-apple-darwin
+@@ -0,0 +1 @@
++../../../target/aarch64-apple-darwin
+\ No newline at end of file
+diff --git a/xcode/libs/aarch64-apple-ios b/xcode/libs/aarch64-apple-ios
+new file mode 120000
+index 0000000..2715abf
+--- /dev/null
++++ b/xcode/libs/aarch64-apple-ios
+@@ -0,0 +1 @@
++../../../target/aarch64-apple-ios
+\ No newline at end of file
+diff --git a/xcode/libs/aarch64-apple-ios-sim b/xcode/libs/aarch64-apple-ios-sim
+new file mode 120000
+index 0000000..d124317
+--- /dev/null
++++ b/xcode/libs/aarch64-apple-ios-sim
+@@ -0,0 +1 @@
++../../../target/aarch64-apple-ios-sim
+\ No newline at end of file
+diff --git a/xcode/libs/x86_64-apple-darwin b/xcode/libs/x86_64-apple-darwin
+new file mode 120000
+index 0000000..58131a4
+--- /dev/null
++++ b/xcode/libs/x86_64-apple-darwin
+@@ -0,0 +1 @@
++../../../target/x86_64-apple-darwin
+\ No newline at end of file
+diff --git a/xcode/libs/x86_64-apple-ios b/xcode/libs/x86_64-apple-ios
+new file mode 120000
+index 0000000..5d09927
+--- /dev/null
++++ b/xcode/libs/x86_64-apple-ios
+@@ -0,0 +1 @@
++../../../target/x86_64-apple-ios
+\ No newline at end of file
+diff --git a/xcode/macOS/macOS.entitlements b/xcode/macOS/macOS.entitlements
+new file mode 100644
+index 0000000..625af03
+--- /dev/null
++++ b/xcode/macOS/macOS.entitlements
+@@ -0,0 +1,12 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0">
++<dict>
++	<key>com.apple.security.app-sandbox</key>
++	<true/>
++	<key>com.apple.security.files.user-selected.read-only</key>
++	<true/>
++	<key>com.apple.security.network.client</key>
++	<true/>
++</dict>
++</plist>
+diff --git a/diff/maplibre-rs/Shared/ContentView.swift b/diff/maplibre-rs/Shared/ContentView.swift
+deleted file mode 100644
+index e24c027..0000000
+--- a/diff/maplibre-rs/Shared/ContentView.swift
++++ /dev/null
+@@ -1,21 +0,0 @@
+-//
+-//  ContentView.swift
+-//  Shared
+-//
+-//  Created by Ehrenamtskarte on 22.04.22.
+-//
+-
+-import SwiftUI
+-
+-struct ContentView: View {
+-    var body: some View {
+-        Text("Hello, world!")
+-            .padding()
+-    }
+-}
+-
+-struct ContentView_Previews: PreviewProvider {
+-    static var previews: some View {
+-        ContentView()
+-    }
+-}
+diff --git a/diff/maplibre-rs/Shared/exampleApp.swift b/diff/maplibre-rs/Shared/exampleApp.swift
+deleted file mode 100644
+index 6461561..0000000
+--- a/diff/maplibre-rs/Shared/exampleApp.swift
++++ /dev/null
+@@ -1,17 +0,0 @@
+-//
+-//  exampleApp.swift
+-//  Shared
+-//
+-//  Created by Ehrenamtskarte on 22.04.22.
+-//
+-
+-import SwiftUI
+-
+-@main
+-struct exampleApp: App {
+-    var body: some Scene {
+-        WindowGroup {
+-            ContentView()
+-        }
+-    }
+-}
+diff --git a/diff/maplibre-rs/maplibre-rs.xcodeproj/project.xcworkspace/xcuserdata/ehrenamtskarte.xcuserdatad/UserInterfaceState.xcuserstate b/diff/maplibre-rs/maplibre-rs.xcodeproj/project.xcworkspace/xcuserdata/ehrenamtskarte.xcuserdatad/UserInterfaceState.xcuserstate
+deleted file mode 100644
+index e20ee61..0000000
+Binary files a/diff/maplibre-rs/maplibre-rs.xcodeproj/project.xcworkspace/xcuserdata/ehrenamtskarte.xcuserdatad/UserInterfaceState.xcuserstate and /dev/null differ
+diff --git a/xcode/maplibre-rs/maplibre.swift b/xcode/maplibre-rs/maplibre.swift
+new file mode 100644
+index 0000000..19f2c92
+--- /dev/null
++++ b/xcode/maplibre-rs/maplibre.swift
+@@ -0,0 +1,5 @@
++public class MapLibre {
++    public static func start() {
++        maplibre_apple_main();
++    }
++}
+diff --git a/diff/maplibre-rs/maplibre-rs/maplibre_rs.h b/xcode/maplibre-rs/maplibre_rs.h
+similarity index 94%
+rename from diff/maplibre-rs/maplibre-rs/maplibre_rs.h
+rename to xcode/maplibre-rs/maplibre_rs.h
+index ccdf6ab..f5f17d1 100644
+--- a/diff/maplibre-rs/maplibre-rs/maplibre_rs.h
++++ b/xcode/maplibre-rs/maplibre_rs.h
+@@ -15,4 +15,4 @@ FOUNDATION_EXPORT const unsigned char maplibre_rsVersionString[];
+ 
+ // In this header, you should import all the public headers of your framework using statements like #import <maplibre_rs/PublicHeader.h>
+ 
+-
++void maplibre_apple_main();
+diff --git a/diff/maplibre-rs/maplibre-rs.xcodeproj/project.pbxproj b/xcode/maplibre-rs.xcodeproj/project.pbxproj
+similarity index 68%
+rename from diff/maplibre-rs/maplibre-rs.xcodeproj/project.pbxproj
+rename to xcode/maplibre-rs.xcodeproj/project.pbxproj
+index ee02f5b..78a0468 100644
+--- a/diff/maplibre-rs/maplibre-rs.xcodeproj/project.pbxproj
++++ b/xcode/maplibre-rs.xcodeproj/project.pbxproj
+@@ -7,93 +7,110 @@
+ 	objects = {
+ 
+ /* Begin PBXBuildFile section */
+-		0BE452E828132EA6003BD2A5 /* maplibre_rs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BE452E728132EA6003BD2A5 /* maplibre_rs.h */; settings = {ATTRIBUTES = (Public, ); }; };
+-		0BE452FC28132EB5003BD2A5 /* exampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE452ED28132EB5003BD2A5 /* exampleApp.swift */; };
+-		0BE452FD28132EB5003BD2A5 /* exampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE452ED28132EB5003BD2A5 /* exampleApp.swift */; };
+-		0BE452FE28132EB5003BD2A5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE452EE28132EB5003BD2A5 /* ContentView.swift */; };
+-		0BE452FF28132EB5003BD2A5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE452EE28132EB5003BD2A5 /* ContentView.swift */; };
+-		0BE4530028132EB5003BD2A5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BE452EF28132EB5003BD2A5 /* Assets.xcassets */; };
+-		0BE4530128132EB5003BD2A5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0BE452EF28132EB5003BD2A5 /* Assets.xcassets */; };
++		0B85D56F2812903700906D21 /* maplibre_rs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B85D56E2812903700906D21 /* maplibre_rs.h */; settings = {ATTRIBUTES = (Public, ); }; };
++		0B85D586281290F800906D21 /* exampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B85D577281290F800906D21 /* exampleApp.swift */; };
++		0B85D587281290F800906D21 /* exampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B85D577281290F800906D21 /* exampleApp.swift */; };
++		0B85D58A281290F800906D21 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B85D579281290F800906D21 /* Assets.xcassets */; };
++		0B85D58B281290F800906D21 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B85D579281290F800906D21 /* Assets.xcassets */; };
++		0B85D5952812913700906D21 /* maplibre.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B85D5942812913700906D21 /* maplibre.swift */; };
++		0B85D596281291A400906D21 /* maplibre_rs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D56B2812903700906D21 /* maplibre_rs.framework */; };
++		0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D56B2812903700906D21 /* maplibre_rs.framework */; };
++		0B85D5A42812991100906D21 /* libmaplibre_apple.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D5A32812987B00906D21 /* libmaplibre_apple.a */; };
+ /* End PBXBuildFile section */
+ 
+ /* Begin PBXFileReference section */
+-		0BE452E428132EA6003BD2A5 /* maplibre_rs.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = maplibre_rs.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+-		0BE452E728132EA6003BD2A5 /* maplibre_rs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = maplibre_rs.h; sourceTree = "<group>"; };
+-		0BE452ED28132EB5003BD2A5 /* exampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = exampleApp.swift; sourceTree = "<group>"; };
+-		0BE452EE28132EB5003BD2A5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+-		0BE452EF28132EB5003BD2A5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+-		0BE452F428132EB5003BD2A5 /* example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = example.app; sourceTree = BUILT_PRODUCTS_DIR; };
+-		0BE452F928132EB5003BD2A5 /* example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = example.app; sourceTree = BUILT_PRODUCTS_DIR; };
+-		0BE452FB28132EB5003BD2A5 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
++		0B85D56B2812903700906D21 /* maplibre_rs.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = maplibre_rs.framework; sourceTree = BUILT_PRODUCTS_DIR; };
++		0B85D56E2812903700906D21 /* maplibre_rs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = maplibre_rs.h; sourceTree = "<group>"; };
++		0B85D577281290F800906D21 /* exampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = exampleApp.swift; sourceTree = "<group>"; };
++		0B85D579281290F800906D21 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
++		0B85D57E281290F800906D21 /* example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = example.app; sourceTree = BUILT_PRODUCTS_DIR; };
++		0B85D583281290F800906D21 /* example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = example.app; sourceTree = BUILT_PRODUCTS_DIR; };
++		0B85D585281290F800906D21 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
++		0B85D5942812913700906D21 /* maplibre.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = maplibre.swift; sourceTree = "<group>"; };
++		0B85D5A32812987B00906D21 /* libmaplibre_apple.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmaplibre_apple.a; sourceTree = SOURCE_ROOT; };
++		0BE452D62812EEA8003BD2A5 /* example--iOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "example--iOS--Info.plist"; sourceTree = "<group>"; };
+ /* End PBXFileReference section */
+ 
+ /* Begin PBXFrameworksBuildPhase section */
+-		0BE452E128132EA6003BD2A5 /* Frameworks */ = {
++		0B85D5682812903700906D21 /* Frameworks */ = {
+ 			isa = PBXFrameworksBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				0B85D5A42812991100906D21 /* libmaplibre_apple.a in Frameworks */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+-		0BE452F128132EB5003BD2A5 /* Frameworks */ = {
++		0B85D57B281290F800906D21 /* Frameworks */ = {
+ 			isa = PBXFrameworksBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				0B85D596281291A400906D21 /* maplibre_rs.framework in Frameworks */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+-		0BE452F628132EB5003BD2A5 /* Frameworks */ = {
++		0B85D580281290F800906D21 /* Frameworks */ = {
+ 			isa = PBXFrameworksBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+ /* End PBXFrameworksBuildPhase section */
+ 
+ /* Begin PBXGroup section */
+-		0BE452D828132E99003BD2A5 = {
++		0B85D55F2812902200906D21 = {
+ 			isa = PBXGroup;
+ 			children = (
+-				0BE452E628132EA6003BD2A5 /* maplibre-rs */,
+-				0BE452EC28132EB5003BD2A5 /* Shared */,
+-				0BE452FA28132EB5003BD2A5 /* macOS */,
+-				0BE452E528132EA6003BD2A5 /* Products */,
++				0BE452D62812EEA8003BD2A5 /* example--iOS--Info.plist */,
++				0B85D56D2812903700906D21 /* maplibre-rs */,
++				0B85D576281290F800906D21 /* Shared */,
++				0B85D584281290F800906D21 /* macOS */,
++				0B85D56C2812903700906D21 /* Products */,
++				0B85D573281290D400906D21 /* Frameworks */,
+ 			);
+ 			sourceTree = "<group>";
+ 		};
+-		0BE452E528132EA6003BD2A5 /* Products */ = {
++		0B85D56C2812903700906D21 /* Products */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				0BE452E428132EA6003BD2A5 /* maplibre_rs.framework */,
+-				0BE452F428132EB5003BD2A5 /* example.app */,
+-				0BE452F928132EB5003BD2A5 /* example.app */,
++				0B85D56B2812903700906D21 /* maplibre_rs.framework */,
++				0B85D57E281290F800906D21 /* example.app */,
++				0B85D583281290F800906D21 /* example.app */,
+ 			);
+ 			name = Products;
+ 			sourceTree = "<group>";
+ 		};
+-		0BE452E628132EA6003BD2A5 /* maplibre-rs */ = {
++		0B85D56D2812903700906D21 /* maplibre-rs */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				0BE452E728132EA6003BD2A5 /* maplibre_rs.h */,
++				0B85D56E2812903700906D21 /* maplibre_rs.h */,
++				0B85D5942812913700906D21 /* maplibre.swift */,
+ 			);
+ 			path = "maplibre-rs";
+ 			sourceTree = "<group>";
+ 		};
+-		0BE452EC28132EB5003BD2A5 /* Shared */ = {
++		0B85D573281290D400906D21 /* Frameworks */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				0BE452ED28132EB5003BD2A5 /* exampleApp.swift */,
+-				0BE452EE28132EB5003BD2A5 /* ContentView.swift */,
+-				0BE452EF28132EB5003BD2A5 /* Assets.xcassets */,
++				0B85D5A32812987B00906D21 /* libmaplibre_apple.a */,
++			);
++			name = Frameworks;
++			sourceTree = "<group>";
++		};
++		0B85D576281290F800906D21 /* Shared */ = {
++			isa = PBXGroup;
++			children = (
++				0B85D577281290F800906D21 /* exampleApp.swift */,
++				0B85D579281290F800906D21 /* Assets.xcassets */,
+ 			);
+ 			path = Shared;
+ 			sourceTree = "<group>";
+ 		};
+-		0BE452FA28132EB5003BD2A5 /* macOS */ = {
++		0B85D584281290F800906D21 /* macOS */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				0BE452FB28132EB5003BD2A5 /* macOS.entitlements */,
++				0B85D585281290F800906D21 /* macOS.entitlements */,
+ 			);
+ 			path = macOS;
+ 			sourceTree = "<group>";
+@@ -101,25 +118,26 @@
+ /* End PBXGroup section */
+ 
+ /* Begin PBXHeadersBuildPhase section */
+-		0BE452DF28132EA6003BD2A5 /* Headers */ = {
++		0B85D5662812903700906D21 /* Headers */ = {
+ 			isa = PBXHeadersBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+-				0BE452E828132EA6003BD2A5 /* maplibre_rs.h in Headers */,
++				0B85D56F2812903700906D21 /* maplibre_rs.h in Headers */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+ /* End PBXHeadersBuildPhase section */
+ 
+ /* Begin PBXNativeTarget section */
+-		0BE452E328132EA6003BD2A5 /* maplibre-rs */ = {
++		0B85D56A2812903700906D21 /* maplibre-rs */ = {
+ 			isa = PBXNativeTarget;
+-			buildConfigurationList = 0BE452E928132EA6003BD2A5 /* Build configuration list for PBXNativeTarget "maplibre-rs" */;
++			buildConfigurationList = 0B85D5702812903700906D21 /* Build configuration list for PBXNativeTarget "maplibre-rs" */;
+ 			buildPhases = (
+-				0BE452DF28132EA6003BD2A5 /* Headers */,
+-				0BE452E028132EA6003BD2A5 /* Sources */,
+-				0BE452E128132EA6003BD2A5 /* Frameworks */,
+-				0BE452E228132EA6003BD2A5 /* Resources */,
++				0B85D5662812903700906D21 /* Headers */,
++				0B85D5672812903700906D21 /* Sources */,
++				0B85D5682812903700906D21 /* Frameworks */,
++				0B85D5692812903700906D21 /* Resources */,
++				0BE452D72812EFC1003BD2A5 /* Cargo Build */,
+ 			);
+ 			buildRules = (
+ 			);
+@@ -127,16 +145,16 @@
+ 			);
+ 			name = "maplibre-rs";
+ 			productName = "maplibre-rs";
+-			productReference = 0BE452E428132EA6003BD2A5 /* maplibre_rs.framework */;
++			productReference = 0B85D56B2812903700906D21 /* maplibre_rs.framework */;
+ 			productType = "com.apple.product-type.framework";
+ 		};
+-		0BE452F328132EB5003BD2A5 /* example (iOS) */ = {
++		0B85D57D281290F800906D21 /* example (iOS) */ = {
+ 			isa = PBXNativeTarget;
+-			buildConfigurationList = 0BE4530228132EB5003BD2A5 /* Build configuration list for PBXNativeTarget "example (iOS)" */;
++			buildConfigurationList = 0B85D58C281290F800906D21 /* Build configuration list for PBXNativeTarget "example (iOS)" */;
+ 			buildPhases = (
+-				0BE452F028132EB5003BD2A5 /* Sources */,
+-				0BE452F128132EB5003BD2A5 /* Frameworks */,
+-				0BE452F228132EB5003BD2A5 /* Resources */,
++				0B85D57A281290F800906D21 /* Sources */,
++				0B85D57B281290F800906D21 /* Frameworks */,
++				0B85D57C281290F800906D21 /* Resources */,
+ 			);
+ 			buildRules = (
+ 			);
+@@ -144,16 +162,16 @@
+ 			);
+ 			name = "example (iOS)";
+ 			productName = "example (iOS)";
+-			productReference = 0BE452F428132EB5003BD2A5 /* example.app */;
++			productReference = 0B85D57E281290F800906D21 /* example.app */;
+ 			productType = "com.apple.product-type.application";
+ 		};
+-		0BE452F828132EB5003BD2A5 /* example (macOS) */ = {
++		0B85D582281290F800906D21 /* example (macOS) */ = {
+ 			isa = PBXNativeTarget;
+-			buildConfigurationList = 0BE4530528132EB5003BD2A5 /* Build configuration list for PBXNativeTarget "example (macOS)" */;
++			buildConfigurationList = 0B85D58F281290F800906D21 /* Build configuration list for PBXNativeTarget "example (macOS)" */;
+ 			buildPhases = (
+-				0BE452F528132EB5003BD2A5 /* Sources */,
+-				0BE452F628132EB5003BD2A5 /* Frameworks */,
+-				0BE452F728132EB5003BD2A5 /* Resources */,
++				0B85D57F281290F800906D21 /* Sources */,
++				0B85D580281290F800906D21 /* Frameworks */,
++				0B85D581281290F800906D21 /* Resources */,
+ 			);
+ 			buildRules = (
+ 			);
+@@ -161,31 +179,32 @@
+ 			);
+ 			name = "example (macOS)";
+ 			productName = "example (macOS)";
+-			productReference = 0BE452F928132EB5003BD2A5 /* example.app */;
++			productReference = 0B85D583281290F800906D21 /* example.app */;
+ 			productType = "com.apple.product-type.application";
+ 		};
+ /* End PBXNativeTarget section */
+ 
+ /* Begin PBXProject section */
+-		0BE452D928132E99003BD2A5 /* Project object */ = {
++		0B85D5602812902200906D21 /* Project object */ = {
+ 			isa = PBXProject;
+ 			attributes = {
+ 				BuildIndependentTargetsInParallel = 1;
+ 				LastSwiftUpdateCheck = 1330;
+ 				LastUpgradeCheck = 1330;
+ 				TargetAttributes = {
+-					0BE452E328132EA6003BD2A5 = {
++					0B85D56A2812903700906D21 = {
+ 						CreatedOnToolsVersion = 13.3.1;
++						LastSwiftMigration = 1330;
+ 					};
+-					0BE452F328132EB5003BD2A5 = {
++					0B85D57D281290F800906D21 = {
+ 						CreatedOnToolsVersion = 13.3.1;
+ 					};
+-					0BE452F828132EB5003BD2A5 = {
++					0B85D582281290F800906D21 = {
+ 						CreatedOnToolsVersion = 13.3.1;
+ 					};
+ 				};
+ 			};
+-			buildConfigurationList = 0BE452DC28132E99003BD2A5 /* Build configuration list for PBXProject "maplibre-rs" */;
++			buildConfigurationList = 0B85D5632812902200906D21 /* Build configuration list for PBXProject "maplibre-rs" */;
+ 			compatibilityVersion = "Xcode 13.0";
+ 			developmentRegion = en;
+ 			hasScannedForEncodings = 0;
+@@ -193,89 +212,111 @@
+ 				en,
+ 				Base,
+ 			);
+-			mainGroup = 0BE452D828132E99003BD2A5;
+-			productRefGroup = 0BE452E528132EA6003BD2A5 /* Products */;
++			mainGroup = 0B85D55F2812902200906D21;
++			productRefGroup = 0B85D56C2812903700906D21 /* Products */;
+ 			projectDirPath = "";
+ 			projectRoot = "";
+ 			targets = (
+-				0BE452E328132EA6003BD2A5 /* maplibre-rs */,
+-				0BE452F328132EB5003BD2A5 /* example (iOS) */,
+-				0BE452F828132EB5003BD2A5 /* example (macOS) */,
++				0B85D56A2812903700906D21 /* maplibre-rs */,
++				0B85D57D281290F800906D21 /* example (iOS) */,
++				0B85D582281290F800906D21 /* example (macOS) */,
+ 			);
+ 		};
+ /* End PBXProject section */
+ 
+ /* Begin PBXResourcesBuildPhase section */
+-		0BE452E228132EA6003BD2A5 /* Resources */ = {
++		0B85D5692812903700906D21 /* Resources */ = {
+ 			isa = PBXResourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+-		0BE452F228132EB5003BD2A5 /* Resources */ = {
++		0B85D57C281290F800906D21 /* Resources */ = {
+ 			isa = PBXResourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+-				0BE4530028132EB5003BD2A5 /* Assets.xcassets in Resources */,
++				0B85D58A281290F800906D21 /* Assets.xcassets in Resources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+-		0BE452F728132EB5003BD2A5 /* Resources */ = {
++		0B85D581281290F800906D21 /* Resources */ = {
+ 			isa = PBXResourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+-				0BE4530128132EB5003BD2A5 /* Assets.xcassets in Resources */,
++				0B85D58B281290F800906D21 /* Assets.xcassets in Resources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+ /* End PBXResourcesBuildPhase section */
+ 
++/* Begin PBXShellScriptBuildPhase section */
++		0BE452D72812EFC1003BD2A5 /* Cargo Build */ = {
++			isa = PBXShellScriptBuildPhase;
++			buildActionMask = 2147483647;
++			files = (
++			);
++			inputFileListPaths = (
++			);
++			inputPaths = (
++			);
++			name = "Cargo Build";
++			outputFileListPaths = (
++			);
++			outputPaths = (
++			);
++			runOnlyForDeploymentPostprocessing = 0;
++			shellPath = /bin/bash;
++			shellScript = ". \"$HOME/.cargo/env\"\n\narch=\"unknown\"\nvendor=\"apple\"\nos_type=\"unknown\"\nenvironment_type=\"\"\n\nmode=\"\"\n\necho \"ARCH: $ARCHS\"\n\nif [[ $CONFIGURATION == \"Release\" ]]\nthen\n    mode=\"--release\"\nfi\n\nif [[ $ARCHS == \"x86_64\" ]]\nthen\n    arch=\"x86_64\"\nelif [[ $ARCHS == \"arm64\" ]]\nthen\n    arch=\"aarch64\"\nfi\n\nif [[ $SDK_NAME == *\"iphoneos\"* ]]\nthen\n    os_type=\"ios\"\nelif [[ $SDK_NAME == *\"macos\"* ]]\nthen\n    os_type=\"darwin\"\nelif [[ $SDK_NAME == *\"iphonesimulator\"* ]]\nthen\n    os_type=\"ios\"\n    environment_type=\"sim\"\nfi\n\n\ntriplet=\"$arch-$vendor-$os_type\"\n\nif [ -n \"$environment_type\" ]\nthen\n    triplet=\"$triplet-$environment_type\"\nfi\n\necho \"$mode\"\necho \"$triplet\"\n\nenv -i zsh -c \"cargo build -p maplibre-apple $mode --target $triplet --lib\"\n\n";
++		};
++/* End PBXShellScriptBuildPhase section */
++
+ /* Begin PBXSourcesBuildPhase section */
+-		0BE452E028132EA6003BD2A5 /* Sources */ = {
++		0B85D5672812903700906D21 /* Sources */ = {
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
++				0B85D5952812913700906D21 /* maplibre.swift in Sources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+-		0BE452F028132EB5003BD2A5 /* Sources */ = {
++		0B85D57A281290F800906D21 /* Sources */ = {
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+-				0BE452FE28132EB5003BD2A5 /* ContentView.swift in Sources */,
+-				0BE452FC28132EB5003BD2A5 /* exampleApp.swift in Sources */,
++				0B85D586281290F800906D21 /* exampleApp.swift in Sources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+-		0BE452F528132EB5003BD2A5 /* Sources */ = {
++		0B85D57F281290F800906D21 /* Sources */ = {
+ 			isa = PBXSourcesBuildPhase;
+ 			buildActionMask = 2147483647;
+ 			files = (
+-				0BE452FF28132EB5003BD2A5 /* ContentView.swift in Sources */,
+-				0BE452FD28132EB5003BD2A5 /* exampleApp.swift in Sources */,
++				0B85D587281290F800906D21 /* exampleApp.swift in Sources */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+ /* End PBXSourcesBuildPhase section */
+ 
+ /* Begin XCBuildConfiguration section */
+-		0BE452DD28132E99003BD2A5 /* Debug */ = {
++		0B85D5642812902200906D21 /* Debug */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 			};
+ 			name = Debug;
+ 		};
+-		0BE452DE28132E99003BD2A5 /* Release */ = {
++		0B85D5652812902200906D21 /* Release */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 			};
+ 			name = Release;
+ 		};
+-		0BE452EA28132EA6003BD2A5 /* Debug */ = {
++		0B85D5712812903700906D21 /* Debug */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
++				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
++				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+ 				CLANG_ANALYZER_NONNULL = YES;
+ 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+ 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+@@ -304,11 +345,13 @@
+ 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+-				CODE_SIGN_STYLE = Automatic;
++				CODE_SIGN_IDENTITY = "Apple Development";
++				CODE_SIGN_STYLE = Manual;
+ 				COPY_PHASE_STRIP = NO;
+ 				CURRENT_PROJECT_VERSION = 1;
+ 				DEBUG_INFORMATION_FORMAT = dwarf;
+ 				DEFINES_MODULE = YES;
++				DEVELOPMENT_TEAM = "";
+ 				DYLIB_COMPATIBILITY_VERSION = 1;
+ 				DYLIB_CURRENT_VERSION = 1;
+ 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+@@ -337,14 +380,28 @@
+ 					"@executable_path/Frameworks",
+ 					"@loader_path/Frameworks",
+ 				);
++				LIBRARY_SEARCH_PATHS = (
++					"$(inherited)",
++					"$(PROJECT_DIR)",
++				);
++				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios/debug";
++				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/debug";
++				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios-sim/debug";
++				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-darwin/debug";
++				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-darwin/debug";
++				MACH_O_TYPE = staticlib;
+ 				MARKETING_VERSION = 1.0;
+ 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+ 				MTL_FAST_MATH = YES;
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				PRODUCT_BUNDLE_IDENTIFIER = "org.maplibre.maplibre-rs";
+ 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
++				PROVISIONING_PROFILE_SPECIFIER = "";
++				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
+ 				SDKROOT = iphoneos;
+-				SKIP_INSTALL = YES;
++				SKIP_INSTALL = NO;
++				SUPPORTED_PLATFORMS = "watchsimulator watchos macosx iphonesimulator iphoneos driverkit appletvsimulator appletvos";
++				SUPPORTS_MACCATALYST = YES;
+ 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+ 				SWIFT_EMIT_LOC_STRINGS = YES;
+ 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+@@ -355,10 +412,12 @@
+ 			};
+ 			name = Debug;
+ 		};
+-		0BE452EB28132EA6003BD2A5 /* Release */ = {
++		0B85D5722812903700906D21 /* Release */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
++				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
++				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+ 				CLANG_ANALYZER_NONNULL = YES;
+ 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+ 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+@@ -387,11 +446,13 @@
+ 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+-				CODE_SIGN_STYLE = Automatic;
++				CODE_SIGN_IDENTITY = "Apple Development";
++				CODE_SIGN_STYLE = Manual;
+ 				COPY_PHASE_STRIP = NO;
+ 				CURRENT_PROJECT_VERSION = 1;
+ 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+ 				DEFINES_MODULE = YES;
++				DEVELOPMENT_TEAM = "";
+ 				DYLIB_COMPATIBILITY_VERSION = 1;
+ 				DYLIB_CURRENT_VERSION = 1;
+ 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+@@ -414,13 +475,28 @@
+ 					"@executable_path/Frameworks",
+ 					"@loader_path/Frameworks",
+ 				);
++				LIBRARY_SEARCH_PATHS = (
++					"$(inherited)",
++					"$(PROJECT_DIR)",
++				);
++				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios/release";
++				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/release";
++				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios-sim/release";
++				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-darwin/release";
++				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-darwin/release";
++				MACH_O_TYPE = staticlib;
+ 				MARKETING_VERSION = 1.0;
+ 				MTL_ENABLE_DEBUG_INFO = NO;
+ 				MTL_FAST_MATH = YES;
++				ONLY_ACTIVE_ARCH = YES;
+ 				PRODUCT_BUNDLE_IDENTIFIER = "org.maplibre.maplibre-rs";
+ 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
++				PROVISIONING_PROFILE_SPECIFIER = "";
++				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
+ 				SDKROOT = iphoneos;
+-				SKIP_INSTALL = YES;
++				SKIP_INSTALL = NO;
++				SUPPORTED_PLATFORMS = "watchsimulator watchos macosx iphonesimulator iphoneos driverkit appletvsimulator appletvos";
++				SUPPORTS_MACCATALYST = YES;
+ 				SWIFT_COMPILATION_MODE = wholemodule;
+ 				SWIFT_EMIT_LOC_STRINGS = YES;
+ 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+@@ -432,7 +508,7 @@
+ 			};
+ 			name = Release;
+ 		};
+-		0BE4530328132EB5003BD2A5 /* Debug */ = {
++		0B85D58D281290F800906D21 /* Debug */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+@@ -489,7 +565,7 @@
+ 				GCC_WARN_UNUSED_FUNCTION = YES;
+ 				GCC_WARN_UNUSED_VARIABLE = YES;
+ 				GENERATE_INFOPLIST_FILE = YES;
+-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
++				INFOPLIST_FILE = "example--iOS--Info.plist";
+ 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+ 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+ 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+@@ -514,7 +590,7 @@
+ 			};
+ 			name = Debug;
+ 		};
+-		0BE4530428132EB5003BD2A5 /* Release */ = {
++		0B85D58E281290F800906D21 /* Release */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+@@ -565,7 +641,7 @@
+ 				GCC_WARN_UNUSED_FUNCTION = YES;
+ 				GCC_WARN_UNUSED_VARIABLE = YES;
+ 				GENERATE_INFOPLIST_FILE = YES;
+-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
++				INFOPLIST_FILE = "example--iOS--Info.plist";
+ 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+ 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+ 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+@@ -590,7 +666,7 @@
+ 			};
+ 			name = Release;
+ 		};
+-		0BE4530628132EB5003BD2A5 /* Debug */ = {
++		0B85D590281290F800906D21 /* Debug */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+@@ -630,8 +706,6 @@
+ 				COPY_PHASE_STRIP = NO;
+ 				CURRENT_PROJECT_VERSION = 1;
+ 				DEBUG_INFORMATION_FORMAT = dwarf;
+-				DEVELOPMENT_TEAM = KM8X78T35K;
+-				ENABLE_HARDENED_RUNTIME = YES;
+ 				ENABLE_PREVIEWS = YES;
+ 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+ 				ENABLE_TESTABILITY = YES;
+@@ -670,7 +744,7 @@
+ 			};
+ 			name = Debug;
+ 		};
+-		0BE4530728132EB5003BD2A5 /* Release */ = {
++		0B85D591281290F800906D21 /* Release */ = {
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+@@ -710,8 +784,6 @@
+ 				COPY_PHASE_STRIP = NO;
+ 				CURRENT_PROJECT_VERSION = 1;
+ 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+-				DEVELOPMENT_TEAM = KM8X78T35K;
+-				ENABLE_HARDENED_RUNTIME = YES;
+ 				ENABLE_NS_ASSERTIONS = NO;
+ 				ENABLE_PREVIEWS = YES;
+ 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+@@ -746,43 +818,43 @@
+ /* End XCBuildConfiguration section */
+ 
+ /* Begin XCConfigurationList section */
+-		0BE452DC28132E99003BD2A5 /* Build configuration list for PBXProject "maplibre-rs" */ = {
++		0B85D5632812902200906D21 /* Build configuration list for PBXProject "maplibre-rs" */ = {
+ 			isa = XCConfigurationList;
+ 			buildConfigurations = (
+-				0BE452DD28132E99003BD2A5 /* Debug */,
+-				0BE452DE28132E99003BD2A5 /* Release */,
++				0B85D5642812902200906D21 /* Debug */,
++				0B85D5652812902200906D21 /* Release */,
+ 			);
+ 			defaultConfigurationIsVisible = 0;
+ 			defaultConfigurationName = Release;
+ 		};
+-		0BE452E928132EA6003BD2A5 /* Build configuration list for PBXNativeTarget "maplibre-rs" */ = {
++		0B85D5702812903700906D21 /* Build configuration list for PBXNativeTarget "maplibre-rs" */ = {
+ 			isa = XCConfigurationList;
+ 			buildConfigurations = (
+-				0BE452EA28132EA6003BD2A5 /* Debug */,
+-				0BE452EB28132EA6003BD2A5 /* Release */,
++				0B85D5712812903700906D21 /* Debug */,
++				0B85D5722812903700906D21 /* Release */,
+ 			);
+ 			defaultConfigurationIsVisible = 0;
+ 			defaultConfigurationName = Release;
+ 		};
+-		0BE4530228132EB5003BD2A5 /* Build configuration list for PBXNativeTarget "example (iOS)" */ = {
++		0B85D58C281290F800906D21 /* Build configuration list for PBXNativeTarget "example (iOS)" */ = {
+ 			isa = XCConfigurationList;
+ 			buildConfigurations = (
+-				0BE4530328132EB5003BD2A5 /* Debug */,
+-				0BE4530428132EB5003BD2A5 /* Release */,
++				0B85D58D281290F800906D21 /* Debug */,
++				0B85D58E281290F800906D21 /* Release */,
+ 			);
+ 			defaultConfigurationIsVisible = 0;
+ 			defaultConfigurationName = Release;
+ 		};
+-		0BE4530528132EB5003BD2A5 /* Build configuration list for PBXNativeTarget "example (macOS)" */ = {
++		0B85D58F281290F800906D21 /* Build configuration list for PBXNativeTarget "example (macOS)" */ = {
+ 			isa = XCConfigurationList;
+ 			buildConfigurations = (
+-				0BE4530628132EB5003BD2A5 /* Debug */,
+-				0BE4530728132EB5003BD2A5 /* Release */,
++				0B85D590281290F800906D21 /* Debug */,
++				0B85D591281290F800906D21 /* Release */,
+ 			);
+ 			defaultConfigurationIsVisible = 0;
+ 			defaultConfigurationName = Release;
+ 		};
+ /* End XCConfigurationList section */
+ 	};
+-	rootObject = 0BE452D928132E99003BD2A5 /* Project object */;
++	rootObject = 0B85D5602812902200906D21 /* Project object */;
+ }
+diff --git a/diff/maplibre-rs/maplibre-rs.xcodeproj/project.xcworkspace/contents.xcworkspacedata b/xcode/maplibre-rs.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+similarity index 100%
+rename from diff/maplibre-rs/maplibre-rs.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+rename to xcode/maplibre-rs.xcodeproj/project.xcworkspace/contents.xcworkspacedata
+diff --git a/diff/maplibre-rs/maplibre-rs.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist b/xcode/maplibre-rs.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+similarity index 100%
+rename from diff/maplibre-rs/maplibre-rs.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+rename to xcode/maplibre-rs.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+diff --git a/xcode/maplibre-rs.xcodeproj/project.xcworkspace/xcuserdata/ehrenamtskarte.xcuserdatad/UserInterfaceState.xcuserstate b/xcode/maplibre-rs.xcodeproj/project.xcworkspace/xcuserdata/ehrenamtskarte.xcuserdatad/UserInterfaceState.xcuserstate
+new file mode 100644
+index 0000000..c510d83
+Binary files /dev/null and b/xcode/maplibre-rs.xcodeproj/project.xcworkspace/xcuserdata/ehrenamtskarte.xcuserdatad/UserInterfaceState.xcuserstate differ
+diff --git a/xcode/maplibre-rs.xcodeproj/xcshareddata/xcschemes/example (iOS).xcscheme b/xcode/maplibre-rs.xcodeproj/xcshareddata/xcschemes/example (iOS).xcscheme
+new file mode 100644
+index 0000000..560d3f3
+--- /dev/null
++++ b/xcode/maplibre-rs.xcodeproj/xcshareddata/xcschemes/example (iOS).xcscheme	
+@@ -0,0 +1,78 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<Scheme
++   LastUpgradeVersion = "1330"
++   version = "1.3">
++   <BuildAction
++      parallelizeBuildables = "YES"
++      buildImplicitDependencies = "YES">
++      <BuildActionEntries>
++         <BuildActionEntry
++            buildForTesting = "YES"
++            buildForRunning = "YES"
++            buildForProfiling = "YES"
++            buildForArchiving = "YES"
++            buildForAnalyzing = "YES">
++            <BuildableReference
++               BuildableIdentifier = "primary"
++               BlueprintIdentifier = "0B85D57D281290F800906D21"
++               BuildableName = "example.app"
++               BlueprintName = "example (iOS)"
++               ReferencedContainer = "container:maplibre-rs.xcodeproj">
++            </BuildableReference>
++         </BuildActionEntry>
++      </BuildActionEntries>
++   </BuildAction>
++   <TestAction
++      buildConfiguration = "Debug"
++      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
++      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
++      shouldUseLaunchSchemeArgsEnv = "YES">
++      <Testables>
++      </Testables>
++   </TestAction>
++   <LaunchAction
++      buildConfiguration = "Debug"
++      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
++      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
++      launchStyle = "0"
++      useCustomWorkingDirectory = "NO"
++      ignoresPersistentStateOnLaunch = "NO"
++      debugDocumentVersioning = "YES"
++      debugServiceExtension = "internal"
++      allowLocationSimulation = "YES">
++      <BuildableProductRunnable
++         runnableDebuggingMode = "0">
++         <BuildableReference
++            BuildableIdentifier = "primary"
++            BlueprintIdentifier = "0B85D57D281290F800906D21"
++            BuildableName = "example.app"
++            BlueprintName = "example (iOS)"
++            ReferencedContainer = "container:maplibre-rs.xcodeproj">
++         </BuildableReference>
++      </BuildableProductRunnable>
++   </LaunchAction>
++   <ProfileAction
++      buildConfiguration = "Release"
++      shouldUseLaunchSchemeArgsEnv = "YES"
++      savedToolIdentifier = ""
++      useCustomWorkingDirectory = "NO"
++      debugDocumentVersioning = "YES">
++      <BuildableProductRunnable
++         runnableDebuggingMode = "0">
++         <BuildableReference
++            BuildableIdentifier = "primary"
++            BlueprintIdentifier = "0B85D57D281290F800906D21"
++            BuildableName = "example.app"
++            BlueprintName = "example (iOS)"
++            ReferencedContainer = "container:maplibre-rs.xcodeproj">
++         </BuildableReference>
++      </BuildableProductRunnable>
++   </ProfileAction>
++   <AnalyzeAction
++      buildConfiguration = "Debug">
++   </AnalyzeAction>
++   <ArchiveAction
++      buildConfiguration = "Release"
++      revealArchiveInOrganizer = "YES">
++   </ArchiveAction>
++</Scheme>
+diff --git a/diff/maplibre-rs/maplibre-rs.xcodeproj/xcuserdata/ehrenamtskarte.xcuserdatad/xcschemes/xcschememanagement.plist b/xcode/maplibre-rs.xcodeproj/xcuserdata/ehrenamtskarte.xcuserdatad/xcschemes/xcschememanagement.plist
+similarity index 79%
+rename from diff/maplibre-rs/maplibre-rs.xcodeproj/xcuserdata/ehrenamtskarte.xcuserdatad/xcschemes/xcschememanagement.plist
+rename to xcode/maplibre-rs.xcodeproj/xcuserdata/ehrenamtskarte.xcuserdatad/xcschemes/xcschememanagement.plist
+index 71f0968..3e826a1 100644
+--- a/diff/maplibre-rs/maplibre-rs.xcodeproj/xcuserdata/ehrenamtskarte.xcuserdatad/xcschemes/xcschememanagement.plist
++++ b/xcode/maplibre-rs.xcodeproj/xcuserdata/ehrenamtskarte.xcuserdatad/xcschemes/xcschememanagement.plist
+@@ -7,17 +7,25 @@
+ 		<key>example (iOS).xcscheme_^#shared#^_</key>
+ 		<dict>
+ 			<key>orderHint</key>
+-			<integer>2</integer>
++			<integer>0</integer>
+ 		</dict>
+ 		<key>example (macOS).xcscheme_^#shared#^_</key>
+ 		<dict>
+ 			<key>orderHint</key>
+-			<integer>1</integer>
++			<integer>2</integer>
+ 		</dict>
+ 		<key>maplibre-rs.xcscheme_^#shared#^_</key>
+ 		<dict>
+ 			<key>orderHint</key>
+-			<integer>0</integer>
++			<integer>1</integer>
++		</dict>
++	</dict>
++	<key>SuppressBuildableAutocreation</key>
++	<dict>
++		<key>0B85D57D281290F800906D21</key>
++		<dict>
++			<key>primary</key>
++			<true/>
+ 		</dict>
+ 	</dict>
+ </dict>
