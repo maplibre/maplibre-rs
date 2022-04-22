@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
 
-use maplibre_style::layer::StyleLayer;
+use crate::style::layer::StyleLayer;
 use wgpu::BufferAddress;
 
 use crate::coords::{Quadkey, WorldTileCoords};

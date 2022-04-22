@@ -5,17 +5,14 @@ resolver = "2"
 members = [
     "maplibre",
     "maplibre-core",
-    "maplibre-android",
-    "maplibre-apple",
-    "maplibre-web",
-
-    "maplibre-style",
-    "maplibre-tilejson",
-
-    "maplibre-benchmark",
     "maplibre-build-tools",
+    "maplibre-demo",
 
-    "maplibre-example",
+    "android",
+    "apple",
+    "web",
+
+    "benchmarks",
 ]
 
 [profile.release]

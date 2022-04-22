@@ -27,10 +27,10 @@ nightly-toolchain:
   rustup component add rust-src --toolchain $RUSTUP_TOOLCHAIN
 
 webpack-webgl-production: nightly-toolchain
-  cd maplibre-web/web && npm install && npm run webgl-production-build
+  cd web/web && npm install && npm run webgl-production-build
 
 webpack-production: nightly-toolchain
-  cd maplibre-web/web && npm install && npm run production-build
+  cd web/web && npm install && npm run production-build
 
 # TODO
 # wasm-pack-webgl: nightly-toolchain
@@ -65,10 +65,10 @@ install-cargo-apk:
   cargo install cargo-apk
 
 run-apk: nightly-toolchain install-cargo-apk
-  cargo apk run -p maplibre-android --lib -Zbuild-std
+  cargo apk run -p android --lib -Zbuild-std
 
 build-apk: nightly-toolchain install-cargo-apk
-  cargo apk build -p maplibre-android --lib -Zbuild-std
+  cargo apk build -p android --lib -Zbuild-std
 
 # language=bash
 print-android-env:

@@ -6,7 +6,7 @@ use std::fmt::Formatter;
 use cgmath::num_traits::Pow;
 use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
 
-use maplibre_style::source::TileAddressingScheme;
+use crate::style::source::TileAddressingScheme;
 
 use crate::util::math::{div_floor, Aabb2};
 use crate::util::SignificantlyDifferent;

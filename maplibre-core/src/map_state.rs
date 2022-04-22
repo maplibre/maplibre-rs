@@ -17,7 +17,7 @@ use crate::io::source_client::{HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TessellateMessage, TileRequest, TileTessellateMessage};
-use maplibre_style::Style;
+use crate::style::Style;
 use wgpu::SurfaceError;
 
 pub trait Runnable<E> {

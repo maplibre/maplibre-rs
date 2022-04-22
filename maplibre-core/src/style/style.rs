@@ -1,5 +1,5 @@
-use crate::layer::{LayerPaint, LinePaint, StyleLayer};
-use crate::source::Source;
+use crate::style::layer::{LayerPaint, LinePaint, StyleLayer};
+use crate::style::source::Source;
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

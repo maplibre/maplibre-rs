@@ -1,6 +1,6 @@
 use crate::coords::WorldTileCoords;
 use crate::error::Error;
-use maplibre_style::source::TileAddressingScheme;
+use crate::style::source::TileAddressingScheme;
 
 pub struct HttpSourceClient {
     #[cfg(not(target_arch = "wasm32"))]

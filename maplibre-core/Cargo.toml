@@ -52,9 +52,6 @@ raw-window-handle = "0.4"
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", optional = true }
 
-maplibre-style = { path = "../maplibre-style" }
-maplibre-tilejson =  { path = "../maplibre-tilejson" }
-
 cgmath = "0.18"
 
 geo = { version = "0.19" }
@@ -79,6 +76,10 @@ bytemuck = "1.2.0"
 bytemuck_derive = "1.0"
 
 include_dir = "0.7.2"
+
+serde = { version = "1.0", features = ["derive"] }
+csscolorparser = { version = "0.5", features = ["serde", "cint"]}
+cint = "0.2"
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools" }

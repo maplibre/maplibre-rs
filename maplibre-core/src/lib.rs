@@ -11,6 +11,8 @@ pub(crate) mod render;
 pub(crate) mod tessellation;
 pub(crate) mod util;
 pub(crate) mod winit;
+pub(crate) mod style;
+pub(crate) mod tilejson;
 
 // Used for benchmarking
 pub mod benchmarking;
@@ -20,7 +22,7 @@ use crate::map_state::{MapState, Runnable};
 use crate::render::render_state::RenderState;
 use crate::window::{WindowFactory, WindowSize};
 pub use io::scheduler::ScheduleMethod;
-use maplibre_style::Style;
+use crate::style::Style;
 pub use platform::schedule_method::*;
 
 pub struct Map<W, E> {

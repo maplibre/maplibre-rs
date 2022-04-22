@@ -4,7 +4,7 @@ pub use std::time::Instant;
 
 // TODO clippy
 // #[cfg(not(target_os = "android"))]
-// compile_error!("maplibre-android works only on android.");
+// compile_error!("android works only on android.");
 
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
 pub fn main() {

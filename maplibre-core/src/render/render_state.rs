@@ -5,7 +5,7 @@ use std::{cmp, iter};
 use tracing;
 use wgpu::{Buffer, Limits, Queue};
 
-use maplibre_style::Style;
+use crate::style::Style;
 
 use crate::coords::{ViewRegion, Zoom};
 

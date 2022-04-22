@@ -1,9 +1,10 @@
 [package]
-name = "maplibre-web"
+name = "web"
 version = "0.1.0"
 description = ""
 categories = []
 edition = "2021"
+publish = false
 
 [features]
 web-webgl = ["maplibre-core/web-webgl"]
