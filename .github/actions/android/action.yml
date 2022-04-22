@@ -9,8 +9,6 @@ runs:
       shell: bash
       run: just nightly-toolchain
     - uses: Swatinem/rust-cache@v1
-      with:
-        toolchain: nightly
     - name: Build
       shell: bash
       run: just build-apk
