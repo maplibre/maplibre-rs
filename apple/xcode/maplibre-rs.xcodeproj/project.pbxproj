@@ -133,11 +133,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0B85D5702812903700906D21 /* Build configuration list for PBXNativeTarget "maplibre-rs" */;
 			buildPhases = (
+				0BE452D72812EFC1003BD2A5 /* Cargo Build */,
 				0B85D5662812903700906D21 /* Headers */,
 				0B85D5672812903700906D21 /* Sources */,
 				0B85D5682812903700906D21 /* Frameworks */,
 				0B85D5692812903700906D21 /* Resources */,
-				0BE452D72812EFC1003BD2A5 /* Cargo Build */,
 			);
 			buildRules = (
 			);
