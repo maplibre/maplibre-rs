@@ -1,4 +1,4 @@
-pub use maplibre_core::*;
+pub use maplibre::*;
 
 // TODO clippy
 // #[cfg(not(target_arch = "wasm32"))]

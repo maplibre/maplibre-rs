@@ -78,6 +78,7 @@ bytemuck_derive = "1.0"
 include_dir = "0.7.2"
 
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 csscolorparser = { version = "0.5", features = ["serde", "cint"]}
 cint = "0.2"
 

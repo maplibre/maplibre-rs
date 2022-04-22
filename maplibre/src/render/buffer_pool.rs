@@ -523,7 +523,7 @@ impl RingIndex {
 #[cfg(test)]
 mod tests {
     use lyon::tessellation::VertexBuffers;
-    use maplibre_style::layer::StyleLayer;
+    use crate::style::layer::StyleLayer;
     use wgpu::BufferAddress;
 
     use crate::render::buffer_pool::{

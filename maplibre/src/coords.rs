@@ -500,7 +500,7 @@ impl fmt::Display for WorldCoords {
 mod tests {
     use cgmath::{Point2, Vector4};
 
-    use maplibre_style::source::TileAddressingScheme;
+    use crate::style::source::TileAddressingScheme;
 
     use crate::coords::{
         Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, EXTENT,
