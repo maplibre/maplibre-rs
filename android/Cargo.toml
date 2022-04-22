@@ -1,5 +1,5 @@
 [package]
-name = "maplibre-android"
+name = "maplibre-android" # Naming this "android" is not possible. Compilation fails.
 version = "0.1.0"
 description = ""
 categories = []
