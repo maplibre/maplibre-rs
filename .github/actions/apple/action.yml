@@ -1,0 +1,18 @@
+name: desktop
+description: Build for desktop
+
+runs:
+  using: "composite"
+  steps:
+    - uses: extractions/setup-just@v1
+    - uses: actions-rs/toolchain@v1
+    - uses: Swatinem/rust-cache@v1
+    - name: Build xcframework
+      shell: bash
+      run: just xcodebuild-xcframework
+    - name: Build Example
+      shell: bash
+      run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
+    - name: Build Swift Package
+      shell: bash
+      run: cd apple/MapLibreRs && swift build
