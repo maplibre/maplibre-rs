@@ -1,5 +1,6 @@
 mod geom;
 mod glyph_tesselation;
+mod texture;
 
 use crate::glyph_tesselation::{GlyphBuilder, SVGBuilder};
 use winit::{
@@ -161,8 +162,12 @@ struct State {
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
-    render_pipeline: wgpu::RenderPipeline,
+    prepass_target_texture: texture::Texture,
+    prepass_target_texture_bind_group: wgpu::BindGroup,
+    prepass_pipeline: wgpu::RenderPipeline,
+    main_pipeline: wgpu::RenderPipeline,
     meshes: Vec<Mesh>,
+    full_screen_quad: Mesh,
     camera: Camera,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
@@ -211,10 +216,53 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
-        });
+        let prepass_target_texture = texture::Texture::empty(
+            &device,
+            size.width,
+            size.height,
+            wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            Some("prepassTarget"),
+        );
+        let texture_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        // This should match the filterable field of the
+                        // corresponding Texture entry above.
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+                label: Some("texture_bind_group_layout"),
+            });
+
+        let prepass_target_texture_bind_group =
+            device.create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &texture_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(&prepass_target_texture.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Sampler(&prepass_target_texture.sampler),
+                    },
+                ],
+                label: Some("diffuse_bind_group"),
+            });
 
         let camera = Camera {
             // position the camera one unit up and 2 units back
@@ -229,16 +277,13 @@ impl State {
             znear: 0.1,
             zfar: 100.0,
         };
-
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
-
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
             contents: bytemuck::cast_slice(&[camera_uniform]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
-
         let camera_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[wgpu::BindGroupLayoutEntry {
@@ -253,7 +298,6 @@ impl State {
                 }],
                 label: Some("camera_bind_group_layout"),
             });
-
         let camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &camera_bind_group_layout,
             entries: &[wgpu::BindGroupEntry {
@@ -263,24 +307,78 @@ impl State {
             label: Some("camera_bind_group"),
         });
 
-        let render_pipeline_layout =
+        let shaders = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: Some("Shaders"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("shaders.wgsl").into()),
+        });
+
+        // PREPASS PIPELINE
+
+        let pre_pass_render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Render Pipeline Layout"),
+                label: Some("Prepass Pipeline Layout"),
                 bind_group_layouts: &[&camera_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
+        let prepass_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Prepass Pipeline"),
+            layout: Some(&pre_pass_render_pipeline_layout),
             vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "vs_main",
+                module: &shaders,
+                entry_point: "prepass_vs",
                 buffers: &[Vertex::desc()],
             },
             fragment: Some(wgpu::FragmentState {
-                module: &shader,
-                entry_point: "fs_main",
+                module: &shaders,
+                entry_point: "prepass_fs",
+                targets: &[wgpu::ColorTargetState {
+                    format: config.format,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                }],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Back),
+                // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
+                polygon_mode: wgpu::PolygonMode::Fill,
+                // Requires Features::DEPTH_CLIP_CONTROL
+                unclipped_depth: false,
+                // Requires Features::CONSERVATIVE_RASTERIZATION
+                conservative: false,
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview: None,
+        });
+
+        // MAIN PASS PIPELINE
+
+        let main_pass_render_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Mainpass Pipeline Layout"),
+                bind_group_layouts: &[&camera_bind_group_layout, &texture_bind_group_layout],
+                push_constant_ranges: &[],
+            });
+
+        let main_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Main Pipeline"),
+            layout: Some(&main_pass_render_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &shaders,
+                entry_point: "mainpass_vs",
+                buffers: &[Vertex::desc()],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shaders,
+                entry_point: "mainpass_fs",
                 targets: &[wgpu::ColorTargetState {
                     format: config.format,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),
@@ -312,14 +410,25 @@ impl State {
 
         let camera_controller = CameraController::new(0.2);
 
+        let quad = Quad {
+            center: Vertex::new_3d(0.0, 0.0, 0.2, 1.0, 0.0, 0.0, 1.0),
+            width: 1.0,
+            height: 1.0,
+        };
+        let full_screen_quad = quad.as_mesh(&device);
+
         Self {
             surface,
             device,
             queue,
             config,
             size,
-            render_pipeline,
+            prepass_target_texture,
+            prepass_target_texture_bind_group,
+            prepass_pipeline,
+            main_pipeline,
             meshes,
+            full_screen_quad,
             camera,
             camera_uniform,
             camera_buffer,
@@ -355,48 +464,111 @@ impl State {
         );
     }
 
-    fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    fn load_test_glyph(&mut self, glyph_id: u16) {
+        let data = std::fs::read("tests/fonts/aparaj.ttf").unwrap();
+        let face = ttf::Face::from_slice(&data, 0).unwrap();
+
+        let mut glyph_builder = GlyphBuilder::new();
+        let bbox = face
+            .outline_glyph(ttf::GlyphId(glyph_id), &mut glyph_builder)
+            .unwrap();
+
+        let mut debug_builder = SVGBuilder(String::new());
+        let _bbox = face
+            .outline_glyph(ttf::GlyphId(glyph_id), &mut debug_builder)
+            .unwrap();
+        // println!("{:?}", &glyph_builder);
+        println!("{}", &debug_builder.0);
+        glyph_builder.normalize(&bbox);
+        //println!("{:?}", &glyph_builder);
+
+        self.add_model(&glyph_builder);
+    }
+
+    fn render_prepass(&mut self, encoder: &mut wgpu::CommandEncoder) {
+        // Draw all the meshes into the target texture
+
+        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("PrePass"),
+            color_attachments: &[wgpu::RenderPassColorAttachment {
+                view: &self.prepass_target_texture.view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: 1.0,
+                        g: 1.0,
+                        b: 1.0,
+                        a: 1.0,
+                    }),
+                    store: true,
+                },
+            }],
+            depth_stencil_attachment: None,
+        });
+
+        render_pass.set_pipeline(&self.prepass_pipeline);
+        render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
+
+        for mesh in &self.meshes {
+            render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(0..4));
+            render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            let num_indices = mesh.num_indices as u32;
+            render_pass.draw_indexed(0..num_indices, 0, 0..1);
+        }
+    }
+
+    fn render_mainpass(
+        &mut self,
+        encoder: &mut wgpu::CommandEncoder,
+    ) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
 
+        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("MainPass"),
+            color_attachments: &[wgpu::RenderPassColorAttachment {
+                view: &view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: 1.0,
+                        g: 1.0,
+                        b: 1.0,
+                        a: 1.0,
+                    }),
+                    store: true,
+                },
+            }],
+            depth_stencil_attachment: None,
+        });
+
+        render_pass.set_pipeline(&self.main_pipeline);
+        render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
+        render_pass.set_bind_group(1, &self.prepass_target_texture_bind_group, &[]);
+
+        let mesh = &self.full_screen_quad;
+        render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(0..4));
+        render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        let num_indices = mesh.num_indices as u32;
+        render_pass.draw_indexed(0..num_indices, 0, 0..1);
+
+        Ok(output)
+    }
+
+    fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
 
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
-                color_attachments: &[wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 1.0,
-                            g: 1.0,
-                            b: 1.0,
-                            a: 1.0,
-                        }),
-                        store: true,
-                    },
-                }],
-                depth_stencil_attachment: None,
-            });
+        // Prepass to fill in the glyph meshes into the texture
+        self.render_prepass(&mut encoder);
 
-            render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
-
-            for mesh in &self.meshes {
-                render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(0..4));
-                render_pass
-                    .set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-                let num_indices = mesh.num_indices as u32;
-                render_pass.draw_indexed(0..num_indices, 0, 0..1);
-            }
-        }
+        // Actual pass to flip the pixels (and compute anti-aliasing?)
+        let output = self.render_mainpass(&mut encoder)?;
 
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
@@ -410,39 +582,8 @@ pub async fn run() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
-    let mut state = State::new(&window).await;
-
-    // state.add_model(&Quad {
-    // center: Vertex::new_3d(0.0, 0.0, 0.2, 1.0, 0.0, 0.0, 1.0),
-    // width: 1.0,
-    // height: 1.0,
-    // });
-    // state.add_model(&Quad {
-    // center: Vertex::new_3d(0.0, 0.0, 0.1, 0.0, 1.0, 0.0, 0.5),
-    // width: 0.5,
-    // height: 0.5,
-    // });
-
-    let data = std::fs::read("tests/fonts/aparaj.ttf").unwrap();
-    let face = ttf::Face::from_slice(&data, 0).unwrap();
-
-    let glyph_id = 566;
-
-    let mut glyph_builder = GlyphBuilder::new();
-    let bbox = face
-        .outline_glyph(ttf::GlyphId(glyph_id), &mut glyph_builder)
-        .unwrap();
-
-    let mut debug_builder = SVGBuilder(String::new());
-    let _bbox = face
-        .outline_glyph(ttf::GlyphId(glyph_id), &mut debug_builder)
-        .unwrap();
-    // println!("{:?}", &glyph_builder);
-    println!("{}", &debug_builder.0);
-    glyph_builder.normalize(&bbox);
-    //println!("{:?}", &glyph_builder);
-
-    state.add_model(&glyph_builder);
+    let mut state: State = State::new(&window).await;
+    state.load_test_glyph(566);
 
     event_loop.run(move |event, _, control_flow| {
         match event {
