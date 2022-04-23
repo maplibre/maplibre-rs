@@ -9,9 +9,8 @@ runs:
       shell: bash
       run: just default-toolchain
     - uses: Swatinem/rust-cache@v1
-    - name: Install mdbook
-      shell: bash
-      run: cargo install mdbook --no-default-features --vers "^0.4.0"
+    - name: Setup mdBook
+      uses: peaceiris/actions-mdbook@v1
     - name: Install Dependencies
       shell: bash
       run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
