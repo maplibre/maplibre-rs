@@ -33,6 +33,10 @@ nightly-toolchain:
   rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
   rustup override set $NIGHTLY_TOOLCHAIN
 
+nightly-toolchain-android: nightly-toolchain
+  rustup target add --toolchain $NIGHTLY_TOOLCHAIN x86_64-linux-android
+  rustup target add --toolchain $NIGHTLY_TOOLCHAIN aarch64-linux-android
+
 webpack-webgl-production: nightly-toolchain
   cd web/web && npm install && npm run webgl-production-build
 
@@ -68,14 +72,9 @@ webpack-production: nightly-toolchain
 #profile-bench:
 # cargo flamegraph --bench render -- --bench
 
-install-cargo-apk:
-  cargo install cargo-apk
 
-run-apk: print-android-env nightly-toolchain install-cargo-apk
-  cargo apk run -p maplibre-android --lib -Zbuild-std
-
-build-apk: print-android-env nightly-toolchain install-cargo-apk
-  cargo apk build -p maplibre-android --lib -Zbuild-std
+build-android: print-android-env
+  cd android/gradle && ./gradlew assembleDebug
 
 # language=bash
 print-android-env:

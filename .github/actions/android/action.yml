@@ -7,11 +7,11 @@ runs:
     - uses: extractions/setup-just@v1
     - name: Install nightly toolchain
       shell: bash
-      run: just nightly-toolchain
+      run: just nightly-toolchain-android
     - uses: Swatinem/rust-cache@v1
     - name: Build
       shell: bash
-      run: cd android/gradle && ./gradlew assembleDebug
+      run: just build-android
     - uses: actions/upload-artifact@v2
       with:
         name: maplibre-rs.apk
