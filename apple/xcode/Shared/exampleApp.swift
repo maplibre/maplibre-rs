@@ -1,8 +1,9 @@
 import SwiftUI
+import maplibre_rs
 
 @main
 struct App {
     static func main() {
-        mapr_apple_main();
+       maplibre_rs.MapLibre.start();
     }
 }

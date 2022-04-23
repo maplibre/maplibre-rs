@@ -29,9 +29,7 @@ impl HttpSourceClient {
     pub fn new() -> Self {
         Self {
             #[cfg(not(target_arch = "wasm32"))]
-            inner_client: crate::platform::http_client::ReqwestHttpClient::new(Some(
-                "./maplibre-cache".to_string(), // TODO make path  dynamic
-            )),
+            inner_client: crate::platform::http_client::ReqwestHttpClient::new(None),
             #[cfg(target_arch = "wasm32")]
             inner_client: crate::platform::http_client::WHATWGFetchHttpClient::new(),
         }

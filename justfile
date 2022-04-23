@@ -2,6 +2,8 @@
 # ^ A shebang isn't required, but allows a justfile to be executed
 #   like a script, with `./justfile test`, for example.
 
+set shell := ["bash", "-c"]
+
 export NIGHTLY_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
 
 test:
@@ -69,17 +71,71 @@ webpack-production: nightly-toolchain
 install-cargo-apk:
   cargo install cargo-apk
 
-run-apk: nightly-toolchain install-cargo-apk
+run-apk: print-android-env nightly-toolchain install-cargo-apk
   cargo apk run -p maplibre-android --lib -Zbuild-std
 
-build-apk: nightly-toolchain install-cargo-apk
+build-apk: print-android-env nightly-toolchain install-cargo-apk
   cargo apk build -p maplibre-android --lib -Zbuild-std
 
 # language=bash
 print-android-env:
+  #!/usr/bin/env bash
+  set -euxo pipefail
   echo "ANDROID_HOME: $ANDROID_HOME"
   echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
   echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
+
+INNER_FRAMEWORK_PATH := "Products/Library/Frameworks/maplibre_rs.framework"
+XC_FRAMEWORK_DIRECTORY := "./apple/MapLibreRs/"
+export XC_FRAMEWORK_PATH := "./apple/MapLibreRs/MapLibreRs.xcframework"
+PROJECT_DIR := "./apple/xcode/maplibre-rs.xcodeproj"
+BINARY_NAME := "maplibre_rs"
+BUILD_DIR := "./apple/build"
+
+xcodebuild-archive ARCH PLATFORM:
+  xcodebuild ARCHS="{{ARCH}}" archive -project "{{PROJECT_DIR}}" \
+                                    -scheme "maplibre-rs" \
+                                    -destination "generic/platform={{PLATFORM}}" \
+                                    -archivePath "{{BUILD_DIR}}/{{ARCH}}-apple-{{PLATFORM}}"
+
+# language=bash
+xcodebuild-archive-fat EXISTING_ARCH EXISTING_PLATFORM ARCH: (xcodebuild-archive ARCH EXISTING_PLATFORM)
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  archive="{{BUILD_DIR}}/{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
+  existing_archive="{{BUILD_DIR}}/{{EXISTING_ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
+  fat_archive="{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
+  cp -R "$existing_archive" "$fat_archive"
+  inner="$archive/{{INNER_FRAMEWORK_PATH}}"
+  existing_inner="$existing_archive/{{INNER_FRAMEWORK_PATH}}"
+  fat_inner="$fat_archive/{{INNER_FRAMEWORK_PATH}}"
+  
+  target_binary="$fat_inner/$(readlink -n "$fat_inner/{{BINARY_NAME}}")"
+  lipo -create  "$existing_inner/{{BINARY_NAME}}" \
+                "$inner/{{BINARY_NAME}}" \
+                -output "$target_binary"
+  cp -R $inner/Modules/{{BINARY_NAME}}.swiftmodule/* \
+        "$fat_inner/Modules/{{BINARY_NAME}}.swiftmodule/"
+  
+
+xcodebuild-clean:
+  rm -rf {{BUILD_DIR}}/*.xcarchive
+  rm -rf {{XC_FRAMEWORK_DIRECTORY}}/*.xcframework
+
+# language=bash
+xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (xcodebuild-archive  "arm64" "macOS") (xcodebuild-archive  "arm64" "iOS Simulator") (xcodebuild-archive-fat "arm64" "macOS" "x86_64")
+  #!/usr/bin/env bash
+  set -euxo pipefail
+  tuples=(
+    "arm64,iOS"
+    "arm64,iOS Simulator"
+    "arm64-x86_64,macOS"
+  )
+  framework_args=$(for i in "${tuples[@]}"; do IFS=","; set -- $i; echo -n "-framework \"{{BUILD_DIR}}/$1-apple-$2.xcarchive/{{INNER_FRAMEWORK_PATH}}\" "; done)
+  echo "$framework_args"
+  echo  "$XC_FRAMEWORK_PATH"
+  echo "$framework_args" | xargs xcodebuild -create-xcframework -output "$XC_FRAMEWORK_PATH"
+  cat "$XC_FRAMEWORK_PATH/Info.plist"
 
 # language=bash
 extract-tiles:
