@@ -29,9 +29,6 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 #[cfg(target_arch = "wasm32")]
 pub use web::*;
 
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-pub use apple::*;
-
 #[cfg(not(target_arch = "wasm32"))]
 pub use noweb::*;
 
