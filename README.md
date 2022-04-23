@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img width="350px" alt="maplibre-rs" src="./docs/src/figures/maplibre-rs-light.svg">
+  <img width="350px" alt="maplibre-rs" src="./docs/logo/maplibre-rs-with-text.svg">
 </h1>
 
 <div align="center">
