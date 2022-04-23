@@ -101,6 +101,9 @@ xcodebuild-archive-fat EXISTING_ARCH EXISTING_PLATFORM ARCH: (xcodebuild-archive
   lipo -create  "{{BUILD_DIR}}/{{EXISTING_ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/{{BINARY_NAME}}" \
                 "{{BUILD_DIR}}/{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/{{BINARY_NAME}}" \
                 -output "{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/{{BINARY_NAME}}"
+  cp -r {{BUILD_DIR}}/{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/Modules/{{BINARY_NAME}}.swiftmodule/* \
+        "{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/Modules/{{BINARY_NAME}}.swiftmodule/"
+  
 
 xcodebuild-clean:
   rm -rf {{BUILD_DIR}}/*.xcarchive
