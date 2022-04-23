@@ -31,7 +31,7 @@ pub struct MapState<W> {
     camera: ChangeObserver<camera::Camera>,
     perspective: camera::Perspective,
 
-    render_state: RenderState,
+    render_state: Option<RenderState>,
     scheduler: Scheduler,
     message_receiver: mpsc::Receiver<TessellateMessage>,
     shared_thread_state: SharedThreadState,
@@ -46,7 +46,7 @@ impl<W> MapState<W> {
     pub fn new(
         window: W,
         window_size: WindowSize,
-        render_state: RenderState,
+        render_state: Option<RenderState>,
         scheduler: Scheduler,
         style: Style,
     ) -> Self {
@@ -100,7 +100,7 @@ impl<W> MapState<W> {
         self.prepare_render();
 
         // Render buffers
-        let result = self.render_state.render();
+        let result = self.render_state_mut().render();
 
         #[cfg(all(feature = "enable-tracing", not(target_arch = "wasm32")))]
         tracy_client::finish_continuous_frame!();
@@ -122,7 +122,7 @@ impl<W> MapState<W> {
                 }
                 TessellateMessage::Tile(TileTessellateMessage { request_id, coords }) => loop {
                     if let Ok(mut tile_request_state) =
-                        self.shared_thread_state.tile_request_state.try_lock()
+                    self.shared_thread_state.tile_request_state.try_lock()
                     {
                         tile_request_state.finish_tile_request(request_id);
                         tracing::trace!("Tile at {} finished loading", coords);
@@ -170,13 +170,12 @@ impl<W> MapState<W> {
         drop(_guard);
 
         if let Some(view_region) = &view_region {
-            self.render_state
-                .upload_tile_geometry(view_region, &self.style, &self.tile_cache);
+            self.render_state.as_mut().expect("render state not yet initialized. Call reinitialize().").upload_tile_geometry(view_region, &self.style, &self.tile_cache);
 
-            self.render_state
-                .update_tile_view_pattern(view_region, &view_proj, self.zoom());
+            let zoom = self.zoom();
+            self.render_state_mut().update_tile_view_pattern(view_region, &view_proj, zoom);
 
-            self.render_state.update_metadata();
+            self.render_state_mut().update_metadata();
         }
 
         // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
@@ -188,7 +187,7 @@ impl<W> MapState<W> {
                 self.try_failed = self.request_tiles_in_view(view_region);
             }
 
-            self.render_state.update_globals(&view_proj, &self.camera);
+            self.render_state().update_globals(&view_proj, &self.camera);
         }
 
         self.camera.update_reference();
@@ -253,7 +252,7 @@ impl<W> MapState<W> {
         self.perspective.resize(width, height);
         self.camera.resize(width, height);
 
-        self.render_state.resize(width, height)
+        self.render_state_mut().resize(width, height)
     }
 
     pub fn scheduler(&self) -> &Scheduler {
@@ -289,19 +288,39 @@ impl<W> MapState<W> {
     }
 
     pub fn suspend(&mut self) {
-        self.render_state.suspend();
+        self.render_state_mut().suspend();
     }
 
     pub fn resume(&mut self) {
-        self.render_state.resume();
+        self.render_state_mut().resume();
+    }
+
+    pub fn render_state(&self) -> &RenderState {
+        self.render_state.as_ref().expect("render state not yet initialized. Call reinitialize().")
+    }
+
+    pub fn render_state_mut(&mut self) -> &'_ mut RenderState {
+        self.render_state.as_mut().unwrap()
     }
 }
 
 impl<W> MapState<W>
-where
-    W: raw_window_handle::HasRawWindowHandle,
+    where
+        W: raw_window_handle::HasRawWindowHandle,
 {
     pub fn recreate_surface(&mut self) {
-        self.render_state.recreate_surface(&self.window);
+        self.render_state.as_mut().expect("render state not yet initialized. Call reinitialize().").recreate_surface(&self.window);
+    }
+
+    pub fn is_initialized(&self) -> bool {
+        self.render_state.is_some()
+    }
+
+    pub async fn reinitialize(&mut self) {
+        if self.render_state.is_none() {
+            let window_size = WindowSize::new(100, 100).unwrap(); // TODO get size
+            let render_state = RenderState::initialize(&self.window, window_size);
+            self.render_state = Some(render_state.await.unwrap())
+        }
     }
 }

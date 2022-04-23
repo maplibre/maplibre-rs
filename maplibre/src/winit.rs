@@ -23,88 +23,102 @@ impl Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Wind
         let mut input_controller = InputController::new(0.2, 100.0, 0.1);
 
         event_loop.run(move |event, _, control_flow| {
-                match event {
-                    Event::DeviceEvent {
-                        ref event,
-                        .. // We're not using device_id currently
-                    } => {
-                        input_controller.device_input(event);
-                    }
 
-                    Event::WindowEvent {
-                        ref event,
-                        window_id,
-                    } if window_id == self.window().id() => {
-                        if !input_controller.window_input(event) {
-                            match event {
-                                WindowEvent::CloseRequested
-                                | WindowEvent::KeyboardInput {
-                                    input:
-                                    KeyboardInput {
-                                        state: ElementState::Pressed,
-                                        virtual_keycode: Some(VirtualKeyCode::Escape),
-                                        ..
-                                    },
-                                    ..
-                                } => *control_flow = ControlFlow::Exit,
-                                WindowEvent::Resized(physical_size) => {
-                                    self.resize(physical_size.width, physical_size.height);
-                                }
-                                WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                                    self.resize(new_inner_size.width, new_inner_size.height);
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-                    Event::RedrawRequested(_) => {
-                        let _span_ = tracing::span!(tracing::Level::TRACE, "redraw requested").entered();
+            #[cfg(target_os = "android")]
+            if !self.is_initialized() && event == Event::Resumed {
+                use tokio::runtime::Handle;
+                use tokio::task;
 
-                        let now = Instant::now();
-                        let dt = now - last_render_time;
-                        last_render_time = now;
+                let state = task::block_in_place(|| {
+                    Handle::current().block_on(async {
+                        self.reinitialize().await;
+                    })
+                });
+                return;
+            }
 
-                        input_controller.update_state(&mut self, dt);
-
-                        match self.update_and_redraw() {
-                            Ok(_) => {}
-                            Err(wgpu::SurfaceError::Lost) => {
-                                log::error!("Surface Lost");
-                            },
-                            // The system is out of memory, we should probably quit
-                            Err(wgpu::SurfaceError::OutOfMemory) => {
-                                log::error!("Out of Memory");
-                                *control_flow = ControlFlow::Exit;
-                            },
-                            // All other errors (Outdated, Timeout) should be resolved by the next frame
-                            Err(e) => eprintln!("{:?}", e),
-                        };
-
-                        if let Some(max_frames) = max_frames {
-                            if current_frame >= max_frames {
-                                log::info!("Exiting because maximum frames reached.");
-                                *control_flow = ControlFlow::Exit;
-                            }
-
-                            current_frame += 1;
-                        }
-                    }
-                    Event::Suspended => {
-                        self.suspend();
-                    }
-                    Event::Resumed => {
-                        self.recreate_surface();
-                        let size = self.window().inner_size();
-                        self.resize(size.width, size.height);// FIXME: Resumed is also called when the app launches for the first time. Instead of first using a "fake" inner_size() in State::new we should initialize with a proper size from the beginning
-                        self.resume();
-                    }
-                    Event::MainEventsCleared => {
-                        // RedrawRequested will only trigger once, unless we manually
-                        // request it.
-                        self.window().request_redraw();
-                    }
-                    _ => {}
+            match event {
+                Event::DeviceEvent {
+                    ref event,
+                    .. // We're not using device_id currently
+                } => {
+                    input_controller.device_input(event);
                 }
+
+                Event::WindowEvent {
+                    ref event,
+                    window_id,
+                } if window_id == self.window().id() => {
+                    if !input_controller.window_input(event) {
+                        match event {
+                            WindowEvent::CloseRequested
+                            | WindowEvent::KeyboardInput {
+                                input:
+                                KeyboardInput {
+                                    state: ElementState::Pressed,
+                                    virtual_keycode: Some(VirtualKeyCode::Escape),
+                                    ..
+                                },
+                                ..
+                            } => *control_flow = ControlFlow::Exit,
+                            WindowEvent::Resized(physical_size) => {
+                                self.resize(physical_size.width, physical_size.height);
+                            }
+                            WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                                self.resize(new_inner_size.width, new_inner_size.height);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                Event::RedrawRequested(_) => {
+                    let _span_ = tracing::span!(tracing::Level::TRACE, "redraw requested").entered();
+
+                    let now = Instant::now();
+                    let dt = now - last_render_time;
+                    last_render_time = now;
+
+                    input_controller.update_state(&mut self, dt);
+
+                    match self.update_and_redraw() {
+                        Ok(_) => {}
+                        Err(wgpu::SurfaceError::Lost) => {
+                            log::error!("Surface Lost");
+                        }
+                        // The system is out of memory, we should probably quit
+                        Err(wgpu::SurfaceError::OutOfMemory) => {
+                            log::error!("Out of Memory");
+                            *control_flow = ControlFlow::Exit;
+                        }
+                        // All other errors (Outdated, Timeout) should be resolved by the next frame
+                        Err(e) => eprintln!("{:?}", e),
+                    };
+
+                    if let Some(max_frames) = max_frames {
+                        if current_frame >= max_frames {
+                            log::info!("Exiting because maximum frames reached.");
+                            *control_flow = ControlFlow::Exit;
+                        }
+
+                        current_frame += 1;
+                    }
+                }
+                Event::Suspended => {
+                    self.suspend();
+                }
+                Event::Resumed => {
+                    self.recreate_surface();
+                    let size = self.window().inner_size();
+                    self.resize(size.width, size.height);// FIXME: Resumed is also called when the app launches for the first time. Instead of first using a "fake" inner_size() in State::new we should initialize with a proper size from the beginning
+                    self.resume();
+                }
+                Event::MainEventsCleared => {
+                    // RedrawRequested will only trigger once, unless we manually
+                    // request it.
+                    self.window().request_redraw();
+                }
+                _ => {}
+            }
         });
     }
 }
@@ -121,7 +135,7 @@ impl FromWindow for MapBuilder<winit::window::Window, winit::event_loop::EventLo
             let size = window.inner_size();
             (
                 window,
-                WindowSize::new(size.width, size.height).unwrap(),
+                WindowSize::new(100, 100).unwrap(),
                 event_loop,
             )
         }))
@@ -154,7 +168,7 @@ pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
 
 #[cfg(target_arch = "wasm32")]
 impl crate::window::FromCanvas
-    for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>>
+for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>>
 {
     fn from_canvas(dom_id: &'static str) -> Self {
         let event_loop = EventLoop::new();
@@ -174,7 +188,7 @@ impl crate::window::FromCanvas
                     size.width.try_into().unwrap(),
                     size.height.try_into().unwrap(),
                 )
-                .unwrap(),
+                    .unwrap(),
                 event_loop,
             )
         }))
