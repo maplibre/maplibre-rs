@@ -106,10 +106,8 @@ xcodebuild-clean:
   rm -rf {{BUILD_DIR}}/*.xcarchive
   rm -rf {{XC_FRAMEWORK_DIRECTORY}}/*.xcframework
 
-xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (
-  xcodebuild-archive  "arm64" "macOS") (
-    xcodebuild-archive  "arm64" "iOS Simulator") (
-      xcodebuild-archive-fat "arm64" "macOS" "x86_64")
+# language=bash
+xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (xcodebuild-archive  "arm64" "macOS") (xcodebuild-archive  "arm64" "iOS Simulator") (xcodebuild-archive-fat "arm64" "macOS" "x86_64")
   #!/usr/bin/env bash
   tuples=(
     "arm64,iOS"
