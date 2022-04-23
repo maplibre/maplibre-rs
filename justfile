@@ -79,6 +79,8 @@ build-apk: print-android-env nightly-toolchain install-cargo-apk
 
 # language=bash
 print-android-env:
+  #!/usr/bin/env bash
+  set -euxo pipefail
   echo "ANDROID_HOME: $ANDROID_HOME"
   echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
   echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
@@ -96,8 +98,10 @@ xcodebuild-archive ARCH PLATFORM:
                                     -destination "generic/platform={{PLATFORM}}" \
                                     -archivePath "{{BUILD_DIR}}/{{ARCH}}-apple-{{PLATFORM}}"
 
+# language=bash
 xcodebuild-archive-fat EXISTING_ARCH EXISTING_PLATFORM ARCH: (xcodebuild-archive ARCH EXISTING_PLATFORM)
   #!/usr/bin/env bash
+  set -euxo pipefail
   archive="{{BUILD_DIR}}/{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
   existing_archive="{{BUILD_DIR}}/{{EXISTING_ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
   fat_archive="{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
@@ -121,6 +125,7 @@ xcodebuild-clean:
 # language=bash
 xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (xcodebuild-archive  "arm64" "macOS") (xcodebuild-archive  "arm64" "iOS Simulator") (xcodebuild-archive-fat "arm64" "macOS" "x86_64")
   #!/usr/bin/env bash
+  set -euxo pipefail
   tuples=(
     "arm64,iOS"
     "arm64,iOS Simulator"
