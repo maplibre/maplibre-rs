@@ -15,12 +15,6 @@ runs:
     - name: Build Example
       shell: bash
       run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
-    - name: Archive xcframework
-      uses: actions/upload-artifact@v3
-      with:
-        name: xcframework
-        path: |
-          apple/MapLibreRs/*.xcframework
     - name: Build Swift Package (arm64)
       shell: bash
       run: cd apple/MapLibreRs && swift build --arch=arm64
