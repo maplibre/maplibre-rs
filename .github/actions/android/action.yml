@@ -11,7 +11,7 @@ runs:
     - uses: Swatinem/rust-cache@v1
     - name: Build
       shell: bash
-      run: just build-apk
+      run: cd android/gradle && ./gradlew assembleDebug
     - uses: actions/upload-artifact@v2
       with:
         name: maplibre-rs.apk
