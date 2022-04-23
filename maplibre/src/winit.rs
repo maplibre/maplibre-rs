@@ -133,11 +133,7 @@ impl FromWindow for MapBuilder<winit::window::Window, winit::event_loop::EventLo
                 .build(&event_loop)
                 .unwrap();
             let size = window.inner_size();
-            (
-                window,
-                WindowSize::new(100, 100).unwrap(),
-                event_loop,
-            )
+            (window, WindowSize::new(100, 100).unwrap(), event_loop)
         }))
     }
 }
@@ -168,7 +164,7 @@ pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
 
 #[cfg(target_arch = "wasm32")]
 impl crate::window::FromCanvas
-for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>>
+    for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>>
 {
     fn from_canvas(dom_id: &'static str) -> Self {
         let event_loop = EventLoop::new();
@@ -188,7 +184,7 @@ for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>>
                     size.width.try_into().unwrap(),
                     size.height.try_into().unwrap(),
                 )
-                    .unwrap(),
+                .unwrap(),
                 event_loop,
             )
         }))

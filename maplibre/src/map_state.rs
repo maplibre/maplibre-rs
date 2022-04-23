@@ -122,7 +122,7 @@ impl<W> MapState<W> {
                 }
                 TessellateMessage::Tile(TileTessellateMessage { request_id, coords }) => loop {
                     if let Ok(mut tile_request_state) =
-                    self.shared_thread_state.tile_request_state.try_lock()
+                        self.shared_thread_state.tile_request_state.try_lock()
                     {
                         tile_request_state.finish_tile_request(request_id);
                         tracing::trace!("Tile at {} finished loading", coords);
@@ -170,10 +170,14 @@ impl<W> MapState<W> {
         drop(_guard);
 
         if let Some(view_region) = &view_region {
-            self.render_state.as_mut().expect("render state not yet initialized. Call reinitialize().").upload_tile_geometry(view_region, &self.style, &self.tile_cache);
+            self.render_state
+                .as_mut()
+                .expect("render state not yet initialized. Call reinitialize().")
+                .upload_tile_geometry(view_region, &self.style, &self.tile_cache);
 
             let zoom = self.zoom();
-            self.render_state_mut().update_tile_view_pattern(view_region, &view_proj, zoom);
+            self.render_state_mut()
+                .update_tile_view_pattern(view_region, &view_proj, zoom);
 
             self.render_state_mut().update_metadata();
         }
@@ -296,7 +300,9 @@ impl<W> MapState<W> {
     }
 
     pub fn render_state(&self) -> &RenderState {
-        self.render_state.as_ref().expect("render state not yet initialized. Call reinitialize().")
+        self.render_state
+            .as_ref()
+            .expect("render state not yet initialized. Call reinitialize().")
     }
 
     pub fn render_state_mut(&mut self) -> &'_ mut RenderState {
@@ -305,11 +311,14 @@ impl<W> MapState<W> {
 }
 
 impl<W> MapState<W>
-    where
-        W: raw_window_handle::HasRawWindowHandle,
+where
+    W: raw_window_handle::HasRawWindowHandle,
 {
     pub fn recreate_surface(&mut self) {
-        self.render_state.as_mut().expect("render state not yet initialized. Call reinitialize().").recreate_surface(&self.window);
+        self.render_state
+            .as_mut()
+            .expect("render state not yet initialized. Call reinitialize().")
+            .recreate_surface(&self.window);
     }
 
     pub fn is_initialized(&self) -> bool {

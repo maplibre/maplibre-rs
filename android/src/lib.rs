@@ -1,10 +1,10 @@
-use std::ffi::CString;
+use jni::objects::JClass;
+use jni::JNIEnv;
+use log::Level;
 use maplibre::window::FromWindow;
 use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
+use std::ffi::CString;
 pub use std::time::Instant;
-use jni::JNIEnv;
-use jni::objects::JClass;
-use log::Level;
 
 // TODO clippy
 // #[cfg(not(target_os = "android"))]
@@ -24,7 +24,7 @@ pub fn android_main() {
 pub extern "system" fn Java_com_example_demo_MapLibre_android_1main(env: JNIEnv, class: JClass) {
     let tag = CString::new("maplibre").unwrap();
     let message = CString::new("maplibre WOORKING").unwrap();
-    ndk_glue::android_log(Level::Warn, &tag,&message);
+    ndk_glue::android_log(Level::Warn, &tag, &message);
 
     //android_main();
 }

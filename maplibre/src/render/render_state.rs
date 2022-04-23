@@ -132,7 +132,8 @@ impl RenderState {
                 },
                 None,
             )
-            .await.ok()?;
+            .await
+            .ok()?;
 
         surface.configure(&device, &surface_config);
 
