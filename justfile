@@ -97,11 +97,13 @@ xcodebuild-archive ARCH PLATFORM:
                                     -archivePath "{{BUILD_DIR}}/{{ARCH}}-apple-{{PLATFORM}}"
 
 xcodebuild-archive-fat EXISTING_ARCH EXISTING_PLATFORM ARCH: (xcodebuild-archive ARCH EXISTING_PLATFORM)
-  cp -r "{{BUILD_DIR}}/{{EXISTING_ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive" "{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
+  #!/usr/bin/env bash
+  cp -R "{{BUILD_DIR}}/{{EXISTING_ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive" "{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
+  target_binary=$(readlink -f "{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/{{BINARY_NAME}}")
   lipo -create  "{{BUILD_DIR}}/{{EXISTING_ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/{{BINARY_NAME}}" \
                 "{{BUILD_DIR}}/{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/{{BINARY_NAME}}" \
-                -output "{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/{{BINARY_NAME}}"
-  cp -r {{BUILD_DIR}}/{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/Modules/{{BINARY_NAME}}.swiftmodule/* \
+                -output "$target_binary"
+  cp -R {{BUILD_DIR}}/{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/Modules/{{BINARY_NAME}}.swiftmodule/* \
         "{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive/{{INNER_FRAMEWORK_PATH}}/Modules/{{BINARY_NAME}}.swiftmodule/"
   
 
