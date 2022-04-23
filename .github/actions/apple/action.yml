@@ -15,7 +15,10 @@ runs:
     - name: Build Example
       shell: bash
       run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
-# FIXME not working
-#    - name: Build Swift Package
-#      shell: bash
-#      run: cd apple/MapLibreRs && swift build
+    - name: Build Swift Package (arm64)
+      shell: bash
+      run: cd apple/MapLibreRs && swift build --arch=arm64
+    - name: Build Swift Package (x86_64)
+      shell: bash
+      run: cd apple/MapLibreRs && swift build --arch=x86_64
+
