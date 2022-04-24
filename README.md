@@ -113,7 +113,7 @@ cargo build
 After that, you can run it on your desktop:
 
 ```bash
-cargo run --example desktop --
+cargo run -p maplibre-demo
 ```
 
 More information about building for different platforms can be

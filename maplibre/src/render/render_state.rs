@@ -68,11 +68,12 @@ impl RenderState {
     pub async fn initialize<W: raw_window_handle::HasRawWindowHandle>(
         window: &W,
         window_size: WindowSize,
-    ) -> Self {
+    ) -> Option<Self> {
         let sample_count = 4;
 
         //let instance = wgpu::Instance::new(wgpu::Backends::GL);
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        //let instance = wgpu::Instance::new(wgpu::Backends::all());
+        let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
 
         let surface = unsafe { instance.create_surface(&window) };
         let surface_config = wgpu::SurfaceConfiguration {
@@ -101,7 +102,13 @@ impl RenderState {
         } else if cfg!(target_os = "android") {
             Limits {
                 max_storage_textures_per_shader_stage: 4,
-                ..wgpu::Limits::default()
+                max_compute_workgroups_per_dimension: 0,
+                max_compute_workgroup_size_z: 0,
+                max_compute_workgroup_size_y: 0,
+                max_compute_workgroup_size_x: 0,
+                max_compute_workgroup_storage_size: 0,
+                max_compute_invocations_per_workgroup: 0,
+                ..wgpu::Limits::downlevel_defaults()
             }
         } else {
             Limits {
@@ -126,7 +133,7 @@ impl RenderState {
                 None,
             )
             .await
-            .unwrap();
+            .ok()?;
 
         surface.configure(&device, &surface_config);
 
@@ -245,7 +252,7 @@ impl RenderState {
             None
         };
 
-        Self {
+        Some(Self {
             instance,
             surface,
             device,
@@ -270,7 +277,7 @@ impl RenderState {
                 tile_view_buffer,
                 TILE_VIEW_BUFFER_SIZE,
             )),
-        }
+        })
     }
 
     pub fn recreate_surface<W: raw_window_handle::HasRawWindowHandle>(&mut self, window: &W) {
