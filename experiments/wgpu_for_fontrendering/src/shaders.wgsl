@@ -39,7 +39,7 @@ fn prepass_vs(
 fn prepass_fs(in: VertexOutputPrePass) -> [[location(0)]] vec4<f32> {
     //TODO: make color constant!
     let color = vec3<f32>(0.0, 0.0, 0.0);
-    return vec4<f32>(color.xyz, 0.2); // 1/255 so overlapping triangles add up to color values of n * 1/255
+    return vec4<f32>(color.xyz, 1.0 / 255.0); // 1/255 so overlapping triangles add up to color values of n * 1/255
 }
 
 // ########## Main Pass #################
