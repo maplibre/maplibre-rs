@@ -610,8 +610,9 @@ pub async fn run() {
 
     let step_x = 0.42;
     let step_y = 0.15;
+    let z_jitter = 1.0;
 
-    let limit = 20;
+    let limit = 5;
 
     let mut rng = rand::thread_rng();
 
@@ -630,7 +631,7 @@ pub async fn run() {
             let number: u32 = rng.gen_range(0..99);
             let text = format!("{}{}{:2}", letter_1, letter_2, number);
 
-            let z = rng.gen_range(-0.1..0.1);
+            let z = rng.gen_range(-z_jitter..z_jitter);
 
             state.add_text_to_scene(
                 &text,
