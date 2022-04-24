@@ -464,25 +464,42 @@ impl State {
         );
     }
 
-    fn load_test_glyph(&mut self, glyph_id: u16) {
-        let data = std::fs::read("tests/fonts/aparaj.ttf").unwrap();
-        let face = ttf::Face::from_slice(&data, 0).unwrap();
+    fn add_text_to_scene(&mut self, text: &str, base_position: &cgmath::Vector3<f32>, scale: f32) {
+        let font_data = std::fs::read("tests/fonts/aparaj.ttf").unwrap();
 
-        let mut glyph_builder = GlyphBuilder::new();
-        let bbox = face
-            .outline_glyph(ttf::GlyphId(glyph_id), &mut glyph_builder)
-            .unwrap();
+        let face = rustybuzz::Face::from_slice(&font_data, 0).unwrap();
 
-        let mut debug_builder = SVGBuilder(String::new());
-        let _bbox = face
-            .outline_glyph(ttf::GlyphId(glyph_id), &mut debug_builder)
-            .unwrap();
-        // println!("{:?}", &glyph_builder);
-        println!("{}", &debug_builder.0);
-        glyph_builder.normalize(&bbox);
-        //println!("{:?}", &glyph_builder);
+        let mut buffer = rustybuzz::UnicodeBuffer::new();
+        buffer.push_str(text);
 
-        self.add_model(&glyph_builder);
+        let glyph_buffer = rustybuzz::shape(&face, &[], buffer);
+
+        let infos = glyph_buffer.glyph_infos();
+        let posistions = glyph_buffer.glyph_positions();
+        let mut glyph_offset = cgmath::Vector3::new(0.0, 0.0, 0.0);
+
+        for (info, pos) in infos.iter().zip(posistions) {
+            println!(
+                "{}, x: {}, y: {}",
+                info.glyph_id, pos.x_offset, pos.y_offset
+            );
+            let mut glyph_builder = GlyphBuilder::new_with_offset(glyph_offset);
+
+            let result = face.outline_glyph(
+                ttf::GlyphId(info.glyph_id.try_into().unwrap()), // ttfparser for some reason wants a u16 ?!
+                &mut glyph_builder,
+            );
+            // Handle empty glyphs (-> whitespace)
+            if let Some(bbox) = result {
+                glyph_builder.prepare_for_screen(&bbox, scale, base_position);
+                self.add_model(&glyph_builder);
+            }
+
+            glyph_offset += cgmath::Vector3::new(pos.x_advance as f32, pos.y_advance as f32, 0.0);
+        }
+
+        // let debug_builder = SVGBuilder(String::new());
+        // println!("{}", &debug_builder.0);
     }
 
     fn render_prepass(&mut self, encoder: &mut wgpu::CommandEncoder) {
@@ -583,7 +600,15 @@ pub async fn run() {
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     let mut state: State = State::new(&window).await;
-    state.load_test_glyph(249);
+
+
+    let title = format!("{} individual glyphs", (2 * limit) * (2 * limit) * 4);
+
+    state.add_text_to_scene(
+        &title,
+        &(-0.8, (limit + 2) as f32 * step_y, 0.0).into(),
+        0.00015,
+    );
 
     event_loop.run(move |event, _, control_flow| {
         match event {

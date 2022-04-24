@@ -19,3 +19,4 @@ pollster = "0.2.5"
 bytemuck = { version = "1.4", features = [ "derive" ] }
 cgmath = "0.18"
 ttf-parser = "0.15.0"
+rustybuzz = "*"

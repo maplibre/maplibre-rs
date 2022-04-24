@@ -56,6 +56,18 @@ impl Vertex {
             uv: uv.into(),
         }
     }
+
+    pub fn scale(&mut self, s: f32) {
+        self.position[0] *= s;
+        self.position[1] *= s;
+        self.position[2] *= s;
+    }
+
+    pub fn scale_3d(&mut self, s: &cgmath::Vector3<f32>) {
+        self.position[0] *= s.x;
+        self.position[1] *= s.y;
+        self.position[2] *= s.z;
+    }
 }
 
 pub struct Mesh {
