@@ -6,7 +6,6 @@ use wgpu::util::DeviceExt;
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     pub position: [f32; 3],
-    pub color: [f32; 4],
     pub uv: [f32; 2],
 }
 
@@ -24,67 +23,38 @@ impl Vertex {
                 wgpu::VertexAttribute {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x4,
-                },
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 3 + 4]>() as wgpu::BufferAddress,
-                    shader_location: 2,
                     format: wgpu::VertexFormat::Float32x2,
                 },
             ],
         }
     }
 
-    pub fn new_2d(x: f32, y: f32) -> Vertex {
+    pub fn new_2d(position: cgmath::Vector2<f32>) -> Vertex {
         Vertex {
-            position: [x, y, 0.0],
-            color: [0.0, 0.0, 0.0, 0.2],
+            position: position.extend(0.0).into(),
             uv: [0.0, 0.0],
         }
     }
 
-    pub fn new_2d_uv(x: f32, y: f32, u: f32, v: f32) -> Vertex {
+    pub fn new_2d_uv(position: cgmath::Vector2<f32>, uv: cgmath::Vector2<f32>) -> Vertex {
         Vertex {
-            position: [x, y, 0.0],
-            color: [0.0, 0.0, 0.0, 0.2],
-            uv: [u, v],
+            position: position.extend(0.0).into(),
+            uv: uv.into(),
         }
     }
 
-    pub fn new_3d(x: f32, y: f32, z: f32, r: f32, g: f32, b: f32, a: f32) -> Vertex {
+    pub fn new_3d(position: cgmath::Vector3<f32>) -> Vertex {
         Vertex {
-            position: [x, y, z],
-            color: [r, g, b, a],
+            position: position.into(),
             uv: [0.0, 0.0],
         }
     }
 
-    pub fn x(&self) -> f32 {
-        self.position[0]
-    }
-
-    pub fn y(&self) -> f32 {
-        self.position[1]
-    }
-
-    pub fn z(&self) -> f32 {
-        self.position[2]
-    }
-
-    pub fn r(&self) -> f32 {
-        self.color[0]
-    }
-
-    pub fn g(&self) -> f32 {
-        self.color[1]
-    }
-
-    pub fn b(&self) -> f32 {
-        self.color[2]
-    }
-
-    pub fn a(&self) -> f32 {
-        self.color[3]
+    pub fn new_3d_uv(position: cgmath::Vector3<f32>, uv: cgmath::Vector2<f32>) -> Vertex {
+        Vertex {
+            position: position.into(),
+            uv: uv.into(),
+        }
     }
 }
 
@@ -128,7 +98,7 @@ pub trait Meshable {
 }
 
 pub struct Quad {
-    pub center: Vertex,
+    pub center: cgmath::Vector3<f32>,
     pub width: f32,
     pub height: f32,
 }
@@ -138,42 +108,16 @@ impl Meshable for Quad {
         let half_width = self.width * 0.5;
         let half_height = self.height * 0.5;
         let mut vertices = Vec::new();
-        vertices.push(Vertex::new_3d(
-            self.center.x() - half_width,
-            self.center.y() + half_height,
-            self.center.z(),
-            self.center.r(),
-            self.center.g(),
-            self.center.b(),
-            self.center.a(),
-        ));
-        vertices.push(Vertex::new_3d(
-            self.center.x() - half_width,
-            self.center.y() - half_height,
-            self.center.z(),
-            self.center.r(),
-            self.center.g(),
-            self.center.b(),
-            self.center.a(),
-        ));
-        vertices.push(Vertex::new_3d(
-            self.center.x() + half_width,
-            self.center.y() - half_height,
-            self.center.z(),
-            self.center.r(),
-            self.center.g(),
-            self.center.b(),
-            self.center.a(),
-        ));
-        vertices.push(Vertex::new_3d(
-            self.center.x() + half_width,
-            self.center.y() + half_height,
-            self.center.z(),
-            self.center.r(),
-            self.center.g(),
-            self.center.b(),
-            self.center.a(),
-        ));
+
+        let top_left = self.center + cgmath::Vector3::new(-half_width, half_height, 0.0);
+        let bottom_left = self.center + cgmath::Vector3::new(-half_width, -half_height, 0.0);
+        let bottom_right = self.center + cgmath::Vector3::new(half_width, -half_height, 0.0);
+        let top_right = self.center + cgmath::Vector3::new(half_width, half_height, 0.0);
+
+        vertices.push(Vertex::new_3d(top_left));
+        vertices.push(Vertex::new_3d(bottom_left));
+        vertices.push(Vertex::new_3d(bottom_right));
+        vertices.push(Vertex::new_3d(top_right));
         let indices: Vec<u16> = vec![0, 1, 2, 2, 3, 0];
         let mesh = Mesh::new(vertices, indices, device);
         mesh

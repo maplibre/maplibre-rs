@@ -411,7 +411,7 @@ impl State {
         let camera_controller = CameraController::new(0.2);
 
         let quad = Quad {
-            center: Vertex::new_3d(0.0, 0.0, 0.2, 1.0, 0.0, 0.0, 1.0),
+            center: (0.0, 0.0, 0.2).into(),
             width: 1.0,
             height: 1.0,
         };

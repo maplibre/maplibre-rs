@@ -46,7 +46,7 @@ impl GlyphBuilder {
             last_start_index: 0,
         };
 
-        builder.vertices.push(Vertex::new_2d(0.0, 0.0));
+        builder.vertices.push(Vertex::new_2d((0.0, 0.0).into()));
 
         builder
     }
@@ -77,7 +77,7 @@ impl GlyphBuilder {
 
 impl ttf::OutlineBuilder for GlyphBuilder {
     fn move_to(&mut self, x: f32, y: f32) {
-        self.vertices.push(Vertex::new_2d(x, y));
+        self.vertices.push(Vertex::new_2d((x, y).into()));
 
         // Move-to starts a new shape
         self.last_start_index = self.vertices.len() as u16 - 1;
@@ -86,7 +86,7 @@ impl ttf::OutlineBuilder for GlyphBuilder {
     }
 
     fn line_to(&mut self, x: f32, y: f32) {
-        self.vertices.push(Vertex::new_2d(x, y));
+        self.vertices.push(Vertex::new_2d((x, y).into()));
         self.added_points += 1;
         if self.added_points == 2 {
             self.make_triangle();
@@ -103,8 +103,10 @@ impl ttf::OutlineBuilder for GlyphBuilder {
         //      which is equipped with special uv coordinates which the pixel shader can use to check if a pixel is inside or outside the curve
         // Because the endpoint is the start point of the next path segment, we first construct the special triangle
 
-        self.vertices.push(Vertex::new_2d_uv(x1, y1, 0.5, 0.0));
-        self.vertices.push(Vertex::new_2d_uv(x, y, 1.0, 1.0));
+        self.vertices
+            .push(Vertex::new_2d_uv((x1, y1).into(), (0.5, 0.0).into()));
+        self.vertices
+            .push(Vertex::new_2d_uv((x, y).into(), (1.0, 1.0).into()));
 
         // The special triangle
         self.indices.push(self.current_index);
@@ -113,7 +115,7 @@ impl ttf::OutlineBuilder for GlyphBuilder {
 
         self.added_points += 1;
         if self.added_points == 2 {
-            self.vertices.push(Vertex::new_2d(x, y)); // duplicate of the end point without special uv coordinates
+            self.vertices.push(Vertex::new_2d((x, y).into())); // duplicate of the end point without special uv coordinates
             self.indices.push(0);
             self.indices.push(self.current_index);
             self.indices.push(self.current_index + 3);
