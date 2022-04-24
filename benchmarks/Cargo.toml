@@ -1,5 +1,5 @@
 [package]
-name = "maplibre-benchmark"
+name = "benchmarks"
 version = "0.1.0"
 description = ""
 categories = []

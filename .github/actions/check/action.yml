@@ -12,9 +12,3 @@ runs:
     - name: Format
       shell: bash
       run: just fmt-check
-    - name: Install Dependencies
-      shell: bash
-      run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
-    - name: Clippy
-      shell: bash
-      run: just clippy

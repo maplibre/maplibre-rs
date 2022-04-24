@@ -12,8 +12,8 @@ test:
 install-clippy:
   rustup component add clippy
 
-clippy: install-clippy
-  cargo clippy --all-targets --all-features --no-deps
+check PROJECT ARCH: install-clippy
+  cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
 
 install-rustfmt:
   rustup component add rustfmt

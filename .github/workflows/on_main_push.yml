@@ -12,11 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/check
-  build-desktop:
+  run-benchmarks:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: ./.github/actions/desktop
+      - uses: ./.github/actions/benchmarks
+  build-linux-demo:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/linux-demo
   build-android:
     runs-on: ubuntu-20.04
     steps:
@@ -29,7 +34,7 @@ jobs:
       - uses: ./.github/actions/webgpu
       - uses: ./.github/actions/deploy
         with:
-          source: web/web/dist/demo/.
+          source: web/web/dist/linux-demo/.
           destination: webgpu
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-deploy-webgl:
@@ -39,7 +44,7 @@ jobs:
       - uses: ./.github/actions/webgl
       - uses: ./.github/actions/deploy
         with:
-          source: web/web/dist/demo/.
+          source: web/web/dist/linux-demo/.
           destination: webgl
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-deploy-docs:
