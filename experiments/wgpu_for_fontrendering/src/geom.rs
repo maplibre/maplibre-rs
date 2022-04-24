@@ -7,6 +7,7 @@ use wgpu::util::DeviceExt;
 pub struct Vertex {
     pub position: [f32; 3],
     pub color: [f32; 4],
+    pub uv: [f32; 2],
 }
 
 impl Vertex {
@@ -25,6 +26,11 @@ impl Vertex {
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x4,
                 },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 3 + 4]>() as wgpu::BufferAddress,
+                    shader_location: 2,
+                    format: wgpu::VertexFormat::Float32x2,
+                },
             ],
         }
     }
@@ -33,6 +39,15 @@ impl Vertex {
         Vertex {
             position: [x, y, 0.0],
             color: [0.0, 0.0, 0.0, 0.2],
+            uv: [0.0, 0.0],
+        }
+    }
+
+    pub fn new_2d_uv(x: f32, y: f32, u: f32, v: f32) -> Vertex {
+        Vertex {
+            position: [x, y, 0.0],
+            color: [0.0, 0.0, 0.0, 0.2],
+            uv: [u, v],
         }
     }
 
@@ -40,6 +55,7 @@ impl Vertex {
         Vertex {
             position: [x, y, z],
             color: [r, g, b, a],
+            uv: [0.0, 0.0],
         }
     }
 

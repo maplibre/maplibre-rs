@@ -15,10 +15,12 @@ var prepass_target_texture_sampler: sampler;
 struct VertexInput {
     [[location(0)]] position: vec3<f32>;
     [[location(1)]] color: vec4<f32>;
+    [[location(2)]] uv: vec2<f32>;
 };
 
 struct VertexOutputPrePass {
     [[builtin(position)]] clip_position: vec4<f32>;
+    [[location(0)]] uv_coords: vec2<f32>;
 };
 
 
@@ -32,12 +34,17 @@ fn prepass_vs(
 ) -> VertexOutputPrePass {
     var out: VertexOutputPrePass;
     out.clip_position = camera.view_proj * vec4<f32>(model.position, 1.0);
+    out.uv_coords = model.uv;
     return out;
 }
 
 [[stage(fragment)]]
 fn prepass_fs(in: VertexOutputPrePass) -> [[location(0)]] vec4<f32> {
-    //TODO: make color constant!
+    //TODO: make color a per glyph variable!
+
+    if ((in.uv_coords.x * in.uv_coords.x) - in.uv_coords.y > 0.0) {
+        discard;
+    }
     let color = vec3<f32>(0.0, 0.0, 0.0);
     return vec4<f32>(color.xyz, 1.0 / 255.0); // 1/255 so overlapping triangles add up to color values of n * 1/255
 }

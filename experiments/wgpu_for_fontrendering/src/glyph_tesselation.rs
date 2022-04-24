@@ -95,20 +95,37 @@ impl ttf::OutlineBuilder for GlyphBuilder {
 
     fn quad_to(&mut self, x1: f32, y1: f32, x: f32, y: f32) {
         // Quadratic curve (control point, end point), start point is endpoint of previous segment
-        self.vertices.push(Vertex::new_2d(x, y));
+
+        // The last pushed vertex is the start point of the curve
+        // We need to construct 2 triangles
+        // A "normal" triangle as with line segments
+        // And another special triangle for the rounded area of the curve,
+        //      which is equipped with special uv coordinates which the pixel shader can use to check if a pixel is inside or outside the curve
+        // Because the endpoint is the start point of the next path segment, we first construct the special triangle
+
+        self.vertices.push(Vertex::new_2d_uv(x1, y1, 0.5, 0.0));
+        self.vertices.push(Vertex::new_2d_uv(x, y, 1.0, 1.0));
+
+        // The special triangle
+        self.indices.push(self.current_index);
+        self.indices.push(self.current_index + 1);
+        self.indices.push(self.current_index + 2);
+
         self.added_points += 1;
         if self.added_points == 2 {
-            self.make_triangle();
+            self.vertices.push(Vertex::new_2d(x, y)); // duplicate of the end point without special uv coordinates
+            self.indices.push(0);
+            self.indices.push(self.current_index);
+            self.indices.push(self.current_index + 3);
+
+            self.added_points = 1;
+            self.current_index += 3;
         }
     }
 
     fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) {
         // Cubic curve (control point 1, control point 2, end point)
-        self.vertices.push(Vertex::new_2d(x, y));
-        self.added_points += 1;
-        if self.added_points == 2 {
-            self.make_triangle();
-        }
+        panic!("Cubic bezier curves not yet supported!");
     }
 
     fn close(&mut self) {
