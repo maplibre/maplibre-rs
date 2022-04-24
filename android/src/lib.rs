@@ -6,9 +6,8 @@ use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
 use std::ffi::CString;
 pub use std::time::Instant;
 
-// TODO clippy
-// #[cfg(not(target_os = "android"))]
-// compile_error!("android works only on android.");
+#[cfg(not(target_os = "android"))]
+compile_error!("android works only on android.");
 
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
 pub fn android_main() {
