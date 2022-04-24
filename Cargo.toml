@@ -14,6 +14,10 @@ members = [
     "benchmarks",
 ]
 
+exclude = [
+    "experiments"
+]
+
 [profile.release]
 lto = true
 codegen-units = 1
