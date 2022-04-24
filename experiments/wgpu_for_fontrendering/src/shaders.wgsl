@@ -14,8 +14,7 @@ var prepass_target_texture_sampler: sampler;
 
 struct VertexInput {
     [[location(0)]] position: vec3<f32>;
-    [[location(1)]] color: vec4<f32>;
-    [[location(2)]] uv: vec2<f32>;
+    [[location(1)]] uv: vec2<f32>;
 };
 
 struct VertexOutputPrePass {
@@ -42,6 +41,7 @@ fn prepass_vs(
 fn prepass_fs(in: VertexOutputPrePass) -> [[location(0)]] vec4<f32> {
     //TODO: make color a per glyph variable!
 
+    // Discard fragments outside the curve defined by u^2 - v
     if ((in.uv_coords.x * in.uv_coords.x) - in.uv_coords.y > 0.0) {
         discard;
     }

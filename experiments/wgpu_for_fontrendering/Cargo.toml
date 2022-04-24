@@ -20,3 +20,4 @@ bytemuck = { version = "1.4", features = [ "derive" ] }
 cgmath = "0.18"
 ttf-parser = "0.15.0"
 rustybuzz = "*"
+rand = "*"

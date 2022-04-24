@@ -2,6 +2,9 @@ mod geom;
 mod glyph_tesselation;
 mod texture;
 
+use rand::Rng;
+use std::time::{Duration, Instant};
+
 use crate::glyph_tesselation::{GlyphBuilder, SVGBuilder};
 use winit::{
     event::*,
@@ -267,9 +270,9 @@ impl State {
         let camera = Camera {
             // position the camera one unit up and 2 units back
             // +z is out of the screen
-            eye: (0.5, 1.0, 2.0).into(),
+            eye: (0.0, 0.0, 5.0).into(),
             // have it look at the origin
-            target: (0.5, 0.5, 0.0).into(),
+            target: (0.0, 0.0, 0.0).into(),
             // which way is "up"
             up: cgmath::Vector3::unit_y(),
             aspect: config.width as f32 / config.height as f32,
@@ -411,7 +414,7 @@ impl State {
         let camera_controller = CameraController::new(0.2);
 
         let quad = Quad {
-            center: (0.0, 0.0, 0.2).into(),
+            center: (0.0, 0.0, 0.0).into(),
             width: 1.0,
             height: 1.0,
         };
@@ -597,10 +600,20 @@ impl State {
 pub async fn run() {
     env_logger::init();
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let size = winit::dpi::PhysicalSize::new(4000, 2000);
+    let window = WindowBuilder::new()
+        .with_inner_size(size)
+        .build(&event_loop)
+        .unwrap();
 
     let mut state: State = State::new(&window).await;
 
+    let step_x = 0.42;
+    let step_y = 0.15;
+
+    let limit = 20;
+
+    let mut rng = rand::thread_rng();
 
     let title = format!("{} individual glyphs", (2 * limit) * (2 * limit) * 4);
 
@@ -609,6 +622,23 @@ pub async fn run() {
         &(-0.8, (limit + 2) as f32 * step_y, 0.0).into(),
         0.00015,
     );
+
+    for i in -limit..limit {
+        for j in -limit..limit {
+            let letter_1: char = rng.gen_range(b'A'..b'Z') as char;
+            let letter_2: char = rng.gen_range(b'A'..b'Z') as char;
+            let number: u32 = rng.gen_range(0..99);
+            let text = format!("{}{}{:2}", letter_1, letter_2, number);
+
+            let z = rng.gen_range(-0.1..0.1);
+
+            state.add_text_to_scene(
+                &text,
+                &(i as f32 * step_x, j as f32 * step_y, z).into(),
+                0.0001,
+            );
+        }
+    }
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -639,6 +669,7 @@ pub async fn run() {
             }
             Event::RedrawRequested(window_id) if window_id == window.id() => {
                 state.update();
+                let now = Instant::now();
                 match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if lost
@@ -648,6 +679,7 @@ pub async fn run() {
                     // All other errors (Outdated, Timeout) should be resolved by the next frame
                     Err(e) => eprintln!("{:?}", e),
                 }
+                println!("Frame: {}ms", now.elapsed().as_millis());
             }
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
