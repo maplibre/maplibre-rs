@@ -33,6 +33,7 @@ pub struct GlyphBuilder {
     indices: Vec<u16>,
     current_index: u16,
     added_points: u16,
+    last_start_index: u16,
 }
 
 impl GlyphBuilder {
@@ -42,23 +43,18 @@ impl GlyphBuilder {
             indices: Vec::new(),
             current_index: 0,
             added_points: 0,
+            last_start_index: 0,
         };
 
-        builder.vertices.push(Vertex::new_2d(0.0, 0.5));
+        builder.vertices.push(Vertex::new_2d(0.0, 0.0));
 
         builder
     }
 
     fn make_triangle(&mut self) {
-        // Both cw and ccw triangles to ensure visibility!
-
         self.indices.push(0);
         self.indices.push(self.current_index);
         self.indices.push(self.current_index + 1);
-
-        self.indices.push(0);
-        self.indices.push(self.current_index + 1);
-        self.indices.push(self.current_index);
 
         self.current_index += 1;
         self.added_points = 1;
@@ -83,7 +79,8 @@ impl ttf::OutlineBuilder for GlyphBuilder {
     fn move_to(&mut self, x: f32, y: f32) {
         self.vertices.push(Vertex::new_2d(x, y));
 
-        // Move to starts a new shape
+        // Move-to starts a new shape
+        self.last_start_index = self.vertices.len() as u16 - 1;
         self.added_points = 1;
         self.current_index += 1;
     }
@@ -115,9 +112,17 @@ impl ttf::OutlineBuilder for GlyphBuilder {
     }
 
     fn close(&mut self) {
-        //self.indices.push(0);
-        //self.indices.push(self.current_index);
-        //self.indices.push(1);
+        // triangle from current point (i.e. the last one that was read in) and the start point of this shape
+        self.indices.push(0);
+        self.indices.push(self.current_index);
+        self.indices.push(self.last_start_index);
+
+        self.indices.push(0);
+        self.indices.push(self.last_start_index);
+        self.indices.push(self.current_index);
+
+        // the next command MUST be a move to if there are more shapes
+        // This will reset the necessary counters
     }
 }
 
