@@ -1,0 +1,31 @@
+name: macOS
+description: Build for macOS
+
+runs:
+  using: "composite"
+  steps:
+    - uses: extractions/setup-just@v1
+    - name: Install toolchain
+      shell: bash
+      run: just default-toolchain
+    - uses: Swatinem/rust-cache@v1
+    - name: Build
+      shell: bash
+      run: just xcodebuild-xcframework
+    - name: Check x86_64 darwin
+      shell: bash
+      run: just check apple x86_64-apple-darwin
+    - name: Check aarch64 darwin
+      shell: bash
+      run: just check apple aarch64-apple-darwin
+    # TODO: Additional clippy checks for iOS
+    - name: Build Example
+      shell: bash
+      run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
+    - name: Build Swift Package (arm64)
+      shell: bash
+      run: cd apple/MapLibreRs && swift build --arch=arm64
+    - name: Build Swift Package (x86_64)
+      shell: bash
+      run: cd apple/MapLibreRs && swift build --arch=x86_64
+

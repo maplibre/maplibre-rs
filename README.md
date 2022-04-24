@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img width="350px" alt="maplibre-rs" src="./docs/src/figures/maplibre-rs-light.svg">
+  <img width="350px" alt="maplibre-rs" src="./docs/logo/maplibre-rs-with-text.svg">
 </h1>
 
 <div align="center">
@@ -12,8 +12,8 @@
 <div align="center">
   <img src="https://img.shields.io/badge/stability-experimental-orange.svg?style=flat-square"
       alt="Stability" />
-  <a href="https://github.com/maplibre/maplibre-rs/actions/workflows/rust.yml">
-    <img src="https://github.com/maplibre/maplibre-rs/actions/workflows/rust.yml/badge.svg"
+  <a href="https://github.com/maplibre/maplibre-rs/actions/workflows/on_main_push.yml">
+    <img src="https://github.com/maplibre/maplibre-rs/actions/workflows/on_main_push.yml/badge.svg"
         alt="Build status" />
   </a>
   <a href="https://matrix.to/#/#maplibre:matrix.org">
@@ -113,7 +113,7 @@ cargo build
 After that, you can run it on your desktop:
 
 ```bash
-cargo run --example desktop --
+cargo run -p maplibre-demo
 ```
 
 More information about building for different platforms can be

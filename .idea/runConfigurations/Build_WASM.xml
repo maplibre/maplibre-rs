@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Build WASM" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="build --features web-webgl --lib --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort" />
+    <option name="command" value="build -p maplibre-web --features web-webgl --lib --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

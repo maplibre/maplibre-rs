@@ -12,24 +12,38 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/check
-  build-desktop:
+  run-benchmarks:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: ./.github/actions/desktop
+      - uses: ./.github/actions/benchmarks
+  build-linux-demo:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/linux-demo
   build-android:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/android
-  build-web:
+  build-webgpu:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/webgpu
+  build-webgl:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
       - uses: ./.github/actions/webgl
   build-docs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/docs
+  build-ios:
+    runs-on: macOS-11
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/apple

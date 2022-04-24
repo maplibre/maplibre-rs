@@ -1,0 +1,88 @@
+plugins {
+    id 'org.mozilla.rust-android-gradle.rust-android' version '0.9.2' apply true
+    id 'com.android.library' version '7.0.4' apply true
+    id 'org.jetbrains.kotlin.android' version '1.6.21' apply true
+}
+
+apply plugin: 'kotlin-android'
+
+android {
+    ndkVersion "23.1.7779620"
+
+    compileSdkVersion 29
+    
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 29
+        
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+cargo {
+    module = "../../"
+    targets = ["arm64", "x86_64"]
+    libname = "maplibre_android"
+    targetDirectory = "${module}/../target"
+    profile = "debug"
+
+    features {
+        defaultAnd "foo", "bar"
+        noDefaultBut("foo", "bar")
+        all()
+    }
+
+    def ndkDir = android.ndkDirectory
+
+    exec = { spec, toolchain ->
+        spec.environment("TEST", "test")
+
+        // https://github.com/mozilla/rust-android-gradle/issues/91
+        if (toolchain.target == "x86_64-linux-android") {
+        	spec.environment("AR_x86_64-linux-android", "$ndkDir/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
+        }
+        if (toolchain.target == "armv7-linux-androideabi") {
+        	spec.environment("AR_armv7-linux-androideabi", "$ndkDir/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
+        }
+
+        if (toolchain.target == "aarch64-linux-android") {
+        	spec.environment("AR_aarch64-linux-android", "$ndkDir/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
+        }
+    }
+}
+
+dependencies {
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    testImplementation 'junit:junit:4.13.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21"
+}
+
+tasks.whenTaskAdded { task ->
+    if ((task.name == 'mergeDebugJniLibFolders' || task.name == 'mergeReleaseJniLibFolders')) {
+        task.dependsOn 'cargoBuild'
+    }
+}
+
+afterEvaluate {
+    // The `cargoBuild` task isn't available until after evaluation.
+    android.libraryVariants.all { variant ->
+        def productFlavor = ""
+        variant.productFlavors.each {
+            productFlavor += "${it.name.capitalize()}"
+        }
+        def buildType = "${variant.buildType.name.capitalize()}"
+        tasks["generate${productFlavor}${buildType}Assets"].dependsOn(tasks["cargoBuild"])
+    }
+}

@@ -4,23 +4,21 @@ description: Build for android
 runs:
   using: "composite"
   steps:
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          ~/.cargo/.crates*
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: Install just
+    - uses: extractions/setup-just@v1
+    - name: Install nightly toolchain
       shell: bash
-      run: cargo install just
+      run: just nightly-toolchain-android
+    - uses: Swatinem/rust-cache@v1
     - name: Build
       shell: bash
-      run: just build-apk
+      run: just build-android
+    - name: Check x86_64
+      shell: bash
+      run: just check maplibre-android x86_64-linux-android
+    - name: Check aarch64
+      shell: bash
+      run: just check maplibre-android aarch64-linux-android
     - uses: actions/upload-artifact@v2
       with:
         name: maplibre-rs.apk
-        path: target/debug/apk/maplibre-rs-demo.apk
+        path: target/debug/apk/maplibre-rs-linux-demo.apk

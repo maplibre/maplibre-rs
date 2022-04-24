@@ -1,0 +1,21 @@
+[package]
+name = "web"
+version = "0.1.0"
+description = ""
+categories = []
+edition = "2021"
+publish = false
+
+[features]
+web-webgl = ["maplibre/web-webgl"]
+enable-tracing = ["maplibre/enable-tracing"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+
+maplibre = { path = "../maplibre" }
