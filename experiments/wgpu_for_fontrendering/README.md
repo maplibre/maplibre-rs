@@ -37,6 +37,7 @@ The main issue with this approach (besides performance) is that the trick with u
 ### TODOs
 * Figure out, whether the problem with overlapping glyphs can be fixed
 * Cache glyph meshes, so they are not recreated whenever they appear in a word and render them as instances
+* Anti-aliasing!
 
 ## Build setup
 This is a separate project from the maplibre-rs, therefore it is excluded from the maplibre-rs workspace and defines its own workspace.
