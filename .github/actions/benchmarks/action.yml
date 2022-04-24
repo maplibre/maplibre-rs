@@ -14,4 +14,4 @@ runs:
       run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
     - name: Check
       shell: bash
-      run: just check maplibre-benchmarks x86_64-unknown-linux-gnu
+      run: just check benchmarks x86_64-unknown-linux-gnu
