@@ -44,10 +44,10 @@ webpack-production: nightly-toolchain
   cd web/web && npm install && npm run production-build
 
 # TODO
-# wasm-pack-webgl: nightly-toolchain
-#   ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
-#     --release --target web --out-dir web/dist/maplibre-rs -- \
-#     --features "web-webgl" -Z build-std=std,panic_abort
+wasm-pack-webgl: nightly-toolchain
+   ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
+     --release --target web --out-dir web/dist/maplibre-rs -- \
+     --features "web-webgl" -Z build-std=std,panic_abort
 #
 # wasm-pack: nightly-toolchain
 #   ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \

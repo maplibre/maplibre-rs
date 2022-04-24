@@ -1,4 +1,4 @@
-import init, {create_pool_scheduler, new_thread_local_state, run} from "./dist/libs/maplibre"
+import init, {create_pool_scheduler, new_thread_local_state, run} from "./wasm-pack"
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 import {
@@ -73,6 +73,8 @@ const checkRequirements = () => {
         return false
     }
 
+    let WEBGL = true
+
     if (WEBGL) {
         if (!isWebGLSupported()) {
             alertUser("WebGL is not supported in this Browser!")
@@ -137,7 +139,7 @@ const setupLegacyWebWorker = (schedulerPtr: number, memory: WebAssembly.Memory) 
     }
 }
 
-const start = async () => {
+export const startMapLibre = async () => {
     await checkWasmFeatures()
 
     if (!checkRequirements()) {
@@ -163,6 +165,4 @@ const start = async () => {
     await run(schedulerPtr)
 }
 
-start().then(() => console.log("started via wasm"))
-
-
+export default "test"

@@ -1,17 +1,13 @@
 const path = require("path");
 const webpack = require("webpack");
-const CopyPlugin = require("copy-webpack-plugin");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-let dist = path.join(__dirname, 'dist/demo');
+let dist = path.join(__dirname, 'dist/maplibre-rs');
 module.exports = (env) => ({
     mode: "development",
-    entry: {
-        main: "./index.ts",
-    },
+    entry: "./src/index.ts",
     experiments: {
-        syncWebAssembly: true
+        syncWebAssembly: true,
     },
     performance: {
         maxEntrypointSize: 400000,
@@ -19,28 +15,28 @@ module.exports = (env) => ({
     },
     output: {
         path: dist,
-        filename: "[name].[fullhash].js"
-    },
-    devServer: {
-        server: {
-            type: 'http',
+        filename: "maplibre-rs.js",
+        library: {
+            name: 'maplibre_rs',
+            type: 'umd',
+
         },
-        allowedHosts: 'all',
-        host: '0.0.0.0',
-        static: {
-            directory: dist,
-        },
-        headers: {
-            'Cross-Origin-Opener-Policy': 'same-origin',
-            'Cross-Origin-Embedder-Policy': 'require-corp'
-        },
+
+        umdNamedDefine: true
     },
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
                 exclude: /node_modules/,
+                use: [
+                    {
+                        loader: 'ts-loader',
+                        options: {
+                            "transpileOnly": true
+                        }
+                    }
+                ]
             },
         ],
     },
@@ -50,9 +46,6 @@ module.exports = (env) => ({
     plugins: [
         new webpack.DefinePlugin({
             WEBGL: !!env.webgl
-        }),
-        new HtmlWebpackPlugin({
-            title: 'maplibre demo',
         }),
         new WasmPackPlugin({
             crateDirectory: path.resolve(__dirname, '../'),
@@ -73,7 +66,7 @@ module.exports = (env) => ({
             // ],
 
             // The same as the `--out-dir` option for `wasm-pack`
-            outDir: path.resolve(__dirname, 'dist/libs/maplibre'),
+            outDir: path.resolve(__dirname, 'src/wasm-pack'),
 
             // The same as the `--out-name` option for `wasm-pack`
             // outName: "index",
