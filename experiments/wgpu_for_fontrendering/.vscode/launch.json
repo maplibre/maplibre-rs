@@ -7,29 +7,11 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'wgpu_for_fontrendering'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib",
-                    "--package=wgpu_for_fontrendering"
-                ],
-                "filter": {
-                    "name": "wgpu_for_fontrendering",
-                    "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'wgpu_for_fontrendering'",
+            "name": "wgpu_for_fontrendering",
             "cargo": {
                 "args": [
                     "build",
+                    "--target=aarch64-apple-darwin",
                     "--bin=wgpu_for_fontrendering",
                     "--package=wgpu_for_fontrendering"
                 ],
@@ -41,24 +23,5 @@
             "args": [],
             "cwd": "${workspaceFolder}"
         },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'wgpu_for_fontrendering'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=wgpu_for_fontrendering",
-                    "--package=wgpu_for_fontrendering"
-                ],
-                "filter": {
-                    "name": "wgpu_for_fontrendering",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        }
     ]
 }
