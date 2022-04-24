@@ -76,16 +76,14 @@ fn mainpass_vs([[builtin(vertex_index)]] index: u32) -> VertexOutputMainPass {
 
 [[stage(fragment)]]
 fn mainpass_fs(in: VertexOutputMainPass) -> [[location(0)]] vec4<f32> {
-    // look up color in texture
+    // look up color in texture -> TODO: currently this is all very inefficient, because we're only using the alpha of the texture!!!!
     // if color % 2 == 1 -> draw, else discard
-    return textureSample(prepass_target_texture, prepass_target_texture_sampler, in.tex_coords);
-    
-    //var color: vec4<f32> = textureSample(prepass_target_texture, prepass_target_texture_sampler, in.tex_coords);
-    //var windingNumber: u32 = u32(color.a * 255.0);
-    //if (windingNumber % 2 == 1) {
-    //    return vec4<f32>(color.xyz, 1.0);
-    //} else {
-    //    discard;
-    //}
+    let color = textureSample(prepass_target_texture, prepass_target_texture_sampler, in.tex_coords);
+    var windingNumber: u32 = u32(color.a * 255.0);
+    if (windingNumber % 2u == 1u) { 
+        return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+    } else {
+        discard;
+    }
 }
 

@@ -381,7 +381,7 @@ impl State {
                 entry_point: "mainpass_fs",
                 targets: &[wgpu::ColorTargetState {
                     format: config.format,
-                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    blend: Some(wgpu::BlendState::REPLACE),
                     write_mask: wgpu::ColorWrites::ALL,
                 }],
             }),
@@ -498,7 +498,7 @@ impl State {
                         r: 1.0,
                         g: 1.0,
                         b: 1.0,
-                        a: 1.0,
+                        a: 0.0, // important, otherwise all pixels will pass the uneven winding number test in the main pass...
                     }),
                     store: true,
                 },
@@ -583,7 +583,7 @@ pub async fn run() {
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     let mut state: State = State::new(&window).await;
-    state.load_test_glyph(566);
+    state.load_test_glyph(249);
 
     event_loop.run(move |event, _, control_flow| {
         match event {
