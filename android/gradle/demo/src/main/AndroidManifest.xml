@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.example.demo">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
             android:allowBackup="true"
@@ -26,13 +26,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity
-                android:name=".MainActivity">
-            <!-- <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+        <activity android:name=".MainActivity" android:exported="true">
 
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter> -->
         </activity>
     </application>
 

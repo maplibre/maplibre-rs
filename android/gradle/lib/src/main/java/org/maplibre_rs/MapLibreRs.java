@@ -1,6 +1,6 @@
 package org.maplibre_rs;
 
-public class MapLibreRsJava {
+public class MapLibreRs {
     public static native void android_main();
 
     static {

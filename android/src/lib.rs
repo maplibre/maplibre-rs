@@ -21,10 +21,8 @@ pub fn android_main() {
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_example_demo_MapLibre_android_1main(env: JNIEnv, class: JClass) {
+pub extern "system" fn Java_org_maplibre_1rs_MapLibreRs_android_1main(env: JNIEnv, class: JClass) {
     let tag = CString::new("maplibre").unwrap();
     let message = CString::new("maplibre WOORKING").unwrap();
     ndk_glue::android_log(Level::Warn, &tag, &message);
-
-    //android_main();
 }

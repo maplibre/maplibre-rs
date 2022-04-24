@@ -16,6 +16,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "maplibre-rs"
-include ':app'
+rootProject.name = "maplibre-rs-android"
+include ':demo'
 include ':lib'
