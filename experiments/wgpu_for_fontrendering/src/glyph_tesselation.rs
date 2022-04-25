@@ -87,42 +87,12 @@ impl GlyphBuilder {
         self.added_points = 1;
     }
 
-    fn scale(&mut self, s: f32) {
-        let s_vec = cgmath::Vector3::new(s, s, 1.0);
-        for v in &mut self.vertices {
-            v.scale_3d(&s_vec);
-        }
-    }
-
-    fn finalize(&mut self, bbox: &ttf::Rect) {
+    pub fn finalize(&mut self, bbox: &ttf::Rect) {
         // Move the first vertex (base for all the triangles) into the center of the bounding box
         // This hopefully avoids overlapping triangles between different glyphs (which would torpedo the winding number hack of the fragment shader)
         if let Some(first_vertex) = self.vertices.first_mut() {
             (*first_vertex).position[0] = bbox.width() as f32 * 0.5;
             (*first_vertex).position[1] = bbox.height() as f32 * 0.5;
-        }
-    }
-
-    pub fn prepare_for_screen(
-        &mut self,
-        bbox: &ttf::Rect,
-        scale: f32,
-        world_translation: &cgmath::Vector3<f32>,
-    ) {
-        self.finalize(bbox);
-        // Now we translate to the appropriate offset in font space
-        self.translate(&self.word_offset.clone());
-        // Scale it to world space
-        self.scale(scale);
-        // Move it in world space
-        self.translate(world_translation);
-    }
-
-    fn translate(&mut self, trans: &cgmath::Vector3<f32>) {
-        for v in &mut self.vertices {
-            v.position[0] += trans.x;
-            v.position[1] += trans.y;
-            v.position[2] += trans.z;
         }
     }
 }
