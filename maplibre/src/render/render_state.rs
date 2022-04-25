@@ -72,8 +72,8 @@ impl RenderState {
         let sample_count = 4;
 
         //let instance = wgpu::Instance::new(wgpu::Backends::GL);
-        //let instance = wgpu::Instance::new(wgpu::Backends::all());
-        let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
+        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
 
         let surface = unsafe { instance.create_surface(&window) };
         let surface_config = wgpu::SurfaceConfiguration {
