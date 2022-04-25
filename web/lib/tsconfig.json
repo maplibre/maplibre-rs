@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    //"outDir": "./dist/maplibre-rs",
-    "module": "commonjs",
-    "target": "es5",
-    "lib": [ "es2015", "dom" ],
+    "outDir": "./dist/maplibre-rs",
+    "module": "es2022",
+    "target": "es2022",
+    "lib": [ "es6", "dom" ],
     "sourceMap": true,
     "declaration": true,
     "allowJs": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    // "plugins": [{ "transform": "@magic-works/commonjs-import.meta" }]
   },
-  //"include": ["./src/**/*"]
+  "include": ["./src/**/*"]
 }
