@@ -3,42 +3,57 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "build": "RUSTUP_TOOLCHAIN=nightly-2022-04-04-x86_64-unknown-linux-gnu webpack --mode=development",
-    "build-esm": "export RUSTUP_TOOLCHAIN=nightly-2022-04-04-x86_64-unknown-linux-gnu && rm -rf ./dist/maplibre-rs-esm && wasm-pack build --out-name index --out-dir lib/src/wasm-pack ../ --target web -- --features web-webgl -Z build-std=std,panic_abort && tsc -m es2022 -outDir ./dist/maplibre-rs-esm && cp src/wasm-pack/index_bg.wasm dist/maplibre-rs-esm/wasm-pack/",
-    "production-build": "RUSTUP_TOOLCHAIN=nightly-2022-04-04-x86_64-unknown-linux-gnu webpack --mode=production",
-    "webgl-build": "npm run build -- --env webgl",
-    "webgl-production-build": "npm run production-build -- --env webgl"
+    "wasm-pack": "wasm-pack build --out-name index --out-dir lib/src/wasm-pack ../ --target web -- --features \"$FEATURES\" -Z build-std=std,panic_abort && rm src/wasm-pack/package.json",
+    "tsc-transpile": "npm run clean && npm run wasm-pack && tsc -m es2022 -outDir ./dist/maplibre-rs-esm",
+    "clean": "rm -rf dist && rm -rf src/wasm-pack",
+    "parcel": "npm run clean && npm run wasm-pack && export WEBGL=false && parcel build --no-cache src/index.ts",
+    "parcel-webgl": "npm run clean && FEATURES=web-webgl npm run wasm-pack && export WEBGL=true && parcel build --no-cache src/index.ts",
+    "webpack": "webpack --mode=development",
+    "webpack-webgl": "npm run build -- --env webgl",
+    "webpack-production": "webpack --mode=production",
+    "webpack-webgl-production": "npm run production-build -- --env webgl"
   },
-  "ignmodule": "dist/maplibre-rs-esm/index.js",
-  "main": "dist/maplibre-rs/maplibre-rs.js",
-  "types": "src/index.ts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/maplibre/maplibre-rs"
+  "module": "dist/parcel-esm/module.js",
+  "main": "dist/parcel-cjs/main.js",
+  "types": "dist/parcel/types.d.ts",
+  "targets": {
+    "main": {
+      "distDir": "./dist/parcel-cjs",
+      "context": "browser",
+      "outputFormat": "commonjs"
+    },
+    "module": {
+      "distDir": "./dist/parcel-esm",
+      "context": "browser",
+      "outputFormat": "esmodule"
+    }
+  },
+  "@parcel/transformer-js": {
+    "inlineFS": false,
+    "inlineEnvironment": [
+      "WEBGL"
+    ]
   },
   "dependencies": {
-    "babel-plugin-bundled-import-meta": "^0.3.2",
     "spectorjs": "^0.9.27",
-    "ttypescript": "^1.5.13",
-    "wasm-feature-detect": "^1.2.11",
-    "workbox-cacheable-response": "^6.4.2",
-    "workbox-routing": "^6.4.2",
-    "workbox-strategies": "^6.4.2"
+    "wasm-feature-detect": "^1.2.11"
   },
   "devDependencies": {
-    "@babel/cli": "^7.17.6",
-    "@babel/core": "^7.17.9",
-    "@babel/plugin-syntax-import-meta": "^7.10.4",
-    "@babel/preset-typescript": "^7.16.7",
-    "@magic-works/commonjs-import.meta": "^1.0.1",
+    "@parcel/optimizer-blob-url": "^2.5.0",
+    "@parcel/packager-ts": "^2.5.0",
+    "@parcel/transformer-inline": "^2.5.0",
+    "@parcel/transformer-typescript-types": "^2.5.0",
     "@wasm-tool/wasm-pack-plugin": "^1.6.0",
-    "babel-plugin-transform-import-meta": "^2.1.1",
-    "ts-loader": "^9.2.6",
+    "parcel": "^2.5.0",
+    "ts-loader": "^9.2.8",
     "typescript": "^4.5.4",
     "wasm-pack": "^0.10.2",
     "webpack": "^5.65.0",
-    "webpack-cli": "^4.9.1",
-    "webpack-dev-server": "^4.6.0"
+    "webpack-cli": "^4.9.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maplibre/maplibre-rs"
   },
   "keywords": [
     "wasm",

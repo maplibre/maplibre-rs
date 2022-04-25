@@ -19,21 +19,17 @@ module.exports = (env) => ({
         library: {
             name: 'maplibre_rs',
             type: 'umd',
-
         },
-
-        umdNamedDefine: true
     },
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
                     {
                         loader: 'ts-loader',
                         options: {
-                            "transpileOnly": true
                         }
                     }
                 ]
@@ -41,11 +37,11 @@ module.exports = (env) => ({
         ],
     },
     resolve: {
-        extensions: ['.tsx', '.ts', '.js'],
+        extensions: ['.ts', '.js'],
     },
     plugins: [
         new webpack.DefinePlugin({
-            WEBGL: !!env.webgl
+            'process.env.WEBGL': !!env.webgl
         }),
         new WasmPackPlugin({
             crateDirectory: path.resolve(__dirname, '../'),

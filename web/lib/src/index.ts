@@ -15,12 +15,7 @@ import {
     threads
 } from "wasm-feature-detect"
 
-declare global {
-    interface Window {
-        schedule_tile_request: (url: string, request_id: number) => void;
-        newWorker: () => void;
-    }
-}
+const WEBGL = JSON.parse(process.env.WEBGL)
 
 const isWebGLSupported = () => {
     try {
@@ -34,13 +29,13 @@ const isWebGLSupported = () => {
 
 const checkWasmFeatures = async () => {
     const checkFeature = async function (featureName: string, feature: () => Promise<boolean>) {
-        let result = await  feature();
+        let result = await feature();
         let msg = `The feature ${featureName} returned: ${result}`;
-       if (result) {
-           console.log(msg);
-       } else {
-           console.warn(msg);
-       }
+        if (result) {
+            console.log(msg);
+        } else {
+            console.warn(msg);
+        }
     }
 
     await checkFeature("bulkMemory", bulkMemory);
@@ -73,8 +68,6 @@ const checkRequirements = () => {
         return false
     }
 
-    let WEBGL = true
-
     if (WEBGL) {
         if (!isWebGLSupported()) {
             alertUser("WebGL is not supported in this Browser!")
@@ -100,32 +93,21 @@ const preventDefaultTouchActions = () => {
         canvas.addEventListener("touchmove", e => e.preventDefault())
     })
 }
+/*
+let WORKER_COUNT = 4
+const createWorker = (id: number, memory: WebAssembly.Memory) => {
+    const worker = new Worker(new URL('./legacy_worker.ts', import.meta.url), {
+        type: "module",
+    })
+    worker.postMessage({type: "init", memory} as WebWorkerMessageType)
 
-const registerServiceWorker = () => {
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register(new URL('./service-worker.ts', import.meta.url)).catch(() => {
-                console.error("Failed to register service worker");
-            })
-        })
-    }
+    return worker
 }
 
 const setupLegacyWebWorker = (schedulerPtr: number, memory: WebAssembly.Memory) => {
-    let WORKER_COUNT = 4
-    const createWorker = (id: number) => {
-        const worker = new Worker(new URL('./worker.ts', import.meta.url), {
-            type: "module",
-            name: `worker_${id}`
-        })
-        worker.postMessage({type: "init", memory} as WebWorkerMessageType)
-
-        return worker
-    }
-
     let workers: [number, Worker][] = Array.from(
         new Array(WORKER_COUNT).keys(),
-        (id) => [new_thread_local_state(schedulerPtr), createWorker(id)]
+        (id) => [new_thread_local_state(schedulerPtr), createWorker(id, memory)]
     )
 
     window.schedule_tile_request = (url: string, request_id: number) => {
@@ -137,25 +119,29 @@ const setupLegacyWebWorker = (schedulerPtr: number, memory: WebAssembly.Memory) 
             request_id
         } as WebWorkerMessageType)
     }
-}
+}*/
 
-export const startMapLibre = async () => {
+export const startMapLibre = async (wasmPath: string | undefined, workerPath: string | undefined) => {
     await checkWasmFeatures()
 
     if (!checkRequirements()) {
         return
     }
 
-    registerServiceWorker()
-
     preventDefaultTouchActions();
 
     let MEMORY_PAGES = 16 * 1024
 
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
-    await init(undefined, memory)
+    await init(wasmPath, memory)
+
+    // TODO: Inline is not yet working
+    // let worker = new Worker(new URL('blob-url:./test_worker.js', import.meta.url), {type: 'module'});
+
     const schedulerPtr = create_pool_scheduler(() => {
-        return new Worker(new URL('./pool_worker.ts', import.meta.url), {
+        return workerPath ? new Worker(workerPath, {
+            type: 'module'
+        }) : new Worker(new URL("./pool_worker.ts", import.meta.url), {
             type: 'module'
         });
     })

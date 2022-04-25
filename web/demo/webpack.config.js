@@ -1,16 +1,15 @@
 const path = require("path");
-const webpack = require("webpack");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require("copy-webpack-plugin");
 
 let dist = path.join(__dirname, 'dist/');
-module.exports = (env) => ({
+module.exports = (_env) => ({
     mode: "development",
     entry: {
         main: "./index.ts",
     },
     experiments: {
-        //syncWebAssembly: true
+        asyncWebAssembly: true
     },
     performance: {
         maxEntrypointSize: 400000,
@@ -37,24 +36,25 @@ module.exports = (env) => ({
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.ts$/,
                 use: 'ts-loader',
                 exclude: /node_modules/,
             },
         ],
     },
     resolve: {
-        extensions: ['.tsx', '.ts', '.js'],
+        extensions: ['.ts', '.js'],
     },
     plugins: [
         new CopyPlugin({
             patterns: [
-                { from: "*.wasm", to: "[path][name][ext]", context: 'node_modules/maplibre_rs/dist/maplibre-rs/' },
-                { from: "*.maplibre-rs.js", to: "[path][name][ext]", context: 'node_modules/maplibre_rs/dist/maplibre-rs/' },
+                // webpack
+                //{ from: "*.wasm", to: "[path][name][ext]", context: 'node_modules/maplibre_rs/dist/maplibre-rs/' },
+                //{ from: "*.maplibre-rs.js", to: "[path][name][ext]", context: 'node_modules/maplibre_rs/dist/maplibre-rs/' },
+                // parcel
+                {from: "*.wasm", to: "[path]maplibre[ext]", context: 'node_modules/maplibre_rs/dist/parcel-cjs/'},
+                {from: "*worker*", to: "[path]worker[ext]", context: 'node_modules/maplibre_rs/dist/parcel-cjs/'},
             ],
-        }),
-        new webpack.DefinePlugin({
-            WEBGL: !!env.webgl
         }),
         new HtmlWebpackPlugin({
             title: 'maplibre demo',

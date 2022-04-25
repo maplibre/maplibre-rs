@@ -9,6 +9,8 @@
     "allowJs": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
+    "types": ["wasm_bindgen", "bundler"],
+    "typeRoots": ["@types"]
   },
   "include": ["./src/**/*"]
 }

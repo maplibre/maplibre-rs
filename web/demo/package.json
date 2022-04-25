@@ -5,12 +5,9 @@
   "private": true,
   "scripts": {
     "start": "webpack-dev-server --mode=development",
+    "start-production": "npm run start -- --mode=production",
     "build": "webpack --mode=development",
-    "production-build": "webpack --mode=production",
-    "webgl-start": "npm run start -- --env webgl",
-    "webgl-start-production": "npm run webgl-start -- --mode=production",
-    "webgl-build": "npm run build -- --env webgl",
-    "webgl-production-build": "npm run production-build -- --env webgl"
+    "build-production": "webpack --mode=production"
   },
   "repository": {
     "type": "git",

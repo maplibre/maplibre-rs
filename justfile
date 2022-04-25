@@ -31,50 +31,25 @@ default-toolchain:
 nightly-toolchain:
   rustup install $NIGHTLY_TOOLCHAIN
   rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
-  rustup override set $NIGHTLY_TOOLCHAIN
 
 nightly-toolchain-android: nightly-toolchain
   rustup target add --toolchain $NIGHTLY_TOOLCHAIN x86_64-linux-android
   rustup target add --toolchain $NIGHTLY_TOOLCHAIN aarch64-linux-android
 
-webpack-webgl-production: nightly-toolchain
-  cd web/web && npm install && npm run webgl-production-build
+web-install PROJECT:
+  cd web/{{PROJECT}} && npm install
 
-webpack-production: nightly-toolchain
-  cd web/web && npm install && npm run production-build
+web-library TARGET: nightly-toolchain (web-install "lib")
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{TARGET}}
 
-# TODO
-wasm-pack-webgl: nightly-toolchain
-   ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
-     --release --target web --out-dir web/dist/maplibre-rs -- \
-     --features "web-webgl" -Z build-std=std,panic_abort
-#
-# wasm-pack: nightly-toolchain
-#   ./wasm-pack-v0.10.1-x86_64-unknown-linux-musl/wasm-pack build . \
-#     --release --target web --out-dir web/dist/maplibre-rs -- \
-#     -Z build-std=std,panic_abort
-#
-# build-web-webgl: nightly-toolchain
-#   cargo build --features web-webgl --target wasm32-unknown-unknown -Z build-std=std,panic_abort
-#
-# build-web: nightly-toolchain
-#   cargo build --features "" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
-#
-# wasm-bindgen:
-#   cargo install wasm-bindgen-cli
-#   # TODO: Untested: --reference-types
-#   wasm-bindgen --target web --out-dir web/dist/maplibre-rs-plain-bindgen target/wasm32-unknown-unknown/debug/maplibre.wasm
-#
-# build-wasm-bindgen: build-web wasm-bindgen
-#
-# build-wasm-bindgen-webgpu: build-web wasm-bindgen
-# TODO
+web-demo TARGET: (web-install "demo")
+  cd web/demo && npm run {{TARGET}}
+
 #profile-bench:
 # cargo flamegraph --bench render -- --bench
 
-
 build-android: print-android-env
-  cd android/gradle && ./gradlew assembleDebug
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd android/gradle && ./gradlew assembleDebug
 
 # language=bash
 print-android-env:
@@ -135,6 +110,9 @@ xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (xc
   echo  "$XC_FRAMEWORK_PATH"
   echo "$framework_args" | xargs xcodebuild -create-xcframework -output "$XC_FRAMEWORK_PATH"
   cat "$XC_FRAMEWORK_PATH/Info.plist"
+
+book-serve:
+  mdbook serve docs
 
 # language=bash
 extract-tiles:

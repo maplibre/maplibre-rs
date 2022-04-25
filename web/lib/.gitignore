@@ -5,3 +5,5 @@ libs/maplibre*
 dist
 
 src/wasm-pack
+
+.parcel-cache
