@@ -34,7 +34,7 @@ jobs:
       - uses: ./.github/actions/webgpu
       - uses: ./.github/actions/deploy
         with:
-          source: web/web/dist/linux-demo/.
+          source: web/demo/dist/.
           destination: webgpu
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-deploy-webgl:
@@ -44,7 +44,7 @@ jobs:
       - uses: ./.github/actions/webgl
       - uses: ./.github/actions/deploy
         with:
-          source: web/web/dist/linux-demo/.
+          source: web/demo/dist/.
           destination: webgl
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-deploy-docs:

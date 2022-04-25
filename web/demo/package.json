@@ -4,10 +4,11 @@
   "description": "A maplibre demo",
   "private": true,
   "scripts": {
+    "clean": "rm -rf dist",
     "start": "webpack-dev-server --mode=development",
-    "start-production": "npm run start -- --mode=production",
-    "build": "webpack --mode=development",
-    "build-production": "webpack --mode=production"
+    "start-production": "webpack-dev-server --mode=production",
+    "build": "npm run clean && webpack --mode=development",
+    "build-production": "npm run clean && webpack --mode=production"
   },
   "repository": {
     "type": "git",

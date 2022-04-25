@@ -46,7 +46,7 @@ module.exports = (_env) => ({
         extensions: ['.ts', '.js'],
     },
     plugins: [
-        new CopyPlugin({
+        /*new CopyPlugin({
             patterns: [
                 // webpack
                 //{ from: "*.wasm", to: "[path][name][ext]", context: 'node_modules/maplibre_rs/dist/maplibre-rs/' },
@@ -55,7 +55,7 @@ module.exports = (_env) => ({
                 {from: "*.wasm", to: "[path]maplibre[ext]", context: 'node_modules/maplibre_rs/dist/parcel-cjs/'},
                 {from: "*worker*", to: "[path]worker[ext]", context: 'node_modules/maplibre_rs/dist/parcel-cjs/'},
             ],
-        }),
+        }),*/
         new HtmlWebpackPlugin({
             title: 'maplibre demo',
         }),
