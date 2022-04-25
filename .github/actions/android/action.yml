@@ -5,6 +5,8 @@ runs:
   using: "composite"
   steps:
     - uses: extractions/setup-just@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Install nightly toolchain
       shell: bash
       run: just nightly-toolchain-android
