@@ -12,10 +12,12 @@ runs:
     - name: Build
       shell: bash
       run: just build-android
-# FIXME: https://github.com/maplibre/maplibre-rs/issues/44
-#    - name: Check x86_64
-#      shell: bash
-#      run: just check maplibre-android x86_64-linux-android
+    - name: Clean
+      shell: bash
+      run: cargo clean
+    - name: Check x86_64
+      shell: bash
+      run: just check maplibre-android x86_64-linux-android
     - name: Check aarch64
       shell: bash
       run: just check maplibre-android aarch64-linux-android
