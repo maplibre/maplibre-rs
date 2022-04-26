@@ -39,7 +39,7 @@ nightly-toolchain-android: nightly-toolchain
 web-install PROJECT:
   cd web/{{PROJECT}} && npm install
 
-web-library TARGET: nightly-toolchain (web-install "lib")
+web-lib TARGET: nightly-toolchain (web-install "lib")
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{TARGET}}
 
 web-demo TARGET: (web-install "demo")

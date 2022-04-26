@@ -13,7 +13,7 @@ runs:
     - uses: Swatinem/rust-cache@v1
     - name: Build lib
       shell: bash
-      run: just web-library parcel-webgl
+      run: just web-lib parcel-webgl
     - name: Build demo
       shell: bash
       run: just web-demo build
