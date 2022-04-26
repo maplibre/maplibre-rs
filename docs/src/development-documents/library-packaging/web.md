@@ -78,17 +78,16 @@ Therefore, we should stick to the `web` output format.
 
 ## Bundler Feature Comparison
 
-| Bundler       | **ESM** | **IIFE** | CJS | UMD | **WebWorker Inlining** | Web Worker Bundling | **WASM Bundling** | **
-Predictable Paths** |
-|---------------|---------|----------|-----|-----|------------------------|---------------------|-------------------|-----------------------|
-| Babel 1)      | ✅       | ❌        | ❌   | ❌   | ❌                      | ❌                   | ❌                 | -                     |
-| TypeScript 1) | ✅       | ❌        | ❌   | ❌   | ❌                      | ❌                   | ❌                 | -                     |
-| Webpack       | ❌ 4)    | ❓        | ❌   | ❓   | ❌ 2)                   | ✅                   | ✅                 | ❓                     |
-| Parcel        | ✅       | ❌        | ✅   | ❌   | 🛠️ 3)                 | ✅                   | ✅                 | ❌ 5)                  |
-| ESBuild       | ✅       | ✅        | ✅   | ❌   | ✅ 6)                  | ❓                   | ✅ 6)              | ✅                     |
-| Rollup        | ❓       | ❓        | ❓   | ❓   | ❓                      | ❓                   | ❓                 | ❓                     |
+| Bundler       | *ESM* | *IIFE* | CJS | UMD | *WebWorker Inlining* | Web Worker Bundling | *WASM Bundling* | *Predictable Paths* |
+|---------------|-------|--------|-----|-----|----------------------|---------------------|-----------------|---------------------|
+| Babel 1)      | ✅     | ❌      | ❌   | ❌   | ❌                    | ❌                   | ❌               | ✅                   |
+| TypeScript 1) | ✅     | ❌      | ❌   | ❌   | ❌                    | ❌                   | ❌               | ✅                   |
+| Webpack       | ❌ 4)  | ❓      | ❌   | ❓   | ❌ 2)                 | ✅                   | ✅               | ❓                   |
+| Parcel        | ✅     | ❌      | ✅   | ❌   | 🛠️ 3)               | ✅                   | ✅               | ❌ 5)                |
+| ESBuild       | ✅     | ✅      | ✅   | ❌   | ✅ 6)                 | ❓                   | ✅ 6)            | ✅                   |
+| Rollup        | ❓     | ❓      | ❓   | ❓   | ❓                    | ❓                   | ❓               | ❓                   |
 
-Features in **bold** are required for maplibre-rs.
+Features in ***italic***s are required for maplibre-rs.
 
 > 1) Technically not a bundler but can be used to emit ES modules
 > 2) Was Supported in Webpack 4, but currently is not supported
