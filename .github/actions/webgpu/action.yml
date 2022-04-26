@@ -11,7 +11,7 @@ runs:
     - uses: Swatinem/rust-cache@v1
     - name: Build lib
       shell: bash
-      run: just web-lib parcel
+      run: just web-lib esbuild
     - name: Build demo
       shell: bash
       run: just web-demo build
