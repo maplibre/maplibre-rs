@@ -9,9 +9,12 @@ runs:
       shell: bash
       run: just nightly-toolchain
     - uses: Swatinem/rust-cache@v1
-    - name: Build
+    - name: Build lib
       shell: bash
-      run: just webpack-production
+      run: just web-lib esbuild
+    - name: Build demo
+      shell: bash
+      run: just web-demo build
     - name: Check
       shell: bash
       run: just check web wasm32-unknown-unknown
