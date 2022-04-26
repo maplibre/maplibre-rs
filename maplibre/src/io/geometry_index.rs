@@ -267,7 +267,7 @@ impl FeatureProcessor for IndexProcessor {
     }
     /// End of feature geometry processing
     fn geometry_end(&mut self) -> Result<(), GeozeroError> {
-        let geometry = self.geo_writer.geometry().clone();
+        let geometry = self.geo_writer.geometry().cloned().unwrap();
 
         match geometry {
             Geometry::Polygon(polygon) => self.geometries.push(
