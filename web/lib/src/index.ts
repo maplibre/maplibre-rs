@@ -1,4 +1,4 @@
-import init, {create_pool_scheduler, new_thread_local_state, run} from "./dist/libs/maplibre"
+import init, {create_pool_scheduler, new_thread_local_state, run} from "./wasm-pack"
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 import {
@@ -15,12 +15,10 @@ import {
     threads
 } from "wasm-feature-detect"
 
-declare global {
-    interface Window {
-        schedule_tile_request: (url: string, request_id: number) => void;
-        newWorker: () => void;
-    }
-}
+// @ts-ignore
+import Worker from './pool.worker.js';
+
+const WEBGL = process.env.WEBGL === "true"
 
 const isWebGLSupported = () => {
     try {
@@ -34,13 +32,13 @@ const isWebGLSupported = () => {
 
 const checkWasmFeatures = async () => {
     const checkFeature = async function (featureName: string, feature: () => Promise<boolean>) {
-        let result = await  feature();
+        let result = await feature();
         let msg = `The feature ${featureName} returned: ${result}`;
-       if (result) {
-           console.log(msg);
-       } else {
-           console.warn(msg);
-       }
+        if (result) {
+            console.log(msg);
+        } else {
+            console.warn(msg);
+        }
     }
 
     await checkFeature("bulkMemory", bulkMemory);
@@ -98,32 +96,21 @@ const preventDefaultTouchActions = () => {
         canvas.addEventListener("touchmove", e => e.preventDefault())
     })
 }
+/*
+let WORKER_COUNT = 4
+const createWorker = (id: number, memory: WebAssembly.Memory) => {
+    const worker = new Worker(new URL('./legacy.worker.ts', import.meta.url), {
+        type: "module",
+    })
+    worker.postMessage({type: "init", memory} as WebWorkerMessageType)
 
-const registerServiceWorker = () => {
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register(new URL('./service-worker.ts', import.meta.url)).catch(() => {
-                console.error("Failed to register service worker");
-            })
-        })
-    }
+    return worker
 }
 
 const setupLegacyWebWorker = (schedulerPtr: number, memory: WebAssembly.Memory) => {
-    let WORKER_COUNT = 4
-    const createWorker = (id: number) => {
-        const worker = new Worker(new URL('./worker.ts', import.meta.url), {
-            type: "module",
-            name: `worker_${id}`
-        })
-        worker.postMessage({type: "init", memory} as WebWorkerMessageType)
-
-        return worker
-    }
-
     let workers: [number, Worker][] = Array.from(
         new Array(WORKER_COUNT).keys(),
-        (id) => [new_thread_local_state(schedulerPtr), createWorker(id)]
+        (id) => [new_thread_local_state(schedulerPtr), createWorker(id, memory)]
     )
 
     window.schedule_tile_request = (url: string, request_id: number) => {
@@ -135,27 +122,29 @@ const setupLegacyWebWorker = (schedulerPtr: number, memory: WebAssembly.Memory) 
             request_id
         } as WebWorkerMessageType)
     }
-}
+}*/
 
-const start = async () => {
+export const startMapLibre = async (wasmPath: string | undefined, workerPath: string | undefined) => {
     await checkWasmFeatures()
 
     if (!checkRequirements()) {
         return
     }
 
-    registerServiceWorker()
-
     preventDefaultTouchActions();
 
     let MEMORY_PAGES = 16 * 1024
 
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
-    await init(undefined, memory)
+    await init(wasmPath, memory)
+
+    // TODO: Inline is not yet working
+    // let worker = new Worker(new URL('blob-url:./test_worker.js', import.meta.url), {type: 'module'});
+
     const schedulerPtr = create_pool_scheduler(() => {
-        return new Worker(new URL('./pool_worker.ts', import.meta.url), {
+        return workerPath ? new Worker(workerPath, {
             type: 'module'
-        });
+        }) : Worker();
     })
 
     // setupLegacyWebWorker(schedulerPtr, memory)
@@ -163,6 +152,4 @@ const start = async () => {
     await run(schedulerPtr)
 }
 
-start().then(() => console.log("started via wasm"))
-
-
+export default "test"

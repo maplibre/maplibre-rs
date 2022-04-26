@@ -19,7 +19,10 @@
   - [Caching](./development-documents/caching.md)
   - [Stencil Masking](./development-documents/stencil-masking.md)
   - [Font Rendering](./development-documents/font-rendering.md)
-
+  - [Library Packaging](./development-documents/library-packaging.md)
+    - [Apple](./development-documents/library-packaging/apple.md)
+    - [Android](./development-documents/library-packaging/android.md)
+    - [Web](./development-documents/library-packaging/web.md)
 
 - [Appendix](./appendix/index.md)
   - [Link Collection](./appendix/link-collection.md)
