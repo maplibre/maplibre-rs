@@ -34,8 +34,14 @@ A rough overview of the setup and render routine:
 The main issue with this approach (besides performance) is that the trick with using overdrawing of pixels to decide whether to fill them or not produces artifacts when two separate glyphs overlap in screen space:
 ![](./doc/overlapping_problem.png)
 
+However, this should not be a serious problem for our use case (labels on maps) due to two reasons:
+1. Text on a map should never overlap because it would be detrimental to readability. Looking at e.g. Google Maps one can see that they have a system in place to detect overlaps and hide text following some sort of importance rating.
+2. If we actually want to allow overlapping text, we should get away with a simple painter's algorithm:
+    * Sort text entities (i.e., entire labels) by their distance to the camera
+    * Draw sorted from closest to farthest
+    * Use a depth buffer -> this way all overlapping fragments between texts further back than the closest one are discarded and won't mess with the winding order
+
 ### TODOs
-* Figure out, whether the problem with overlapping glyphs can be fixed
 * Cache glyph meshes, so they are not recreated whenever they appear in a word and render them as instances
 * Anti-aliasing!
 
