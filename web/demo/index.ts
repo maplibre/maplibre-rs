@@ -1,11 +1,10 @@
 import { startMapLibre } from 'maplibre_rs'
-// @ts-ignore
-//import maplibreWasm from 'maplibre_rs/dist/parcel-cjs/index_bg.900705f4.wasm'
-// @ts-ignore
-//import maplibreWorker from 'maplibre_rs/dist/parcel-cjs/pool_worker.584c4c50'
 
-
-// cjs
-//startMapLibre("./maplibre.wasm", "./worker.js")
-// esm
-startMapLibre(undefined, undefined)
+if (process.env.CJS) {
+    // When bundling a CJS library, webpack can not know where to find the wasm file or the WebWorker. So we need to
+    // find it manually and then pass it down.
+    const maplibreWasm = require('file-loader!maplibre_rs/dist/esbuild-cjs/assets/index_bg.wasm')
+    startMapLibre(maplibreWasm.default, undefined)
+} else {
+    startMapLibre(undefined, undefined)
+}
