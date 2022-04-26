@@ -1,15 +1,16 @@
 const path = require("path");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyPlugin = require("copy-webpack-plugin");
+//const CopyPlugin = require("copy-webpack-plugin");
+const webpack = require("webpack");
 
 let dist = path.join(__dirname, 'dist/');
-module.exports = (_env) => ({
+module.exports = (env) => ({
     mode: "development",
     entry: {
         main: "./index.ts",
     },
     experiments: {
-        asyncWebAssembly: true
+        asyncWebAssembly: env.cjs ? false : true
     },
     performance: {
         maxEntrypointSize: 400000,
@@ -44,8 +45,12 @@ module.exports = (_env) => ({
     },
     resolve: {
         extensions: ['.ts', '.js'],
+        //mainFields: env.cjs ? ['main', 'module'] : undefined,
     },
     plugins: [
+        new webpack.DefinePlugin({
+            'process.env.CJS': !!env.cjs
+        }),
         /*new CopyPlugin({
             patterns: [
                 // webpack
