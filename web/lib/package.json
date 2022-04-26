@@ -1,5 +1,5 @@
 {
-  "name": "maplibre_rs",
+  "name": "maplibre-rs",
   "version": "0.0.1",
   "description": "",
   "scripts": {
@@ -8,6 +8,9 @@
     "esbuild": "npm run clean && npm run wasm-pack && WEBGL=false node build.mjs && tsc -m es2022 -outDir ./dist/esbuild --emitDeclarationOnly",
     "esbuild-webgl": "npm run clean && FEATURES=web-webgl npm run wasm-pack && WEBGL=true node build.mjs  && tsc -m es2022 -outDir ./dist/esbuild --emitDeclarationOnly"
   },
+  "files": [
+    "dist/**/*"
+  ],
   "module": "dist/esbuild-esm/module.js",
   "main": "dist/esbuild-cjs/main.js",
   "types": "dist/esbuild/index.d.ts",
