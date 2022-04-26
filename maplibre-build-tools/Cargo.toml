@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "A library with build tools for maplibre-rs"
 categories = []
 edition = "2021"
+authors = ["Maximilian Ammann <max@maxammann.org>"]
+license = "MIT OR Apache-2.0"
+readme = "../README.md"
 
 [dependencies]
 naga = { version = "0.8", features = ["wgsl-in"] }

@@ -1,10 +1,12 @@
 [package]
 name = "maplibre"
-version = "0.1.0"
-authors = ["Maximilian Ammann <max@maxammann.org>"]
+version = "0.0.2"
 edition = "2021"
 build = "build.rs"
+authors = ["Maximilian Ammann <max@maxammann.org>"]
 license = "MIT OR Apache-2.0"
+description = "Native Maps for Web, Mobile and Desktop"
+readme = "../README.md"
 
 [features]
 web-webgl = ["wgpu/webgl"]
