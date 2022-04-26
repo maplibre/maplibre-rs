@@ -15,7 +15,10 @@ import {
     threads
 } from "wasm-feature-detect"
 
-const WEBGL = JSON.parse(process.env.WEBGL)
+// @ts-ignore
+import Worker from './pool.worker.js';
+
+const WEBGL = process.env.WEBGL === "true"
 
 const isWebGLSupported = () => {
     try {
@@ -96,7 +99,7 @@ const preventDefaultTouchActions = () => {
 /*
 let WORKER_COUNT = 4
 const createWorker = (id: number, memory: WebAssembly.Memory) => {
-    const worker = new Worker(new URL('./legacy_worker.ts', import.meta.url), {
+    const worker = new Worker(new URL('./legacy.worker.ts', import.meta.url), {
         type: "module",
     })
     worker.postMessage({type: "init", memory} as WebWorkerMessageType)
@@ -141,9 +144,7 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
     const schedulerPtr = create_pool_scheduler(() => {
         return workerPath ? new Worker(workerPath, {
             type: 'module'
-        }) : new Worker(new URL("./pool_worker.ts", import.meta.url), {
-            type: 'module'
-        });
+        }) : Worker();
     })
 
     // setupLegacyWebWorker(schedulerPtr, memory)
