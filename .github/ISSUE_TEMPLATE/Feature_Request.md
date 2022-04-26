@@ -3,14 +3,6 @@ name: 🙋 Feature Request
 about: Want us to add something to maplibre-rs?
 ---
 
-<!---
-Thanks for filing an issue 😄 ! Before you submit, please read the following:
-
-Search open/closed issues before submitting since someone might have asked the same thing before!
--->
-
-# 🙋 feature request
-
 <!--- Provide a general summary of the issue here -->
 
 ## 🤔 Expected Behavior
