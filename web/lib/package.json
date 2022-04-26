@@ -4,36 +4,13 @@
   "description": "",
   "scripts": {
     "wasm-pack": "wasm-pack build --out-name index --out-dir lib/src/wasm-pack ../ --target web -- --features \"$FEATURES\" -Z build-std=std,panic_abort && rm src/wasm-pack/package.json",
-    "tsc-transpile": "npm run clean && npm run wasm-pack && tsc -m es2022 -outDir ./dist/maplibre-rs-esm",
     "clean": "rm -rf dist && rm -rf src/wasm-pack",
-    "parcel": "npm run clean && npm run wasm-pack && export WEBGL=false && parcel build --no-cache src/index.ts",
-    "parcel-webgl": "npm run clean && FEATURES=web-webgl npm run wasm-pack && export WEBGL=true && parcel build --no-cache src/index.ts",
-    "webpack": "webpack --mode=development",
-    "webpack-webgl": "npm run build -- --env webgl",
-    "webpack-production": "webpack --mode=production",
-    "webpack-webgl-production": "npm run production-build -- --env webgl"
+    "esbuild": "npm run clean && npm run wasm-pack && WEBGL=false node build.mjs && tsc -m es2022 -outDir ./dist/esbuild --emitDeclarationOnly",
+    "esbuild-webgl": "npm run clean && FEATURES=web-webgl npm run wasm-pack && WEBGL=true node build.mjs  && tsc -m es2022 -outDir ./dist/esbuild --emitDeclarationOnly"
   },
-  "module": "dist/parcel-esm/module.js",
-  "main": "dist/parcel-cjs/main.js",
-  "types": "dist/parcel/types.d.ts",
-  "targets": {
-    "main": {
-      "distDir": "./dist/parcel-cjs",
-      "context": "browser",
-      "outputFormat": "commonjs"
-    },
-    "module": {
-      "distDir": "./dist/parcel-esm",
-      "context": "browser",
-      "outputFormat": "esmodule"
-    }
-  },
-  "@parcel/transformer-js": {
-    "inlineFS": false,
-    "inlineEnvironment": [
-      "WEBGL"
-    ]
-  },
+  "module": "dist/esbuild-esm/module.js",
+  "main": "dist/esbuild-cjs/main.js",
+  "types": "dist/esbuild/index.d.ts",
   "dependencies": {
     "spectorjs": "^0.9.27",
     "wasm-feature-detect": "^1.2.11"
