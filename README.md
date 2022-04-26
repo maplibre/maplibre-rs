@@ -98,19 +98,13 @@ https://user-images.githubusercontent.com/905221/163552617-5db04c66-23e3-4915-87
 
 ## Building & Running
 
-Now, to clone the project:
+Clone the project
 
 ```bash
-git clone --recursive git@github.com:maplibre/maplibre-rs
+git clone https://github.com/maplibre/maplibre-rs.git
 ```
 
-and then build it for running on a desktop:
-
-```bash
-cargo build
-```
-
-After that, you can run it on your desktop:
+Build and run it on a desktop
 
 ```bash
 cargo run -p maplibre-demo
