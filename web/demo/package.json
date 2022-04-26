@@ -17,7 +17,7 @@
     "url": "https://github.com/maplibre/maplibre-rs"
   },
   "dependencies": {
-    "maplibre_rs": "file:../lib"
+    "maplibre-rs": "file:../lib"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^10.2.4",

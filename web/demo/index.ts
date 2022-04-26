@@ -1,4 +1,4 @@
-import { startMapLibre } from 'maplibre_rs'
+import { startMapLibre } from 'maplibre-rs'
 
 if (process.env.CJS) {
     // When bundling a CJS library, webpack can not know where to find the wasm file or the WebWorker. So we need to
