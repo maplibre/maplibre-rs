@@ -137,6 +137,10 @@ There are two important steps:
 1. Create a fat binary using `lipo -create binA binB -output binfat`
 2. Copy for example the arm64 framework and add the `.swiftmodule` definitions from the x86_64 framework
 
+## Single UIApplication
+
+Right now `winit` only allows the usage of a `UIApplication`. This means the application needs to run in fullscreen.
+[Tracking Issue](https://github.com/maplibre/maplibre-rs/issues/28)
 
 ## Example App
 
