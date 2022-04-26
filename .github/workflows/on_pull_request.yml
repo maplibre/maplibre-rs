@@ -47,3 +47,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/apple
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
