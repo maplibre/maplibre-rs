@@ -1,10 +1,10 @@
-use crate::geom::{Mesh, Meshable, Vertex};
+use crate::text_system::geom::{Mesh, Meshable, Vertex};
+use owned_ttf_parser as ttf;
 use std::fmt::Write;
-use ttf_parser as ttf;
 
 pub struct SVGBuilder(pub String);
 
-impl ttf_parser::OutlineBuilder for SVGBuilder {
+impl ttf::OutlineBuilder for SVGBuilder {
     fn move_to(&mut self, x: f32, y: f32) {
         write!(&mut self.0, "M {} {} ", x, y).unwrap();
     }
