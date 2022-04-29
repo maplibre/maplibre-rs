@@ -74,12 +74,6 @@ corresponds to your system. Otherwise, XCode will tell you that the app is incom
 In order to change that, go into *Build settings -> Deployment -> MacOS deployment target* and select your OSX version.
 Finally, you can click on the run button to start the application.
 
-> __Note__: In some cases, before opening the XCode project, you need to build manually using the following command:
-> `cargo build -p apple --target your-target --lib`
->
-> After that, open the XCode project and run it.
-> (XCode seems to set some environment variables which cause problems with the build directly within XCode)
-
 ## Web (WebGL, WebGPU)
 
 If you have a browser which already supports a recent version of the WebGPU specification then you can start a
