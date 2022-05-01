@@ -1,4 +1,4 @@
-use js_sys::{ArrayBuffer, Error as JSError, Uint8Array};
+use js_sys::{ArrayBuffer, Uint8Array};
 use maplibre::io::source_client::HTTPClient;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -12,14 +12,6 @@ use async_trait::async_trait;
 use maplibre::error::Error;
 
 pub struct WHATWGFetchHttpClient {}
-
-impl From<JsValue> for WebError {
-    fn from(maybe_error: JsValue) -> Self {
-        assert!(maybe_error.is_instance_of::<JSError>());
-        let error: JSError = maybe_error.dyn_into().unwrap();
-        WebError::Network(error.message().as_string().unwrap())
-    }
-}
 
 impl WHATWGFetchHttpClient {
     pub fn new() -> Self {
