@@ -6,7 +6,7 @@ This document describes issues and challenges when packaging maplibre-rs as a np
 
 ### ESM
 
-The ESM module format is the standard nowadays which should be followed. If a bundler like webpack encounters an ESM
+The ESM module format is the standard nowadays which should be followed. If a JS bundler encounters an ESM
 module it can resolve WebAssembly files or WebWorkers dynamically.
 The following syntax is used to resolve referenced WebWorkers:
 
@@ -28,7 +28,8 @@ new URL('index_bg.wasm', import.meta.url);
 > object. This allows quick prototyping/playgrounds/experiments using maplibre-rs.
 
 In order to support this we need to create a bundle which works on any modern browser. Additionally, a WASM file and
-WebWorker needs to be deployed at a predictable path, because there is no bundler active which manages assets.
+WebWorker needs to be deployed at a predictable path, because there is no bundler active which manages assets. Users of
+these libraries have to specify where WASM or non-inlined WebWorkers are located.
 
 Both assets could be inlined theoretically. This is common for WebWorkers, but not for WASM files.
 
@@ -42,18 +43,14 @@ Both assets could be inlined theoretically. This is common for WebWorkers, but n
 
 > Not needed for the browser build of maplibre-rs, possibly needed when supporting Node
 
-With a CommonJS module its is not possible for bundlers to dynamically resolve WebWorkers or WASM files. Users of these
-libraries have
-to specify where WASM or non-inlined WebWorkers are hosted.
+With a CommonJS module its is not possible for bundlers to dynamically resolve WebWorkers or WASM files.
 
 The `import.meta.url` token can not exist in a CommonJS module. Therefore, bundlers which encounter a CommonJS module
 have to use a different mechanism of resolving files.
 
-* The Parcel bundler translates to `new URL('index_bg.wasm', import.meta.url);`
-  to `new URL("index_bg.wasm", "file:" + __filename);`
-  While depending on `file:` and `filename` works for NodeJS, it is unsupported in the browser
-* Webpack translates `new URL('index_bg.wasm', import.meta.url);` to something that is equivalent to `'./index_bg.wasm'`
-  . It just expects that assets are resolvable from the current file.
+Generally, we do not need to support CommonJS, because we are not targeting Node with maplibre-rs. It's properly good to
+support it as a fallback though, for bundlers which can not deal with ESM modules yet.
+This is for example true for test runners like Jest which require that dependencies are available as CJS module.
 
 ## wasm-pack output
 
@@ -67,25 +64,22 @@ Therefore, we should stick to the `web` output format.
 
 ## Required Features
 
-* WASM Bundling
-  > Make the WASM binary available to users of the maplibre-rs library
-* WebWorker Bundling
-  > Make the WebWorker available to users of the maplibre-rs library. This could also be achived by inlining.
-* WebWorker Inlining
-  > Inline the WebWorker bundle in the library bundle as a string.
-* Predictable paths for CJS
-  > TODO
+* WASM Bundling: Make the WASM binary available to users of the maplibre-rs library
+* WebWorker Bundling: Make the WebWorker available to users of the maplibre-rs library. This could also be achived by inlining.
+* WebWorker Inlining: Inline the WebWorker bundle in the library bundle as a string.
+* Predictable Paths: Without predictable paths, it's difficult for users to reference the wasm file directly from the `node_modules` directory if requried.
+
 
 ## Bundler Feature Comparison
 
-| Bundler       | *ESM* | *IIFE* | CJS | UMD | *WebWorker Inlining* | Web Worker Bundling | *WASM Bundling* | *Predictable Paths* |
-|---------------|-------|--------|-----|-----|----------------------|---------------------|-----------------|---------------------|
-| Babel 1)      | ✅     | ❌      | ❌   | ❌   | ❌                    | ❌                   | ❌               | ✅                   |
-| TypeScript 1) | ✅     | ❌      | ❌   | ❌   | ❌                    | ❌                   | ❌               | ✅                   |
-| Webpack       | ❌ 4)  | ❓      | ❌   | ❓   | ❌ 2)                 | ✅                   | ✅               | ❓                   |
-| Parcel        | ✅     | ❌      | ✅   | ❌   | 🛠️ 3)               | ✅                   | ✅               | ❌ 5)                |
-| ESBuild       | ✅     | ✅      | ✅   | ❌   | ✅ 6)                 | ❓                   | ✅ 6)            | ✅                   |
-| Rollup        | ❓     | ❓      | ❓   | ❓   | ❓                    | ❓                   | ❓               | ❓                   |
+| Bundler       | *ESM* | *IIFE* | CJS | UMD | *WebWorker Inlining* | Web Worker Bundling | *WASM Bundling* | *Predictable Paths* | Inlining Environment Variables |
+|---------------|-------|--------|-----|-----|----------------------|---------------------|-----------------|---------------------|--------------------------------|
+| Babel 1)      | ✅     | ❌      | ❌   | ❌   | ❌                    | ❌                   | ❌               | ✅                   | ✅                              |
+| TypeScript 1) | ✅     | ❌      | ❌   | ❌   | ❌                    | ❌                   | ❌               | ✅                   | ❌                              |
+| Webpack       | ❌ 4)  | ❓      | ❌   | ❓   | ❌ 2)                 | ✅                   | ✅               | ❓                   | ✅                              |
+| Parcel        | ✅     | ❌      | ✅   | ❌   | 🛠️ 3)               | ✅                   | ✅               | ❌ 5)                | ✅                              |
+| ESBuild       | ✅     | ✅      | ✅   | ❌   | ✅ 6)                 | ❓                   | ✅ 6)            | ✅                   | ✅                              |
+| Rollup        | ❓     | ❓      | ❓   | ❓   | ❓                    | ❓                   | ❓               | ❓                   | ✅                              |
 
 Features in ***italic***s are required for maplibre-rs.
 
@@ -96,6 +90,20 @@ Features in ***italic***s are required for maplibre-rs.
 > 5) Plugins exist, but they don't work reliably
 > 6) Plugins exist, and work reliably
 
+### ESBuild
+
+ESBuild supports CJS, ESM and IIFI modules equally well. Plugins exist for WebWorker inlining and resolving assets
+through `import.meta.url`. The plugin quality seems to be superior compared to Parcel. It is also very fast compared to
+all other bundlers.
+
+* IIFI: The esbuild bundler translates to `new URL('index_bg.wasm', import.meta.url);` to
+  ```js
+  var __currentScriptUrl__ = document.currentScript && document.currentScript.src || document.baseURI;
+  new URL("./assets/index_bg.wasm?emit=file", __currentScriptUrl__);
+  ```
+
+See config in `web/lib/build.mjs` for an example usage.
+
 ### Babel & TypeScript
 
 Babel and TypeScript both can produce ESM modules, but they **fail with transforming references within the source code**
@@ -103,13 +111,16 @@ like `new URL("./pool.worker.ts", import.meta.url)`. There exist some Babel plug
 Therefore, we actually need a proper bundler which supports outputting ESM modules.
 The only stable solution to this is Parcel. Parcel also has good documentation around the bundling of WebWorkers.
 
-
 ### WebPack
 
-TODO
+WebPack supports older module formats like CommonJS or UMD very well. It falls short when bundling the format ESM
+format which is not yet stable. It also does not support inlining WebWorkers in version 5. The wasm-pack plugin
+for WebPack makes including Cargo projects easy.
 
+* CJS: Webpack translates `new URL('index_bg.wasm', import.meta.url);` to something that is equivalent to `'./index_bg.wasm'`
+  . It just expects that assets are resolvable from the current file.
 
-Example scripts:
+Example scripts for `package.json`:
 
 ```json
 {
@@ -156,8 +167,7 @@ module.exports = (env) => ({
                 use: [
                     {
                         loader: 'ts-loader',
-                        options: {
-                        }
+                        options: {}
                     }
                 ]
             },
@@ -219,9 +229,14 @@ module.exports = (env) => ({
 
 ### Parcel
 
-TODO
+Parcel supports CommonJS and ESM modules equally good. The documentation about `import.meta.url` is very good. In other
+bundlers documentations around this feature is missing. In the latest Parcel version inlining WebWorkers is not working.
 
-Example scripts:
+* CJS: The Parcel bundler translates to `new URL('index_bg.wasm', import.meta.url);`
+  to `new URL("index_bg.wasm", "file:" + __filename);`
+  While depending on `file:` and `filename` works for NodeJS, it is unsupported in the browser.
+
+Example scripts for `package.json`:
 
 ```json
 {
@@ -259,13 +274,6 @@ Example config in `package.json:
   }
 }
 ```
-
-
-### ESBuild
-
-TODO
-
-See config in `web/lib/build.mjs`.
 
 ### Rollup
 
