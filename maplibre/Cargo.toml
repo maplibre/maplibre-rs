@@ -11,23 +11,15 @@ readme = "../README.md"
 [features]
 web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web
-enable-tracing = [ "tracing-subscriber", "tracing-tracy", "tracy-client", "tracing-wasm"]
-default = []
+enable-tracing = [ "tracing-subscriber", "tracing-tracy", "tracy-client"]
+no-thread-safe-futures = []
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-console_error_panic_hook = "0.1"
 web-sys = { version = "0.3", features = [
-    "Window",
-    "Worker", "WorkerGlobalScope", "DedicatedWorkerGlobalScope", "MessageEvent",
-    "Request", "RequestInit", "RequestMode", "Response", "Headers",
-    "ErrorEvent"
+    "Window"
 ] }
-js-sys = "0.3"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
-console_log = { version = "0.2", features = ["color"] }
-tracing-wasm = { version = "0.2", optional = true } # FIXME: Low quality dependency
-instant = { version = "0.1", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android"))'.dependencies]
 tokio = { version = "1.17", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
@@ -47,6 +39,9 @@ reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"
 winit = { version = "0.26", default-features = false, features = ["x11", "wayland"] }
 
 [dependencies]
+async-trait = "0.1"
+instant = { version = "0.1", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
+
 winit = { version = "0.26", default-features = false }
 
 raw-window-handle = "0.4"

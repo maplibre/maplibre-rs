@@ -1,9 +1,12 @@
 use crate::error::Error;
+use crate::HTTPClient;
+use async_trait::async_trait;
 use reqwest::{Client, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use reqwest_middleware_cache::managers::CACacheManager;
 use reqwest_middleware_cache::{Cache, CacheMode};
 
+#[derive(Clone)]
 pub struct ReqwestHttpClient {
     client: ClientWithMiddleware,
 }
@@ -35,8 +38,11 @@ impl ReqwestHttpClient {
             client: builder.build(),
         }
     }
+}
 
-    pub async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
+#[async_trait]
+impl HTTPClient for ReqwestHttpClient {
+    async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
         let response = self.client.get(url).send().await?;
         match response.error_for_status() {
             Ok(response) => {

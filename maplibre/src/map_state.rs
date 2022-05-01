@@ -3,17 +3,18 @@ use crate::coords::{ViewRegion, WorldTileCoords, Zoom, TILE_SIZE};
 use crate::io::scheduler::Scheduler;
 
 use crate::render::camera;
-use crate::render::camera::{Camera, Perspective};
+use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::render::render_state::RenderState;
 use crate::util::ChangeObserver;
-use crate::{MapWindow, WindowSize};
+use crate::{MapWindow, ScheduleMethod, WindowSize};
 use std::collections::HashSet;
+use std::sync;
 use std::sync::{mpsc, Arc, Mutex};
 
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
 use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::io::source_client::{HTTPClient, HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TessellateMessage, TileRequest, TileTessellateMessage};
@@ -55,22 +56,25 @@ pub struct MapState<W: MapWindow, SM: ScheduleMethod, HC: HTTPClient> {
     view_state: ViewState,
 
     render_state: Option<RenderState>,
-    scheduler: Scheduler,
+    scheduler: Scheduler<SM>,
     message_receiver: mpsc::Receiver<TessellateMessage>,
     shared_thread_state: SharedThreadState,
     tile_cache: TileCache,
+
+    source_client: SourceClient<HC>,
 
     style: Style,
 
     try_failed: bool,
 }
 
-impl<W: MapWindow> MapState<W> {
+impl<W: MapWindow, SM: ScheduleMethod, HC: HTTPClient> MapState<W, SM, HC> {
     pub fn new(
         window: W,
         window_size: WindowSize,
         render_state: Option<RenderState>,
-        scheduler: Scheduler,
+        scheduler: Scheduler<SM>,
+        http_client: HC,
         style: Style,
     ) -> Self {
         let camera = camera::Camera::new(
@@ -114,6 +118,7 @@ impl<W: MapWindow> MapState<W> {
             style,
 
             try_failed: false,
+            source_client: SourceClient::Http(HttpSourceClient::new(http_client)),
         }
     }
 
@@ -183,9 +188,9 @@ impl<W: MapWindow> MapState<W> {
         let render_setup_span = tracing::span!(tracing::Level::TRACE, "setup view region");
         let _guard = render_setup_span.enter();
 
-        let visible_level = self.visible_level();
+        let visible_level = self.view_state.visible_level();
 
-        let view_proj = self.camera.calc_view_proj(&self.perspective);
+        let view_proj = self.view_state.view_projection();
 
         let view_region = self
             .view_state
@@ -256,7 +261,7 @@ impl<W: MapWindow> MapState<W> {
                     );
                 }*/
 
-                let client = SourceClient::Http(HttpSourceClient::new());
+                let client = self.source_client.clone();
                 let coords = *coords;
 
                 self.scheduler
@@ -285,13 +290,13 @@ impl<W: MapWindow> MapState<W> {
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.perspective.resize(width, height);
-        self.camera.resize(width, height);
+        self.view_state.perspective.resize(width, height);
+        self.view_state.camera.resize(width, height);
 
         self.render_state_mut().resize(width, height)
     }
 
-    pub fn scheduler(&self) -> &Scheduler {
+    pub fn scheduler(&self) -> &Scheduler<SM> {
         &self.scheduler
     }
 
@@ -326,7 +331,7 @@ impl<W: MapWindow> MapState<W> {
     }
 }
 
-impl<W: MapWindow> MapState<W>
+impl<W: MapWindow, SM: ScheduleMethod, HC: HTTPClient> MapState<W, SM, HC>
 where
     W: raw_window_handle::HasRawWindowHandle,
 {

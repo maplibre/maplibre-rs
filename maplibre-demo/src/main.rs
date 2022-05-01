@@ -1,5 +1,5 @@
 use maplibre::window::FromWindow;
-use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
+use maplibre::{MapBuilder, ReqwestHttpClient, ScheduleMethod, TokioScheduleMethod};
 
 #[cfg(feature = "enable-tracing")]
 fn enable_tracing() {
@@ -18,7 +18,8 @@ fn main() {
     enable_tracing();
 
     MapBuilder::from_window("A fantastic window!")
-        .with_schedule_method(ScheduleMethod::Tokio(TokioScheduleMethod::new()))
+        .with_http_client(ReqwestHttpClient::new(None))
+        .with_schedule_method(TokioScheduleMethod::new())
         .build()
         .run_sync();
 }
