@@ -24,12 +24,35 @@ pub trait Runnable<E> {
     fn run(self, event_loop: E, max_frames: Option<u64>);
 }
 
-pub struct MapState<W: MapWindow> {
+pub struct ViewState {
+    zoom: ChangeObserver<Zoom>,
+    pub camera: ChangeObserver<Camera>,
+    pub perspective: Perspective,
+}
+
+impl ViewState {
+    pub fn view_projection(&self) -> ViewProjection {
+        self.camera.calc_view_proj(&self.perspective)
+    }
+
+    pub fn visible_level(&self) -> u8 {
+        self.zoom.level()
+    }
+
+    pub fn zoom(&self) -> Zoom {
+        *self.zoom
+    }
+
+    pub fn update_zoom(&mut self, new_zoom: Zoom) {
+        *self.zoom = new_zoom;
+        log::info!("zoom: {}", new_zoom);
+    }
+}
+
+pub struct MapState<W: MapWindow, SM: ScheduleMethod, HC: HTTPClient> {
     window: W,
 
-    zoom: ChangeObserver<Zoom>,
-    camera: ChangeObserver<Camera>,
-    perspective: Perspective,
+    view_state: ViewState,
 
     render_state: Option<RenderState>,
     scheduler: Scheduler,
@@ -71,9 +94,11 @@ impl<W: MapWindow> MapState<W> {
         Self {
             window,
 
-            zoom: ChangeObserver::default(),
-            camera: ChangeObserver::new(camera),
-            perspective,
+            view_state: ViewState {
+                zoom: ChangeObserver::default(),
+                camera: ChangeObserver::new(camera),
+                perspective,
+            },
 
             render_state,
             scheduler,
@@ -163,9 +188,12 @@ impl<W: MapWindow> MapState<W> {
         let view_proj = self.camera.calc_view_proj(&self.perspective);
 
         let view_region = self
+            .view_state
             .camera
             .view_region_bounding_box(&view_proj.invert())
-            .map(|bounding_box| ViewRegion::new(bounding_box, 0, *self.zoom, visible_level));
+            .map(|bounding_box| {
+                ViewRegion::new(bounding_box, 0, *self.view_state.zoom, visible_level)
+            });
 
         drop(_guard);
 
@@ -175,7 +203,7 @@ impl<W: MapWindow> MapState<W> {
                 .expect("render state not yet initialized. Call reinitialize().")
                 .upload_tile_geometry(view_region, &self.style, &self.tile_cache);
 
-            let zoom = self.zoom();
+            let zoom = self.view_state.zoom();
             self.render_state_mut()
                 .update_tile_view_pattern(view_region, &view_proj, zoom);
 
@@ -185,17 +213,21 @@ impl<W: MapWindow> MapState<W> {
         // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
         // TODO: What is StagingBelt for?
 
-        if self.camera.did_change(0.05) || self.zoom.did_change(0.05) || self.try_failed {
+        if self.view_state.camera.did_change(0.05)
+            || self.view_state.zoom.did_change(0.05)
+            || self.try_failed
+        {
             if let Some(view_region) = &view_region {
                 // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
                 self.try_failed = self.request_tiles_in_view(view_region);
             }
 
-            self.render_state().update_globals(&view_proj, &self.camera);
+            self.render_state()
+                .update_globals(&view_proj, &self.view_state.camera);
         }
 
-        self.camera.update_reference();
-        self.zoom.update_reference();
+        self.view_state.camera.update_reference();
+        self.view_state.zoom.update_reference();
     }
 
     fn try_request_tile(
@@ -267,30 +299,6 @@ impl<W: MapWindow> MapState<W> {
         &self.window
     }
 
-    pub fn camera(&self) -> &Camera {
-        &self.camera
-    }
-
-    pub fn camera_mut(&mut self) -> &mut Camera {
-        &mut self.camera
-    }
-
-    pub fn perspective(&self) -> &Perspective {
-        &self.perspective
-    }
-
-    pub fn zoom(&self) -> Zoom {
-        *self.zoom
-    }
-    pub fn visible_level(&self) -> u8 {
-        self.zoom.level()
-    }
-
-    pub fn update_zoom(&mut self, new_zoom: Zoom) {
-        *self.zoom = new_zoom;
-        log::info!("zoom: {}", new_zoom);
-    }
-
     pub fn suspend(&mut self) {
         self.render_state_mut().suspend();
     }
@@ -307,6 +315,14 @@ impl<W: MapWindow> MapState<W> {
 
     pub fn render_state_mut(&mut self) -> &'_ mut RenderState {
         self.render_state.as_mut().unwrap()
+    }
+
+    pub fn view_state(&self) -> &ViewState {
+        &self.view_state
+    }
+
+    pub fn view_state_mut(&mut self) -> &mut ViewState {
+        &mut self.view_state
     }
 }
 

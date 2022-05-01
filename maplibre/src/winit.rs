@@ -85,7 +85,7 @@ impl Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Wind
                     let dt = now - last_render_time;
                     last_render_time = now;
 
-                    input_controller.update_state(&mut self, dt);
+                    input_controller.update_state(self.view_state_mut(), dt);
 
                     match self.update_and_redraw() {
                         Ok(_) => {}
