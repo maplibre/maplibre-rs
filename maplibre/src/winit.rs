@@ -184,15 +184,7 @@ impl crate::window::FromCanvas
 
             let size = get_body_size().unwrap();
             window.set_inner_size(size);
-            (
-                window,
-                WindowSize::new(
-                    size.width.try_into().unwrap(),
-                    size.height.try_into().unwrap(),
-                )
-                .unwrap(),
-                event_loop,
-            )
+            (window, event_loop)
         }))
     }
 }
