@@ -2,7 +2,7 @@ use jni::objects::JClass;
 use jni::JNIEnv;
 use log::Level;
 use maplibre::window::FromWindow;
-use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
+use maplibre::{MapBuilder, ReqwestHttpClient, ScheduleMethod, TokioScheduleMethod};
 use std::ffi::CString;
 pub use std::time::Instant;
 
@@ -14,7 +14,8 @@ pub fn android_main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
     MapBuilder::from_window("A fantastic window!")
-        .with_schedule_method(ScheduleMethod::Tokio(TokioScheduleMethod::new()))
+        .with_http_client(ReqwestHttpClient::new(None))
+        .with_schedule_method(TokioScheduleMethod::new())
         .build()
         .run_sync();
 }
