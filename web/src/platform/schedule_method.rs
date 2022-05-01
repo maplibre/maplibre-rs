@@ -1,19 +1,13 @@
 use std::future::Future;
-use std::thread::Thread;
 
-use js_sys::{ArrayBuffer, Error as JSError, Uint8Array};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::Worker;
-use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
 
-use maplibre::coords::{TileCoords, WorldTileCoords};
+use web_sys::Worker;
+
 use maplibre::error::Error;
-use maplibre::io::scheduler::{ScheduleMethod, Scheduler};
+use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::shared_thread_state::SharedThreadState;
-use maplibre::io::tile_cache::TileCache;
-use maplibre::io::TileRequestID;
 
 use super::pool::WorkerPool;
 

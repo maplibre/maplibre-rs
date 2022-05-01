@@ -1,17 +1,12 @@
 use crate::platform::http_client::WHATWGFetchHttpClient;
 use crate::platform::schedule_method::WebWorkerPoolScheduleMethod;
-use console_error_panic_hook;
-use maplibre::io::scheduler::ScheduleMethod;
+
 use maplibre::io::scheduler::Scheduler;
-use maplibre::style::source::TileAddressingScheme;
+
 use maplibre::window::FromCanvas;
 use maplibre::MapBuilder;
 use std::panic;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use web_sys::Window as WebSysWindow;
-use web_sys::Worker;
 
 mod error;
 mod platform;
@@ -35,7 +30,7 @@ fn enable_tracing() {
 
 #[wasm_bindgen(start)]
 pub fn wasm_bindgen_start() {
-    if let Err(_) = console_log::init_with_level(log::Level::Info) {
+    if console_log::init_with_level(log::Level::Info).is_err() {
         // Failed to initialize logging. No need to log a message.
     }
     panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -49,8 +44,8 @@ pub fn create_pool_scheduler(
     new_worker: js_sys::Function,
 ) -> *mut Scheduler<WebWorkerPoolScheduleMethod> {
     let scheduler = Box::new(Scheduler::new(WebWorkerPoolScheduleMethod::new(new_worker)));
-    let scheduler_ptr = Box::into_raw(scheduler);
-    return scheduler_ptr;
+
+    Box::into_raw(scheduler)
 }
 
 #[wasm_bindgen]

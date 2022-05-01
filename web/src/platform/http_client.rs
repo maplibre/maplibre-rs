@@ -1,22 +1,15 @@
-use std::thread::Thread;
-
 use js_sys::{ArrayBuffer, Error as JSError, Uint8Array};
 use maplibre::io::source_client::HTTPClient;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::Worker;
-use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
+
+use web_sys::{Request, RequestInit, Response, WorkerGlobalScope};
 
 use crate::error::WebError;
 use async_trait::async_trait;
-use maplibre::coords::{TileCoords, WorldTileCoords};
-use maplibre::error::Error;
-use maplibre::io::scheduler::{ScheduleMethod, Scheduler};
-use maplibre::io::tile_cache::TileCache;
-use maplibre::io::TileRequestID;
 
-use super::pool::WorkerPool;
+use maplibre::error::Error;
 
 pub struct WHATWGFetchHttpClient {}
 
@@ -37,7 +30,7 @@ impl WHATWGFetchHttpClient {
         let mut opts = RequestInit::new();
         opts.method("GET");
 
-        let request = Request::new_with_str_and_init(&url, &opts)?;
+        let request = Request::new_with_str_and_init(url, &opts)?;
 
         // Get the global scope
         let global = js_sys::global();
@@ -80,6 +73,6 @@ impl HTTPClient for WHATWGFetchHttpClient {
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
         self.fetch(url)
             .await
-            .map_err(|e| Error::Network("web error".to_string()))
+            .map_err(|_e| Error::Network("web error".to_string()))
     }
 }

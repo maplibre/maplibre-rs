@@ -1,27 +1,13 @@
-use std::panic;
-use std::thread::Thread;
-
 use super::schedule_method::WebWorkerPoolScheduleMethod;
-use console_error_panic_hook;
-use js_sys::{ArrayBuffer, Error as JSError, Uint8Array};
-use maplibre::style::source::TileAddressingScheme;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::Window as WebSysWindow;
-use web_sys::Worker;
-use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
 
-use maplibre::coords::{TileCoords, WorldTileCoords};
-use maplibre::error::Error;
-use maplibre::io::scheduler::ScheduleMethod;
+use wasm_bindgen::prelude::*;
+
+use maplibre::coords::TileCoords;
+
 use maplibre::io::scheduler::Scheduler;
 use maplibre::io::shared_thread_state::SharedThreadState;
-use maplibre::io::tile_cache::TileCache;
-use maplibre::io::TileRequestID;
-use maplibre::MapBuilder;
 
-use super::pool::WorkerPool;
+use maplibre::io::TileRequestID;
 
 #[wasm_bindgen]
 extern "C" {
@@ -40,8 +26,8 @@ pub fn new_thread_local_state(scheduler_ptr: *mut Scheduler) -> *mut SharedThrea
 }*/
 
 #[wasm_bindgen]
-pub fn new_thread_local_state(scheduler_ptr: *mut Scheduler<WebWorkerPoolScheduleMethod>) -> u32 {
-    return 0;
+pub fn new_thread_local_state(_scheduler_ptr: *mut Scheduler<WebWorkerPoolScheduleMethod>) -> u32 {
+    0
 }
 
 #[wasm_bindgen]
