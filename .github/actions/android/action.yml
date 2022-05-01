@@ -12,9 +12,15 @@ runs:
     - name: Build
       shell: bash
       run: just build-android
-#    - name: Check x86_64
-#      shell: bash
-#      run: just check maplibre-android x86_64-linux-android
-#    - name: Check aarch64
-#      shell: bash
-#      run: just check maplibre-android aarch64-linux-android
+    - name: Check x86_64
+      shell: bash
+      run: |
+        export AR_x86_64-linux-android="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        export CC_x86_64-linux-android="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang"
+        just check maplibre-android x86_64-linux-android
+    - name: Check aarch64
+      shell: bash
+      run: |
+        export AR_aarch64-linux-android="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        export CC_aarch64-linux-android="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang"
+        just check maplibre-android aarch64-linux-android
