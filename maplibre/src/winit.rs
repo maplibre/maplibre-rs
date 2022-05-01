@@ -13,7 +13,14 @@ use crate::map_state::{MapState, Runnable};
 use crate::platform::Instant;
 
 use crate::window::FromWindow;
-use crate::{MapBuilder, WindowSize};
+use crate::{MapBuilder, MapWindow, WindowSize};
+
+impl MapWindow for winit::window::Window {
+    fn size(&self) -> Option<WindowSize> {
+        let size = self.inner_size();
+        WindowSize::new(size.width, size.height)
+    }
+}
 
 impl Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Window> {
     fn run(mut self, event_loop: winit::event_loop::EventLoop<()>, max_frames: Option<u64>) {
@@ -132,8 +139,7 @@ impl FromWindow for MapBuilder<winit::window::Window, winit::event_loop::EventLo
                 .with_title(title)
                 .build(&event_loop)
                 .unwrap();
-            let size = window.inner_size();
-            (window, WindowSize::new(100, 100).unwrap(), event_loop)
+            (window, event_loop)
         }))
     }
 }

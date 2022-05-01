@@ -12,6 +12,7 @@ use crate::input::shift_handler::ShiftHandler;
 use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
 use crate::map_state::MapState;
+use crate::MapWindow;
 
 mod pan_handler;
 mod pinch_handler;
@@ -124,12 +125,12 @@ impl InputController {
 }
 
 pub trait UpdateState {
-    fn update_state<W>(&mut self, state: &mut MapState<W>, dt: Duration);
+    fn update_state<W: MapWindow>(&mut self, state: &mut MapState<W>, dt: Duration);
 }
 
 impl UpdateState for InputController {
     #[tracing::instrument(skip_all)]
-    fn update_state<W>(&mut self, state: &mut MapState<W>, dt: Duration) {
+    fn update_state<W: MapWindow>(&mut self, state: &mut MapState<W>, dt: Duration) {
         self.pan_handler.update_state(state, dt);
         self.pinch_handler.update_state(state, dt);
         self.zoom_handler.update_state(state, dt);

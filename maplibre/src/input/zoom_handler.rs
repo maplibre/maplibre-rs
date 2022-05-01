@@ -3,6 +3,7 @@ use super::UpdateState;
 use crate::coords::Zoom;
 use crate::map_state::MapState;
 
+use crate::MapWindow;
 use cgmath::{Vector2, Vector3};
 use std::time::Duration;
 
@@ -13,7 +14,7 @@ pub struct ZoomHandler {
 }
 
 impl UpdateState for ZoomHandler {
-    fn update_state<W>(&mut self, state: &mut MapState<W>, _dt: Duration) {
+    fn update_state<W: MapWindow>(&mut self, state: &mut MapState<W>, _dt: Duration) {
         if let Some(zoom_delta) = self.zoom_delta {
             if let Some(window_position) = self.window_position {
                 let current_zoom = state.zoom();

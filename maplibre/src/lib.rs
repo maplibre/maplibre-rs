@@ -25,12 +25,16 @@ use crate::window::{WindowFactory, WindowSize};
 pub use io::scheduler::ScheduleMethod;
 pub use platform::schedule_method::*;
 
-pub struct Map<W, E> {
+pub trait MapWindow {
+    fn size(&self) -> Option<WindowSize>;
+}
+
+pub struct Map<W: MapWindow, E> {
     map_state: MapState<W>,
     event_loop: E,
 }
 
-impl<W, E> Map<W, E>
+impl<W: MapWindow, E> Map<W, E>
 where
     MapState<W>: Runnable<E>,
 {
@@ -49,7 +53,6 @@ where
 
 pub struct UninitializedMap<W, E> {
     window: W,
-    window_size: WindowSize,
     event_loop: E,
     scheduler: Scheduler,
     style: Style,
@@ -57,14 +60,25 @@ pub struct UninitializedMap<W, E> {
 
 impl<W, E> UninitializedMap<W, E>
 where
-    W: raw_window_handle::HasRawWindowHandle,
+    W: MapWindow + raw_window_handle::HasRawWindowHandle,
 {
     pub async fn initialize(self) -> Map<W, E> {
-        let render_state = RenderState::initialize(&self.window, self.window_size).await;
+        #[cfg(target_os = "android")]
+        // On android we can not get the dimensions of the window initially. Therefore, we use a
+        // fallback until the window is ready to deliver its correct bounds.
+        let window_size = self.window.size().unwrap_or_default();
+
+        #[cfg(not(target_os = "android"))]
+        let window_size = self
+            .window
+            .size()
+            .expect("failed to get window dimensions.");
+
+        let render_state = RenderState::initialize(&self.window, window_size).await;
         Map {
             map_state: MapState::new(
                 self.window,
-                self.window_size,
+                window_size,
                 render_state,
                 self.scheduler,
                 self.style,
@@ -77,7 +91,7 @@ where
 #[cfg(not(target_arch = "wasm32"))]
 impl<W, E> UninitializedMap<W, E>
 where
-    W: raw_window_handle::HasRawWindowHandle,
+    W: MapWindow + raw_window_handle::HasRawWindowHandle,
     MapState<W>: Runnable<E>,
 {
     pub fn run_sync(self) {
@@ -117,7 +131,7 @@ pub struct MapBuilder<W, E> {
 impl<W, E> MapBuilder<W, E>
 where
     MapState<W>: Runnable<E>,
-    W: raw_window_handle::HasRawWindowHandle,
+    W: MapWindow + raw_window_handle::HasRawWindowHandle,
 {
     pub(crate) fn new(create_window: Box<WindowFactory<W, E>>) -> Self {
         Self {
@@ -144,7 +158,7 @@ where
     }
 
     pub fn build(self) -> UninitializedMap<W, E> {
-        let (window, window_size, event_loop) = (self.window_factory)();
+        let (window, event_loop) = (self.window_factory)();
 
         let scheduler = self
             .scheduler
@@ -153,7 +167,6 @@ where
 
         UninitializedMap {
             window,
-            window_size,
             event_loop,
             scheduler,
             style,

@@ -6,7 +6,7 @@ use crate::render::camera;
 use crate::render::camera::{Camera, Perspective};
 use crate::render::render_state::RenderState;
 use crate::util::ChangeObserver;
-use crate::WindowSize;
+use crate::{MapWindow, WindowSize};
 use std::collections::HashSet;
 use std::sync::{mpsc, Arc, Mutex};
 
@@ -24,12 +24,12 @@ pub trait Runnable<E> {
     fn run(self, event_loop: E, max_frames: Option<u64>);
 }
 
-pub struct MapState<W> {
+pub struct MapState<W: MapWindow> {
     window: W,
 
     zoom: ChangeObserver<Zoom>,
-    camera: ChangeObserver<camera::Camera>,
-    perspective: camera::Perspective,
+    camera: ChangeObserver<Camera>,
+    perspective: Perspective,
 
     render_state: Option<RenderState>,
     scheduler: Scheduler,
@@ -42,7 +42,7 @@ pub struct MapState<W> {
     try_failed: bool,
 }
 
-impl<W> MapState<W> {
+impl<W: MapWindow> MapState<W> {
     pub fn new(
         window: W,
         window_size: WindowSize,
@@ -310,7 +310,7 @@ impl<W> MapState<W> {
     }
 }
 
-impl<W> MapState<W>
+impl<W: MapWindow> MapState<W>
 where
     W: raw_window_handle::HasRawWindowHandle,
 {
@@ -327,9 +327,14 @@ where
 
     pub async fn reinitialize(&mut self) {
         if self.render_state.is_none() {
-            let window_size = WindowSize::new(100, 100).unwrap(); // TODO get size
-            let render_state = RenderState::initialize(&self.window, window_size);
-            self.render_state = Some(render_state.await.unwrap())
+            let window_size = self
+                .window
+                .size()
+                .expect("Window size should be known when reinitializing.");
+            let render_state = RenderState::initialize(&self.window, window_size)
+                .await
+                .unwrap();
+            self.render_state = Some(render_state)
         }
     }
 }
