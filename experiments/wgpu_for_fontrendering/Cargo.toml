@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "wgpu_for_fontrendering"
 version = "0.1.0"
@@ -19,5 +17,5 @@ pollster = "0.2.5"
 bytemuck = { version = "1.4", features = [ "derive" ] }
 cgmath = "0.18"
 owned_ttf_parser = "0.15.0"
-rustybuzz = "*"
-rand = "*"
+rustybuzz = "0.5"
+rand = "0.8"

@@ -12,10 +12,8 @@ members = [
     "web",
 
     "benchmarks",
-]
 
-exclude = [
-    "experiments"
+    "experiments/wgpu_for_fontrendering"
 ]
 
 [profile.release]
