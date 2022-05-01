@@ -1,6 +1,6 @@
 use crate::text_system::geom::{Mesh, Meshable, Vertex};
-use owned_ttf_parser as ttf;
 use std::fmt::Write;
+use ttf_parser as ttf;
 
 pub struct SVGBuilder(pub String);
 

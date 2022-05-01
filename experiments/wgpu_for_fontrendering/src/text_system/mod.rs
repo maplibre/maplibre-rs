@@ -4,11 +4,11 @@ mod texture;
 
 use geom::{Mesh, Meshable, Quad, Vertex};
 use glyph_tesselation::GlyphBuilder;
-use owned_ttf_parser as ttf;
+use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 use std::io::Error;
 use std::mem;
-use ttf::AsFaceRef;
+use ttf_parser as ttf;
 use wgpu::util::DeviceExt;
 
 use crate::rendering::{Renderable, State};
@@ -58,7 +58,7 @@ impl GlyphInstances {
 
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
         wgpu::VertexBufferLayout {
-            array_stride: mem::size_of::<GlyphInstances>() as wgpu::BufferAddress,
+            array_stride: mem::size_of::<GlyphInstanceAttributes>() as wgpu::BufferAddress,
             // We need to switch from using a step mode of Vertex to Instance
             // This means that our shaders will only change to use the next
             // instance when the shader starts processing a new instance
@@ -101,7 +101,7 @@ impl GlyphInstances {
         self.attributes.push(glyph_attributes);
     }
 
-    fn buffer(&mut self, device: &wgpu::Device) -> wgpu::Buffer {
+    fn compute_buffer(&mut self, device: &wgpu::Device) {
         self.buffer = Some(
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Instance Buffer"),
@@ -109,8 +109,6 @@ impl GlyphInstances {
                 usage: wgpu::BufferUsages::VERTEX,
             }),
         );
-
-        self.buffer.unwrap()
     }
 
     fn num_instances(&self) -> u32 {
@@ -121,7 +119,7 @@ impl GlyphInstances {
 impl TextEntity {
     fn new(
         text: &str,
-        face: &rustybuzz::Face,
+        face: rustybuzz::Face,
         position: cgmath::Vector3<f32>,
         rotation: cgmath::Quaternion<f32>,
         color: cgmath::Vector3<f32>,
@@ -132,7 +130,7 @@ impl TextEntity {
 
         TextEntity {
             text: String::from(text),
-            shaping_info: rustybuzz::shape(face, &[], buffer),
+            shaping_info: rustybuzz::shape(&face, &[], buffer),
             position,
             rotation,
             color,
@@ -146,7 +144,7 @@ pub type FontID = String;
 pub struct Font {
     pub font_name: FontID,
     pub font_file_path: String,
-    font_face: ttf::OwnedFace,
+    font_data: Vec<u8>,
 }
 
 impl Font {
@@ -159,46 +157,39 @@ impl Font {
         }
 
         let font_data = font_data_res.unwrap();
-        let font_face_res = ttf::OwnedFace::from_vec(font_data, 0);
-
-        if font_face_res.is_err() {
-            return Err(TextSystemError::FontNotLoaded("Problem creating font face"));
-        }
-
-        let font_face = font_face_res.unwrap();
 
         Ok(Self {
             font_name,
             font_file_path,
-            font_face,
+            font_data,
         })
     }
 
-    pub fn get_face_ref(&self) -> &rustybuzz::Face {
-        unsafe {
-            let face_ref: &rustybuzz::Face = mem::transmute(self.font_face.as_face_ref());
-            return face_ref;
-        }
+    pub fn get_face(&self) -> rustybuzz::Face {
+        // TODO: try using "owningFace" instead and return ref, so we don't recomput the face every time!
+        rustybuzz::Face::from_slice(&self.font_data, 0).unwrap()
     }
+}
+
+struct GlyphRenderData {
+    mesh: Mesh,
+    instances: GlyphInstances,
 }
 
 // System that takes care of rendering the text
 // Offers a simple interface to add / transform / remove bits of text and then render them to the screen
 // TODO: cleaner separation of rendering algorithm and text system management (i.e. -> interface that supplies mesh representation and shaders + some factory)
 // TODO: This will likely not perform well with very dynamic text (i.e. lots of movement / appearing / vanishing of labels on the map, ...)
-pub struct SceneTextSystem<'a> {
+pub struct SceneTextSystem {
     // The loaded fonts
     fonts: HashMap<FontID, Font>,
     // Cache for triangulated glyphs (vertices are in font coordinate system -> relatively large numbers)
-    glyph_mesh_cache: HashMap<ttf::GlyphId, Mesh>,
-    // Information (transform, color, ...) for each instance of a glyph in the scene
-    glyph_instance_map: HashMap<ttf::GlyphId, GlyphInstances>,
+    glyph_mesh_cache: HashMap<ttf::GlyphId, GlyphRenderData>,
     // All texts in the scene
     text_entities: HashMap<TextEntityID, TextEntity>,
     // Internal counter to assign a unique ID to each text in the scene
     next_text_entity_id: TextEntityID,
     // ######### Rendering related stuff #########################################################
-    rendering_state: &'a State,
     prepass_target_texture: texture::Texture,
     prepass_target_texture_bind_group: wgpu::BindGroup,
     prepass_pipeline: wgpu::RenderPipeline,
@@ -206,8 +197,8 @@ pub struct SceneTextSystem<'a> {
     full_screen_quad: Mesh,
 }
 
-impl<'a> SceneTextSystem<'a> {
-    pub fn new(rendering_state: &'a State) -> Result<Self, Error> {
+impl SceneTextSystem {
+    pub fn new(rendering_state: &State) -> Result<Self, Error> {
         let prepass_target_texture = texture::Texture::empty(
             &rendering_state.device,
             rendering_state.config.width,
@@ -386,10 +377,8 @@ impl<'a> SceneTextSystem<'a> {
         let full_screen_quad = quad.as_mesh(&rendering_state.device);
 
         Ok(Self {
-            rendering_state,
             fonts: HashMap::new(),
             glyph_mesh_cache: HashMap::new(),
-            glyph_instance_map: HashMap::new(),
             text_entities: HashMap::new(),
             next_text_entity_id: 0,
             prepass_target_texture,
@@ -408,6 +397,7 @@ impl<'a> SceneTextSystem<'a> {
 
     pub fn add_text_to_scene(
         &mut self,
+        rendering_state: &State,
         text: &str,
         base_position: cgmath::Vector3<f32>,
         rotation: cgmath::Quaternion<f32>,
@@ -429,14 +419,7 @@ impl<'a> SceneTextSystem<'a> {
 
         self.text_entities.insert(
             new_text_id,
-            TextEntity::new(
-                text,
-                font.get_face_ref(),
-                base_position,
-                rotation,
-                color,
-                size,
-            ),
+            TextEntity::new(text, font.get_face(), base_position, rotation, color, size),
         );
         let text_entity = self.text_entities.get(&new_text_id).unwrap(); // This MUST be present, as it was added in the line above.
 
@@ -449,52 +432,58 @@ impl<'a> SceneTextSystem<'a> {
         for (info, pos) in infos.iter().zip(posistions) {
             let glyph_id = ttf::GlyphId(info.glyph_id.try_into().unwrap()); // ttfparser for some reason wants a u16 ?!
 
+            let mut inserted = true;
+
             // Create and add glyph mesh to cache if not present
             if !self.glyph_mesh_cache.contains_key(&glyph_id) {
                 let mut glyph_builder = GlyphBuilder::new();
-                if let Some(bbox) = font
-                    .get_face_ref()
-                    .outline_glyph(glyph_id, &mut glyph_builder)
-                {
+                if let Some(bbox) = font.get_face().outline_glyph(glyph_id, &mut glyph_builder) {
                     glyph_builder.finalize(&bbox);
                     self.glyph_mesh_cache.insert(
                         glyph_id,
-                        glyph_builder.as_mesh(&self.rendering_state.device),
+                        GlyphRenderData {
+                            mesh: glyph_builder.as_mesh(&rendering_state.device),
+                            instances: GlyphInstances::new(),
+                        },
                     );
                 } else {
-                    return Err(TextSystemError::GlyphNotSupported("Glyph not supported!"));
+                    // now new mesh -> we don't need and instance infos for it!
+                    inserted = false;
+                    // TODO: most likely: white space? -> detect that so we can detect actual errors here
+                    // return Err(TextSystemError::GlyphNotSupported("Glyph not supported!"));
                 }
             }
 
-            // Construct instance by passing the attributes. Currently only the position changes for each letter.
-            // TODO: support different styles for each letter in a text entity
-            let glyph_instances: &mut GlyphInstances = self
-                .glyph_instance_map
-                .entry(glyph_id)
-                .or_insert(GlyphInstances::new());
-
-            // we don't scale text in the z-direction as it is a 2-D flat object positioned in 3-D
-            glyph_instances.add(
-                new_text_id,
-                GlyphInstanceAttributes {
-                    transform: (cgmath::Matrix4::from_translation(glyph_offset)
-                        * cgmath::Matrix4::from_nonuniform_scale(size, size, 1.0)
-                        * cgmath::Matrix4::from(rotation))
-                    .into(),
-                    color: color.into(),
-                },
-            );
+            if inserted {
+                // Construct instance by passing the attributes. Currently only the position changes for each letter.
+                // TODO: support different styles for each letter in a text entity
+                let glyph_render_data: &mut GlyphRenderData =
+                    self.glyph_mesh_cache.get_mut(&glyph_id).unwrap();
+                // we don't scale text in the z-direction as it is a 2-D flat object positioned in 3-D
+                let glyph_instances: &mut GlyphInstances = &mut glyph_render_data.instances;
+                glyph_instances.add(
+                    new_text_id,
+                    GlyphInstanceAttributes {
+                        transform: (cgmath::Matrix4::from_translation(glyph_offset)
+                            * cgmath::Matrix4::from_nonuniform_scale(size, size, 1.0)
+                            * cgmath::Matrix4::from(rotation))
+                        .into(),
+                        color: color.into(),
+                    },
+                );
+            }
 
             // Move offset to position of next letter in the text
-            let x_advance = pos.x_advance as f32;
-            let y_advance = pos.y_advance as f32;
+            // Apply scaling because advances are in the fonts local coordinate system
+            let x_advance = pos.x_advance as f32 * size;
+            let y_advance = pos.y_advance as f32 * size;
             glyph_offset += cgmath::Vector3::new(x_advance, y_advance, 0.0);
         }
         self.next_text_entity_id += 1;
         Ok(())
     }
 
-    fn render_prepass(&mut self, encoder: &mut wgpu::CommandEncoder) {
+    fn render_prepass(&mut self, encoder: &mut wgpu::CommandEncoder, rendering_state: &State) {
         // Draw all the meshes into the target texture
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -516,7 +505,7 @@ impl<'a> SceneTextSystem<'a> {
         });
 
         render_pass.set_pipeline(&self.prepass_pipeline);
-        render_pass.set_bind_group(0, &self.rendering_state.camera_bind_group, &[]);
+        render_pass.set_bind_group(0, &rendering_state.camera_bind_group, &[]);
 
         // TODO: render each glyph instanced (create instance buffers anew, because text in the scene in its positions might have changed!)
         /*
@@ -528,21 +517,29 @@ impl<'a> SceneTextSystem<'a> {
         }
         */
 
-        for (glyph_id, mesh) in self.glyph_mesh_cache {
-            let instances_info = self.glyph_instance_map.get(&glyph_id).unwrap();
-            render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+        for (_, glyph_render_data) in &mut self.glyph_mesh_cache {
+            render_pass.set_vertex_buffer(0, glyph_render_data.mesh.vertex_buffer.slice(..));
+            glyph_render_data
+                .instances
+                .compute_buffer(&rendering_state.device);
             render_pass.set_vertex_buffer(
                 1,
-                instances_info
-                    .buffer(&self.rendering_state.device)
+                glyph_render_data
+                    .instances
+                    .buffer
+                    .as_ref()
+                    .unwrap()
                     .slice(..),
             );
 
-            render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.set_index_buffer(
+                glyph_render_data.mesh.index_buffer.slice(..),
+                wgpu::IndexFormat::Uint16,
+            );
             render_pass.draw_indexed(
-                0..(mesh.num_indices as u32),
+                0..(glyph_render_data.mesh.num_indices as u32),
                 0,
-                0..instances_info.num_instances(),
+                0..glyph_render_data.instances.num_instances(),
             );
         }
     }
@@ -550,8 +547,9 @@ impl<'a> SceneTextSystem<'a> {
     fn render_mainpass(
         &mut self,
         encoder: &mut wgpu::CommandEncoder,
+        rendering_state: &State,
     ) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError> {
-        let output = self.rendering_state.surface.get_current_texture()?;
+        let output = rendering_state.surface.get_current_texture()?;
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -575,7 +573,7 @@ impl<'a> SceneTextSystem<'a> {
         });
 
         render_pass.set_pipeline(&self.main_pipeline);
-        render_pass.set_bind_group(0, &self.rendering_state.camera_bind_group, &[]);
+        render_pass.set_bind_group(0, &rendering_state.camera_bind_group, &[]);
         render_pass.set_bind_group(1, &self.prepass_target_texture_bind_group, &[]);
 
         let mesh = &self.full_screen_quad;
@@ -588,23 +586,26 @@ impl<'a> SceneTextSystem<'a> {
     }
 }
 
-impl Renderable for SceneTextSystem<'_> {
-    fn render(&mut self) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError> {
+impl Renderable for SceneTextSystem {
+    fn render(
+        &mut self,
+        rendering_state: &State,
+    ) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError> {
         let mut encoder =
-            self.rendering_state
+            rendering_state
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                     label: Some("Render Encoder"),
                 });
 
         // Prepass to fill in the glyph meshes into the texture
-        self.render_prepass(&mut encoder);
+        self.render_prepass(&mut encoder, rendering_state);
 
         // Actual pass to flip the pixels (and compute anti-aliasing?)
-        let output = self.render_mainpass(&mut encoder)?;
+        let output = self.render_mainpass(&mut encoder, rendering_state)?;
 
         // submit will accept anything that implements IntoIter
-        self.rendering_state
+        rendering_state
             .queue
             .submit(std::iter::once(encoder.finish()));
         Ok(output)

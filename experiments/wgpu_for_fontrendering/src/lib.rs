@@ -1,6 +1,7 @@
 mod rendering;
 mod text_system;
 
+use cgmath::One;
 use cgmath::Quaternion;
 use rand::Rng;
 use std::time::{Duration, Instant};
@@ -35,13 +36,14 @@ pub async fn run() {
         let step_y = 0.15;
         let z_jitter: f32 = 1.0;
 
-        let limit = 5;
+        let limit = 30;
 
         let mut rng = rand::thread_rng();
 
         let title = format!("{} individual glyphs", (2 * limit) * (2 * limit) * 4);
 
         if let Err(_) = text_system.add_text_to_scene(
+            &state,
             &title,
             (-0.8, (limit + 2) as f32 * step_y, 0.0).into(),
             Quaternion::new(0.0, 0.0, 0.0, 0.0),
@@ -62,6 +64,7 @@ pub async fn run() {
                 let z = rng.gen_range(-z_jitter..z_jitter);
 
                 if let Err(_) = text_system.add_text_to_scene(
+                    &state,
                     &text,
                     (i as f32 * step_x, j as f32 * step_y, z).into(),
                     Quaternion::new(0.0, 0.0, 0.0, 0.0),
@@ -104,7 +107,7 @@ pub async fn run() {
                 Event::RedrawRequested(window_id) if window_id == window.id() => {
                     state.update();
                     let now = Instant::now();
-                    match rendering::State::render(&text_system) {
+                    match state.render(&mut text_system) {
                         Ok(_) => {}
                         // Reconfigure the surface if lost
                         Err(wgpu::SurfaceError::Lost) => state.resize(state.size),

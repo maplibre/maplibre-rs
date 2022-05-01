@@ -11,7 +11,10 @@ use winit::{
 use wgpu::util::DeviceExt;
 
 pub trait Renderable {
-    fn render(&mut self) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError>;
+    fn render(
+        &mut self,
+        rendering_state: &State,
+    ) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError>;
 }
 
 pub struct State {
@@ -87,7 +90,7 @@ impl State {
             aspect: config.width as f32 / config.height as f32,
             fovy: 45.0,
             znear: 0.1,
-            zfar: 100.0,
+            zfar: 1000.0,
         };
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
@@ -158,8 +161,8 @@ impl State {
         );
     }
 
-    pub fn render(renderable: &dyn Renderable) -> Result<(), wgpu::SurfaceError> {
-        let output = renderable.render()?;
+    pub fn render(&mut self, renderable: &mut dyn Renderable) -> Result<(), wgpu::SurfaceError> {
+        let output = renderable.render(self)?;
         output.present();
         Ok(())
     }

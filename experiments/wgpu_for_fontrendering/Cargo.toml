@@ -16,6 +16,6 @@ wgpu = "0.12"
 pollster = "0.2.5"
 bytemuck = { version = "1.4", features = [ "derive" ] }
 cgmath = "0.18"
-owned_ttf_parser = "0.15.0"
+ttf-parser = "0.15.0"
 rustybuzz = "0.5"
 rand = "0.8"
