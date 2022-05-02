@@ -2,6 +2,7 @@ use super::UpdateState;
 
 use crate::map_state::MapState;
 
+use crate::MapWindow;
 use cgmath::{Deg, Rad, Zero};
 use std::time::Duration;
 
@@ -13,7 +14,7 @@ pub struct TiltHandler {
 }
 
 impl UpdateState for TiltHandler {
-    fn update_state<W>(&mut self, state: &mut MapState<W>, dt: Duration) {
+    fn update_state<W: MapWindow>(&mut self, state: &mut MapState<W>, dt: Duration) {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.delta_pitch * dt;

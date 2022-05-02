@@ -21,7 +21,19 @@ impl WindowSize {
     }
 }
 
-pub type WindowFactory<W, E> = dyn FnOnce() -> (W, WindowSize, E);
+#[cfg(target_os = "android")]
+/// On android we can not get the dimensions of the window initially. Therefore, we use a fallback
+/// until the window is ready to deliver its correct bounds.
+impl Default for WindowSize {
+    fn default() -> Self {
+        WindowSize {
+            width: 100,
+            height: 100,
+        }
+    }
+}
+
+pub type WindowFactory<W, E> = dyn FnOnce() -> (W, E);
 
 pub trait FromWindow {
     fn from_window(title: &'static str) -> Self;

@@ -2,6 +2,7 @@ use cgmath::Vector2;
 
 use crate::input::UpdateState;
 use crate::map_state::MapState;
+use crate::MapWindow;
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
 
@@ -56,7 +57,7 @@ impl QueryHandler {
 }
 
 impl UpdateState for QueryHandler {
-    fn update_state<W>(&mut self, state: &mut MapState<W>, _dt: Duration) {
+    fn update_state<W: MapWindow>(&mut self, state: &mut MapState<W>, _dt: Duration) {
         if self.clicking {
             if let Some(window_position) = self.window_position {
                 let perspective = &state.perspective();
