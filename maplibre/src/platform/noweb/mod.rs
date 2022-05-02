@@ -2,5 +2,3 @@
 
 pub mod http_client;
 pub mod schedule_method;
-
-pub use std::time::Instant;

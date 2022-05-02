@@ -3,6 +3,7 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
+use instant::Instant;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
@@ -10,10 +11,9 @@ use winit::window::WindowBuilder;
 use crate::input::{InputController, UpdateState};
 
 use crate::map_state::{MapState, Runnable};
-use crate::platform::Instant;
 
 use crate::window::FromWindow;
-use crate::{MapBuilder, MapWindow, WindowSize};
+use crate::{HTTPClient, MapBuilder, MapWindow, ScheduleMethod, WindowSize};
 
 impl MapWindow for winit::window::Window {
     fn size(&self) -> Option<WindowSize> {
@@ -22,7 +22,11 @@ impl MapWindow for winit::window::Window {
     }
 }
 
-impl Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Window> {
+impl<SM, HC> Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Window, SM, HC>
+where
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
     fn run(mut self, event_loop: winit::event_loop::EventLoop<()>, max_frames: Option<u64>) {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
@@ -85,7 +89,7 @@ impl Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Wind
                     let dt = now - last_render_time;
                     last_render_time = now;
 
-                    input_controller.update_state(&mut self, dt);
+                    input_controller.update_state(self.view_state_mut(), dt);
 
                     match self.update_and_redraw() {
                         Ok(_) => {}
@@ -131,7 +135,12 @@ impl Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Wind
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl FromWindow for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>> {
+impl<SM, HC> FromWindow
+    for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>, SM, HC>
+where
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
     fn from_window(title: &'static str) -> Self {
         let event_loop = EventLoop::new();
         Self::new(Box::new(move || {
@@ -169,8 +178,11 @@ pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
 }
 
 #[cfg(target_arch = "wasm32")]
-impl crate::window::FromCanvas
-    for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>>
+impl<SM, HC> crate::window::FromCanvas
+    for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>, SM, HC>
+where
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     fn from_canvas(dom_id: &'static str) -> Self {
         let event_loop = EventLoop::new();

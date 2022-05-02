@@ -1,18 +1,13 @@
-use std::thread::Thread;
+use std::future::Future;
 
-use js_sys::{ArrayBuffer, Error as JSError, Uint8Array};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::Worker;
-use web_sys::{Request, RequestInit, RequestMode, Response, WorkerGlobalScope};
 
-use crate::coords::{TileCoords, WorldTileCoords};
-use crate::error::Error;
-use crate::io::scheduler::{ScheduleMethod, Scheduler};
-use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::tile_cache::TileCache;
-use crate::io::TileRequestID;
+use web_sys::Worker;
+
+use maplibre::error::Error;
+use maplibre::io::scheduler::ScheduleMethod;
+use maplibre::io::shared_thread_state::SharedThreadState;
 
 use super::pool::WorkerPool;
 
@@ -36,14 +31,16 @@ impl WebWorkerPoolScheduleMethod {
             .unwrap(),
         }
     }
+}
 
-    pub fn schedule<T>(
+impl ScheduleMethod for WebWorkerPoolScheduleMethod {
+    fn schedule<T>(
         &self,
         shared_thread_state: SharedThreadState,
         future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
-    ) where
-        T: std::future::Future + 'static,
-        T::Output: Send + 'static,
+    ) -> Result<(), Error>
+    where
+        T: Future<Output = ()> + 'static,
     {
         self.pool
             .run(move || {
@@ -53,5 +50,6 @@ impl WebWorkerPoolScheduleMethod {
                 })
             })
             .unwrap();
+        Ok(())
     }
 }

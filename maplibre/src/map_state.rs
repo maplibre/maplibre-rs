@@ -1,53 +1,87 @@
 use crate::coords::{ViewRegion, WorldTileCoords, Zoom, TILE_SIZE};
-
-use crate::io::scheduler::Scheduler;
-
-use crate::render::camera;
-use crate::render::camera::{Camera, Perspective};
-use crate::render::render_state::RenderState;
-use crate::util::ChangeObserver;
-use crate::{MapWindow, WindowSize};
-use std::collections::HashSet;
-use std::sync::{mpsc, Arc, Mutex};
-
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
+use crate::io::scheduler::Scheduler;
 use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::io::source_client::{HTTPClient, HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TessellateMessage, TileRequest, TileTessellateMessage};
+use crate::render::camera;
+use crate::render::camera::{Camera, Perspective, ViewProjection};
+use crate::render::render_state::RenderState;
 use crate::style::Style;
+use crate::util::ChangeObserver;
+use crate::{MapWindow, ScheduleMethod, WindowSize};
+use std::collections::HashSet;
+use std::sync;
+use std::sync::{mpsc, Arc, Mutex};
 use wgpu::SurfaceError;
 
 pub trait Runnable<E> {
     fn run(self, event_loop: E, max_frames: Option<u64>);
 }
 
-pub struct MapState<W: MapWindow> {
+pub struct ViewState {
+    zoom: ChangeObserver<Zoom>,
+    pub camera: ChangeObserver<Camera>,
+    pub perspective: Perspective,
+}
+
+impl ViewState {
+    pub fn view_projection(&self) -> ViewProjection {
+        self.camera.calc_view_proj(&self.perspective)
+    }
+
+    pub fn visible_level(&self) -> u8 {
+        self.zoom.level()
+    }
+
+    pub fn zoom(&self) -> Zoom {
+        *self.zoom
+    }
+
+    pub fn update_zoom(&mut self, new_zoom: Zoom) {
+        *self.zoom = new_zoom;
+        log::info!("zoom: {}", new_zoom);
+    }
+}
+
+pub struct MapState<W, SM, HC>
+where
+    W: MapWindow,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
     window: W,
 
-    zoom: ChangeObserver<Zoom>,
-    camera: ChangeObserver<Camera>,
-    perspective: Perspective,
+    view_state: ViewState,
 
     render_state: Option<RenderState>,
-    scheduler: Scheduler,
+    scheduler: Scheduler<SM>,
     message_receiver: mpsc::Receiver<TessellateMessage>,
     shared_thread_state: SharedThreadState,
     tile_cache: TileCache,
+
+    source_client: SourceClient<HC>,
 
     style: Style,
 
     try_failed: bool,
 }
 
-impl<W: MapWindow> MapState<W> {
+impl<W, SM, HC> MapState<W, SM, HC>
+where
+    W: MapWindow,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
     pub fn new(
         window: W,
         window_size: WindowSize,
         render_state: Option<RenderState>,
-        scheduler: Scheduler,
+        scheduler: Scheduler<SM>,
+        http_client: HC,
         style: Style,
     ) -> Self {
         let camera = camera::Camera::new(
@@ -71,9 +105,11 @@ impl<W: MapWindow> MapState<W> {
         Self {
             window,
 
-            zoom: ChangeObserver::default(),
-            camera: ChangeObserver::new(camera),
-            perspective,
+            view_state: ViewState {
+                zoom: ChangeObserver::default(),
+                camera: ChangeObserver::new(camera),
+                perspective,
+            },
 
             render_state,
             scheduler,
@@ -89,6 +125,7 @@ impl<W: MapWindow> MapState<W> {
             style,
 
             try_failed: false,
+            source_client: SourceClient::Http(HttpSourceClient::new(http_client)),
         }
     }
 
@@ -158,14 +195,17 @@ impl<W: MapWindow> MapState<W> {
         let render_setup_span = tracing::span!(tracing::Level::TRACE, "setup view region");
         let _guard = render_setup_span.enter();
 
-        let visible_level = self.visible_level();
+        let visible_level = self.view_state.visible_level();
 
-        let view_proj = self.camera.calc_view_proj(&self.perspective);
+        let view_proj = self.view_state.view_projection();
 
         let view_region = self
+            .view_state
             .camera
             .view_region_bounding_box(&view_proj.invert())
-            .map(|bounding_box| ViewRegion::new(bounding_box, 0, *self.zoom, visible_level));
+            .map(|bounding_box| {
+                ViewRegion::new(bounding_box, 0, *self.view_state.zoom, visible_level)
+            });
 
         drop(_guard);
 
@@ -175,7 +215,7 @@ impl<W: MapWindow> MapState<W> {
                 .expect("render state not yet initialized. Call reinitialize().")
                 .upload_tile_geometry(view_region, &self.style, &self.tile_cache);
 
-            let zoom = self.zoom();
+            let zoom = self.view_state.zoom();
             self.render_state_mut()
                 .update_tile_view_pattern(view_region, &view_proj, zoom);
 
@@ -185,17 +225,21 @@ impl<W: MapWindow> MapState<W> {
         // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
         // TODO: What is StagingBelt for?
 
-        if self.camera.did_change(0.05) || self.zoom.did_change(0.05) || self.try_failed {
+        if self.view_state.camera.did_change(0.05)
+            || self.view_state.zoom.did_change(0.05)
+            || self.try_failed
+        {
             if let Some(view_region) = &view_region {
                 // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
                 self.try_failed = self.request_tiles_in_view(view_region);
             }
 
-            self.render_state().update_globals(&view_proj, &self.camera);
+            self.render_state()
+                .update_globals(&view_proj, &self.view_state.camera);
         }
 
-        self.camera.update_reference();
-        self.zoom.update_reference();
+        self.view_state.camera.update_reference();
+        self.view_state.zoom.update_reference();
     }
 
     fn try_request_tile(
@@ -224,7 +268,7 @@ impl<W: MapWindow> MapState<W> {
                     );
                 }*/
 
-                let client = SourceClient::Http(HttpSourceClient::new());
+                let client = self.source_client.clone();
                 let coords = *coords;
 
                 self.scheduler
@@ -253,42 +297,18 @@ impl<W: MapWindow> MapState<W> {
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.perspective.resize(width, height);
-        self.camera.resize(width, height);
+        self.view_state.perspective.resize(width, height);
+        self.view_state.camera.resize(width, height);
 
         self.render_state_mut().resize(width, height)
     }
 
-    pub fn scheduler(&self) -> &Scheduler {
+    pub fn scheduler(&self) -> &Scheduler<SM> {
         &self.scheduler
     }
 
     pub fn window(&self) -> &W {
         &self.window
-    }
-
-    pub fn camera(&self) -> &Camera {
-        &self.camera
-    }
-
-    pub fn camera_mut(&mut self) -> &mut Camera {
-        &mut self.camera
-    }
-
-    pub fn perspective(&self) -> &Perspective {
-        &self.perspective
-    }
-
-    pub fn zoom(&self) -> Zoom {
-        *self.zoom
-    }
-    pub fn visible_level(&self) -> u8 {
-        self.zoom.level()
-    }
-
-    pub fn update_zoom(&mut self, new_zoom: Zoom) {
-        *self.zoom = new_zoom;
-        log::info!("zoom: {}", new_zoom);
     }
 
     pub fn suspend(&mut self) {
@@ -308,11 +328,21 @@ impl<W: MapWindow> MapState<W> {
     pub fn render_state_mut(&mut self) -> &'_ mut RenderState {
         self.render_state.as_mut().unwrap()
     }
+
+    pub fn view_state(&self) -> &ViewState {
+        &self.view_state
+    }
+
+    pub fn view_state_mut(&mut self) -> &mut ViewState {
+        &mut self.view_state
+    }
 }
 
-impl<W: MapWindow> MapState<W>
+impl<W, SM, HC> MapState<W, SM, HC>
 where
-    W: raw_window_handle::HasRawWindowHandle,
+    W: MapWindow + raw_window_handle::HasRawWindowHandle,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     pub fn recreate_surface(&mut self) {
         self.render_state

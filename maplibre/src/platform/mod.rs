@@ -26,18 +26,19 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 )))]
 pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
 
-#[cfg(target_arch = "wasm32")]
-pub use web::*;
-
 #[cfg(not(target_arch = "wasm32"))]
-pub use noweb::*;
+mod noweb;
+
+pub mod http_client {
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use super::noweb::http_client::*;
+}
+
+pub mod schedule_method {
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use super::noweb::schedule_method::*;
+}
 
 // FIXME: This limit is enforced by WebGL. Actually this makes sense!
 // FIXME: This can also be achieved by _pad attributes in shader_ffi.rs
 pub const MIN_BUFFER_SIZE: u64 = 32;
-
-#[cfg(not(target_arch = "wasm32"))]
-mod noweb;
-
-#[cfg(target_arch = "wasm32")]
-mod web;

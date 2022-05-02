@@ -3,7 +3,7 @@
 //! Adopted from [wasm-bindgen example](https://github.com/rustwasm/wasm-bindgen/blob/0eba2efe45801b71f8873bc368c58a8ed8e894ff/examples/raytrace-parallel/src/pool.rs)
 
 use std::cell::RefCell;
-use std::future::Future;
+
 use std::rc::Rc;
 
 use js_sys::Promise;

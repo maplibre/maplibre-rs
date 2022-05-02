@@ -1,12 +1,13 @@
 use super::UpdateState;
 
+use crate::map_state::ViewState;
 use crate::{MapState, MapWindow};
 use std::time::Duration;
 
 pub struct PinchHandler {}
 
 impl UpdateState for PinchHandler {
-    fn update_state<W: MapWindow>(&mut self, _state: &mut MapState<W>, _dt: Duration) {
+    fn update_state(&mut self, _state: &mut ViewState, _dt: Duration) {
         // TODO
     }
 }

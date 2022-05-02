@@ -1,6 +1,5 @@
+use instant::Instant;
 use std::time::Duration;
-
-use crate::platform::Instant;
 
 /// Measures the frames per second.
 ///
