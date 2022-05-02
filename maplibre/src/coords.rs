@@ -17,12 +17,26 @@ pub const EXTENT: f64 = EXTENT_UINT as f64;
 pub const TILE_SIZE: f64 = 512.0;
 pub const MAX_ZOOM: usize = 32;
 
+// FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn't fit in u32 or i32
+// Bounds are generated 0..=31
+pub const ZOOM_BOUNDS: [u32; MAX_ZOOM] = create_zoom_bounds::<MAX_ZOOM>();
+
+const fn create_zoom_bounds<const DIM: usize>() -> [u32; DIM] {
+    let mut result: [u32; DIM] = [0; DIM];
+    let mut i = 0;
+    while i < DIM {
+        result[i as usize] = 2u32.pow(i as u32);
+        i += 1;
+    }
+    result
+}
+
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
 pub struct Quadkey([u8; MAX_ZOOM]);
 
 impl Quadkey {
     pub fn new(quad_encoded: &[u8]) -> Self {
-        let mut key = [0u8; 32];
+        let mut key = [0u8; MAX_ZOOM];
         key[0] = quad_encoded.len() as u8;
         for (i, part) in quad_encoded.iter().enumerate() {
             key[i + 1] = *part;
@@ -139,7 +153,9 @@ impl TileCoords {
     /// The [`TileCoords`] `T(x=5,y=5,z=0)` exceeds its bounds because there is no tile
     /// `x=5,y=5` at zoom level `z=0`.
     pub fn into_world_tile(self, scheme: TileAddressingScheme) -> Option<WorldTileCoords> {
-        let bounds = 2i32.pow(self.z as u32);
+        // FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn't fit in u32 or i32
+        // Note that unlike WorldTileCoords, values are signed (no idea why)
+        let bounds = ZOOM_BOUNDS[self.z as usize] as i32;
         let x = self.x as i32;
         let y = self.y as i32;
 
@@ -191,7 +207,8 @@ impl WorldTileCoords {
     /// The [`WorldTileCoords`] `WT(x=5,y=5,z=0)` exceeds its bounds because there is no tile
     /// `x=5,y=5` at zoom level `z=0`.
     pub fn into_tile(self, scheme: TileAddressingScheme) -> Option<TileCoords> {
-        let bounds = 2u32.pow(self.z as u32);
+        // FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn't fit in u32 or i32
+        let bounds = ZOOM_BOUNDS[self.z as usize];
         let x = self.x as u32;
         let y = self.y as u32;
 
@@ -244,7 +261,7 @@ impl WorldTileCoords {
 
     /// Adopted from [tilebelt](https://github.com/mapbox/tilebelt)
     pub fn build_quad_key(&self) -> Option<Quadkey> {
-        let bounds = 2u32.pow(self.z as u32);
+        let bounds = ZOOM_BOUNDS[self.z as usize];
         let x = self.x as u32;
         let y = self.y as u32;
 
@@ -252,7 +269,7 @@ impl WorldTileCoords {
             return None;
         }
 
-        let mut key = [0u8; 32];
+        let mut key = [0u8; MAX_ZOOM];
 
         key[0] = self.z;
 
