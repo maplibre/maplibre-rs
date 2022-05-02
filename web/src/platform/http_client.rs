@@ -18,7 +18,7 @@ impl WHATWGFetchHttpClient {
         Self {}
     }
 
-    async fn whatwg_fetch(url: &str) -> Result<JsValue, JsValue> {
+    async fn fetch_array_buffer(url: &str) -> Result<JsValue, JsValue> {
         let mut opts = RequestInit::new();
         opts.method("GET");
 
@@ -39,8 +39,8 @@ impl WHATWGFetchHttpClient {
         Ok(maybe_array_buffer)
     }
 
-    async fn fetch(&self, url: &str) -> Result<Vec<u8>, WebError> {
-        let maybe_array_buffer = Self::whatwg_fetch(url).await?;
+    async fn fetch_bytes(&self, url: &str) -> Result<Vec<u8>, WebError> {
+        let maybe_array_buffer = Self::fetch_array_buffer(url).await?;
 
         assert!(maybe_array_buffer.is_instance_of::<ArrayBuffer>());
         let array_buffer: ArrayBuffer = maybe_array_buffer.dyn_into().unwrap();
@@ -63,8 +63,8 @@ impl Clone for WHATWGFetchHttpClient {
 #[async_trait(?Send)]
 impl HTTPClient for WHATWGFetchHttpClient {
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
-        self.fetch(url)
+        self.fetch_bytes(url)
             .await
-            .map_err(|_e| Error::Network("web error".to_string()))
+            .map_err(|WebError(msg)| Error::Network(msg))
     }
 }

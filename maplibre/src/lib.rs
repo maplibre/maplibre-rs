@@ -1,45 +1,46 @@
-use crate::io::scheduler::Scheduler;
+use crate::io::scheduler::{ScheduleMethod, Scheduler};
+use crate::io::source_client::HTTPClient;
+use crate::map_state::{MapState, Runnable};
+use crate::render::render_state::RenderState;
+use crate::style::Style;
+use crate::window::{MapWindow, WindowFactory, WindowSize};
 use std::marker::PhantomData;
 
+pub mod coords;
 pub mod error;
 pub mod io;
+pub mod platform;
+pub mod style;
 pub mod window;
 
-pub mod coords;
+// Used for benchmarking
+pub mod benchmarking;
+
+// Internal modules
 pub(crate) mod input;
 pub(crate) mod map_state;
-pub(crate) mod platform;
 pub(crate) mod render;
-pub mod style;
 pub(crate) mod tessellation;
 pub(crate) mod tilejson;
 pub(crate) mod util;
 pub(crate) mod winit;
 
-// Used for benchmarking
-pub mod benchmarking;
-
-use crate::io::source_client::HTTPClient;
-use crate::map_state::{MapState, Runnable};
-pub use crate::platform::http_client::*;
-pub use crate::platform::schedule_method::*;
-use crate::render::render_state::RenderState;
-use crate::style::Style;
-use crate::window::{WindowFactory, WindowSize};
-pub use io::scheduler::ScheduleMethod;
-
-pub trait MapWindow {
-    fn size(&self) -> Option<WindowSize>;
-}
-
-pub struct Map<W: MapWindow, E, SM: ScheduleMethod, HC: HTTPClient> {
+pub struct Map<W, E, SM, HC>
+where
+    W: MapWindow,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
     map_state: MapState<W, SM, HC>,
     event_loop: E,
 }
 
-impl<W: MapWindow, E, SM: ScheduleMethod, HC: HTTPClient> Map<W, E, SM, HC>
+impl<W, E, SM, HC> Map<W, E, SM, HC>
 where
     MapState<W, SM, HC>: Runnable<E>,
+    W: MapWindow,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     pub fn run(self) {
         self.run_with_optionally_max_frames(None);
@@ -54,7 +55,11 @@ where
     }
 }
 
-pub struct UninitializedMap<W, E, SM: ScheduleMethod, HC: HTTPClient> {
+pub struct UninitializedMap<W, E, SM, HC>
+where
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
     window: W,
     event_loop: E,
     scheduler: Scheduler<SM>,
@@ -62,9 +67,11 @@ pub struct UninitializedMap<W, E, SM: ScheduleMethod, HC: HTTPClient> {
     style: Style,
 }
 
-impl<W, E, SM: ScheduleMethod, HC: HTTPClient> UninitializedMap<W, E, SM, HC>
+impl<W, E, SM, HC> UninitializedMap<W, E, SM, HC>
 where
     W: MapWindow + raw_window_handle::HasRawWindowHandle,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     pub async fn initialize(self) -> Map<W, E, SM, HC> {
         #[cfg(target_os = "android")]
@@ -94,10 +101,12 @@ where
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<W, E, SM: ScheduleMethod, HC: HTTPClient> UninitializedMap<W, E, SM, HC>
+impl<W, E, SM, HC> UninitializedMap<W, E, SM, HC>
 where
     W: MapWindow + raw_window_handle::HasRawWindowHandle,
     MapState<W, SM, HC>: Runnable<E>,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     pub fn run_sync(self) {
         self.run_sync_with_optionally_max_frames(None);
@@ -126,7 +135,10 @@ where
     }
 }
 
-pub struct MapBuilder<W, E, SM: ScheduleMethod, HC> {
+pub struct MapBuilder<W, E, SM, HC>
+where
+    SM: ScheduleMethod,
+{
     window_factory: Box<WindowFactory<W, E>>,
     schedule_method: Option<SM>,
     scheduler: Option<Scheduler<SM>>,
@@ -134,10 +146,12 @@ pub struct MapBuilder<W, E, SM: ScheduleMethod, HC> {
     style: Option<Style>,
 }
 
-impl<W, E, SM: ScheduleMethod, HC: HTTPClient> MapBuilder<W, E, SM, HC>
+impl<W, E, SM, HC> MapBuilder<W, E, SM, HC>
 where
     MapState<W, SM, HC>: Runnable<E>,
     W: MapWindow + raw_window_handle::HasRawWindowHandle,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     pub fn new(create_window: Box<WindowFactory<W, E>>) -> Self {
         Self {
@@ -174,7 +188,7 @@ where
 
         let scheduler = self
             .scheduler
-            .unwrap_or_else(|| Scheduler::new(self.schedule_method.unwrap_or_default()));
+            .unwrap_or_else(|| Scheduler::new(self.schedule_method.unwrap()));
         let style = self.style.unwrap_or_default();
 
         UninitializedMap {

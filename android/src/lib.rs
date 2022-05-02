@@ -1,10 +1,11 @@
 use jni::objects::JClass;
 use jni::JNIEnv;
 use log::Level;
+use maplibre::platform::http_client::ReqwestHttpClient;
+use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::window::FromWindow;
-use maplibre::{MapBuilder, ReqwestHttpClient, ScheduleMethod, TokioScheduleMethod};
+use maplibre::MapBuilder;
 use std::ffi::CString;
-pub use std::time::Instant;
 
 #[cfg(not(target_os = "android"))]
 compile_error!("android works only on android.");

@@ -1,6 +1,7 @@
+use maplibre::platform::http_client::ReqwestHttpClient;
+use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::window::FromWindow;
-use maplibre::{MapBuilder, ReqwestHttpClient, ScheduleMethod, TokioScheduleMethod};
-pub use std::time::Instant;
+use maplibre::MapBuilder;
 
 #[cfg(not(any(target_os = "macos", target_os = "ios")))]
 compile_error!("apple works only on macOS and iOS.");

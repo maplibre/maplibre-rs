@@ -33,12 +33,6 @@ impl WebWorkerPoolScheduleMethod {
     }
 }
 
-impl Default for WebWorkerPoolScheduleMethod {
-    fn default() -> Self {
-        todo!()
-    }
-}
-
 impl ScheduleMethod for WebWorkerPoolScheduleMethod {
     fn schedule<T>(
         &self,

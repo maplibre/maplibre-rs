@@ -18,19 +18,28 @@ pub trait HTTPClient: Clone + Sync + Send + 'static {
 }
 
 #[derive(Clone)]
-pub struct HttpSourceClient<HC: HTTPClient> {
+pub struct HttpSourceClient<HC>
+where
+    HC: HTTPClient,
+{
     inner_client: HC,
 }
 
 #[derive(Clone)]
-pub enum SourceClient<HC: HTTPClient> {
+pub enum SourceClient<HC>
+where
+    HC: HTTPClient,
+{
     Http(HttpSourceClient<HC>),
     Mbtiles {
         // TODO
     },
 }
 
-impl<HC: HTTPClient> SourceClient<HC> {
+impl<HC> SourceClient<HC>
+where
+    HC: HTTPClient,
+{
     pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
         match self {
             SourceClient::Http(client) => client.fetch(coords).await,
@@ -39,7 +48,10 @@ impl<HC: HTTPClient> SourceClient<HC> {
     }
 }
 
-impl<HC: HTTPClient> HttpSourceClient<HC> {
+impl<HC> HttpSourceClient<HC>
+where
+    HC: HTTPClient,
+{
     pub fn new(http_client: HC) -> Self {
         Self {
             inner_client: http_client,

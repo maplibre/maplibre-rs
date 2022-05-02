@@ -22,8 +22,10 @@ impl MapWindow for winit::window::Window {
     }
 }
 
-impl<SM: ScheduleMethod + 'static, HC: HTTPClient + 'static>
-    Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Window, SM, HC>
+impl<SM, HC> Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Window, SM, HC>
+where
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     fn run(mut self, event_loop: winit::event_loop::EventLoop<()>, max_frames: Option<u64>) {
         let mut last_render_time = Instant::now();
@@ -133,8 +135,11 @@ impl<SM: ScheduleMethod + 'static, HC: HTTPClient + 'static>
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<SM: ScheduleMethod, HC: HTTPClient> FromWindow
+impl<SM, HC> FromWindow
     for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>, SM, HC>
+where
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     fn from_window(title: &'static str) -> Self {
         let event_loop = EventLoop::new();
@@ -173,8 +178,11 @@ pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
 }
 
 #[cfg(target_arch = "wasm32")]
-impl<SM: ScheduleMethod, HC: HTTPClient> crate::window::FromCanvas
+impl<SM, HC> crate::window::FromCanvas
     for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>, SM, HC>
+where
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     fn from_canvas(dom_id: &'static str) -> Self {
         let event_loop = EventLoop::new();

@@ -11,12 +11,6 @@ impl TokioScheduleMethod {
     }
 }
 
-impl Default for TokioScheduleMethod {
-    fn default() -> Self {
-        todo!()
-    }
-}
-
 impl ScheduleMethod for TokioScheduleMethod {
     fn schedule<T>(
         &self,

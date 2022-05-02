@@ -4,11 +4,17 @@ use crate::error::Error;
 
 use crate::io::shared_thread_state::SharedThreadState;
 
-pub struct Scheduler<SM: ScheduleMethod> {
+pub struct Scheduler<SM>
+where
+    SM: ScheduleMethod,
+{
     schedule_method: SM,
 }
 
-impl<SM: ScheduleMethod> Scheduler<SM> {
+impl<SM> Scheduler<SM>
+where
+    SM: ScheduleMethod,
+{
     pub fn new(schedule_method: SM) -> Self {
         Self { schedule_method }
     }
@@ -18,7 +24,7 @@ impl<SM: ScheduleMethod> Scheduler<SM> {
     }
 }
 
-pub trait ScheduleMethod: Default + 'static {
+pub trait ScheduleMethod: 'static {
     #[cfg(not(feature = "no-thread-safe-futures"))]
     fn schedule<T>(
         &self,

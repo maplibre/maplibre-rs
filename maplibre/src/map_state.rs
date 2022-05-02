@@ -1,24 +1,21 @@
 use crate::coords::{ViewRegion, WorldTileCoords, Zoom, TILE_SIZE};
-
-use crate::io::scheduler::Scheduler;
-
-use crate::render::camera;
-use crate::render::camera::{Camera, Perspective, ViewProjection};
-use crate::render::render_state::RenderState;
-use crate::util::ChangeObserver;
-use crate::{MapWindow, ScheduleMethod, WindowSize};
-use std::collections::HashSet;
-use std::sync;
-use std::sync::{mpsc, Arc, Mutex};
-
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
+use crate::io::scheduler::Scheduler;
 use crate::io::shared_thread_state::SharedThreadState;
 use crate::io::source_client::{HTTPClient, HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TessellateMessage, TileRequest, TileTessellateMessage};
+use crate::render::camera;
+use crate::render::camera::{Camera, Perspective, ViewProjection};
+use crate::render::render_state::RenderState;
 use crate::style::Style;
+use crate::util::ChangeObserver;
+use crate::{MapWindow, ScheduleMethod, WindowSize};
+use std::collections::HashSet;
+use std::sync;
+use std::sync::{mpsc, Arc, Mutex};
 use wgpu::SurfaceError;
 
 pub trait Runnable<E> {
@@ -50,7 +47,12 @@ impl ViewState {
     }
 }
 
-pub struct MapState<W: MapWindow, SM: ScheduleMethod, HC: HTTPClient> {
+pub struct MapState<W, SM, HC>
+where
+    W: MapWindow,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
     window: W,
 
     view_state: ViewState,
@@ -68,7 +70,12 @@ pub struct MapState<W: MapWindow, SM: ScheduleMethod, HC: HTTPClient> {
     try_failed: bool,
 }
 
-impl<W: MapWindow, SM: ScheduleMethod, HC: HTTPClient> MapState<W, SM, HC> {
+impl<W, SM, HC> MapState<W, SM, HC>
+where
+    W: MapWindow,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
     pub fn new(
         window: W,
         window_size: WindowSize,
@@ -331,9 +338,11 @@ impl<W: MapWindow, SM: ScheduleMethod, HC: HTTPClient> MapState<W, SM, HC> {
     }
 }
 
-impl<W: MapWindow, SM: ScheduleMethod, HC: HTTPClient> MapState<W, SM, HC>
+impl<W, SM, HC> MapState<W, SM, HC>
 where
-    W: raw_window_handle::HasRawWindowHandle,
+    W: MapWindow + raw_window_handle::HasRawWindowHandle,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
 {
     pub fn recreate_surface(&mut self) {
         self.render_state

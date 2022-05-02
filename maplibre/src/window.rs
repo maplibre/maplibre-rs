@@ -1,3 +1,7 @@
+pub trait MapWindow {
+    fn size(&self) -> Option<WindowSize>;
+}
+
 #[derive(Clone, Copy)]
 pub struct WindowSize {
     width: u32,
