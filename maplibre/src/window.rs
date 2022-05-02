@@ -1,4 +1,10 @@
-pub trait MapWindow {
+use crate::MapSurface;
+
+pub trait MapWindow<E> {
+    fn create(instance: &wgpu::Instance) -> (Self, MapSurface, WindowSize, E)
+    where
+        Self: Sized;
+
     fn size(&self) -> Option<WindowSize>;
 }
 
@@ -35,12 +41,6 @@ impl Default for WindowSize {
             height: 100,
         }
     }
-}
-
-pub type WindowFactory<W, E> = dyn FnOnce() -> (W, E);
-
-pub trait FromWindow {
-    fn from_window(title: &'static str) -> Self;
 }
 
 pub trait FromCanvas {

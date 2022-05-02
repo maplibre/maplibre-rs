@@ -5,24 +5,58 @@
 
 use instant::Instant;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop};
+use winit::event_loop::ControlFlow;
 use winit::window::WindowBuilder;
 
 use crate::input::{InputController, UpdateState};
 
 use crate::map_state::{MapState, Runnable};
 
-use crate::window::FromWindow;
-use crate::{HTTPClient, MapBuilder, MapWindow, ScheduleMethod, WindowSize};
+pub use winit::window::Window as WinitWindow;
 
-impl MapWindow for winit::window::Window {
+use crate::{
+    HTTPClient, MapBuilder, MapSurface, MapWindow, ScheduleMethod, WindowMapSurface, WindowSize,
+};
+
+impl MapWindow<winit::event_loop::EventLoop<()>> for winit::window::Window {
+    fn create(
+        instance: &wgpu::Instance,
+    ) -> (
+        Self,
+        MapSurface,
+        WindowSize,
+        winit::event_loop::EventLoop<()>,
+    ) {
+        let event_loop = winit::event_loop::EventLoop::new();
+        let window = WindowBuilder::new()
+            .with_title("awesome")
+            .build(&event_loop)
+            .unwrap();
+
+        #[cfg(target_os = "android")]
+        // On android we can not get the dimensions of the window initially. Therefore, we use a
+        // fallback until the window is ready to deliver its correct bounds.
+        let window_size = self.window.size().unwrap_or_default();
+
+        #[cfg(not(target_os = "android"))]
+        let window_size = window.size().expect("failed to get window dimensions.");
+
+        let surface = MapSurface::Window(WindowMapSurface::initialize(
+            &instance,
+            &window,
+            window_size,
+        ));
+        (window, surface, window_size, event_loop)
+    }
+
     fn size(&self) -> Option<WindowSize> {
         let size = self.inner_size();
         WindowSize::new(size.width, size.height)
     }
 }
 
-impl<SM, HC> Runnable<winit::event_loop::EventLoop<()>> for MapState<winit::window::Window, SM, HC>
+impl<SM, HC> Runnable<winit::event_loop::EventLoop<()>>
+    for MapState<winit::window::Window, winit::event_loop::EventLoop<()>, SM, HC>
 where
     SM: ScheduleMethod,
     HC: HTTPClient,
@@ -131,25 +165,6 @@ where
                 _ => {}
             }
         });
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl<SM, HC> FromWindow
-    for MapBuilder<winit::window::Window, winit::event_loop::EventLoop<()>, SM, HC>
-where
-    SM: ScheduleMethod,
-    HC: HTTPClient,
-{
-    fn from_window(title: &'static str) -> Self {
-        let event_loop = EventLoop::new();
-        Self::new(Box::new(move || {
-            let window = WindowBuilder::new()
-                .with_title(title)
-                .build(&event_loop)
-                .unwrap();
-            (window, event_loop)
-        }))
     }
 }
 

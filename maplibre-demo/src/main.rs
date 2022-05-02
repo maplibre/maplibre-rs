@@ -1,6 +1,7 @@
+use maplibre::headless::HeadlessWindow;
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::window::FromWindow;
+use maplibre::winit::WinitWindow;
 use maplibre::MapBuilder;
 
 #[cfg(feature = "enable-tracing")]
@@ -14,7 +15,8 @@ fn enable_tracing() {
 }
 
 fn run_in_window() {
-    MapBuilder::from_window("A fantastic window!")
+    let builder: MapBuilder<WinitWindow, _, _, _> = MapBuilder::new();
+    builder
         .with_http_client(ReqwestHttpClient::new(None))
         .with_schedule_method(TokioScheduleMethod::new())
         .build()
@@ -22,7 +24,8 @@ fn run_in_window() {
 }
 
 fn run_headless() {
-    MapBuilder::from_window("A fantastic window!")
+    let builder: MapBuilder<HeadlessWindow, _, _, _> = MapBuilder::new();
+    builder
         .with_http_client(ReqwestHttpClient::new(None))
         .with_schedule_method(TokioScheduleMethod::new())
         .build()
@@ -35,9 +38,6 @@ fn main() {
     #[cfg(feature = "enable-tracing")]
     enable_tracing();
 
-    MapBuilder::from_window("A fantastic window!")
-        .with_http_client(ReqwestHttpClient::new(None))
-        .with_schedule_method(TokioScheduleMethod::new())
-        .build()
-        .run_sync();
+    run_headless();
+    //run_in_window();
 }

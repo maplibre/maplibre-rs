@@ -9,11 +9,12 @@ use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TessellateMessage, TileRequest, TileTessellateMessage};
 use crate::render::camera;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
-use crate::render::render_state::RenderState;
+use crate::render::render_state::{MapSurface, RenderState};
 use crate::style::Style;
 use crate::util::ChangeObserver;
-use crate::{MapWindow, ScheduleMethod, WindowSize};
+use crate::{MapWindow, ScheduleMethod, WindowMapSurface, WindowSize};
 use std::collections::HashSet;
+use std::marker::PhantomData;
 use std::sync;
 use std::sync::{mpsc, Arc, Mutex};
 use wgpu::SurfaceError;
@@ -47,9 +48,9 @@ impl ViewState {
     }
 }
 
-pub struct MapState<W, SM, HC>
+pub struct MapState<W, E, SM, HC>
 where
-    W: MapWindow,
+    W: MapWindow<E>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -68,11 +69,13 @@ where
     style: Style,
 
     try_failed: bool,
+
+    phantom_e: PhantomData<E>,
 }
 
-impl<W, SM, HC> MapState<W, SM, HC>
+impl<W, E, SM, HC> MapState<W, E, SM, HC>
 where
-    W: MapWindow,
+    W: MapWindow<E>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -126,6 +129,7 @@ where
 
             try_failed: false,
             source_client: SourceClient::Http(HttpSourceClient::new(http_client)),
+            phantom_e: Default::default(),
         }
     }
 
@@ -338,9 +342,9 @@ where
     }
 }
 
-impl<W, SM, HC> MapState<W, SM, HC>
+impl<W, E, SM, HC> MapState<W, E, SM, HC>
 where
-    W: MapWindow + raw_window_handle::HasRawWindowHandle,
+    W: MapWindow<E> + raw_window_handle::HasRawWindowHandle,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -361,9 +365,18 @@ where
                 .window
                 .size()
                 .expect("Window size should be known when reinitializing.");
-            let render_state = RenderState::initialize(&self.window, window_size)
-                .await
-                .unwrap();
+
+            let instance = wgpu::Instance::new(wgpu::Backends::all());
+            //let instance = wgpu::Instance::new(wgpu::Backends::GL);
+            //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
+
+            let surface = MapSurface::Window(WindowMapSurface::initialize(
+                &instance,
+                &self.window,
+                window_size,
+            ));
+
+            let render_state = RenderState::initialize(instance, surface).await.unwrap();
             self.render_state = Some(render_state)
         }
     }

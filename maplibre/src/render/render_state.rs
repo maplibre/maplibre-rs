@@ -3,7 +3,7 @@ use std::default::Default;
 use std::{cmp, iter};
 
 use tracing;
-use wgpu::{Buffer, Limits, Queue};
+use wgpu::{SurfaceError, SurfaceTexture, TextureFormat, TextureView};
 
 use crate::style::Style;
 
@@ -29,6 +29,238 @@ use super::shaders;
 use super::shaders::*;
 use super::texture::Texture;
 
+pub enum Frame {
+    Window(WindowFrame),
+    Headless(HeadlessFrame),
+}
+
+impl Frame {
+    fn present(self) {
+        match self {
+            Frame::Window(frame) => frame.present(),
+            Frame::Headless(frame) => {
+                let image = frame.frame.as_image_copy();
+            }
+        }
+    }
+
+    fn create_view(&self) -> TextureView {
+        match self {
+            Frame::Window(frame) => frame.create_view(),
+            Frame::Headless(frame) => frame.create_view(),
+        }
+    }
+}
+
+pub struct HeadlessFrame {
+    frame: wgpu::Texture,
+}
+
+impl HeadlessFrame {
+    fn create_view(&self) -> TextureView {
+        self.frame
+            .create_view(&wgpu::TextureViewDescriptor::default())
+    }
+}
+
+pub struct WindowFrame {
+    frame: SurfaceTexture,
+}
+
+impl WindowFrame {
+    fn present(self) {
+        self.frame.present();
+    }
+
+    fn create_view(&self) -> TextureView {
+        self.frame
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default())
+    }
+}
+
+pub enum MapSurface {
+    Window(WindowMapSurface),
+    Headless(HeadlessMapSurface),
+}
+
+impl MapSurface {
+    pub fn recreate_surface<W: raw_window_handle::HasRawWindowHandle>(
+        &mut self,
+        instance: &wgpu::Instance,
+        window: &W,
+    ) {
+        match self {
+            MapSurface::Window(surface) => surface.recreate_surface(instance, window),
+            MapSurface::Headless(surface) => surface.recreate_surface(instance, window),
+        }
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        match self {
+            MapSurface::Window(surface) => surface.resize(width, height),
+            MapSurface::Headless(surface) => surface.resize(width, height),
+        }
+    }
+
+    pub fn configure(&self, device: &wgpu::Device) {
+        match self {
+            MapSurface::Window(surface) => surface.configure(device),
+            MapSurface::Headless(surface) => surface.configure(device),
+        }
+    }
+
+    pub fn surface(&self) -> Option<&wgpu::Surface> {
+        match self {
+            MapSurface::Window(surface) => surface.surface(),
+            MapSurface::Headless(surface) => surface.surface(),
+        }
+    }
+
+    pub fn new_frame(&self, device: &wgpu::Device) -> Result<Frame, SurfaceError> {
+        match self {
+            MapSurface::Window(surface) => surface.new_frame(device),
+            MapSurface::Headless(surface) => surface.new_frame(device),
+        }
+    }
+
+    pub fn size(&self) -> WindowSize {
+        match self {
+            MapSurface::Window(surface) => surface.size(),
+            MapSurface::Headless(surface) => surface.size(),
+        }
+    }
+
+    pub fn format(&self) -> TextureFormat {
+        match self {
+            MapSurface::Window(surface) => surface.format(),
+            MapSurface::Headless(surface) => surface.format(),
+        }
+    }
+}
+
+pub struct HeadlessMapSurface {
+    format: TextureFormat,
+    size: WindowSize,
+}
+
+impl HeadlessMapSurface {
+    pub fn initialize(window_size: WindowSize) -> Self {
+        let format = TextureFormat::Bgra8UnormSrgb;
+
+        Self {
+            size: window_size,
+            format,
+        }
+    }
+
+    pub fn recreate_surface<W: raw_window_handle::HasRawWindowHandle>(
+        &mut self,
+        _instance: &wgpu::Instance,
+        _window: &W,
+    ) {
+    }
+
+    pub fn resize(&mut self, _width: u32, _height: u32) {}
+
+    pub fn configure(&self, _device: &wgpu::Device) {}
+
+    pub fn surface(&self) -> Option<&wgpu::Surface> {
+        None
+    }
+
+    pub fn new_frame(&self, device: &wgpu::Device) -> Result<Frame, SurfaceError> {
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("Surface texture"),
+            size: wgpu::Extent3d {
+                width: self.size.width(),
+                height: self.size.height(),
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: self.format,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+        });
+        Ok(Frame::Headless(HeadlessFrame { frame: texture }))
+    }
+
+    pub fn size(&self) -> WindowSize {
+        self.size
+    }
+
+    pub fn format(&self) -> TextureFormat {
+        self.format
+    }
+}
+
+pub struct WindowMapSurface {
+    surface: wgpu::Surface,
+    config: wgpu::SurfaceConfiguration,
+    size: WindowSize,
+}
+
+impl WindowMapSurface {
+    pub fn initialize<W: raw_window_handle::HasRawWindowHandle>(
+        instance: &wgpu::Instance,
+        window: &W,
+        window_size: WindowSize,
+    ) -> Self {
+        let surface = unsafe { instance.create_surface(&window) };
+        let surface_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: crate::platform::COLOR_TEXTURE_FORMAT,
+            width: window_size.width(),
+            height: window_size.height(),
+            // present_mode: wgpu::PresentMode::Mailbox,
+            present_mode: wgpu::PresentMode::Fifo, // VSync
+        };
+
+        Self {
+            surface,
+            config: surface_config,
+            size: window_size,
+        }
+    }
+
+    pub fn recreate_surface<W: raw_window_handle::HasRawWindowHandle>(
+        &mut self,
+        instance: &wgpu::Instance,
+        window: &W,
+    ) {
+        let surface = unsafe { instance.create_surface(window) };
+        self.surface = surface;
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.config.width = width;
+        self.config.height = height;
+    }
+
+    pub fn configure(&self, device: &wgpu::Device) {
+        self.surface.configure(device, &self.config);
+    }
+
+    pub fn surface(&self) -> Option<&wgpu::Surface> {
+        Some(&self.surface)
+    }
+
+    pub fn new_frame(&self, _device: &wgpu::Device) -> Result<Frame, SurfaceError> {
+        Ok(Frame::Window(WindowFrame {
+            frame: self.surface.get_current_texture()?,
+        }))
+    }
+
+    pub fn size(&self) -> WindowSize {
+        self.size
+    }
+
+    pub fn format(&self) -> TextureFormat {
+        self.config.format
+    }
+}
+
 pub struct RenderState {
     instance: wgpu::Instance,
 
@@ -37,8 +269,7 @@ pub struct RenderState {
 
     fps_meter: FPSMeter,
 
-    surface: wgpu::Surface,
-    surface_config: wgpu::SurfaceConfiguration,
+    surface: MapSurface,
     suspended: bool,
 
     render_pipeline: wgpu::RenderPipeline,
@@ -53,54 +284,37 @@ pub struct RenderState {
     globals_uniform_buffer: wgpu::Buffer,
 
     buffer_pool: BufferPool<
-        Queue,
-        Buffer,
+        wgpu::Queue,
+        wgpu::Buffer,
         ShaderVertex,
         IndexDataType,
         ShaderLayerMetadata,
         ShaderFeatureStyle,
     >,
 
-    tile_view_pattern: TileViewPattern<Queue, Buffer>,
+    tile_view_pattern: TileViewPattern<wgpu::Queue, wgpu::Buffer>,
 }
 
 impl RenderState {
-    pub async fn initialize<W: raw_window_handle::HasRawWindowHandle>(
-        window: &W,
-        window_size: WindowSize,
-    ) -> Option<Self> {
+    pub async fn initialize(instance: wgpu::Instance, surface: MapSurface) -> Option<Self> {
         let sample_count = 4;
-
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
-        //let instance = wgpu::Instance::new(wgpu::Backends::GL);
-        //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
-
-        let surface = unsafe { instance.create_surface(&window) };
-        let surface_config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: crate::platform::COLOR_TEXTURE_FORMAT,
-            width: window_size.width(),
-            height: window_size.height(),
-            // present_mode: wgpu::PresentMode::Mailbox,
-            present_mode: wgpu::PresentMode::Fifo, // VSync
-        };
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::LowPower,
-                compatible_surface: Some(&surface),
+                compatible_surface: surface.surface(),
                 force_fallback_adapter: false,
             })
             .await
             .unwrap();
 
         let limits = if cfg!(feature = "web-webgl") {
-            Limits {
+            wgpu::Limits {
                 max_texture_dimension_2d: 4096,
                 ..wgpu::Limits::downlevel_webgl2_defaults()
             }
         } else if cfg!(target_os = "android") {
-            Limits {
+            wgpu::Limits {
                 max_storage_textures_per_shader_stage: 4,
                 max_compute_workgroups_per_dimension: 0,
                 max_compute_workgroup_size_z: 0,
@@ -111,7 +325,7 @@ impl RenderState {
                 ..wgpu::Limits::downlevel_defaults()
             }
         } else {
-            Limits {
+            wgpu::Limits {
                 ..wgpu::Limits::default()
             }
         };
@@ -135,7 +349,7 @@ impl RenderState {
             .await
             .ok()?;
 
-        surface.configure(&device, &surface_config);
+        surface.configure(&device);
 
         let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
@@ -240,12 +454,20 @@ impl RenderState {
         let render_pipeline = device.create_render_pipeline(&render_pipeline_descriptor);
         let mask_pipeline = device.create_render_pipeline(&mask_pipeline_descriptor);
 
-        let depth_texture = Texture::create_depth_texture(&device, &surface_config, sample_count);
+        let surface_size = surface.size();
+        let depth_texture = Texture::create_depth_texture(
+            &device,
+            surface_size.width(),
+            surface_size.height(),
+            sample_count,
+        );
 
         let multisampling_texture = if sample_count > 1 {
             Some(Texture::create_multisampling_texture(
                 &device,
-                &surface_config,
+                surface_size.width(),
+                surface_size.height(),
+                surface.format(),
                 sample_count,
             ))
         } else {
@@ -257,7 +479,6 @@ impl RenderState {
             surface,
             device,
             queue,
-            surface_config,
             render_pipeline,
             mask_pipeline,
             bind_group,
@@ -284,9 +505,8 @@ impl RenderState {
         // We only create a new surface if we are currently suspended. On Android (and probably iOS)
         // the surface gets invalid after the app has been suspended.
         if self.suspended {
-            let surface = unsafe { self.instance.create_surface(window) };
-            surface.configure(&self.device, &self.surface_config);
-            self.surface = surface;
+            self.surface.recreate_surface(&self.instance, window);
+            self.surface.configure(&self.device);
         }
     }
 
@@ -296,20 +516,20 @@ impl RenderState {
             return;
         }
 
-        self.surface_config.width = width;
-        self.surface_config.height = height;
-
-        self.surface.configure(&self.device, &self.surface_config);
+        self.surface.resize(width, height);
+        self.surface.configure(&self.device);
 
         // Re-configure depth buffer
         self.depth_texture =
-            Texture::create_depth_texture(&self.device, &self.surface_config, self.sample_count);
+            Texture::create_depth_texture(&self.device, width, height, self.sample_count);
 
         // Re-configure multi-sampling buffer
         self.multisampling_texture = if self.sample_count > 1 {
             Some(Texture::create_multisampling_texture(
                 &self.device,
-                &self.surface_config,
+                width,
+                height,
+                self.surface.format(),
                 self.sample_count,
             ))
         } else {
@@ -502,10 +722,8 @@ impl RenderState {
         let render_setup_span = tracing::span!(tracing::Level::TRACE, "render prepare");
         let _guard = render_setup_span.enter();
 
-        let frame = self.surface.get_current_texture()?;
-        let frame_view = frame
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        let frame = self.surface.new_frame(&self.device)?;
+        let frame_view = frame.create_view();
 
         let mut encoder = self
             .device
