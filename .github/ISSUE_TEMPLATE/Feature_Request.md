@@ -1,6 +1,10 @@
 ---
-name: 🙋 Feature Request
+name: "\U0001F64B Feature Request"
 about: Want us to add something to maplibre-rs?
+title: ''
+labels: feature-request
+assignees: ''
+
 ---
 
 <!--- Provide a general summary of the issue here -->
