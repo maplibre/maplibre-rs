@@ -4,7 +4,6 @@ mod texture;
 
 use geom::{Mesh, Meshable, Quad, Vertex};
 use glyph_tesselation::GlyphBuilder;
-use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 use std::io::Error;
 use std::mem;
@@ -12,6 +11,18 @@ use ttf_parser as ttf;
 use wgpu::util::DeviceExt;
 
 use crate::rendering::{Renderable, State};
+
+// A piece of text in the scene, which is styled and moved as a unit
+pub struct TextEntity {
+    pub text: String,
+    pub shaping_info: rustybuzz::GlyphBuffer,
+    pub position: cgmath::Vector3<f32>,
+    pub rotation: cgmath::Quaternion<f32>,
+    pub color: cgmath::Vector3<f32>,
+    pub size: f32,
+}
+
+pub type TextEntityID = u32;
 
 pub enum TextSystemError {
     FontNotLoaded(&'static str),
@@ -25,18 +36,6 @@ struct GlyphInstanceAttributes {
     pub transform: [[f32; 4]; 4],
     pub color: [f32; 3],
 }
-
-// A piece of text in the scene, which is styled and moved as a unit
-pub struct TextEntity {
-    pub text: String,
-    pub shaping_info: rustybuzz::GlyphBuffer,
-    pub position: cgmath::Vector3<f32>,
-    pub rotation: cgmath::Quaternion<f32>,
-    pub color: cgmath::Vector3<f32>,
-    pub size: f32,
-}
-
-pub type TextEntityID = u32;
 
 // Struct of arrays to allow simple instance buffer generation from 'attributes'
 // While at the same time allow removing and editing of glyphs that are part of
@@ -166,7 +165,7 @@ impl Font {
     }
 
     pub fn get_face(&self) -> rustybuzz::Face {
-        // TODO: try using "owningFace" instead and return ref, so we don't recomput the face every time!
+        // TODO: try using "owningFace" instead and return ref, so we don't recompute the face every time!
         rustybuzz::Face::from_slice(&self.font_data, 0).unwrap()
     }
 }
@@ -179,7 +178,9 @@ struct GlyphRenderData {
 // System that takes care of rendering the text
 // Offers a simple interface to add / transform / remove bits of text and then render them to the screen
 // TODO: cleaner separation of rendering algorithm and text system management (i.e. -> interface that supplies mesh representation and shaders + some factory)
-// TODO: This will likely not perform well with very dynamic text (i.e. lots of movement / appearing / vanishing of labels on the map, ...)
+// TODO: add prioritzed collision detection
+// TODO: add way to handle duplicate text on different map zoom levels
+// TODO: test performance with very dynamic text (i.e. lots of movement / appearing / vanishing of labels on the map, ...)
 pub struct SceneTextSystem {
     // The loaded fonts
     fonts: HashMap<FontID, Font>,
@@ -259,7 +260,7 @@ impl SceneTextSystem {
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some("Text Shaders"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("shaders.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(include_str!("textsystem_shaders.wgsl").into()),
             });
 
         // PREPASS PIPELINE
@@ -298,11 +299,8 @@ impl SceneTextSystem {
                         strip_index_format: None,
                         front_face: wgpu::FrontFace::Ccw,
                         cull_mode: None, // no culling because glyph tesselation yields cw and ccw triangles
-                        // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
                         polygon_mode: wgpu::PolygonMode::Fill,
-                        // Requires Features::DEPTH_CLIP_CONTROL
                         unclipped_depth: false,
-                        // Requires Features::CONSERVATIVE_RASTERIZATION
                         conservative: false,
                     },
                     depth_stencil: None,
@@ -487,7 +485,7 @@ impl SceneTextSystem {
         // Draw all the meshes into the target texture
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("PrePass"),
+            label: Some("TextSystemPrePass"),
             color_attachments: &[wgpu::RenderPassColorAttachment {
                 view: &self.prepass_target_texture.view,
                 resolve_target: None,
@@ -506,16 +504,6 @@ impl SceneTextSystem {
 
         render_pass.set_pipeline(&self.prepass_pipeline);
         render_pass.set_bind_group(0, &rendering_state.camera_bind_group, &[]);
-
-        // TODO: render each glyph instanced (create instance buffers anew, because text in the scene in its positions might have changed!)
-        /*
-        for mesh in &self.meshes {
-            render_pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(0..4));
-            render_pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            let num_indices = mesh.num_indices as u32;
-            render_pass.draw_indexed(0..num_indices, 0, 0..1);
-        }
-        */
 
         for (_, glyph_render_data) in &mut self.glyph_mesh_cache {
             render_pass.set_vertex_buffer(0, glyph_render_data.mesh.vertex_buffer.slice(..));
@@ -548,14 +536,14 @@ impl SceneTextSystem {
         &mut self,
         encoder: &mut wgpu::CommandEncoder,
         rendering_state: &State,
-    ) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError> {
-        let output = rendering_state.surface.get_current_texture()?;
-        let view = output
+        output_texture: wgpu::SurfaceTexture,
+    ) -> wgpu::SurfaceTexture {
+        let view = output_texture
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("MainPass"),
+            label: Some("TextSystemMainPass"),
             color_attachments: &[wgpu::RenderPassColorAttachment {
                 view: &view,
                 resolve_target: None,
@@ -582,7 +570,7 @@ impl SceneTextSystem {
         let num_indices = mesh.num_indices as u32;
         render_pass.draw_indexed(0..num_indices, 0, 0..1);
 
-        Ok(output)
+        output_texture
     }
 }
 
@@ -590,7 +578,8 @@ impl Renderable for SceneTextSystem {
     fn render(
         &mut self,
         rendering_state: &State,
-    ) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError> {
+        output_texture: wgpu::SurfaceTexture,
+    ) -> wgpu::SurfaceTexture {
         let mut encoder =
             rendering_state
                 .device
@@ -602,12 +591,11 @@ impl Renderable for SceneTextSystem {
         self.render_prepass(&mut encoder, rendering_state);
 
         // Actual pass to flip the pixels (and compute anti-aliasing?)
-        let output = self.render_mainpass(&mut encoder, rendering_state)?;
+        let output = self.render_mainpass(&mut encoder, rendering_state, output_texture);
 
-        // submit will accept anything that implements IntoIter
         rendering_state
             .queue
             .submit(std::iter::once(encoder.finish()));
-        Ok(output)
+        output
     }
 }

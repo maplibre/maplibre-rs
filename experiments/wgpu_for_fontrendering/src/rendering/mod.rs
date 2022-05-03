@@ -1,20 +1,16 @@
 mod camera;
 
 use camera::*;
-
-use winit::{
-    event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::{Window, WindowBuilder},
-};
-
 use wgpu::util::DeviceExt;
+use winit::{event::*, window::Window};
 
 pub trait Renderable {
+    /// Render to the given output texture and return it
     fn render(
         &mut self,
         rendering_state: &State,
-    ) -> Result<wgpu::SurfaceTexture, wgpu::SurfaceError>;
+        output_texture: wgpu::SurfaceTexture,
+    ) -> wgpu::SurfaceTexture;
 }
 
 pub struct State {
@@ -29,13 +25,6 @@ pub struct State {
     pub camera_bind_group_layout: wgpu::BindGroupLayout,
     pub camera_bind_group: wgpu::BindGroup,
     pub camera_controller: CameraController,
-}
-
-// Getters
-impl State {
-    fn get_device(&mut self) -> &mut wgpu::Device {
-        &mut self.device
-    }
 }
 
 impl State {
@@ -162,7 +151,8 @@ impl State {
     }
 
     pub fn render(&mut self, renderable: &mut dyn Renderable) -> Result<(), wgpu::SurfaceError> {
-        let output = renderable.render(self)?;
+        let output_texture = self.surface.get_current_texture()?;
+        let output = renderable.render(self, output_texture);
         output.present();
         Ok(())
     }
