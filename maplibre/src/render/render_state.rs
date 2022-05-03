@@ -1,9 +1,12 @@
 use std::default::Default;
 
-use std::{cmp, iter};
+use std::fs::File;
+use std::io::Write;
+use std::sync::Arc;
+use std::{cmp, iter, mem};
 
 use tracing;
-use wgpu::{SurfaceError, SurfaceTexture, TextureFormat, TextureView};
+use wgpu::{CommandEncoder, SurfaceError, SurfaceTexture, TextureFormat, TextureView};
 
 use crate::style::Style;
 
@@ -39,7 +42,7 @@ impl Frame {
         match self {
             Frame::Window(frame) => frame.present(),
             Frame::Headless(frame) => {
-                let image = frame.frame.as_image_copy();
+                let image = frame.texture.as_image_copy();
             }
         }
     }
@@ -50,16 +53,93 @@ impl Frame {
             Frame::Headless(frame) => frame.create_view(),
         }
     }
+
+    pub fn post_render(&self, encoder: &mut CommandEncoder) {
+        match self {
+            Frame::Window(frame) => frame.post_render(encoder),
+            Frame::Headless(frame) => frame.post_render(encoder),
+        }
+    }
 }
 
 pub struct HeadlessFrame {
-    frame: wgpu::Texture,
+    texture: wgpu::Texture,
+    output_buffer: wgpu::Buffer,
+    size: WindowSize,
+    buffer_dimensions: BufferDimensions,
 }
 
 impl HeadlessFrame {
     fn create_view(&self) -> TextureView {
-        self.frame
+        self.texture
             .create_view(&wgpu::TextureViewDescriptor::default())
+    }
+
+    pub fn post_render(&self, encoder: &mut wgpu::CommandEncoder) {
+        // Copy the data from the texture to the buffer
+        encoder.copy_texture_to_buffer(
+            self.texture.as_image_copy(),
+            wgpu::ImageCopyBuffer {
+                buffer: &self.output_buffer,
+                layout: wgpu::ImageDataLayout {
+                    offset: 0,
+                    bytes_per_row: Some(
+                        std::num::NonZeroU32::new(
+                            self.buffer_dimensions.padded_bytes_per_row as u32,
+                        )
+                        .unwrap(),
+                    ),
+                    rows_per_image: None,
+                },
+            },
+            wgpu::Extent3d {
+                width: self.size.width() as u32,
+                height: self.size.height() as u32,
+                depth_or_array_layers: 1,
+            },
+        );
+    }
+
+    pub async fn create_png(&self, png_output_path: &str, device: &wgpu::Device) {
+        // Note that we're not calling `.await` here.
+        let buffer_slice = self.output_buffer.slice(..);
+        let buffer_future = buffer_slice.map_async(wgpu::MapMode::Read);
+
+        // Poll the device in a blocking manner so that our future resolves.
+        // In an actual application, `device.poll(...)` should
+        // be called in an event loop or on another thread.
+        device.poll(wgpu::Maintain::Wait);
+
+        if let Ok(()) = buffer_future.await {
+            let padded_buffer = buffer_slice.get_mapped_range();
+
+            let mut png_encoder = png::Encoder::new(
+                File::create(png_output_path).unwrap(),
+                self.buffer_dimensions.width as u32,
+                self.buffer_dimensions.height as u32,
+            );
+            png_encoder.set_depth(png::BitDepth::Eight);
+            png_encoder.set_color(png::ColorType::Rgba);
+            let mut png_writer = png_encoder
+                .write_header()
+                .unwrap()
+                .into_stream_writer_with_size(self.buffer_dimensions.unpadded_bytes_per_row)
+                .unwrap();
+
+            // from the padded_buffer we write just the unpadded bytes into the image
+            for chunk in padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row) {
+                png_writer
+                    .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row])
+                    .unwrap();
+            }
+            png_writer.finish().unwrap();
+
+            // With the current interface, we have to make sure all mapped views are
+            // dropped before we unmap the buffer.
+            drop(padded_buffer);
+
+            self.output_buffer.unmap();
+        }
     }
 }
 
@@ -77,6 +157,8 @@ impl WindowFrame {
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default())
     }
+
+    pub fn post_render(&self, _encoder: &mut wgpu::CommandEncoder) {}
 }
 
 pub enum MapSurface {
@@ -139,6 +221,29 @@ impl MapSurface {
     }
 }
 
+struct BufferDimensions {
+    width: usize,
+    height: usize,
+    unpadded_bytes_per_row: usize,
+    padded_bytes_per_row: usize,
+}
+
+impl BufferDimensions {
+    fn new(width: usize, height: usize) -> Self {
+        let bytes_per_pixel = mem::size_of::<u32>();
+        let unpadded_bytes_per_row = width * bytes_per_pixel;
+        let align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT as usize;
+        let padded_bytes_per_row_padding = (align - unpadded_bytes_per_row % align) % align;
+        let padded_bytes_per_row = unpadded_bytes_per_row + padded_bytes_per_row_padding;
+        Self {
+            width,
+            height,
+            unpadded_bytes_per_row,
+            padded_bytes_per_row,
+        }
+    }
+}
+
 pub struct HeadlessMapSurface {
     format: TextureFormat,
     size: WindowSize,
@@ -170,6 +275,20 @@ impl HeadlessMapSurface {
     }
 
     pub fn new_frame(&self, device: &wgpu::Device) -> Result<Frame, SurfaceError> {
+        // It is a WebGPU requirement that ImageCopyBuffer.layout.bytes_per_row % wgpu::COPY_BYTES_PER_ROW_ALIGNMENT == 0
+        // So we calculate padded_bytes_per_row by rounding unpadded_bytes_per_row
+        // up to the next multiple of wgpu::COPY_BYTES_PER_ROW_ALIGNMENT.
+        // https://en.wikipedia.org/wiki/Data_structure_alignment#Computing_padding
+        let buffer_dimensions =
+            BufferDimensions::new(self.size.width() as usize, self.size.height() as usize);
+        // The output buffer lets us retrieve the data as an array
+        let output_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: (buffer_dimensions.padded_bytes_per_row * buffer_dimensions.height) as u64,
+            usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("Surface texture"),
             size: wgpu::Extent3d {
@@ -181,9 +300,14 @@ impl HeadlessMapSurface {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: self.format,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
         });
-        Ok(Frame::Headless(HeadlessFrame { frame: texture }))
+        Ok(Frame::Headless(HeadlessFrame {
+            texture,
+            output_buffer,
+            size: self.size,
+            buffer_dimensions,
+        }))
     }
 
     pub fn size(&self) -> WindowSize {
@@ -264,7 +388,7 @@ impl WindowMapSurface {
 pub struct RenderState {
     instance: wgpu::Instance,
 
-    device: wgpu::Device,
+    pub(crate) device: Arc<wgpu::Device>,
     queue: wgpu::Queue,
 
     fps_meter: FPSMeter,
@@ -477,7 +601,7 @@ impl RenderState {
         Some(Self {
             instance,
             surface,
-            device,
+            device: Arc::new(device),
             queue,
             render_pipeline,
             mask_pipeline,
@@ -718,7 +842,7 @@ impl RenderState {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self) -> Result<Frame, wgpu::SurfaceError> {
         let render_setup_span = tracing::span!(tracing::Level::TRACE, "render prepare");
         let _guard = render_setup_span.enter();
 
@@ -860,6 +984,8 @@ impl RenderState {
             }
         }
 
+        frame.post_render(&mut encoder);
+
         {
             let _span = tracing::span!(tracing::Level::TRACE, "render finish").entered();
             tracing::trace!("Finished drawing");
@@ -867,12 +993,12 @@ impl RenderState {
             self.queue.submit(Some(encoder.finish()));
             tracing::trace!("Submitted queue");
 
-            frame.present();
+            //frame.present();
             tracing::trace!("Presented frame");
         }
 
         self.fps_meter.update_and_print();
-        Ok(())
+        Ok(frame)
     }
 
     pub fn suspend(&mut self) {

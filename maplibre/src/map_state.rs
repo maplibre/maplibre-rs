@@ -9,7 +9,7 @@ use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TessellateMessage, TileRequest, TileTessellateMessage};
 use crate::render::camera;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
-use crate::render::render_state::{MapSurface, RenderState};
+use crate::render::render_state::{Frame, MapSurface, RenderState};
 use crate::style::Style;
 use crate::util::ChangeObserver;
 use crate::{MapWindow, ScheduleMethod, WindowMapSurface, WindowSize};
@@ -133,7 +133,7 @@ where
         }
     }
 
-    pub fn update_and_redraw(&mut self) -> Result<(), SurfaceError> {
+    pub fn update_and_redraw(&mut self) -> Result<Frame, SurfaceError> {
         // Get data from other threads
         self.try_populate_cache();
 
