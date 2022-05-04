@@ -2,12 +2,17 @@ use crate::error::Error;
 use crate::io::shared_thread_state::SharedThreadState;
 use crate::ScheduleMethod;
 use std::future::Future;
-
-pub struct TokioScheduleMethod;
+use tokio::task;
+use tokio_util::task::LocalPoolHandle;
+pub struct TokioScheduleMethod {
+    pool: LocalPoolHandle,
+}
 
 impl TokioScheduleMethod {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            pool: LocalPoolHandle::new(4),
+        }
     }
 }
 
@@ -18,9 +23,14 @@ impl ScheduleMethod for TokioScheduleMethod {
         future_factory: impl FnOnce(SharedThreadState) -> T + Send + 'static,
     ) -> Result<(), Error>
     where
-        T: Future<Output = ()> + Send + 'static,
+        T: Future<Output = ()> + 'static,
     {
-        tokio::task::spawn(future_factory(shared_thread_state));
+        self.pool.spawn_pinned(|| {
+            let unsend_data = (future_factory)(shared_thread_state);
+
+            async move { unsend_data.await }
+        });
+
         Ok(())
     }
 }

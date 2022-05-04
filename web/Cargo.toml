@@ -19,7 +19,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 async-trait = "0.1"
-maplibre = { path = "../maplibre", features = ["no-thread-safe-futures"] }
+maplibre = { path = "../maplibre", features = [] }
 winit = "*"
 log = "*"
 

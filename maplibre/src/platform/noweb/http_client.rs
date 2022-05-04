@@ -40,7 +40,7 @@ impl ReqwestHttpClient {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl HTTPClient for ReqwestHttpClient {
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
         let response = self.client.get(url).send().await?;
