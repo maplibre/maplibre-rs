@@ -20,8 +20,9 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 async-trait = "0.1"
 maplibre = { path = "../maplibre", features = ["no-thread-safe-futures"] }
-winit = "*"
-log = "*"
+winit = "0.26"
+log = "0.4"
+rand = { version = "0.7", features = ["wasm-bindgen"] }
 
 console_error_panic_hook = "0.1"
 web-sys = { version = "0.3", features = [
