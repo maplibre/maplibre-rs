@@ -8,7 +8,7 @@ The build for desktop is very simple. You just have to run the following:
 cargo build -p maplibre-demo
 ```
 
-You can use the *--release* parameter if you want to be in release mode instead of debug.
+You can use the `--release` parameter if you want to be in release mode instead of debug.
 
 If you want to run the application:
 
@@ -16,8 +16,8 @@ If you want to run the application:
 cargo run -p maplibre-demo
 ```
 
-> __Note__: Make sure you have selected the right toolchain target within Rustup. You can use `rustup show` to see your
-> active toolchain. If you want to change the target of the build manually, use the cargo *--target* parameter.
+> __Note__: Make sure you have selected the right toolchain target within rustup. You can use `rustup show` to see your
+> active toolchain. If you want to change the target of the build manually, use the cargo `--target` parameter.
 
 
 ## Android
@@ -58,16 +58,11 @@ cargo build -p maplibre-demo --target aarch64-apple-darwin
 If you want to build a proper MacOS application (in OSX terminology), you will need to use the XCode project
 in the folder `./apple/xcode/`.
 
-After installing [XCode](https://apps.apple.com/us/app/xcode/id497799835?ls=1&mt=12) and [Rustup](https://rustup.rs/),
-build the Rust library inside `./apple` with Cargo:
-
-```bash
-cargo build -p apple --lib
-```
-
-Then open the project from the folder `./apple/xcode` with XCode. Select the scheme called *example(macOs)* and
+Install [XCode](https://apps.apple.com/us/app/xcode/id497799835?ls=1&mt=12) and [rustup](https://rustup.rs/).
+Then open the project from the folder `./apple/xcode` with XCode. Select the scheme called *example(macOS)* and
 click on *Product -> Build for -> Running*. This will build the MacOS application for the version of OSX defined
-in the Build Settings.
+in the Build Settings. The XCode project is configured to automatically compile the Rust library with the correct target
+in the *Cargo Build* build phases configuration.
 
 If you want to run the project from XCode, you need to make sure that you have selected the version of OSX which
 corresponds to your system. Otherwise, XCode will tell you that the app is incompatible with the current version of macOS.
