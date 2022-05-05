@@ -1,5 +1,7 @@
+use maplibre::platform::http_client::ReqwestHttpClient;
+use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::window::FromWindow;
-use maplibre::{MapBuilder, ScheduleMethod, TokioScheduleMethod};
+use maplibre::MapBuilder;
 
 #[cfg(feature = "enable-tracing")]
 fn enable_tracing() {
@@ -11,6 +13,22 @@ fn enable_tracing() {
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 }
 
+fn run_in_window() {
+    MapBuilder::from_window("A fantastic window!")
+        .with_http_client(ReqwestHttpClient::new(None))
+        .with_schedule_method(TokioScheduleMethod::new())
+        .build()
+        .run_sync();
+}
+
+fn run_headless() {
+    MapBuilder::from_window("A fantastic window!")
+        .with_http_client(ReqwestHttpClient::new(None))
+        .with_schedule_method(TokioScheduleMethod::new())
+        .build()
+        .run_sync();
+}
+
 fn main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
@@ -18,7 +36,8 @@ fn main() {
     enable_tracing();
 
     MapBuilder::from_window("A fantastic window!")
-        .with_schedule_method(ScheduleMethod::Tokio(TokioScheduleMethod::new()))
+        .with_http_client(ReqwestHttpClient::new(None))
+        .with_schedule_method(TokioScheduleMethod::new())
         .build()
         .run_sync();
 }

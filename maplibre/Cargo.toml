@@ -1,31 +1,25 @@
 [package]
 name = "maplibre"
-version = "0.1.0"
-authors = ["Maximilian Ammann <max@maxammann.org>"]
+version = "0.0.2"
 edition = "2021"
 build = "build.rs"
+authors = ["Maximilian Ammann <max@maxammann.org>"]
 license = "MIT OR Apache-2.0"
+description = "Native Maps for Web, Mobile and Desktop"
+readme = "../README.md"
 
 [features]
 web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web
-enable-tracing = [ "tracing-subscriber", "tracing-tracy", "tracy-client", "tracing-wasm"]
-default = []
+enable-tracing = [ "tracing-subscriber", "tracing-tracy", "tracy-client"]
+no-thread-safe-futures = []
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-console_error_panic_hook = "0.1"
 web-sys = { version = "0.3", features = [
-    "Window",
-    "Worker", "WorkerGlobalScope", "DedicatedWorkerGlobalScope", "MessageEvent",
-    "Request", "RequestInit", "RequestMode", "Response", "Headers",
-    "ErrorEvent"
+    "Window"
 ] }
-js-sys = "0.3"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
-console_log = { version = "0.2", features = ["color"] }
-tracing-wasm = { version = "0.2", optional = true } # FIXME: Low quality dependency
-instant = { version = "0.1", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android"))'.dependencies]
 tokio = { version = "1.17", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
@@ -45,6 +39,9 @@ reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"
 winit = { version = "0.26", default-features = false, features = ["x11", "wayland"] }
 
 [dependencies]
+async-trait = "0.1"
+instant = { version = "0.1", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
+
 winit = { version = "0.26", default-features = false }
 
 raw-window-handle = "0.4"
@@ -57,8 +54,8 @@ cgmath = "0.18"
 geo = { version = "0.19" }
 geo-types = { version = "0.7", features = ["use-rstar_0_9"] }
 rstar = { version = "0.9" }
-prost = "0.9"
-geozero = { git = "https://github.com/georust/geozero", rev = "373b731", default-features = false, features = ["with-mvt", "with-geo"]}
+prost = "0.10.1"
+geozero = { version = "0.9.4", default-features = false, features = ["with-mvt", "with-geo"]}
 
 tile-grid = "0.3"
 

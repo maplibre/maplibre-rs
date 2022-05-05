@@ -22,7 +22,7 @@ use crate::render::options::{
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
 use crate::tessellation::IndexDataType;
 use crate::util::FPSMeter;
-use crate::WindowSize;
+use crate::{MapWindow, WindowSize};
 
 use super::piplines::*;
 use super::shaders;
@@ -71,8 +71,8 @@ impl RenderState {
     ) -> Option<Self> {
         let sample_count = 4;
 
-        //let instance = wgpu::Instance::new(wgpu::Backends::GL);
         let instance = wgpu::Instance::new(wgpu::Backends::all());
+        //let instance = wgpu::Instance::new(wgpu::Backends::GL);
         //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
 
         let surface = unsafe { instance.create_surface(&window) };

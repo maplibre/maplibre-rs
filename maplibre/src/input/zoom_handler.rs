@@ -1,8 +1,10 @@
 use super::UpdateState;
 
 use crate::coords::Zoom;
-use crate::map_state::MapState;
+use crate::map_state::{MapState, ViewState};
 
+use crate::render::camera::Camera;
+use crate::MapWindow;
 use cgmath::{Vector2, Vector3};
 use std::time::Duration;
 
@@ -13,7 +15,7 @@ pub struct ZoomHandler {
 }
 
 impl UpdateState for ZoomHandler {
-    fn update_state<W>(&mut self, state: &mut MapState<W>, _dt: Duration) {
+    fn update_state(&mut self, state: &mut ViewState, dt: Duration) {
         if let Some(zoom_delta) = self.zoom_delta {
             if let Some(window_position) = self.window_position {
                 let current_zoom = state.zoom();
@@ -22,13 +24,12 @@ impl UpdateState for ZoomHandler {
                 state.update_zoom(next_zoom);
                 self.zoom_delta = None;
 
-                let perspective = &state.perspective();
-                let view_proj = state.camera().calc_view_proj(perspective);
+                let view_proj = state.view_projection();
                 let inverted_view_proj = view_proj.invert();
-                let camera = state.camera_mut();
 
-                if let Some(cursor_position) =
-                    camera.window_to_world_at_ground(&window_position, &inverted_view_proj)
+                if let Some(cursor_position) = state
+                    .camera
+                    .window_to_world_at_ground(&window_position, &inverted_view_proj)
                 {
                     let scale = current_zoom.scale_delta(&next_zoom);
 
@@ -38,7 +39,7 @@ impl UpdateState for ZoomHandler {
                         cursor_position.z,
                     ) - cursor_position;
 
-                    camera.position += delta;
+                    state.camera.position += delta;
                 }
             }
         }

@@ -54,7 +54,7 @@ jobs:
       - uses: ./.github/actions/docs
       - uses: ./.github/actions/deploy
         with:
-          source: target/x86_64-unknown-linux-gnu/doc/.
+          source: target/doc/.
           destination: api-docs
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
       - uses: ./.github/actions/deploy
