@@ -1,6 +1,6 @@
 # Design
 
-<script src="https://unpkg.com/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js" ></script>
+<script crossorigin="anonymous" src="https://unpkg.com/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js" ></script>
 
 <embed style="border-style: solid; width: 100%" type="image/svg+xml" src="./figures/domain-model.drawio.svg" class="diagram"/>
 <embed style="border-style: solid; width: 100%" type="image/svg+xml" src="./figures/data-model.drawio.svg" class="diagram"/>
