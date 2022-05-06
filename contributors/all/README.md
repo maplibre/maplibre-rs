@@ -9,7 +9,7 @@ Thanks go to these wonderful people ([emoji key](https://allcontributors.org/doc
 <table>
   <tr>
     <td align="center"><a href="https://github.com/maxammann"><img src="https://avatars.githubusercontent.com/u/905221?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Max Ammann</b></sub></a><br /></td>
-    <td align="center"><a href="https://turnipguy30.github.io"><img src="https://avatars.githubusercontent.com/u/50542928?v=4?s=100" width="100px;" alt=""/><br /><sub><b>JohnnySD</b></sub></a><br /><a href="#content-TurnipGuy30" title="Content">🖋</a> <a href="https://github.com/all-contributors/all-contributors/commits?author=TurnipGuy30" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://turnipguy30.github.io"><img src="https://avatars.githubusercontent.com/u/3996615?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Drabble</b></sub></a><br /></a>></td>
     <td align="center"><a href="https://github.com/maxammann
   </tr>
 </table>
