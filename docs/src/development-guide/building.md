@@ -81,7 +81,7 @@ During the installation select the C++ tools. Restart your machine after the ins
 
 Finally you can run the command:
 
-bash
+```bash
 cargo build -p maplibre-demo --target x86_64-pc-windows-msvc
 
 > The target may vary depending on the CPU architecture you are targetting for your build. On ARM64 you would
