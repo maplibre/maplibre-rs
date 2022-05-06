@@ -83,6 +83,7 @@ Finally you can run the command:
 
 ```bash
 cargo build -p maplibre-demo --target x86_64-pc-windows-msvc
+```
 
 > The target may vary depending on the CPU architecture you are targetting for your build. On ARM64 you would
 > use the target aarch64-pc-windows-msvc instead. If you are building for your current operating system, 
