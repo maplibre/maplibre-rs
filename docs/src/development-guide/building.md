@@ -69,6 +69,25 @@ corresponds to your system. Otherwise, XCode will tell you that the app is incom
 In order to change that, go into *Build settings -> Deployment -> MacOS deployment target* and select your OSX version.
 Finally, you can click on the run button to start the application.
 
+## Microsoft Windows
+
+You can build executables for Microsoft Windows with the `cargo build` command. You will need to install 
+[rustup](https://rustup.rs/) and [CMake](https://cmake.org/download/). CMake is required by some libraries
+to build c/c++ code. 
+
+You also need to install the 
+[Build Tools for Visual Studio 2019](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=BuildTools&rel=16). 
+During the installation select the C++ tools. Restart your machine after the installation is complete.
+
+Finally you can run the command:
+
+bash
+cargo build -p maplibre-demo --target x86_64-pc-windows-msvc
+
+> The target may vary depending on the CPU architecture you are targetting for your build. On ARM64 you would
+> use the target aarch64-pc-windows-msvc instead. If you are building for your current operating system, 
+> you shouldn't have to specify the target, it should be automatically configured by rustup.
+
 ## Web (WebGL, WebGPU)
 
 If you have a browser which already supports a recent version of the WebGPU specification then you can start a
