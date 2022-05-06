@@ -9,8 +9,8 @@ Thanks go to these wonderful people ([emoji key](https://allcontributors.org/doc
 <table>
   <tr>
     <td align="center"><a href="https://github.com/maxammann"><img src="https://avatars.githubusercontent.com/u/905221?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Max Ammann</b></sub></a><br /></td>
-    <td align="center"><a href="https://turnipguy30.github.io"><img src="https://avatars.githubusercontent.com/u/3996615?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Drabble</b></sub></a><br /></a>></td>
-    <td align="center"><a href="https://github.com/maxammann
+    <td align="center"><a href="https://github.com/Drabble"><img src="https://avatars.githubusercontent.com/u/3996615?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Drabble</b></sub></a><br /></a></td>
+     <td align="center"><a href="https://github.com/nyurik"><img src="https://avatars.githubusercontent.com/u/1641515?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Yuri Astrakhan</b></sub></a><br /></a></td>
   </tr>
 </table>
 
