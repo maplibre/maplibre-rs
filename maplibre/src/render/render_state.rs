@@ -65,25 +65,12 @@ pub struct RenderState {
 }
 
 impl RenderState {
-    pub async fn initialize<W: raw_window_handle::HasRawWindowHandle>(
-        window: &W,
-        window_size: WindowSize,
+    pub async fn initialize(
+        instance: wgpu::Instance,
+        surface: wgpu::Surface,
+        surface_config: wgpu::SurfaceConfiguration,
     ) -> Option<Self> {
         let sample_count = 4;
-
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
-        //let instance = wgpu::Instance::new(wgpu::Backends::GL);
-        //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
-
-        let surface = unsafe { instance.create_surface(&window) };
-        let surface_config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: crate::platform::COLOR_TEXTURE_FORMAT,
-            width: window_size.width(),
-            height: window_size.height(),
-            // present_mode: wgpu::PresentMode::Mailbox,
-            present_mode: wgpu::PresentMode::Fifo, // VSync
-        };
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -280,11 +267,11 @@ impl RenderState {
         })
     }
 
-    pub fn recreate_surface<W: raw_window_handle::HasRawWindowHandle>(&mut self, window: &W) {
+    pub fn recreate_surface<W: MapWindow>(&mut self, window: &W) {
         // We only create a new surface if we are currently suspended. On Android (and probably iOS)
         // the surface gets invalid after the app has been suspended.
         if self.suspended {
-            let surface = unsafe { self.instance.create_surface(window) };
+            let surface = unsafe { self.instance.create_surface(window.inner()) };
             surface.configure(&self.device, &self.surface_config);
             self.surface = surface;
         }

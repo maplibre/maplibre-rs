@@ -18,10 +18,6 @@ use std::sync;
 use std::sync::{mpsc, Arc, Mutex};
 use wgpu::SurfaceError;
 
-pub trait Runnable<E> {
-    fn run(self, event_loop: E, max_frames: Option<u64>);
-}
-
 pub struct ViewState {
     zoom: ChangeObserver<Zoom>,
     pub camera: ChangeObserver<Camera>,
@@ -47,14 +43,11 @@ impl ViewState {
     }
 }
 
-pub struct MapState<W, SM, HC>
+pub struct MapState<SM, HC>
 where
-    W: MapWindow,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    window: W,
-
     view_state: ViewState,
 
     render_state: Option<RenderState>,
@@ -70,14 +63,12 @@ where
     try_failed: bool,
 }
 
-impl<W, SM, HC> MapState<W, SM, HC>
+impl<SM, HC> MapState<SM, HC>
 where
-    W: MapWindow,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
     pub fn new(
-        window: W,
         window_size: WindowSize,
         render_state: Option<RenderState>,
         scheduler: Scheduler<SM>,
@@ -103,8 +94,6 @@ where
         let (message_sender, message_receiver) = mpsc::channel();
 
         Self {
-            window,
-
             view_state: ViewState {
                 zoom: ChangeObserver::default(),
                 camera: ChangeObserver::new(camera),
@@ -129,7 +118,7 @@ where
         }
     }
 
-    pub fn update_and_redraw(&mut self) -> Result<(), SurfaceError> {
+    pub fn update_and_redraw(&mut self) -> Result<(), Error> {
         // Get data from other threads
         self.try_populate_cache();
 
@@ -137,12 +126,12 @@ where
         self.prepare_render();
 
         // Render buffers
-        let result = self.render_state_mut().render();
+        self.render_state_mut().render()?;
 
         #[cfg(all(feature = "enable-tracing", not(target_arch = "wasm32")))]
         tracy_client::finish_continuous_frame!();
 
-        result
+        Ok(())
     }
 
     #[tracing::instrument(skip_all)]
@@ -307,10 +296,6 @@ where
         &self.scheduler
     }
 
-    pub fn window(&self) -> &W {
-        &self.window
-    }
-
     pub fn suspend(&mut self) {
         self.render_state_mut().suspend();
     }
@@ -338,30 +323,42 @@ where
     }
 }
 
-impl<W, SM, HC> MapState<W, SM, HC>
+impl<SM, HC> MapState<SM, HC>
 where
-    W: MapWindow + raw_window_handle::HasRawWindowHandle,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    pub fn recreate_surface(&mut self) {
+    pub fn recreate_surface<W: MapWindow>(&mut self, window: &W) {
         self.render_state
             .as_mut()
             .expect("render state not yet initialized. Call reinitialize().")
-            .recreate_surface(&self.window);
+            .recreate_surface(window);
     }
 
     pub fn is_initialized(&self) -> bool {
         self.render_state.is_some()
     }
 
-    pub async fn reinitialize(&mut self) {
+    pub async fn reinitialize<W: MapWindow>(&mut self) {
         if self.render_state.is_none() {
-            let window_size = self
-                .window
-                .size()
-                .expect("Window size should be known when reinitializing.");
-            let render_state = RenderState::initialize(&self.window, window_size)
+            let instance = wgpu::Instance::new(wgpu::Backends::all());
+            //let instance = wgpu::Instance::new(wgpu::Backends::GL);
+            //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
+
+            let (window, event_loop) = W::create();
+            let window_size = window.size();
+
+            let surface = unsafe { instance.create_surface(window.inner()) };
+            let surface_config = wgpu::SurfaceConfiguration {
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                format: crate::platform::COLOR_TEXTURE_FORMAT,
+                width: window_size.width(),
+                height: window_size.height(),
+                // present_mode: wgpu::PresentMode::Mailbox,
+                present_mode: wgpu::PresentMode::Fifo, // VSync
+            };
+            let window_size = window.size();
+            let render_state = RenderState::initialize(instance, surface, surface_config)
                 .await
                 .unwrap();
             self.render_state = Some(render_state)

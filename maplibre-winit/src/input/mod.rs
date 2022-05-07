@@ -2,8 +2,8 @@
 
 use std::time::Duration;
 
-use crate::coords::Zoom;
 use cgmath::Vector2;
+use maplibre::coords::Zoom;
 use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
 use crate::input::pan_handler::PanHandler;
@@ -12,9 +12,8 @@ use crate::input::query_handler::QueryHandler;
 use crate::input::shift_handler::ShiftHandler;
 use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
-use crate::map_state::{MapState, ViewState};
-use crate::render::camera::Camera;
-use crate::MapWindow;
+use maplibre::map_state::{MapState, ViewState};
+use maplibre::render::camera::Camera;
 
 mod pan_handler;
 mod pinch_handler;
@@ -131,7 +130,6 @@ pub trait UpdateState {
 }
 
 impl UpdateState for InputController {
-    #[tracing::instrument(skip_all)]
     fn update_state(&mut self, state: &mut ViewState, dt: Duration) {
         self.pan_handler.update_state(state, dt);
         self.pinch_handler.update_state(state, dt);

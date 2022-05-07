@@ -1,11 +1,10 @@
 use super::UpdateState;
 
-use crate::coords::Zoom;
-use crate::map_state::{MapState, ViewState};
+use maplibre::coords::Zoom;
+use maplibre::map_state::{MapState, ViewState};
 
-use crate::render::camera::Camera;
-use crate::MapWindow;
 use cgmath::{Vector2, Vector3};
+use maplibre::render::camera::Camera;
 use std::time::Duration;
 
 pub struct ZoomHandler {

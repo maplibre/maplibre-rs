@@ -3,8 +3,8 @@ use crate::platform::schedule_method::WebWorkerPoolScheduleMethod;
 
 use maplibre::io::scheduler::Scheduler;
 
-use maplibre::window::FromCanvas;
 use maplibre::MapBuilder;
+use maplibre_winit::winit::WinitMapWindow;
 use std::panic;
 use wasm_bindgen::prelude::*;
 
@@ -54,7 +54,8 @@ pub async fn run(scheduler_ptr: *mut Scheduler<WebWorkerPoolScheduleMethod>) {
         unsafe { Box::from_raw(scheduler_ptr) };
 
     // Either call forget or the main loop to keep worker loop alive
-    MapBuilder::from_canvas("maplibre")
+    let builder: MapBuilder<WinitMapWindow, _, _, _> = MapBuilder::new();
+    builder
         .with_http_client(WHATWGFetchHttpClient::new())
         .with_existing_scheduler(*scheduler)
         .build()

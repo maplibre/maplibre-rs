@@ -1,9 +1,9 @@
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
 use crate::io::source_client::HTTPClient;
-use crate::map_state::{MapState, Runnable};
+use crate::map_state::MapState;
 use crate::render::render_state::RenderState;
 use crate::style::Style;
-use crate::window::{MapWindow, WindowFactory, WindowSize};
+use crate::window::{MapWindow, Runnable, WindowSize};
 use std::marker::PhantomData;
 
 pub mod coords;
@@ -17,13 +17,11 @@ pub mod window;
 pub mod benchmarking;
 
 // Internal modules
-pub(crate) mod input;
-pub(crate) mod map_state;
-pub(crate) mod render;
+pub mod map_state;
+pub mod render;
 pub(crate) mod tessellation;
 pub(crate) mod tilejson;
 pub(crate) mod util;
-pub(crate) mod winit;
 
 pub struct Map<W, E, SM, HC>
 where
@@ -31,14 +29,14 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    map_state: MapState<W, SM, HC>,
+    map_state: MapState<SM, HC>,
+    window: W,
     event_loop: E,
 }
 
 impl<W, E, SM, HC> Map<W, E, SM, HC>
 where
-    MapState<W, SM, HC>: Runnable<E>,
-    W: MapWindow,
+    W: MapWindow<EventLoop = E> + Runnable<SM, HC>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -50,8 +48,8 @@ where
         self.run_with_optionally_max_frames(Some(max_frames));
     }
 
-    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
-        self.map_state.run(self.event_loop, max_frames);
+    pub fn run_with_optionally_max_frames(mut self, max_frames: Option<u64>) {
+        self.window.run(self.map_state, self.event_loop, max_frames);
     }
 }
 
@@ -60,42 +58,49 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    window: W,
-    event_loop: E,
     scheduler: Scheduler<SM>,
     http_client: HC,
     style: Style,
+
+    phantom_w: PhantomData<W>,
+    phantom_e: PhantomData<E>,
 }
 
 impl<W, E, SM, HC> UninitializedMap<W, E, SM, HC>
 where
-    W: MapWindow + raw_window_handle::HasRawWindowHandle,
+    W: MapWindow<EventLoop = E>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
     pub async fn initialize(self) -> Map<W, E, SM, HC> {
-        #[cfg(target_os = "android")]
-        // On android we can not get the dimensions of the window initially. Therefore, we use a
-        // fallback until the window is ready to deliver its correct bounds.
-        let window_size = self.window.size().unwrap_or_default();
+        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        //let instance = wgpu::Instance::new(wgpu::Backends::GL);
+        //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
 
-        #[cfg(not(target_os = "android"))]
-        let window_size = self
-            .window
-            .size()
-            .expect("failed to get window dimensions.");
+        let (window, event_loop) = W::create();
+        let window_size = window.size();
 
-        let render_state = RenderState::initialize(&self.window, window_size).await;
+        let surface = unsafe { instance.create_surface(window.inner()) };
+        let surface_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: crate::platform::COLOR_TEXTURE_FORMAT,
+            width: window_size.width(),
+            height: window_size.height(),
+            // present_mode: wgpu::PresentMode::Mailbox,
+            present_mode: wgpu::PresentMode::Fifo, // VSync
+        };
+
+        let render_state = RenderState::initialize(instance, surface, surface_config).await;
         Map {
             map_state: MapState::new(
-                self.window,
                 window_size,
                 render_state,
                 self.scheduler,
                 self.http_client,
                 self.style,
             ),
-            event_loop: self.event_loop,
+            window,
+            event_loop,
         }
     }
 }
@@ -103,8 +108,7 @@ where
 #[cfg(not(target_arch = "wasm32"))]
 impl<W, E, SM, HC> UninitializedMap<W, E, SM, HC>
 where
-    W: MapWindow + raw_window_handle::HasRawWindowHandle,
-    MapState<W, SM, HC>: Runnable<E>,
+    W: MapWindow<EventLoop = E> + Runnable<SM, HC>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -139,27 +143,29 @@ pub struct MapBuilder<W, E, SM, HC>
 where
     SM: ScheduleMethod,
 {
-    window_factory: Box<WindowFactory<W, E>>,
     schedule_method: Option<SM>,
     scheduler: Option<Scheduler<SM>>,
     http_client: Option<HC>,
     style: Option<Style>,
+
+    phantom_w: PhantomData<W>,
+    phantom_e: PhantomData<E>,
 }
 
 impl<W, E, SM, HC> MapBuilder<W, E, SM, HC>
 where
-    MapState<W, SM, HC>: Runnable<E>,
-    W: MapWindow + raw_window_handle::HasRawWindowHandle,
+    W: MapWindow<EventLoop = E> + Runnable<SM, HC>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    pub fn new(create_window: Box<WindowFactory<W, E>>) -> Self {
+    pub fn new() -> Self {
         Self {
-            window_factory: create_window,
             schedule_method: None,
             scheduler: None,
             http_client: None,
             style: None,
+            phantom_w: Default::default(),
+            phantom_e: Default::default(),
         }
     }
 
@@ -184,19 +190,17 @@ where
     }
 
     pub fn build(self) -> UninitializedMap<W, E, SM, HC> {
-        let (window, event_loop) = (self.window_factory)();
-
         let scheduler = self
             .scheduler
             .unwrap_or_else(|| Scheduler::new(self.schedule_method.unwrap()));
         let style = self.style.unwrap_or_default();
 
         UninitializedMap {
-            window,
-            event_loop,
             scheduler,
             http_client: self.http_client.unwrap(),
             style,
+            phantom_w: Default::default(),
+            phantom_e: Default::default(),
         }
     }
 }
