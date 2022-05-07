@@ -1,10 +1,10 @@
 use super::UpdateState;
 
 use maplibre::coords::Zoom;
-use maplibre::map_state::{MapState, ViewState};
+use maplibre::map_state::ViewState;
 
 use cgmath::{Vector2, Vector3};
-use maplibre::render::camera::Camera;
+
 use std::time::Duration;
 
 pub struct ZoomHandler {
@@ -14,7 +14,7 @@ pub struct ZoomHandler {
 }
 
 impl UpdateState for ZoomHandler {
-    fn update_state(&mut self, state: &mut ViewState, dt: Duration) {
+    fn update_state(&mut self, state: &mut ViewState, _dt: Duration) {
         if let Some(zoom_delta) = self.zoom_delta {
             if let Some(window_position) = self.window_position {
                 let current_zoom = state.zoom();

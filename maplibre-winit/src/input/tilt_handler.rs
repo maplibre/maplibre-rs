@@ -1,10 +1,9 @@
 use super::UpdateState;
 
-use maplibre::map_state::{MapState, ViewState};
+use maplibre::map_state::ViewState;
 
 use cgmath::{Deg, Rad, Zero};
-use maplibre::coords::Zoom;
-use maplibre::render::camera::Camera;
+
 use std::time::Duration;
 
 pub struct TiltHandler {

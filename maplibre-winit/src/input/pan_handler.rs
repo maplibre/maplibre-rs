@@ -1,10 +1,10 @@
 use super::UpdateState;
 
-use maplibre::map_state::{MapState, ViewState};
+use maplibre::map_state::ViewState;
 use maplibre::render::camera::Camera;
 
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
-use maplibre::window::MapWindow;
+
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
 

@@ -22,7 +22,7 @@ use crate::render::options::{
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
 use crate::tessellation::IndexDataType;
 use crate::util::FPSMeter;
-use crate::{MapWindow, WindowSize};
+use crate::MapWindow;
 
 use super::piplines::*;
 use super::shaders;

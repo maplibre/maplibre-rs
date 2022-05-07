@@ -1,18 +1,10 @@
-use instant::Instant;
-use maplibre::error::Error;
-use maplibre::io::scheduler::ScheduleMethod;
-use maplibre::io::source_client::HTTPClient;
-use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use winit::event_loop::ControlFlow;
 use winit::window::WindowBuilder;
-
-use crate::input::{InputController, UpdateState};
 
 use super::WinitEventLoop;
 use super::WinitMapWindow;
 use super::WinitWindow;
-use maplibre::map_state::MapState;
-use maplibre::window::{MapWindow, Runnable, WindowSize};
+
+use maplibre::window::{MapWindow, WindowSize};
 use winit::platform::web::WindowBuilderExtWebSys;
 
 impl MapWindow for WinitMapWindow {
@@ -32,14 +24,13 @@ impl MapWindow for WinitMapWindow {
 
         let size = get_body_size().unwrap();
         window.set_inner_size(size);
-        return (Self { inner: window }, event_loop);
+        (Self { inner: window }, event_loop)
     }
 
     fn size(&self) -> WindowSize {
         let size = self.inner.inner_size();
-        let window_size =
-            WindowSize::new(size.width, size.height).expect("failed to get window dimensions.");
-        window_size
+
+        WindowSize::new(size.width, size.height).expect("failed to get window dimensions.")
     }
 
     fn inner(&self) -> &Self::Window {

@@ -48,7 +48,7 @@ where
         self.run_with_optionally_max_frames(Some(max_frames));
     }
 
-    pub fn run_with_optionally_max_frames(mut self, max_frames: Option<u64>) {
+    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
         self.window.run(self.map_state, self.event_loop, max_frames);
     }
 }

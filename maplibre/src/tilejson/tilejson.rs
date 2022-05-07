@@ -132,7 +132,7 @@ mod tests {
         }
         "#;
 
-        let tilejson: TileJSON = serde_json::from_str(&tilejson_str).unwrap();
+        let tilejson: TileJSON = serde_json::from_str(tilejson_str).unwrap();
 
         assert_eq!(
             tilejson,

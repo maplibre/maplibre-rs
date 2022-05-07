@@ -4,11 +4,10 @@ use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::HTTPClient;
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::ControlFlow;
-use winit::window::WindowBuilder;
 
 use crate::input::{InputController, UpdateState};
 use maplibre::map_state::MapState;
-use maplibre::window::{MapWindow, Runnable, WindowSize};
+use maplibre::window::{MapWindow, Runnable};
 use winit::event::Event;
 
 #[cfg(target_arch = "wasm32")]

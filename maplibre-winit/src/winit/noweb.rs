@@ -3,21 +3,13 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
-use instant::Instant;
-use maplibre::error::Error;
-use maplibre::io::scheduler::ScheduleMethod;
-use maplibre::io::source_client::HTTPClient;
-use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use winit::event_loop::ControlFlow;
 use winit::window::WindowBuilder;
-
-use crate::input::{InputController, UpdateState};
 
 use super::WinitEventLoop;
 use super::WinitMapWindow;
 use super::WinitWindow;
-use maplibre::map_state::MapState;
-use maplibre::window::{MapWindow, Runnable, WindowSize};
+
+use maplibre::window::{MapWindow, WindowSize};
 
 impl MapWindow for WinitMapWindow {
     type EventLoop = WinitEventLoop;
@@ -33,7 +25,7 @@ impl MapWindow for WinitMapWindow {
             .build(&event_loop)
             .unwrap();
 
-        return (Self { inner: window }, event_loop);
+        (Self { inner: window }, event_loop)
     }
 
     fn size(&self) -> WindowSize {

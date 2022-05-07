@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
-use maplibre::coords::Zoom;
+
 use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
 use crate::input::pan_handler::PanHandler;
@@ -12,8 +12,7 @@ use crate::input::query_handler::QueryHandler;
 use crate::input::shift_handler::ShiftHandler;
 use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
-use maplibre::map_state::{MapState, ViewState};
-use maplibre::render::camera::Camera;
+use maplibre::map_state::ViewState;
 
 mod pan_handler;
 mod pinch_handler;

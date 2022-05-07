@@ -1,7 +1,7 @@
 use cgmath::Vector2;
 
 use crate::input::UpdateState;
-use maplibre::map_state::{MapState, ViewState};
+use maplibre::map_state::ViewState;
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
 

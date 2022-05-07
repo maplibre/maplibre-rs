@@ -14,9 +14,8 @@ use crate::style::Style;
 use crate::util::ChangeObserver;
 use crate::{MapWindow, ScheduleMethod, WindowSize};
 use std::collections::HashSet;
-use std::sync;
+
 use std::sync::{mpsc, Arc, Mutex};
-use wgpu::SurfaceError;
 
 pub struct ViewState {
     zoom: ChangeObserver<Zoom>,
@@ -345,7 +344,7 @@ where
             //let instance = wgpu::Instance::new(wgpu::Backends::GL);
             //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
 
-            let (window, event_loop) = W::create();
+            let (window, _event_loop) = W::create();
             let window_size = window.size();
 
             let surface = unsafe { instance.create_surface(window.inner()) };
@@ -357,7 +356,7 @@ where
                 // present_mode: wgpu::PresentMode::Mailbox,
                 present_mode: wgpu::PresentMode::Fifo, // VSync
             };
-            let window_size = window.size();
+            let _window_size = window.size();
             let render_state = RenderState::initialize(instance, surface, surface_config)
                 .await
                 .unwrap();
