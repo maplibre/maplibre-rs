@@ -52,7 +52,7 @@ where
         self.run_with_optionally_max_frames(None);
     }
 
-    /// Starts the MapState Runnable with the configured event loop.
+    /// Starts the [`crate::map_state::MapState`] Runnable with the configured event loop.
     ///
     /// # Arguments
     ///
@@ -73,7 +73,7 @@ where
 
 /// Stores the map configuration before the map's state has been fully initialized.
 ///
-/// FIXME: We could maybe remove this class, and store the render_state in an Optional in MapState.
+/// FIXME: We could maybe remove this class, and store the render_state in an Optional in [`crate::map_state::MapState`].
 /// FIXME: I think we can find a workaround so that this class doesn't exist.
 pub struct UninitializedMap<W, E, SM, HC>
 where

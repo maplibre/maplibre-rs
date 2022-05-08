@@ -1,4 +1,4 @@
-//! Handles IO related processing with async Rust.
+//! Handles IO related processing as well as multithreading.
 
 use crate::coords::WorldTileCoords;
 

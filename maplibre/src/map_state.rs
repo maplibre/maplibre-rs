@@ -53,7 +53,7 @@ impl ViewState {
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
 ///
-/// FIXME: MapState may not follow the Single-responsibility principle, has it not only stores
+/// FIXME: MapState may not follow the Single-responsibility principle, as it not only stores
 /// the state of the map but also the rendering, caching, etc.
 pub struct MapState<W, SM, HC>
 where

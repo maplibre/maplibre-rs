@@ -43,7 +43,6 @@ pub mod schedule_method {
 
 /// Minimum WebGPU buffer size
 ///
-///
 /// FIXME: This limit is enforced by WebGL. Actually this makes sense!
 /// FIXME: This can also be achieved by _pad attributes in shader_ffi.rs
 pub const MIN_BUFFER_SIZE: u64 = 32;
