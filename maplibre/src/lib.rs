@@ -134,7 +134,6 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-
     /// Runs the map application without a maximum number of frames per second defined.
     ///
     /// # Panics

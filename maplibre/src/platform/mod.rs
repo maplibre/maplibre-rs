@@ -29,7 +29,6 @@ pub const COLOR_TEXTURE_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8
 #[cfg(not(target_arch = "wasm32"))]
 mod noweb;
 
-
 /// Http client for non-web targets.
 pub mod http_client {
     #[cfg(not(target_arch = "wasm32"))]
