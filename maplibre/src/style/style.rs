@@ -1,3 +1,5 @@
+//! Default vector tile styles configuration.
+
 use crate::style::layer::{LayerPaint, LinePaint, StyleLayer};
 use crate::style::source::Source;
 use csscolorparser::Color;
@@ -5,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
 
+/// Stores the style for a multi-layered map.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Style {
     pub version: u16,

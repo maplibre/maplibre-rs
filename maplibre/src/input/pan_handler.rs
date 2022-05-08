@@ -99,6 +99,7 @@ impl PanHandler {
 
         if !self.is_panning {
             // starting to pan
+            // FIXME: This if is not used
         }
 
         if *state == ElementState::Pressed {

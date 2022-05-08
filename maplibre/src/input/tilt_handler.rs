@@ -44,6 +44,10 @@ impl TiltHandler {
         } else {
             Deg::zero()
         };
+        // FIXME: If the goal is to maintain the key pressed to tilt, then process_key shouldn't
+        // increase the delta_pitch but set it to true/false. Increasing the delta will cause
+        // multiple clicks to cause a bigger tilt if more than one event can occur during a
+        // frame.
         match key {
             winit::event::VirtualKeyCode::R => {
                 self.delta_pitch -= amount;

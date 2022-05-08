@@ -3,6 +3,7 @@ use crate::io::shared_thread_state::SharedThreadState;
 use crate::ScheduleMethod;
 use std::future::Future;
 
+/// Multi-threading with Tokio.
 pub struct TokioScheduleMethod;
 
 impl TokioScheduleMethod {

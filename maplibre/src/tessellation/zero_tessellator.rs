@@ -1,3 +1,5 @@
+//! Tessellator implementation.
+
 use bytemuck::Pod;
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use lyon::geom;
@@ -16,6 +18,7 @@ use crate::tessellation::{VertexConstructor, DEFAULT_TOLERANCE};
 
 type GeoResult<T> = geozero::error::Result<T>;
 
+/// Build tessellations with vectors.
 pub struct ZeroTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> {
     path_builder: RefCell<Builder>,
     path_open: bool,

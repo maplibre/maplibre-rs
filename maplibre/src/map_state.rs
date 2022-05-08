@@ -1,3 +1,5 @@
+//! Stores the state of the map such as zoom level, camera, styles, etc.
+
 use crate::coords::{ViewRegion, WorldTileCoords, Zoom, TILE_SIZE};
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
@@ -18,10 +20,12 @@ use std::sync;
 use std::sync::{mpsc, Arc, Mutex};
 use wgpu::SurfaceError;
 
+/// An element that will execute an event loop with an optional maximum number of frames per second.
 pub trait Runnable<E> {
     fn run(self, event_loop: E, max_frames: Option<u64>);
 }
 
+/// Stores the camera configuration.
 pub struct ViewState {
     zoom: ChangeObserver<Zoom>,
     pub camera: ChangeObserver<Camera>,
@@ -47,6 +51,10 @@ impl ViewState {
     }
 }
 
+/// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
+///
+/// FIXME: MapState may not follow the Single-responsibility principle, has it not only stores
+/// the state of the map but also the rendering, caching, etc.
 pub struct MapState<W, SM, HC>
 where
     W: MapWindow,
@@ -170,7 +178,7 @@ where
         }
     }
 
-    /// Request tiles which are currently in view
+    /// Request tiles which are currently in view.
     #[tracing::instrument(skip_all)]
     fn request_tiles_in_view(&mut self, view_region: &ViewRegion) -> bool {
         let mut try_failed = false;

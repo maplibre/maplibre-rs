@@ -1,3 +1,7 @@
+//! # Maplibre-rs
+//!
+//! A multi-platform library for rendering vector tile maps with WebGPU.
+
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
 use crate::io::source_client::HTTPClient;
 use crate::map_state::{MapState, Runnable};
@@ -25,6 +29,7 @@ pub(crate) mod tilejson;
 pub(crate) mod util;
 pub(crate) mod winit;
 
+/// Map's configuration and execution.
 pub struct Map<W, E, SM, HC>
 where
     W: MapWindow,
@@ -42,19 +47,34 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
+    /// Starts the [`crate::map_state::MapState`] Runnable with the configured event loop.
     pub fn run(self) {
         self.run_with_optionally_max_frames(None);
     }
 
+    /// Starts the MapState Runnable with the configured event loop.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_frames` - Maximum number of frames per second.
     pub fn run_with_max_frames(self, max_frames: u64) {
         self.run_with_optionally_max_frames(Some(max_frames));
     }
 
+    /// Starts the MapState Runnable with the configured event loop.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_frames` - Optional maximum number of frames per second.
     pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
         self.map_state.run(self.event_loop, max_frames);
     }
 }
 
+/// Stores the map configuration before the map's state has been fully initialized.
+///
+/// FIXME: We could maybe remove this class, and store the render_state in an Optional in MapState.
+/// FIXME: I think we can find a workaround so that this class doesn't exist.
 pub struct UninitializedMap<W, E, SM, HC>
 where
     SM: ScheduleMethod,
@@ -73,6 +93,12 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
+    /// Initializes the whole rendering pipeline for the given configuration.
+    /// Returns the initialized map, ready to be run.
+    ///
+    /// # Panics
+    ///
+    /// * Panics if Winit is unable to retrieve the target window size.
     pub async fn initialize(self) -> Map<W, E, SM, HC> {
         #[cfg(target_os = "android")]
         // On android we can not get the dimensions of the window initially. Therefore, we use a
@@ -108,10 +134,25 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
+
+    /// Runs the map application without a maximum number of frames per second defined.
+    ///
+    /// # Panics
+    ///
+    /// * Panics if the operating system is unable to starts the worker threads.
     pub fn run_sync(self) {
         self.run_sync_with_optionally_max_frames(None);
     }
 
+    /// Builds and runs the Map with the given maximum number of frames per second.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_frames` - The maxiumum number of frame per seconds.
+    ///
+    /// # Panics
+    ///
+    /// * Panics if the operating system is unable to starts the worker threads.
     pub fn run_sync_with_max_frames(self, max_frames: u64) {
         self.run_sync_with_optionally_max_frames(Some(max_frames))
     }
@@ -135,6 +176,7 @@ where
     }
 }
 
+/// Builder pattern to construct a new [`crate::UninitializedMap`].
 pub struct MapBuilder<W, E, SM, HC>
 where
     SM: ScheduleMethod,
@@ -183,6 +225,12 @@ where
         self
     }
 
+    /// Builds the UninitializedMap with the given configuration.
+    ///
+    /// # Panics
+    ///
+    /// * Panics if no schedule method has been configured.
+    /// * Panics if no http client has been configured.
     pub fn build(self) -> UninitializedMap<W, E, SM, HC> {
         let (window, event_loop) = (self.window_factory)();
 

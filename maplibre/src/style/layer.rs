@@ -1,8 +1,11 @@
+//! Vector tile layer drawing utilities.
+
 use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Background styling.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {
     #[serde(rename = "background-color")]
@@ -11,6 +14,7 @@ pub struct BackgroundPaint {
     // TODO a lot
 }
 
+/// Fill styling.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FillPaint {
     #[serde(rename = "fill-color")]
@@ -19,6 +23,7 @@ pub struct FillPaint {
     // TODO a lot
 }
 
+/// Line styling.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LinePaint {
     #[serde(rename = "line-color")]
@@ -27,6 +32,7 @@ pub struct LinePaint {
     // TODO a lot
 }
 
+/// The different types of paints.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", content = "paint")]
 pub enum LayerPaint {
@@ -51,6 +57,7 @@ impl LayerPaint {
     }
 }
 
+/// Stores all the styles for a specific layer.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct StyleLayer {
     #[serde(skip)]

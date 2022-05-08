@@ -3,6 +3,7 @@
 use lyon::tessellation::TessellationError;
 use std::sync::mpsc::SendError;
 
+/// Multiple types of map rendering errors
 #[derive(Debug)]
 pub enum Error {
     Schedule,

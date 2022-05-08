@@ -1,7 +1,11 @@
+//! Utilities for the window system.
+
+/// Window with an optional [carte::window::WindowSize].
 pub trait MapWindow {
     fn size(&self) -> Option<WindowSize>;
 }
 
+/// Window size with a width and an height in pixels.
 #[derive(Clone, Copy)]
 pub struct WindowSize {
     width: u32,
@@ -37,12 +41,15 @@ impl Default for WindowSize {
     }
 }
 
+/// Closure that usually returns a window with an event loop.
 pub type WindowFactory<W, E> = dyn FnOnce() -> (W, E);
 
+/// Constructor for a window.
 pub trait FromWindow {
     fn from_window(title: &'static str) -> Self;
 }
 
+/// Constructor for a canvas.
 pub trait FromCanvas {
     fn from_canvas(dom_id: &'static str) -> Self;
 }
