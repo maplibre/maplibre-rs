@@ -33,7 +33,8 @@ impl MapWindow for WinitMapWindow {
         #[cfg(target_os = "android")]
         // On android we can not get the dimensions of the window initially. Therefore, we use a
         // fallback until the window is ready to deliver its correct bounds.
-        let window_size = WindowSize::new(size.width, size.height).unwrap_or_default();
+        let window_size =
+            WindowSize::new(size.width, size.height).unwrap_or(WindowSize::new(100, 100).unwrap());
 
         #[cfg(not(target_os = "android"))]
         let window_size =
