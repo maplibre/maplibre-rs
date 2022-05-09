@@ -21,8 +21,7 @@ crate-type = ["cdylib", "rlib"]
 async-trait = "0.1"
 maplibre = { path = "../maplibre", features = ["no-thread-safe-futures"] }
 maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
-winit = "*"
-log = "*"
+log = "0.4"
 
 console_error_panic_hook = "0.1"
 web-sys = { version = "0.3", features = [
