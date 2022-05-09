@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2021"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android"))'.dependencies]
-tokio = { version = "1.17" }
+tokio = { version = "1.17", features = ["rt"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 winit = { version = "0.26", default-features = false }
