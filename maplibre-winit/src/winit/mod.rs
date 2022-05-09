@@ -51,7 +51,7 @@ where
 
         event_loop.run(move |event, _, control_flow| {
             #[cfg(target_os = "android")]
-            if !self.is_initialized() && event == Event::Resumed {
+            if !map_state.is_initialized() && event == Event::Resumed {
                 use tokio::runtime::Handle;
                 use tokio::task;
 
