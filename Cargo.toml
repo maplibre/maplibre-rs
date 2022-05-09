@@ -17,10 +17,12 @@ members = [
 [profile.release]
 lto = true
 codegen-units = 1
-opt-level = 's'
-panic = "abort"
-
-strip = "debuginfo"
+strip = true  # Automatically strip symbols from the binary.
+opt-level = "z"  # Optimize for size.
 
 [profile.bench]
 debug = true
+
+[profile.binary-size]
+inherits = "release"
+strip = false
