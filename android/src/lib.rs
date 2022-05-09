@@ -3,7 +3,6 @@ use jni::JNIEnv;
 use log::Level;
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::window::FromWindow;
 use maplibre::MapBuilder;
 use maplibre_winit::winit::{WinitEventLoop, WinitMapWindow, WinitWindow};
 use std::ffi::CString;
