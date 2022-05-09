@@ -17,8 +17,9 @@ members = [
 [profile.release]
 lto = true
 codegen-units = 1
-strip = true  # Automatically strip symbols from the binary.
+strip = "debuginfo"  # Automatically strip symbols from the binary. Using here true makes "wasm-pack" fail
 opt-level = "z"  # Optimize for size.
+panic = "abort"
 
 [profile.bench]
 debug = true
