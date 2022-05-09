@@ -7,7 +7,7 @@ use winit::event_loop::ControlFlow;
 
 use crate::input::{InputController, UpdateState};
 use maplibre::map_state::MapState;
-use maplibre::window::{MapWindow, Runnable};
+use maplibre::window::{MapWindow, MapWindowConfig, Runnable};
 use winit::event::Event;
 
 #[cfg(target_arch = "wasm32")]
@@ -22,12 +22,33 @@ pub use web::*;
 #[cfg(not(target_arch = "wasm32"))]
 pub use noweb::*;
 
+pub struct WinitMapWindowConfig {
+    title: String,
+}
+
+impl WinitMapWindowConfig {
+    pub fn new(title: String) -> Self {
+        Self { title }
+    }
+}
+
+impl MapWindowConfig for WinitMapWindowConfig {
+    type WindowMap = WinitMapWindow;
+}
+
 pub struct WinitMapWindow {
-    inner: WinitWindow,
+    window: WinitWindow,
+    event_loop: Option<WinitEventLoop>,
 }
 
 pub type WinitWindow = winit::window::Window;
 pub type WinitEventLoop = winit::event_loop::EventLoop<()>;
+
+impl WinitMapWindow {
+    pub fn take_event_loop(&mut self) -> Option<WinitEventLoop> {
+        self.event_loop.take()
+    }
+}
 
 ///Main (platform-specific) main loop which handles:
 ///* Input (Mouse/Keyboard)
@@ -38,32 +59,29 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    fn run(
-        self,
-        mut map_state: MapState<SM, HC>,
-        event_loop: Self::EventLoop,
-        max_frames: Option<u64>,
-    ) {
+    fn run(mut self, mut map_state: MapState<SM, HC>, max_frames: Option<u64>) {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
 
         let mut input_controller = InputController::new(0.2, 100.0, 0.1);
 
-        event_loop.run(move |event, _, control_flow| {
-            #[cfg(target_os = "android")]
-            if !map_state.is_initialized() && event == Event::Resumed {
-                use tokio::runtime::Handle;
-                use tokio::task;
+        self.take_event_loop()
+            .unwrap()
+            .run(move |event, _, control_flow| {
+                #[cfg(target_os = "android")]
+                if !map_state.is_initialized() && event == Event::Resumed {
+                    use tokio::runtime::Handle;
+                    use tokio::task;
 
-                let state = task::block_in_place(|| {
-                    Handle::current().block_on(async {
-                        map_state.reinitialize::<WinitMapWindow>().await;
-                    })
-                });
-                return;
-            }
+                    let state = task::block_in_place(|| {
+                        Handle::current().block_on(async {
+                            map_state.reinitialize::<WinitMapWindow>().await;
+                        })
+                    });
+                    return;
+                }
 
-            match event {
+                match event {
                 Event::DeviceEvent {
                     ref event,
                     .. // We're not using device_id currently
@@ -140,6 +158,6 @@ where
                 }
                 _ => {}
             }
-        });
+            });
     }
 }

@@ -39,6 +39,9 @@ pub mod schedule_method {
     pub use super::noweb::schedule_method::*;
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+pub use noweb::run_multithreaded;
+
 // FIXME: This limit is enforced by WebGL. Actually this makes sense!
 // FIXME: This can also be achieved by _pad attributes in shader_ffi.rs
 pub const MIN_BUFFER_SIZE: u64 = 32;

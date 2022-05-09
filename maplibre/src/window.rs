@@ -4,22 +4,30 @@ pub trait MapWindow {
     type EventLoop;
     type Window: raw_window_handle::HasRawWindowHandle;
 
-    fn create() -> (Self, Self::EventLoop)
-    where
-        Self: Sized;
+    fn create() -> Self;
 
     fn size(&self) -> WindowSize;
 
     fn inner(&self) -> &Self::Window;
 }
 
+pub trait MapWindowConfig {
+    type WindowMap: MapWindow;
+}
+
+pub trait RunnableWindowMap<SM, HC>: MapWindow + Runnable<SM, HC>
+where
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
+}
+
 pub trait Runnable<SM, HC>
 where
     SM: ScheduleMethod,
     HC: HTTPClient,
-    Self: MapWindow + Sized,
 {
-    fn run(self, map_state: MapState<SM, HC>, event_loop: Self::EventLoop, max_frames: Option<u64>);
+    fn run(self, map_state: MapState<SM, HC>, max_frames: Option<u64>);
 }
 
 #[derive(Clone, Copy)]

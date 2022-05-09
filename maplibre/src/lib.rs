@@ -3,7 +3,7 @@ use crate::io::source_client::HTTPClient;
 use crate::map_state::MapState;
 use crate::render::render_state::RenderState;
 use crate::style::Style;
-use crate::window::{MapWindow, Runnable, WindowSize};
+use crate::window::{MapWindow, MapWindowConfig, Runnable, RunnableWindowMap, WindowSize};
 use std::marker::PhantomData;
 
 pub mod coords;
@@ -23,7 +23,7 @@ pub(crate) mod tessellation;
 pub(crate) mod tilejson;
 pub(crate) mod util;
 
-pub struct Map<W, E, SM, HC>
+pub struct Map<W, SM, HC>
 where
     W: MapWindow,
     SM: ScheduleMethod,
@@ -31,12 +31,11 @@ where
 {
     map_state: MapState<SM, HC>,
     window: W,
-    event_loop: E,
 }
 
-impl<W, E, SM, HC> Map<W, E, SM, HC>
+impl<W, SM, HC> Map<W, SM, HC>
 where
-    W: MapWindow<EventLoop = E> + Runnable<SM, HC>,
+    W: MapWindow + Runnable<SM, HC>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -49,12 +48,13 @@ where
     }
 
     pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
-        self.window.run(self.map_state, self.event_loop, max_frames);
+        self.window.run(self.map_state, max_frames);
     }
 }
 
-pub struct UninitializedMap<W, E, SM, HC>
+pub struct UninitializedMap<MWC, SM, HC>
 where
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -62,22 +62,21 @@ where
     http_client: HC,
     style: Style,
 
-    phantom_w: PhantomData<W>,
-    phantom_e: PhantomData<E>,
+    map_window_config: MWC,
 }
 
-impl<W, E, SM, HC> UninitializedMap<W, E, SM, HC>
+impl<MWC, SM, HC> UninitializedMap<MWC, SM, HC>
 where
-    W: MapWindow<EventLoop = E>,
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    pub async fn initialize(self) -> Map<W, E, SM, HC> {
+    pub async fn initialize(self) -> Map<MWC::WindowMap, SM, HC> {
         let instance = wgpu::Instance::new(wgpu::Backends::all());
         //let instance = wgpu::Instance::new(wgpu::Backends::GL);
         //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
 
-        let (window, event_loop) = W::create();
+        let window = MWC::WindowMap::create();
         let window_size = window.size();
 
         let surface = unsafe { instance.create_surface(window.inner()) };
@@ -100,46 +99,11 @@ where
                 self.style,
             ),
             window,
-            event_loop,
         }
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-impl<W, E, SM, HC> UninitializedMap<W, E, SM, HC>
-where
-    W: MapWindow<EventLoop = E> + Runnable<SM, HC>,
-    SM: ScheduleMethod,
-    HC: HTTPClient,
-{
-    pub fn run_sync(self) {
-        self.run_sync_with_optionally_max_frames(None);
-    }
-
-    pub fn run_sync_with_max_frames(self, max_frames: u64) {
-        self.run_sync_with_optionally_max_frames(Some(max_frames))
-    }
-
-    fn run_sync_with_optionally_max_frames(self, max_frames: Option<u64>) {
-        tokio::runtime::Builder::new_multi_thread()
-            .worker_threads(4)
-            .enable_io()
-            .enable_time()
-            .on_thread_start(|| {
-                #[cfg(feature = "enable-tracing")]
-                tracy_client::set_thread_name("tokio-runtime-worker");
-            })
-            .build()
-            .unwrap()
-            .block_on(async {
-                self.initialize()
-                    .await
-                    .run_with_optionally_max_frames(max_frames);
-            })
-    }
-}
-
-pub struct MapBuilder<W, E, SM, HC>
+pub struct MapBuilder<MWC, SM, HC>
 where
     SM: ScheduleMethod,
 {
@@ -148,13 +112,12 @@ where
     http_client: Option<HC>,
     style: Option<Style>,
 
-    phantom_w: PhantomData<W>,
-    phantom_e: PhantomData<E>,
+    map_window_config: Option<MWC>,
 }
 
-impl<W, E, SM, HC> MapBuilder<W, E, SM, HC>
+impl<MWC, SM, HC> MapBuilder<MWC, SM, HC>
 where
-    W: MapWindow<EventLoop = E> + Runnable<SM, HC>,
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -164,9 +127,13 @@ where
             scheduler: None,
             http_client: None,
             style: None,
-            phantom_w: Default::default(),
-            phantom_e: Default::default(),
+            map_window_config: None,
         }
+    }
+
+    pub fn with_map_window_config(mut self, map_window_config: MWC) -> Self {
+        self.map_window_config = Some(map_window_config);
+        self
     }
 
     pub fn with_schedule_method(mut self, schedule_method: SM) -> Self {
@@ -189,7 +156,7 @@ where
         self
     }
 
-    pub fn build(self) -> UninitializedMap<W, E, SM, HC> {
+    pub fn build(self) -> UninitializedMap<MWC, SM, HC> {
         let scheduler = self
             .scheduler
             .unwrap_or_else(|| Scheduler::new(self.schedule_method.unwrap()));
@@ -199,8 +166,7 @@ where
             scheduler,
             http_client: self.http_client.unwrap(),
             style,
-            phantom_w: Default::default(),
-            phantom_e: Default::default(),
+            map_window_config: self.map_window_config.unwrap(),
         }
     }
 }

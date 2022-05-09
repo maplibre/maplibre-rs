@@ -338,7 +338,7 @@ where
             //let instance = wgpu::Instance::new(wgpu::Backends::GL);
             //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
 
-            let (window, _event_loop) = W::create();
+            let window = W::create();
             let window_size = window.size();
 
             let surface = unsafe { instance.create_surface(window.inner()) };

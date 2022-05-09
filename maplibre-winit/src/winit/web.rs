@@ -11,10 +11,7 @@ impl MapWindow for WinitMapWindow {
     type EventLoop = WinitEventLoop;
     type Window = WinitWindow;
 
-    fn create() -> (Self, Self::EventLoop)
-    where
-        Self: Sized,
-    {
+    fn create() -> Self {
         let event_loop = WinitEventLoop::new();
 
         let window: winit::window::Window = WindowBuilder::new()
@@ -24,17 +21,20 @@ impl MapWindow for WinitMapWindow {
 
         let size = get_body_size().unwrap();
         window.set_inner_size(size);
-        (Self { inner: window }, event_loop)
+        Self {
+            window,
+            event_loop: Some(event_loop),
+        }
     }
 
     fn size(&self) -> WindowSize {
-        let size = self.inner.inner_size();
+        let size = self.window.inner_size();
 
         WindowSize::new(size.width, size.height).expect("failed to get window dimensions.")
     }
 
     fn inner(&self) -> &Self::Window {
-        &self.inner
+        &self.window
     }
 }
 
