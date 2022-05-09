@@ -3,7 +3,7 @@ use crate::io::source_client::HTTPClient;
 use crate::map_state::MapState;
 use crate::render::render_state::RenderState;
 use crate::style::Style;
-use crate::window::{MapWindow, MapWindowConfig, Runnable, RunnableWindowMap, WindowSize};
+use crate::window::{MapWindow, MapWindowConfig, Runnable, WindowSize};
 use std::marker::PhantomData;
 
 pub mod coords;
@@ -29,13 +29,13 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    map_state: MapState<SM, HC>,
+    map_state: MapState<W::MapWindowConfig, SM, HC>,
     window: W,
 }
 
 impl<W, SM, HC> Map<W, SM, HC>
 where
-    W: MapWindow + Runnable<SM, HC>,
+    W: MapWindow + Runnable<W::MapWindowConfig, SM, HC>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -71,12 +71,12 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    pub async fn initialize(self) -> Map<MWC::WindowMap, SM, HC> {
+    pub async fn initialize(self) -> Map<MWC::MapWindow, SM, HC> {
         let instance = wgpu::Instance::new(wgpu::Backends::all());
         //let instance = wgpu::Instance::new(wgpu::Backends::GL);
         //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
 
-        let window = MWC::WindowMap::create();
+        let window = MWC::MapWindow::create(&self.map_window_config);
         let window_size = window.size();
 
         let surface = unsafe { instance.create_surface(window.inner()) };
@@ -92,6 +92,7 @@ where
         let render_state = RenderState::initialize(instance, surface, surface_config).await;
         Map {
             map_state: MapState::new(
+                self.map_window_config,
                 window_size,
                 render_state,
                 self.scheduler,

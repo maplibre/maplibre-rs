@@ -2,6 +2,7 @@ use winit::window::WindowBuilder;
 
 use super::WinitEventLoop;
 use super::WinitMapWindow;
+use super::WinitMapWindowConfig;
 use super::WinitWindow;
 
 use maplibre::window::{MapWindow, WindowSize};
@@ -10,12 +11,13 @@ use winit::platform::web::WindowBuilderExtWebSys;
 impl MapWindow for WinitMapWindow {
     type EventLoop = WinitEventLoop;
     type Window = WinitWindow;
+    type MapWindowConfig = WinitMapWindowConfig;
 
-    fn create() -> Self {
+    fn create(map_window_config: &Self::MapWindowConfig) -> Self {
         let event_loop = WinitEventLoop::new();
 
         let window: winit::window::Window = WindowBuilder::new()
-            .with_canvas(Some(get_canvas("maplibre")))
+            .with_canvas(Some(get_canvas(&map_window_config.canvas_id)))
             .build(&event_loop)
             .unwrap();
 
@@ -48,7 +50,7 @@ pub fn get_body_size() -> Option<winit::dpi::LogicalSize<i32>> {
     })
 }
 
-pub fn get_canvas(element_id: &'static str) -> web_sys::HtmlCanvasElement {
+pub fn get_canvas(element_id: &str) -> web_sys::HtmlCanvasElement {
     use wasm_bindgen::JsCast;
 
     let web_window: web_sys::Window = web_sys::window().unwrap();

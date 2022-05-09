@@ -22,18 +22,32 @@ pub use web::*;
 #[cfg(not(target_arch = "wasm32"))]
 pub use noweb::*;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub struct WinitMapWindowConfig {
     title: String,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl WinitMapWindowConfig {
     pub fn new(title: String) -> Self {
         Self { title }
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+pub struct WinitMapWindowConfig {
+    canvas_id: String,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl WinitMapWindowConfig {
+    pub fn new(canvas_id: String) -> Self {
+        Self { canvas_id }
+    }
+}
+
 impl MapWindowConfig for WinitMapWindowConfig {
-    type WindowMap = WinitMapWindow;
+    type MapWindow = WinitMapWindow;
 }
 
 pub struct WinitMapWindow {
@@ -54,12 +68,13 @@ impl WinitMapWindow {
 ///* Input (Mouse/Keyboard)
 ///* Platform Events like suspend/resume
 ///* Render a new frame
-impl<SM, HC> Runnable<SM, HC> for WinitMapWindow
+impl<MWC, SM, HC> Runnable<MWC, SM, HC> for WinitMapWindow
 where
+    MWC: MapWindowConfig<MapWindow = WinitMapWindow>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    fn run(mut self, mut map_state: MapState<SM, HC>, max_frames: Option<u64>) {
+    fn run(mut self, mut map_state: MapState<MWC, SM, HC>, max_frames: Option<u64>) {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
 

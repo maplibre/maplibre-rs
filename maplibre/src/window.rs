@@ -3,31 +3,26 @@ use crate::{HTTPClient, MapState, ScheduleMethod};
 pub trait MapWindow {
     type EventLoop;
     type Window: raw_window_handle::HasRawWindowHandle;
+    type MapWindowConfig: MapWindowConfig<MapWindow = Self>;
 
-    fn create() -> Self;
+    fn create(map_window_config: &Self::MapWindowConfig) -> Self;
 
     fn size(&self) -> WindowSize;
 
     fn inner(&self) -> &Self::Window;
 }
 
-pub trait MapWindowConfig {
-    type WindowMap: MapWindow;
+pub trait MapWindowConfig: 'static {
+    type MapWindow: MapWindow<MapWindowConfig = Self>;
 }
 
-pub trait RunnableWindowMap<SM, HC>: MapWindow + Runnable<SM, HC>
+pub trait Runnable<MWC, SM, HC>
 where
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-}
-
-pub trait Runnable<SM, HC>
-where
-    SM: ScheduleMethod,
-    HC: HTTPClient,
-{
-    fn run(self, map_state: MapState<SM, HC>, max_frames: Option<u64>);
+    fn run(self, map_state: MapState<MWC, SM, HC>, max_frames: Option<u64>);
 }
 
 #[derive(Clone, Copy)]

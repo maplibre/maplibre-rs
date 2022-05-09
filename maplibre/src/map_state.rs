@@ -12,7 +12,7 @@ use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::render::render_state::RenderState;
 use crate::style::Style;
 use crate::util::ChangeObserver;
-use crate::{MapWindow, ScheduleMethod, WindowSize};
+use crate::{MapWindow, MapWindowConfig, ScheduleMethod, WindowSize};
 use std::collections::HashSet;
 
 use std::sync::{mpsc, Arc, Mutex};
@@ -42,11 +42,14 @@ impl ViewState {
     }
 }
 
-pub struct MapState<SM, HC>
+pub struct MapState<MWC, SM, HC>
 where
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
+    map_window_config: MWC,
+
     view_state: ViewState,
 
     render_state: Option<RenderState>,
@@ -62,12 +65,14 @@ where
     try_failed: bool,
 }
 
-impl<SM, HC> MapState<SM, HC>
+impl<MWC, SM, HC> MapState<MWC, SM, HC>
 where
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
     pub fn new(
+        map_window_config: MWC,
         window_size: WindowSize,
         render_state: Option<RenderState>,
         scheduler: Scheduler<SM>,
@@ -93,6 +98,7 @@ where
         let (message_sender, message_receiver) = mpsc::channel();
 
         Self {
+            map_window_config,
             view_state: ViewState {
                 zoom: ChangeObserver::default(),
                 camera: ChangeObserver::new(camera),
@@ -321,7 +327,7 @@ where
         &mut self.view_state
     }
 
-    pub fn recreate_surface<W: MapWindow>(&mut self, window: &W) {
+    pub fn recreate_surface(&mut self, window: &MWC::MapWindow) {
         self.render_state
             .as_mut()
             .expect("render state not yet initialized. Call reinitialize().")
@@ -332,13 +338,13 @@ where
         self.render_state.is_some()
     }
 
-    pub async fn reinitialize<W: MapWindow>(&mut self) {
+    pub async fn reinitialize(&mut self) {
         if self.render_state.is_none() {
             let instance = wgpu::Instance::new(wgpu::Backends::all());
             //let instance = wgpu::Instance::new(wgpu::Backends::GL);
             //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
 
-            let window = W::create();
+            let window = MWC::MapWindow::create(&self.map_window_config);
             let window_size = window.size();
 
             let surface = unsafe { instance.create_surface(window.inner()) };

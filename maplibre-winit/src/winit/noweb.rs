@@ -9,16 +9,18 @@ use super::WinitEventLoop;
 use super::WinitMapWindow;
 use super::WinitWindow;
 
+use super::WinitMapWindowConfig;
 use maplibre::window::{MapWindow, WindowSize};
 
 impl MapWindow for WinitMapWindow {
     type EventLoop = WinitEventLoop;
     type Window = WinitWindow;
+    type MapWindowConfig = WinitMapWindowConfig;
 
-    fn create() -> Self {
+    fn create(map_window_config: &Self::MapWindowConfig) -> Self {
         let event_loop = WinitEventLoop::new();
         let window = WindowBuilder::new()
-            .with_title("title")
+            .with_title(&map_window_config.title)
             .build(&event_loop)
             .unwrap();
 
