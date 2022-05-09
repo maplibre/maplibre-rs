@@ -1,1 +1,1 @@
-See [here](https://github.com/maplibre/maplibre-gl-js/blob/main/CODE-OF-CONDUCT.md).
+See [here](https://github.com/maplibre/maplibre/blob/main/CODE_OF_CONDUCT.md).
