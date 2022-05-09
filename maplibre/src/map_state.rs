@@ -320,13 +320,7 @@ where
     pub fn view_state_mut(&mut self) -> &mut ViewState {
         &mut self.view_state
     }
-}
 
-impl<SM, HC> MapState<SM, HC>
-where
-    SM: ScheduleMethod,
-    HC: HTTPClient,
-{
     pub fn recreate_surface<W: MapWindow>(&mut self, window: &W) {
         self.render_state
             .as_mut()

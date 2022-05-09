@@ -57,7 +57,7 @@ where
 
                 let state = task::block_in_place(|| {
                     Handle::current().block_on(async {
-                        self.reinitialize().await;
+                        map_state.reinitialize().await;
                     })
                 });
                 return;
