@@ -2,6 +2,7 @@
 //! communication with the GPU.
 
 mod buffer_pool;
+mod graph;
 mod options;
 mod piplines;
 mod shaders;

@@ -39,6 +39,7 @@ tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", optional = true }
 
 cgmath = "0.18"
+glam = "0.20"
 
 geo = { version = "0.19" }
 geo-types = { version = "0.7", features = ["use-rstar_0_9"] }
@@ -50,6 +51,7 @@ tile-grid = "0.3"
 
 # Rendering
 wgpu = { version = "0.12" }
+wgpu-profiler = "0.8"
 lyon = { version = "0.17", features = [] }
 
 # cached = "0.32"
@@ -67,6 +69,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 csscolorparser = { version = "0.5", features = ["serde", "cint"]}
 cint = "0.2"
+
+bumpalo = "3.9"
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }
