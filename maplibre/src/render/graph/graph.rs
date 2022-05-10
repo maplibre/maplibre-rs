@@ -1,3 +1,4 @@
+use std::collections::{HashMap, HashSet};
 use std::{
     any::Any,
     cell::{RefCell, UnsafeCell},
@@ -30,7 +31,7 @@ pub struct ReadyData {
 /// Implementation of a rendergraph. See module docs for details.
 pub struct RenderGraph<'node> {
     pub(super) targets: Vec<RenderTargetDescriptor>,
-    pub(super) shadows: FastHashSet<usize>,
+    pub(super) shadows: HashSet<usize>,
     pub(super) data: Vec<Box<dyn Any>>, // Any is RefCell<Option<T>> where T is the stored data
     pub(super) nodes: Vec<RenderGraphNode<'node>>,
 }
@@ -38,7 +39,7 @@ impl<'node> RenderGraph<'node> {
     pub fn new() -> Self {
         Self {
             targets: Vec::with_capacity(32),
-            shadows: FastHashSet::with_capacity_and_hasher(32, Default::default()),
+            shadows: HashSet::with_capacity(32),
             data: Vec::with_capacity(32),
             nodes: Vec::with_capacity(64),
         }
@@ -46,10 +47,10 @@ impl<'node> RenderGraph<'node> {
 
     pub fn add_node<'a, S>(&'a mut self, label: S) -> RenderGraphNodeBuilder<'a, 'node>
     where
-        SsoString: From<S>,
+        S: Into<String>,
     {
         RenderGraphNodeBuilder {
-            label: SsoString::from(label),
+            label: label.into(),
             graph: self,
             inputs: Vec::with_capacity(16),
             outputs: Vec::with_capacity(16),
@@ -90,7 +91,7 @@ impl<'node> RenderGraph<'node> {
     ) -> Option<RendererStatistics> {
         profiling::scope!("RenderGraph::execute");
 
-        let mut awaiting_inputs = FastHashSet::default();
+        let mut awaiting_inputs = HashSet::new();
         // The surface is used externally
         awaiting_inputs.insert(GraphResource::OutputTexture);
         // External deps are used externally
@@ -115,7 +116,7 @@ impl<'node> RenderGraph<'node> {
             pruned_node_list.reverse();
         }
 
-        let mut resource_spans = FastHashMap::<_, (usize, Option<usize>)>::default();
+        let mut resource_spans = HashMap::<_, (usize, Option<usize>)>::new();
         {
             profiling::scope!("Resource Span Analysis");
             // Iterate through all the nodes, tracking the index where they are first used,
@@ -170,9 +171,9 @@ impl<'node> RenderGraph<'node> {
         graph_texture_store.mark_unused();
 
         // Stores the Texture while a texture is using it
-        let mut active_textures = FastHashMap::default();
+        let mut active_textures = HashMap::new();
         // Maps a name to its actual texture view.
-        let mut active_views = FastHashMap::default();
+        let mut active_views = HashMap::new();
         // Which node index needs acquire to happen.
         let mut acquire_idx = None;
         {
@@ -330,15 +331,6 @@ impl<'node> RenderGraph<'node> {
                     data: &self.data,
                     // SAFETY: This is only viewed mutably when no renderpass exists
                     output: unsafe { &*output_cell.get() }.as_view(),
-
-                    camera_manager: &data_core.camera_manager,
-                    directional_light_manager: &data_core.directional_light_manager,
-                    material_manager: &data_core.material_manager,
-                    mesh_manager: &data_core.mesh_manager,
-                    skeleton_manager: &data_core.skeleton_manager,
-                    object_manager: &data_core.object_manager,
-                    d2_texture_manager: &data_core.d2_texture_manager,
-                    d2c_texture_manager: &data_core.d2c_texture_manager,
                 };
 
                 let mut encoder_or_rpass = match rpass {
@@ -421,8 +413,8 @@ impl<'node> RenderGraph<'node> {
         node_idx: usize,
         pass_end_idx: usize,
         output: &'rpass OutputFrame,
-        resource_spans: &'rpass FastHashMap<GraphResource, (usize, Option<usize>)>,
-        active_views: &'rpass FastHashMap<usize, TextureView>,
+        resource_spans: &'rpass HashMap<GraphResource, (usize, Option<usize>)>,
+        active_views: &'rpass HashMap<usize, TextureView>,
         shadow_views: &'rpass [TextureView],
     ) -> RenderPass<'rpass> {
         let color_attachments: Vec<_> = desc

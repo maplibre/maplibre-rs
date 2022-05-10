@@ -71,6 +71,7 @@ csscolorparser = { version = "0.5", features = ["serde", "cint"]}
 cint = "0.2"
 
 bumpalo = "3.9"
+profiling = "1"
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }

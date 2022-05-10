@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::{any::Any, cell::RefCell, marker::PhantomData};
 
 use wgpu::TextureView;
@@ -42,20 +43,11 @@ impl<T> PartialEq for DataHandle<T> {
 ///
 /// This is how you turn [DeclaredDependency] into actual wgpu resources.
 pub struct RenderGraphDataStore<'a> {
-    pub(super) texture_mapping: &'a FastHashMap<usize, TextureView>,
+    pub(super) texture_mapping: &'a HashMap<usize, TextureView>,
     pub(super) shadow_coordinates: &'a [ShadowCoordinates],
     pub(super) shadow_views: &'a [TextureView],
     pub(super) data: &'a [Box<dyn Any>], // Any is RefCell<Option<T>> where T is the stored data
     pub(super) output: Option<&'a TextureView>,
-
-    pub camera_manager: &'a CameraManager,
-    pub directional_light_manager: &'a DirectionalLightManager,
-    pub material_manager: &'a MaterialManager,
-    pub mesh_manager: &'a MeshManager,
-    pub skeleton_manager: &'a SkeletonManager,
-    pub object_manager: &'a ObjectManager,
-    pub d2_texture_manager: &'a TextureManager,
-    pub d2c_texture_manager: &'a TextureManager,
 }
 
 impl<'a> RenderGraphDataStore<'a> {

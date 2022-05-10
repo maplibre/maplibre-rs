@@ -17,7 +17,7 @@ pub struct DeclaredDependency<Handle> {
 pub(super) struct RenderGraphNode<'node> {
     pub inputs: Vec<GraphResource>,
     pub outputs: Vec<GraphResource>,
-    pub label: SsoString,
+    pub label: String,
     pub rpass: Option<RenderPassTargets>,
     pub passthrough: PassthroughDataContainer<'node>,
     pub exec: Box<
@@ -37,7 +37,7 @@ pub(super) struct RenderGraphNode<'node> {
 /// Calling build will automatically add the node to the rendergraph.
 pub struct RenderGraphNodeBuilder<'a, 'node> {
     pub(super) graph: &'a mut RenderGraph<'node>,
-    pub(super) label: SsoString,
+    pub(super) label: String,
     pub(super) inputs: Vec<GraphResource>,
     pub(super) outputs: Vec<GraphResource>,
     pub(super) passthrough: PassthroughDataContainer<'node>,
