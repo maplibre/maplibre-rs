@@ -31,7 +31,6 @@ pub struct ReadyData {
 /// Implementation of a rendergraph. See module docs for details.
 pub struct RenderGraph<'node> {
     pub(super) targets: Vec<RenderTargetDescriptor>,
-    pub(super) shadows: HashSet<usize>,
     pub(super) data: Vec<Box<dyn Any>>, // Any is RefCell<Option<T>> where T is the stored data
     pub(super) nodes: Vec<RenderGraphNode<'node>>,
 }
@@ -39,7 +38,6 @@ impl<'node> RenderGraph<'node> {
     pub fn new() -> Self {
         Self {
             targets: Vec::with_capacity(32),
-            shadows: HashSet::with_capacity(32),
             data: Vec::with_capacity(32),
             nodes: Vec::with_capacity(64),
         }
@@ -192,7 +190,6 @@ impl<'node> RenderGraph<'node> {
                             active_textures.insert(idx, tex);
                             active_views.insert(idx, view);
                         }
-                        GraphResource::Shadow(..) => {}
                         GraphResource::Data(..) => {}
                         GraphResource::OutputTexture => {
                             acquire_idx = Some(idx);
@@ -212,7 +209,6 @@ impl<'node> RenderGraph<'node> {
                             let desc = self.targets[idx].clone();
                             graph_texture_store.return_texture(desc.to_core(), tex);
                         }
-                        GraphResource::Shadow(..) => {}
                         GraphResource::Data(..) => {}
                         GraphResource::OutputTexture => {}
                         GraphResource::External => {}
@@ -255,8 +251,6 @@ impl<'node> RenderGraph<'node> {
         }
 
         profiling::scope!("Run Nodes");
-
-        let shadow_views = data_core.directional_light_manager.get_layer_views();
 
         let output_cell = UnsafeCell::new(output);
         let encoder_cell = UnsafeCell::new(
@@ -317,7 +311,6 @@ impl<'node> RenderGraph<'node> {
                         unsafe { &mut *output_cell.get() },
                         &resource_spans,
                         &active_views,
-                        shadow_views,
                     ));
                 }
                 next_rpass_idx += 1;
@@ -326,8 +319,6 @@ impl<'node> RenderGraph<'node> {
             {
                 let store = RenderGraphDataStore {
                     texture_mapping: &active_views,
-                    shadow_coordinates: data_core.directional_light_manager.get_coords(),
-                    shadow_views: data_core.directional_light_manager.get_layer_views(),
                     data: &self.data,
                     // SAFETY: This is only viewed mutably when no renderpass exists
                     output: unsafe { &*output_cell.get() }.as_view(),
@@ -415,7 +406,6 @@ impl<'node> RenderGraph<'node> {
         output: &'rpass OutputFrame,
         resource_spans: &'rpass HashMap<GraphResource, (usize, Option<usize>)>,
         active_views: &'rpass HashMap<usize, TextureView>,
-        shadow_views: &'rpass [TextureView],
     ) -> RenderPass<'rpass> {
         let color_attachments: Vec<_> = desc
             .targets
@@ -457,7 +447,6 @@ impl<'node> RenderGraph<'node> {
         let depth_stencil_attachment = desc.depth_stencil.as_ref().map(|ds_target| {
             let resource = match ds_target.target {
                 DepthHandle::RenderTarget(ref dep) => dep.handle.resource,
-                DepthHandle::Shadow(ref s) => GraphResource::Shadow(s.handle.idx),
             };
 
             let view_span = resource_spans[&resource];
@@ -490,7 +479,6 @@ impl<'node> RenderGraph<'node> {
                         .as_view()
                         .expect("internal rendergraph error: tried to use output texture before acquire"),
                     GraphResource::Texture(t) => &active_views[t],
-                    GraphResource::Shadow(s) => &shadow_views[*s],
                     _ => {
                         panic!("internal rendergraph error: using a non-texture as a renderpass attachment")
                     }

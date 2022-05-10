@@ -3,10 +3,7 @@ use std::{any::Any, cell::RefCell, marker::PhantomData};
 
 use wgpu::TextureView;
 
-use super::{
-    DeclaredDependency, GraphResource, RenderTargetHandle, RpassTemporaryPool, ShadowTarget,
-    ShadowTargetHandle,
-};
+use super::{DeclaredDependency, GraphResource, RenderTargetHandle, RpassTemporaryPool};
 
 /// Handle to arbitrary graph-stored data.
 pub struct DataHandle<T> {
@@ -44,8 +41,6 @@ impl<T> PartialEq for DataHandle<T> {
 /// This is how you turn [DeclaredDependency] into actual wgpu resources.
 pub struct RenderGraphDataStore<'a> {
     pub(super) texture_mapping: &'a HashMap<usize, TextureView>,
-    pub(super) shadow_coordinates: &'a [ShadowCoordinates],
-    pub(super) shadow_views: &'a [TextureView],
     pub(super) data: &'a [Box<dyn Any>], // Any is RefCell<Option<T>> where T is the stored data
     pub(super) output: Option<&'a TextureView>,
 }
@@ -70,22 +65,6 @@ impl<'a> RenderGraphDataStore<'a> {
                     r
                 )
             }
-        }
-    }
-
-    /// Get a shadow description from a handle to one.
-    pub fn get_shadow(&self, handle: DeclaredDependency<ShadowTargetHandle>) -> ShadowTarget<'_> {
-        let coords = self
-            .shadow_coordinates
-            .get(handle.handle.idx)
-            .expect("internal rendergraph error: failed to get shadow mapping");
-        ShadowTarget {
-            view: self
-                .shadow_views
-                .get(coords.layer)
-                .expect("internal rendergraph error: failed to get shadow layer"),
-            offset: coords.offset,
-            size: coords.size,
         }
     }
 

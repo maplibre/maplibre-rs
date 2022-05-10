@@ -2,7 +2,7 @@
 //! communication with the GPU.
 
 mod buffer_pool;
-mod graph;
+
 mod options;
 mod piplines;
 mod shaders;
@@ -14,3 +14,6 @@ pub mod render_state;
 
 // These are created during tessellation and must be public
 pub use shaders::ShaderVertex;
+
+pub mod graph;
+pub trait Renderer {}

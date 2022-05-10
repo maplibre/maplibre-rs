@@ -6,7 +6,7 @@
 //! # High Level Overview
 //!
 //! The design consists of a series of nodes which have inputs and outputs.
-//! These inputs can be render targets, shadow targets, or custom user data. The
+//! These inputs can be render targets,  or custom user data. The
 //! graph is laid out in order using the inputs/outputs then pruned.
 //!
 //! Each node is a pile of arbitrary code that can use various resources within
@@ -101,24 +101,11 @@ pub(crate) struct RenderTargetCore {
     pub usage: TextureUsages,
 }
 
-/// Requirements to render to a particular shadow map.
-///
-/// view + size form the start/end of the viewport to render to.
-pub struct ShadowTarget<'a> {
-    /// View to render to
-    pub view: &'a TextureView,
-    /// 2D offset in the image.
-    pub offset: UVec2,
-    /// Size in both dimentions of the viewport
-    pub size: usize,
-}
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum GraphResource {
     OutputTexture,
     External,
     Texture(usize),
-    Shadow(usize),
     Data(usize),
 }
 
@@ -128,16 +115,6 @@ pub struct RenderTargetHandle {
     // Must only be OutputTexture or Texture
     resource: GraphResource,
 }
-
-/// Handle to a single shadow map.
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct ShadowTargetHandle {
-    idx: usize,
-}
-
-/// Handle to the entire shadow atlas.
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct ShadowArrayHandle;
 
 /// Targets that make up a renderpass.
 #[derive(Debug, PartialEq)]
@@ -208,5 +185,4 @@ pub struct RenderPassDepthTarget {
 #[derive(Debug, PartialEq)]
 pub enum DepthHandle {
     RenderTarget(DeclaredDependency<RenderTargetHandle>),
-    Shadow(DeclaredDependency<ShadowTargetHandle>),
 }
