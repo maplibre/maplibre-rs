@@ -19,10 +19,9 @@
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
 use crate::io::source_client::HTTPClient;
 use crate::map_state::MapState;
-use crate::render::render_state::RenderState;
+use crate::render::{RenderState, Renderer};
 use crate::style::Style;
 use crate::window::{MapWindow, MapWindowConfig, Runnable, WindowSize};
-use std::marker::PhantomData;
 
 pub mod coords;
 pub mod error;
@@ -125,12 +124,12 @@ where
             present_mode: wgpu::PresentMode::Fifo, // VSync
         };
 
-        let render_state = RenderState::initialize(instance, surface, surface_config).await;
+        let renderer = Renderer::initialize(Some(&surface)).await.unwrap();
         Map {
             map_state: MapState::new(
                 self.map_window_config,
                 window_size,
-                render_state,
+                Some(renderer),
                 self.scheduler,
                 self.http_client,
                 self.style,

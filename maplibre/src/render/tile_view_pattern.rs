@@ -10,7 +10,6 @@ use crate::tessellation::IndexDataType;
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
-use wgpu::Buffer;
 
 /// The tile mask pattern assigns each tile a value which can be used for stencil testing.
 pub struct TileViewPattern<Q, B> {
@@ -75,7 +74,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         view_region: &ViewRegion,
         buffer_pool: &BufferPool<
             wgpu::Queue,
-            Buffer,
+            wgpu::Buffer,
             ShaderVertex,
             IndexDataType,
             ShaderLayerMetadata,

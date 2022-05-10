@@ -9,7 +9,6 @@ use lyon::tessellation::{
 };
 
 use crate::error::Error;
-use wgpu::BufferAddress;
 
 pub mod zero_tessellator;
 
@@ -80,8 +79,8 @@ trait Align<V: Pod, I: Pod> {
 impl<V: Pod, I: Pod> Align<V, I> for VertexBuffers<V, I> {
     fn align_vertices(&mut self) {
         let align = wgpu::COPY_BUFFER_ALIGNMENT;
-        let stride = std::mem::size_of::<ShaderVertex>() as BufferAddress;
-        let unpadded_bytes = self.vertices.len() as BufferAddress * stride;
+        let stride = std::mem::size_of::<ShaderVertex>() as wgpu::BufferAddress;
+        let unpadded_bytes = self.vertices.len() as wgpu::BufferAddress * stride;
         let padding_bytes = (align - unpadded_bytes % align) % align;
 
         if padding_bytes != 0 {
@@ -94,8 +93,8 @@ impl<V: Pod, I: Pod> Align<V, I> for VertexBuffers<V, I> {
 
     fn align_indices(&mut self) {
         let align = wgpu::COPY_BUFFER_ALIGNMENT;
-        let stride = std::mem::size_of::<I>() as BufferAddress;
-        let unpadded_bytes = self.indices.len() as BufferAddress * stride;
+        let stride = std::mem::size_of::<I>() as wgpu::BufferAddress;
+        let unpadded_bytes = self.indices.len() as wgpu::BufferAddress * stride;
         let padding_bytes = (align - unpadded_bytes % align) % align;
         let overpad = (padding_bytes + stride - 1) / stride; // Divide by stride but round up
 

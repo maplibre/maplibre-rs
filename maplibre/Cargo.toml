@@ -68,5 +68,11 @@ serde_json = "1.0"
 csscolorparser = { version = "0.5", features = ["serde", "cint"]}
 cint = "0.2"
 
+thiserror = "1"
+downcast-rs = "1.2"
+uuid = { version = "1", features = ["v4"] }
+smallvec = "1.8"
+naga = "0.8"
+
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }

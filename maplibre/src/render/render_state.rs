@@ -3,7 +3,6 @@ use std::default::Default;
 use std::{cmp, iter};
 
 use tracing;
-use wgpu::{Buffer, Limits, Queue};
 
 use crate::style::Style;
 
@@ -15,21 +14,17 @@ use crate::platform::MIN_BUFFER_SIZE;
 use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
 
 use crate::render::camera::{Camera, ViewProjection};
-use crate::render::options::{
-    DEBUG_WIREFRAME, FEATURE_METADATA_BUFFER_SIZE, INDEX_FORMAT, INDICES_BUFFER_SIZE,
-    LAYER_METADATA_BUFFER_SIZE, TILE_VIEW_BUFFER_SIZE, VERTEX_BUFFER_SIZE,
-};
+use crate::render::options::{INDEX_FORMAT, TILE_VIEW_SIZE};
 use crate::render::tile_view_pattern::{TileInView, TileViewPattern};
 use crate::tessellation::IndexDataType;
 use crate::util::FPSMeter;
 use crate::MapWindow;
 
-use super::piplines::*;
 use super::shaders;
 use super::shaders::*;
 use super::texture::Texture;
 
-pub struct RenderState {
+pub struct RenderState2 {
     instance: wgpu::Instance,
 
     device: wgpu::Device,
@@ -41,27 +36,9 @@ pub struct RenderState {
     surface_config: wgpu::SurfaceConfiguration,
     suspended: bool,
 
-    render_pipeline: wgpu::RenderPipeline,
-    mask_pipeline: wgpu::RenderPipeline,
-    bind_group: wgpu::BindGroup,
-
-    sample_count: u32,
     multisampling_texture: Option<Texture>,
 
     depth_texture: Texture,
-
-    globals_uniform_buffer: wgpu::Buffer,
-
-    buffer_pool: BufferPool<
-        Queue,
-        Buffer,
-        ShaderVertex,
-        IndexDataType,
-        ShaderLayerMetadata,
-        ShaderFeatureStyle,
-    >,
-
-    tile_view_pattern: TileViewPattern<Queue, Buffer>,
 }
 
 impl RenderState {
@@ -72,160 +49,13 @@ impl RenderState {
     ) -> Option<Self> {
         let sample_count = 4;
 
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::LowPower,
-                compatible_surface: Some(&surface),
-                force_fallback_adapter: false,
-            })
-            .await
-            .unwrap();
-
-        let limits = if cfg!(feature = "web-webgl") {
-            Limits {
-                max_texture_dimension_2d: 4096,
-                ..wgpu::Limits::downlevel_webgl2_defaults()
-            }
-        } else if cfg!(target_os = "android") {
-            Limits {
-                max_storage_textures_per_shader_stage: 4,
-                max_compute_workgroups_per_dimension: 0,
-                max_compute_workgroup_size_z: 0,
-                max_compute_workgroup_size_y: 0,
-                max_compute_workgroup_size_x: 0,
-                max_compute_workgroup_storage_size: 0,
-                max_compute_invocations_per_workgroup: 0,
-                ..wgpu::Limits::downlevel_defaults()
-            }
-        } else {
-            Limits {
-                ..wgpu::Limits::default()
-            }
-        };
-
-        // create a device and a queue
-        let features = if DEBUG_WIREFRAME {
+        /*let features = if DEBUG_WIREFRAME {
             wgpu::Features::default() | wgpu::Features::POLYGON_MODE_LINE
         } else {
             wgpu::Features::default()
         };
 
-        let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: None,
-                    features,
-                    limits,
-                },
-                None,
-            )
-            .await
-            .ok()?;
-
-        surface.configure(&device, &surface_config);
-
-        let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: VERTEX_BUFFER_SIZE,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let feature_metadata_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: FEATURE_METADATA_BUFFER_SIZE,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let indices_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: INDICES_BUFFER_SIZE,
-            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let tile_view_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: TILE_VIEW_BUFFER_SIZE,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let globals_buffer_byte_size =
-            cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<ShaderGlobals>() as u64);
-
-        let layer_metadata_buffer_size =
-            std::mem::size_of::<ShaderLayerMetadata>() as u64 * LAYER_METADATA_BUFFER_SIZE;
-        let layer_metadata_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Layer Metadata ubo"),
-            size: layer_metadata_buffer_size,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let globals_uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Globals ubo"),
-            size: globals_buffer_byte_size,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("Bind group layout"),
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: wgpu::BufferSize::new(globals_buffer_byte_size),
-                },
-                count: None,
-            }],
-        });
-
-        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Bind group"),
-            layout: &bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::Buffer(
-                    globals_uniform_buffer.as_entire_buffer_binding(),
-                ),
-            }],
-        });
-
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[&bind_group_layout],
-            push_constant_ranges: &[],
-            label: None,
-        });
-
-        let mut vertex_shader = shaders::tile::VERTEX;
-        let mut fragment_shader = shaders::tile::FRAGMENT;
-
-        let render_pipeline_descriptor = create_map_render_pipeline_description(
-            &pipeline_layout,
-            vertex_shader.create_vertex_state(&device),
-            fragment_shader.create_fragment_state(&device),
-            sample_count,
-            false,
-        );
-
-        let mut vertex_shader = shaders::tile_mask::VERTEX;
-        let mut fragment_shader = shaders::tile_mask::FRAGMENT;
-
-        let mask_pipeline_descriptor = create_map_render_pipeline_description(
-            &pipeline_layout,
-            vertex_shader.create_vertex_state(&device),
-            fragment_shader.create_fragment_state(&device),
-            sample_count,
-            true,
-        );
-
-        let render_pipeline = device.create_render_pipeline(&render_pipeline_descriptor);
-        let mask_pipeline = device.create_render_pipeline(&mask_pipeline_descriptor);
+        surface.configure(&device, &surface_config);*/
 
         let depth_texture = Texture::create_depth_texture(&device, &surface_config, sample_count);
 
@@ -254,16 +84,6 @@ impl RenderState {
             globals_uniform_buffer,
             fps_meter: FPSMeter::new(),
             suspended: false, // Initially rendering is not suspended
-            buffer_pool: BufferPool::new(
-                BackingBufferDescriptor::new(vertex_buffer, VERTEX_BUFFER_SIZE),
-                BackingBufferDescriptor::new(indices_buffer, INDICES_BUFFER_SIZE),
-                BackingBufferDescriptor::new(layer_metadata_buffer, layer_metadata_buffer_size),
-                BackingBufferDescriptor::new(feature_metadata_buffer, FEATURE_METADATA_BUFFER_SIZE),
-            ),
-            tile_view_pattern: TileViewPattern::new(BackingBufferDescriptor::new(
-                tile_view_buffer,
-                TILE_VIEW_BUFFER_SIZE,
-            )),
         })
     }
 
@@ -302,23 +122,6 @@ impl RenderState {
         } else {
             None
         };
-    }
-
-    pub fn update_globals(&self, view_proj: &ViewProjection, camera: &Camera) {
-        // Update globals
-        self.queue.write_buffer(
-            &self.globals_uniform_buffer,
-            0,
-            bytemuck::cast_slice(&[ShaderGlobals::new(ShaderCamera::new(
-                view_proj.downcast().into(),
-                camera
-                    .position
-                    .to_homogeneous()
-                    .cast::<f32>()
-                    .unwrap()
-                    .into(),
-            ))]),
-        );
     }
 
     #[tracing::instrument(skip_all)]
@@ -505,7 +308,7 @@ impl RenderState {
         {
             let _span_ = tracing::span!(tracing::Level::TRACE, "render pass").entered();
             {
-                let color_attachment =
+                /* let color_attachment =
                     if let Some(multisampling_target) = &self.multisampling_texture {
                         wgpu::RenderPassColorAttachment {
                             view: &multisampling_target.view,
@@ -540,11 +343,11 @@ impl RenderState {
                             store: true,
                         }),
                     }),
-                });
+                });*/
 
                 pass.set_bind_group(0, &self.bind_group, &[]);
 
-                {
+                /*{
                     let index = self.buffer_pool.index();
 
                     for TileInView { shape, fallback } in self.tile_view_pattern.iter() {
@@ -559,7 +362,7 @@ impl RenderState {
                             as u32;
 
                         // Draw mask
-                        {
+                        /*{
                             tracing::trace!("Drawing mask {}", &coords);
 
                             pass.set_pipeline(&self.mask_pipeline);
@@ -571,7 +374,7 @@ impl RenderState {
                                     .slice(shape.buffer_range.clone()),
                             );
                             pass.draw(0..6, 0..1);
-                        }
+                        }*/
 
                         if let Some(entries) = index.get_layers(&shape_to_render.coords) {
                             let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
@@ -579,7 +382,7 @@ impl RenderState {
 
                             for entry in layers_to_render {
                                 // Draw tile
-                                {
+                                /* {
                                     tracing::trace!(
                                         "Drawing layer {:?} at {}",
                                         entry.style_layer.source_layer,
@@ -619,13 +422,13 @@ impl RenderState {
                                             .slice(entry.feature_metadata_buffer_range()),
                                     );
                                     pass.draw_indexed(entry.indices_range(), 0, 0..1);
-                                }
+                                }*/
                             }
                         } else {
                             tracing::trace!("No layers found at {}", &shape_to_render.coords);
                         }
                     }
-                }
+                }*/
             }
         }
 

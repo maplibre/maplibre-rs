@@ -9,9 +9,8 @@ use crate::io::source_client::{HTTPClient, HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TessellateMessage, TileRequest, TileTessellateMessage};
-use crate::render::camera;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
-use crate::render::render_state::RenderState;
+use crate::render::{camera, Renderer};
 use crate::style::Style;
 use crate::util::ChangeObserver;
 use crate::{MapWindow, MapWindowConfig, ScheduleMethod, WindowSize};
@@ -58,7 +57,7 @@ where
 
     view_state: ViewState,
 
-    render_state: Option<RenderState>,
+    renderer: Option<Renderer>,
     scheduler: Scheduler<SM>,
     message_receiver: mpsc::Receiver<TessellateMessage>,
     shared_thread_state: SharedThreadState,
@@ -80,7 +79,7 @@ where
     pub fn new(
         map_window_config: MWC,
         window_size: WindowSize,
-        render_state: Option<RenderState>,
+        renderer: Option<Renderer>,
         scheduler: Scheduler<SM>,
         http_client: HC,
         style: Style,
@@ -111,7 +110,7 @@ where
                 perspective,
             },
 
-            render_state,
+            renderer,
             scheduler,
 
             tile_cache: TileCache::new(),
@@ -137,7 +136,7 @@ where
         self.prepare_render();
 
         // Render buffers
-        self.render_state_mut().render()?;
+        self.renderer_mut().render();
 
         #[cfg(all(feature = "enable-tracing", not(target_arch = "wasm32")))]
         tracy_client::finish_continuous_frame!();
@@ -210,16 +209,16 @@ where
         drop(_guard);
 
         if let Some(view_region) = &view_region {
-            self.render_state
+            self.renderer
                 .as_mut()
                 .expect("render state not yet initialized. Call reinitialize().")
                 .upload_tile_geometry(view_region, &self.style, &self.tile_cache);
 
             let zoom = self.view_state.zoom();
-            self.render_state_mut()
+            self.renderer_mut()
                 .update_tile_view_pattern(view_region, &view_proj, zoom);
 
-            self.render_state_mut().update_metadata();
+            self.renderer_mut().update_metadata();
         }
 
         // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
@@ -234,7 +233,7 @@ where
                 self.try_failed = self.request_tiles_in_view(view_region);
             }
 
-            self.render_state()
+            self.renderer()
                 .update_globals(&view_proj, &self.view_state.camera);
         }
 
@@ -300,7 +299,7 @@ where
         self.view_state.perspective.resize(width, height);
         self.view_state.camera.resize(width, height);
 
-        self.render_state_mut().resize(width, height)
+        self.renderer_mut().resize(width, height)
     }
 
     pub fn scheduler(&self) -> &Scheduler<SM> {
@@ -308,21 +307,21 @@ where
     }
 
     pub fn suspend(&mut self) {
-        self.render_state_mut().suspend();
+        self.renderer_mut().suspend();
     }
 
     pub fn resume(&mut self) {
-        self.render_state_mut().resume();
+        self.renderer_mut().resume();
     }
 
-    pub fn render_state(&self) -> &RenderState {
-        self.render_state
+    pub fn renderer(&self) -> &Renderer {
+        self.renderer
             .as_ref()
             .expect("render state not yet initialized. Call reinitialize().")
     }
 
-    pub fn render_state_mut(&mut self) -> &'_ mut RenderState {
-        self.render_state.as_mut().unwrap()
+    pub fn renderer_mut(&mut self) -> &'_ mut Renderer {
+        self.renderer.as_mut().unwrap()
     }
 
     pub fn view_state(&self) -> &ViewState {
@@ -334,18 +333,18 @@ where
     }
 
     pub fn recreate_surface(&mut self, window: &MWC::MapWindow) {
-        self.render_state
+        self.renderer
             .as_mut()
             .expect("render state not yet initialized. Call reinitialize().")
             .recreate_surface(window);
     }
 
     pub fn is_initialized(&self) -> bool {
-        self.render_state.is_some()
+        self.renderer.is_some()
     }
 
     pub async fn reinitialize(&mut self) {
-        if self.render_state.is_none() {
+        if self.renderer.is_none() {
             let instance = wgpu::Instance::new(wgpu::Backends::all());
             //let instance = wgpu::Instance::new(wgpu::Backends::GL);
             //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
@@ -363,10 +362,8 @@ where
                 present_mode: wgpu::PresentMode::Fifo, // VSync
             };
             let _window_size = window.size();
-            let render_state = RenderState::initialize(instance, surface, surface_config)
-                .await
-                .unwrap();
-            self.render_state = Some(render_state)
+            let renderer = Renderer::initialize(Some(&surface)).await.unwrap();
+            self.renderer = Some(renderer)
         }
     }
 }
