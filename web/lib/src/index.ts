@@ -151,5 +151,3 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
 
     await run(schedulerPtr)
 }
-
-export default "test"

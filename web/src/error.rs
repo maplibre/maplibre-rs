@@ -1,7 +1,7 @@
 //! Errors which can happen in various parts of the library.
 
 use js_sys::Error as JSError;
-use wasm_bindgen::prelude::*;
+
 use wasm_bindgen::{JsCast, JsValue};
 
 #[derive(Debug)]

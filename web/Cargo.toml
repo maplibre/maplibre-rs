@@ -20,7 +20,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 async-trait = "0.1"
 maplibre = { path = "../maplibre", features = ["no-thread-safe-futures"] }
-winit = "0.26"
+maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
 log = "0.4"
 rand = { version = "0.7", features = ["wasm-bindgen"] }
 
