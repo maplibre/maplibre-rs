@@ -1,5 +1,28 @@
+use crate::{HTTPClient, MapState, ScheduleMethod};
+
 pub trait MapWindow {
-    fn size(&self) -> Option<WindowSize>;
+    type EventLoop;
+    type Window: raw_window_handle::HasRawWindowHandle;
+    type MapWindowConfig: MapWindowConfig<MapWindow = Self>;
+
+    fn create(map_window_config: &Self::MapWindowConfig) -> Self;
+
+    fn size(&self) -> WindowSize;
+
+    fn inner(&self) -> &Self::Window;
+}
+
+pub trait MapWindowConfig: 'static {
+    type MapWindow: MapWindow<MapWindowConfig = Self>;
+}
+
+pub trait Runnable<MWC, SM, HC>
+where
+    MWC: MapWindowConfig,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
+    fn run(self, map_state: MapState<MWC, SM, HC>, max_frames: Option<u64>);
 }
 
 #[derive(Clone, Copy)]
@@ -23,26 +46,4 @@ impl WindowSize {
     pub fn height(&self) -> u32 {
         self.height
     }
-}
-
-#[cfg(target_os = "android")]
-/// On android we can not get the dimensions of the window initially. Therefore, we use a fallback
-/// until the window is ready to deliver its correct bounds.
-impl Default for WindowSize {
-    fn default() -> Self {
-        WindowSize {
-            width: 100,
-            height: 100,
-        }
-    }
-}
-
-pub type WindowFactory<W, E> = dyn FnOnce() -> (W, E);
-
-pub trait FromWindow {
-    fn from_window(title: &'static str) -> Self;
-}
-
-pub trait FromCanvas {
-    fn from_canvas(dom_id: &'static str) -> Self;
 }

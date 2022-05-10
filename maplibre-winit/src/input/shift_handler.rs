@@ -1,8 +1,7 @@
 use super::UpdateState;
 
-use crate::map_state::ViewState;
-use crate::{MapState, MapWindow};
 use cgmath::{Vector3, Zero};
+use maplibre::map_state::ViewState;
 use std::time::Duration;
 
 pub struct ShiftHandler {
