@@ -7,6 +7,7 @@ use std::{
     sync::Arc,
 };
 
+use crate::render::Renderer;
 use wgpu::{
     CommandBuffer, CommandEncoder, CommandEncoderDescriptor, LoadOp, Operations, RenderPass,
     RenderPassColorAttachment, RenderPassDepthStencilAttachment, RenderPassDescriptor, TextureView,
@@ -25,7 +26,6 @@ use super::{
 pub struct ReadyData {
     pub d2_texture: TextureManagerReadyOutput,
     pub d2c_texture: TextureManagerReadyOutput,
-    pub directional_light_cameras: Vec<CameraManager>,
 }
 
 /// Implementation of a rendergraph. See module docs for details.

@@ -23,7 +23,7 @@ pub(super) struct RenderGraphNode<'node> {
     pub exec: Box<
         dyn for<'b, 'pass> FnOnce(
                 &mut PassthroughDataContainer<'pass>,
-                &Arc<dyn Renderer>,
+                &Arc<Renderer>,
                 RenderGraphEncoderOrPass<'b, 'pass>,
                 &'pass RpassTemporaryPool<'pass>,
                 &'pass ReadyData,
@@ -181,7 +181,7 @@ impl<'a, 'node> RenderGraphNodeBuilder<'a, 'node> {
     where
         F: for<'b, 'pass> FnOnce(
                 &mut PassthroughDataContainer<'pass>,
-                &Arc<dyn Renderer>,
+                &Arc<Renderer>,
                 RenderGraphEncoderOrPass<'b, 'pass>,
                 &'pass RpassTemporaryPool<'pass>,
                 &'pass ReadyData,
