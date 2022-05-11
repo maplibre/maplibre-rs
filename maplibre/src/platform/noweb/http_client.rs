@@ -6,7 +6,6 @@ use reqwest_middleware::ClientWithMiddleware;
 use reqwest_middleware_cache::managers::CACacheManager;
 use reqwest_middleware_cache::{Cache, CacheMode};
 
-/// Reqwest http client
 #[derive(Clone)]
 pub struct ReqwestHttpClient {
     client: ClientWithMiddleware,

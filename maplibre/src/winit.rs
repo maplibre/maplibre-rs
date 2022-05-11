@@ -89,10 +89,6 @@ where
                     let dt = now - last_render_time;
                     last_render_time = now;
 
-                    // FIXME: Inputs are updated in RedrawRequested which
-                    // 1. Adds a strain on the main thread, maybe we need another thread for that.
-                    // 2. Delta time is correlated to the frame rate, and a low frame rate will cause
-                    //    a lag with inputs. e.g. a button is held for a certain amount of time.
                     input_controller.update_state(self.view_state_mut(), dt);
 
                     match self.update_and_redraw() {

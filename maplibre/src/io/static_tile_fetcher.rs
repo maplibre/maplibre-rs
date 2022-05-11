@@ -15,7 +15,7 @@ static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 #[cfg(not(static_tiles))]
 static TILES: Dir = Dir::new("/path", &[]);
 
-/// Load PBF files from the local direction `extracted-tiles`.
+/// Load PBF files which were statically embedded in the `build.rs`
 #[derive(Default)]
 pub struct StaticTileFetcher;
 

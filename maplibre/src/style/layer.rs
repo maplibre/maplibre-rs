@@ -5,7 +5,6 @@ use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Background styling.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {
     #[serde(rename = "background-color")]
@@ -14,7 +13,6 @@ pub struct BackgroundPaint {
     // TODO a lot
 }
 
-/// Fill styling.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FillPaint {
     #[serde(rename = "fill-color")]
@@ -23,7 +21,6 @@ pub struct FillPaint {
     // TODO a lot
 }
 
-/// Line styling.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LinePaint {
     #[serde(rename = "line-color")]

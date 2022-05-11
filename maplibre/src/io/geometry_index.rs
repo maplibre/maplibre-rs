@@ -14,7 +14,7 @@ use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, Zoom, EXTENT, TILE_SIZE};
 use crate::util::math::bounds_from_points;
 
-/// A quad tree storing the current tiles being rendered.
+/// A quad tree storing the currently loaded tiles.
 pub struct GeometryIndex {
     index: BTreeMap<Quadkey, TileIndex>,
 }
@@ -62,7 +62,7 @@ impl GeometryIndex {
 /// Spatial tiles are stored in a multi-dimentional tree which represents their position in the tile.
 /// Linear tiles are simply stored in a vector.
 ///
-/// A spatial tile index can improve query performance on tiles.
+/// A spatial tile index can theoretically improve query performance on tiles. Practically it could be slower though. The `Spatial` index is experimental and currently unused.
 pub enum TileIndex {
     Spatial { tree: RTree<IndexedGeometry<f64>> },
     Linear { list: Vec<IndexedGeometry<f64>> },

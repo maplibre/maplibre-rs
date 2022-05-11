@@ -1,4 +1,4 @@
-//! Stores the state of the map such as zoom level, camera, styles, etc.
+//! Stores the state of the map such as `[crate::coords::Zoom]`, `[crate::camera::Camera]`, `[crate::style::Style]`, `[crate::io::tile_cache::TileCache]` and more.
 
 use crate::coords::{ViewRegion, WorldTileCoords, Zoom, TILE_SIZE};
 use crate::error::Error;

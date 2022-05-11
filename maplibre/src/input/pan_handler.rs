@@ -97,11 +97,6 @@ impl PanHandler {
             return false;
         }
 
-        if !self.is_panning {
-            // starting to pan
-            // FIXME: This `if` statement is not used
-        }
-
         if *state == ElementState::Pressed {
             // currently panning or starting to pan
             self.is_panning = true;

@@ -1,6 +1,20 @@
 //! # Maplibre-rs
 //!
 //! A multi-platform library for rendering vector tile maps with WebGPU.
+//!
+//! Maplibre-rs is a map renderer that can run natively on MacOS, Linux, Windows, Android, iOS and the web.
+//! It takes advantage of Lyon to tessellate vector tiles and WebGPU to display them efficiently.
+//! Maplibre-rs also has an headless mode (*work in progress*) that can generate rasters.
+//!
+//! The official guide book can be found here #![doc = include_str!("description.md")]
+//!
+//! ### Example
+//!
+//! To import maplibre-rs in your `Cargo.toml`:
+//!
+//! ```toml
+//! maplibre = "0.0.2"
+//! ```
 
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
 use crate::io::source_client::HTTPClient;
@@ -95,10 +109,6 @@ where
 {
     /// Initializes the whole rendering pipeline for the given configuration.
     /// Returns the initialized map, ready to be run.
-    ///
-    /// # Panics
-    ///
-    /// * Panics if Winit is unable to retrieve the target window size.
     pub async fn initialize(self) -> Map<W, E, SM, HC> {
         #[cfg(target_os = "android")]
         // On android we can not get the dimensions of the window initially. Therefore, we use a
@@ -135,10 +145,6 @@ where
     HC: HTTPClient,
 {
     /// Runs the map application without a maximum number of frames per second defined.
-    ///
-    /// # Panics
-    ///
-    /// * Panics if the operating system is unable to starts the worker threads.
     pub fn run_sync(self) {
         self.run_sync_with_optionally_max_frames(None);
     }
@@ -148,10 +154,6 @@ where
     /// # Arguments
     ///
     /// * `max_frames` - The maxiumum number of frame per seconds.
-    ///
-    /// # Panics
-    ///
-    /// * Panics if the operating system is unable to starts the worker threads.
     pub fn run_sync_with_max_frames(self, max_frames: u64) {
         self.run_sync_with_optionally_max_frames(Some(max_frames))
     }
@@ -225,11 +227,6 @@ where
     }
 
     /// Builds the UninitializedMap with the given configuration.
-    ///
-    /// # Panics
-    ///
-    /// * Panics if no schedule method has been configured.
-    /// * Panics if no http client has been configured.
     pub fn build(self) -> UninitializedMap<W, E, SM, HC> {
         let (window, event_loop) = (self.window_factory)();
 
