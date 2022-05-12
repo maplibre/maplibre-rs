@@ -1,4 +1,3 @@
-
 //! Shared thread state.
 
 use crate::coords::{WorldCoords, WorldTileCoords, Zoom};

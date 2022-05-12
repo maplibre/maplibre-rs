@@ -59,7 +59,7 @@ impl fmt::Debug for Quadkey {
     }
 }
 
-/// `Zoom` is an exponential scale that defines of the camera and tiles. 
+/// `Zoom` is an exponential scale that defines the zoom of the camera on the map.
 /// We can derive the `ZoomLevel` from `Zoom` by using the `[crate::coords::ZOOM_BOUNDS]`.
 #[derive(Copy, Clone, Debug)]
 pub struct Zoom(f64);
