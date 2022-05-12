@@ -6,7 +6,7 @@
 //! It takes advantage of Lyon to tessellate vector tiles and WebGPU to display them efficiently.
 //! Maplibre-rs also has an headless mode (*work in progress*) that can generate rasters.
 //!
-//! The official guide book can be found here #![doc = include_str!("description.md")]
+//! The official guide book can be found [here](https://maxammann.org/maplibre-rs/docs/).
 //!
 //! ### Example
 //!
