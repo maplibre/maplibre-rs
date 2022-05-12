@@ -41,6 +41,9 @@ pub mod schedule_method {
     pub use super::noweb::schedule_method::*;
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+pub use noweb::run_multithreaded;
+
 /// Minimum WebGPU buffer size
 ///
 /// FIXME: This limit is enforced by WebGL. Actually this makes sense!

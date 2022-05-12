@@ -1,10 +1,10 @@
 use super::UpdateState;
 
-use crate::map_state::{MapState, ViewState};
-use crate::render::camera::Camera;
+use maplibre::map_state::ViewState;
+use maplibre::render::camera::Camera;
 
-use crate::MapWindow;
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
+
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
 

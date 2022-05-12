@@ -113,12 +113,6 @@ cargo run -p maplibre-demo
 More information about building for different platforms can be
 found [here](https://maxammann.org/maplibre-rs/docs/development-guide/building.html).
 
-> __Note for Mac__: Before opening the XCode project, you need to build manually using the following command:
-> `cargo build --target aarch64-apple-darwin --lib`
->
-> After that, open the XCode project and run it.
-> (XCode seems to set some environment variables which cause problems with the build directly within XCode)
-
 ## Rust Setup
 
 Install [rustup](https://rustup.rs/) because this is the recommended way of setting up Rust toolchains.

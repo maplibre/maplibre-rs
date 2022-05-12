@@ -1,18 +1,18 @@
+
 //! Shared thread state.
 
-use crate::coords::{TileCoords, WorldCoords, WorldTileCoords, Zoom};
+use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
 use crate::error::Error;
 use crate::io::geometry_index::{GeometryIndex, IndexProcessor, IndexedGeometry, TileIndex};
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{
-    LayerTessellateMessage, TessellateMessage, TileFetchResult, TileRequest, TileRequestID,
-    TileTessellateMessage,
+    LayerTessellateMessage, TessellateMessage, TileRequest, TileRequestID, TileTessellateMessage,
 };
-use crate::tessellation::Tessellated;
+
 use std::collections::HashSet;
 
 use crate::tessellation::zero_tessellator::ZeroTessellator;
-use geozero::mvt::tile;
+
 use geozero::GeozeroDatasource;
 use prost::Message;
 use std::sync::{mpsc, Arc, Mutex};
@@ -44,9 +44,9 @@ impl SharedThreadState {
 
             let mut tile = geozero::mvt::Tile::decode(data.as_ref()).expect("failed to load tile");
 
-            let mut index = IndexProcessor::new();
+            let index = IndexProcessor::new();
 
-            for mut layer in &mut tile.layers {
+            for layer in &mut tile.layers {
                 let cloned_layer = layer.clone();
                 let layer_name: &str = &cloned_layer.name;
                 if !tile_request.layers.contains(layer_name) {

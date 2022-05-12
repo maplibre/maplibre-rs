@@ -1,11 +1,9 @@
 use super::UpdateState;
 
-use crate::map_state::{MapState, ViewState};
+use maplibre::map_state::ViewState;
 
-use crate::coords::Zoom;
-use crate::render::camera::Camera;
-use crate::MapWindow;
 use cgmath::{Deg, Rad, Zero};
+
 use std::time::Duration;
 
 pub struct TiltHandler {

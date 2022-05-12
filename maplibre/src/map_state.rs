@@ -14,16 +14,9 @@ use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::render::render_state::RenderState;
 use crate::style::Style;
 use crate::util::ChangeObserver;
-use crate::{MapWindow, ScheduleMethod, WindowSize};
+use crate::{MapWindow, MapWindowConfig, ScheduleMethod, WindowSize};
 use std::collections::HashSet;
-use std::sync;
 use std::sync::{mpsc, Arc, Mutex};
-use wgpu::SurfaceError;
-
-/// An element that will execute an event loop with an optional maximum number of frames per second.
-pub trait Runnable<E> {
-    fn run(self, event_loop: E, max_frames: Option<u64>);
-}
 
 /// Stores the camera configuration.
 pub struct ViewState {
@@ -55,13 +48,13 @@ impl ViewState {
 ///
 /// FIXME: MapState may not follow the Single-responsibility principle, as it not only stores
 /// the state of the map but also the rendering, caching, etc.
-pub struct MapState<W, SM, HC>
+pub struct MapState<MWC, SM, HC>
 where
-    W: MapWindow,
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    window: W,
+    map_window_config: MWC,
 
     view_state: ViewState,
 
@@ -78,14 +71,14 @@ where
     try_failed: bool,
 }
 
-impl<W, SM, HC> MapState<W, SM, HC>
+impl<MWC, SM, HC> MapState<MWC, SM, HC>
 where
-    W: MapWindow,
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
     pub fn new(
-        window: W,
+        map_window_config: MWC,
         window_size: WindowSize,
         render_state: Option<RenderState>,
         scheduler: Scheduler<SM>,
@@ -111,8 +104,7 @@ where
         let (message_sender, message_receiver) = mpsc::channel();
 
         Self {
-            window,
-
+            map_window_config,
             view_state: ViewState {
                 zoom: ChangeObserver::default(),
                 camera: ChangeObserver::new(camera),
@@ -137,7 +129,7 @@ where
         }
     }
 
-    pub fn update_and_redraw(&mut self) -> Result<(), SurfaceError> {
+    pub fn update_and_redraw(&mut self) -> Result<(), Error> {
         // Get data from other threads
         self.try_populate_cache();
 
@@ -145,12 +137,12 @@ where
         self.prepare_render();
 
         // Render buffers
-        let result = self.render_state_mut().render();
+        self.render_state_mut().render()?;
 
         #[cfg(all(feature = "enable-tracing", not(target_arch = "wasm32")))]
         tracy_client::finish_continuous_frame!();
 
-        result
+        Ok(())
     }
 
     #[tracing::instrument(skip_all)]
@@ -315,10 +307,6 @@ where
         &self.scheduler
     }
 
-    pub fn window(&self) -> &W {
-        &self.window
-    }
-
     pub fn suspend(&mut self) {
         self.render_state_mut().suspend();
     }
@@ -344,19 +332,12 @@ where
     pub fn view_state_mut(&mut self) -> &mut ViewState {
         &mut self.view_state
     }
-}
 
-impl<W, SM, HC> MapState<W, SM, HC>
-where
-    W: MapWindow + raw_window_handle::HasRawWindowHandle,
-    SM: ScheduleMethod,
-    HC: HTTPClient,
-{
-    pub fn recreate_surface(&mut self) {
+    pub fn recreate_surface(&mut self, window: &MWC::MapWindow) {
         self.render_state
             .as_mut()
             .expect("render state not yet initialized. Call reinitialize().")
-            .recreate_surface(&self.window);
+            .recreate_surface(window);
     }
 
     pub fn is_initialized(&self) -> bool {
@@ -365,11 +346,24 @@ where
 
     pub async fn reinitialize(&mut self) {
         if self.render_state.is_none() {
-            let window_size = self
-                .window
-                .size()
-                .expect("Window size should be known when reinitializing.");
-            let render_state = RenderState::initialize(&self.window, window_size)
+            let instance = wgpu::Instance::new(wgpu::Backends::all());
+            //let instance = wgpu::Instance::new(wgpu::Backends::GL);
+            //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
+
+            let window = MWC::MapWindow::create(&self.map_window_config);
+            let window_size = window.size();
+
+            let surface = unsafe { instance.create_surface(window.inner()) };
+            let surface_config = wgpu::SurfaceConfiguration {
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                format: crate::platform::COLOR_TEXTURE_FORMAT,
+                width: window_size.width(),
+                height: window_size.height(),
+                // present_mode: wgpu::PresentMode::Mailbox,
+                present_mode: wgpu::PresentMode::Fifo, // VSync
+            };
+            let _window_size = window.size();
+            let render_state = RenderState::initialize(instance, surface, surface_config)
                 .await
                 .unwrap();
             self.render_state = Some(render_state)

@@ -191,6 +191,6 @@ mod tests {
         }
         "##;
 
-        let style: Style = serde_json::from_str(&style_json_str).unwrap();
+        let _style: Style = serde_json::from_str(style_json_str).unwrap();
     }
 }
