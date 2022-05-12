@@ -31,10 +31,11 @@ const fn create_zoom_bounds<const DIM: usize>() -> [u32; DIM] {
     result
 }
 
-/// Represents the position of a node within a quad tree. It stores the number of one of the four
-/// squares for each subdivision of the quad tree from zoom level 0.
+/// Represents the position of a node within a quad tree. The first u8 defines the `ZoomLevel` of the node.
+/// The remaining bytes define which part (north west, south west, south east, north east) of each
+/// subdivision of the quadtree is concerned.
 ///
-/// TODO: Would it be useful to optimize the quadkey and store the keys on 3 bits instead of 8?
+/// TODO: We can optimize the quadkey and store the keys on 2 bits instead of 8
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
 pub struct Quadkey([u8; MAX_ZOOM]);
 
