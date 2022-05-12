@@ -1,7 +1,8 @@
-use bytemuck::Pod;
+//! Tessellator implementation.
+
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use lyon::geom;
-use lyon::geom::point;
+
 use lyon::lyon_tessellation::VertexBuffers;
 use lyon::path::path::Builder;
 use lyon::path::Path;
@@ -16,6 +17,7 @@ use crate::tessellation::{VertexConstructor, DEFAULT_TOLERANCE};
 
 type GeoResult<T> = geozero::error::Result<T>;
 
+/// Build tessellations with vectors.
 pub struct ZeroTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> {
     path_builder: RefCell<Builder>,
     path_open: bool,
@@ -85,7 +87,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> ZeroTesse
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProcessor
     for ZeroTessellator<I>
 {
-    fn xy(&mut self, x: f64, y: f64, idx: usize) -> GeoResult<()> {
+    fn xy(&mut self, x: f64, y: f64, _idx: usize) -> GeoResult<()> {
         // log::info!("xy");
 
         if self.is_point {
@@ -167,7 +169,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
         Ok(())
     }
 
-    fn multipolygon_begin(&mut self, size: usize, idx: usize) -> GeoResult<()> {
+    fn multipolygon_begin(&mut self, _size: usize, _idx: usize) -> GeoResult<()> {
         // log::info!("multipolygon_begin");
         Ok(())
     }

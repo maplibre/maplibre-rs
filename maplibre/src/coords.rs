@@ -1,4 +1,4 @@
-//! File which exposes all kinds of coordinates used throughout maplibre-rs
+//! Provides utilities related to coordinates.
 
 use std::fmt;
 use std::fmt::Formatter;
@@ -31,6 +31,11 @@ const fn create_zoom_bounds<const DIM: usize>() -> [u32; DIM] {
     result
 }
 
+/// Represents the position of a node within a quad tree. The first u8 defines the `ZoomLevel` of the node.
+/// The remaining bytes define which part (north west, south west, south east, north east) of each
+/// subdivision of the quadtree is concerned.
+///
+/// TODO: We can optimize the quadkey and store the keys on 2 bits instead of 8
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
 pub struct Quadkey([u8; MAX_ZOOM]);
 
@@ -55,6 +60,8 @@ impl fmt::Debug for Quadkey {
     }
 }
 
+/// `Zoom` is an exponential scale that defines the zoom of the camera on the map.
+/// We can derive the `ZoomLevel` from `Zoom` by using the `[crate::coords::ZOOM_BOUNDS]`.
 #[derive(Copy, Clone, Debug)]
 pub struct Zoom(f64);
 
@@ -439,6 +446,7 @@ impl From<Point3<f64>> for WorldCoords {
     }
 }
 
+/// Defines a bounding box on a tiled map with a [`ZoomLevel`] and a padding.
 #[derive(Debug)]
 pub struct ViewRegion {
     min_tile: WorldTileCoords,

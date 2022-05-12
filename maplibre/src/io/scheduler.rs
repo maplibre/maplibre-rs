@@ -1,9 +1,12 @@
+//! Scheduling.
+
 use std::future::Future;
 
 use crate::error::Error;
 
 use crate::io::shared_thread_state::SharedThreadState;
 
+/// Async/await scheduler.
 pub struct Scheduler<SM>
 where
     SM: ScheduleMethod,
@@ -24,6 +27,7 @@ where
     }
 }
 
+/// Can schedule a task from a future factory and a shared state.
 pub trait ScheduleMethod: 'static {
     #[cfg(not(feature = "no-thread-safe-futures"))]
     fn schedule<T>(

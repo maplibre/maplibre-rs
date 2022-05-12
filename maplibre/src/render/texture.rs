@@ -32,7 +32,7 @@ impl Texture {
         }
     }
 
-    /// Creates a texture that uses MSAA and fits a given swap chain
+    /// Creates a texture that uses MSAA and fits a given swap chain.
     pub fn create_multisampling_texture(
         device: &wgpu::Device,
         desc: &wgpu::SurfaceConfiguration,

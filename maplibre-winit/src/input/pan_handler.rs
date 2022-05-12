@@ -1,10 +1,10 @@
 use super::UpdateState;
 
-use crate::map_state::{MapState, ViewState};
-use crate::render::camera::Camera;
+use maplibre::map_state::ViewState;
+use maplibre::render::camera::Camera;
 
-use crate::MapWindow;
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
+
 use std::time::Duration;
 use winit::event::{ElementState, MouseButton};
 
@@ -95,10 +95,6 @@ impl PanHandler {
     pub fn process_mouse_key_press(&mut self, key: &MouseButton, state: &ElementState) -> bool {
         if *key != MouseButton::Left {
             return false;
-        }
-
-        if !self.is_panning {
-            // starting to pan
         }
 
         if *state == ElementState::Pressed {
