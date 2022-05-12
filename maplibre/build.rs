@@ -1,3 +1,8 @@
+//! # Build
+//!
+//! This script is built and executed just before building the package.
+//! It will validate the WGSL (WebGPU Shading Language) shaders and embed static files.
+
 use std::path::{Path, PathBuf};
 use std::{env, fs};
 
@@ -8,7 +13,7 @@ const MUNICH_X: u32 = 17425;
 const MUNICH_Y: u32 = 11365;
 const MUNICH_Z: u8 = 15;
 
-/// Tiles which can be used by StaticTileFetcher
+/// Tiles which can be used by StaticTileFetcher.
 fn clean_static_tiles() -> PathBuf {
     let out_dir = env::var("OUT_DIR").unwrap();
 

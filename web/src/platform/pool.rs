@@ -62,7 +62,7 @@ impl WorkerPool {
         Ok(pool)
     }
 
-    /// Unconditionally spawns a new worker
+    /// Unconditionally spawns a new worker.
     ///
     /// The worker isn't registered with this `WorkerPool` but is capable of
     /// executing work for this wasm module.

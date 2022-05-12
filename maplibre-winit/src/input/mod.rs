@@ -56,6 +56,8 @@ impl InputController {
         false
     }
 
+    /// Process the given winit `[winit::event::WindowEvent]`.
+    /// Returns true if the event has been processed and false otherwise.
     pub fn window_input(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {

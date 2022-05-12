@@ -1,9 +1,14 @@
+//! Vector tile data utilities.
+
 use serde::{Deserialize, Serialize};
 
+/// String url to a tile.
 pub type TileUrl = String;
 
+/// String url to a JSON tile.
 pub type TileJSONUrl = String;
 
+/// Tiles can be positioned using either the xyz coordinates or the TMS (Tile Map Service) protocol.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum TileAddressingScheme {
     #[serde(rename = "xyz")]
@@ -18,18 +23,19 @@ impl Default for TileAddressingScheme {
     }
 }
 
+/// Source properties for tiles or rasters.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct VectorSource {
-    /// String which contains attribution information for the used tiles
+    /// String which contains attribution information for the used tiles.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attribution: Option<String>,
-    /// The bounds in which tiles are available
+    /// The bounds in which tiles are available.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bounds: Option<(f64, f64, f64, f64)>,
-    /// Max zoom level at which tiles are available
+    /// Max zoom level at which tiles are available.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maxzoom: Option<u8>,
-    /// Min zoom level at which tiles are available
+    /// Min zoom level at which tiles are available.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub minzoom: Option<u8>,
     // TODO: promoteId
@@ -49,5 +55,5 @@ pub enum Source {
     #[serde(rename = "vector")]
     Vector(VectorSource),
     #[serde(rename = "raster")]
-    Raster(VectorSource),
+    Raster(VectorSource), // FIXME: Does it make sense that a raster have a VectorSource?
 }

@@ -15,8 +15,10 @@ pub mod zero_tessellator;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
+/// Vertex buffers index data type.
 pub type IndexDataType = u32; // Must match INDEX_FORMAT
 
+/// An element that can be tessellated into vertex buffers.
 pub trait Tessellated<I: Add> {
     /// Returns a vertex buffer which represents some object like a layer. Each object can contain
     /// multiple features. For each feature also the amount of indices is returned.
@@ -24,6 +26,7 @@ pub trait Tessellated<I: Add> {
     fn tessellate(&self) -> Result<(VertexBuffers<ShaderVertex, I>, Vec<u32>), Error>;
 }
 
+/// Constructor for Fill and Stroke vertices.
 pub struct VertexConstructor {}
 
 impl FillVertexConstructor<ShaderVertex> for VertexConstructor {

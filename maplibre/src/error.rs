@@ -30,6 +30,7 @@ impl RenderError {
     }
 }
 
+/// Enumeration of errors which can happen during the operation of the library.
 #[derive(Debug)]
 pub enum Error {
     Schedule,

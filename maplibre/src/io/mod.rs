@@ -18,6 +18,7 @@ pub mod shared_thread_state;
 pub mod tile_cache;
 pub mod tile_request_state;
 
+/// Contains a `Tile` if the fetch was successful otherwise `Unavailable`.
 pub enum TileFetchResult {
     Unavailable {
         coords: WorldTileCoords,
@@ -41,16 +42,20 @@ impl fmt::Debug for TileFetchResult {
     }
 }
 
+/// [crate::io::TileTessellateMessage] or [crate::io::LayerTessellateMessage] tessellation message.
 pub enum TessellateMessage {
     Tile(TileTessellateMessage),
     Layer(LayerTessellateMessage),
 }
 
+///  The result of the tessellation of a tile.
 pub struct TileTessellateMessage {
     pub request_id: TileRequestID,
     pub coords: WorldTileCoords,
 }
 
+/// `TessellatedLayer` contains the result of the tessellation for a specific layer, otherwise
+/// `UnavailableLayer` if the layer doesn't exist.
 pub enum LayerTessellateMessage {
     UnavailableLayer {
         coords: WorldTileCoords,
@@ -59,7 +64,7 @@ pub enum LayerTessellateMessage {
     TessellatedLayer {
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-        /// Holds for each feature the count of indices
+        /// Holds for each feature the count of indices.
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
     },
@@ -87,6 +92,7 @@ impl LayerTessellateMessage {
     }
 }
 
+/// A request for a tile at the given coordinates and in the given layers.
 #[derive(Clone)]
 pub struct TileRequest {
     pub coords: WorldTileCoords,
@@ -99,4 +105,5 @@ impl fmt::Debug for TileRequest {
     }
 }
 
+/// The ID format for a tile request.
 pub type TileRequestID = u32;

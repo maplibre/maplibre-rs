@@ -1,3 +1,5 @@
+//! Stores the state of the map such as `[crate::coords::Zoom]`, `[crate::camera::Camera]`, `[crate::style::Style]`, `[crate::io::tile_cache::TileCache]` and more.
+
 use crate::coords::{ViewRegion, WorldTileCoords, Zoom, TILE_SIZE};
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
@@ -14,9 +16,9 @@ use crate::style::Style;
 use crate::util::ChangeObserver;
 use crate::{MapWindow, MapWindowConfig, ScheduleMethod, WindowSize};
 use std::collections::HashSet;
-
 use std::sync::{mpsc, Arc, Mutex};
 
+/// Stores the camera configuration.
 pub struct ViewState {
     zoom: ChangeObserver<Zoom>,
     pub camera: ChangeObserver<Camera>,
@@ -42,6 +44,10 @@ impl ViewState {
     }
 }
 
+/// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
+///
+/// FIXME: MapState may not follow the Single-responsibility principle, as it not only stores
+/// the state of the map but also the rendering, caching, etc.
 pub struct MapState<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
@@ -164,7 +170,7 @@ where
         }
     }
 
-    /// Request tiles which are currently in view
+    /// Request tiles which are currently in view.
     #[tracing::instrument(skip_all)]
     fn request_tiles_in_view(&mut self, view_region: &ViewRegion) -> bool {
         let mut try_failed = false;

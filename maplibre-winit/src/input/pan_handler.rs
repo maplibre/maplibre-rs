@@ -97,10 +97,6 @@ impl PanHandler {
             return false;
         }
 
-        if !self.is_panning {
-            // starting to pan
-        }
-
         if *state == ElementState::Pressed {
             // currently panning or starting to pan
             self.is_panning = true;

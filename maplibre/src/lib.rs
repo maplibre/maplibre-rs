@@ -1,3 +1,21 @@
+//! # Maplibre-rs
+//!
+//! A multi-platform library for rendering vector tile maps with WebGPU.
+//!
+//! Maplibre-rs is a map renderer that can run natively on MacOS, Linux, Windows, Android, iOS and the web.
+//! It takes advantage of Lyon to tessellate vector tiles and WebGPU to display them efficiently.
+//! Maplibre-rs also has an headless mode (*work in progress*) that can generate rasters.
+//!
+//! The official guide book can be found [here](https://maxammann.org/maplibre-rs/docs/).
+//!
+//! ### Example
+//!
+//! To import maplibre-rs in your `Cargo.toml`:
+//!
+//! ```toml
+//! maplibre = "0.0.2"
+//! ```
+
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
 use crate::io::source_client::HTTPClient;
 use crate::map_state::MapState;
@@ -23,6 +41,7 @@ pub(crate) mod tessellation;
 pub(crate) mod tilejson;
 pub(crate) mod util;
 
+/// Map's configuration and execution.
 pub struct Map<W, SM, HC>
 where
     W: MapWindow,
@@ -39,19 +58,34 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
+    /// Starts the [`crate::map_state::MapState`] Runnable with the configured event loop.
     pub fn run(self) {
         self.run_with_optionally_max_frames(None);
     }
 
+    /// Starts the [`crate::map_state::MapState`] Runnable with the configured event loop.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_frames` - Maximum number of frames per second.
     pub fn run_with_max_frames(self, max_frames: u64) {
         self.run_with_optionally_max_frames(Some(max_frames));
     }
 
+    /// Starts the MapState Runnable with the configured event loop.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_frames` - Optional maximum number of frames per second.
     pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
         self.window.run(self.map_state, max_frames);
     }
 }
 
+/// Stores the map configuration before the map's state has been fully initialized.
+///
+/// FIXME: We could maybe remove this class, and store the render_state in an Optional in [`crate::map_state::MapState`].
+/// FIXME: I think we can find a workaround so that this class doesn't exist.
 pub struct UninitializedMap<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
@@ -71,6 +105,8 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
+    /// Initializes the whole rendering pipeline for the given configuration.
+    /// Returns the initialized map, ready to be run.
     pub async fn initialize(self) -> Map<MWC::MapWindow, SM, HC> {
         let instance = wgpu::Instance::new(wgpu::Backends::all());
         //let instance = wgpu::Instance::new(wgpu::Backends::GL);
@@ -157,6 +193,7 @@ where
         self
     }
 
+    /// Builds the UninitializedMap with the given configuration.
     pub fn build(self) -> UninitializedMap<MWC, SM, HC> {
         let scheduler = self
             .scheduler

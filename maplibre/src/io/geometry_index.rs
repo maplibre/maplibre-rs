@@ -1,3 +1,5 @@
+//! Geometry index.
+
 use std::collections::{BTreeMap, HashMap};
 
 use cgmath::num_traits::Signed;
@@ -12,6 +14,7 @@ use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, Zoom, EXTENT, TILE_SIZE};
 use crate::util::math::bounds_from_points;
 
+/// A quad tree storing the currently loaded tiles.
 pub struct GeometryIndex {
     index: BTreeMap<Quadkey, TileIndex>,
 }
@@ -55,6 +58,11 @@ impl GeometryIndex {
     }
 }
 
+/// Index of tiles which can be of two types: spatial or linear.
+/// Spatial tiles are stored in a multi-dimentional tree which represents their position in the tile.
+/// Linear tiles are simply stored in a vector.
+///
+/// A spatial tile index can theoretically improve query performance on tiles. Practically it could be slower though. The `Spatial` index is experimental and currently unused.
 pub enum TileIndex {
     Spatial { tree: RTree<IndexedGeometry<f64>> },
     Linear { list: Vec<IndexedGeometry<f64>> },
@@ -85,6 +93,8 @@ impl TileIndex {
     }
 }
 
+/// An indexed geometry contains an exact vector geometry, computed bounds which
+/// can be helpful when interacting with the geometry and a hashmap of properties.
 #[derive(Debug, Clone)]
 pub struct IndexedGeometry<T>
 where
@@ -95,6 +105,7 @@ where
     pub properties: HashMap<String, String>,
 }
 
+/// Contains either a polygon or line vector.
 #[derive(Debug, Clone)]
 pub enum ExactGeometry<T>
 where
@@ -158,6 +169,7 @@ where
     }
 }
 
+/// A processor able to create geometries using `[geozero::geo_types::GeoWriter]`.
 pub struct IndexProcessor {
     geo_writer: GeoWriter,
     geometries: Vec<IndexedGeometry<f64>>,
@@ -236,36 +248,36 @@ impl PropertyProcessor for IndexProcessor {
 }
 
 impl FeatureProcessor for IndexProcessor {
-    /// Begin of dataset processing
+    /// Begin of dataset processing.
     fn dataset_begin(&mut self, _name: Option<&str>) -> Result<(), GeozeroError> {
         Ok(())
     }
-    /// End of dataset processing
+    /// End of dataset processing.
     fn dataset_end(&mut self) -> Result<(), GeozeroError> {
         Ok(())
     }
-    /// Begin of feature processing
+    /// Begin of feature processing.
     fn feature_begin(&mut self, _idx: u64) -> Result<(), GeozeroError> {
         Ok(())
     }
-    /// End of feature processing
+    /// End of feature processing.
     fn feature_end(&mut self, _idx: u64) -> Result<(), GeozeroError> {
         Ok(())
     }
-    /// Begin of feature property processing
+    /// Begin of feature property processing.
     fn properties_begin(&mut self) -> Result<(), GeozeroError> {
         self.properties = Some(HashMap::new());
         Ok(())
     }
-    /// End of feature property processing
+    /// End of feature property processing.
     fn properties_end(&mut self) -> Result<(), GeozeroError> {
         Ok(())
     }
-    /// Begin of feature geometry processing
+    /// Begin of feature geometry processing.
     fn geometry_begin(&mut self) -> Result<(), GeozeroError> {
         Ok(())
     }
-    /// End of feature geometry processing
+    /// End of feature geometry processing.
     fn geometry_end(&mut self) -> Result<(), GeozeroError> {
         let geometry = self.geo_writer.geometry().cloned().unwrap();
 

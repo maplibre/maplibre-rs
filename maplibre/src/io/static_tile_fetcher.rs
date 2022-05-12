@@ -1,3 +1,5 @@
+//! Static tile fetcher
+
 use std::concat;
 use std::env;
 
@@ -13,6 +15,7 @@ static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 #[cfg(not(static_tiles))]
 static TILES: Dir = Dir::new("/path", &[]);
 
+/// Load PBF files which were statically embedded in the `build.rs`
 #[derive(Default)]
 pub struct StaticTileFetcher;
 
@@ -25,10 +28,14 @@ impl StaticTileFetcher {
         Self {}
     }
 
+    /// Fetch the tile static file asynchrounously and returns a vector of bytes or a network error if the file
+    /// could not be fetched.
     pub async fn fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
         self.sync_fetch_tile(coords)
     }
 
+    /// Fetch the tile static file and returns a vector of bytes or a network error if the file
+    /// could not be fetched.
     pub fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
         if TILES.entries().is_empty() {
             log::error!(
