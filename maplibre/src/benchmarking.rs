@@ -2,7 +2,7 @@
 
 /// Re-export of the io module.
 pub mod io {
-    pub use crate::io;
+    pub use crate::io::*;
 }
 
 /// Re-export of the tessellation module.

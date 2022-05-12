@@ -51,31 +51,3 @@ impl WindowSize {
         self.height
     }
 }
-<<<<<<< HEAD
-
-#[cfg(target_os = "android")]
-/// On android we can not get the dimensions of the window initially. Therefore, we use a fallback
-/// until the window is ready to deliver its correct bounds.
-impl Default for WindowSize {
-    fn default() -> Self {
-        WindowSize {
-            width: 100,
-            height: 100,
-        }
-    }
-}
-
-/// Closure that usually returns a window with an event loop.
-pub type WindowFactory<W, E> = dyn FnOnce() -> (W, E);
-
-/// Constructor for a window.
-pub trait FromWindow {
-    fn from_window(title: &'static str) -> Self;
-}
-
-/// Constructor for a canvas.
-pub trait FromCanvas {
-    fn from_canvas(dom_id: &'static str) -> Self;
-}
-=======
->>>>>>> main
