@@ -6,6 +6,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".MainActivity">
+    <SurfaceView
+            android:layout_width="333dp"
+            android:layout_height="224dp" android:id="@+id/surfaceView1"/>
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

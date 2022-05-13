@@ -68,7 +68,7 @@ impl WinitMapWindow {
 ///* Input (Mouse/Keyboard)
 ///* Platform Events like suspend/resume
 ///* Render a new frame
-impl<MWC, SM, HC> Runnable<MWC, SM, HC> for WinitMapWindow
+impl<MWC: 'static, SM, HC> Runnable<MWC, SM, HC> for WinitMapWindow
 where
     MWC: MapWindowConfig<MapWindow = WinitMapWindow>,
     SM: ScheduleMethod,

@@ -15,7 +15,7 @@ pub trait MapWindow {
     fn inner(&self) -> &Self::Window;
 }
 
-pub trait MapWindowConfig: 'static {
+pub trait MapWindowConfig {
     type MapWindow: MapWindow<MapWindowConfig = Self>;
 }
 
