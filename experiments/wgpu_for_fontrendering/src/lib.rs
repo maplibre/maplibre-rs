@@ -47,7 +47,7 @@ pub async fn run() {
             &title,
             (-0.8, (limit + 2) as f32 * step_y, 0.0).into(),
             Quaternion::new(0.0, 0.0, 0.0, 0.0),
-            (0.0, 0.0, 0.0).into(),
+            (1.0, 0.0, 0.0).into(),
             0.00015,
             &font_id,
         ) {
@@ -61,6 +61,10 @@ pub async fn run() {
                 let number: u32 = rng.gen_range(0..99);
                 let text = format!("{}{}{:2}", letter_1, letter_2, number);
 
+                let r: f32 = rng.gen_range(0.0..1.0);
+                let g: f32 = rng.gen_range(0.0..1.0);
+                let b: f32 = rng.gen_range(0.0..1.0);
+
                 let z = rng.gen_range(-z_jitter..z_jitter);
 
                 if let Err(_) = text_system.add_text_to_scene(
@@ -68,7 +72,7 @@ pub async fn run() {
                     &text,
                     (i as f32 * step_x, j as f32 * step_y, z).into(),
                     Quaternion::new(0.0, 0.0, 0.0, 0.0),
-                    (0.0, 0.0, 0.0).into(),
+                    (r, g, b).into(),
                     0.0001,
                     &font_id,
                 ) {

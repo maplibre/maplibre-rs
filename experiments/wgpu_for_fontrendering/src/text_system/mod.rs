@@ -290,7 +290,16 @@ impl SceneTextSystem {
                         entry_point: "prepass_fs",
                         targets: &[wgpu::ColorTargetState {
                             format: rendering_state.config.format,
-                            blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                            blend: Some(wgpu::BlendState {
+                                // Overwrite color without alpha blending applied
+                                // -> A glyph instance's color will be transferred unmodified through the prepass
+                                color: wgpu::BlendComponent {
+                                    src_factor: wgpu::BlendFactor::One,
+                                    dst_factor: wgpu::BlendFactor::Zero,
+                                    operation: wgpu::BlendOperation::Add,
+                                },
+                                alpha: wgpu::BlendComponent::OVER,
+                            }),
                             write_mask: wgpu::ColorWrites::ALL,
                         }],
                     }),
@@ -491,9 +500,9 @@ impl SceneTextSystem {
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: 1.0,
-                        g: 1.0,
-                        b: 1.0,
+                        r: 0.0,
+                        g: 0.0,
+                        b: 0.0,
                         a: 0.0, // important, otherwise all pixels will pass the uneven winding number test in the main pass...
                     }),
                     store: true,
