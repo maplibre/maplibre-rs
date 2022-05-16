@@ -1,5 +1,7 @@
 use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
-use crate::render::render_phase::{DrawFunctionId, PhaseItem, TrackedRenderPass};
+use crate::render::render_commands::{DrawMask, DrawMasks, DrawTile, DrawTiles};
+use crate::render::render_phase::{DrawFunctionId, PhaseItem, RenderCommand, TrackedRenderPass};
+use crate::render::stages::draw_graph;
 use crate::render::util::FloatOrd;
 use crate::render::Eventually::Initialized;
 use crate::render::RenderState;
@@ -27,24 +29,6 @@ impl PhaseItem for Transparent2d {
     #[inline]
     fn draw_function(&self) -> DrawFunctionId {
         self.draw_function
-    }
-}
-
-// Plugins that contribute to the RenderGraph should use the following label conventions:
-// 1. Graph modules should have a NAME, input module, and node module (where relevant)
-// 2. The "top level" graph is the plugin module root. Just add things like `pub mod node` directly under the plugin module
-// 3. "sub graph" modules should be nested beneath their parent graph module
-
-pub mod node {
-    pub const MAIN_PASS_DEPENDENCIES: &str = "main_pass_dependencies";
-    pub const MAIN_PASS_DRIVER: &str = "main_pass_driver";
-}
-
-pub mod draw_graph {
-    pub const NAME: &str = "draw";
-    pub mod input {}
-    pub mod node {
-        pub const MAIN_PASS: &str = "main_pass";
     }
 }
 
@@ -122,41 +106,15 @@ impl Node for MainPassNode {
                     }),
                 });
 
-        let _tracked_pass = TrackedRenderPass::new(render_pass);
+        let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        /*let index = self.buffer_pool.index();
+        for item in &state.mask_phase.items {
+            DrawMasks::render(state, item, &mut tracked_pass);
+        }
 
-        for TileInView { shape, fallback } in self.tile_view_pattern.iter() {
-            let coords = shape.coords;
-            tracing::trace!("Drawing tile at {coords}");
-
-            let shape_to_render = fallback.as_ref().unwrap_or(shape);
-
-            let reference =
-                self.tile_view_pattern
-                    .stencil_reference_value(&shape_to_render.coords) as u32;
-
-            // Draw mask
-            // FIXME
-
-            if let Some(entries) = index.get_layers(&shape_to_render.coords) {
-                let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
-                layers_to_render.sort_by_key(|entry| entry.style_layer.index);
-
-                for entry in layers_to_render {
-                    // Draw tile
-                    // FIXME
-                }
-            } else {
-                tracing::trace!("No layers found at {}", &shape_to_render.coords);
-            }
-        }*/
-
-        /*let mut draw_functions = DrawFunctions::default();
-        for item in &transparent_phase.items {
-            let draw_function = draw_functions.get_mut(item.draw_function).unwrap();
-            draw_function.draw(world, &mut tracked_pass, view_entity, item);
-        }*/
+        for item in &state.tile_phase.items {
+            DrawTiles::render(state, item, &mut tracked_pass);
+        }
         Ok(())
     }
 }

@@ -1,5 +1,6 @@
+use crate::context::MapContext;
 use crate::render::RenderState;
-use crate::{define_label, Renderer};
+use crate::{define_label, Renderer, ScheduleMethod};
 use downcast_rs::{impl_downcast, Downcast};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -7,7 +8,7 @@ use std::fmt::Debug;
 pub struct NopStage;
 
 impl Stage for NopStage {
-    fn run(&mut self, _renderer: &Renderer, _state: &mut RenderState) {}
+    fn run(&mut self, _context: &mut MapContext) {}
 }
 
 define_label!(StageLabel);
@@ -28,44 +29,10 @@ impl RunCriteria {
     }
 }
 
-/// The labels of the default App rendering stages.
-#[derive(Debug, Hash, PartialEq, Eq, Clone)]
-pub enum RenderStage {
-    /// FIXME Extract data from the "app world" and insert it into the "render world".
-    /// This step should be kept as short as possible to increase the "pipelining potential" for
-    /// running the next frame while rendering the current frame.
-    Extract,
-
-    /// Prepare render resources from the extracted data for the GPU.
-    Prepare,
-
-    /// Create [`BindGroups`](crate::render_resource::BindGroup) that depend on
-    /// [`Prepare`](RenderStage::Prepare) data and queue up draw calls to run during the
-    /// [`Render`](RenderStage::Render) stage.
-    Queue,
-
-    // FIXME: TODO: This could probably be moved in favor of a system ordering abstraction in Render or Queue
-    /// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.
-    PhaseSort,
-
-    /// Actual rendering happens here.
-    /// In most cases, only the render backend should insert resources here.
-    Render,
-
-    /// Cleanup render resources here.
-    Cleanup,
-}
-
-impl StageLabel for RenderStage {
-    fn dyn_clone(&self) -> Box<dyn StageLabel> {
-        Box::new(self.clone())
-    }
-}
-
-pub trait Stage: Downcast + Send + Sync {
+pub trait Stage: Downcast {
     /// Runs the stage; this happens once per update.
     /// Implementors must initialize all of their state before running the first time.
-    fn run(&mut self, renderer: &Renderer, state: &mut RenderState);
+    fn run(&mut self, context: &mut MapContext);
 }
 
 impl_downcast!(Stage);
@@ -89,7 +56,7 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, NopStage};
+    /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
     /// schedule.add_stage("my_stage", NopStage);
@@ -107,7 +74,7 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, NopStage};
+    /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
     /// # schedule.add_stage("target_stage", NopStage);
@@ -140,7 +107,7 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, NopStage};
+    /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
     /// # schedule.add_stage("target_stage", NopStage);
@@ -179,7 +146,7 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, NopStage};
+    /// # use maplibre::schedule::{Schedule, NopStage};
     /// # let mut schedule = Schedule::default();
     ///
     /// # schedule.add_stage("my_stage", NopStage);
@@ -212,7 +179,7 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, NopStage};
+    /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
     /// # schedule.add_stage("my_stage", NopStage);
@@ -232,7 +199,7 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, NopStage};
+    /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
     /// # schedule.add_stage("my_stage", NopStage);
@@ -246,12 +213,12 @@ impl Schedule {
     }
 
     /// Executes each [`Stage`] contained in the schedule, one at a time.
-    pub fn run_once(&mut self, renderer: &Renderer, state: &mut RenderState) {
+    pub fn run_once(&mut self, context: &mut MapContext) {
         for label in &self.stage_order {
             #[cfg(feature = "trace")]
             let _stage_span = tracing::info_span!("stage", name = ?label).entered();
             let stage = self.stages.get_mut(label).unwrap();
-            stage.run(renderer, state);
+            stage.run(context);
         }
     }
 
@@ -304,21 +271,21 @@ pub enum ShouldRun {
 
 impl Default for ShouldRun {
     fn default() -> Self {
-        ShouldRun::No
+        ShouldRun::Yes
     }
 }
 
 impl Stage for Schedule {
-    fn run(&mut self, renderer: &Renderer, state: &mut RenderState) {
+    fn run(&mut self, context: &mut MapContext) {
         loop {
             match self.run_criteria.should_run() {
                 ShouldRun::No => return,
                 ShouldRun::Yes => {
-                    self.run_once(renderer, state);
+                    self.run_once(context);
                     return;
                 }
                 ShouldRun::YesAndCheckAgain => {
-                    self.run_once(renderer, state);
+                    self.run_once(context);
                 }
                 ShouldRun::NoAndCheckAgain => {
                     panic!("`NoAndCheckAgain` would loop infinitely in this situation.")

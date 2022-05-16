@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
-
-pub mod label;
+use std::mem;
 
 /// A wrapper type that enables ordering floats. This is a work around for the famous "rust float
 /// ordering" problem. By using it, you acknowledge that sorting NaN is undefined according to spec.
@@ -32,5 +31,28 @@ impl Ord for FloatOrd {
                 Ordering::Equal
             }
         })
+    }
+}
+
+pub enum Eventually<T> {
+    Initialized(T),
+    Uninitialized,
+}
+
+impl<T> Eventually<T> {
+    pub fn initialize(&mut self, f: impl FnOnce() -> T) {
+        if let Eventually::Uninitialized = self {
+            mem::replace(self, Eventually::Initialized(f()));
+        }
+    }
+
+    pub fn take(&mut self) -> Eventually<T> {
+        mem::replace(self, Eventually::Uninitialized)
+    }
+}
+
+impl<T> Default for Eventually<T> {
+    fn default() -> Self {
+        Eventually::Uninitialized
     }
 }

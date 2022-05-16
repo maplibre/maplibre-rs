@@ -1,3 +1,4 @@
+use crate::platform::COLOR_TEXTURE_FORMAT;
 use crate::WindowSize;
 use raw_window_handle::RawWindowHandle;
 use std::borrow::Cow;
@@ -26,7 +27,7 @@ pub struct WgpuSettings {
 
 impl Default for WgpuSettings {
     fn default() -> Self {
-        let backends = Some(wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::PRIMARY));
+        let backends = Some(wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all()));
 
         let limits = if cfg!(feature = "web-webgl") {
             wgpu::Limits {
@@ -68,8 +69,34 @@ pub enum SurfaceType {
     Headed,
 }
 
+#[derive(Copy, Clone)]
+/// Configuration resource for [Multi-Sample Anti-Aliasing](https://en.wikipedia.org/wiki/Multisample_anti-aliasing).
+///
+pub struct Msaa {
+    /// The number of samples to run for Multi-Sample Anti-Aliasing. Higher numbers result in
+    /// smoother edges.
+    /// Defaults to 4.
+    ///
+    /// Note that WGPU currently only supports 1 or 4 samples.
+    /// Ultimately we plan on supporting whatever is natively supported on a given device.
+    /// Check out this issue for more info: <https://github.com/gfx-rs/wgpu/issues/1832>
+    pub samples: u32,
+}
+
+impl Msaa {
+    pub fn is_active(&self) -> bool {
+        return self.samples > 1;
+    }
+}
+
+impl Default for Msaa {
+    fn default() -> Self {
+        Self { samples: 4 }
+    }
+}
+
 pub struct RendererSettings {
-    pub sample_count: u32,
+    pub msaa: Msaa,
     pub texture_format: wgpu::TextureFormat,
     pub surface_type: SurfaceType,
 }
@@ -77,9 +104,9 @@ pub struct RendererSettings {
 impl Default for RendererSettings {
     fn default() -> Self {
         Self {
-            sample_count: 2,
-            texture_format: wgpu::TextureFormat::Rg8Unorm,
-            surface_type: SurfaceType::Headless,
+            msaa: Msaa::default(),
+            texture_format: COLOR_TEXTURE_FORMAT,
+            surface_type: SurfaceType::Headed,
         }
     }
 }

@@ -70,7 +70,7 @@ cint = "0.2"
 
 thiserror = "1"
 downcast-rs = "1.2"
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "js"] }
 smallvec = "1.8"
 naga = "0.8"
 

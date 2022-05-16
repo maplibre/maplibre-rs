@@ -18,6 +18,7 @@ pub struct TileViewPattern<Q, B> {
     phantom_q: PhantomData<Q>,
 }
 
+#[derive(Clone)]
 pub struct TileShape {
     pub zoom_factor: f64,
 
@@ -39,6 +40,7 @@ impl TileShape {
     }
 }
 
+#[derive(Clone)]
 pub struct TileInView {
     pub shape: TileShape,
 

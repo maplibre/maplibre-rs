@@ -2,6 +2,7 @@ use instant::Instant;
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::HTTPClient;
+use std::borrow::BorrowMut;
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::ControlFlow;
 
@@ -135,7 +136,9 @@ where
                     let dt = now - last_render_time;
                     last_render_time = now;
 
-                    input_controller.update_state(map_state.view_state_mut(), dt);
+                    {
+                        input_controller.update_state(map_state.view_state_mut(), dt);
+                    }
 
                     match map_state.update_and_redraw() {
                         Ok(_) => {}
@@ -158,13 +161,21 @@ where
                     }
                 }
                 Event::Suspended => {
-                    map_state.renderer_mut().suspend();
+                    // FIXME map_state.renderer_mut().suspend();
                 }
                 Event::Resumed => {
-                    map_state.recreate_surface(&self);
+                    /* FIXME let renderer = map_state.renderer_mut();
+                    match renderer.surface.head_mut() {
+                        Head::Headed(window) => {
+                            window.recreate_surface(&self, &renderer.instance);
+                        }
+                        Head::Headless(_) => {}
+                    }*/
+
+
                     let size = self.size();
                     map_state.resize(size.width(), size.height());// FIXME: Resumed is also called when the app launches for the first time. Instead of first using a "fake" inner_size() in State::new we should initialize with a proper size from the beginning
-                    map_state.renderer_mut().resume();
+                    // FIXME map_state.renderer_mut().resume();
                 }
                 Event::MainEventsCleared => {
                     // RedrawRequested will only trigger once, unless we manually

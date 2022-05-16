@@ -138,14 +138,26 @@ impl Surface {
         }
     }
 
-    pub fn create_view(&self) -> Result<TextureView, wgpu::SurfaceError> {
-        let view: TextureView = match &self.head {
-            Head::Headed(WindowHead { surface, .. }) => surface.get_current_texture()?.into(),
+    pub fn create_view(&self, device: &wgpu::Device) -> TextureView {
+        match &self.head {
+            Head::Headed(window) => {
+                let WindowHead { surface, .. } = window;
+                let frame = match surface.get_current_texture() {
+                    Ok(view) => view,
+                    Err(wgpu::SurfaceError::Outdated) => {
+                        window.configure(device);
+                        surface
+                            .get_current_texture()
+                            .expect("Error reconfiguring surface")
+                    }
+                    err => err.expect("Failed to acquire next swap chain texture!"),
+                };
+                frame.into()
+            }
             Head::Headless(BufferedTextureHead { texture, .. }) => texture
                 .create_view(&wgpu::TextureViewDescriptor::default())
                 .into(),
-        };
-        Ok(view)
+        }
     }
 
     pub fn size(&self) -> WindowSize {
@@ -154,5 +166,9 @@ impl Surface {
 
     pub fn head(&self) -> &Head {
         &self.head
+    }
+
+    pub fn head_mut(&mut self) -> &mut Head {
+        &mut self.head
     }
 }

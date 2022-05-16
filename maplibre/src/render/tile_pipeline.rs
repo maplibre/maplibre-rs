@@ -1,6 +1,7 @@
 use crate::platform::MIN_BUFFER_SIZE;
 use crate::render::resource::pipeline::{RenderPipeline, RenderPipelineDescriptor};
 use crate::render::resource::shader::{FragmentState, VertexState};
+use crate::render::settings::Msaa;
 use crate::render::shaders::ShaderGlobals;
 use std::cmp;
 
@@ -8,7 +9,7 @@ pub struct TilePipeline {
     update_stencil: bool,
     debug_stencil: bool,
     wireframe: bool,
-    sample_count: u32,
+    msaa: Msaa,
 
     vertex_state: VertexState,
     fragment_state: FragmentState,
@@ -16,15 +17,18 @@ pub struct TilePipeline {
 
 impl TilePipeline {
     pub(crate) fn new(
-        sample_count: u32,
+        msaa: Msaa,
         vertex_state: VertexState,
         fragment_state: FragmentState,
+        update_stencil: bool,
+        debug_stencil: bool,
+        wireframe: bool,
     ) -> Self {
         TilePipeline {
-            update_stencil: false,
-            debug_stencil: false,
-            wireframe: false,
-            sample_count,
+            update_stencil,
+            debug_stencil,
+            wireframe,
+            msaa,
             vertex_state,
             fragment_state,
         }
@@ -58,7 +62,8 @@ impl RenderPipeline for TilePipeline {
 
         RenderPipelineDescriptor {
             label: None,
-            layout: Some(vec![vec![wgpu::BindGroupLayoutEntry {
+            layout: None,
+            /*layout: Some(vec![vec![wgpu::BindGroupLayoutEntry {
                 binding: 0,
                 visibility: wgpu::ShaderStages::VERTEX,
                 ty: wgpu::BindingType::Buffer {
@@ -67,7 +72,7 @@ impl RenderPipeline for TilePipeline {
                     min_binding_size: wgpu::BufferSize::new(globals_buffer_byte_size),
                 },
                 count: None,
-            }]]),
+            }]]),*/
             vertex: self.vertex_state,
             fragment: self.fragment_state,
             primitive: wgpu::PrimitiveState {
@@ -98,7 +103,7 @@ impl RenderPipeline for TilePipeline {
                 bias: wgpu::DepthBiasState::default(),
             }),
             multisample: wgpu::MultisampleState {
-                count: self.sample_count,
+                count: self.msaa.samples,
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },

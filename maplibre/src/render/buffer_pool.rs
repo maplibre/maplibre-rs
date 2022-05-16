@@ -1,5 +1,4 @@
 use crate::coords::{Quadkey, WorldTileCoords};
-use crate::render::FromDevice;
 use crate::style::layer::StyleLayer;
 use crate::tessellation::OverAlignedVertexBuffer;
 use bytemuck::Pod;
@@ -12,7 +11,7 @@ use std::ops::Range;
 pub const VERTEX_SIZE: wgpu::BufferAddress = 1_000_000;
 pub const INDICES_SIZE: wgpu::BufferAddress = 1_000_000;
 
-pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 1024 * 100;
+pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 1024 * 1000;
 pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 1024;
 
 pub trait Queue<B> {
@@ -28,7 +27,7 @@ impl Queue<wgpu::Buffer> for wgpu::Queue {
 /// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
 #[derive(Debug)]
-pub struct BufferPool<Q, B, V, I, M, FM> {
+pub struct BufferPool<Q, B, V, I, TM, FM> {
     vertices: BackingBuffer<B>,
     indices: BackingBuffer<B>,
     layer_metadata: BackingBuffer<B>,
@@ -38,38 +37,44 @@ pub struct BufferPool<Q, B, V, I, M, FM> {
     phantom_v: PhantomData<V>,
     phantom_i: PhantomData<I>,
     phantom_q: PhantomData<Q>,
-    phantom_m: PhantomData<M>,
+    phantom_m: PhantomData<TM>,
     phantom_fm: PhantomData<FM>,
 }
 
-impl<V: Pod, I: Pod, M: Pod, FM: Pod> FromDevice
-    for BufferPool<wgpu::Queue, wgpu::Buffer, V, I, M, FM>
-{
-    fn from_device(device: &wgpu::Device) -> Self {
+#[derive(Debug)]
+enum BackingBufferType {
+    Vertices,
+    Indices,
+    Metadata,
+    FeatureMetadata,
+}
+
+impl<V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<wgpu::Queue, wgpu::Buffer, V, I, TM, FM> {
+    pub fn from_device(device: &wgpu::Device) -> Self {
         let vertex_buffer_desc = wgpu::BufferDescriptor {
-            label: None,
+            label: Some("vertex buffer"),
             size: size_of::<V>() as wgpu::BufferAddress * VERTEX_SIZE,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         };
 
         let indices_buffer_desc = wgpu::BufferDescriptor {
-            label: None,
+            label: Some("indices buffer"),
             size: size_of::<I>() as wgpu::BufferAddress * INDICES_SIZE,
             usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         };
 
         let feature_metadata_desc = wgpu::BufferDescriptor {
-            label: None,
+            label: Some("feature metadata buffer"),
             size: size_of::<FM>() as wgpu::BufferAddress * FEATURE_METADATA_SIZE,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         };
 
         let layer_metadata_desc = wgpu::BufferDescriptor {
-            label: Some("Layer Metadata ubo"),
-            size: size_of::<M>() as wgpu::BufferAddress * LAYER_METADATA_SIZE,
+            label: Some("layer metadata buffer"),
+            size: size_of::<TM>() as wgpu::BufferAddress * LAYER_METADATA_SIZE,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         };
@@ -94,18 +99,7 @@ impl<V: Pod, I: Pod, M: Pod, FM: Pod> FromDevice
         )
     }
 }
-
-#[derive(Debug)]
-enum BackingBufferType {
-    Vertices,
-    Indices,
-    Metadata,
-    FeatureMetadata,
-}
-
-impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: bytemuck::Pod>
-    BufferPool<Q, B, V, I, TM, FM>
-{
+impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM, FM> {
     pub fn new(
         vertices: BackingBufferDescriptor<B>,
         indices: BackingBufferDescriptor<B>,
@@ -378,7 +372,10 @@ impl<B> BackingBuffer<B> {
         index: &mut RingIndex,
     ) -> Range<wgpu::BufferAddress> {
         if new_data > self.inner_size {
-            panic!("can not allocate because backing buffers are too small")
+            panic!(
+                "can not allocate because backing buffer {:?} are too small",
+                self.typ
+            )
         }
 
         let mut available_gap = self.find_largest_gap(index);
@@ -437,7 +434,7 @@ impl<B> BackingBuffer<B> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IndexEntry {
     pub coords: WorldTileCoords,
     pub style_layer: StyleLayer,

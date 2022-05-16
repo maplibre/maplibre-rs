@@ -1,3 +1,4 @@
+use crate::render::settings::Msaa;
 use std::ops::Deref;
 
 /// Describes a [`Texture`] with its associated metadata required by a pipeline or [`BindGroup`](super::BindGroup).
@@ -64,23 +65,24 @@ pub struct Texture {
 
 impl Texture {
     pub fn new(
+        label: wgpu::Label,
         device: &wgpu::Device,
         format: wgpu::TextureFormat,
         width: u32,
         height: u32,
-        sample_count: u32,
+        msaa: Msaa,
     ) -> Texture {
         let texture = device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("Multisampled frame descriptor"),
+            label,
             size: wgpu::Extent3d {
-                width: width,
-                height: height,
+                width,
+                height,
                 depth_or_array_layers: 1,
             },
             mip_level_count: 1,
-            sample_count,
+            sample_count: msaa.samples,
             dimension: wgpu::TextureDimension::D2,
-            format: format,
+            format,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());

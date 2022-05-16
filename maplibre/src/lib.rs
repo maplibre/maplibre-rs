@@ -34,8 +34,11 @@ pub mod window;
 pub mod benchmarking;
 
 // Internal modules
+pub(crate) mod context;
 pub mod map_state;
 pub mod render;
+pub mod schedule;
+pub(crate) mod stages;
 pub(crate) mod tessellation;
 pub(crate) mod tilejson;
 pub(crate) mod util;
@@ -107,10 +110,6 @@ where
     /// Initializes the whole rendering pipeline for the given configuration.
     /// Returns the initialized map, ready to be run.
     pub async fn initialize(self) -> Map<MWC::MapWindow, SM, HC> {
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
-        //let instance = wgpu::Instance::new(wgpu::Backends::GL);
-        //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
-
         let window = MWC::MapWindow::create(&self.map_window_config);
         let window_size = window.size();
         let renderer = Renderer::initialize(&window).await.unwrap();

@@ -3,7 +3,7 @@ use crate::render::render_phase::{
     DrawFunctionId, PhaseItem, RenderCommand, RenderCommandResult, TrackedRenderPass,
 };
 use crate::render::tile_view_pattern::{TileInView, TileShape};
-use crate::render::Eventually::Initialized;
+use crate::render::util::Eventually::Initialized;
 use crate::render::INDEX_FORMAT;
 use crate::RenderState;
 
@@ -34,7 +34,7 @@ impl PhaseItem for TileInView {
     }
 }
 
-impl PhaseItem for (&IndexEntry, &TileShape) {
+impl PhaseItem for (IndexEntry, TileShape) {
     type SortKey = u32;
 
     fn sort_key(&self) -> Self::SortKey {
@@ -107,10 +107,10 @@ impl RenderCommand<TileInView> for DrawMask {
 }
 
 pub struct DrawTile;
-impl RenderCommand<(&IndexEntry, &TileShape)> for DrawTile {
+impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
     fn render<'w>(
         state: &'w RenderState,
-        (entry, shape): &(&IndexEntry, &TileShape),
+        (entry, shape): &(IndexEntry, TileShape),
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         if let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
@@ -157,6 +157,6 @@ impl RenderCommand<(&IndexEntry, &TileShape)> for DrawTile {
     }
 }
 
-type DrawTiles = (SetTilePipeline, DrawTile);
+pub type DrawTiles = (SetTilePipeline, DrawTile);
 
-type DrawMasks = (SetMaskPipeline, DrawMask);
+pub type DrawMasks = (SetMaskPipeline, DrawMask);
