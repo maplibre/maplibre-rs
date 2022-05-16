@@ -1,4 +1,4 @@
-use crate::render::resource::TextureView;
+use crate::render::resource::texture::TextureView;
 use std::rc::Rc;
 use std::{borrow::Cow, fmt};
 

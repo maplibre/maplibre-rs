@@ -1,29 +1,17 @@
-use crate::define_label;
 use crate::render::RenderState;
+use crate::{define_label, Renderer};
 use downcast_rs::{impl_downcast, Downcast};
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+pub struct NopStage;
+
+impl Stage for NopStage {
+    fn run(&mut self, _renderer: &Renderer, _state: &mut RenderState) {}
+}
+
 define_label!(StageLabel);
 pub(crate) type BoxedStageLabel = Box<dyn StageLabel>;
-
-pub struct System {}
-
-pub struct SystemStage {
-    systems: Vec<System>,
-}
-
-impl SystemStage {
-    pub fn add_system(&mut self, system: impl Into<System>) {
-        self.systems.push(system.into())
-    }
-}
-
-impl Stage for SystemStage {
-    fn run(&mut self, state: &mut RenderState) {
-        for x in self.systems {}
-    }
-}
 
 #[derive(Default)]
 pub struct RunCriteria {
@@ -56,7 +44,7 @@ pub enum RenderStage {
     /// [`Render`](RenderStage::Render) stage.
     Queue,
 
-    // TODO: This could probably be moved in favor of a system ordering abstraction in Render or Queue
+    // FIXME: TODO: This could probably be moved in favor of a system ordering abstraction in Render or Queue
     /// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.
     PhaseSort,
 
@@ -76,8 +64,8 @@ impl StageLabel for RenderStage {
 
 pub trait Stage: Downcast + Send + Sync {
     /// Runs the stage; this happens once per update.
-    /// Implementors must initialize all of their state and systems before running the first time.
-    fn run(&mut self, state: &mut RenderState);
+    /// Implementors must initialize all of their state before running the first time.
+    fn run(&mut self, renderer: &Renderer, state: &mut RenderState);
 }
 
 impl_downcast!(Stage);
@@ -90,7 +78,7 @@ impl_downcast!(Stage);
 /// runs indefinitely.
 #[derive(Default)]
 pub struct Schedule {
-    stages: HashMap<BoxedStageLabel, Box<dyn Stage>>,
+    stages: HashMap<BoxedStageLabel, Box<dyn Stage>>, // FIXME Is this the archetype pattern?
     stage_order: Vec<BoxedStageLabel>,
     run_criteria: RunCriteria,
 }
@@ -101,10 +89,10 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, SystemStage};
+    /// # use maplibre::render::stage::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// schedule.add_stage("my_stage", SystemStage::parallel());
+    /// schedule.add_stage("my_stage", NopStage);
     /// ```
     pub fn add_stage<S: Stage>(&mut self, label: impl StageLabel, stage: S) -> &mut Self {
         let label: Box<dyn StageLabel> = Box::new(label);
@@ -119,11 +107,11 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, SystemStage};
+    /// # use maplibre::render::stage::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage("target_stage", SystemStage::parallel());
-    /// schedule.add_stage_after("target_stage", "my_stage", SystemStage::parallel());
+    /// # schedule.add_stage("target_stage", NopStage);
+    /// schedule.add_stage_after("target_stage", "my_stage", NopStage);
     /// ```
     pub fn add_stage_after<S: Stage>(
         &mut self,
@@ -152,12 +140,12 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, SystemStage};
+    /// # use maplibre::render::stage::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage("target_stage", SystemStage::parallel());
+    /// # schedule.add_stage("target_stage", NopStage);
     /// #
-    /// schedule.add_stage_before("target_stage", "my_stage", SystemStage::parallel());
+    /// schedule.add_stage_before("target_stage", "my_stage", NopStage);
     /// ```
     pub fn add_stage_before<S: Stage>(
         &mut self,
@@ -181,41 +169,6 @@ impl Schedule {
         self
     }
 
-    /// Adds the given `system` to the stage identified by `stage_label`.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use maplibre::render::stage::{Schedule, SystemStage};
-    /// #
-    /// # fn my_system() {}
-    /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage("my_stage", SystemStage::parallel());
-    /// #
-    /// schedule.add_system_to_stage("my_stage", my_system);
-    /// ```
-    pub fn add_system_to_stage(
-        &mut self,
-        stage_label: impl StageLabel,
-        system: impl Into<System>,
-    ) -> &mut Self {
-        // Use a function instead of a closure to ensure that it is codegend instead
-        // of the game. Closures inherit generic parameters from their enclosing function.
-        #[cold]
-        fn stage_not_found(stage_label: &dyn Debug) -> ! {
-            panic!(
-                "Stage '{:?}' does not exist or is not a SystemStage",
-                stage_label
-            )
-        }
-
-        let stage = self
-            .get_stage_mut::<SystemStage>(&stage_label)
-            .unwrap_or_else(move || stage_not_found(&stage_label));
-        stage.add_system(system);
-        self
-    }
-
     /// Fetches the [`Stage`] of type `T` marked with `label`, then executes the provided
     /// `func` passing the fetched stage to it as an argument.
     ///
@@ -226,16 +179,15 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, SystemStage};
+    /// # use maplibre::render::stage::{Schedule, NopStage};
     /// # let mut schedule = Schedule::default();
     ///
-    /// # schedule.add_stage("my_stage", SystemStage::parallel());
+    /// # schedule.add_stage("my_stage", NopStage);
     /// #
-    /// schedule.stage("my_stage", |stage: &mut SystemStage| {
-    ///     stage.add_system(my_system)
+    /// schedule.stage("my_stage", |stage: &mut NopStage| {
+    ///     // modify stage
+    ///     stage
     /// });
-    /// #
-    /// # fn my_system() {}
     /// ```
     ///
     /// # Panics
@@ -260,13 +212,12 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, SystemStage};
+    /// # use maplibre::render::stage::{Schedule, NopStage};
     /// #
-    /// # fn my_system() {}
     /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage("my_stage", SystemStage::parallel());
+    /// # schedule.add_stage("my_stage", NopStage);
     /// #
-    /// let stage = schedule.get_stage::<SystemStage>(&"my_stage").unwrap();
+    /// let stage = schedule.get_stage::<NopStage>(&"my_stage").unwrap();
     /// ```
     pub fn get_stage<T: Stage>(&self, label: &dyn StageLabel) -> Option<&T> {
         self.stages
@@ -281,13 +232,12 @@ impl Schedule {
     /// # Example
     ///
     /// ```
-    /// # use maplibre::render::stage::{Schedule, SystemStage};
+    /// # use maplibre::render::stage::{Schedule, NopStage};
     /// #
-    /// # fn my_system() {}
     /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage("my_stage", SystemStage::parallel());
+    /// # schedule.add_stage("my_stage", NopStage);
     /// #
-    /// let stage = schedule.get_stage_mut::<SystemStage>(&"my_stage").unwrap();
+    /// let stage = schedule.get_stage_mut::<NopStage>(&"my_stage").unwrap();
     /// ```
     pub fn get_stage_mut<T: Stage>(&mut self, label: &dyn StageLabel) -> Option<&mut T> {
         self.stages
@@ -296,12 +246,12 @@ impl Schedule {
     }
 
     /// Executes each [`Stage`] contained in the schedule, one at a time.
-    pub fn run_once(&mut self, state: &mut RenderState) {
+    pub fn run_once(&mut self, renderer: &Renderer, state: &mut RenderState) {
         for label in &self.stage_order {
             #[cfg(feature = "trace")]
             let _stage_span = tracing::info_span!("stage", name = ?label).entered();
             let stage = self.stages.get_mut(label).unwrap();
-            stage.run(state);
+            stage.run(renderer, state);
         }
     }
 
@@ -321,14 +271,14 @@ impl Schedule {
 ///
 /// A stage will loop over its run criteria and systems until no more systems need to be executed
 /// and no more run criteria need to be checked.
-/// - Any systems with run criteria that returns [`Yes`] will be ran exactly one more time during
+/// - FIXME: Any systems with run criteria that returns [`Yes`] will be ran exactly one more time during
 ///   the stage's execution that tick.
-/// - Any systems with run criteria that returns [`No`] are not ran for the rest of the stage's
+/// - FIXME: Any systems with run criteria that returns [`No`] are not ran for the rest of the stage's
 ///   execution that tick.
-/// - Any systems with run criteria that returns [`YesAndCheckAgain`] will be ran during this
+/// - FIXME: Any systems with run criteria that returns [`YesAndCheckAgain`] will be ran during this
 ///   iteration of the loop. After all the systems that need to run are ran, that criteria will be
 ///   checked again.
-/// - Any systems with run criteria that returns [`NoAndCheckAgain`] will not be ran during this
+/// - FIXME: Any systems with run criteria that returns [`NoAndCheckAgain`] will not be ran during this
 ///   iteration of the loop. After all the systems that need to run are ran, that criteria will be
 ///   checked again.
 ///
@@ -338,15 +288,15 @@ impl Schedule {
 /// [`NoAndCheckAgain`]: ShouldRun::NoAndCheckAgain
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShouldRun {
-    /// Yes, the system should run one more time this tick.
+    /// FIXME: Yes, the system should run one more time this tick.
     Yes,
-    /// No, the system should not run for the rest of this tick.
+    /// FIXME: No, the system should not run for the rest of this tick.
     No,
-    /// Yes, the system should run, and after all systems in this stage have run, the criteria
+    /// FIXME: Yes, the system should run, and after all systems in this stage have run, the criteria
     /// should be checked again. This will cause the stage to loop over the remaining systems and
     /// criteria this tick until they no longer need to be checked.
     YesAndCheckAgain,
-    /// No, the system should not run right now, but after all systems in this stage have run, the
+    /// FIXME: No, the system should not run right now, but after all systems in this stage have run, the
     /// criteria should be checked again. This will cause the stage to loop over the remaining
     /// systems and criteria this tick until they no longer need to be checked.
     NoAndCheckAgain,
@@ -359,16 +309,16 @@ impl Default for ShouldRun {
 }
 
 impl Stage for Schedule {
-    fn run(&mut self, state: &mut RenderState) {
+    fn run(&mut self, renderer: &Renderer, state: &mut RenderState) {
         loop {
             match self.run_criteria.should_run() {
                 ShouldRun::No => return,
                 ShouldRun::Yes => {
-                    self.run_once(state);
+                    self.run_once(renderer, state);
                     return;
                 }
                 ShouldRun::YesAndCheckAgain => {
-                    self.run_once(state);
+                    self.run_once(renderer, state);
                 }
                 ShouldRun::NoAndCheckAgain => {
                     panic!("`NoAndCheckAgain` would loop infinitely in this situation.")

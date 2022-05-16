@@ -8,13 +8,17 @@ pub mod label;
 #[derive(Debug, Copy, Clone, PartialOrd)]
 pub struct FloatOrd(pub f32);
 
-impl Eq for FloatOrd {}
-
-impl PartialEq<Self> for FloatOrd {
+impl PartialEq for FloatOrd {
     fn eq(&self, other: &Self) -> bool {
-        todo!()
+        if self.0.is_nan() && other.0.is_nan() {
+            true
+        } else {
+            self.0 == other.0
+        }
     }
 }
+
+impl Eq for FloatOrd {}
 
 #[allow(clippy::derive_ord_xor_partial_ord)]
 impl Ord for FloatOrd {

@@ -1,3 +1,5 @@
+use crate::WindowSize;
+use raw_window_handle::RawWindowHandle;
 use std::borrow::Cow;
 
 /// Provides configuration for renderer initialization. Use [`Device::features`](crate::renderer::Device::features),
@@ -57,6 +59,27 @@ impl Default for WgpuSettings {
             limits,
             constrained_limits: None,
             record_trace: false,
+        }
+    }
+}
+
+pub enum SurfaceType {
+    Headless,
+    Headed,
+}
+
+pub struct RendererSettings {
+    pub sample_count: u32,
+    pub texture_format: wgpu::TextureFormat,
+    pub surface_type: SurfaceType,
+}
+
+impl Default for RendererSettings {
+    fn default() -> Self {
+        Self {
+            sample_count: 2,
+            texture_format: wgpu::TextureFormat::Rg8Unorm,
+            surface_type: SurfaceType::Headless,
         }
     }
 }

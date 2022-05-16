@@ -1,6 +1,10 @@
 use crate::render::resource::shader::{FragmentState, VertexState};
 use std::borrow::Cow;
 
+pub trait RenderPipeline {
+    fn describe_render_pipeline(self) -> RenderPipelineDescriptor;
+}
+
 pub struct RenderPipelineDescriptor {
     /// Debug label of the pipeline. This will show up in graphics debuggers for easy identification.
     pub label: Option<Cow<'static, str>>,
@@ -15,9 +19,69 @@ pub struct RenderPipelineDescriptor {
     /// The multi-sampling properties of the pipeline.
     pub multisample: wgpu::MultisampleState,
     /// The compiled fragment stage, its entry point, and the color targets.
-    pub fragment: Option<FragmentState>,
+    pub fragment: FragmentState,
 }
 
-pub trait RenderPipeline {
-    fn describe_render_pipeline(self) -> RenderPipelineDescriptor;
+impl RenderPipelineDescriptor {
+    pub fn initialize(&self, device: &wgpu::Device) -> wgpu::RenderPipeline {
+        let bind_group_layouts = if let Some(layout) = &self.layout {
+            layout
+                .iter()
+                .map(|entries| {
+                    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                        label: None,
+                        entries: entries.as_ref(),
+                    })
+                })
+                .collect::<Vec<_>>()
+        } else {
+            vec![]
+        };
+
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            bind_group_layouts: &bind_group_layouts.iter().collect::<Vec<_>>(),
+            ..Default::default()
+        });
+
+        let vertex_shader_module = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: None,
+            source: wgpu::ShaderSource::Wgsl(self.vertex.source.into()),
+        });
+        let fragment_shader_module = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: None,
+            source: wgpu::ShaderSource::Wgsl(self.fragment.source.into()),
+        });
+
+        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: self.label.as_ref().map(|label| label.as_ref()),
+            layout: Some(&pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &vertex_shader_module,
+                entry_point: self.vertex.entry_point,
+                buffers: self
+                    .vertex
+                    .buffers
+                    .iter()
+                    .map(|layout| wgpu::VertexBufferLayout {
+                        array_stride: layout.array_stride,
+                        step_mode: layout.step_mode,
+                        attributes: layout.attributes.as_slice(),
+                    })
+                    .collect::<Vec<_>>()
+                    .as_slice(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &fragment_shader_module,
+                entry_point: self.fragment.entry_point,
+                targets: self.fragment.targets.as_slice(),
+            }),
+            primitive: self.primitive,
+            depth_stencil: self.depth_stencil.clone(),
+            multisample: self.multisample,
+
+            multiview: None,
+        });
+
+        pipeline
+    }
 }

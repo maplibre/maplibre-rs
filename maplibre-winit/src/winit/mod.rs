@@ -158,13 +158,13 @@ where
                     }
                 }
                 Event::Suspended => {
-                    map_state.suspend();
+                    map_state.renderer_mut().suspend();
                 }
                 Event::Resumed => {
                     map_state.recreate_surface(&self);
                     let size = self.size();
                     map_state.resize(size.width(), size.height());// FIXME: Resumed is also called when the app launches for the first time. Instead of first using a "fake" inner_size() in State::new we should initialize with a proper size from the beginning
-                    map_state.resume();
+                    map_state.renderer_mut().resume();
                 }
                 Event::MainEventsCleared => {
                     // RedrawRequested will only trigger once, unless we manually

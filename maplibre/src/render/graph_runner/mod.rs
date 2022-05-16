@@ -71,9 +71,9 @@ impl RenderGraphRunner {
         let mut node_outputs: HashMap<NodeId, SmallVec<[SlotValue; 4]>> = HashMap::default();
         #[cfg(feature = "trace")]
         let span = if let Some(name) = &graph_name {
-            info_span!("run_graph", name = name.deref())
+            tracing::info_span!("run_graph", name = name.deref())
         } else {
-            info_span!("run_graph", name = "main_graph")
+            tracing::info_span!("run_graph", name = "main_graph")
         };
         #[cfg(feature = "trace")]
         let _guard = span.enter();
@@ -165,7 +165,7 @@ impl RenderGraphRunner {
                 let mut context = RenderGraphContext::new(graph, node_state, &inputs, &mut outputs);
                 {
                     #[cfg(feature = "trace")]
-                    let _span = info_span!("node", name = node_state.type_name).entered();
+                    let _span = tracing::info_span!("node", name = node_state.type_name).entered();
 
                     node_state.node.run(&mut context, render_context, state)?;
                 }

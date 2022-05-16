@@ -31,72 +31,6 @@ impl TilePipeline {
     }
 }
 
-impl TilePipeline {
-    pub fn initialize(&self, device: &wgpu::Device) -> wgpu::RenderPipeline {
-        let descriptor = self.describe_render_pipeline();
-
-        let bind_group_layouts = if let Some(layout) = descriptor.layout {
-            layout
-                .iter()
-                .map(|entries| {
-                    device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                        label: None,
-                        entries: entries.as_ref(),
-                    })
-                })
-                .collect::<Vec<_>>()
-        } else {
-            vec![]
-        };
-
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &bind_group_layouts.iter().collect::<Vec<_>>(),
-            ..Default::default()
-        });
-
-        let vertex_shader_module = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: None,
-            source: wgpu::ShaderSource::Wgsl(self.vertex_state.source.into()),
-        });
-        let fragment_shader_module = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: None,
-            source: wgpu::ShaderSource::Wgsl(self.fragment_state.source.into()),
-        });
-
-        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: descriptor.label.map(|label| label.as_ref()),
-            layout: Some(&pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &vertex_shader_module,
-                entry_point: self.vertex_state.entry_point,
-                buffers: self
-                    .vertex_state
-                    .buffers
-                    .iter()
-                    .map(|layout| wgpu::VertexBufferLayout {
-                        array_stride: layout.array_stride,
-                        step_mode: layout.step_mode,
-                        attributes: layout.attributes.as_slice(),
-                    })
-                    .collect::<Vec<_>>()
-                    .as_slice(),
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &fragment_shader_module,
-                entry_point: self.fragment_state.entry_point,
-                targets: self.fragment_state.targets.as_slice(),
-            }),
-            primitive: descriptor.primitive,
-            depth_stencil: descriptor.depth_stencil,
-            multisample: descriptor.multisample,
-
-            multiview: None,
-        });
-
-        pipeline
-    }
-}
-
 impl RenderPipeline for TilePipeline {
     fn describe_render_pipeline(self) -> RenderPipelineDescriptor {
         let stencil_state = if self.update_stencil {
@@ -135,7 +69,7 @@ impl RenderPipeline for TilePipeline {
                 count: None,
             }]]),
             vertex: self.vertex_state,
-            fragment: Some(self.fragment_state),
+            fragment: self.fragment_state,
             primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList,
                 polygon_mode: if self.update_stencil {

@@ -10,6 +10,7 @@ use crate::io::tile_cache::TileCache;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TessellateMessage, TileRequest, TileTessellateMessage};
 use crate::render::camera::{Camera, Perspective, ViewProjection};
+use crate::render::stage::{Schedule, Stage};
 use crate::render::{camera, Renderer};
 use crate::style::Style;
 use crate::util::ChangeObserver;
@@ -57,6 +58,7 @@ where
 
     view_state: ViewState,
 
+    schedule: Schedule,
     renderer: Option<Renderer>,
     scheduler: Scheduler<SM>,
     message_receiver: mpsc::Receiver<TessellateMessage>,
@@ -110,6 +112,7 @@ where
                 perspective,
             },
 
+            schedule: Default::default(),
             renderer,
             scheduler,
 
@@ -136,7 +139,9 @@ where
         self.prepare_render();
 
         // Render buffers
-        self.renderer_mut().render();
+        if let Some(renderer) = &mut self.renderer {
+            self.schedule.run(renderer, &mut renderer.state)
+        }
 
         #[cfg(all(feature = "enable-tracing", not(target_arch = "wasm32")))]
         tracy_client::finish_continuous_frame!();
@@ -191,9 +196,6 @@ where
 
     #[tracing::instrument(skip_all)]
     fn prepare_render(&mut self) {
-        let render_setup_span = tracing::span!(tracing::Level::TRACE, "setup view region");
-        let _guard = render_setup_span.enter();
-
         let visible_level = self.view_state.visible_level();
 
         let view_proj = self.view_state.view_projection();
@@ -206,19 +208,19 @@ where
                 ViewRegion::new(bounding_box, 0, *self.view_state.zoom, visible_level)
             });
 
-        drop(_guard);
-
         if let Some(view_region) = &view_region {
-            self.renderer
-                .as_mut()
-                .expect("render state not yet initialized. Call reinitialize().")
-                .upload_tile_geometry(view_region, &self.style, &self.tile_cache);
+            // FIXME:
+            /*self.renderer
+            .as_mut()
+            .expect("render state not yet initialized. Call reinitialize().")
+            .upload_tile_geometry(view_region, &self.style, &self.tile_cache);*/
 
             let zoom = self.view_state.zoom();
-            self.renderer_mut()
-                .update_tile_view_pattern(view_region, &view_proj, zoom);
+            // FIXME
+            /*self.renderer_mut()
+            .update_tile_view_pattern(view_region, &view_proj, zoom);*/
 
-            self.renderer_mut().update_metadata();
+            // FIXME self.renderer_mut().update_metadata();
         }
 
         // TODO: Could we draw inspiration from StagingBelt (https://docs.rs/wgpu/latest/wgpu/util/struct.StagingBelt.html)?
@@ -233,8 +235,7 @@ where
                 self.try_failed = self.request_tiles_in_view(view_region);
             }
 
-            self.renderer()
-                .update_globals(&view_proj, &self.view_state.camera);
+            // FIXME self.renderer().update_globals(&view_proj, &self.view_state.camera);
         }
 
         self.view_state.camera.update_reference();
@@ -299,7 +300,7 @@ where
         self.view_state.perspective.resize(width, height);
         self.view_state.camera.resize(width, height);
 
-        self.renderer_mut().resize(width, height)
+        // FIXME self.renderer_mut().resize(width, height)
     }
 
     pub fn scheduler(&self) -> &Scheduler<SM> {
@@ -307,11 +308,11 @@ where
     }
 
     pub fn suspend(&mut self) {
-        self.renderer_mut().suspend();
+        // FIXME
     }
 
     pub fn resume(&mut self) {
-        self.renderer_mut().resume();
+        // FIXME
     }
 
     pub fn renderer(&self) -> &Renderer {
@@ -332,12 +333,12 @@ where
         &mut self.view_state
     }
 
-    pub fn recreate_surface(&mut self, window: &MWC::MapWindow) {
+    /*FIXME: pub fn recreate_surface(&mut self, window: &MWC::MapWindow) {
         self.renderer
             .as_mut()
             .expect("render state not yet initialized. Call reinitialize().")
             .recreate_surface(window);
-    }
+    }*/
 
     pub fn is_initialized(&self) -> bool {
         self.renderer.is_some()
@@ -345,24 +346,8 @@ where
 
     pub async fn reinitialize(&mut self) {
         if self.renderer.is_none() {
-            let instance = wgpu::Instance::new(wgpu::Backends::all());
-            //let instance = wgpu::Instance::new(wgpu::Backends::GL);
-            //let instance = wgpu::Instance::new(wgpu::Backends::VULKAN);
-
             let window = MWC::MapWindow::create(&self.map_window_config);
-            let window_size = window.size();
-
-            let surface = unsafe { instance.create_surface(window.inner()) };
-            let surface_config = wgpu::SurfaceConfiguration {
-                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-                format: crate::platform::COLOR_TEXTURE_FORMAT,
-                width: window_size.width(),
-                height: window_size.height(),
-                // present_mode: wgpu::PresentMode::Mailbox,
-                present_mode: wgpu::PresentMode::Fifo, // VSync
-            };
-            let _window_size = window.size();
-            let renderer = Renderer::initialize(Some(&surface)).await.unwrap();
+            let renderer = Renderer::initialize(&window).await.unwrap();
             self.renderer = Some(renderer)
         }
     }

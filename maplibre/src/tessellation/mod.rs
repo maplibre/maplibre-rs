@@ -3,12 +3,12 @@
 use bytemuck::Pod;
 use std::ops::Add;
 
-use crate::render::ShaderVertex;
 use lyon::tessellation::{
     FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor, VertexBuffers,
 };
 
 use crate::error::Error;
+use crate::render::ShaderVertex;
 
 pub mod zero_tessellator;
 

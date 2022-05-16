@@ -5,7 +5,7 @@ use crate::{HTTPClient, MapState, ScheduleMethod};
 /// Window with an optional [carte::window::WindowSize].
 pub trait MapWindow {
     type EventLoop;
-    type Window: raw_window_handle::HasRawWindowHandle;
+    type Window: raw_window_handle::HasRawWindowHandle; // FIXME: Not true for headless
     type MapWindowConfig: MapWindowConfig<MapWindow = Self>;
 
     fn create(map_window_config: &Self::MapWindowConfig) -> Self;

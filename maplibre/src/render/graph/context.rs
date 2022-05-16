@@ -1,5 +1,5 @@
 use super::{NodeState, RenderGraph, SlotInfos, SlotLabel, SlotType, SlotValue};
-use crate::render::resource::TextureView;
+use crate::render::resource::texture::TextureView;
 use std::borrow::Cow;
 use thiserror::Error;
 

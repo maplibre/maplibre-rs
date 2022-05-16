@@ -61,7 +61,7 @@ pub trait Node: Downcast + Send + Sync + 'static {
     }
 
     /// Updates internal node state using the current [`RenderState`] prior to the run method.
-    fn update(&mut self, state: &mut RenderState) {}
+    fn update(&mut self, _state: &mut RenderState) {}
 
     /// Runs the graph node logic, issues draw calls, updates the output slots and
     /// optionally queues up subgraphs for execution. The graph data, input and output values are

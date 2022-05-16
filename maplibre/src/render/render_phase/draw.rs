@@ -9,7 +9,7 @@ use std::{any::TypeId, fmt::Debug, hash::Hash};
 /// are more modular.
 pub trait Draw<P: PhaseItem>: 'static {
     /// Draws the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
-    fn draw<'w>(&mut self, pass: &mut TrackedRenderPass<'w>, state: &RenderState, item: &P);
+    fn draw<'w>(&mut self, pass: &mut TrackedRenderPass<'w>, state: &'w RenderState, item: &P);
 }
 
 /// An item which will be drawn to the screen. A phase item should be queued up for rendering
@@ -94,7 +94,7 @@ impl<P: PhaseItem> DrawFunctions<P> {
 pub trait RenderCommand<P: PhaseItem> {
     /// Renders the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
     fn render<'w>(
-        state: &RenderState,
+        state: &'w RenderState,
         item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult;
@@ -110,7 +110,7 @@ macro_rules! render_command_tuple_impl {
         impl<P: PhaseItem, $($name: RenderCommand<P>),*> RenderCommand<P> for ($($name,)*) {
             #[allow(non_snake_case)]
             fn render<'w>(
-                _state: &RenderState,
+                _state: &'w RenderState,
                 _item: &P,
                 _pass: &mut TrackedRenderPass<'w>,
             ) -> RenderCommandResult{
@@ -135,7 +135,7 @@ where
     C: RenderCommand<P>,
 {
     /// FIXME: Prepares the ECS parameters for the wrapped [`RenderCommand`] and then renders it.
-    fn draw<'w>(&mut self, pass: &mut TrackedRenderPass<'w>, state: &RenderState, item: &P) {
+    fn draw<'w>(&mut self, pass: &mut TrackedRenderPass<'w>, state: &'w RenderState, item: &P) {
         C::render(state, item, pass);
     }
 }

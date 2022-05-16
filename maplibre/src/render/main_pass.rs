@@ -2,7 +2,7 @@ use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext
 use crate::render::render_phase::{DrawFunctionId, PhaseItem, TrackedRenderPass};
 use crate::render::util::FloatOrd;
 use crate::render::Eventually::Initialized;
-use crate::render::{draw_graph, RenderState};
+use crate::render::RenderState;
 use std::ops::{Deref, Range};
 
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
@@ -30,11 +30,27 @@ impl PhaseItem for Transparent2d {
     }
 }
 
+// Plugins that contribute to the RenderGraph should use the following label conventions:
+// 1. Graph modules should have a NAME, input module, and node module (where relevant)
+// 2. The "top level" graph is the plugin module root. Just add things like `pub mod node` directly under the plugin module
+// 3. "sub graph" modules should be nested beneath their parent graph module
+
+pub mod node {
+    pub const MAIN_PASS_DEPENDENCIES: &str = "main_pass_dependencies";
+    pub const MAIN_PASS_DRIVER: &str = "main_pass_driver";
+}
+
+pub mod draw_graph {
+    pub const NAME: &str = "draw";
+    pub mod input {}
+    pub mod node {
+        pub const MAIN_PASS: &str = "main_pass";
+    }
+}
+
 pub struct MainPassNode {}
 
 impl MainPassNode {
-    pub const IN_VIEW: &'static str = "view";
-
     pub fn new() -> Self {
         Self {}
     }
@@ -45,7 +61,7 @@ impl Node for MainPassNode {
         vec![]
     }
 
-    fn update(&mut self, state: &mut RenderState) {}
+    fn update(&mut self, _state: &mut RenderState) {}
 
     fn run(
         &self,
@@ -87,7 +103,7 @@ impl Node for MainPassNode {
             }
         };
 
-        let mut render_pass =
+        let render_pass =
             render_context
                 .command_encoder
                 .begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -106,7 +122,7 @@ impl Node for MainPassNode {
                     }),
                 });
 
-        let mut tracked_pass = TrackedRenderPass::new(render_pass);
+        let _tracked_pass = TrackedRenderPass::new(render_pass);
 
         /*let index = self.buffer_pool.index();
 
@@ -152,7 +168,7 @@ impl Node for MainPassDriverNode {
         &self,
         graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
-        state: &RenderState,
+        _state: &RenderState,
     ) -> Result<(), NodeRunError> {
         graph.run_sub_graph(draw_graph::NAME, vec![])?;
 

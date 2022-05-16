@@ -113,18 +113,7 @@ where
 
         let window = MWC::MapWindow::create(&self.map_window_config);
         let window_size = window.size();
-
-        let surface = unsafe { instance.create_surface(window.inner()) };
-        let surface_config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: crate::platform::COLOR_TEXTURE_FORMAT,
-            width: window_size.width(),
-            height: window_size.height(),
-            // present_mode: wgpu::PresentMode::Mailbox,
-            present_mode: wgpu::PresentMode::Fifo, // VSync
-        };
-
-        let renderer = Renderer::initialize(Some(&surface)).await.unwrap();
+        let renderer = Renderer::initialize(&window).await.unwrap();
         Map {
             map_state: MapState::new(
                 self.map_window_config,

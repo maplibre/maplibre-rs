@@ -49,7 +49,7 @@ impl PhaseItem for (&IndexEntry, &TileShape) {
 pub struct SetMaskPipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
     fn render<'w>(
-        state: &RenderState,
+        state: &'w RenderState,
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
@@ -65,7 +65,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
 pub struct SetTilePipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetTilePipeline {
     fn render<'w>(
-        state: &RenderState,
+        state: &'w RenderState,
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
@@ -81,7 +81,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetTilePipeline {
 pub struct DrawMask;
 impl RenderCommand<TileInView> for DrawMask {
     fn render<'w>(
-        state: &RenderState,
+        state: &'w RenderState,
         TileInView { shape, fallback }: &TileInView,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
@@ -109,7 +109,7 @@ impl RenderCommand<TileInView> for DrawMask {
 pub struct DrawTile;
 impl RenderCommand<(&IndexEntry, &TileShape)> for DrawTile {
     fn render<'w>(
-        state: &RenderState,
+        state: &'w RenderState,
         (entry, shape): &(&IndexEntry, &TileShape),
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
