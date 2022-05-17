@@ -1,6 +1,7 @@
 //! Scheduling.
 
 use std::future::Future;
+use std::pin::Pin;
 
 use crate::error::Error;
 
@@ -25,25 +26,29 @@ where
     pub fn schedule_method(&self) -> &SM {
         &self.schedule_method
     }
+
+    pub fn take(self) -> SM {
+        self.schedule_method
+    }
 }
 
 /// Can schedule a task from a future factory and a shared state.
 pub trait ScheduleMethod: 'static {
     #[cfg(not(feature = "no-thread-safe-futures"))]
-    fn schedule<T>(
+    fn schedule(
         &self,
         shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
-    ) -> Result<(), Error>
-    where
-        T: Future<Output = ()> + Send + 'static;
+        future_factory: Box<
+            (dyn (FnOnce(SharedThreadState) -> Pin<Box<dyn Future<Output = ()> + Send>>) + Send),
+        >,
+    ) -> Result<(), Error>;
 
     #[cfg(feature = "no-thread-safe-futures")]
-    fn schedule<T>(
+    fn schedule(
         &self,
         shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
-    ) -> Result<(), Error>
-    where
-        T: Future<Output = ()> + 'static;
+        future_factory: Box<
+            (dyn (FnOnce(SharedThreadState) -> Pin<Box<dyn Future<Output = ()>>>) + Send),
+        >,
+    ) -> Result<(), Error>;
 }
