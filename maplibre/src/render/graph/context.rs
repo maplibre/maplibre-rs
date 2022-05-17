@@ -1,5 +1,5 @@
 use super::{NodeState, RenderGraph, SlotInfos, SlotLabel, SlotType, SlotValue};
-use crate::render::resource::texture::TextureView;
+use crate::render::resource::TextureView;
 use std::borrow::Cow;
 use thiserror::Error;
 
@@ -69,7 +69,6 @@ impl<'a> RenderGraphContext<'a> {
         Ok(&self.inputs[index])
     }
 
-    // TODO: should this return an Arc or a reference?
     /// Retrieves the input slot value referenced by the `label` as a [`TextureView`].
     pub fn get_input_texture(
         &self,

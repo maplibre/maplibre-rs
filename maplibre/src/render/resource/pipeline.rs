@@ -1,3 +1,5 @@
+//! Utility for creating [RenderPipelines](wgpu::RenderPipeline)
+
 use crate::render::resource::shader::{FragmentState, VertexState};
 use std::borrow::Cow;
 

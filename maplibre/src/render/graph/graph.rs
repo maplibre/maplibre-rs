@@ -50,6 +50,8 @@ pub struct RenderGraph {
     node_names: HashMap<Cow<'static, str>, NodeId>,
     sub_graphs: HashMap<Cow<'static, str>, RenderGraph>,
     input_node: Option<NodeId>,
+
+    current_id: usize,
 }
 
 impl RenderGraph {
@@ -88,7 +90,8 @@ impl RenderGraph {
     where
         T: Node,
     {
-        let id = NodeId::new();
+        let id = NodeId::new(self.current_id);
+        self.current_id += 1;
         let name = name.into();
         let mut node_state = NodeState::new(id, node);
         node_state.name = Some(name.clone());

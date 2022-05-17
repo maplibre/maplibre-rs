@@ -1,36 +1,17 @@
+//! The main render pass for this application.
+//!
+//! Right now there is only one render graph. A use case for multiple render passes would be
+//! [shadows](https://www.raywenderlich.com/books/metal-by-tutorials/v2.0/chapters/14-multipass-deferred-rendering).
+
 use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
-use crate::render::render_commands::{DrawMask, DrawMasks, DrawTile, DrawTiles};
-use crate::render::render_phase::{DrawFunctionId, PhaseItem, RenderCommand, TrackedRenderPass};
+use crate::render::render_commands::{DrawMasks, DrawTiles};
+use crate::render::render_phase::{PhaseItem, RenderCommand};
+use crate::render::resource::TrackedRenderPass;
 use crate::render::stages::draw_graph;
 use crate::render::util::FloatOrd;
 use crate::render::Eventually::Initialized;
 use crate::render::RenderState;
 use std::ops::{Deref, Range};
-
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
-pub struct PipelineID(usize);
-
-pub struct Transparent2d {
-    pub sort_key: FloatOrd,
-    pub pipeline: PipelineID,
-    pub draw_function: DrawFunctionId,
-    /// Range in the vertex buffer of this item
-    pub batch_range: Option<Range<u32>>,
-}
-
-impl PhaseItem for Transparent2d {
-    type SortKey = FloatOrd;
-
-    #[inline]
-    fn sort_key(&self) -> Self::SortKey {
-        self.sort_key
-    }
-
-    #[inline]
-    fn draw_function(&self) -> DrawFunctionId {
-        self.draw_function
-    }
-}
 
 pub struct MainPassNode {}
 

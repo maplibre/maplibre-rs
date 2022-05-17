@@ -1,48 +1,25 @@
 //! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 
-use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
-use crate::error::Error;
-use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::source_client::SourceClient;
-use crate::io::tile_cache::TileCache;
-use crate::io::{LayerTessellateMessage, TileRequest};
-use crate::map_state::ViewState;
-use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, IndexEntry};
-use crate::render::camera::ViewProjection;
-use crate::render::graph::{EmptyNode, RenderGraph};
-use crate::render::graph_runner::RenderGraphRunner;
 use crate::render::render_phase::RenderPhase;
-use crate::render::resource::pipeline::RenderPipeline;
-use crate::render::resource::surface::{Head, Surface};
-use crate::render::resource::texture::{Texture, TextureView};
+use crate::render::resource::{BufferPool, Globals, IndexEntry};
+use crate::render::resource::{Head, Surface};
+use crate::render::resource::{Texture, TextureView};
 use crate::render::settings::{RendererSettings, SurfaceType, WgpuSettings};
-use crate::render::shaders::{
-    Shader, ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata, Vec4f32,
-};
-use crate::render::tile_pipeline::TilePipeline;
+use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata};
 use crate::render::tile_view_pattern::{TileInView, TileShape, TileViewPattern};
 use crate::render::util::Eventually;
-use crate::render::Eventually::{Initialized, Uninitialized};
 use crate::tessellation::IndexDataType;
-use crate::{HTTPClient, MapWindow, ScheduleMethod, Scheduler, Style};
-use log::{error, info};
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::collections::HashSet;
-use std::mem::size_of;
-use std::rc::Rc;
-use std::{iter, mem};
+use crate::MapWindow;
+use log::info;
 
 // Rendering internals
-mod buffer_pool;
 mod graph;
 mod graph_runner;
 mod main_pass;
 mod render_commands;
 mod render_phase;
 mod resource;
-mod settings;
 mod shaders;
 mod stages;
 mod tile_pipeline;
@@ -51,6 +28,7 @@ mod util;
 
 // Public API
 pub mod camera;
+pub mod settings;
 
 pub use shaders::ShaderVertex;
 pub use stages::register_render_stages;
@@ -59,6 +37,8 @@ pub const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must m
 
 #[derive(Default)]
 pub struct RenderState {
+    render_target: Eventually<TextureView>,
+
     buffer_pool: Eventually<
         BufferPool<
             wgpu::Queue,
@@ -74,7 +54,7 @@ pub struct RenderState {
     tile_pipeline: Eventually<wgpu::RenderPipeline>,
     mask_pipeline: Eventually<wgpu::RenderPipeline>,
 
-    render_target: Eventually<TextureView>,
+    globals_bind_group: Eventually<Globals>,
 
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
@@ -99,13 +79,14 @@ pub struct Renderer {
 impl Renderer {
     /// Initializes the renderer by retrieving and preparing the GPU instance, device and queue
     /// for the specified backend.
-    pub async fn initialize<MW>(window: &MW) -> Result<Self, wgpu::RequestDeviceError>
+    pub async fn initialize<MW>(
+        window: &MW,
+        wgpu_settings: WgpuSettings,
+        settings: RendererSettings,
+    ) -> Result<Self, wgpu::RequestDeviceError>
     where
         MW: MapWindow,
     {
-        let wgpu_settings = WgpuSettings::default(); // FIXME: make configurable
-        let settings = RendererSettings::default();
-
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
         let maybe_surface = match &settings.surface_type {
@@ -155,6 +136,11 @@ impl Renderer {
         })
     }
 
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.surface.resize(width, height)
+    }
+
+    /// Requests a device
     async fn request_device(
         instance: &wgpu::Instance,
         settings: &WgpuSettings,

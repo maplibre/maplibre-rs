@@ -7,7 +7,7 @@ use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::ControlFlow;
 
 use crate::input::{InputController, UpdateState};
-use maplibre::map_state::MapState;
+use maplibre::map_schedule::MapSchedule;
 use maplibre::window::{MapWindow, MapWindowConfig, Runnable};
 use winit::event::Event;
 
@@ -75,7 +75,7 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    fn run(mut self, mut map_state: MapState<MWC, SM, HC>, max_frames: Option<u64>) {
+    fn run(mut self, mut map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>) {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
 
@@ -91,7 +91,7 @@ where
 
                     let state = task::block_in_place(|| {
                         Handle::current().block_on(async {
-                            map_state.reinitialize().await;
+                            map_state.late_init().await;
                         })
                     });
                     return;
@@ -161,21 +161,10 @@ where
                     }
                 }
                 Event::Suspended => {
-                    // FIXME map_state.renderer_mut().suspend();
+                    map_state.suspend();
                 }
                 Event::Resumed => {
-                    /* FIXME let renderer = map_state.renderer_mut();
-                    match renderer.surface.head_mut() {
-                        Head::Headed(window) => {
-                            window.recreate_surface(&self, &renderer.instance);
-                        }
-                        Head::Headless(_) => {}
-                    }*/
-
-
-                    let size = self.size();
-                    map_state.resize(size.width(), size.height());// FIXME: Resumed is also called when the app launches for the first time. Instead of first using a "fake" inner_size() in State::new we should initialize with a proper size from the beginning
-                    // FIXME map_state.renderer_mut().resume();
+                    map_state.resume(&self);
                 }
                 Event::MainEventsCleared => {
                     // RedrawRequested will only trigger once, unless we manually

@@ -33,6 +33,7 @@ where
 }
 
 /// Can schedule a task from a future factory and a shared state.
+// Should be object safe in order to be able to have a dyn object in MapContext
 pub trait ScheduleMethod: 'static {
     #[cfg(not(feature = "no-thread-safe-futures"))]
     fn schedule(

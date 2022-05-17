@@ -1,7 +1,10 @@
+//! Utilities for handling surfaces which can be either headless or headed. A headed surface has
+//! a handle to a window. A headless surface renders to a texture.
+
 use crate::render::resource::texture::TextureView;
 use crate::render::settings::RendererSettings;
+use crate::render::util::HasChanged;
 use crate::{MapWindow, WindowSize};
-use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use std::mem::size_of;
 
 struct BufferDimensions {
@@ -79,7 +82,7 @@ impl Surface {
             format: settings.texture_format,
             width: size.width(),
             height: size.height(),
-            // present_mode: wgpu::PresentMode::Mailbox,
+            //present_mode: wgpu::PresentMode::Immediate,
             present_mode: wgpu::PresentMode::Fifo, // VSync
         };
 
@@ -138,6 +141,7 @@ impl Surface {
         }
     }
 
+    #[tracing::instrument(name = "create_view", skip_all)]
     pub fn create_view(&self, device: &wgpu::Device) -> TextureView {
         match &self.head {
             Head::Headed(window) => {
@@ -145,6 +149,7 @@ impl Surface {
                 let frame = match surface.get_current_texture() {
                     Ok(view) => view,
                     Err(wgpu::SurfaceError::Outdated) => {
+                        tracing::trace!("surface outdated");
                         window.configure(device);
                         surface
                             .get_current_texture()
@@ -164,11 +169,53 @@ impl Surface {
         self.size
     }
 
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.size = WindowSize::new(width, height).expect("Invalid size for resizing the surface.");
+        match &mut self.head {
+            Head::Headed(window) => {
+                window.surface_config.height = height;
+                window.surface_config.width = width;
+            }
+            Head::Headless(_) => {}
+        }
+    }
+
+    pub fn reconfigure(&mut self, device: &wgpu::Device) {
+        match &mut self.head {
+            Head::Headed(window) => {
+                if window.has_changed(&(self.size.width(), self.size.height())) {
+                    window.configure(device);
+                }
+            }
+            Head::Headless(_) => {}
+        }
+    }
+
+    pub fn recreate<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    where
+        MW: MapWindow,
+    {
+        match &mut self.head {
+            Head::Headed(head) => {
+                head.recreate_surface(window, instance);
+            }
+            Head::Headless(_) => {}
+        }
+    }
+
     pub fn head(&self) -> &Head {
         &self.head
     }
 
     pub fn head_mut(&mut self) -> &mut Head {
         &mut self.head
+    }
+}
+
+impl HasChanged for WindowHead {
+    type Criteria = (u32, u32);
+
+    fn has_changed(&self, criteria: &Self::Criteria) -> bool {
+        self.surface_config.height != criteria.0 || self.surface_config.width != criteria.1
     }
 }

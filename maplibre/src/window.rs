@@ -1,6 +1,6 @@
 //! Utilities for the window system.
 
-use crate::{HTTPClient, MapState, ScheduleMethod};
+use crate::{HTTPClient, MapSchedule, ScheduleMethod};
 
 /// Window with an optional [carte::window::WindowSize].
 pub trait MapWindow {
@@ -25,11 +25,11 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    fn run(self, map_state: MapState<MWC, SM, HC>, max_frames: Option<u64>);
+    fn run(self, map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>);
 }
 
 /// Window size with a width and an height in pixels.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub struct WindowSize {
     width: u32,
     height: u32,

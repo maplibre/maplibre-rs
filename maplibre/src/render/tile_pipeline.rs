@@ -1,11 +1,14 @@
+//! Utility for declaring pipelines.
+
 use crate::platform::MIN_BUFFER_SIZE;
-use crate::render::resource::pipeline::{RenderPipeline, RenderPipelineDescriptor};
-use crate::render::resource::shader::{FragmentState, VertexState};
+use crate::render::resource::{FragmentState, VertexState};
+use crate::render::resource::{RenderPipeline, RenderPipelineDescriptor};
 use crate::render::settings::Msaa;
 use crate::render::shaders::ShaderGlobals;
 use std::cmp;
 
 pub struct TilePipeline {
+    bind_globals: bool,
     update_stencil: bool,
     debug_stencil: bool,
     wireframe: bool,
@@ -20,11 +23,13 @@ impl TilePipeline {
         msaa: Msaa,
         vertex_state: VertexState,
         fragment_state: FragmentState,
+        bind_globals: bool,
         update_stencil: bool,
         debug_stencil: bool,
         wireframe: bool,
     ) -> Self {
         TilePipeline {
+            bind_globals,
             update_stencil,
             debug_stencil,
             wireframe,
@@ -62,17 +67,20 @@ impl RenderPipeline for TilePipeline {
 
         RenderPipelineDescriptor {
             label: None,
-            layout: None,
-            /*layout: Some(vec![vec![wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: wgpu::BufferSize::new(globals_buffer_byte_size),
-                },
-                count: None,
-            }]]),*/
+            layout: if self.bind_globals {
+                Some(vec![vec![wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: wgpu::BufferSize::new(globals_buffer_byte_size),
+                    },
+                    count: None,
+                }]])
+            } else {
+                None
+            },
             vertex: self.vertex_state,
             fragment: self.fragment_state,
             primitive: wgpu::PrimitiveState {

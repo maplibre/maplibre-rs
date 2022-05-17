@@ -1,3 +1,5 @@
+//! A ring-buffer like pool of [buffers](wgpu::Buffer).
+
 use crate::coords::{Quadkey, WorldTileCoords};
 use crate::style::layer::StyleLayer;
 use crate::tessellation::OverAlignedVertexBuffer;

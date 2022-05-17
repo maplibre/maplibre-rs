@@ -1,3 +1,5 @@
+//! Utilities for creating shader states.
+
 /// Describes how the vertex buffer is interpreted.
 #[derive(Clone, Debug)]
 pub struct VertexBufferLayout {

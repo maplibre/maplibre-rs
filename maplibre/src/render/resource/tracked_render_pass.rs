@@ -1,3 +1,5 @@
+//! A render pass which allows tracking, for example using a tracing framework.
+
 use log::trace;
 use std::ops::Range;
 

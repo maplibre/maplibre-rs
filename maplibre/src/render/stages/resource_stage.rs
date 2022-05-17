@@ -1,13 +1,17 @@
+//! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.
+
 use crate::context::MapContext;
-use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool};
-use crate::render::resource::pipeline::RenderPipeline;
-use crate::render::resource::texture::Texture;
+use crate::platform::MIN_BUFFER_SIZE;
+use crate::render::resource::Texture;
+use crate::render::resource::{BackingBufferDescriptor, BufferPool};
+use crate::render::resource::{Globals, RenderPipeline};
 use crate::render::shaders;
-use crate::render::shaders::{Shader, ShaderTileMetadata};
+use crate::render::shaders::{Shader, ShaderGlobals, ShaderTileMetadata};
 use crate::render::tile_pipeline::TilePipeline;
 use crate::render::tile_view_pattern::TileViewPattern;
 use crate::schedule::Stage;
-use crate::{Renderer, ScheduleMethod};
+use crate::Renderer;
+use std::cmp;
 use std::mem::size_of;
 
 pub const TILE_VIEW_SIZE: wgpu::BufferAddress = 32;
@@ -16,6 +20,7 @@ pub const TILE_VIEW_SIZE: wgpu::BufferAddress = 32;
 pub struct ResourceStage;
 
 impl Stage for ResourceStage {
+    #[tracing::instrument(name = "ResourceStage", skip_all)]
     fn run(
         &mut self,
         MapContext {
@@ -30,82 +35,99 @@ impl Stage for ResourceStage {
             ..
         }: &mut MapContext,
     ) {
+        let size = surface.size();
+
+        surface.reconfigure(device);
+
         state
             .render_target
             .initialize(|| surface.create_view(device));
 
-        let size = surface.size();
-
-        state.depth_texture.initialize(|| {
-            Texture::new(
-                Some("depth texture"),
-                device,
-                wgpu::TextureFormat::Depth24PlusStencil8,
-                size.width(),
-                size.height(),
-                settings.msaa,
-            )
-        });
-
-        state.multisampling_texture.initialize(|| {
-            if settings.msaa.is_active() {
-                Some(Texture::new(
-                    Some("multisampling texture"),
-                    &device,
-                    settings.texture_format,
+        state.depth_texture.reinitialize(
+            || {
+                Texture::new(
+                    Some("depth texture"),
+                    device,
+                    wgpu::TextureFormat::Depth24PlusStencil8,
                     size.width(),
                     size.height(),
                     settings.msaa,
-                ))
-            } else {
-                None
-            }
-        });
+                )
+            },
+            &(size.width(), size.height()),
+        );
+
+        state.multisampling_texture.reinitialize(
+            || {
+                if settings.msaa.is_active() {
+                    Some(Texture::new(
+                        Some("multisampling texture"),
+                        device,
+                        settings.texture_format,
+                        size.width(),
+                        size.height(),
+                        settings.msaa,
+                    ))
+                } else {
+                    None
+                }
+            },
+            &(size.width(), size.height()),
+        );
 
         state
             .buffer_pool
             .initialize(|| BufferPool::from_device(device));
 
-        let tile_view_buffer_desc = wgpu::BufferDescriptor {
-            label: Some("tile view buffer"),
-            size: size_of::<ShaderTileMetadata>() as wgpu::BufferAddress * TILE_VIEW_SIZE,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        };
-
         state.tile_view_pattern.initialize(|| {
+            let tile_view_buffer_desc = wgpu::BufferDescriptor {
+                label: Some("tile view buffer"),
+                size: size_of::<ShaderTileMetadata>() as wgpu::BufferAddress * TILE_VIEW_SIZE,
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            };
+
             TileViewPattern::new(BackingBufferDescriptor::new(
                 device.create_buffer(&tile_view_buffer_desc),
                 tile_view_buffer_desc.size,
             ))
         });
 
-        let tile_shader = shaders::TileShader {
-            format: settings.texture_format,
-        };
-        let mask_shader = shaders::TileMaskShader {
-            format: settings.texture_format,
-            draw_colors: false,
-        };
-
         state.tile_pipeline.initialize(|| {
-            TilePipeline::new(
+            let tile_shader = shaders::TileShader {
+                format: settings.texture_format,
+            };
+
+            let pipeline = TilePipeline::new(
                 settings.msaa,
                 tile_shader.describe_vertex(),
                 tile_shader.describe_fragment(),
+                true,
                 false,
                 false,
                 false,
             )
             .describe_render_pipeline()
-            .initialize(device)
+            .initialize(device);
+
+            state
+                .globals_bind_group
+                .initialize(|| Globals::from_device(device, &pipeline.get_bind_group_layout(0)));
+
+            pipeline
         });
 
         state.mask_pipeline.initialize(|| {
+            let mask_shader = shaders::TileMaskShader {
+                format: settings.texture_format,
+                draw_colors: false,
+            };
+
             TilePipeline::new(
                 settings.msaa,
                 mask_shader.describe_vertex(),
                 mask_shader.describe_fragment(),
+                false,
                 true,
                 false,
                 false,

@@ -1,7 +1,9 @@
+//! Settings for the renderer
+
 use crate::platform::COLOR_TEXTURE_FORMAT;
-use crate::WindowSize;
-use raw_window_handle::RawWindowHandle;
 use std::borrow::Cow;
+
+pub use wgpu::Backends;
 
 /// Provides configuration for renderer initialization. Use [`Device::features`](crate::renderer::Device::features),
 /// [`Device::limits`](crate::renderer::Device::limits), and the [`WgpuAdapterInfo`](crate::render_resource::WgpuAdapterInfo)
@@ -64,6 +66,7 @@ impl Default for WgpuSettings {
     }
 }
 
+#[derive(Clone)]
 pub enum SurfaceType {
     Headless,
     Headed,
@@ -85,7 +88,7 @@ pub struct Msaa {
 
 impl Msaa {
     pub fn is_active(&self) -> bool {
-        return self.samples > 1;
+        self.samples > 1
     }
 }
 
@@ -95,6 +98,7 @@ impl Default for Msaa {
     }
 }
 
+#[derive(Clone)]
 pub struct RendererSettings {
     pub msaa: Msaa,
     pub texture_format: wgpu::TextureFormat,

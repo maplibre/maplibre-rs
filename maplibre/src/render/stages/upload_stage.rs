@@ -1,23 +1,26 @@
+//! Uploads data to the GPU which is needed for rendering.
+
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, Zoom};
 use crate::io::tile_cache::TileCache;
 use crate::io::LayerTessellateMessage;
-use crate::map_state::ViewState;
-use crate::render::buffer_pool::IndexEntry;
 use crate::render::camera::ViewProjection;
-use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata, Vec4f32};
+use crate::render::resource::IndexEntry;
+use crate::render::shaders::{
+    ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32,
+};
 use crate::render::tile_view_pattern::TileInView;
 use crate::render::util::Eventually::Initialized;
 use crate::schedule::Stage;
-use crate::{RenderState, Renderer, ScheduleMethod, Style};
-use std::cell::RefCell;
+use crate::{RenderState, Renderer, Style};
+
 use std::iter;
-use std::rc::Rc;
 
 #[derive(Default)]
 pub struct UploadStage;
 
 impl Stage for UploadStage {
+    #[tracing::instrument(name = "UploadStage", skip_all)]
     fn run(
         &mut self,
         MapContext {
@@ -26,10 +29,10 @@ impl Stage for UploadStage {
             tile_cache,
             renderer:
                 Renderer {
-                    settings,
-                    device,
+                    settings: _,
+                    device: _,
                     queue,
-                    surface,
+                    surface: _,
                     state,
                     ..
                 },
@@ -39,6 +42,24 @@ impl Stage for UploadStage {
         let visible_level = view_state.visible_level();
 
         let view_proj = view_state.view_projection();
+
+        if let Initialized(globals_bind_group) = &state.globals_bind_group {
+            // Update globals
+            queue.write_buffer(
+                &globals_bind_group.uniform_buffer,
+                0,
+                bytemuck::cast_slice(&[ShaderGlobals::new(ShaderCamera::new(
+                    view_proj.downcast().into(),
+                    view_state
+                        .camera
+                        .position
+                        .to_homogeneous()
+                        .cast::<f32>()
+                        .unwrap()
+                        .into(),
+                ))]),
+            );
+        }
 
         let view_region = view_state
             .camera
@@ -51,42 +72,6 @@ impl Stage for UploadStage {
             self.upload_tile_geometry(state, queue, tile_cache, style, view_region);
             self.update_tile_view_pattern(state, queue, view_region, &view_proj, zoom);
             self.update_metadata();
-        }
-
-        state.mask_phase.items.clear();
-        state.tile_phase.items.clear();
-
-        if let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (&state.tile_view_pattern, &state.buffer_pool)
-        {
-            let index = buffer_pool.index();
-
-            for tile_in_view in tile_view_pattern.iter() {
-                let TileInView { shape, fallback } = &tile_in_view;
-                let coords = shape.coords;
-                tracing::trace!("Drawing tile at {coords}");
-
-                let shape_to_render = fallback.as_ref().unwrap_or(shape);
-
-                // Draw mask
-                // FIXME
-                state.mask_phase.add(tile_in_view.clone());
-
-                if let Some(entries) = index.get_layers(&shape_to_render.coords) {
-                    let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
-                    layers_to_render.sort_by_key(|entry| entry.style_layer.index);
-
-                    for entry in layers_to_render {
-                        // Draw tile
-                        // FIXME
-                        state
-                            .tile_phase
-                            .add((entry.clone(), shape_to_render.clone()))
-                    }
-                } else {
-                    tracing::trace!("No layers found at {}", &shape_to_render.coords);
-                }
-            }
         }
     }
 }
@@ -177,8 +162,8 @@ impl UploadStage {
         if let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
             (tile_view_pattern, buffer_pool)
         {
-            tile_view_pattern.update_pattern(view_region, &buffer_pool, zoom);
-            tile_view_pattern.upload_pattern(&queue, view_proj);
+            tile_view_pattern.update_pattern(view_region, buffer_pool, zoom);
+            tile_view_pattern.upload_pattern(queue, view_proj);
         }
     }
 
@@ -250,10 +235,10 @@ impl UploadStage {
 
                                     tracing::trace!("Allocating geometry at {}", &coords);
                                     buffer_pool.allocate_layer_geometry(
-                                        &queue,
+                                        queue,
                                         *coords,
                                         style_layer.clone(),
-                                        &buffer,
+                                        buffer,
                                         ShaderLayerMetadata::new(style_layer.index as f32),
                                         &feature_metadata,
                                     );

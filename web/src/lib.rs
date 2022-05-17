@@ -14,7 +14,7 @@ mod platform;
 #[cfg(not(target_arch = "wasm32"))]
 compile_error!("web works only on wasm32.");
 
-#[cfg(feature = "enable-tracing")]
+#[cfg(feature = "trace")]
 fn enable_tracing() {
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::Registry;
@@ -35,7 +35,7 @@ pub fn wasm_bindgen_start() {
     }
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    #[cfg(any(feature = "enable-tracing"))]
+    #[cfg(any(feature = "trace"))]
     enable_tracing();
 }
 

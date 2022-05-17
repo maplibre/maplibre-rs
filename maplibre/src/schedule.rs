@@ -1,9 +1,10 @@
 use crate::context::MapContext;
-use crate::render::RenderState;
-use crate::{define_label, Renderer, ScheduleMethod};
+use crate::define_label;
 use downcast_rs::{impl_downcast, Downcast};
+use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::rc::Rc;
 
 pub struct NopStage;
 
@@ -11,23 +12,58 @@ impl Stage for NopStage {
     fn run(&mut self, _context: &mut MapContext) {}
 }
 
+#[macro_export]
+macro_rules! multi_stage {
+    ($multi_stage:ident, $($stage:ident: $stage_ty:ty),*) => {
+        pub struct $multi_stage {
+            $($stage: $stage_ty),*
+        }
+
+        impl Stage for $multi_stage {
+            fn run(&mut self, context: &mut MapContext) {
+                 $(self.$stage.run(context);)*
+            }
+        }
+
+        impl Default for $multi_stage {
+            fn default() -> Self {
+                $multi_stage {
+                     $($stage: <$stage_ty>::default()),*
+                }
+            }
+        }
+    };
+}
+
+pub struct MultiStage<const I: usize, S>
+where
+    S: Stage,
+{
+    stages: [S; I],
+}
+
+impl<const I: usize, S> MultiStage<I, S>
+where
+    S: Stage,
+{
+    pub fn new(stages: [S; I]) -> Self {
+        Self { stages }
+    }
+}
+
+impl<const I: usize, S> Stage for MultiStage<I, S>
+where
+    S: Stage,
+{
+    fn run(&mut self, context: &mut MapContext) {
+        for stage in self.stages.iter_mut() {
+            stage.run(context)
+        }
+    }
+}
+
 define_label!(StageLabel);
 pub(crate) type BoxedStageLabel = Box<dyn StageLabel>;
-
-#[derive(Default)]
-pub struct RunCriteria {
-    should_run: ShouldRun,
-}
-
-impl RunCriteria {
-    pub fn should_run(&mut self) -> ShouldRun {
-        self.should_run
-    }
-
-    pub fn set_should_run(&mut self, should_run: ShouldRun) {
-        self.should_run = should_run;
-    }
-}
 
 pub trait Stage: Downcast {
     /// Runs the stage; this happens once per update.
@@ -45,9 +81,8 @@ impl_downcast!(Stage);
 /// runs indefinitely.
 #[derive(Default)]
 pub struct Schedule {
-    stages: HashMap<BoxedStageLabel, Box<dyn Stage>>, // FIXME Is this the archetype pattern?
+    stages: HashMap<BoxedStageLabel, Box<dyn Stage>>,
     stage_order: Vec<BoxedStageLabel>,
-    run_criteria: RunCriteria,
 }
 
 impl Schedule {
@@ -228,69 +263,10 @@ impl Schedule {
             .iter()
             .map(move |label| (&**label, &*self.stages[label]))
     }
-    pub fn run_criteria_mut(&mut self) -> &mut RunCriteria {
-        &mut self.run_criteria
-    }
-}
-
-/// Determines whether a system should be executed or not, and how many times it should be ran each
-/// time the stage is executed.
-///
-/// A stage will loop over its run criteria and systems until no more systems need to be executed
-/// and no more run criteria need to be checked.
-/// - FIXME: Any systems with run criteria that returns [`Yes`] will be ran exactly one more time during
-///   the stage's execution that tick.
-/// - FIXME: Any systems with run criteria that returns [`No`] are not ran for the rest of the stage's
-///   execution that tick.
-/// - FIXME: Any systems with run criteria that returns [`YesAndCheckAgain`] will be ran during this
-///   iteration of the loop. After all the systems that need to run are ran, that criteria will be
-///   checked again.
-/// - FIXME: Any systems with run criteria that returns [`NoAndCheckAgain`] will not be ran during this
-///   iteration of the loop. After all the systems that need to run are ran, that criteria will be
-///   checked again.
-///
-/// [`Yes`]: ShouldRun::Yes
-/// [`No`]: ShouldRun::No
-/// [`YesAndCheckAgain`]: ShouldRun::YesAndCheckAgain
-/// [`NoAndCheckAgain`]: ShouldRun::NoAndCheckAgain
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ShouldRun {
-    /// FIXME: Yes, the system should run one more time this tick.
-    Yes,
-    /// FIXME: No, the system should not run for the rest of this tick.
-    No,
-    /// FIXME: Yes, the system should run, and after all systems in this stage have run, the criteria
-    /// should be checked again. This will cause the stage to loop over the remaining systems and
-    /// criteria this tick until they no longer need to be checked.
-    YesAndCheckAgain,
-    /// FIXME: No, the system should not run right now, but after all systems in this stage have run, the
-    /// criteria should be checked again. This will cause the stage to loop over the remaining
-    /// systems and criteria this tick until they no longer need to be checked.
-    NoAndCheckAgain,
-}
-
-impl Default for ShouldRun {
-    fn default() -> Self {
-        ShouldRun::Yes
-    }
 }
 
 impl Stage for Schedule {
     fn run(&mut self, context: &mut MapContext) {
-        loop {
-            match self.run_criteria.should_run() {
-                ShouldRun::No => return,
-                ShouldRun::Yes => {
-                    self.run_once(context);
-                    return;
-                }
-                ShouldRun::YesAndCheckAgain => {
-                    self.run_once(context);
-                }
-                ShouldRun::NoAndCheckAgain => {
-                    panic!("`NoAndCheckAgain` would loop infinitely in this situation.")
-                }
-            }
-        }
+        self.run_once(context);
     }
 }

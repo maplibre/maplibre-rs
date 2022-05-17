@@ -1,3 +1,5 @@
+//! Executes the [`RenderGraph`] current render graph.
+
 // Plugins that contribute to the RenderGraph should use the following label conventions:
 // 1. Graph modules should have a NAME, input module, and node module (where relevant)
 // 2. The "top level" graph is the plugin module root. Just add things like `pub mod node` directly under the plugin module
@@ -9,7 +11,7 @@ use crate::render::graph_runner::RenderGraphRunner;
 use crate::render::main_pass::{MainPassDriverNode, MainPassNode};
 use crate::render::util::Eventually::Initialized;
 use crate::schedule::Stage;
-use crate::{Renderer, ScheduleMethod};
+use crate::Renderer;
 use log::error;
 
 pub mod node {

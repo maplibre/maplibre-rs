@@ -1,37 +1,17 @@
-use crate::render::buffer_pool::IndexEntry;
-use crate::render::render_phase::{
-    DrawFunctionId, PhaseItem, RenderCommand, RenderCommandResult, TrackedRenderPass,
-};
+//! Specifies the instructions which are going to be sent to the GPU. Render commands can be concatenated
+//! into a new render command which executes multiple instruction sets.
+
+use crate::render::render_phase::{PhaseItem, RenderCommand, RenderCommandResult};
+use crate::render::resource::{Globals, IndexEntry, TrackedRenderPass};
 use crate::render::tile_view_pattern::{TileInView, TileShape};
 use crate::render::util::Eventually::Initialized;
 use crate::render::INDEX_FORMAT;
 use crate::RenderState;
 
-/*pub struct SetMeshViewBindGroup<const I: usize>;
-impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetMeshViewBindGroup<I> {
-    #[inline]
-    fn render<'w>(view: Entity, _item: P, pass: &mut TrackedRenderPass<'w>) -> RenderCommandResult {
-        let (view_uniform, view_lights, mesh_view_bind_group) = view_query.get_inner(view).unwrap();
-        pass.set_bind_group(
-            I,
-            &mesh_view_bind_group.value,
-            &[view_uniform.offset, view_lights.offset],
-        );
-
-        RenderCommandResult::Success
-    }
-}*/
-
 impl PhaseItem for TileInView {
     type SortKey = ();
 
-    fn sort_key(&self) -> Self::SortKey {
-        ()
-    }
-
-    fn draw_function(&self) -> DrawFunctionId {
-        todo!()
-    }
+    fn sort_key(&self) -> Self::SortKey {}
 }
 
 impl PhaseItem for (IndexEntry, TileShape) {
@@ -40,9 +20,21 @@ impl PhaseItem for (IndexEntry, TileShape) {
     fn sort_key(&self) -> Self::SortKey {
         self.0.style_layer.index
     }
+}
 
-    fn draw_function(&self) -> DrawFunctionId {
-        todo!()
+pub struct SetViewBindGroup<const I: usize>;
+impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetViewBindGroup<I> {
+    fn render<'w>(
+        state: &'w RenderState,
+        _item: &P,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        if let Initialized(Globals { bind_group, .. }) = &state.globals_bind_group {
+            pass.set_bind_group(0, bind_group, &[]);
+            RenderCommandResult::Success
+        } else {
+            RenderCommandResult::Failure
+        }
     }
 }
 
@@ -88,7 +80,7 @@ impl RenderCommand<TileInView> for DrawMask {
         if let Initialized(tile_view_pattern) = &state.tile_view_pattern {
             tracing::trace!("Drawing mask {}", &shape.coords);
 
-            let shape_to_render = fallback.as_ref().unwrap_or(&shape);
+            let shape_to_render = fallback.as_ref().unwrap_or(shape);
 
             let reference =
                 tile_view_pattern.stencil_reference_value(&shape_to_render.coords) as u32;
@@ -157,6 +149,6 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
     }
 }
 
-pub type DrawTiles = (SetTilePipeline, DrawTile);
+pub type DrawTiles = (SetTilePipeline, SetViewBindGroup<0>, DrawTile);
 
 pub type DrawMasks = (SetMaskPipeline, DrawMask);

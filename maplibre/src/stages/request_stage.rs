@@ -1,16 +1,15 @@
+//! Requests tiles which are currently in view
+
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, WorldTileCoords};
 use crate::error::Error;
 use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::io::source_client::SourceClient;
 use crate::io::tile_cache::TileCache;
 use crate::io::TileRequest;
-use crate::map_state::ViewState;
 use crate::schedule::Stage;
-use crate::{HTTPClient, Renderer, ScheduleMethod, Scheduler, Style};
-use std::cell::RefCell;
+use crate::{HTTPClient, ScheduleMethod, Style};
 use std::collections::HashSet;
-use std::rc::Rc;
 
 pub struct RequestStage<HC>
 where
@@ -20,7 +19,10 @@ where
     pub try_failed: bool,
 }
 
-impl<HC> RequestStage<HC> {
+impl<HC> RequestStage<HC>
+where
+    HC: HTTPClient,
+{
     pub fn new(source_client: SourceClient<HC>) -> Self {
         Self {
             source_client,
@@ -65,8 +67,6 @@ where
                     view_region,
                 );
             }
-
-            // FIXME self.renderer().update_globals(&view_proj, &self.view_state.camera);
         }
 
         view_state.camera.update_reference();

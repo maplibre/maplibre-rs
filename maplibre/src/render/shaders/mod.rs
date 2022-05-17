@@ -1,7 +1,7 @@
 #![allow(clippy::identity_op)]
 
 use crate::coords::WorldCoords;
-use crate::render::resource::shader::{FragmentState, VertexBufferLayout, VertexState};
+use crate::render::resource::{FragmentState, VertexBufferLayout, VertexState};
 use bytemuck_derive::{Pod, Zeroable};
 use cgmath::SquareMatrix;
 

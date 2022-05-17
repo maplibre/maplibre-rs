@@ -1,8 +1,8 @@
+//! Describes the concept of a [`RenderPhase`] and [`PhaseItem`]
+
 mod draw;
-mod tracked_render_pass;
 
 pub use draw::*;
-pub use tracked_render_pass::*;
 
 /// A resource to collect and sort draw requests for specific [`PhaseItems`](PhaseItem).
 pub struct RenderPhase<I: PhaseItem> {

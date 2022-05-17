@@ -1,15 +1,11 @@
 //! Provides utilities related to coordinates.
 
-use std::fmt;
-use std::fmt::Formatter;
-
-use cgmath::num_traits::Pow;
-use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
-
 use crate::style::source::TileAddressingScheme;
-
 use crate::util::math::{div_floor, Aabb2};
 use crate::util::SignificantlyDifferent;
+use cgmath::num_traits::Pow;
+use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
+use std::fmt;
 
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
@@ -51,7 +47,7 @@ impl Quadkey {
 }
 
 impl fmt::Debug for Quadkey {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let len = self.0[0] as usize;
         for part in &self.0[0..len] {
             write!(f, "{:?}", part)?;
@@ -78,7 +74,7 @@ impl Default for Zoom {
 }
 
 impl fmt::Display for Zoom {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", (self.0 * 100.0).round() / 100.0)
     }
 }
@@ -505,7 +501,7 @@ impl fmt::Display for TileCoords {
 }
 
 impl fmt::Display for WorldTileCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "WT(x={x},y={y},z={z})",
@@ -516,7 +512,7 @@ impl fmt::Display for WorldTileCoords {
     }
 }
 impl fmt::Display for WorldCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "W(x={x},y={y})", x = self.x, y = self.y,)
     }
 }

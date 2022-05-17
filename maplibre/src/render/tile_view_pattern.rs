@@ -1,7 +1,8 @@
-use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
+//! Utility for generating a tile pattern which can be used for masking.
 
-use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, Queue};
+use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
 use crate::render::camera::ViewProjection;
+use crate::render::resource::{BackingBufferDescriptor, BufferPool, Queue};
 use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata};
 use cgmath::Matrix4;
 

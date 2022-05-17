@@ -1,3 +1,5 @@
+//! Executes a [`RenderGraph`]
+
 use log::error;
 use smallvec::smallvec;
 use smallvec::SmallVec;
@@ -71,7 +73,7 @@ impl RenderGraphRunner {
         let mut node_outputs: HashMap<NodeId, SmallVec<[SlotValue; 4]>> = HashMap::default();
         #[cfg(feature = "trace")]
         let span = if let Some(name) = &graph_name {
-            tracing::info_span!("run_graph", name = name.deref())
+            tracing::info_span!("run_graph", name = name.as_ref())
         } else {
             tracing::info_span!("run_graph", name = "main_graph")
         };

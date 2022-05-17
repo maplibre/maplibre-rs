@@ -6,7 +6,6 @@ use crate::render::RenderState;
 use downcast_rs::{impl_downcast, Downcast};
 use std::{borrow::Cow, fmt::Debug};
 use thiserror::Error;
-use uuid::Uuid;
 
 /// The context with all information required to interact with the GPU.
 ///
@@ -22,16 +21,12 @@ pub struct RenderContext<'d> {
 ///
 /// This id is used to reference the node internally (edges, etc).
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct NodeId(Uuid);
+pub struct NodeId(usize);
 
 impl NodeId {
     #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        NodeId(Uuid::new_v4())
-    }
-
-    pub fn uuid(&self) -> &Uuid {
-        &self.0
+    pub fn new(id: usize) -> Self {
+        NodeId(id)
     }
 }
 

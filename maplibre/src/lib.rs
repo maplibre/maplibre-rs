@@ -18,26 +18,30 @@
 
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
 use crate::io::source_client::HTTPClient;
-use crate::map_state::MapState;
+use crate::map_schedule::MapSchedule;
+use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::{RenderState, Renderer};
 use crate::style::Style;
 use crate::window::{MapWindow, MapWindowConfig, Runnable, WindowSize};
 
+pub mod context;
 pub mod coords;
 pub mod error;
 pub mod io;
+// Exposed because of input handlers in maplibre-winit
+pub mod map_schedule;
 pub mod platform;
+// Exposed because of camera
+pub mod render;
 pub mod style;
 pub mod window;
+// Exposed because of doc-strings
+pub mod schedule;
 
 // Used for benchmarking
 pub mod benchmarking;
 
 // Internal modules
-pub(crate) mod context;
-pub mod map_state;
-pub mod render;
-pub mod schedule;
 pub(crate) mod stages;
 pub(crate) mod tessellation;
 pub(crate) mod tilejson;
@@ -50,7 +54,7 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    map_state: MapState<W::MapWindowConfig, SM, HC>,
+    map_state: MapSchedule<W::MapWindowConfig, SM, HC>,
     window: W,
 }
 
@@ -98,6 +102,8 @@ where
     http_client: HC,
     style: Style,
 
+    wgpu_settings: WgpuSettings,
+    renderer_settings: RendererSettings,
     map_window_config: MWC,
 }
 
@@ -112,15 +118,27 @@ where
     pub async fn initialize(self) -> Map<MWC::MapWindow, SM, HC> {
         let window = MWC::MapWindow::create(&self.map_window_config);
         let window_size = window.size();
-        let renderer = Renderer::initialize(&window).await.unwrap();
+
+        #[cfg(target_os = "android")]
+        let renderer = None;
+        #[cfg(not(target_os = "android"))]
+        let renderer = Renderer::initialize(
+            &window,
+            self.wgpu_settings.clone(),
+            self.renderer_settings.clone(),
+        )
+        .await
+        .ok();
         Map {
-            map_state: MapState::new(
+            map_state: MapSchedule::new(
                 self.map_window_config,
                 window_size,
-                Some(renderer),
+                renderer,
                 self.scheduler,
                 self.http_client,
                 self.style,
+                self.wgpu_settings,
+                self.renderer_settings,
             ),
             window,
         }
@@ -137,6 +155,8 @@ where
     style: Option<Style>,
 
     map_window_config: Option<MWC>,
+    wgpu_settings: Option<WgpuSettings>,
+    renderer_settings: Option<RendererSettings>,
 }
 
 impl<MWC, SM, HC> MapBuilder<MWC, SM, HC>
@@ -152,11 +172,23 @@ where
             http_client: None,
             style: None,
             map_window_config: None,
+            wgpu_settings: None,
+            renderer_settings: None,
         }
     }
 
     pub fn with_map_window_config(mut self, map_window_config: MWC) -> Self {
         self.map_window_config = Some(map_window_config);
+        self
+    }
+
+    pub fn with_renderer_settings(mut self, renderer_settings: RendererSettings) -> Self {
+        self.renderer_settings = Some(renderer_settings);
+        self
+    }
+
+    pub fn with_wgpu_settings(mut self, wgpu_settings: WgpuSettings) -> Self {
+        self.wgpu_settings = Some(wgpu_settings);
         self
     }
 
@@ -191,6 +223,8 @@ where
             scheduler,
             http_client: self.http_client.unwrap(),
             style,
+            wgpu_settings: self.wgpu_settings.unwrap_or_default(),
+            renderer_settings: self.renderer_settings.unwrap_or_default(),
             map_window_config: self.map_window_config.unwrap(),
         }
     }

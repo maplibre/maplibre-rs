@@ -1,7 +1,11 @@
+//! Utility for a texture view which can either be created by a [`TextureView`](wgpu::TextureView)
+//! or [`SurfaceTexture`](wgpu::SurfaceTexture)
+
 use crate::render::settings::Msaa;
+use crate::render::util::HasChanged;
 use std::ops::Deref;
 
-/// Describes a [`Texture`] with its associated metadata required by a pipeline or [`BindGroup`](super::BindGroup).
+/// Describes a [`TextureView`].
 ///
 /// May be converted from a [`TextureView`](wgpu::TextureView) or [`SurfaceTexture`](wgpu::SurfaceTexture)
 /// or dereferences to a wgpu [`TextureView`](wgpu::TextureView).
@@ -38,11 +42,13 @@ impl From<wgpu::TextureView> for TextureView {
 }
 
 impl From<wgpu::SurfaceTexture> for TextureView {
-    fn from(value: wgpu::SurfaceTexture) -> Self {
-        let texture = value;
-        let view = texture.texture.create_view(&Default::default());
+    fn from(surface_texture: wgpu::SurfaceTexture) -> Self {
+        let view = surface_texture.texture.create_view(&Default::default());
 
-        TextureView::SurfaceTexture { texture, view }
+        TextureView::SurfaceTexture {
+            texture: surface_texture,
+            view,
+        }
     }
 }
 
@@ -59,6 +65,7 @@ impl Deref for TextureView {
 }
 
 pub struct Texture {
+    pub size: (u32, u32),
     pub texture: wgpu::Texture,
     pub view: TextureView,
 }
@@ -87,8 +94,17 @@ impl Texture {
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         Self {
+            size: (width, height),
             texture,
             view: TextureView::TextureView(view),
         }
+    }
+}
+
+impl HasChanged for Texture {
+    type Criteria = (u32, u32);
+
+    fn has_changed(&self, criteria: &Self::Criteria) -> bool {
+        !self.size.eq(criteria)
     }
 }
