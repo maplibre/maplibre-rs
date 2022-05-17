@@ -1,0 +1,12 @@
+name: Build demos
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  run-check:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/demo/windows
