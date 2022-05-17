@@ -1,0 +1,117 @@
+# Running maplibre-rs demos on various platforms
+
+During development, you will want to run the maplibre demos on your local machine to test out your changes.
+There are multiple demos of maplibre-rs for different targets. Some targets have prerequisites
+depending on your operating system.
+
+* **Maplibre-demo** - targets Windows, MacOS and Linux, it is built directly with cargo.
+* **Apple** - targets iOS and MacOS and relies on the xcode IDE.
+* **Android** - targets Android devices and builds in Android Studio.
+* **Web** - targets the web using a WASM binary.
+* **Headless** - *TBD*
+
+All the targets below require you to install [rustup](https://rustup.rs/) to manage your Rust toolchain.
+
+> __Note__: Make sure you have selected the right toolchain target within rustup. You can use `rustup show` to see your
+> active toolchain. If you want to change the target of the build manually, use the cargo `--target` parameter.
+
+## Maplibre-demo
+
+### Linux/MacOS
+
+The build for desktop is very simple, you just have to run the following command from the root of the
+maplibre-rs project:
+
+```bash
+cargo run -p maplibre-demo
+```
+
+### Windows
+
+Windows has two additional prerequisites to be able to run. You will need CMake, Visual Studio c++ build tools and the
+sqlite3.lib.
+
+Install [CMake](https://cmake.org/download/) and add it to your path environment variables.
+
+For the c++ build tools, download the [Visual Studio 2022 Build tools](https://visualstudio.microsoft.com/downloads/)
+from the Microsoft website. After the download, while installing the Build tools, make sure that you select the
+*c++ build tools*.
+
+To install sqlite3 you need to build the sqlite3.lib manually with the following
+[steps](https://gist.github.com/zeljic/d8b542788b225b1bcb5fce169ee28c55). This will generate a .lib file that
+you will have to add to the SQLITE3_LIB_DIR environment variable.
+
+Restart your shell to make sure you are using up-to-date environment variables.
+
+Finally, the command below should execute successfully:
+
+```bash
+cargo run -p maplibre-demo
+```
+
+## Android
+
+Start by installing the 
+[Android Studio IDE](https://developer.android.com/studio?gclid=CjwKCAjwj42UBhAAEiwACIhADmF7uHXnEHGnmOgFnjp0Z6n-TnBvutC5faGA89lwouMIXiR6OXK4hBoCq78QAvD_BwE&gclsrc=aw.ds).
+
+Make sure the NDK version 23.1.7779620 is installed. The Native Development Kit (NDK) is a set of tools that allows 
+you to use C and C++ code with Android.
+
+```
+ANDROID STUDIO -> tools -> SDK manager -> SDK tools -> tick show package details -> ndk (side by side) version 23.1.7779620
+```
+
+Open the project within `./android/gradle` and create a new virtual device with the device manager. Minimum SDK version
+should be 21 (tested on Nexus 5 API 31 x86_64). Finally, run the demo configuration. It should open your virtual device and 
+run the maplibre-rs Android demo on it. Alternatively you can also run it on your own Android device.
+
+> If you are building for a x86 Android device, you probably need to install the x86 linux android toolchain with 
+> rustup with the following command `rustup target add i686-linux-android`.
+
+> Android is configured to support OpenGL ES 3.1 (This API specification is supported by Android 5.0 (API level 21) and higher).
+> Your Android device is required to support OpenGL ES 3.1 at least. There are some issues 
+> [here](https://stackoverflow.com/questions/40797975/android-emulator-and-opengl-es3-egl-bad-config) and 
+> [here](https://www.reddit.com/r/Arcore/comments/8squbo/opengl_es_31_is_required_for_android_emulator_to/) that
+> discuss configuration of Android Studio for OpenGL ES 3.1 support in emulators.
+ 
+## Apple
+
+Apple builds rely on the [XCode IDE](https://apps.apple.com/us/app/xcode/id497799835?ls=1&mt=12).
+Start by installing XCode and open the project within `./apple/xcode`.
+
+> Cargo is used in to build the maplibre library in the build phases of the XCode project configuration.
+
+### iOS
+
+You can use XCode to run on a iOS Simulator or a real device. Install a simulator in XCode.
+Version 9 is the minimum version supported theoretically.
+
+Select the scheme called *example (iOS)* and click on run. This will start the iOS application.
+
+### MacOS
+
+As you might have seen in the maplibre-demo section, you can build Unix executables directly with Cargo.
+In order to build a proper MacOS application (in OSX terminology) you have to use the `./apple/xcode` project.
+
+Open the project from the folder `./apple/xcode` with XCode. Select the scheme called *example (macOS)* and
+click on run. This will start the MacOS application. 
+
+> The minimum target OSX version for the MacOS build is defined inside *Build settings -> Deployment -> MacOS deployment target*.
+> If you are using a lower version of OSX, you will not be able to run the application on your computer.
+
+## Web (WebGL, WebGPU)
+
+If you have a browser which already supports a recent version of the WebGPU specification then you can start a
+development server using the following commands.
+
+```bash
+cd web
+npm run start
+```
+
+If you want to run maplibre-rs with WebGL which is supported on every major browser, then you have to use the following
+command.
+
+```bash
+npm run webgl-start
+```
