@@ -88,13 +88,6 @@ impl RenderState {
             }
         } else if cfg!(target_os = "android") {
             Limits {
-                max_storage_textures_per_shader_stage: 4,
-                max_compute_workgroups_per_dimension: 0,
-                max_compute_workgroup_size_z: 0,
-                max_compute_workgroup_size_y: 0,
-                max_compute_workgroup_size_x: 0,
-                max_compute_workgroup_storage_size: 0,
-                max_compute_invocations_per_workgroup: 0,
                 ..wgpu::Limits::downlevel_defaults()
             }
         } else {
