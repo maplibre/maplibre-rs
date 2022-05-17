@@ -1,0 +1,28 @@
+name: macOS
+description: Build for macOS
+
+inputs:
+  GITHUB_TOKEN:
+    required: true
+    description: On macos runners we often hit API limits. Using this token avoid this.
+
+runs:
+  using: "composite"
+  steps:
+    - uses: extractions/setup-just@v1
+      env:
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+    - name: Install toolchain
+      shell: bash
+      run: just default-toolchain
+    - uses: Swatinem/rust-cache@v1
+    # TODO: Build in release instad of debug doesn't work
+    # TODO: Sign app
+    - name: Build
+      shell: bash
+      run: cd apple/xcode && xcodebuild -scheme "example (macOS)" build CODE_SIGNING_ALLOWED=NO MACOSX_DEPLOYMENT_TARGET=10.9 -derivedDataPath build
+    - uses: actions/upload-artifact@v3
+      with:
+        name: maplibre-x86_64-apple-darwin-demo
+        path: apple/xcode/build/Build/Products/Debug/*.app
+        if-no-files-found: error
