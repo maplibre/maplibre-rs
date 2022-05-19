@@ -184,7 +184,12 @@ where
         for coords in view_region.iter() {
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
-                try_failed = self.try_request_tile(&coords, &source_layers).unwrap();
+                // try_failed = self.try_request_tile(&coords, &source_layers).unwrap();
+                try_failed = match self.try_request_tile(&coords, &source_layers) {
+                                Ok(true_or_false) => true_or_false,
+                                // Err(e) => false // am assuming false is the default value of try_failed
+                                Err(e) => panic!("{:?}",e)
+                            }
             }
         }
         try_failed
@@ -277,17 +282,26 @@ where
                         self.shared_thread_state.clone(),
                         move |state: SharedThreadState| async move {
                             match client.fetch(&coords).await {
-                                Ok(data) => state
-                                    .process_tile(request_id, data.into_boxed_slice())
-                                    .unwrap(),
+                                // Ok(data) = .process_tile(request_id, data.into_boxed_slice()).unwrap();
+                                Ok(data) => {match state
+                                    .process_tile(request_id, data.into_boxed_slice()) {
+                                        Ok(_) => (),
+                                        Err(e) => log::error!("{:?}", &e)
+                                        }
+                                    // .unwrap()},
+                                },
                                 Err(e) => {
                                     log::error!("{:?}", &e);
-                                    state.tile_unavailable(&coords, request_id).unwrap()
+                                    // state.tile_unavailable(&coords, request_id).unwrap()
+                                    match state.tile_unavailable(&coords, request_id){
+                                        Ok(_) => (),
+                                        Err(e) => log::error!("{:?}", &e)
+                                    }
                                 }
                             }
                         },
-                    )
-                    .unwrap();
+                    )?
+                    // .unwrap();
             }
 
             Ok(false)
@@ -327,6 +341,9 @@ where
 
     pub fn render_state_mut(&mut self) -> &'_ mut RenderState {
         self.render_state.as_mut().unwrap()
+        // match self.render_state.as_mut(){
+        //     Some()
+        // }
     }
 
     pub fn view_state(&self) -> &ViewState {

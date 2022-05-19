@@ -10,12 +10,17 @@ const MUNICH_Z: u8 = 15;
 
 /// Tiles which can be used by StaticTileFetcher
 fn clean_static_tiles() -> PathBuf {
-    let out_dir = env::var("OUT_DIR").unwrap();
+    let out_dir = env::var("OUT_DIR");
 
+    let out_dir = match out_dir {
+        Ok(dir) => dir,
+        Err(e) => panic!("{:?}", &e),
+    };
+    
     let out = Path::new(&out_dir).join("extracted-tiles");
 
     if out.exists() && out.is_dir() {
-        fs::remove_dir_all(&out).unwrap()
+        fs::remove_dir_all(&out).unwrap() //does not make sense since only unit is contained in the result
     }
 
     out
@@ -46,21 +51,30 @@ fn generate_type_def() -> Option<u32> {
 fn embed_tiles_statically() {
     let out = clean_static_tiles();
 
-    let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let root_dir = env::var("CARGO_MANIFEST_DIR");
+
+    let root_dir = match root_dir {
+        Ok(dir) => dir,
+        Err(e) => panic!("{}", e)
+    };
 
     let source = Path::new(&root_dir).join(format!("test-data/munich-{}.mbtiles", MUNICH_Z));
 
     if source.exists() {
         println!("cargo:rustc-cfg=static_tiles");
         // Pack tiles around Munich HBF (100 tiles in each direction)
-        extract(
+        let extracted = extract(
             source,
             out,
             MUNICH_Z,
             (MUNICH_X - 2)..(MUNICH_X + 2),
             (MUNICH_Y - 2)..(MUNICH_Y + 2),
-        )
-        .unwrap();
+        );
+        let extracted = match extracted{
+            Ok(result) => result,
+            Err(e) => panic!("{:?}",e)
+        };
+
     } else {
         // Do not statically embed tiles
     }

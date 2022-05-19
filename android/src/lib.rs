@@ -23,15 +23,7 @@ pub fn android_main() {
 
 #[no_mangle]
 pub extern "system" fn Java_org_maplibre_1rs_MapLibreRs_android_1main(env: JNIEnv, class: JClass) {
-    let tag = match CString::new("maplibre");
-    let tag = match tag {
-        Ok(tagg) => tagg,
-        Err(e) => (e),
-    };
-    let message = CString::new("maplibre WOORKING");
-    let message = match message {
-        Ok(mess) => mess,
-        Err(e) => (e),
-    };
+    let tag = CString::new("maplibre").unwrap();
+    let message = CString::new("maplibre WOORKING").unwrap();
     ndk_glue::android_log(Level::Warn, &tag, &message);
 }
