@@ -4,11 +4,11 @@ During development, you will want to run the maplibre demos on your local machin
 There are multiple demos of maplibre-rs for different targets. Some targets have prerequisites
 depending on your operating system.
 
-* **Maplibre-demo** - targets Windows, MacOS and Linux, it is built directly with cargo.
-* **Apple** - targets iOS and MacOS and relies on the xcode IDE.
+* **maplibre-demo** - targets Windows, MacOS and Linux, it is built directly with cargo.
+* **apple** - targets iOS and MacOS and relies on the xcode IDE.
 * **Android** - targets Android devices and builds in Android Studio.
-* **Web** - targets the web using a WASM binary.
-* **Headless** - *TBD*
+* **web** - targets the web using a WASM binary.
+* **maplibre-headless** - *TBD*
 
 All the targets below require you to install [rustup](https://rustup.rs/) to manage your Rust toolchain.
 
@@ -28,14 +28,14 @@ cargo run -p maplibre-demo
 
 ### Windows
 
-Windows has two additional prerequisites to be able to run. You will need CMake, Visual Studio c++ build tools and the
-sqlite3.lib.
+Windows has two additional prerequisites to be able to run. You will need CMake, Visual Studio C++ build tools and the
+sqlite3 library.
 
 Install [CMake](https://cmake.org/download/) and add it to your path environment variables.
 
-For the c++ build tools, download the [Visual Studio 2022 Build tools](https://visualstudio.microsoft.com/downloads/)
+For the C++ build tools, download the [Visual Studio 2022 Build tools](https://visualstudio.microsoft.com/downloads/)
 from the Microsoft website. After the download, while installing the Build tools, make sure that you select the
-*c++ build tools*.
+*C++ build tools*.
 
 To install sqlite3 you need to build the sqlite3.lib manually with the following
 [steps](https://gist.github.com/zeljic/d8b542788b225b1bcb5fce169ee28c55). This will generate a .lib file that
@@ -62,13 +62,13 @@ ANDROID STUDIO -> tools -> SDK manager -> SDK tools -> tick show package details
 ```
 
 Open the project within `./android/gradle` and create a new virtual device with the device manager. Minimum SDK version
-should be 21 (tested on Nexus 5 API 31 x86_64). Finally, run the demo configuration. It should open your virtual device and 
+should be 21. This was tested on a x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and 
 run the maplibre-rs Android demo on it. Alternatively you can also run it on your own Android device.
 
-> If you are building for a x86 Android device, you probably need to install the x86 linux android toolchain with 
+> Note: If you are building for a x86 Android device, you probably need to install the following target using  
 > rustup with the following command `rustup target add i686-linux-android`.
 
-> Android is configured to support OpenGL ES 3.1 (This API specification is supported by Android 5.0 (API level 21) and higher).
+> Note: Android is configured to support OpenGL ES 3.1 (This API specification is supported by Android 5.0 (API level 21) and higher).
 > Your Android device is required to support OpenGL ES 3.1 at least. There are some issues 
 > [here](https://stackoverflow.com/questions/40797975/android-emulator-and-opengl-es3-egl-bad-config) and 
 > [here](https://www.reddit.com/r/Arcore/comments/8squbo/opengl_es_31_is_required_for_android_emulator_to/) that
@@ -113,5 +113,6 @@ If you want to run maplibre-rs with WebGL which is supported on every major brow
 command.
 
 ```bash
-npm run webgl-start
+just web-lib esbuild
+just web-demo start
 ```
