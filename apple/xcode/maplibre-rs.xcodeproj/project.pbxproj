@@ -480,7 +480,6 @@
 					"$(PROJECT_DIR)",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios/release";
-				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/release";
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/release";
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios-sim/release";
 				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-darwin/release";
