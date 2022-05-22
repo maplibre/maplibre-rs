@@ -6,7 +6,7 @@ depending on your operating system.
 
 * **maplibre-demo** - targets Windows, MacOS and Linux, it is built directly with cargo.
 * **apple** - targets iOS and MacOS and relies on the xcode IDE.
-* **Android** - targets Android devices and builds in Android Studio.
+* **android** - targets Android devices and builds in Android Studio.
 * **web** - targets the web using a WASM binary.
 * **maplibre-headless** - *TBD*
 
