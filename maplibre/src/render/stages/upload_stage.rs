@@ -27,15 +27,7 @@ impl Stage for UploadStage {
             view_state,
             style,
             tile_cache,
-            renderer:
-                Renderer {
-                    settings: _,
-                    device: _,
-                    queue,
-                    surface: _,
-                    state,
-                    ..
-                },
+            renderer: Renderer { queue, state, .. },
             ..
         }: &mut MapContext,
     ) {

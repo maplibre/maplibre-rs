@@ -11,10 +11,12 @@ mod phase_sort_stage;
 mod queue_stage;
 mod resource_stage;
 mod upload_stage;
+mod write_surface_buffer_stage;
 
 use crate::multi_stage;
 use crate::render::stages::phase_sort_stage::PhaseSortStage;
 use crate::render::stages::queue_stage::QueueStage;
+use crate::render::stages::write_surface_buffer_stage::WriteSurfaceBufferStage;
 pub use graph_runner_stage::{draw_graph, node};
 
 /// The labels of the default App rendering stages.
@@ -53,4 +55,8 @@ pub fn register_render_stages(schedule: &mut Schedule) {
     schedule.add_stage(RenderStageLabel::Queue, QueueStage::default());
     schedule.add_stage(RenderStageLabel::PhaseSort, PhaseSortStage::default());
     schedule.add_stage(RenderStageLabel::Render, GraphRunnerStage::default());
+    schedule.add_stage(
+        RenderStageLabel::Cleanup,
+        WriteSurfaceBufferStage::default(),
+    );
 }
