@@ -3,32 +3,16 @@
 use crate::{HTTPClient, MapSchedule, ScheduleMethod};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 
-/// Window with an optional [carte::window::WindowSize].
+/// Window with a [carte::window::WindowSize].
 pub trait MapWindow {
-    type EventLoop;
-    type RawWindow;
-
     fn size(&self) -> WindowSize;
+}
+
+pub trait HeadedMapWindow: MapWindow {
+    type EventLoop;
+    type RawWindow: HasRawWindowHandle;
 
     fn inner(&self) -> &Self::RawWindow;
-}
-
-pub trait HasRawWindow {
-    type HRWH: HasRawWindowHandle;
-
-    fn raw_window(&self) -> &Self::HRWH;
-}
-
-impl<MW> HasRawWindow for MW
-where
-    MW: MapWindow,
-    MW::RawWindow: HasRawWindowHandle,
-{
-    type HRWH = MW::RawWindow;
-
-    fn raw_window(&self) -> &Self::HRWH {
-        self.inner()
-    }
 }
 
 pub trait MapWindowConfig: 'static {

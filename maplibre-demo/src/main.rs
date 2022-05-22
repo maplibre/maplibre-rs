@@ -33,15 +33,8 @@ impl MapWindowConfig for HeadlessMapWindowConfig {
 pub struct HeadlessMapWindow;
 
 impl MapWindow for HeadlessMapWindow {
-    type EventLoop = ();
-    type RawWindow = ();
-
     fn size(&self) -> WindowSize {
         WindowSize::new(1920, 1080).unwrap()
-    }
-
-    fn inner(&self) -> &Self::RawWindow {
-        &()
     }
 }
 

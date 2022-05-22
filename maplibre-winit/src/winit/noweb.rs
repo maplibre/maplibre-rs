@@ -10,12 +10,9 @@ use super::WinitMapWindow;
 use super::WinitWindow;
 
 use super::WinitMapWindowConfig;
-use maplibre::window::{MapWindow, MapWindowConfig, WindowSize};
+use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
 
 impl MapWindow for WinitMapWindow {
-    type EventLoop = WinitEventLoop;
-    type RawWindow = WinitWindow;
-
     fn size(&self) -> WindowSize {
         let size = self.window.inner_size();
         #[cfg(target_os = "android")]
@@ -29,6 +26,10 @@ impl MapWindow for WinitMapWindow {
             WindowSize::new(size.width, size.height).expect("failed to get window dimensions.");
         window_size
     }
+}
+impl HeadedMapWindow for WinitMapWindow {
+    type EventLoop = WinitEventLoop;
+    type RawWindow = WinitWindow;
 
     fn inner(&self) -> &Self::RawWindow {
         &self.window

@@ -8,7 +8,7 @@ use winit::event_loop::ControlFlow;
 
 use crate::input::{InputController, UpdateState};
 use maplibre::map_schedule::MapSchedule;
-use maplibre::window::{MapWindow, MapWindowConfig, Runnable};
+use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, Runnable};
 use winit::event::Event;
 
 #[cfg(target_arch = "wasm32")]
