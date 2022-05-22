@@ -4,7 +4,8 @@
 use crate::render::resource::texture::TextureView;
 use crate::render::settings::RendererSettings;
 use crate::render::util::HasChanged;
-use crate::{HasRawWindow, MapWindow, MapWindowConfig, WindowSize};
+use crate::window::HeadedMapWindow;
+use crate::{MapWindow, MapWindowConfig, WindowSize};
 use std::fs::File;
 use std::io::Write;
 use std::mem::size_of;
@@ -46,8 +47,7 @@ impl WindowHead {
     pub fn recreate_surface<MWC>(&mut self, window: &MWC::MapWindow, instance: &wgpu::Instance)
     where
         MWC: MapWindowConfig,
-        <<MWC as MapWindowConfig>::MapWindow as MapWindow>::RawWindow:
-            raw_window_handle::HasRawWindowHandle,
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
     {
         self.surface = unsafe { instance.create_surface(window.inner()) };
     }
@@ -127,9 +127,7 @@ impl Surface {
     ) -> Self
     where
         MWC: MapWindowConfig,
-        MWC::MapWindow: HasRawWindow,
-        /*        <<MWC as MapWindowConfig>::MapWindow as MapWindow>::Window:
-        raw_window_handle::HasRawWindowHandle,*/
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
     {
         let size = window.size();
         let surface_config = wgpu::SurfaceConfiguration {
@@ -141,7 +139,7 @@ impl Surface {
             present_mode: wgpu::PresentMode::Fifo, // VSync
         };
 
-        let surface = unsafe { instance.create_surface(window.raw_window()) };
+        let surface = unsafe { instance.create_surface(window.inner()) };
 
         Self {
             size,
@@ -254,8 +252,7 @@ impl Surface {
     pub fn recreate<MWC>(&mut self, window: &MWC::MapWindow, instance: &wgpu::Instance)
     where
         MWC: MapWindowConfig,
-        <<MWC as MapWindowConfig>::MapWindow as MapWindow>::RawWindow:
-            raw_window_handle::HasRawWindowHandle,
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
     {
         match &mut self.head {
             Head::Headed(window_head) => {

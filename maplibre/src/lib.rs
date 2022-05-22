@@ -22,7 +22,7 @@ use crate::map_schedule::MapSchedule;
 use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::{RenderState, Renderer};
 use crate::style::Style;
-use crate::window::{HasRawWindow, MapWindow, MapWindowConfig, Runnable, WindowSize};
+use crate::window::{HeadedMapWindow, MapWindow, MapWindowConfig, Runnable, WindowSize};
 
 pub mod context;
 pub mod coords;

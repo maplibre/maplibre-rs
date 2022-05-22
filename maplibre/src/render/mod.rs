@@ -27,7 +27,7 @@ use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata};
 use crate::render::tile_view_pattern::{TileInView, TileShape, TileViewPattern};
 use crate::render::util::Eventually;
 use crate::tessellation::IndexDataType;
-use crate::{HasRawWindow, MapWindow, MapWindowConfig};
+use crate::{HeadedMapWindow, MapWindow, MapWindowConfig};
 use log::info;
 use std::sync::Arc;
 
@@ -122,10 +122,8 @@ impl Renderer {
         settings: RendererSettings,
     ) -> Result<Self, wgpu::RequestDeviceError>
     where
-        MWC::MapWindow: HasRawWindow,
         MWC: MapWindowConfig,
-        /*        <<MWC as MapWindowConfig>::MapWindow as MapWindow>::Window:
-        raw_window_handle::HasRawWindowHandle,*/
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
