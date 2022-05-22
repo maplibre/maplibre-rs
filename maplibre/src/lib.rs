@@ -22,7 +22,7 @@ use crate::map_schedule::MapSchedule;
 use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::{RenderState, Renderer};
 use crate::style::Style;
-use crate::window::{MapWindow, MapWindowConfig, Runnable, WindowSize};
+use crate::window::{HasRawWindow, MapWindow, MapWindowConfig, Runnable, WindowSize};
 
 pub mod context;
 pub mod coords;
@@ -47,9 +47,9 @@ pub(crate) mod tessellation;
 pub(crate) mod util;
 
 /// Map's configuration and execution.
-pub struct Map<W, SM, HC>
+pub struct Map<MWC, SM, HC>
 where
-    W: MapWindow,
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -57,9 +57,10 @@ where
     window: W,
 }
 
-impl<W, SM, HC> Map<W, SM, HC>
+impl<MWC, SM, HC> Map<MWC, SM, HC>
 where
-    W: MapWindow + Runnable<W::MapWindowConfig, SM, HC>,
+    MWC: MapWindowConfig,
+    MWC::MapWindow: Runnable<MWC, SM, HC>,
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
@@ -138,6 +139,29 @@ where
                 self.style,
                 self.wgpu_settings,
                 self.renderer_settings,
+            ),
+            window,
+        }
+    }
+
+    pub async fn initialize_headless(self) -> Map<MWC, SM, HC> {
+        let window = self.map_window_config.create();
+
+        let renderer = Renderer::initialize_headless::<MWC>(
+            &window,
+            self.wgpu_settings,
+            self.renderer_settings,
+        )
+        .await
+        .unwrap();
+        Map {
+            map_state: MapSchedule::new(
+                window.size(),
+                self.map_window_config,
+                Some(renderer),
+                self.scheduler,
+                self.http_client,
+                self.style,
             ),
             window,
         }

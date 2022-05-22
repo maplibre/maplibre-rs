@@ -27,10 +27,12 @@ use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata};
 use crate::render::tile_view_pattern::{TileInView, TileShape, TileViewPattern};
 use crate::render::util::Eventually;
 use crate::tessellation::IndexDataType;
-use crate::MapWindow;
+use crate::{HasRawWindow, MapWindow, MapWindowConfig};
 use log::info;
+use std::sync::Arc;
 
 // Rendering internals
+mod copy_surface_to_buffer_node;
 mod graph;
 mod graph_runner;
 mod main_pass;
@@ -52,7 +54,6 @@ pub use stages::register_render_stages;
 
 pub const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
-#[derive(Default)]
 pub struct RenderState {
     render_target: Eventually<TextureView>,
 
@@ -76,13 +77,33 @@ pub struct RenderState {
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
 
+    surface: Surface,
+
     mask_phase: RenderPhase<TileInView>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
 }
 
+impl RenderState {
+    pub fn new(surface: Surface) -> Self {
+        Self {
+            render_target: Default::default(),
+            buffer_pool: Default::default(),
+            tile_view_pattern: Default::default(),
+            tile_pipeline: Default::default(),
+            mask_pipeline: Default::default(),
+            globals_bind_group: Default::default(),
+            depth_texture: Default::default(),
+            multisampling_texture: Default::default(),
+            surface,
+            mask_phase: Default::default(),
+            tile_phase: Default::default(),
+        }
+    }
+}
+
 pub struct Renderer {
     pub instance: wgpu::Instance,
-    pub device: wgpu::Device,
+    pub device: Arc<wgpu::Device>,
     pub queue: wgpu::Queue,
     pub adapter_info: wgpu::AdapterInfo,
 
@@ -90,34 +111,29 @@ pub struct Renderer {
     pub settings: RendererSettings,
 
     pub state: RenderState,
-    pub surface: Surface,
 }
 
 impl Renderer {
     /// Initializes the renderer by retrieving and preparing the GPU instance, device and queue
     /// for the specified backend.
-    pub async fn initialize<MW>(
-        window: &MW,
+    pub async fn initialize<MWC>(
+        window: &MWC::MapWindow,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
     ) -> Result<Self, wgpu::RequestDeviceError>
     where
-        MW: MapWindow,
+        MWC::MapWindow: HasRawWindow,
+        MWC: MapWindowConfig,
+        /*        <<MWC as MapWindowConfig>::MapWindow as MapWindow>::Window:
+        raw_window_handle::HasRawWindowHandle,*/
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        let maybe_surface = match &settings.surface_type {
-            SurfaceType::Headless => None,
-            SurfaceType::Headed => Some(Surface::from_window(&instance, window, &settings)),
-        };
+        let surface = Surface::from_window::<MWC>(&instance, window, &settings);
 
-        let compatible_surface = if let Some(surface) = &maybe_surface {
-            match &surface.head() {
-                Head::Headed(window_head) => Some(window_head.surface()),
-                Head::Headless(_) => None,
-            }
-        } else {
-            None
+        let compatible_surface = match &surface.head() {
+            Head::Headed(window_head) => Some(window_head.surface()),
+            Head::Headless(_) => None,
         };
 
         let (device, queue, adapter_info) = Self::request_device(
@@ -131,11 +147,6 @@ impl Renderer {
         )
         .await?;
 
-        let surface = maybe_surface.unwrap_or_else(|| match &settings.surface_type {
-            SurfaceType::Headless => Surface::from_image(&device, window, &settings),
-            SurfaceType::Headed => Surface::from_window(&instance, window, &settings),
-        });
-
         match surface.head() {
             Head::Headed(window) => window.configure(&device),
             Head::Headless(_) => {}
@@ -143,18 +154,51 @@ impl Renderer {
 
         Ok(Self {
             instance,
-            device,
+            device: Arc::new(device),
             queue,
             adapter_info,
             wgpu_settings,
             settings,
-            state: Default::default(),
-            surface,
+            state: RenderState::new(surface),
+        })
+    }
+
+    pub async fn initialize_headless<MWC>(
+        window: &MWC::MapWindow,
+        wgpu_settings: WgpuSettings,
+        settings: RendererSettings,
+    ) -> Result<Self, wgpu::RequestDeviceError>
+    where
+        MWC: MapWindowConfig,
+    {
+        let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+
+        let (device, queue, adapter_info) = Self::request_device(
+            &instance,
+            &wgpu_settings,
+            &wgpu::RequestAdapterOptions {
+                power_preference: wgpu_settings.power_preference,
+                force_fallback_adapter: false,
+                compatible_surface: None,
+            },
+        )
+        .await?;
+
+        let surface = Surface::from_image::<MWC>(&device, window, &settings);
+
+        Ok(Self {
+            instance,
+            device: Arc::new(device),
+            queue,
+            adapter_info,
+            wgpu_settings,
+            settings,
+            state: RenderState::new(surface),
         })
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.surface.resize(width, height)
+        self.state.surface.resize(width, height)
     }
 
     /// Requests a device
@@ -323,7 +367,7 @@ impl Renderer {
         &self.state
     }
     pub fn surface(&self) -> &Surface {
-        &self.surface
+        &self.state.surface
     }
 }
 

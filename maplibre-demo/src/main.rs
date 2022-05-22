@@ -1,8 +1,15 @@
+use maplibre::error::Error;
+use maplibre::io::scheduler::ScheduleMethod;
+use maplibre::io::source_client::HTTPClient;
+use maplibre::map_state::MapSchedule;
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
+use maplibre::render::settings::RendererSettings;
+use maplibre::window::{MapWindow, MapWindowConfig, Runnable, WindowSize};
 use maplibre::MapBuilder;
 use maplibre_winit::winit::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
+use wgpu::TextureFormat;
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
@@ -12,6 +19,54 @@ fn enable_tracing() {
     let subscriber = Registry::default().with(tracing_tracy::TracyLayer::new());
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+}
+pub struct HeadlessMapWindowConfig;
+
+impl MapWindowConfig for HeadlessMapWindowConfig {
+    type MapWindow = HeadlessMapWindow;
+
+    fn create(&self) -> Self::MapWindow {
+        Self::MapWindow {}
+    }
+}
+
+pub struct HeadlessMapWindow;
+
+impl MapWindow for HeadlessMapWindow {
+    type EventLoop = ();
+    type RawWindow = ();
+
+    fn size(&self) -> WindowSize {
+        WindowSize::new(1920, 1080).unwrap()
+    }
+
+    fn inner(&self) -> &Self::RawWindow {
+        &()
+    }
+}
+
+impl<MWC, SM, HC> Runnable<MWC, SM, HC> for HeadlessMapWindow
+where
+    MWC: MapWindowConfig<MapWindow = HeadlessMapWindow>,
+    SM: ScheduleMethod,
+    HC: HTTPClient,
+{
+    fn run(mut self, mut map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>) {
+        let arc = map_state.map_context.renderer.device.clone();
+        tokio::task::spawn_blocking(move || loop {
+            arc.poll(wgpu::Maintain::Wait);
+        });
+        for i in 0..3 {
+            match map_state.update_and_redraw() {
+                Ok(_) => {}
+                Err(Error::Render(e)) => {
+                    eprintln!("{}", e);
+                    if e.should_exit() {}
+                }
+                e => eprintln!("{:?}", e),
+            };
+        }
+    }
 }
 
 fn run_in_window() {
@@ -27,11 +82,28 @@ fn run_in_window() {
     })
 }
 
+fn run_headless() {
+    run_multithreaded(async {
+        MapBuilder::new()
+            .with_map_window_config(HeadlessMapWindowConfig)
+            .with_http_client(ReqwestHttpClient::new(None))
+            .with_schedule_method(TokioScheduleMethod::new())
+            .with_renderer_settings(RendererSettings {
+                texture_format: TextureFormat::Rgba8UnormSrgb,
+                ..RendererSettings::default()
+            })
+            .build()
+            .initialize_headless()
+            .await
+            .run()
+    })
+}
+
 fn main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    run_in_window()
+    run_headless()
 }

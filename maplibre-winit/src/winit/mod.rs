@@ -47,10 +47,6 @@ impl WinitMapWindowConfig {
     }
 }
 
-impl MapWindowConfig for WinitMapWindowConfig {
-    type MapWindow = WinitMapWindow;
-}
-
 pub struct WinitMapWindow {
     window: WinitWindow,
     event_loop: Option<WinitEventLoop>,

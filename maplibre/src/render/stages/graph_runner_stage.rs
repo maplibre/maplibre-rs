@@ -6,6 +6,7 @@
 // 3. "sub graph" modules should be nested beneath their parent graph module
 
 use crate::context::MapContext;
+use crate::render::copy_surface_to_buffer_node::CopySurfaceBufferNode;
 use crate::render::graph::{EmptyNode, RenderGraph};
 use crate::render::graph_runner::RenderGraphRunner;
 use crate::render::main_pass::{MainPassDriverNode, MainPassNode};
@@ -24,6 +25,7 @@ pub mod draw_graph {
     pub mod input {}
     pub mod node {
         pub const MAIN_PASS: &str = "main_pass";
+        pub const COPY: &str = "copy";
     }
 }
 
@@ -34,17 +36,20 @@ pub struct GraphRunnerStage {
 
 impl Default for GraphRunnerStage {
     fn default() -> Self {
-        let pass_node = MainPassNode::new();
         let mut graph = RenderGraph::default();
 
         let mut draw_graph = RenderGraph::default();
-        draw_graph.add_node(draw_graph::node::MAIN_PASS, pass_node);
+        draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
         let input_node_id = draw_graph.set_input(vec![]);
         draw_graph
             .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
             .unwrap();
-        graph.add_sub_graph(draw_graph::NAME, draw_graph);
+        draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
+        draw_graph
+            .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)
+            .unwrap();
 
+        graph.add_sub_graph(draw_graph::NAME, draw_graph);
         graph.add_node(node::MAIN_PASS_DEPENDENCIES, EmptyNode);
         graph.add_node(node::MAIN_PASS_DRIVER, MainPassDriverNode);
         graph
