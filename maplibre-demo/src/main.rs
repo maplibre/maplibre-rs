@@ -1,7 +1,7 @@
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::HTTPClient;
-use maplibre::map_state::MapSchedule;
+use maplibre::map_schedule::MapSchedule;
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
@@ -45,10 +45,6 @@ where
     HC: HTTPClient,
 {
     fn run(mut self, mut map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>) {
-        let arc = map_state.map_context.renderer.device.clone();
-        tokio::task::spawn_blocking(move || loop {
-            arc.poll(wgpu::Maintain::Wait);
-        });
         for i in 0..3 {
             match map_state.update_and_redraw() {
                 Ok(_) => {}

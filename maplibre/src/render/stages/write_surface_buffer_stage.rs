@@ -24,13 +24,15 @@ use tokio::task;
 use wgpu::{BufferAsyncError, BufferSlice};
 
 #[derive(Default)]
-pub struct WriteSurfaceBufferStage;
+pub struct WriteSurfaceBufferStage {
+    frame: u64,
+}
 
 impl Stage for WriteSurfaceBufferStage {
     fn run(
         &mut self,
         MapContext {
-            renderer: Renderer { state, .. },
+            renderer: Renderer { state, device, .. },
             ..
         }: &mut MapContext,
     ) {
@@ -39,11 +41,18 @@ impl Stage for WriteSurfaceBufferStage {
             Head::Headless(buffered_texture) => {
                 let buffered_texture = buffered_texture.clone();
 
+                let device = device.clone();
+                let current_frame = self.frame;
+
                 task::block_in_place(|| {
                     Handle::current().block_on(async {
-                        buffered_texture.create_png("test.png").await;
+                        buffered_texture
+                            .create_png(&device, format!("frame_{}.png", current_frame).as_str())
+                            .await;
                     })
                 });
+
+                self.frame += 1;
             }
         }
     }

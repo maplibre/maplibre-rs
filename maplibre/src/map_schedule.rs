@@ -14,22 +14,22 @@ use crate::schedule::{Schedule, Stage};
 use crate::stages::register_stages;
 use crate::style::Style;
 use crate::{
-    MapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod, WgpuSettings,
-    WindowSize,
+    HeadedMapWindow, MapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod,
+    WgpuSettings, WindowSize,
 };
 use std::marker::PhantomData;
 use std::mem;
 use std::sync::{mpsc, Arc, Mutex};
 
 pub struct PrematureMapContext {
-    pub view_state: ViewState,
-    pub style: Style,
+    view_state: ViewState,
+    style: Style,
 
-    pub tile_cache: TileCache,
-    pub scheduler: Box<dyn ScheduleMethod>,
+    tile_cache: TileCache,
+    scheduler: Box<dyn ScheduleMethod>,
 
-    pub message_receiver: mpsc::Receiver<TessellateMessage>,
-    pub shared_thread_state: SharedThreadState,
+    message_receiver: mpsc::Receiver<TessellateMessage>,
+    shared_thread_state: SharedThreadState,
 
     wgpu_settings: WgpuSettings,
     renderer_settings: RendererSettings,
@@ -183,13 +183,16 @@ where
         self.suspended = true;
     }
 
-    pub fn resume<MW>(&mut self, window: &MW)
+    pub fn resume(&mut self, window: &MWC::MapWindow)
     where
-        MW: MapWindow,
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
     {
         if let EventuallyMapContext::Full(map_context) = &mut self.map_context {
             let mut renderer = &mut map_context.renderer;
-            renderer.surface.recreate(window, &renderer.instance);
+            renderer
+                .state
+                .surface
+                .recreate::<MWC>(window, &renderer.instance);
             self.suspended = false;
         }
     }
@@ -201,24 +204,25 @@ where
         }
     }
 
-    pub async fn late_init(&mut self) -> bool {
+    pub async fn late_init(&mut self) -> bool
+    where
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
+    {
         match &self.map_context {
             EventuallyMapContext::Full(_) => false,
             EventuallyMapContext::Premature(PrematureMapContext {
-                view_state,
-                style,
-                tile_cache,
-                scheduler,
-                message_receiver,
-                shared_thread_state,
                 wgpu_settings,
                 renderer_settings,
+                ..
             }) => {
-                let window = MWC::MapWindow::create(&self.map_window_config);
-                let renderer =
-                    Renderer::initialize(&window, wgpu_settings.clone(), renderer_settings.clone())
-                        .await
-                        .unwrap();
+                let window = self.map_window_config.create();
+                let renderer = Renderer::initialize::<MWC>(
+                    &window,
+                    wgpu_settings.clone(),
+                    renderer_settings.clone(),
+                )
+                .await
+                .unwrap();
                 &self.map_context.make_full(renderer);
                 true
             }

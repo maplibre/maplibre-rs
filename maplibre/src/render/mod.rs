@@ -77,7 +77,7 @@ pub struct RenderState {
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
 
-    surface: Surface,
+    pub surface: Surface,
 
     mask_phase: RenderPhase<TileInView>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,

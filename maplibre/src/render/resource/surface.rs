@@ -65,6 +65,7 @@ pub struct BufferedTextureHead {
 impl BufferedTextureHead {
     pub async fn create_png<'a>(
         &self,
+        device: &wgpu::Device,
         png_output_path: &str,
         // device: &wgpu::Device,
     ) {
@@ -75,7 +76,7 @@ impl BufferedTextureHead {
         // Poll the device in a blocking manner so that our future resolves.
         // In an actual application, `device.poll(...)` should
         // be called in an event loop or on another thread.
-        //device.poll(wgpu::Maintain::Wait);
+        device.poll(wgpu::Maintain::Wait);
         if let Ok(()) = buffer_future.await {
             let padded_buffer = buffer_slice.get_mapped_range();
 
