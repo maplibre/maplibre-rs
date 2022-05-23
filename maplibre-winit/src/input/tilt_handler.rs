@@ -1,6 +1,6 @@
 use super::UpdateState;
 
-use maplibre::map_state::ViewState;
+use maplibre::context::ViewState;
 
 use cgmath::{Deg, Rad, Zero};
 

@@ -12,7 +12,7 @@ use crate::input::query_handler::QueryHandler;
 use crate::input::shift_handler::ShiftHandler;
 use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
-use maplibre::map_state::ViewState;
+use maplibre::context::ViewState;
 
 mod pan_handler;
 mod pinch_handler;

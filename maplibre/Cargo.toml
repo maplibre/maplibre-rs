@@ -11,12 +11,12 @@ readme = "../README.md"
 [features]
 web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web
-enable-tracing = [ "tracing-subscriber", "tracing-tracy", "tracy-client"]
+trace = [ "tracing-subscriber", "tracing-tracy", "tracy-client"]
 no-thread-safe-futures = []
 
 
 
-[target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android"))'.dependencies]
+[target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
 tokio = { version = "1.17", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
 env_logger = "0.9"
 reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "gzip"] }
@@ -67,6 +67,10 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 csscolorparser = { version = "0.5", features = ["serde", "cint"]}
 cint = "0.2"
+
+thiserror = "1"
+downcast-rs = "1.2"
+smallvec = "1.8"
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }

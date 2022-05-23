@@ -63,7 +63,7 @@ jobs:
           destination: docs
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-ios:
-    runs-on: macOS-11
+    runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/apple
@@ -74,3 +74,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/demo/windows
+  build-demo-macos:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/demo/macos
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
