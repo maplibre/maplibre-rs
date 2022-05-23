@@ -4,7 +4,7 @@ use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::MapBuilder;
 use maplibre_winit::winit::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
 
-#[cfg(feature = "enable-tracing")]
+#[cfg(feature = "trace")]
 fn enable_tracing() {
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::Registry;
@@ -30,7 +30,7 @@ fn run_in_window() {
 fn main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
-    #[cfg(feature = "enable-tracing")]
+    #[cfg(feature = "trace")]
     enable_tracing();
 
     run_in_window()

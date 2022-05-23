@@ -1,7 +1,7 @@
 use super::UpdateState;
 
+use maplibre::context::ViewState;
 use maplibre::coords::Zoom;
-use maplibre::map_state::ViewState;
 
 use cgmath::{Vector2, Vector3};
 
