@@ -94,14 +94,14 @@ impl RenderPipeline for TilePipeline {
                 },
                 front_face: wgpu::FrontFace::Ccw,
                 strip_index_format: None,
-                cull_mode: None, // TODO Maps look the same from he bottom and above
+                cull_mode: None, // Maps look the same from he bottom and above -> No culling needed
                 conservative: false,
                 unclipped_depth: false,
             },
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: wgpu::TextureFormat::Depth24PlusStencil8,
                 depth_write_enabled: !self.update_stencil,
-                depth_compare: wgpu::CompareFunction::Greater, // FIXME
+                depth_compare: wgpu::CompareFunction::Greater,
                 stencil: wgpu::StencilState {
                     front: stencil_state,
                     back: stencil_state,
