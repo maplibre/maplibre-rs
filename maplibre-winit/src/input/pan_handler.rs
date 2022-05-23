@@ -1,6 +1,6 @@
 use super::UpdateState;
 
-use maplibre::map_state::ViewState;
+use maplibre::context::ViewState;
 use maplibre::render::camera::Camera;
 
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
@@ -95,10 +95,6 @@ impl PanHandler {
     pub fn process_mouse_key_press(&mut self, key: &MouseButton, state: &ElementState) -> bool {
         if *key != MouseButton::Left {
             return false;
-        }
-
-        if !self.is_panning {
-            // starting to pan
         }
 
         if *state == ElementState::Pressed {

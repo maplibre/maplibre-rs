@@ -138,9 +138,6 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
     const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
     await init(wasmPath, memory)
 
-    // TODO: Inline is not yet working
-    // let worker = new Worker(new URL('blob-url:./test_worker.js', import.meta.url), {type: 'module'});
-
     const schedulerPtr = create_pool_scheduler(() => {
         return workerPath ? new Worker(workerPath, {
             type: 'module'

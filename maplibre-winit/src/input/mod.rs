@@ -12,7 +12,7 @@ use crate::input::query_handler::QueryHandler;
 use crate::input::shift_handler::ShiftHandler;
 use crate::input::tilt_handler::TiltHandler;
 use crate::input::zoom_handler::ZoomHandler;
-use maplibre::map_state::ViewState;
+use maplibre::context::ViewState;
 
 mod pan_handler;
 mod pinch_handler;
@@ -56,6 +56,8 @@ impl InputController {
         false
     }
 
+    /// Process the given winit `[winit::event::WindowEvent]`.
+    /// Returns true if the event has been processed and false otherwise.
     pub fn window_input(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {

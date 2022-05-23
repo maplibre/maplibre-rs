@@ -1,3 +1,5 @@
+//! Shared thread state.
+
 use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
 use crate::error::Error;
 use crate::io::geometry_index::{GeometryIndex, IndexProcessor, IndexedGeometry, TileIndex};
@@ -14,6 +16,7 @@ use geozero::GeozeroDatasource;
 use prost::Message;
 use std::sync::{mpsc, Arc, Mutex};
 
+/// Stores and provides access to the thread safe data shared between the schedulers.
 #[derive(Clone)]
 pub struct SharedThreadState {
     pub tile_request_state: Arc<Mutex<TileRequestState>>,
