@@ -53,8 +53,8 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    map_state: MapSchedule<W::MapWindowConfig, SM, HC>,
-    window: W,
+    map_state: MapSchedule<MWC, SM, HC>,
+    window: MWC::MapWindow,
 }
 
 impl<MWC, SM, HC> Map<MWC, SM, HC>
@@ -115,14 +115,18 @@ where
 {
     /// Initializes the whole rendering pipeline for the given configuration.
     /// Returns the initialized map, ready to be run.
-    pub async fn initialize(self) -> Map<MWC::MapWindow, SM, HC> {
-        let window = MWC::MapWindow::create(&self.map_window_config);
+    pub async fn initialize(self) -> Map<MWC, SM, HC>
+    where
+        MWC: MapWindowConfig,
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
+    {
+        let window = self.map_window_config.create();
         let window_size = window.size();
 
         #[cfg(target_os = "android")]
         let renderer = None;
         #[cfg(not(target_os = "android"))]
-        let renderer = Renderer::initialize(
+        let renderer = Renderer::initialize::<MWC>(
             &window,
             self.wgpu_settings.clone(),
             self.renderer_settings.clone(),
@@ -146,22 +150,25 @@ where
 
     pub async fn initialize_headless(self) -> Map<MWC, SM, HC> {
         let window = self.map_window_config.create();
+        let window_size = window.size();
 
         let renderer = Renderer::initialize_headless::<MWC>(
             &window,
-            self.wgpu_settings,
-            self.renderer_settings,
+            self.wgpu_settings.clone(),
+            self.renderer_settings.clone(),
         )
         .await
-        .unwrap();
+        .ok();
         Map {
             map_state: MapSchedule::new(
-                window.size(),
                 self.map_window_config,
-                Some(renderer),
+                window_size,
+                renderer,
                 self.scheduler,
                 self.http_client,
                 self.style,
+                self.wgpu_settings,
+                self.renderer_settings,
             ),
             window,
         }
