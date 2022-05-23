@@ -1,5 +1,22 @@
 //! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
+//!
+//! The render in this module is largely based on the
+//! [bevy_render](https://github.com/bevyengine/bevy/tree/aced6a/crates/bevy_render)
+//! crate with commit `aced6a`.
+//! It is dual-licensed under MIT and Apache:
+//!
+//! ```text
+//! Bevy is dual-licensed under either
+//!
+//! * MIT License (docs/LICENSE-MIT or http://opensource.org/licenses/MIT)
+//! * Apache License, Version 2.0 (docs/LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0)
+//!
+//! at your option.
+//! ```
+//!
+//! We appreciate the design and implementation work which as gone into it.
+//!
 
 use crate::render::render_phase::RenderPhase;
 use crate::render::resource::{BufferPool, Globals, IndexEntry};
