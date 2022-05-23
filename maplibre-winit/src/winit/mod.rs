@@ -2,11 +2,12 @@ use instant::Instant;
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::HTTPClient;
+use std::borrow::BorrowMut;
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::ControlFlow;
 
 use crate::input::{InputController, UpdateState};
-use maplibre::map_state::MapState;
+use maplibre::map_schedule::MapSchedule;
 use maplibre::window::{MapWindow, MapWindowConfig, Runnable};
 use winit::event::Event;
 
@@ -74,7 +75,7 @@ where
     SM: ScheduleMethod,
     HC: HTTPClient,
 {
-    fn run(mut self, mut map_state: MapState<MWC, SM, HC>, max_frames: Option<u64>) {
+    fn run(mut self, mut map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>) {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
 
@@ -90,7 +91,7 @@ where
 
                     let state = task::block_in_place(|| {
                         Handle::current().block_on(async {
-                            map_state.reinitialize().await;
+                            map_state.late_init().await;
                         })
                     });
                     return;
@@ -135,7 +136,9 @@ where
                     let dt = now - last_render_time;
                     last_render_time = now;
 
-                    input_controller.update_state(map_state.view_state_mut(), dt);
+                    {
+                        input_controller.update_state(map_state.view_state_mut(), dt);
+                    }
 
                     match map_state.update_and_redraw() {
                         Ok(_) => {}
@@ -161,10 +164,7 @@ where
                     map_state.suspend();
                 }
                 Event::Resumed => {
-                    map_state.recreate_surface(&self);
-                    let size = self.size();
-                    map_state.resize(size.width(), size.height());// FIXME: Resumed is also called when the app launches for the first time. Instead of first using a "fake" inner_size() in State::new we should initialize with a proper size from the beginning
-                    map_state.resume();
+                    map_state.resume(&self);
                 }
                 Event::MainEventsCleared => {
                     // RedrawRequested will only trigger once, unless we manually

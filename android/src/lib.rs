@@ -5,6 +5,7 @@ use log::Level;
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
+use maplibre::render::settings::{Backends, WgpuSettings};
 use maplibre::MapBuilder;
 use maplibre_winit::winit::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
 use ndk::native_window::NativeWindow;
@@ -28,6 +29,10 @@ pub fn android_main() {
             .with_map_window_config(WinitMapWindowConfig::new("maplibre android".to_string()))
             .with_http_client(ReqwestHttpClient::new(None))
             .with_schedule_method(TokioScheduleMethod::new())
+            .with_wgpu_settings(WgpuSettings {
+                backends: Some(Backends::VULKAN),
+                ..WgpuSettings::default()
+            })
             .build()
             .initialize()
             .await

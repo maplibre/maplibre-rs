@@ -1,3 +1,5 @@
+//! Main camera
+
 use cgmath::prelude::*;
 use cgmath::{AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
@@ -5,7 +7,7 @@ use crate::util::math::{bounds_from_points, Aabb2, Aabb3, Plane};
 use crate::util::SignificantlyDifferent;
 
 #[rustfmt::skip]
-pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
+pub const OPENGL_TO_WGPU_MATRIX: Matrix4<f64> = Matrix4::new(
     1.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
     0.0, 0.0, 0.5, 0.0,
@@ -13,7 +15,7 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
 );
 
 #[rustfmt::skip]
-pub const FLIP_Y: cgmath::Matrix4<f64> = cgmath::Matrix4::new(
+pub const FLIP_Y: Matrix4<f64> = Matrix4::new(
     1.0, 0.0, 0.0, 0.0, 
     0.0, -1.0, 0.0, 0.0, 
     0.0, 0.0, 1.0, 0.0, 
@@ -65,7 +67,7 @@ impl ModelViewProjection {
 
 #[derive(Debug, Clone)]
 pub struct Camera {
-    pub position: cgmath::Point3<f64>,
+    pub position: Point3<f64>,
     pub yaw: cgmath::Rad<f64>,
     pub pitch: cgmath::Rad<f64>,
 
@@ -84,11 +86,7 @@ impl SignificantlyDifferent for Camera {
 }
 
 impl Camera {
-    pub fn new<
-        V: Into<cgmath::Point3<f64>>,
-        Y: Into<cgmath::Rad<f64>>,
-        P: Into<cgmath::Rad<f64>>,
-    >(
+    pub fn new<V: Into<Point3<f64>>, Y: Into<cgmath::Rad<f64>>, P: Into<cgmath::Rad<f64>>>(
         position: V,
         yaw: Y,
         pitch: P,
@@ -109,11 +107,11 @@ impl Camera {
         self.height = height as f64;
     }
 
-    fn calc_matrix(&self) -> cgmath::Matrix4<f64> {
-        cgmath::Matrix4::look_to_rh(
+    fn calc_matrix(&self) -> Matrix4<f64> {
+        Matrix4::look_to_rh(
             self.position,
-            cgmath::Vector3::new(self.yaw.cos(), self.pitch.sin(), self.yaw.sin()).normalize(),
-            cgmath::Vector3::unit_y(),
+            Vector3::new(self.yaw.cos(), self.pitch.sin(), self.yaw.sin()).normalize(),
+            Vector3::unit_y(),
         )
     }
 
@@ -354,7 +352,7 @@ pub struct Perspective {
     znear: f64,
     zfar: f64,
 
-    current_projection: cgmath::Matrix4<f64>,
+    current_projection: Matrix4<f64>,
 }
 
 impl Perspective {
@@ -383,12 +381,7 @@ impl Perspective {
         );
     }
 
-    fn calc_matrix(
-        aspect: f64,
-        fovy: cgmath::Rad<f64>,
-        znear: f64,
-        zfar: f64,
-    ) -> cgmath::Matrix4<f64> {
+    fn calc_matrix(aspect: f64, fovy: cgmath::Rad<f64>, znear: f64, zfar: f64) -> Matrix4<f64> {
         OPENGL_TO_WGPU_MATRIX * cgmath::perspective(fovy, aspect, znear, zfar)
     }
 }
