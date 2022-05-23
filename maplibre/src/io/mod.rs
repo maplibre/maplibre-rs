@@ -2,9 +2,9 @@
 
 use crate::coords::WorldTileCoords;
 
-use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 
+use crate::render::ShaderVertex;
 use geozero::mvt::tile;
 use std::collections::HashSet;
 use std::fmt;
