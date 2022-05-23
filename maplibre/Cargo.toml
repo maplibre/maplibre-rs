@@ -13,7 +13,7 @@ web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web
 trace = [ "tracing-subscriber", "tracing-tracy", "tracy-client"]
 no-thread-safe-futures = []
-
+embed-static-tiles = ["maplibre-build-tools/sqlite"]
 
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]

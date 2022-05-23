@@ -6,7 +6,6 @@ use std::path::Path;
 use std::{fs, io};
 
 use flate2::bufread::GzDecoder;
-#[cfg(feature = "sqlite")]
 use rusqlite::{params, Connection, Row};
 
 #[derive(Debug)]
@@ -26,14 +25,12 @@ impl From<io::Error> for Error {
     }
 }
 
-#[cfg(feature = "sqlite")]
 impl From<rusqlite::Error> for Error {
     fn from(error: rusqlite::Error) -> Self {
         Error::IO(error.to_string())
     }
 }
 
-#[cfg(feature = "sqlite")]
 pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(
     input_mbtiles: P,
     output_dir: R,
@@ -86,12 +83,10 @@ pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(
     Ok(())
 }
 
-#[allow(dead_code)]
 fn flip_vertical_axis(zoom: u8, value: u32) -> u32 {
     2u32.pow(zoom as u32) - 1 - value
 }
 
-#[cfg(feature = "sqlite")]
 fn extract_tile(tile: &Row, output_path: &Path) -> Result<(), Error> {
     let (z, x, mut y): (u8, u32, u32) = (
         tile.get::<_, u8>(0)?,
@@ -115,7 +110,6 @@ fn extract_tile(tile: &Row, output_path: &Path) -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(feature = "sqlite")]
 fn extract_metadata(connection: &Connection, output_path: &Path) -> Result<(), Error> {
     // language=SQL
     let mut prepared_statement = connection.prepare("SELECT name, value FROM metadata;")?;
