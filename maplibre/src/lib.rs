@@ -44,7 +44,6 @@ pub mod benchmarking;
 // Internal modules
 pub(crate) mod stages;
 pub(crate) mod tessellation;
-pub(crate) mod tilejson;
 pub(crate) mod util;
 
 /// Map's configuration and execution.
