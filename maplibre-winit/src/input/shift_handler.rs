@@ -1,7 +1,7 @@
 use super::UpdateState;
 
 use cgmath::{Vector3, Zero};
-use maplibre::map_state::ViewState;
+use maplibre::context::ViewState;
 use std::time::Duration;
 
 pub struct ShiftHandler {
