@@ -1,6 +1,6 @@
 //! Utilities for the window system.
 
-use crate::{HTTPClient, MapSchedule, ScheduleMethod};
+use crate::{HttpClient, MapSchedule, ScheduleMethod};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 
 /// Window with a [carte::window::WindowSize].
@@ -25,7 +25,7 @@ pub trait Runnable<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     fn run(self, map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>);
 }

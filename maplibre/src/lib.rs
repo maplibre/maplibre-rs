@@ -17,7 +17,7 @@
 //! ```
 
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
-use crate::io::source_client::HTTPClient;
+use crate::io::source_client::HttpClient;
 use crate::map_schedule::MapSchedule;
 use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::{RenderState, Renderer};
@@ -96,7 +96,7 @@ pub struct UninitializedMap<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     scheduler: Scheduler<SM>,
     http_client: HC,
@@ -111,7 +111,7 @@ impl<MWC, SM, HC> UninitializedMap<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     /// Initializes the whole rendering pipeline for the given configuration.
     /// Returns the initialized map, ready to be run.
