@@ -1,7 +1,7 @@
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
-use maplibre::io::source_client::HTTPClient;
-use maplibre::map_schedule::MapSchedule;
+use maplibre::io::source_client::{HttpClient, HttpSourceClient};
+use maplibre::map_schedule::{EventuallyMapContext, MapSchedule};
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;

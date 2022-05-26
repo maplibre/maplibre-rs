@@ -1,7 +1,7 @@
 use instant::Instant;
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
-use maplibre::io::source_client::HTTPClient;
+use maplibre::io::source_client::HttpClient;
 use std::borrow::BorrowMut;
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::ControlFlow;
@@ -69,7 +69,7 @@ impl<MWC, SM, HC> Runnable<MWC, SM, HC> for WinitMapWindow
 where
     MWC: MapWindowConfig<MapWindow = WinitMapWindow>,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     fn run(mut self, mut map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>) {
         let mut last_render_time = Instant::now();

@@ -5,7 +5,7 @@ use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
 use crate::io::scheduler::Scheduler;
 use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::source_client::{HTTPClient, HttpSourceClient, SourceClient};
+use crate::io::source_client::{HttpClient, HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::TessellateMessage;
@@ -80,7 +80,7 @@ pub struct MapSchedule<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     map_window_config: MWC,
 
@@ -98,7 +98,7 @@ impl<MWC, SM, HC> MapSchedule<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     pub fn new(
         map_window_config: MWC,
