@@ -22,7 +22,7 @@ use crate::map_schedule::MapSchedule;
 use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::{RenderState, Renderer};
 use crate::style::Style;
-use crate::window::{HeadedMapWindow, MapWindow, MapWindowConfig, Runnable, WindowSize};
+use crate::window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
 
 pub mod context;
 pub mod coords;
@@ -51,30 +51,35 @@ pub struct Map<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
-    map_state: MapSchedule<MWC, SM, HC>,
+    map_schedule: MapSchedule<MWC, SM, HC>,
     window: MWC::MapWindow,
 }
 
 impl<MWC, SM, HC> Map<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
-    MWC::MapWindow: Runnable<MWC, SM, HC>,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
-    /// Starts the [`crate::map_state::MapState`] Runnable with the configured event loop.
-    pub fn run(self) {
+    /// Starts the [`crate::map_schedule::MapState`] Runnable with the configured event loop.
+    pub fn run(self)
+    where
+        MWC::MapWindow: EventLoop<MWC, SM, HC>,
+    {
         self.run_with_optionally_max_frames(None);
     }
 
-    /// Starts the [`crate::map_state::MapState`] Runnable with the configured event loop.
+    /// Starts the [`crate::map_schedule::MapState`] Runnable with the configured event loop.
     ///
     /// # Arguments
     ///
     /// * `max_frames` - Maximum number of frames per second.
-    pub fn run_with_max_frames(self, max_frames: u64) {
+    pub fn run_with_max_frames(self, max_frames: u64)
+    where
+        MWC::MapWindow: EventLoop<MWC, SM, HC>,
+    {
         self.run_with_optionally_max_frames(Some(max_frames));
     }
 
@@ -83,15 +88,23 @@ where
     /// # Arguments
     ///
     /// * `max_frames` - Optional maximum number of frames per second.
-    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
-        self.window.run(self.map_state, max_frames);
+    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>)
+    where
+        MWC::MapWindow: EventLoop<MWC, SM, HC>,
+    {
+        self.window.run(self.map_schedule, max_frames);
+    }
+
+    pub fn map_schedule(&self) -> &MapSchedule<MWC, SM, HC> {
+        &self.map_schedule
+    }
+
+    pub fn map_schedule_mut(&mut self) -> &mut MapSchedule<MWC, SM, HC> {
+        &mut self.map_schedule
     }
 }
 
 /// Stores the map configuration before the map's state has been fully initialized.
-///
-/// FIXME: We could maybe remove this class, and store the render_state in an Optional in [`crate::map_state::MapState`].
-/// FIXME: I think we can find a workaround so that this class doesn't exist.
 pub struct UninitializedMap<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
@@ -134,7 +147,7 @@ where
         .await
         .ok();
         Map {
-            map_state: MapSchedule::new(
+            map_schedule: MapSchedule::new(
                 self.map_window_config,
                 window_size,
                 renderer,
@@ -160,7 +173,7 @@ where
         .await
         .ok();
         Map {
-            map_state: MapSchedule::new(
+            map_schedule: MapSchedule::new(
                 self.map_window_config,
                 window_size,
                 renderer,
@@ -193,7 +206,7 @@ impl<MWC, SM, HC> MapBuilder<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     pub fn new() -> Self {
         Self {

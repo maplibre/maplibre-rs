@@ -1,3 +1,4 @@
+use maplibre::coords::WorldTileCoords;
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::{HttpClient, HttpSourceClient};
@@ -6,7 +7,7 @@ use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::render::settings::RendererSettings;
-use maplibre::window::{MapWindow, MapWindowConfig, Runnable, WindowSize};
+use maplibre::window::{EventLoop, MapWindow, MapWindowConfig, WindowSize};
 use maplibre::MapBuilder;
 use maplibre_winit::winit::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
 use wgpu::TextureFormat;
@@ -38,26 +39,6 @@ impl MapWindow for HeadlessMapWindow {
     }
 }
 
-impl<MWC, SM, HC> Runnable<MWC, SM, HC> for HeadlessMapWindow
-where
-    MWC: MapWindowConfig<MapWindow = HeadlessMapWindow>,
-    SM: ScheduleMethod,
-    HC: HTTPClient,
-{
-    fn run(mut self, mut map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>) {
-        for i in 0..3 {
-            match map_state.update_and_redraw() {
-                Ok(_) => {}
-                Err(Error::Render(e)) => {
-                    eprintln!("{}", e);
-                    if e.should_exit() {}
-                }
-                e => eprintln!("{:?}", e),
-            };
-        }
-    }
-}
-
 fn run_in_window() {
     run_multithreaded(async {
         MapBuilder::new()
@@ -73,7 +54,7 @@ fn run_in_window() {
 
 fn run_headless() {
     run_multithreaded(async {
-        MapBuilder::new()
+        let mut map = MapBuilder::new()
             .with_map_window_config(HeadlessMapWindowConfig)
             .with_http_client(ReqwestHttpClient::new(None))
             .with_schedule_method(TokioScheduleMethod::new())
@@ -83,8 +64,37 @@ fn run_headless() {
             })
             .build()
             .initialize_headless()
-            .await
-            .run()
+            .await;
+
+        let http_source_client: HttpSourceClient<HC> =
+            HttpSourceClient::new(ReqwestHttpClient::new(None));
+
+        let coords = WorldTileCoords::from((0, 0, 0));
+        let request_id = 0;
+
+        let x = match http_source_client.fetch(&coords).await {
+            Ok(data) => state.process_tile(0, data.into_boxed_slice()).unwrap(),
+            Err(e) => {
+                log::error!("{:?}", &e);
+
+                state.tile_unavailable(&coords, request_id).unwrap()
+            }
+        };
+
+        match map.map_schedule_mut().map_context {
+            EventuallyMapContext::Full(a) => a.tile_cache.put_tessellated_layer(),
+            EventuallyMapContext::Premature(_) => {}
+            EventuallyMapContext::_Uninitialized => {}
+        }
+
+        match map.map_schedule_mut().update_and_redraw() {
+            Ok(_) => {}
+            Err(Error::Render(e)) => {
+                eprintln!("{}", e);
+                if e.should_exit() {}
+            }
+            e => eprintln!("{:?}", e),
+        };
     })
 }
 
