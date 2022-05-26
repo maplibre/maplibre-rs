@@ -9,7 +9,6 @@ pub trait MapWindow {
 }
 
 pub trait HeadedMapWindow: MapWindow {
-    type EventLoop;
     type RawWindow: HasRawWindowHandle;
 
     fn inner(&self) -> &Self::RawWindow;
@@ -21,13 +20,13 @@ pub trait MapWindowConfig: 'static {
     fn create(&self) -> Self::MapWindow;
 }
 
-pub trait Runnable<MWC, SM, HC>
+pub trait EventLoop<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
     HC: HttpClient,
 {
-    fn run(self, map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>);
+    fn run(self, map_schedule: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>);
 }
 
 /// Window size with a width and an height in pixels.

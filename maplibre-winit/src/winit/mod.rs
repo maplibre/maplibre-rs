@@ -8,7 +8,7 @@ use winit::event_loop::ControlFlow;
 
 use crate::input::{InputController, UpdateState};
 use maplibre::map_schedule::MapSchedule;
-use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, Runnable};
+use maplibre::window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig};
 use winit::event::Event;
 
 #[cfg(target_arch = "wasm32")]
@@ -65,13 +65,13 @@ impl WinitMapWindow {
 ///* Input (Mouse/Keyboard)
 ///* Platform Events like suspend/resume
 ///* Render a new frame
-impl<MWC, SM, HC> Runnable<MWC, SM, HC> for WinitMapWindow
+impl<MWC, SM, HC> EventLoop<MWC, SM, HC> for WinitMapWindow
 where
     MWC: MapWindowConfig<MapWindow = WinitMapWindow>,
     SM: ScheduleMethod,
     HC: HttpClient,
 {
-    fn run(mut self, mut map_state: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>) {
+    fn run(mut self, mut map_schedule: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>) {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
 
@@ -81,13 +81,13 @@ where
             .unwrap()
             .run(move |event, _, control_flow| {
                 #[cfg(target_os = "android")]
-                if !map_state.is_initialized() && event == Event::Resumed {
+                if !map_schedule.is_initialized() && event == Event::Resumed {
                     use tokio::runtime::Handle;
                     use tokio::task;
 
                     let state = task::block_in_place(|| {
                         Handle::current().block_on(async {
-                            map_state.late_init().await;
+                            map_schedule.late_init().await;
                         })
                     });
                     return;
@@ -118,10 +118,10 @@ where
                                 ..
                             } => *control_flow = ControlFlow::Exit,
                             WindowEvent::Resized(physical_size) => {
-                                map_state.resize(physical_size.width, physical_size.height);
+                                map_schedule.resize(physical_size.width, physical_size.height);
                             }
                             WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                                map_state.resize(new_inner_size.width, new_inner_size.height);
+                                map_schedule.resize(new_inner_size.width, new_inner_size.height);
                             }
                             _ => {}
                         }
@@ -133,10 +133,10 @@ where
                     last_render_time = now;
 
                     {
-                        input_controller.update_state(map_state.view_state_mut(), dt);
+                        input_controller.update_state(map_schedule.view_state_mut(), dt);
                     }
 
-                    match map_state.update_and_redraw() {
+                    match map_schedule.update_and_redraw() {
                         Ok(_) => {}
                         Err(Error::Render(e)) => {
                             eprintln!("{}", e);
@@ -157,10 +157,10 @@ where
                     }
                 }
                 Event::Suspended => {
-                    map_state.suspend();
+                    map_schedule.suspend();
                 }
                 Event::Resumed => {
-                    map_state.resume(&self);
+                    map_schedule.resume(&self);
                 }
                 Event::MainEventsCleared => {
                     // RedrawRequested will only trigger once, unless we manually

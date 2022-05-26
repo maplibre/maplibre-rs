@@ -28,7 +28,6 @@ impl MapWindow for WinitMapWindow {
     }
 }
 impl HeadedMapWindow for WinitMapWindow {
-    type EventLoop = WinitEventLoop;
     type RawWindow = WinitWindow;
 
     fn inner(&self) -> &Self::RawWindow {
