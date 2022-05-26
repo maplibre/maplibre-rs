@@ -63,8 +63,4 @@ pub struct MapContext {
 
     pub tile_cache: TileCache,
     pub renderer: Renderer,
-    pub scheduler: Box<dyn ScheduleMethod>,
-
-    pub message_receiver: mpsc::Receiver<TessellateMessage>,
-    pub shared_thread_state: SharedThreadState,
 }

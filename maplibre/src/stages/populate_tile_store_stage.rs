@@ -1,23 +1,29 @@
 //! Receives data from async threads and populates the [`crate::io::tile_cache::TileCache`].
 
 use crate::context::MapContext;
+use crate::io::shared_thread_state::SharedThreadState;
 use crate::io::{TessellateMessage, TileTessellateMessage};
 use crate::schedule::Stage;
+use crate::stages::MessageReceiver;
+use std::sync::mpsc;
 
-#[derive(Default)]
-pub struct PopulateTileStore {}
+pub struct PopulateTileStore {
+    shared_thread_state: SharedThreadState,
+    message_receiver: MessageReceiver,
+}
 
-impl Stage for PopulateTileStore {
-    fn run(
-        &mut self,
-        MapContext {
-            tile_cache,
+impl PopulateTileStore {
+    pub fn new(shared_thread_state: SharedThreadState, message_receiver: MessageReceiver) -> Self {
+        Self {
             shared_thread_state,
             message_receiver,
-            ..
-        }: &mut MapContext,
-    ) {
-        if let Ok(result) = message_receiver.try_recv() {
+        }
+    }
+}
+
+impl Stage for PopulateTileStore {
+    fn run(&mut self, MapContext { tile_cache, .. }: &mut MapContext) {
+        if let Ok(result) = self.message_receiver.try_recv() {
             match result {
                 TessellateMessage::Layer(layer_result) => {
                     tracing::trace!(
@@ -29,7 +35,7 @@ impl Stage for PopulateTileStore {
                 }
                 TessellateMessage::Tile(TileTessellateMessage { request_id, coords }) => loop {
                     if let Ok(mut tile_request_state) =
-                        shared_thread_state.tile_request_state.try_lock()
+                        self.shared_thread_state.tile_request_state.try_lock()
                     {
                         tile_request_state.finish_tile_request(request_id);
                         tracing::trace!("Tile at {} finished loading", coords);

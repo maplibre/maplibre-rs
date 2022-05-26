@@ -26,10 +26,6 @@ pub struct PrematureMapContext {
     style: Style,
 
     tile_cache: TileCache,
-    scheduler: Box<dyn ScheduleMethod>,
-
-    message_receiver: mpsc::Receiver<TessellateMessage>,
-    shared_thread_state: SharedThreadState,
 
     wgpu_settings: WgpuSettings,
     renderer_settings: RendererSettings,
@@ -38,12 +34,12 @@ pub struct PrematureMapContext {
 pub enum EventuallyMapContext {
     Full(MapContext),
     Premature(PrematureMapContext),
-    Empty,
+    _Uninitialized,
 }
 
 impl EventuallyMapContext {
     pub fn make_full(&mut self, renderer: Renderer) {
-        let context = mem::replace(self, EventuallyMapContext::Empty);
+        let context = mem::replace(self, EventuallyMapContext::_Uninitialized);
 
         match context {
             EventuallyMapContext::Full(_) => {}
@@ -51,11 +47,7 @@ impl EventuallyMapContext {
                 view_state,
                 style,
                 tile_cache,
-                scheduler,
-                message_receiver,
-                shared_thread_state,
-                wgpu_settings,
-                renderer_settings,
+                ..
             }) => {
                 mem::replace(
                     self,
@@ -64,13 +56,10 @@ impl EventuallyMapContext {
                         style,
                         tile_cache,
                         renderer,
-                        scheduler,
-                        message_receiver,
-                        shared_thread_state,
                     }),
                 );
             }
-            EventuallyMapContext::Empty => {}
+            EventuallyMapContext::_Uninitialized => {}
         }
     }
 }
@@ -84,7 +73,7 @@ where
 {
     map_window_config: MWC,
 
-    map_context: EventuallyMapContext,
+    pub map_context: EventuallyMapContext,
 
     schedule: Schedule,
 
@@ -112,20 +101,13 @@ where
     ) -> Self {
         let view_state = ViewState::new(&window_size);
         let tile_cache = TileCache::new();
-
         let mut schedule = Schedule::default();
-        let client: SourceClient<HC> = SourceClient::Http(HttpSourceClient::new(http_client));
-        register_stages(&mut schedule, client);
+
+        let http_source_client: HttpSourceClient<HC> = HttpSourceClient::new(http_client);
+        //register_stages(&mut schedule, http_source_client, Box::new(scheduler));
+
         register_render_stages(&mut schedule);
 
-        let (message_sender, message_receiver) = mpsc::channel();
-
-        let scheduler = Box::new(scheduler.take());
-        let shared_thread_state = SharedThreadState {
-            tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
-            message_sender,
-            geometry_index: Arc::new(Mutex::new(GeometryIndex::new())),
-        };
         Self {
             map_window_config,
             map_context: match renderer {
@@ -133,10 +115,7 @@ where
                     view_state,
                     style,
                     tile_cache,
-                    scheduler,
-                    shared_thread_state,
                     wgpu_settings,
-                    message_receiver,
                     renderer_settings,
                 }),
                 Some(renderer) => EventuallyMapContext::Full(MapContext {
@@ -144,9 +123,6 @@ where
                     style,
                     tile_cache,
                     renderer,
-                    scheduler,
-                    shared_thread_state,
-                    message_receiver,
                 }),
             },
             schedule,
@@ -226,7 +202,7 @@ where
                 &self.map_context.make_full(renderer);
                 true
             }
-            EventuallyMapContext::Empty => false,
+            EventuallyMapContext::_Uninitialized => false,
         }
     }
 
