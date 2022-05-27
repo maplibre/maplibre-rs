@@ -373,7 +373,8 @@ impl Renderer {
 mod tests {
     use crate::render::graph::RenderGraph;
     use crate::render::graph_runner::RenderGraphRunner;
-    use crate::render::RenderState;
+    use crate::render::resource::Surface;
+    use crate::RenderState;
 
     #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]

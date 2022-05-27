@@ -66,13 +66,13 @@ fn run_headless() {
             .initialize_headless()
             .await;
 
-        let http_source_client: HttpSourceClient<HC> =
+        let http_source_client: HttpSourceClient<ReqwestHttpClient> =
             HttpSourceClient::new(ReqwestHttpClient::new(None));
 
         let coords = WorldTileCoords::from((0, 0, 0));
         let request_id = 0;
 
-        let x = match http_source_client.fetch(&coords).await {
+        /*        let x = match http_source_client.fetch(&coords).await {
             Ok(data) => state.process_tile(0, data.into_boxed_slice()).unwrap(),
             Err(e) => {
                 log::error!("{:?}", &e);
@@ -85,7 +85,7 @@ fn run_headless() {
             EventuallyMapContext::Full(a) => a.tile_cache.put_tessellated_layer(),
             EventuallyMapContext::Premature(_) => {}
             EventuallyMapContext::_Uninitialized => {}
-        }
+        }*/
 
         match map.map_schedule_mut().update_and_redraw() {
             Ok(_) => {}

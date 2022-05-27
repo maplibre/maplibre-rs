@@ -44,7 +44,7 @@ pub struct BufferPool<Q, B, V, I, TM, FM> {
 }
 
 #[derive(Debug)]
-enum BackingBufferType {
+pub enum BackingBufferType {
     Vertices,
     Indices,
     Metadata,
@@ -581,9 +581,8 @@ mod tests {
     use crate::style::layer::StyleLayer;
     use lyon::tessellation::VertexBuffers;
 
-    use crate::render::resource::buffer_pool::{
-        BackingBufferDescriptor, BackingBufferType, BufferPool, Queue,
-    };
+    use crate::render::resource::buffer_pool::BackingBufferType;
+    use crate::render::resource::{BackingBufferDescriptor, BufferPool, Queue};
 
     #[derive(Debug)]
     struct TestBuffer {
