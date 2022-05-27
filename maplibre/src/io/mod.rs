@@ -14,6 +14,7 @@ pub mod source_client;
 pub mod static_tile_fetcher;
 
 pub mod geometry_index;
+pub mod pipeline;
 pub mod shared_thread_state;
 pub mod tile_cache;
 pub mod tile_request_state;
