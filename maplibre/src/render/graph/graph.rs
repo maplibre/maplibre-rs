@@ -575,9 +575,10 @@ mod tests {
         Edge, Node, NodeId, NodeRunError, RenderGraph, RenderGraphContext, RenderGraphError,
         SlotInfo,
     };
-    use crate::render::graph::SlotType;
-    use crate::render::renderer::RenderContext;
-    use crate::render::World;
+    use crate::render::{
+        graph::{RenderContext, SlotType},
+        RenderState,
+    };
     use std::collections::HashSet;
 
     #[derive(Debug)]
@@ -612,7 +613,7 @@ mod tests {
             &self,
             _: &mut RenderGraphContext,
             _: &mut RenderContext,
-            _: &World,
+            _: &RenderState,
         ) -> Result<(), NodeRunError> {
             Ok(())
         }
@@ -685,7 +686,7 @@ mod tests {
                 &self,
                 _: &mut RenderGraphContext,
                 _: &mut RenderContext,
-                _: &World,
+                _: &RenderState,
             ) -> Result<(), NodeRunError> {
                 Ok(())
             }
