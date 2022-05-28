@@ -333,6 +333,7 @@ mod tests {
     use crate::render::graph_runner::RenderGraphRunner;
     use crate::render::RenderState;
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
     async fn test_render() {
         let graph = RenderGraph::default();
