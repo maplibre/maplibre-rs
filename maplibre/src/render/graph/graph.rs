@@ -27,8 +27,7 @@ use super::EdgeExistence;
 ///
 /// ## Example
 /// Here is a simple render graph example with two nodes connected by a node edge.
-/// ```
-/// #
+/// ```ignore
 /// # use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
 /// # use maplibre::render::{RenderState};
 /// # struct MyNode;
