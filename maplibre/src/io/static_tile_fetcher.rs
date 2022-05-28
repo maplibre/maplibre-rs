@@ -61,6 +61,7 @@ mod tests {
 
     use super::StaticTileFetcher;
 
+    #[cfg(static_tiles)]
     #[tokio::test]
     async fn test_tiles_available() {
         const MUNICH_X: i32 = 17425;
