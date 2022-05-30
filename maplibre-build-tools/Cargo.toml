@@ -8,10 +8,13 @@ authors = ["Maximilian Ammann <max@maxammann.org>"]
 license = "MIT OR Apache-2.0"
 readme = "../README.md"
 
+[features]
+sqlite = ["rusqlite"]
+
 [dependencies]
 naga = { version = "0.8", features = ["wgsl-in"] }
 walkdir = "2.3"
 log = "0.4"
-rusqlite = "0.26"
+rusqlite = {version= "0.26", optional=true}
 serde_json = "1.0"
 flate2 = "1.0"
