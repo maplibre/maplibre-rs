@@ -70,7 +70,11 @@ pub struct PipelineContext {
     pub processor: Box<dyn PipelineProcessor>,
 }
 
-impl PipelineContext {}
+impl PipelineContext {
+    pub fn teardown(self) -> Box<dyn PipelineProcessor> {
+        self.processor
+    }
+}
 
 pub trait Processable {
     type Input;

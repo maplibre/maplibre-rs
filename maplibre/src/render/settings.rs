@@ -102,7 +102,6 @@ impl Default for Msaa {
 pub struct RendererSettings {
     pub msaa: Msaa,
     pub texture_format: wgpu::TextureFormat,
-    pub surface_type: SurfaceType,
 }
 
 impl Default for RendererSettings {
@@ -110,7 +109,6 @@ impl Default for RendererSettings {
         Self {
             msaa: Msaa::default(),
             texture_format: COLOR_TEXTURE_FORMAT,
-            surface_type: SurfaceType::Headed,
         }
     }
 }

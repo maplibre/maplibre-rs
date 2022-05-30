@@ -64,7 +64,7 @@ impl EventuallyMapContext {
 }
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
-pub struct MapSchedule<MWC, SM, HC>
+pub struct InteractiveMapSchedule<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
@@ -82,7 +82,7 @@ where
     suspended: bool,
 }
 
-impl<MWC, SM, HC> MapSchedule<MWC, SM, HC>
+impl<MWC, SM, HC> InteractiveMapSchedule<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
@@ -103,7 +103,7 @@ where
         let mut schedule = Schedule::default();
 
         let http_source_client: HttpSourceClient<HC> = HttpSourceClient::new(http_client);
-        //register_stages(&mut schedule, http_source_client, Box::new(scheduler));
+        register_stages(&mut schedule, http_source_client, Box::new(scheduler));
 
         register_render_stages(&mut schedule);
 
@@ -211,5 +211,73 @@ where
             EventuallyMapContext::Premature(PrematureMapContext { view_state, .. }) => view_state,
             _ => panic!("should not happen"),
         }
+    }
+}
+
+/// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
+pub struct SimpleMapSchedule<MWC, SM, HC>
+where
+    MWC: MapWindowConfig,
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    map_window_config: MWC,
+
+    pub map_context: MapContext,
+
+    schedule: Schedule,
+    scheduler: Scheduler<SM>,
+    http_client: HC,
+}
+
+impl<MWC, SM, HC> SimpleMapSchedule<MWC, SM, HC>
+where
+    MWC: MapWindowConfig,
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    pub fn new(
+        map_window_config: MWC,
+        window_size: WindowSize,
+        renderer: Renderer,
+        scheduler: Scheduler<SM>,
+        http_client: HC,
+        style: Style,
+    ) -> Self {
+        let view_state = ViewState::new(&window_size);
+        let tile_cache = TileCache::new();
+        let mut schedule = Schedule::default();
+
+        register_render_stages(&mut schedule);
+
+        Self {
+            map_window_config,
+            map_context: MapContext {
+                view_state,
+                style,
+                tile_cache,
+                renderer,
+            },
+            schedule,
+            scheduler,
+            http_client,
+        }
+    }
+
+    #[tracing::instrument(name = "update_and_redraw", skip_all)]
+    pub fn update_and_redraw(&mut self) -> Result<(), Error> {
+        self.schedule.run(&mut self.map_context);
+
+        Ok(())
+    }
+
+    pub fn schedule(&self) -> &Schedule {
+        &self.schedule
+    }
+    pub fn scheduler(&self) -> &Scheduler<SM> {
+        &self.scheduler
+    }
+    pub fn http_client(&self) -> &HC {
+        &self.http_client
     }
 }

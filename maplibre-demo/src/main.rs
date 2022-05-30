@@ -8,7 +8,7 @@ use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::{HttpClient, HttpSourceClient};
 use maplibre::io::{LayerTessellateMessage, TileRequest, TileRequestID};
-use maplibre::map_schedule::{EventuallyMapContext, MapSchedule};
+use maplibre::map_schedule::{EventuallyMapContext, InteractiveMapSchedule};
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
@@ -136,21 +136,19 @@ fn run_headless() {
             &mut pipeline_context,
         );
 
-        match &mut map.map_schedule_mut().map_context {
-            EventuallyMapContext::Full(context) => {
-                while let Some(v) = pipeline_context
-                    .processor
-                    .as_any_mut()
-                    .downcast_mut::<HeadlessPipelineProcessor>()
-                    .unwrap()
-                    .layers
-                    .pop()
-                {
-                    context.tile_cache.put_tessellated_layer(v);
-                }
-            }
-            EventuallyMapContext::Premature(_) => {}
-            EventuallyMapContext::_Uninitialized => {}
+        let mut processor = pipeline_context.teardown();
+
+        while let Some(v) = processor
+            .as_any_mut()
+            .downcast_mut::<HeadlessPipelineProcessor>()
+            .unwrap()
+            .layers
+            .pop()
+        {
+            map.map_schedule_mut()
+                .map_context
+                .tile_cache
+                .put_tessellated_layer(v);
         }
 
         match map.map_schedule_mut().update_and_redraw() {
@@ -170,5 +168,6 @@ fn main() {
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    run_headless()
+    run_headless();
+    run_in_window();
 }

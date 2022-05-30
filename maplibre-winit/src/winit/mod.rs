@@ -7,7 +7,7 @@ use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::ControlFlow;
 
 use crate::input::{InputController, UpdateState};
-use maplibre::map_schedule::MapSchedule;
+use maplibre::map_schedule::InteractiveMapSchedule;
 use maplibre::window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig};
 use winit::event::Event;
 
@@ -71,7 +71,11 @@ where
     SM: ScheduleMethod,
     HC: HttpClient,
 {
-    fn run(mut self, mut map_schedule: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>) {
+    fn run(
+        mut self,
+        mut map_schedule: InteractiveMapSchedule<MWC, SM, HC>,
+        max_frames: Option<u64>,
+    ) {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
 

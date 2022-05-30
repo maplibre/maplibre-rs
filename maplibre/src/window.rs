@@ -1,6 +1,6 @@
 //! Utilities for the window system.
 
-use crate::{HttpClient, MapSchedule, ScheduleMethod};
+use crate::{HttpClient, InteractiveMapSchedule, ScheduleMethod};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 
 /// Window with a [carte::window::WindowSize].
@@ -26,7 +26,7 @@ where
     SM: ScheduleMethod,
     HC: HttpClient,
 {
-    fn run(self, map_schedule: MapSchedule<MWC, SM, HC>, max_frames: Option<u64>);
+    fn run(self, map_schedule: InteractiveMapSchedule<MWC, SM, HC>, max_frames: Option<u64>);
 }
 
 /// Window size with a width and an height in pixels.

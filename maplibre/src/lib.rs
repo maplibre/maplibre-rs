@@ -18,7 +18,7 @@
 
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
 use crate::io::source_client::HttpClient;
-use crate::map_schedule::MapSchedule;
+use crate::map_schedule::{InteractiveMapSchedule, SimpleMapSchedule};
 use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::{RenderState, Renderer};
 use crate::style::Style;
@@ -53,7 +53,7 @@ where
     SM: ScheduleMethod,
     HC: HttpClient,
 {
-    map_schedule: MapSchedule<MWC, SM, HC>,
+    map_schedule: InteractiveMapSchedule<MWC, SM, HC>,
     window: MWC::MapWindow,
 }
 
@@ -95,11 +95,31 @@ where
         self.window.run(self.map_schedule, max_frames);
     }
 
-    pub fn map_schedule(&self) -> &MapSchedule<MWC, SM, HC> {
+    pub fn map_schedule(&self) -> &InteractiveMapSchedule<MWC, SM, HC> {
         &self.map_schedule
     }
 
-    pub fn map_schedule_mut(&mut self) -> &mut MapSchedule<MWC, SM, HC> {
+    pub fn map_schedule_mut(&mut self) -> &mut InteractiveMapSchedule<MWC, SM, HC> {
+        &mut self.map_schedule
+    }
+}
+
+pub struct HeadlessMap<MWC, SM, HC>
+where
+    MWC: MapWindowConfig,
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    map_schedule: SimpleMapSchedule<MWC, SM, HC>,
+    window: MWC::MapWindow,
+}
+impl<MWC, SM, HC> HeadlessMap<MWC, SM, HC>
+where
+    MWC: MapWindowConfig,
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    pub fn map_schedule_mut(&mut self) -> &mut SimpleMapSchedule<MWC, SM, HC> {
         &mut self.map_schedule
     }
 }
@@ -147,7 +167,7 @@ where
         .await
         .ok();
         Map {
-            map_schedule: MapSchedule::new(
+            map_schedule: InteractiveMapSchedule::new(
                 self.map_window_config,
                 window_size,
                 renderer,
@@ -161,7 +181,7 @@ where
         }
     }
 
-    pub async fn initialize_headless(self) -> Map<MWC, SM, HC> {
+    pub async fn initialize_headless(self) -> HeadlessMap<MWC, SM, HC> {
         let window = self.map_window_config.create();
         let window_size = window.size();
 
@@ -171,17 +191,15 @@ where
             self.renderer_settings.clone(),
         )
         .await
-        .ok();
-        Map {
-            map_schedule: MapSchedule::new(
+        .expect("Failed to initialize renderer");
+        HeadlessMap {
+            map_schedule: SimpleMapSchedule::new(
                 self.map_window_config,
                 window_size,
                 renderer,
                 self.scheduler,
                 self.http_client,
                 self.style,
-                self.wgpu_settings,
-                self.renderer_settings,
             ),
             window,
         }
