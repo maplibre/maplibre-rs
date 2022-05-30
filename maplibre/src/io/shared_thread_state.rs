@@ -1,6 +1,6 @@
 //! Shared thread state.
 
-use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
+use crate::coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel};
 use crate::error::Error;
 use crate::io::geometry_index::{GeometryIndex, IndexProcessor, IndexedGeometry, TileIndex};
 use crate::io::tile_request_state::TileRequestState;
@@ -150,7 +150,7 @@ impl SharedThreadState {
     pub fn query_point(
         &self,
         world_coords: &WorldCoords,
-        z: u8,
+        z: ZoomLevel,
         zoom: Zoom,
     ) -> Option<Vec<IndexedGeometry<f64>>> {
         if let Ok(geometry_index) = self.geometry_index.lock() {

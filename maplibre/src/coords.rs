@@ -33,12 +33,12 @@ const fn create_zoom_bounds<const DIM: usize>() -> [u32; DIM] {
 ///
 /// TODO: We can optimize the quadkey and store the keys on 2 bits instead of 8
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
-pub struct Quadkey([u8; MAX_ZOOM]);
+pub struct Quadkey([ZoomLevel; MAX_ZOOM]);
 
 impl Quadkey {
-    pub fn new(quad_encoded: &[u8]) -> Self {
-        let mut key = [0u8; MAX_ZOOM];
-        key[0] = quad_encoded.len() as u8;
+    pub fn new(quad_encoded: &[ZoomLevel]) -> Self {
+        let mut key = [ZoomLevel::default(); MAX_ZOOM];
+        key[0] = ZoomLevel::new(quad_encoded.len() as u8);
         for (i, part) in quad_encoded.iter().enumerate() {
             key[i + 1] = *part;
         }
@@ -48,11 +48,56 @@ impl Quadkey {
 
 impl fmt::Debug for Quadkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let len = self.0[0] as usize;
+        let len = self.0[0].0 as usize;
         for part in &self.0[0..len] {
             write!(f, "{:?}", part)?;
         }
         Ok(())
+    }
+}
+
+#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug)]
+pub struct ZoomLevel(u8);
+
+impl ZoomLevel {
+    pub fn new(zoom_level: u8) -> Self {
+        ZoomLevel(zoom_level)
+    }
+}
+
+impl Default for ZoomLevel {
+    fn default() -> Self {
+        ZoomLevel(0)
+    }
+}
+
+impl std::ops::Add<i32> for ZoomLevel {
+    type Output = ZoomLevel;
+
+    fn add(self, rhs: i32) -> Self::Output {
+        ZoomLevel(self.0 + rhs as u8)
+    }
+}
+
+impl std::ops::Sub<i32> for ZoomLevel {
+    type Output = ZoomLevel;
+
+    fn sub(self, rhs: i32) -> Self::Output {
+        ZoomLevel(self.0 - rhs as u8)
+    }
+}
+
+impl std::ops::Mul<i32> for ZoomLevel {
+    type Output = ZoomLevel;
+
+    fn mul(self, rhs: i32) -> Self::Output {
+        ZoomLevel(self.0 * rhs as u8)
+    }
+}
+
+impl fmt::Display for ZoomLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -64,6 +109,12 @@ pub struct Zoom(f64);
 impl Zoom {
     pub fn new(zoom: f64) -> Self {
         Zoom(zoom)
+    }
+}
+
+impl Zoom {
+    pub fn from(zoom_level: ZoomLevel) -> Self {
+        Zoom(zoom_level.0 as f64)
     }
 }
 
@@ -97,19 +148,19 @@ impl std::ops::Sub for Zoom {
 
 impl Zoom {
     pub fn scale_to_tile(&self, coords: &WorldTileCoords) -> f64 {
-        2.0_f64.powf(coords.z as f64 - self.0)
+        2.0_f64.powf(coords.z.0 as f64 - self.0)
     }
 
-    pub fn scale_to_zoom_level(&self, z: u8) -> f64 {
-        2.0_f64.powf(z as f64 - self.0)
+    pub fn scale_to_zoom_level(&self, z: ZoomLevel) -> f64 {
+        2.0_f64.powf(z.0 as f64 - self.0)
     }
 
     pub fn scale_delta(&self, zoom: &Zoom) -> f64 {
         2.0_f64.powf(zoom.0 - self.0)
     }
 
-    pub fn level(&self) -> u8 {
-        self.0.floor() as u8
+    pub fn level(&self) -> ZoomLevel {
+        ZoomLevel::new(self.0.floor() as u8)
     }
 }
 
@@ -144,7 +195,7 @@ pub struct InnerCoords {
 pub struct TileCoords {
     pub x: u32,
     pub y: u32,
-    pub z: u8,
+    pub z: ZoomLevel,
 }
 
 impl TileCoords {
@@ -158,7 +209,7 @@ impl TileCoords {
     pub fn into_world_tile(self, scheme: TileAddressingScheme) -> Option<WorldTileCoords> {
         // FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn't fit in u32 or i32
         // Note that unlike WorldTileCoords, values are signed (no idea why)
-        let bounds = ZOOM_BOUNDS[self.z as usize] as i32;
+        let bounds = ZOOM_BOUNDS[self.z.0 as usize] as i32;
         let x = self.x as i32;
         let y = self.y as i32;
 
@@ -182,7 +233,7 @@ impl From<(u32, u32, u8)> for TileCoords {
         TileCoords {
             x: tuple.0,
             y: tuple.1,
-            z: tuple.2,
+            z: ZoomLevel::new(tuple.2),
         }
     }
 }
@@ -198,7 +249,7 @@ impl From<(u32, u32, u8)> for TileCoords {
 pub struct WorldTileCoords {
     pub x: i32,
     pub y: i32,
-    pub z: u8,
+    pub z: ZoomLevel,
 }
 
 impl WorldTileCoords {
@@ -211,7 +262,7 @@ impl WorldTileCoords {
     /// `x=5,y=5` at zoom level `z=0`.
     pub fn into_tile(self, scheme: TileAddressingScheme) -> Option<TileCoords> {
         // FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn't fit in u32 or i32
-        let bounds = ZOOM_BOUNDS[self.z as usize];
+        let bounds = ZOOM_BOUNDS[self.z.0 as usize];
         let x = self.x as u32;
         let y = self.y as u32;
 
@@ -239,7 +290,7 @@ impl WorldTileCoords {
            If tile.z > zoom:
                => scale < 512
         */
-        let tile_scale = TILE_SIZE * Zoom::new(self.z as f64).scale_delta(&zoom);
+        let tile_scale = TILE_SIZE * Zoom::from(self.z).scale_delta(&zoom);
 
         let translate = Matrix4::from_translation(Vector3::new(
             self.x as f64 * tile_scale,
@@ -264,7 +315,7 @@ impl WorldTileCoords {
 
     /// Adopted from [tilebelt](https://github.com/mapbox/tilebelt)
     pub fn build_quad_key(&self) -> Option<Quadkey> {
-        let bounds = ZOOM_BOUNDS[self.z as usize];
+        let bounds = ZOOM_BOUNDS[self.z.0 as usize];
         let x = self.x as u32;
         let y = self.y as u32;
 
@@ -272,11 +323,11 @@ impl WorldTileCoords {
             return None;
         }
 
-        let mut key = [0u8; MAX_ZOOM];
+        let mut key = [ZoomLevel::default(); MAX_ZOOM];
 
         key[0] = self.z;
 
-        for z in 1..self.z + 1 {
+        for z in 1..self.z.0 + 1 {
             let mut b = 0;
             let mask: i32 = 1 << (z - 1);
             if (self.x & mask) != 0 {
@@ -285,7 +336,7 @@ impl WorldTileCoords {
             if (self.y & mask) != 0 {
                 b += 2u8;
             }
-            key[z as usize] = b;
+            key[z as usize] = ZoomLevel::new(b);
         }
         Some(Quadkey(key))
     }
@@ -318,7 +369,7 @@ impl WorldTileCoords {
 
     /// Get the tile which is one zoom level lower and contains this one
     pub fn get_parent(&self) -> Option<WorldTileCoords> {
-        if self.z == 0 {
+        if self.z == ZoomLevel::default() {
             return None;
         }
 
@@ -335,7 +386,7 @@ impl From<(i32, i32, u8)> for WorldTileCoords {
         WorldTileCoords {
             x: tuple.0,
             y: tuple.1,
-            z: tuple.2,
+            z: ZoomLevel::new(tuple.2),
         }
     }
 }
@@ -402,7 +453,7 @@ impl WorldCoords {
         Self { x, y }
     }
 
-    pub fn into_world_tile(self, z: u8, zoom: Zoom) -> WorldTileCoords {
+    pub fn into_world_tile(self, z: ZoomLevel, zoom: Zoom) -> WorldTileCoords {
         let tile_scale = zoom.scale_to_zoom_level(z) / TILE_SIZE; // TODO: Deduplicate
         let x = self.x * tile_scale;
         let y = self.y * tile_scale;
@@ -447,12 +498,12 @@ impl From<Point3<f64>> for WorldCoords {
 pub struct ViewRegion {
     min_tile: WorldTileCoords,
     max_tile: WorldTileCoords,
-    z: u8,
+    z: ZoomLevel,
     padding: i32,
 }
 
 impl ViewRegion {
-    pub fn new(view_region: Aabb2<f64>, padding: i32, zoom: Zoom, z: u8) -> Self {
+    pub fn new(view_region: Aabb2<f64>, padding: i32, zoom: Zoom, z: ZoomLevel) -> Self {
         let min_world: WorldCoords = WorldCoords::at_ground(view_region.min.x, view_region.min.y);
         let min_world_tile: WorldTileCoords = min_world.into_world_tile(z, zoom);
         let max_world: WorldCoords = WorldCoords::at_ground(view_region.max.x, view_region.max.y);
@@ -466,7 +517,7 @@ impl ViewRegion {
         }
     }
 
-    pub fn zoom_level(&self) -> u8 {
+    pub fn zoom_level(&self) -> ZoomLevel {
         self.z
     }
 
@@ -481,7 +532,7 @@ impl ViewRegion {
     pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
         (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding).flat_map(move |x| {
             (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding).map(move |y| {
-                let tile_coord: WorldTileCoords = (x, y, self.z as u8).into();
+                let tile_coord: WorldTileCoords = (x, y, self.z.0 as u8).into();
                 tile_coord
             })
         })
@@ -489,7 +540,7 @@ impl ViewRegion {
 }
 
 impl fmt::Display for TileCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "T(x={x},y={y},z={z})",
@@ -523,9 +574,7 @@ mod tests {
 
     use crate::style::source::TileAddressingScheme;
 
-    use crate::coords::{
-        Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, EXTENT,
-    };
+    use crate::coords::{Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, EXTENT, ZoomLevel};
     use crate::util::math::Aabb2;
 
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
@@ -553,32 +602,32 @@ mod tests {
     #[test]
     fn test_quad_key() {
         assert_eq!(
-            TileCoords { x: 0, y: 0, z: 1 }
+            TileCoords { x: 0, y: 0, z: ZoomLevel::new(1) }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
                 .build_quad_key(),
-            Some(Quadkey::new(&[2]))
+            Some(Quadkey::new(&[ZoomLevel::new(2)]))
         );
         assert_eq!(
-            TileCoords { x: 0, y: 1, z: 1 }
+            TileCoords { x: 0, y: 1, z: ZoomLevel::new(1) }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
                 .build_quad_key(),
-            Some(Quadkey::new(&[0]))
+            Some(Quadkey::new(&[ZoomLevel::new(0)]))
         );
         assert_eq!(
-            TileCoords { x: 1, y: 1, z: 1 }
+            TileCoords { x: 1, y: 1, z: ZoomLevel::new(1) }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
                 .build_quad_key(),
-            Some(Quadkey::new(&[1]))
+            Some(Quadkey::new(&[ZoomLevel::new(1)]))
         );
         assert_eq!(
-            TileCoords { x: 1, y: 0, z: 1 }
+            TileCoords { x: 1, y: 0, z: ZoomLevel::new(1) }
                 .into_world_tile(TileAddressingScheme::TMS)
                 .unwrap()
                 .build_quad_key(),
-            Some(Quadkey::new(&[3]))
+            Some(Quadkey::new(&[ZoomLevel::new(3)]))
         );
     }
 
@@ -588,7 +637,7 @@ mod tests {
             Aabb2::new(Point2::new(0.0, 0.0), Point2::new(2000.0, 2000.0)),
             1,
             Zoom::default(),
-            0,
+            ZoomLevel::default(),
         )
         .iter()
         {

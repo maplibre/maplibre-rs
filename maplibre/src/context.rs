@@ -1,4 +1,4 @@
-use crate::coords::{Zoom, TILE_SIZE};
+use crate::coords::{Zoom, TILE_SIZE, ZoomLevel};
 use crate::io::shared_thread_state::SharedThreadState;
 use crate::io::tile_cache::TileCache;
 use crate::io::TessellateMessage;
@@ -43,7 +43,7 @@ impl ViewState {
         self.camera.calc_view_proj(&self.perspective)
     }
 
-    pub fn visible_level(&self) -> u8 {
+    pub fn visible_level(&self) -> ZoomLevel {
         self.zoom.level()
     }
 
