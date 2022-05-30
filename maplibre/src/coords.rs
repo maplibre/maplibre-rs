@@ -101,6 +101,12 @@ impl fmt::Display for ZoomLevel {
     }
 }
 
+impl Into<u8> for ZoomLevel {
+    fn into(self) -> u8 {
+        self.0
+    }
+}
+
 /// `Zoom` is an exponential scale that defines the zoom of the camera on the map.
 /// We can derive the `ZoomLevel` from `Zoom` by using the `[crate::coords::ZOOM_BOUNDS]`.
 #[derive(Copy, Clone, Debug)]
