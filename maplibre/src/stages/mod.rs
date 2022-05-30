@@ -1,18 +1,19 @@
 //! [Stages](Stage) for requesting and preparing data
 
 use crate::io::geometry_index::GeometryIndex;
-use crate::io::shared_thread_state::SharedThreadState;
 use crate::io::source_client::{HttpSourceClient, SourceClient};
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::TessellateMessage;
 use crate::schedule::Schedule;
 use crate::stages::populate_tile_store_stage::PopulateTileStore;
+use crate::stages::shared_thread_state::SharedThreadState;
 use crate::{HttpClient, ScheduleMethod, Scheduler};
 use request_stage::RequestStage;
 use std::sync::{mpsc, Arc, Mutex};
 
 mod populate_tile_store_stage;
 mod request_stage;
+mod shared_thread_state;
 
 pub type MessageSender = mpsc::Sender<TessellateMessage>;
 pub type MessageReceiver = mpsc::Receiver<TessellateMessage>;

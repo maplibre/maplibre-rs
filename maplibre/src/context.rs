@@ -1,5 +1,4 @@
 use crate::coords::{Zoom, TILE_SIZE};
-use crate::io::shared_thread_state::SharedThreadState;
 use crate::io::tile_cache::TileCache;
 use crate::io::TessellateMessage;
 use crate::render::camera::{Camera, Perspective, ViewProjection};

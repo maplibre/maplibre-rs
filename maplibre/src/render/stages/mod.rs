@@ -6,6 +6,7 @@ use graph_runner_stage::GraphRunnerStage;
 use resource_stage::ResourceStage;
 use upload_stage::UploadStage;
 
+mod extract_stage;
 mod graph_runner_stage;
 mod phase_sort_stage;
 mod queue_stage;
@@ -14,6 +15,7 @@ mod upload_stage;
 mod write_surface_buffer_stage;
 
 use crate::multi_stage;
+use crate::render::stages::extract_stage::ExtractStage;
 use crate::render::stages::phase_sort_stage::PhaseSortStage;
 use crate::render::stages::queue_stage::QueueStage;
 use crate::render::stages::write_surface_buffer_stage::WriteSurfaceBufferStage;
@@ -48,7 +50,12 @@ impl StageLabel for RenderStageLabel {
     }
 }
 
-multi_stage!(PrepareStage, upload: UploadStage, resource: ResourceStage);
+multi_stage!(
+    PrepareStage,
+    resource: ResourceStage,
+    extract: ExtractStage,
+    upload: UploadStage
+);
 
 pub fn register_render_stages(schedule: &mut Schedule) {
     schedule.add_stage(RenderStageLabel::Prepare, PrepareStage::default());

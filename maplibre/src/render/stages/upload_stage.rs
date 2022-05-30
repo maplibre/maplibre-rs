@@ -59,10 +59,8 @@ impl Stage for UploadStage {
             .map(|bounding_box| ViewRegion::new(bounding_box, 0, *view_state.zoom, visible_level));
 
         if let Some(view_region) = &view_region {
-            let zoom = view_state.zoom();
-
             self.upload_tile_geometry(state, queue, tile_cache, style, view_region);
-            self.update_tile_view_pattern(state, queue, view_region, &view_proj, zoom);
+            self.upload_tile_view_pattern(state, queue, &view_proj);
             self.update_metadata();
         }
     }
@@ -139,22 +137,15 @@ impl UploadStage {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn update_tile_view_pattern(
+    pub fn upload_tile_view_pattern(
         &self,
         RenderState {
-            tile_view_pattern,
-            buffer_pool,
-            ..
+            tile_view_pattern, ..
         }: &mut RenderState,
         queue: &wgpu::Queue,
-        view_region: &ViewRegion,
         view_proj: &ViewProjection,
-        zoom: Zoom,
     ) {
-        if let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (tile_view_pattern, buffer_pool)
-        {
-            tile_view_pattern.update_pattern(view_region, buffer_pool, zoom);
+        if let Initialized(tile_view_pattern) = tile_view_pattern {
             tile_view_pattern.upload_pattern(queue, view_proj);
         }
     }

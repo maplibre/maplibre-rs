@@ -3,11 +3,11 @@
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, WorldTileCoords};
 use crate::error::Error;
-use crate::io::shared_thread_state::SharedThreadState;
 use crate::io::source_client::{HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::TileRequest;
 use crate::schedule::Stage;
+use crate::stages::shared_thread_state::SharedThreadState;
 use crate::{HttpClient, ScheduleMethod, Style};
 use std::collections::HashSet;
 
@@ -134,23 +134,21 @@ where
                 let client = SourceClient::Http(self.http_source_client.clone());
                 let coords = *coords;
 
+                let state = self.shared_thread_state.clone();
                 self.scheduler
-                    .schedule(
-                        self.shared_thread_state.clone(),
-                        Box::new(move |state: SharedThreadState| {
-                            Box::pin(async move {
-                                match client.fetch(&coords).await {
-                                    Ok(data) => state
-                                        .process_tile(request_id, data.into_boxed_slice())
-                                        .unwrap(),
-                                    Err(e) => {
-                                        log::error!("{:?}", &e);
-                                        state.tile_unavailable(&coords, request_id).unwrap()
-                                    }
+                    .schedule(Box::new(move || {
+                        Box::pin(async move {
+                            match client.fetch(&coords).await {
+                                Ok(data) => state
+                                    .process_tile(request_id, data.into_boxed_slice())
+                                    .unwrap(),
+                                Err(e) => {
+                                    log::error!("{:?}", &e);
+                                    state.tile_unavailable(&coords, request_id).unwrap()
                                 }
-                            })
-                        }),
-                    )
+                            }
+                        })
+                    }))
                     .unwrap();
             }
 

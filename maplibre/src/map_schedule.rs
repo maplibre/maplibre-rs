@@ -4,7 +4,6 @@ use crate::context::{MapContext, ViewState};
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
 use crate::io::scheduler::Scheduler;
-use crate::io::shared_thread_state::SharedThreadState;
 use crate::io::source_client::{HttpClient, HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::tile_request_state::TileRequestState;

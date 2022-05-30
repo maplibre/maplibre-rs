@@ -1,15 +1,24 @@
+use geozero::mvt::tile;
+use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use maplibre::coords::WorldTileCoords;
 use maplibre::error::Error;
+use maplibre::io::pipeline::steps::build_vector_tile_pipeline;
+use maplibre::io::pipeline::Processable;
+use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::{HttpClient, HttpSourceClient};
+use maplibre::io::{LayerTessellateMessage, TileRequest, TileRequestID};
 use maplibre::map_schedule::{EventuallyMapContext, MapSchedule};
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::render::settings::RendererSettings;
+use maplibre::render::ShaderVertex;
 use maplibre::window::{EventLoop, MapWindow, MapWindowConfig, WindowSize};
 use maplibre::MapBuilder;
 use maplibre_winit::winit::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
+use std::any::Any;
+use std::collections::HashSet;
 use wgpu::TextureFormat;
 
 #[cfg(feature = "trace")]
@@ -21,21 +30,25 @@ fn enable_tracing() {
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 }
-pub struct HeadlessMapWindowConfig;
+pub struct HeadlessMapWindowConfig {
+    size: WindowSize,
+}
 
 impl MapWindowConfig for HeadlessMapWindowConfig {
     type MapWindow = HeadlessMapWindow;
 
     fn create(&self) -> Self::MapWindow {
-        Self::MapWindow {}
+        Self::MapWindow { size: self.size }
     }
 }
 
-pub struct HeadlessMapWindow;
+pub struct HeadlessMapWindow {
+    size: WindowSize,
+}
 
 impl MapWindow for HeadlessMapWindow {
     fn size(&self) -> WindowSize {
-        WindowSize::new(1920, 1080).unwrap()
+        self.size
     }
 }
 
@@ -52,10 +65,38 @@ fn run_in_window() {
     })
 }
 
+#[derive(Default)]
+struct HeadlessPipelineProcessor {
+    layers: Vec<LayerTessellateMessage>,
+}
+
+impl PipelineProcessor for HeadlessPipelineProcessor {
+    fn finished_tile_tesselation(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {}
+
+    fn unavailable_layer(&mut self, coords: &WorldTileCoords, layer_name: &str) {}
+
+    fn finished_layer_tesselation(
+        &mut self,
+        coords: &WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+        feature_indices: Vec<u32>,
+        layer_data: tile::Layer,
+    ) {
+        self.layers.push(LayerTessellateMessage::TessellatedLayer {
+            coords: *coords,
+            buffer,
+            feature_indices,
+            layer_data,
+        })
+    }
+}
+
 fn run_headless() {
     run_multithreaded(async {
         let mut map = MapBuilder::new()
-            .with_map_window_config(HeadlessMapWindowConfig)
+            .with_map_window_config(HeadlessMapWindowConfig {
+                size: WindowSize::new(1000, 1000).unwrap(),
+            })
             .with_http_client(ReqwestHttpClient::new(None))
             .with_schedule_method(TokioScheduleMethod::new())
             .with_renderer_settings(RendererSettings {
@@ -72,20 +113,45 @@ fn run_headless() {
         let coords = WorldTileCoords::from((0, 0, 0));
         let request_id = 0;
 
-        /*        let x = match http_source_client.fetch(&coords).await {
-            Ok(data) => state.process_tile(0, data.into_boxed_slice()).unwrap(),
-            Err(e) => {
-                log::error!("{:?}", &e);
+        let data = http_source_client
+            .fetch(&coords)
+            .await
+            .unwrap()
+            .into_boxed_slice();
 
-                state.tile_unavailable(&coords, request_id).unwrap()
-            }
+        let mut processor = HeadlessPipelineProcessor::default();
+        let mut pipeline_context = PipelineContext {
+            processor: Box::new(processor),
         };
+        let pipeline = build_vector_tile_pipeline();
+        pipeline.process(
+            (
+                TileRequest {
+                    coords,
+                    layers: HashSet::from(["boundary".to_owned(), "water".to_owned()]),
+                },
+                request_id,
+                data,
+            ),
+            &mut pipeline_context,
+        );
 
-        match map.map_schedule_mut().map_context {
-            EventuallyMapContext::Full(a) => a.tile_cache.put_tessellated_layer(),
+        match &mut map.map_schedule_mut().map_context {
+            EventuallyMapContext::Full(context) => {
+                while let Some(v) = pipeline_context
+                    .processor
+                    .as_any_mut()
+                    .downcast_mut::<HeadlessPipelineProcessor>()
+                    .unwrap()
+                    .layers
+                    .pop()
+                {
+                    context.tile_cache.put_tessellated_layer(v);
+                }
+            }
             EventuallyMapContext::Premature(_) => {}
             EventuallyMapContext::_Uninitialized => {}
-        }*/
+        }
 
         match map.map_schedule_mut().update_and_redraw() {
             Ok(_) => {}

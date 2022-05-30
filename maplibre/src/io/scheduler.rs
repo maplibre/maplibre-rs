@@ -5,8 +5,6 @@ use std::pin::Pin;
 
 use crate::error::Error;
 
-use crate::io::shared_thread_state::SharedThreadState;
-
 /// Async/await scheduler.
 pub struct Scheduler<SM>
 where
@@ -38,18 +36,12 @@ pub trait ScheduleMethod: 'static {
     #[cfg(not(feature = "no-thread-safe-futures"))]
     fn schedule(
         &self,
-        shared_thread_state: SharedThreadState,
-        future_factory: Box<
-            (dyn (FnOnce(SharedThreadState) -> Pin<Box<dyn Future<Output = ()> + Send>>) + Send),
-        >,
+        future_factory: Box<(dyn (FnOnce() -> Pin<Box<dyn Future<Output = ()> + Send>>) + Send)>,
     ) -> Result<(), Error>;
 
     #[cfg(feature = "no-thread-safe-futures")]
     fn schedule(
         &self,
-        shared_thread_state: SharedThreadState,
-        future_factory: Box<
-            (dyn (FnOnce(SharedThreadState) -> Pin<Box<dyn Future<Output = ()>>>) + Send),
-        >,
+        future_factory: Box<(dyn (FnOnce() -> Pin<Box<dyn Future<Output = ()>>>) + Send)>,
     ) -> Result<(), Error>;
 }

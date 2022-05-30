@@ -2,12 +2,14 @@ use crate::coords::WorldTileCoords;
 use crate::io::{LayerTessellateMessage, TessellateMessage, TileRequestID, TileTessellateMessage};
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
+use downcast_rs::{impl_downcast, Downcast};
 use geozero::mvt::tile;
+use std::any::Any;
 use std::marker::PhantomData;
 use std::process::Output;
 use std::sync::mpsc;
 
-pub trait PipelineProcessor {
+pub trait PipelineProcessor: Downcast {
     fn finished_tile_tesselation(&mut self, request_id: TileRequestID, coords: &WorldTileCoords);
     fn unavailable_layer(&mut self, coords: &WorldTileCoords, layer_name: &str);
     fn finished_layer_tesselation(
@@ -19,6 +21,8 @@ pub trait PipelineProcessor {
         layer_data: tile::Layer,
     );
 }
+
+impl_downcast!(PipelineProcessor);
 
 pub struct HeadedPipelineProcessor {
     pub message_sender: mpsc::Sender<TessellateMessage>,
@@ -80,7 +84,7 @@ where
     P: Processable,
     N: Processable<Input = P::Output>,
 {
-    func: P,
+    process: P,
     next: N,
 }
 
@@ -93,7 +97,7 @@ where
     type Output = N::Output;
 
     fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output {
-        let output = self.func.process(input, context);
+        let output = self.process.process(input, context);
         self.next.process(output, context)
     }
 }
@@ -177,8 +181,8 @@ impl<I, O> Processable for Closure2Processable<I, O> {
     }
 }
 
-mod steps {
-    use crate::io::pipeline::{PipelineContext, Processable};
+pub mod steps {
+    use crate::io::pipeline::{EndStep, PipelineContext, PipelineStep, Processable};
     use crate::io::{TileRequest, TileRequestID};
     use crate::tessellation::zero_tessellator::ZeroTessellator;
     use crate::tessellation::IndexDataType;
@@ -269,6 +273,47 @@ mod steps {
                 .finished_tile_tesselation(request_id, &tile_request.coords);
         }
     }
+
+    pub fn build_vector_tile_pipeline(
+    ) -> impl Processable<Input = <ParseTileStep as Processable>::Input> {
+        PipelineStep {
+            process: ParseTileStep {},
+            next: PipelineStep {
+                process: TessellateLayerStep {},
+                next: EndStep::default(),
+            },
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use crate::io::pipeline::steps::build_vector_tile_pipeline;
+        use crate::io::pipeline::{HeadedPipelineProcessor, PipelineContext, Processable};
+        use crate::io::TileRequest;
+        use std::sync::mpsc;
+
+        #[test]
+        fn test() {
+            let mut context = PipelineContext {
+                processor: Box::new(HeadedPipelineProcessor {
+                    message_sender: mpsc::channel().0,
+                }),
+            };
+
+            let pipeline = build_vector_tile_pipeline();
+            let output = pipeline.process(
+                (
+                    TileRequest {
+                        coords: (0, 0, 0).into(),
+                        layers: Default::default(),
+                    },
+                    0,
+                    Box::new([0]),
+                ),
+                &mut context,
+            );
+        }
+    }
 }
 
 #[cfg(test)]
@@ -295,7 +340,7 @@ mod tests {
             }),
         };
         let output: u32 = PipelineStep {
-            func: FnProcessable {
+            process: FnProcessable {
                 func: &(add_two as fn(u8, &mut PipelineContext) -> u32),
             },
             next: EndStep::default(),
@@ -305,9 +350,9 @@ mod tests {
         assert_eq!(output, 7);
 
         let output = PipelineStep {
-            func: &(add_one as fn(u32, &mut PipelineContext) -> u8),
+            process: &(add_one as fn(u32, &mut PipelineContext) -> u8),
             next: PipelineStep {
-                func: &(add_two as fn(u8, &mut PipelineContext) -> u32),
+                process: &(add_two as fn(u8, &mut PipelineContext) -> u32),
                 next: EndStep::default(),
             },
         }
@@ -316,7 +361,7 @@ mod tests {
         assert_eq!(output, 8);
 
         let output: u32 = PipelineStep {
-            func: ClosureProcessable {
+            process: ClosureProcessable {
                 func: |input: u8, context| -> u32 {
                     return input as u32 + 2;
                 },
@@ -330,7 +375,7 @@ mod tests {
         assert_eq!(output, 7);
 
         let output: u32 = PipelineStep {
-            func: Closure2Processable {
+            process: Closure2Processable {
                 func: |input: u8, context| -> u32 { input as u32 + 2 },
             },
             next: EndStep::default(),
