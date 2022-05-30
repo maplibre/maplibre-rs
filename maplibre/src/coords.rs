@@ -574,7 +574,9 @@ mod tests {
 
     use crate::style::source::TileAddressingScheme;
 
-    use crate::coords::{Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, EXTENT, ZoomLevel};
+    use crate::coords::{
+        Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
+    };
     use crate::util::math::Aabb2;
 
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
@@ -602,31 +604,47 @@ mod tests {
     #[test]
     fn test_quad_key() {
         assert_eq!(
-            TileCoords { x: 0, y: 0, z: ZoomLevel::new(1) }
-                .into_world_tile(TileAddressingScheme::TMS)
-                .unwrap()
-                .build_quad_key(),
+            TileCoords {
+                x: 0,
+                y: 0,
+                z: ZoomLevel::new(1)
+            }
+            .into_world_tile(TileAddressingScheme::TMS)
+            .unwrap()
+            .build_quad_key(),
             Some(Quadkey::new(&[ZoomLevel::new(2)]))
         );
         assert_eq!(
-            TileCoords { x: 0, y: 1, z: ZoomLevel::new(1) }
-                .into_world_tile(TileAddressingScheme::TMS)
-                .unwrap()
-                .build_quad_key(),
+            TileCoords {
+                x: 0,
+                y: 1,
+                z: ZoomLevel::new(1)
+            }
+            .into_world_tile(TileAddressingScheme::TMS)
+            .unwrap()
+            .build_quad_key(),
             Some(Quadkey::new(&[ZoomLevel::new(0)]))
         );
         assert_eq!(
-            TileCoords { x: 1, y: 1, z: ZoomLevel::new(1) }
-                .into_world_tile(TileAddressingScheme::TMS)
-                .unwrap()
-                .build_quad_key(),
+            TileCoords {
+                x: 1,
+                y: 1,
+                z: ZoomLevel::new(1)
+            }
+            .into_world_tile(TileAddressingScheme::TMS)
+            .unwrap()
+            .build_quad_key(),
             Some(Quadkey::new(&[ZoomLevel::new(1)]))
         );
         assert_eq!(
-            TileCoords { x: 1, y: 0, z: ZoomLevel::new(1) }
-                .into_world_tile(TileAddressingScheme::TMS)
-                .unwrap()
-                .build_quad_key(),
+            TileCoords {
+                x: 1,
+                y: 0,
+                z: ZoomLevel::new(1)
+            }
+            .into_world_tile(TileAddressingScheme::TMS)
+            .unwrap()
+            .build_quad_key(),
             Some(Quadkey::new(&[ZoomLevel::new(3)]))
         );
     }

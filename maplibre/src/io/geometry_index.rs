@@ -11,7 +11,9 @@ use geozero::geo_types::GeoWriter;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
-use crate::coords::{InnerCoords, Quadkey, WorldCoords, WorldTileCoords, Zoom, EXTENT, TILE_SIZE, ZoomLevel};
+use crate::coords::{
+    InnerCoords, Quadkey, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT, TILE_SIZE,
+};
 use crate::util::math::bounds_from_points;
 
 /// A quad tree storing the currently loaded tiles.
