@@ -24,24 +24,23 @@ where
     pub fn schedule_method(&self) -> &SM {
         &self.schedule_method
     }
-
-    pub fn take(self) -> SM {
-        self.schedule_method
-    }
 }
 
 /// Can schedule a task from a future factory and a shared state.
-// Should be object safe in order to be able to have a dyn object in MapContext
 pub trait ScheduleMethod: 'static {
     #[cfg(not(feature = "no-thread-safe-futures"))]
-    fn schedule(
+    fn schedule<T>(
         &self,
-        future_factory: Box<(dyn (FnOnce() -> Pin<Box<dyn Future<Output = ()> + Send>>) + Send)>,
-    ) -> Result<(), Error>;
+        future_factory: impl (FnOnce() -> T) + Send + 'static,
+    ) -> Result<(), Error>
+    where
+        T: Future<Output = ()> + Send + 'static;
 
     #[cfg(feature = "no-thread-safe-futures")]
-    fn schedule(
+    fn schedule<T>(
         &self,
-        future_factory: Box<(dyn (FnOnce() -> Pin<Box<dyn Future<Output = ()>>>) + Send)>,
-    ) -> Result<(), Error>;
+        future_factory: impl (FnOnce() -> T) + Send + 'static,
+    ) -> Result<(), Error>
+    where
+        T: Future<Output = ()> + 'static;
 }

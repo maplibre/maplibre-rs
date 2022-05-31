@@ -13,12 +13,10 @@ impl TokioScheduleMethod {
 }
 
 impl ScheduleMethod for TokioScheduleMethod {
-    fn schedule(
-        &self,
-        future_factory: Box<
-            (dyn (FnOnce() -> Pin<Box<dyn Future<Output = ()> + Send + 'static>>) + Send + 'static),
-        >,
-    ) -> Result<(), Error> {
+    fn schedule<T>(&self, future_factory: impl FnOnce() -> T + Send + 'static) -> Result<(), Error>
+    where
+        T: Future<Output = ()> + Send + 'static,
+    {
         tokio::task::spawn((future_factory)());
         Ok(())
     }

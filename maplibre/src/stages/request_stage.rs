@@ -8,27 +8,29 @@ use crate::io::tile_repository::TileRepository;
 use crate::io::TileRequest;
 use crate::schedule::Stage;
 use crate::stages::SharedThreadState;
-use crate::{HttpClient, ScheduleMethod, Style};
+use crate::{HttpClient, ScheduleMethod, Scheduler, Style};
 use std::collections::HashSet;
 
-pub struct RequestStage<HC>
+pub struct RequestStage<SM, HC>
 where
+    SM: ScheduleMethod,
     HC: HttpClient,
 {
     shared_thread_state: SharedThreadState,
-    scheduler: Box<dyn ScheduleMethod>,
+    scheduler: Scheduler<SM>,
     http_source_client: HttpSourceClient<HC>,
     try_failed: bool,
 }
 
-impl<HC> RequestStage<HC>
+impl<SM, HC> RequestStage<SM, HC>
 where
+    SM: ScheduleMethod,
     HC: HttpClient,
 {
     pub fn new(
         shared_thread_state: SharedThreadState,
         http_source_client: HttpSourceClient<HC>,
-        scheduler: Box<dyn ScheduleMethod>,
+        scheduler: Scheduler<SM>,
     ) -> Self {
         Self {
             shared_thread_state,
@@ -39,8 +41,9 @@ where
     }
 }
 
-impl<HC> Stage for RequestStage<HC>
+impl<SM, HC> Stage for RequestStage<SM, HC>
 where
+    SM: ScheduleMethod,
     HC: HttpClient,
 {
     fn run(
@@ -74,8 +77,9 @@ where
     }
 }
 
-impl<HC> RequestStage<HC>
+impl<SM, HC> RequestStage<SM, HC>
 where
+    SM: ScheduleMethod,
     HC: HttpClient,
 {
     /// Request tiles which are currently in view.
@@ -136,6 +140,7 @@ where
 
                 let state = self.shared_thread_state.clone();
                 self.scheduler
+                    .schedule_method()
                     .schedule(Box::new(move || {
                         Box::pin(async move {
                             match client.fetch(&coords).await {

@@ -117,9 +117,7 @@ fn run_headless() {
             .into_boxed_slice();
 
         let processor = HeadlessPipelineProcessor::default();
-        let mut pipeline_context = PipelineContext {
-            processor: Box::new(processor),
-        };
+        let mut pipeline_context = PipelineContext::new(processor);
         let pipeline = build_vector_tile_pipeline();
         pipeline.process(
             (
@@ -133,15 +131,11 @@ fn run_headless() {
             &mut pipeline_context,
         );
 
-        let mut processor = pipeline_context.take_processor();
+        let mut processor = pipeline_context
+            .take_processor::<HeadlessPipelineProcessor>()
+            .unwrap();
 
-        while let Some(v) = processor
-            .as_any_mut()
-            .downcast_mut::<HeadlessPipelineProcessor>()
-            .unwrap()
-            .layers
-            .pop()
-        {
+        while let Some(v) = processor.layers.pop() {
             map.map_schedule_mut()
                 .map_context
                 .tile_repository

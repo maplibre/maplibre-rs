@@ -46,11 +46,9 @@ pub fn register_stages<HC: HttpClient, SM: ScheduleMethod>(
         geometry_index: Arc::new(Mutex::new(GeometryIndex::new())),
     };
 
-    let scheduler = Box::new(scheduler.take());
-
     schedule.add_stage(
         "request",
-        RequestStage::new(shared_thread_state.clone(), http_source_client, scheduler),
+        RequestStage::new(shared_thread_state.clone(), http_source_client, *scheduler),
     );
     schedule.add_stage(
         "populate_tile_store",
