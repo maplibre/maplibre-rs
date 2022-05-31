@@ -8,7 +8,6 @@ use web_sys::Worker;
 
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
-use maplibre::io::shared_thread_state::SharedThreadState;
 
 use super::pool::WorkerPool;
 
@@ -37,17 +36,14 @@ impl WebWorkerPoolScheduleMethod {
 impl ScheduleMethod for WebWorkerPoolScheduleMethod {
     fn schedule(
         &self,
-        shared_thread_state: SharedThreadState,
         future_factory: Box<
-            (dyn (FnOnce(SharedThreadState) -> Pin<Box<dyn Future<Output = ()> + 'static>>)
-                 + Send
-                 + 'static),
+            (dyn (FnOnce() -> Pin<Box<dyn Future<Output = ()> + 'static>>) + Send + 'static),
         >,
     ) -> Result<(), Error> {
         self.pool
             .run(move || {
                 wasm_bindgen_futures::future_to_promise(async move {
-                    future_factory(shared_thread_state).await;
+                    future_factory().await;
                     Ok(JsValue::undefined())
                 })
             })

@@ -104,7 +104,7 @@ where
         let http_source_client: HttpSourceClient<HC> = HttpSourceClient::new(http_client);
         register_stages(&mut schedule, http_source_client, Box::new(scheduler));
 
-        register_render_stages(&mut schedule);
+        register_render_stages(&mut schedule, false);
 
         Self {
             map_window_config,
@@ -247,7 +247,7 @@ where
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
-        register_render_stages(&mut schedule);
+        register_render_stages(&mut schedule, true);
 
         Self {
             map_window_config,

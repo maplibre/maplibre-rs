@@ -7,11 +7,20 @@ use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext
 use crate::render::render_commands::{DrawMasks, DrawTiles};
 use crate::render::render_phase::{PhaseItem, RenderCommand};
 use crate::render::resource::TrackedRenderPass;
-use crate::render::stages::draw_graph;
 use crate::render::util::FloatOrd;
 use crate::render::Eventually::Initialized;
-use crate::render::RenderState;
+use crate::render::{draw_graph, main_graph, RenderState};
 use std::ops::{Deref, Range};
+
+pub mod graph {
+    // Labels for input nodes
+    pub mod input {}
+    // Labels for non-input nodes
+    pub mod node {
+        pub const MAIN_PASS_DEPENDENCIES: &str = "main_pass_dependencies";
+        pub const MAIN_PASS_DRIVER: &str = "main_pass_driver";
+    }
+}
 
 pub struct MainPassNode {}
 

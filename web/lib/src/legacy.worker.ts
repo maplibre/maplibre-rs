@@ -1,3 +1,4 @@
+/*
 import init, {InitOutput, tessellate_layers} from "./wasm-pack"
 import {WebWorkerMessageType} from "./types"
 
@@ -30,3 +31,4 @@ onmessage = async message => {
             break
     }
 }
+*/

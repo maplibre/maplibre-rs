@@ -5,7 +5,6 @@ use wasm_bindgen::prelude::*;
 use maplibre::coords::TileCoords;
 
 use maplibre::io::scheduler::Scheduler;
-use maplibre::io::shared_thread_state::SharedThreadState;
 
 use maplibre::io::TileRequestID;
 

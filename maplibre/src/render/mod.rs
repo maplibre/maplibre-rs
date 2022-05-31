@@ -32,6 +32,7 @@ use log::info;
 use std::sync::Arc;
 
 // Rendering internals
+#[cfg(not(target_arch = "wasm32"))]
 mod copy_surface_to_buffer_node;
 mod graph;
 mod graph_runner;
@@ -408,5 +409,32 @@ mod tests {
         let render_state = RenderState::default();
 
         RenderGraphRunner::run(&graph, &device, &queue, &render_state);
+    }
+}
+
+// Plugins that contribute to the RenderGraph should use the following label conventions:
+// 1. Graph modules should have a NAME, input module, and node module (where relevant)
+// 2. The "top level" graph is the plugin module root. Just add things like `pub mod node` directly under the plugin module
+// 3. "sub graph" modules should be nested beneath their parent graph module
+pub mod main_graph {
+    // Labels for input nodes
+    pub mod input {}
+    // Labels for non-input nodes
+    pub mod node {
+        pub const MAIN_PASS_DEPENDENCIES: &str = "main_pass_dependencies";
+        pub const MAIN_PASS_DRIVER: &str = "main_pass_driver";
+    }
+}
+
+/// Labels for the "draw" graph
+pub mod draw_graph {
+    pub const NAME: &str = "draw";
+    // Labels for input nodes
+    pub mod input {}
+    // Labels for non-input nodes
+    pub mod node {
+        pub const MAIN_PASS: &str = "main_pass";
+        #[cfg(not(target_arch = "wasm32"))]
+        pub const COPY: &str = "copy";
     }
 }
