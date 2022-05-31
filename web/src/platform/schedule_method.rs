@@ -1,4 +1,5 @@
 use std::future::Future;
+use std::pin::Pin;
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -34,14 +35,15 @@ impl WebWorkerPoolScheduleMethod {
 }
 
 impl ScheduleMethod for WebWorkerPoolScheduleMethod {
-    fn schedule<T>(
+    fn schedule(
         &self,
         shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
-    ) -> Result<(), Error>
-    where
-        T: Future<Output = ()> + 'static,
-    {
+        future_factory: Box<
+            (dyn (FnOnce(SharedThreadState) -> Pin<Box<dyn Future<Output = ()> + 'static>>)
+                 + Send
+                 + 'static),
+        >,
+    ) -> Result<(), Error> {
         self.pool
             .run(move || {
                 wasm_bindgen_futures::future_to_promise(async move {

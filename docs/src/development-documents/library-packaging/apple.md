@@ -52,8 +52,6 @@ environment variable, as the others seem unreliable. Note that this can include 
 setting `ONLY_ACTIVE_ARCH` is set to `YES`.
 
 ```bash
-. "$HOME/.cargo/env"
-
 arch="unknown"
 vendor="apple"
 os_type="unknown"
@@ -85,7 +83,10 @@ then
 elif [[ $SDK_NAME == *"iphonesimulator"* ]]
 then
     os_type="ios"
-    environment_type="sim"
+    if [[ $ARCHS == "arm64" ]]
+    then
+        environment_type="sim"
+    fi
 fi
 
 
@@ -96,10 +97,15 @@ then
     triplet="$triplet-$environment_type"
 fi
 
-echo "$mode"
-echo "$triplet"
+echo "Mode: $mode"
+echo "Triplet: $triplet"
+echo "Shell: $SHELL"
 
-env -i zsh -c "cargo build -p maplibre-apple $mode --target $triplet --lib"
+cmd="export HOME=$HOME && . $HOME/.cargo/env && cargo build -p apple $mode --target $triplet --lib"
+
+echo "Command: $cmd"
+
+env -i /bin/bash -c "$cmd"
 ```
 
 ### Build Settings

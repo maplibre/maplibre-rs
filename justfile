@@ -6,14 +6,14 @@ set shell := ["bash", "-c"]
 
 export NIGHTLY_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
 
-test:
-  cargo test
-
 install-clippy:
   rustup component add clippy
 
 check PROJECT ARCH: install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
+
+test PROJECT ARCH:
+  cargo test -p {{PROJECT}} --target {{ARCH}}
 
 install-rustfmt:
   rustup component add rustfmt

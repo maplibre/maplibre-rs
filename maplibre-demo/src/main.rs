@@ -1,9 +1,10 @@
 use maplibre::platform::http_client::ReqwestHttpClient;
+use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::window::FromWindow;
 use maplibre::MapBuilder;
+use maplibre_winit::winit::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
 
-#[cfg(feature = "enable-tracing")]
+#[cfg(feature = "trace")]
 fn enable_tracing() {
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::Registry;
@@ -14,30 +15,23 @@ fn enable_tracing() {
 }
 
 fn run_in_window() {
-    MapBuilder::from_window("A fantastic window!")
-        .with_http_client(ReqwestHttpClient::new(None))
-        .with_schedule_method(TokioScheduleMethod::new())
-        .build()
-        .run_sync();
-}
-
-fn run_headless() {
-    MapBuilder::from_window("A fantastic window!")
-        .with_http_client(ReqwestHttpClient::new(None))
-        .with_schedule_method(TokioScheduleMethod::new())
-        .build()
-        .run_sync();
+    run_multithreaded(async {
+        MapBuilder::new()
+            .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
+            .with_http_client(ReqwestHttpClient::new(None))
+            .with_schedule_method(TokioScheduleMethod::new())
+            .build()
+            .initialize()
+            .await
+            .run()
+    })
 }
 
 fn main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
-    #[cfg(feature = "enable-tracing")]
+    #[cfg(feature = "trace")]
     enable_tracing();
 
-    MapBuilder::from_window("A fantastic window!")
-        .with_http_client(ReqwestHttpClient::new(None))
-        .with_schedule_method(TokioScheduleMethod::new())
-        .build()
-        .run_sync();
+    run_in_window()
 }

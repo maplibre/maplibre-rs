@@ -8,6 +8,8 @@ publish = false
 
 [dependencies]
 maplibre = { path = "../maplibre" }
+maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
+
 env_logger = "0.9"
 
 [lib]

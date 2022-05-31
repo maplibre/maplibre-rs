@@ -17,11 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/benchmarks
-  build-linux-demo:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/linux-demo
   build-android:
     runs-on: ubuntu-20.04
     steps:
@@ -63,9 +58,27 @@ jobs:
           destination: docs
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-ios:
-    runs-on: macOS-11
+    runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/apple
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-demo-linux:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/demo/linux
+  build-demo-windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/demo/windows
+  build-demo-macos:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/demo/macos
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

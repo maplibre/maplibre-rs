@@ -1,9 +1,7 @@
 #![allow(clippy::identity_op)]
-use wgpu::{
-    ColorTargetState, Device, FragmentState, ShaderModule, VertexBufferLayout, VertexState,
-};
 
 use crate::coords::WorldCoords;
+use crate::render::resource::{FragmentState, VertexBufferLayout, VertexState};
 use bytemuck_derive::{Pod, Zeroable};
 use cgmath::SquareMatrix;
 
@@ -18,101 +16,25 @@ impl From<WorldCoords> for Vec3f32 {
     }
 }
 
-pub struct FragmentShaderState {
-    source: &'static str,
-    targets: &'static [ColorTargetState],
-    module: Option<ShaderModule>,
+pub trait Shader {
+    fn describe_vertex(&self) -> VertexState;
+    fn describe_fragment(&self) -> FragmentState;
 }
 
-pub struct VertexShaderState {
-    source: &'static str,
-    buffers: &'static [VertexBufferLayout<'static>],
-    module: Option<ShaderModule>,
+pub struct TileMaskShader {
+    pub format: wgpu::TextureFormat,
+    pub draw_colors: bool,
 }
 
-impl FragmentShaderState {
-    pub const fn new(source: &'static str, targets: &'static [ColorTargetState]) -> Self {
-        Self {
-            source,
-            targets,
-            module: None,
-        }
-    }
-
-    pub fn create_fragment_state(&mut self, device: &Device) -> FragmentState {
-        self.module = Some(device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: Some("fragment shader"),
-            source: wgpu::ShaderSource::Wgsl(self.source.into()),
-        }));
-
-        wgpu::FragmentState {
-            module: self.module.as_ref().unwrap(),
+impl Shader for TileMaskShader {
+    fn describe_vertex(&self) -> VertexState {
+        VertexState {
+            source: include_str!("tile_mask.vertex.wgsl"),
             entry_point: "main",
-            targets: self.targets,
-        }
-    }
-}
-
-impl VertexShaderState {
-    pub const fn new(
-        source: &'static str,
-        buffers: &'static [VertexBufferLayout<'static>],
-    ) -> Self {
-        Self {
-            source,
-            buffers,
-            module: None,
-        }
-    }
-
-    pub fn create_vertex_state(&mut self, device: &Device) -> VertexState {
-        self.module = Some(device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: Some("vertex shader"),
-            source: wgpu::ShaderSource::Wgsl(self.source.into()),
-        }));
-
-        wgpu::VertexState {
-            module: self.module.as_ref().unwrap(),
-            entry_point: "main",
-            buffers: self.buffers,
-        }
-    }
-}
-
-pub mod tile {
-    use super::{ShaderLayerMetadata, ShaderVertex};
-    use crate::platform::COLOR_TEXTURE_FORMAT;
-    use crate::render::shaders::{ShaderFeatureStyle, ShaderTileMetadata};
-
-    use super::{FragmentShaderState, VertexShaderState};
-
-    pub const VERTEX: VertexShaderState = VertexShaderState::new(
-        include_str!("tile.vertex.wgsl"),
-        &[
-            // vertex data
-            wgpu::VertexBufferLayout {
-                array_stride: std::mem::size_of::<ShaderVertex>() as u64,
-                step_mode: wgpu::VertexStepMode::Vertex,
-                attributes: &[
-                    // position
-                    wgpu::VertexAttribute {
-                        offset: 0,
-                        format: wgpu::VertexFormat::Float32x2,
-                        shader_location: 0,
-                    },
-                    // normal
-                    wgpu::VertexAttribute {
-                        offset: wgpu::VertexFormat::Float32x2.size(),
-                        format: wgpu::VertexFormat::Float32x2,
-                        shader_location: 1,
-                    },
-                ],
-            },
-            // tile metadata
-            wgpu::VertexBufferLayout {
+            buffers: vec![VertexBufferLayout {
                 array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
                 step_mode: wgpu::VertexStepMode::Instance,
-                attributes: &[
+                attributes: vec![
                     // translate
                     wgpu::VertexAttribute {
                         offset: 0,
@@ -134,118 +56,142 @@ pub mod tile {
                         format: wgpu::VertexFormat::Float32x4,
                         shader_location: 7,
                     },
-                    // zoom_factor
-                    wgpu::VertexAttribute {
-                        offset: 4 * wgpu::VertexFormat::Float32x4.size(),
-                        format: wgpu::VertexFormat::Float32,
-                        shader_location: 9,
-                    },
                 ],
-            },
-            // layer metadata
-            wgpu::VertexBufferLayout {
-                array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
-                step_mode: wgpu::VertexStepMode::Instance,
-                attributes: &[
-                    // z_index
-                    wgpu::VertexAttribute {
-                        offset: 0,
-                        format: wgpu::VertexFormat::Float32,
-                        shader_location: 10,
-                    },
-                ],
-            },
-            // features
-            wgpu::VertexBufferLayout {
-                array_stride: std::mem::size_of::<ShaderFeatureStyle>() as u64,
-                step_mode: wgpu::VertexStepMode::Vertex,
-                attributes: &[
-                    // color
-                    wgpu::VertexAttribute {
-                        offset: 0,
-                        format: wgpu::VertexFormat::Float32x4,
-                        shader_location: 8,
-                    },
-                ],
-            },
-        ],
-    );
+            }],
+        }
+    }
 
-    pub const FRAGMENT: FragmentShaderState = FragmentShaderState::new(
-        include_str!("tile.fragment.wgsl"),
-        &[wgpu::ColorTargetState {
-            format: COLOR_TEXTURE_FORMAT,
-            /*blend: Some(wgpu::BlendState {
-                color: wgpu::BlendComponent {
-                    src_factor: wgpu::BlendFactor::SrcAlpha,
-                    dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                    operation: wgpu::BlendOperation::Add,
+    fn describe_fragment(&self) -> FragmentState {
+        FragmentState {
+            source: include_str!("tile_mask.fragment.wgsl"),
+            entry_point: "main",
+            targets: vec![wgpu::ColorTargetState {
+                format: self.format,
+                blend: None,
+                write_mask: if self.draw_colors {
+                    wgpu::ColorWrites::ALL
+                } else {
+                    wgpu::ColorWrites::empty()
                 },
-                alpha: wgpu::BlendComponent {
-                    src_factor: wgpu::BlendFactor::SrcAlpha,
-                    dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                    operation: wgpu::BlendOperation::Add,
-                },
-            }),*/
-            blend: None,
-            write_mask: wgpu::ColorWrites::ALL,
-        }],
-    );
+            }],
+        }
+    }
 }
 
-pub mod tile_mask {
-    use crate::platform::COLOR_TEXTURE_FORMAT;
-    use crate::render::options::DEBUG_STENCIL_PATTERN;
-    use crate::render::shaders::ShaderTileMetadata;
-    use wgpu::ColorWrites;
+pub struct TileShader {
+    pub format: wgpu::TextureFormat,
+}
 
-    use super::{FragmentShaderState, VertexShaderState};
-
-    pub const VERTEX: VertexShaderState = VertexShaderState::new(
-        include_str!("tile_mask.vertex.wgsl"),
-        &[wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
-            step_mode: wgpu::VertexStepMode::Instance,
-            attributes: &[
-                // translate
-                wgpu::VertexAttribute {
-                    offset: 0,
-                    format: wgpu::VertexFormat::Float32x4,
-                    shader_location: 4,
+impl Shader for TileShader {
+    fn describe_vertex(&self) -> VertexState {
+        VertexState {
+            source: include_str!("tile.vertex.wgsl"),
+            entry_point: "main",
+            buffers: vec![
+                // vertex data
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderVertex>() as u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: vec![
+                        // position
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32x2,
+                            shader_location: 0,
+                        },
+                        // normal
+                        wgpu::VertexAttribute {
+                            offset: wgpu::VertexFormat::Float32x2.size(),
+                            format: wgpu::VertexFormat::Float32x2,
+                            shader_location: 1,
+                        },
+                    ],
                 },
-                wgpu::VertexAttribute {
-                    offset: 1 * wgpu::VertexFormat::Float32x4.size(),
-                    format: wgpu::VertexFormat::Float32x4,
-                    shader_location: 5,
+                // tile metadata
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: vec![
+                        // translate
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 4,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 1 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 5,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 2 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 6,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 3 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 7,
+                        },
+                        // zoom_factor
+                        wgpu::VertexAttribute {
+                            offset: 4 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 9,
+                        },
+                    ],
                 },
-                wgpu::VertexAttribute {
-                    offset: 2 * wgpu::VertexFormat::Float32x4.size(),
-                    format: wgpu::VertexFormat::Float32x4,
-                    shader_location: 6,
+                // layer metadata
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: vec![
+                        // z_index
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 10,
+                        },
+                    ],
                 },
-                wgpu::VertexAttribute {
-                    offset: 3 * wgpu::VertexFormat::Float32x4.size(),
-                    format: wgpu::VertexFormat::Float32x4,
-                    shader_location: 7,
+                // features
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderFeatureStyle>() as u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: vec![
+                        // color
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 8,
+                        },
+                    ],
                 },
             ],
-        }],
-    );
+        }
+    }
 
-    pub const FRAGMENT: FragmentShaderState = FragmentShaderState::new(
-        include_str!("tile_mask.fragment.wgsl"),
-        &[wgpu::ColorTargetState {
-            format: COLOR_TEXTURE_FORMAT,
-            blend: None,
-            write_mask: mask_write_mask(),
-        }],
-    );
-
-    pub const fn mask_write_mask() -> ColorWrites {
-        if DEBUG_STENCIL_PATTERN {
-            wgpu::ColorWrites::ALL
-        } else {
-            wgpu::ColorWrites::empty()
+    fn describe_fragment(&self) -> FragmentState {
+        FragmentState {
+            source: include_str!("tile.fragment.wgsl"),
+            entry_point: "main",
+            targets: vec![wgpu::ColorTargetState {
+                format: self.format,
+                /*blend: Some(wgpu::BlendState {
+                    color: wgpu::BlendComponent {
+                        src_factor: wgpu::BlendFactor::SrcAlpha,
+                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
+                        operation: wgpu::BlendOperation::Add,
+                    },
+                    alpha: wgpu::BlendComponent {
+                        src_factor: wgpu::BlendFactor::SrcAlpha,
+                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
+                        operation: wgpu::BlendOperation::Add,
+                    },
+                }),*/
+                blend: None,
+                write_mask: wgpu::ColorWrites::ALL,
+            }],
         }
     }
 }
