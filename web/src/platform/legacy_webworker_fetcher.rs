@@ -7,6 +7,7 @@ use maplibre::coords::TileCoords;
 use maplibre::io::scheduler::Scheduler;
 
 use maplibre::io::TileRequestID;
+use maplibre::stages::SharedThreadState;
 
 #[wasm_bindgen]
 extern "C" {

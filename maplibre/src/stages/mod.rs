@@ -26,7 +26,7 @@ use std::sync::{mpsc, Arc, Mutex};
 use crate::io::pipeline::Processable;
 use crate::io::tile_repository::StoredLayer;
 use crate::stages::message::{
-    LayerTessellateMessage, MessageReceiver, MessageSender, SharedThreadState, TessellateMessage,
+    LayerTessellateMessage, MessageReceiver, MessageSender, TessellateMessage,
     TileTessellateMessage,
 };
 
@@ -110,6 +110,78 @@ impl PipelineProcessor for HeadedPipelineProcessor {
     ) {
         if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
             geometry_index.index_tile(&coords, TileIndex::Linear { list: geometries })
+        }
+    }
+}
+
+/// Stores and provides access to the thread safe data shared between the schedulers.
+#[derive(Clone)]
+pub struct SharedThreadState {
+    pub tile_request_state: Arc<Mutex<TileRequestState>>,
+    pub message_sender: mpsc::Sender<TessellateMessage>,
+    pub geometry_index: Arc<Mutex<GeometryIndex>>,
+}
+
+impl SharedThreadState {
+    fn get_tile_request(&self, request_id: TileRequestID) -> Option<TileRequest> {
+        self.tile_request_state
+            .lock()
+            .ok()
+            .and_then(|tile_request_state| tile_request_state.get_tile_request(request_id).cloned())
+    }
+
+    #[tracing::instrument(skip_all)]
+    pub fn process_tile(&self, request_id: TileRequestID, data: Box<[u8]>) -> Result<(), Error> {
+        if let Some(tile_request) = self.get_tile_request(request_id) {
+            let mut pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
+                state: self.clone(),
+            });
+            let pipeline = build_vector_tile_pipeline();
+            pipeline.process((tile_request, request_id, data), &mut pipeline_context);
+        }
+
+        Ok(())
+    }
+
+    pub fn tile_unavailable(
+        &self,
+        coords: &WorldTileCoords,
+        request_id: TileRequestID,
+    ) -> Result<(), Error> {
+        if let Some(tile_request) = self.get_tile_request(request_id) {
+            for to_load in &tile_request.layers {
+                tracing::warn!("layer {} at {} unavailable", to_load, coords);
+                self.message_sender.send(TessellateMessage::Layer(
+                    LayerTessellateMessage::UnavailableLayer {
+                        coords: tile_request.coords,
+                        layer_name: to_load.to_string(),
+                    },
+                ))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    #[tracing::instrument(skip_all)]
+    pub fn query_point(
+        &self,
+        world_coords: &WorldCoords,
+        z: u8,
+        zoom: Zoom,
+    ) -> Option<Vec<IndexedGeometry<f64>>> {
+        if let Ok(geometry_index) = self.geometry_index.lock() {
+            geometry_index
+                .query_point(world_coords, z, zoom)
+                .map(|geometries| {
+                    geometries
+                        .iter()
+                        .cloned()
+                        .cloned()
+                        .collect::<Vec<IndexedGeometry<f64>>>()
+                })
+        } else {
+            unimplemented!()
         }
     }
 }

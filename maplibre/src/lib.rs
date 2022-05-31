@@ -37,12 +37,13 @@ pub mod style;
 pub mod window;
 // Exposed because of doc-strings
 pub mod schedule;
+// Exposed because of SharedThreadState
+pub mod stages;
 
 // Used for benchmarking
 pub mod benchmarking;
 
 // Internal modules
-pub(crate) mod stages;
 pub(crate) mod tessellation;
 pub mod util;
 

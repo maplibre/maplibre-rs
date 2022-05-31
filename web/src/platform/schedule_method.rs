@@ -34,12 +34,13 @@ impl WebWorkerPoolScheduleMethod {
 }
 
 impl ScheduleMethod for WebWorkerPoolScheduleMethod {
-    fn schedule(
+    fn schedule<T>(
         &self,
-        future_factory: Box<
-            (dyn (FnOnce() -> Pin<Box<dyn Future<Output = ()> + 'static>>) + Send + 'static),
-        >,
-    ) -> Result<(), Error> {
+        future_factory: impl (FnOnce() -> T) + Send + 'static,
+    ) -> Result<(), Error>
+    where
+        T: Future<Output = ()> + 'static,
+    {
         self.pool
             .run(move || {
                 wasm_bindgen_futures::future_to_promise(async move {
