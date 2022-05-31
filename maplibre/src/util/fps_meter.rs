@@ -4,8 +4,8 @@ use std::time::Duration;
 /// Measures the frames per second.
 ///
 /// # Example
-/// ```rust
-/// use crate::util::FPSMeter;
+/// ```ignore
+/// use maplibre::util::FPSMeter;
 ///
 /// let mut meter = FPSMeter::new();
 ///

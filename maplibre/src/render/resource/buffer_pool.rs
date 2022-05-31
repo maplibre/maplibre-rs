@@ -581,7 +581,7 @@ mod tests {
     use crate::style::layer::StyleLayer;
     use lyon::tessellation::VertexBuffers;
 
-    use crate::render::buffer_pool::{
+    use crate::render::resource::buffer_pool::{
         BackingBufferDescriptor, BackingBufferType, BufferPool, Queue,
     };
 
