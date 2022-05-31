@@ -121,26 +121,24 @@ impl<I, O> Processable for fn(input: I, context: &mut PipelineContext) -> O {
     }
 }
 
-pub struct FnProcessable<I: 'static, O: 'static> {
-    func: &'static fn(I, context: &mut PipelineContext) -> O,
-}
-
-impl<I, O> Processable for FnProcessable<I, O> {
-    type Input = I;
-    type Output = O;
-
-    fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output {
-        (self.func)(input, context)
-    }
-}
-
 pub struct ClosureProcessable<F, I, O>
 where
     F: Fn(I, &mut PipelineContext) -> O,
 {
     func: F,
     phantom_i: PhantomData<I>,
-    phantom_o: PhantomData<O>,
+}
+
+impl<F, I, O> From<F> for ClosureProcessable<F, I, O>
+where
+    F: Fn(I, &mut PipelineContext) -> O,
+{
+    fn from(func: F) -> Self {
+        ClosureProcessable {
+            func,
+            phantom_i: PhantomData::default(),
+        }
+    }
 }
 
 impl<F, I, O> Processable for ClosureProcessable<F, I, O>
@@ -155,24 +153,10 @@ where
     }
 }
 
-pub struct Closure2Processable<I, O> {
-    func: fn(I, context: &mut PipelineContext) -> O,
-}
-
-impl<I, O> Processable for Closure2Processable<I, O> {
-    type Input = I;
-    type Output = O;
-
-    fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output {
-        (self.func)(input, context)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::io::pipeline::{
-        Closure2Processable, ClosureProcessable, EndStep, FnProcessable, HeadedPipelineProcessor,
-        PipelineContext, PipelineProcessor, PipelineStep, Processable,
+        ClosureProcessable, EndStep, PipelineContext, PipelineProcessor, PipelineStep, Processable,
     };
     use std::sync::mpsc;
 
@@ -194,9 +178,7 @@ mod tests {
             processor: Box::new(DummyPipelineProcessor),
         };
         let output: u32 = PipelineStep {
-            process: FnProcessable {
-                func: &(add_two as fn(u8, &mut PipelineContext) -> u32),
-            },
+            process: add_two as fn(u8, &mut PipelineContext) -> u32,
             next: EndStep::default(),
         }
         .process(5u8, &mut context);
@@ -204,9 +186,9 @@ mod tests {
         assert_eq!(output, 7);
 
         let output = PipelineStep {
-            process: &(add_one as fn(u32, &mut PipelineContext) -> u8),
+            process: add_one as fn(u32, &mut PipelineContext) -> u8,
             next: PipelineStep {
-                process: &(add_two as fn(u8, &mut PipelineContext) -> u32),
+                process: add_two as fn(u8, &mut PipelineContext) -> u32,
                 next: EndStep::default(),
             },
         }
@@ -214,28 +196,42 @@ mod tests {
 
         assert_eq!(output, 8);
 
+        let mut a = 3;
+        let closure = |input: u8, context: &mut PipelineContext| -> u32 {
+            return input as u32 + 2 + a;
+        };
         let output: u32 = PipelineStep {
             process: ClosureProcessable {
-                func: |input: u8, context| -> u32 {
-                    return input as u32 + 2;
-                },
+                func: closure,
                 phantom_i: Default::default(),
-                phantom_o: Default::default(),
             },
             next: EndStep::default(),
         }
         .process(5u8, &mut context);
 
-        assert_eq!(output, 7);
+        assert_eq!(output, 10);
 
+        let processable =
+            ClosureProcessable::from(|input: u8, context: &mut PipelineContext| -> u32 {
+                return input as u32 + 2 + a;
+            });
         let output: u32 = PipelineStep {
-            process: Closure2Processable {
-                func: |input: u8, context| -> u32 { input as u32 + 2 },
-            },
+            process: processable,
             next: EndStep::default(),
         }
         .process(5u8, &mut context);
 
-        assert_eq!(output, 7);
+        assert_eq!(output, 10);
+
+        let output: u32 = PipelineStep::<ClosureProcessable<_, u8, u32>, _>::new(
+            (|input: u8, context: &mut PipelineContext| -> u32 {
+                return input as u32 + 2 + a;
+            })
+            .into(),
+            EndStep::<u32>::default(),
+        )
+        .process(5u8, &mut context);
+
+        assert_eq!(output, 10);
     }
 }
