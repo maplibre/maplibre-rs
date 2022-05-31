@@ -47,15 +47,12 @@ impl EventuallyMapContext {
                 tile_repository,
                 ..
             }) => {
-                mem::replace(
-                    self,
-                    EventuallyMapContext::Full(MapContext {
-                        view_state,
-                        style,
-                        tile_repository,
-                        renderer,
-                    }),
-                );
+                *self = EventuallyMapContext::Full(MapContext {
+                    view_state,
+                    style,
+                    tile_repository,
+                    renderer,
+                });
             }
             EventuallyMapContext::_Uninitialized => {}
         }
