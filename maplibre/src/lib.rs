@@ -44,7 +44,7 @@ pub mod benchmarking;
 // Internal modules
 pub(crate) mod stages;
 pub(crate) mod tessellation;
-pub(crate) mod util;
+pub mod util;
 
 /// Map's configuration and execution.
 pub struct Map<MWC, SM, HC>

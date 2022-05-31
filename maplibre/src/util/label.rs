@@ -51,7 +51,7 @@ where
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```
 /// # use maplibre::define_label;
 /// define_label!(MyNewLabelTrait);
 /// ```

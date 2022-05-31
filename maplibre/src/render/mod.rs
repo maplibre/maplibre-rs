@@ -34,12 +34,12 @@ use std::sync::Arc;
 // Rendering internals
 #[cfg(not(target_arch = "wasm32"))]
 mod copy_surface_to_buffer_node;
-mod graph;
+pub mod graph;
 mod graph_runner;
 mod main_pass;
 mod render_commands;
 mod render_phase;
-mod resource;
+pub mod resource;
 mod shaders;
 mod stages;
 mod tile_pipeline;
@@ -375,7 +375,29 @@ mod tests {
     use crate::render::graph::RenderGraph;
     use crate::render::graph_runner::RenderGraphRunner;
     use crate::render::resource::Surface;
-    use crate::RenderState;
+    use crate::{MapWindow, MapWindowConfig, RenderState, Renderer, RendererSettings, WindowSize};
+
+    pub struct HeadlessMapWindowConfig {
+        size: WindowSize,
+    }
+
+    impl MapWindowConfig for HeadlessMapWindowConfig {
+        type MapWindow = HeadlessMapWindow;
+
+        fn create(&self) -> Self::MapWindow {
+            Self::MapWindow { size: self.size }
+        }
+    }
+
+    pub struct HeadlessMapWindow {
+        size: WindowSize,
+    }
+
+    impl MapWindow for HeadlessMapWindow {
+        fn size(&self) -> WindowSize {
+            self.size
+        }
+    }
 
     #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
@@ -406,9 +428,15 @@ mod tests {
             .ok()
             .unwrap();
 
-        let render_state = RenderState::default();
+        let render_state = RenderState::new(Surface::from_image::<HeadlessMapWindowConfig>(
+            &device,
+            &HeadlessMapWindow {
+                size: WindowSize::new(100, 100).unwrap(),
+            },
+            &RendererSettings::default(),
+        ));
 
-        RenderGraphRunner::run(&graph, &device, &queue, &render_state);
+        RenderGraphRunner::run(&graph, &device, &queue, &render_state).unwrap();
     }
 }
 
