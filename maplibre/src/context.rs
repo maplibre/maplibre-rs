@@ -1,5 +1,5 @@
 use crate::coords::{Zoom, TILE_SIZE};
-use crate::io::tile_cache::TileCache;
+use crate::io::tile_repository::TileRepository;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::util::ChangeObserver;
 use crate::{Renderer, ScheduleMethod, Style, WindowSize};
@@ -59,6 +59,6 @@ pub struct MapContext {
     pub view_state: ViewState,
     pub style: Style,
 
-    pub tile_cache: TileCache,
+    pub tile_repository: TileRepository,
     pub renderer: Renderer,
 }

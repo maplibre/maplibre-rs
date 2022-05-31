@@ -1,8 +1,9 @@
-//! Receives data from async threads and populates the [`crate::io::tile_cache::TileCache`].
+//! Receives data from async threads and populates the [`crate::io::tile_repository::TileCache`].
 
+use super::{MessageReceiver, SharedThreadState, TessellateMessage, TileTessellateMessage};
 use crate::context::MapContext;
+use crate::io::tile_repository::StoredLayer;
 use crate::schedule::Stage;
-use crate::stages::{MessageReceiver, SharedThreadState, TessellateMessage, TileTessellateMessage};
 use std::sync::mpsc;
 
 pub struct PopulateTileStore {
@@ -20,16 +21,22 @@ impl PopulateTileStore {
 }
 
 impl Stage for PopulateTileStore {
-    fn run(&mut self, MapContext { tile_cache, .. }: &mut MapContext) {
+    fn run(
+        &mut self,
+        MapContext {
+            tile_repository, ..
+        }: &mut MapContext,
+    ) {
         if let Ok(result) = self.message_receiver.try_recv() {
             match result {
                 TessellateMessage::Layer(layer_result) => {
+                    let layer: StoredLayer = layer_result.into();
                     tracing::trace!(
                         "Layer {} at {} reached main thread",
-                        layer_result.layer_name(),
-                        layer_result.get_coords()
+                        layer.layer_name(),
+                        layer.get_coords()
                     );
-                    tile_cache.put_tessellated_layer(layer_result);
+                    tile_repository.put_tessellated_layer(layer);
                 }
                 TessellateMessage::Tile(TileTessellateMessage { request_id, coords }) => loop {
                     if let Ok(mut tile_request_state) =

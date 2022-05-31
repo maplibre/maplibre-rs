@@ -2,7 +2,7 @@
 
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, Zoom};
-use crate::io::tile_cache::TileCache;
+use crate::io::tile_repository::{StoredLayer, TileRepository};
 use crate::render::camera::ViewProjection;
 use crate::render::resource::IndexEntry;
 use crate::render::shaders::{
@@ -13,7 +13,6 @@ use crate::render::util::Eventually::Initialized;
 use crate::schedule::Stage;
 use crate::{RenderState, Renderer, Style};
 
-use crate::stages::LayerTessellateMessage;
 use std::iter;
 
 #[derive(Default)]
@@ -26,7 +25,7 @@ impl Stage for UploadStage {
         MapContext {
             view_state,
             style,
-            tile_cache,
+            tile_repository,
             renderer: Renderer { queue, state, .. },
             ..
         }: &mut MapContext,
@@ -59,7 +58,7 @@ impl Stage for UploadStage {
             .map(|bounding_box| ViewRegion::new(bounding_box, 0, *view_state.zoom, visible_level));
 
         if let Some(view_region) = &view_region {
-            self.upload_tile_geometry(state, queue, tile_cache, style, view_region);
+            self.upload_tile_geometry(state, queue, tile_repository, style, view_region);
             self.upload_tile_view_pattern(state, queue, &view_proj);
             self.update_metadata();
         }
@@ -89,7 +88,7 @@ impl UploadStage {
         /*let source_layer = entry.style_layer.source_layer.as_ref().unwrap();
 
         if let Some(result) = scheduler
-            .get_tile_cache()
+            .get_tile_repository()
             .iter_tessellated_layers_at(&world_coords)
             .unwrap()
             .find(|layer| source_layer.as_str() == layer.layer_name())
@@ -155,7 +154,7 @@ impl UploadStage {
         &self,
         RenderState { buffer_pool, .. }: &mut RenderState,
         queue: &wgpu::Queue,
-        tile_cache: &TileCache,
+        tile_repository: &TileRepository,
         style: &Style,
         view_region: &ViewRegion,
     ) {
@@ -165,7 +164,7 @@ impl UploadStage {
                 let loaded_layers = buffer_pool
                     .get_loaded_layers_at(&world_coords)
                     .unwrap_or_default();
-                if let Some(available_layers) = tile_cache
+                if let Some(available_layers) = tile_repository
                     .iter_tessellated_layers_at(&world_coords)
                     .map(|layers| {
                         layers
@@ -187,10 +186,10 @@ impl UploadStage {
                                 .map(|color| color.into());
 
                             match message {
-                                LayerTessellateMessage::UnavailableLayer { coords: _, .. } => {
+                                StoredLayer::UnavailableLayer { coords: _, .. } => {
                                     /*self.buffer_pool.mark_layer_unavailable(*coords);*/
                                 }
-                                LayerTessellateMessage::TessellatedLayer {
+                                StoredLayer::TessellatedLayer {
                                     coords,
                                     feature_indices,
                                     layer_data,

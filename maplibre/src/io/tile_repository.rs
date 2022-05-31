@@ -2,18 +2,48 @@
 
 use crate::coords::{Quadkey, WorldTileCoords};
 use crate::render::ShaderVertex;
-use crate::stages::LayerTessellateMessage;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use geozero::mvt::tile;
 use std::collections::{btree_map, BTreeMap, HashSet};
 
-/// Stores the multiple [crate::io::LayerTessellateMessage] of a cached tile.
-pub struct CachedTile {
-    layers: Vec<LayerTessellateMessage>, // TODO: Changen type here, its no message
+/// A layer which is stored for future use.
+pub enum StoredLayer {
+    UnavailableLayer {
+        coords: WorldTileCoords,
+        layer_name: String,
+    },
+    TessellatedLayer {
+        coords: WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+        /// Holds for each feature the count of indices.
+        feature_indices: Vec<u32>,
+        layer_data: tile::Layer,
+    },
 }
 
-impl CachedTile {
-    pub fn new(first_layer: LayerTessellateMessage) -> Self {
+impl StoredLayer {
+    pub fn get_coords(&self) -> WorldTileCoords {
+        match self {
+            StoredLayer::UnavailableLayer { coords, .. } => *coords,
+            StoredLayer::TessellatedLayer { coords, .. } => *coords,
+        }
+    }
+
+    pub fn layer_name(&self) -> &str {
+        match self {
+            StoredLayer::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
+            StoredLayer::TessellatedLayer { layer_data, .. } => &layer_data.name,
+        }
+    }
+}
+
+/// Stores multiple [StoredLayers](StoredLayer).
+pub struct StoredTile {
+    layers: Vec<StoredLayer>,
+}
+
+impl StoredTile {
+    pub fn new(first_layer: StoredLayer) -> Self {
         Self {
             layers: vec![first_layer],
         }
@@ -22,50 +52,34 @@ impl CachedTile {
 
 /// Stores and provides access to a quad tree of cached tiles with world tile coords.
 #[derive(Default)]
-pub struct TileCache {
-    // TODO: Change name to TileStore
-    cache: BTreeMap<Quadkey, CachedTile>,
+pub struct TileRepository {
+    tree: BTreeMap<Quadkey, StoredTile>,
 }
 
-impl TileCache {
+impl TileRepository {
     pub fn new() -> Self {
         Self {
-            cache: BTreeMap::new(),
+            tree: BTreeMap::new(),
         }
-    }
-
-    pub fn put_tessellated_layer_(
-        &mut self,
-        coords: WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
-        layer_data: tile::Layer,
-    ) {
-        self.put_tessellated_layer(LayerTessellateMessage::TessellatedLayer {
-            coords,
-            buffer,
-            feature_indices,
-            layer_data,
-        })
     }
 
     /// Inserts a tessellated layer into the quad tree at its world tile coords.
     /// If the space is vacant, the tessellated layer is inserted into a new
-    /// [crate::io::tile_cache::CachedTile].
+    /// [crate::io::tile_repository::CachedTile].
     /// If the space is occupied, the tessellated layer is added to the current
-    /// [crate::io::tile_cache::CachedTile].
-    pub fn put_tessellated_layer(&mut self, message: LayerTessellateMessage) {
-        if let Some(entry) = message
+    /// [crate::io::tile_repository::CachedTile].
+    pub fn put_tessellated_layer(&mut self, layer: StoredLayer) {
+        if let Some(entry) = layer
             .get_coords()
             .build_quad_key()
-            .map(|key| self.cache.entry(key))
+            .map(|key| self.tree.entry(key))
         {
             match entry {
                 btree_map::Entry::Vacant(entry) => {
-                    entry.insert(CachedTile::new(message));
+                    entry.insert(StoredTile::new(layer));
                 }
                 btree_map::Entry::Occupied(mut entry) => {
-                    entry.get_mut().layers.push(message);
+                    entry.get_mut().layers.push(layer);
                 }
             }
         }
@@ -76,10 +90,10 @@ impl TileCache {
     pub fn iter_tessellated_layers_at(
         &self,
         coords: &WorldTileCoords,
-    ) -> Option<impl Iterator<Item = &LayerTessellateMessage> + '_> {
+    ) -> Option<impl Iterator<Item = &StoredLayer> + '_> {
         coords
             .build_quad_key()
-            .and_then(|key| self.cache.get(&key))
+            .and_then(|key| self.tree.get(&key))
             .map(|results| results.layers.iter())
     }
 
@@ -90,7 +104,7 @@ impl TileCache {
         coords: &WorldTileCoords,
         layers: &mut HashSet<String>,
     ) {
-        if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.cache.get(&key)) {
+        if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.tree.get(&key)) {
             let tessellated_set: HashSet<String> = cached_tile
                 .layers
                 .iter()
@@ -103,7 +117,7 @@ impl TileCache {
 
     /// Checks if a layer is missing from the given layers set at the given coords.
     pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
-        if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.cache.get(&key)) {
+        if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.tree.get(&key)) {
             let tessellated_set: HashSet<&str> = cached_tile
                 .layers
                 .iter()

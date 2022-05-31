@@ -1,11 +1,11 @@
-//! Stores the state of the map such as `[crate::coords::Zoom]`, `[crate::camera::Camera]`, `[crate::style::Style]`, `[crate::io::tile_cache::TileCache]` and more.
+//! Stores the state of the map such as `[crate::coords::Zoom]`, `[crate::camera::Camera]`, `[crate::style::Style]`, `[crate::io::tile_repository::TileCache]` and more.
 
 use crate::context::{MapContext, ViewState};
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
 use crate::io::scheduler::Scheduler;
 use crate::io::source_client::{HttpClient, HttpSourceClient, SourceClient};
-use crate::io::tile_cache::TileCache;
+use crate::io::tile_repository::TileRepository;
 use crate::io::tile_request_state::TileRequestState;
 use crate::render::register_render_stages;
 use crate::schedule::{Schedule, Stage};
@@ -23,7 +23,7 @@ pub struct PrematureMapContext {
     view_state: ViewState,
     style: Style,
 
-    tile_cache: TileCache,
+    tile_repository: TileRepository,
 
     wgpu_settings: WgpuSettings,
     renderer_settings: RendererSettings,
@@ -44,7 +44,7 @@ impl EventuallyMapContext {
             EventuallyMapContext::Premature(PrematureMapContext {
                 view_state,
                 style,
-                tile_cache,
+                tile_repository,
                 ..
             }) => {
                 mem::replace(
@@ -52,7 +52,7 @@ impl EventuallyMapContext {
                     EventuallyMapContext::Full(MapContext {
                         view_state,
                         style,
-                        tile_cache,
+                        tile_repository,
                         renderer,
                     }),
                 );
@@ -98,7 +98,7 @@ where
         renderer_settings: RendererSettings,
     ) -> Self {
         let view_state = ViewState::new(&window_size);
-        let tile_cache = TileCache::new();
+        let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
         let http_source_client: HttpSourceClient<HC> = HttpSourceClient::new(http_client);
@@ -112,14 +112,14 @@ where
                 None => EventuallyMapContext::Premature(PrematureMapContext {
                     view_state,
                     style,
-                    tile_cache,
+                    tile_repository,
                     wgpu_settings,
                     renderer_settings,
                 }),
                 Some(renderer) => EventuallyMapContext::Full(MapContext {
                     view_state,
                     style,
-                    tile_cache,
+                    tile_repository,
                     renderer,
                 }),
             },
@@ -244,7 +244,7 @@ where
         style: Style,
     ) -> Self {
         let view_state = ViewState::new(&window_size);
-        let tile_cache = TileCache::new();
+        let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
         register_render_stages(&mut schedule);
@@ -254,7 +254,7 @@ where
             map_context: MapContext {
                 view_state,
                 style,
-                tile_cache,
+                tile_repository,
                 renderer,
             },
             schedule,

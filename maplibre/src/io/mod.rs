@@ -16,7 +16,7 @@ pub mod static_tile_fetcher;
 pub mod geometry_index;
 pub mod pipeline;
 pub mod pipeline_steps;
-pub mod tile_cache;
+pub mod tile_repository;
 pub mod tile_request_state;
 
 /// A request for a tile at the given coordinates and in the given layers.

@@ -7,6 +7,7 @@ use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
 use maplibre::io::pipeline_steps::build_vector_tile_pipeline;
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::{HttpClient, HttpSourceClient};
+use maplibre::io::tile_repository::StoredLayer;
 use maplibre::io::{TileRequest, TileRequestID};
 use maplibre::map_schedule::{EventuallyMapContext, InteractiveMapSchedule};
 use maplibre::platform::http_client::ReqwestHttpClient;
@@ -65,24 +66,12 @@ fn run_in_window() {
     })
 }
 
-struct TessellatedLayer {
-    coords: WorldTileCoords,
-    buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-    /// Holds for each feature the count of indices.
-    feature_indices: Vec<u32>,
-    layer_data: tile::Layer,
-}
-
 #[derive(Default)]
 struct HeadlessPipelineProcessor {
-    layers: Vec<TessellatedLayer>,
+    layers: Vec<StoredLayer>,
 }
 
 impl PipelineProcessor for HeadlessPipelineProcessor {
-    fn finished_tile_tesselation(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {}
-
-    fn unavailable_layer(&mut self, coords: &WorldTileCoords, layer_name: &str) {}
-
     fn finished_layer_tesselation(
         &mut self,
         coords: &WorldTileCoords,
@@ -90,7 +79,7 @@ impl PipelineProcessor for HeadlessPipelineProcessor {
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
     ) {
-        self.layers.push(TessellatedLayer {
+        self.layers.push(StoredLayer::TessellatedLayer {
             coords: *coords,
             buffer,
             feature_indices,
@@ -127,7 +116,7 @@ fn run_headless() {
             .unwrap()
             .into_boxed_slice();
 
-        let mut processor = HeadlessPipelineProcessor::default();
+        let processor = HeadlessPipelineProcessor::default();
         let mut pipeline_context = PipelineContext {
             processor: Box::new(processor),
         };
@@ -155,8 +144,8 @@ fn run_headless() {
         {
             map.map_schedule_mut()
                 .map_context
-                .tile_cache
-                .put_tessellated_layer_(v.coords, v.buffer, v.feature_indices, v.layer_data);
+                .tile_repository
+                .put_tessellated_layer(v);
         }
 
         match map.map_schedule_mut().update_and_redraw() {

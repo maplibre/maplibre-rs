@@ -2,7 +2,7 @@
 
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, Zoom};
-use crate::io::tile_cache::TileCache;
+use crate::io::tile_repository::TileRepository;
 use crate::render::camera::ViewProjection;
 use crate::render::render_phase::RenderPhase;
 use crate::render::resource::{BufferDimensions, BufferedTextureHead, Head, IndexEntry};

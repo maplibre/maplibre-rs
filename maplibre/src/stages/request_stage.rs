@@ -4,7 +4,7 @@ use crate::context::MapContext;
 use crate::coords::{ViewRegion, WorldTileCoords};
 use crate::error::Error;
 use crate::io::source_client::{HttpSourceClient, SourceClient};
-use crate::io::tile_cache::TileCache;
+use crate::io::tile_repository::TileRepository;
 use crate::io::TileRequest;
 use crate::schedule::Stage;
 use crate::stages::SharedThreadState;
@@ -48,7 +48,7 @@ where
         MapContext {
             view_state,
             style,
-            tile_cache,
+            tile_repository,
             ..
         }: &mut MapContext,
     ) {
@@ -65,7 +65,7 @@ where
         {
             if let Some(view_region) = &view_region {
                 // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
-                self.try_failed = self.request_tiles_in_view(tile_cache, style, view_region);
+                self.try_failed = self.request_tiles_in_view(tile_repository, style, view_region);
             }
         }
 
@@ -82,7 +82,7 @@ where
     #[tracing::instrument(skip_all)]
     fn request_tiles_in_view(
         &self,
-        tile_cache: &TileCache,
+        tile_repository: &TileRepository,
         style: &Style,
         view_region: &ViewRegion,
     ) -> bool {
@@ -97,7 +97,7 @@ where
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
                 try_failed = self
-                    .try_request_tile(tile_cache, &coords, &source_layers)
+                    .try_request_tile(tile_repository, &coords, &source_layers)
                     .unwrap();
             }
         }
@@ -106,11 +106,11 @@ where
 
     fn try_request_tile(
         &self,
-        tile_cache: &TileCache,
+        tile_repository: &TileRepository,
         coords: &WorldTileCoords,
         layers: &HashSet<String>,
     ) -> Result<bool, Error> {
-        if !tile_cache.is_layers_missing(coords, layers) {
+        if !tile_repository.is_layers_missing(coords, layers) {
             return Ok(false);
         }
 
