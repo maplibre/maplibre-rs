@@ -74,12 +74,15 @@ impl PipelineProcessor for HeadedPipelineProcessor {
     }
 
     fn unavailable_layer(&mut self, coords: &WorldTileCoords, layer_name: &str) {
-        self.state.message_sender.send(TessellateMessage::Layer(
-            LayerTessellateMessage::UnavailableLayer {
-                coords: *coords,
-                layer_name: layer_name.to_owned(),
-            },
-        ));
+        self.state
+            .message_sender
+            .send(TessellateMessage::Layer(
+                LayerTessellateMessage::UnavailableLayer {
+                    coords: *coords,
+                    layer_name: layer_name.to_owned(),
+                },
+            ))
+            .unwrap();
     }
 
     fn finished_layer_tesselation(

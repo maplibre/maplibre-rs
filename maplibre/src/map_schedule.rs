@@ -101,7 +101,7 @@ where
         let http_source_client: HttpSourceClient<HC> = HttpSourceClient::new(http_client);
         register_stages(&mut schedule, http_source_client, Box::new(scheduler));
 
-        register_render_stages(&mut schedule, false);
+        register_render_stages(&mut schedule, false).unwrap();
 
         Self {
             map_window_config,
@@ -194,7 +194,7 @@ where
                 )
                 .await
                 .unwrap();
-                &self.map_context.make_full(renderer);
+                self.map_context.make_full(renderer);
                 true
             }
             EventuallyMapContext::_Uninitialized => false,
@@ -244,7 +244,7 @@ where
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
-        register_render_stages(&mut schedule, true);
+        register_render_stages(&mut schedule, true).unwrap();
 
         Self {
             map_window_config,

@@ -33,12 +33,27 @@ pub trait PipelineProcessor: Downcast {
 impl_downcast!(PipelineProcessor);
 
 pub struct PipelineContext {
-    pub processor: Box<dyn PipelineProcessor>,
+    processor: Box<dyn PipelineProcessor>,
 }
 
 impl PipelineContext {
-    pub fn teardown(self) -> Box<dyn PipelineProcessor> {
-        self.processor
+    pub fn new<P>(processor: P) -> Self
+    where
+        P: PipelineProcessor,
+    {
+        Self {
+            processor: Box::new(processor),
+        }
+    }
+
+    pub fn take_processor<P>(self) -> Option<Box<P>>
+    where
+        P: PipelineProcessor,
+    {
+        self.processor.into_any().downcast::<P>().ok()
+    }
+    pub fn processor_mut(&mut self) -> &mut dyn PipelineProcessor {
+        self.processor.as_mut()
     }
 }
 

@@ -98,12 +98,9 @@ impl SharedThreadState {
     #[tracing::instrument(skip_all)]
     pub fn process_tile(&self, request_id: TileRequestID, data: Box<[u8]>) -> Result<(), Error> {
         if let Some(tile_request) = self.get_tile_request(request_id) {
-            let mut processor = HeadedPipelineProcessor {
+            let mut pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
                 state: self.clone(),
-            };
-            let mut pipeline_context = PipelineContext {
-                processor: Box::new(processor),
-            };
+            });
             let pipeline = build_vector_tile_pipeline();
             pipeline.process((tile_request, request_id, data), &mut pipeline_context);
         }

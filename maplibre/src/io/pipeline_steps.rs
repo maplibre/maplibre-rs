@@ -39,7 +39,7 @@ impl Processable for IndexLayerStep {
         let index = IndexProcessor::new();
 
         context
-            .processor
+            .processor_mut()
             .finished_layer_indexing(&tile_request.coords, index.get_geometries());
         (tile_request, request_id, tile)
     }
@@ -70,7 +70,9 @@ impl Processable for TessellateLayerStep {
 
             let mut tessellator = ZeroTessellator::<IndexDataType>::default();
             if let Err(e) = layer.process(&mut tessellator) {
-                context.processor.unavailable_layer(coords, layer_name);
+                context
+                    .processor_mut()
+                    .unavailable_layer(coords, layer_name);
 
                 tracing::error!(
                     "layer {} at {} tesselation failed {:?}",
@@ -79,7 +81,7 @@ impl Processable for TessellateLayerStep {
                     e
                 );
             } else {
-                context.processor.finished_layer_tesselation(
+                context.processor_mut().finished_layer_tesselation(
                     coords,
                     tessellator.buffer.into(),
                     tessellator.feature_indices,
@@ -95,7 +97,9 @@ impl Processable for TessellateLayerStep {
             .collect::<HashSet<_>>();
 
         for missing_layer in tile_request.layers.difference(&available_layers) {
-            context.processor.unavailable_layer(coords, missing_layer);
+            context
+                .processor_mut()
+                .unavailable_layer(coords, missing_layer);
 
             tracing::info!(
                 "requested layer {} at {} not found in tile",
@@ -107,7 +111,7 @@ impl Processable for TessellateLayerStep {
         tracing::info!("tile tessellated at {} finished", &tile_request.coords);
 
         context
-            .processor
+            .processor_mut()
             .finished_tile_tesselation(request_id, &tile_request.coords);
 
         (tile_request, request_id, tile)
@@ -133,9 +137,7 @@ mod tests {
 
     #[test]
     fn test() {
-        let mut context = PipelineContext {
-            processor: Box::new(DummyPipelineProcessor),
-        };
+        let mut context = PipelineContext::new(DummyPipelineProcessor);
 
         let pipeline = build_vector_tile_pipeline();
         let output = pipeline.process(

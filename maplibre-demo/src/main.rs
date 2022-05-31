@@ -133,7 +133,7 @@ fn run_headless() {
             &mut pipeline_context,
         );
 
-        let mut processor = pipeline_context.teardown();
+        let mut processor = pipeline_context.take_processor();
 
         while let Some(v) = processor
             .as_any_mut()
