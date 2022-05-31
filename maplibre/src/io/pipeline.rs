@@ -1,5 +1,6 @@
 use crate::coords::WorldTileCoords;
-use crate::io::{LayerTessellateMessage, TessellateMessage, TileRequestID, TileTessellateMessage};
+use crate::io::geometry_index::IndexedGeometry;
+use crate::io::TileRequestID;
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use downcast_rs::{impl_downcast, Downcast};
@@ -10,8 +11,8 @@ use std::process::Output;
 use std::sync::mpsc;
 
 pub trait PipelineProcessor: Downcast {
-    fn finished_tile_tesselation(&mut self, request_id: TileRequestID, coords: &WorldTileCoords);
-    fn unavailable_layer(&mut self, coords: &WorldTileCoords, layer_name: &str);
+    fn finished_tile_tesselation(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {}
+    fn unavailable_layer(&mut self, coords: &WorldTileCoords, layer_name: &str) {}
     fn finished_layer_tesselation(
         &mut self,
         coords: &WorldTileCoords,
@@ -19,52 +20,17 @@ pub trait PipelineProcessor: Downcast {
         // Holds for each feature the count of indices.
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
-    );
+    ) {
+    }
+    fn finished_layer_indexing(
+        &mut self,
+        coords: &WorldTileCoords,
+        geometries: Vec<IndexedGeometry<f64>>,
+    ) {
+    }
 }
 
 impl_downcast!(PipelineProcessor);
-
-pub struct HeadedPipelineProcessor {
-    pub message_sender: mpsc::Sender<TessellateMessage>,
-}
-
-impl PipelineProcessor for HeadedPipelineProcessor {
-    fn finished_tile_tesselation(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {
-        self.message_sender
-            .send(TessellateMessage::Tile(TileTessellateMessage {
-                request_id,
-                coords: *coords,
-            }))
-            .unwrap();
-    }
-
-    fn unavailable_layer(&mut self, coords: &WorldTileCoords, layer_name: &str) {
-        self.message_sender.send(TessellateMessage::Layer(
-            LayerTessellateMessage::UnavailableLayer {
-                coords: *coords,
-                layer_name: layer_name.to_owned(),
-            },
-        ));
-    }
-    fn finished_layer_tesselation(
-        &mut self,
-        coords: &WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
-        layer_data: tile::Layer,
-    ) {
-        self.message_sender
-            .send(TessellateMessage::Layer(
-                LayerTessellateMessage::TessellatedLayer {
-                    coords: *coords,
-                    buffer,
-                    feature_indices,
-                    layer_data,
-                },
-            ))
-            .unwrap();
-    }
-}
 
 pub struct PipelineContext {
     pub processor: Box<dyn PipelineProcessor>,
@@ -92,6 +58,16 @@ where
     next: N,
 }
 
+impl<P, N> PipelineStep<P, N>
+where
+    P: Processable,
+    N: Processable<Input = P::Output>,
+{
+    pub fn new(process: P, next: N) -> Self {
+        Self { process, next }
+    }
+}
+
 impl<P, N> Processable for PipelineStep<P, N>
 where
     P: Processable,
@@ -106,9 +82,16 @@ where
     }
 }
 
-#[derive(Default)]
 pub struct EndStep<I> {
     phantom: PhantomData<I>,
+}
+
+impl<I> Default for EndStep<I> {
+    fn default() -> Self {
+        Self {
+            phantom: PhantomData::default(),
+        }
+    }
 }
 
 impl<I> Processable for EndStep<I> {
@@ -185,148 +168,17 @@ impl<I, O> Processable for Closure2Processable<I, O> {
     }
 }
 
-pub mod steps {
-    use crate::io::pipeline::{EndStep, PipelineContext, PipelineStep, Processable};
-    use crate::io::{TileRequest, TileRequestID};
-    use crate::tessellation::zero_tessellator::ZeroTessellator;
-    use crate::tessellation::IndexDataType;
-    use geozero::GeozeroDatasource;
-    use prost::Message;
-    use std::collections::HashSet;
-
-    pub struct ParseTileStep {}
-
-    impl Processable for ParseTileStep {
-        type Input = (TileRequest, TileRequestID, Box<[u8]>);
-        type Output = (TileRequest, TileRequestID, geozero::mvt::Tile);
-
-        fn process(
-            &self,
-            (tile_request, request_id, data): Self::Input,
-            _context: &mut PipelineContext,
-        ) -> Self::Output {
-            let tile = geozero::mvt::Tile::decode(data.as_ref()).expect("failed to load tile");
-            (tile_request, request_id, tile)
-        }
-    }
-
-    pub struct IndexLayerStep {}
-
-    pub struct TessellateLayerStep {}
-
-    impl Processable for TessellateLayerStep {
-        type Input = (TileRequest, TileRequestID, geozero::mvt::Tile);
-        type Output = ();
-
-        fn process(
-            &self,
-            (tile_request, request_id, mut tile): Self::Input,
-            context: &mut PipelineContext,
-        ) -> Self::Output {
-            let coords = &tile_request.coords;
-
-            for layer in &mut tile.layers {
-                let cloned_layer = layer.clone();
-                let layer_name: &str = &cloned_layer.name;
-                if !tile_request.layers.contains(layer_name) {
-                    continue;
-                }
-
-                tracing::info!("layer {} at {} ready", layer_name, coords);
-
-                let mut tessellator = ZeroTessellator::<IndexDataType>::default();
-                if let Err(e) = layer.process(&mut tessellator) {
-                    context.processor.unavailable_layer(coords, layer_name);
-
-                    tracing::error!(
-                        "layer {} at {} tesselation failed {:?}",
-                        layer_name,
-                        &coords,
-                        e
-                    );
-                } else {
-                    context.processor.finished_layer_tesselation(
-                        coords,
-                        tessellator.buffer.into(),
-                        tessellator.feature_indices,
-                        cloned_layer,
-                    )
-                }
-            }
-
-            let available_layers: HashSet<_> = tile
-                .layers
-                .iter()
-                .map(|layer| layer.name.clone())
-                .collect::<HashSet<_>>();
-
-            for missing_layer in tile_request.layers.difference(&available_layers) {
-                context.processor.unavailable_layer(coords, missing_layer);
-
-                tracing::info!(
-                    "requested layer {} at {} not found in tile",
-                    missing_layer,
-                    &coords
-                );
-            }
-
-            tracing::info!("tile tessellated at {} finished", &tile_request.coords);
-
-            context
-                .processor
-                .finished_tile_tesselation(request_id, &tile_request.coords);
-        }
-    }
-
-    pub fn build_vector_tile_pipeline(
-    ) -> impl Processable<Input = <ParseTileStep as Processable>::Input> {
-        PipelineStep {
-            process: ParseTileStep {},
-            next: PipelineStep {
-                process: TessellateLayerStep {},
-                next: EndStep::default(),
-            },
-        }
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use crate::io::pipeline::steps::build_vector_tile_pipeline;
-        use crate::io::pipeline::{HeadedPipelineProcessor, PipelineContext, Processable};
-        use crate::io::TileRequest;
-        use std::sync::mpsc;
-
-        #[test]
-        fn test() {
-            let mut context = PipelineContext {
-                processor: Box::new(HeadedPipelineProcessor {
-                    message_sender: mpsc::channel().0,
-                }),
-            };
-
-            let pipeline = build_vector_tile_pipeline();
-            let output = pipeline.process(
-                (
-                    TileRequest {
-                        coords: (0, 0, 0).into(),
-                        layers: Default::default(),
-                    },
-                    0,
-                    Box::new([0]),
-                ),
-                &mut context,
-            );
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::io::pipeline::{
         Closure2Processable, ClosureProcessable, EndStep, FnProcessable, HeadedPipelineProcessor,
-        PipelineContext, PipelineStep, Processable,
+        PipelineContext, PipelineProcessor, PipelineStep, Processable,
     };
     use std::sync::mpsc;
+
+    pub struct DummyPipelineProcessor;
+
+    impl PipelineProcessor for DummyPipelineProcessor {}
 
     fn add_one(input: u32, context: &mut PipelineContext) -> u8 {
         input as u8 + 1
@@ -339,9 +191,7 @@ mod tests {
     #[test]
     fn test() {
         let mut context = PipelineContext {
-            processor: Box::new(HeadedPipelineProcessor {
-                message_sender: mpsc::channel().0,
-            }),
+            processor: Box::new(DummyPipelineProcessor),
         };
         let output: u32 = PipelineStep {
             process: FnProcessable {

@@ -7,7 +7,6 @@ use crate::io::scheduler::Scheduler;
 use crate::io::source_client::{HttpClient, HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::tile_request_state::TileRequestState;
-use crate::io::TessellateMessage;
 use crate::render::register_render_stages;
 use crate::schedule::{Schedule, Stage};
 use crate::stages::register_stages;

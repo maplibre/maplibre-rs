@@ -2,12 +2,12 @@ use geozero::mvt::tile;
 use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use maplibre::coords::WorldTileCoords;
 use maplibre::error::Error;
-use maplibre::io::pipeline::steps::build_vector_tile_pipeline;
 use maplibre::io::pipeline::Processable;
 use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
+use maplibre::io::pipeline_steps::build_vector_tile_pipeline;
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::{HttpClient, HttpSourceClient};
-use maplibre::io::{LayerTessellateMessage, TileRequest, TileRequestID};
+use maplibre::io::{TileRequest, TileRequestID};
 use maplibre::map_schedule::{EventuallyMapContext, InteractiveMapSchedule};
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
@@ -65,9 +65,17 @@ fn run_in_window() {
     })
 }
 
+struct TessellatedLayer {
+    coords: WorldTileCoords,
+    buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+    /// Holds for each feature the count of indices.
+    feature_indices: Vec<u32>,
+    layer_data: tile::Layer,
+}
+
 #[derive(Default)]
 struct HeadlessPipelineProcessor {
-    layers: Vec<LayerTessellateMessage>,
+    layers: Vec<TessellatedLayer>,
 }
 
 impl PipelineProcessor for HeadlessPipelineProcessor {
@@ -82,7 +90,7 @@ impl PipelineProcessor for HeadlessPipelineProcessor {
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
     ) {
-        self.layers.push(LayerTessellateMessage::TessellatedLayer {
+        self.layers.push(TessellatedLayer {
             coords: *coords,
             buffer,
             feature_indices,
@@ -148,7 +156,7 @@ fn run_headless() {
             map.map_schedule_mut()
                 .map_context
                 .tile_cache
-                .put_tessellated_layer(v);
+                .put_tessellated_layer_(v.coords, v.buffer, v.feature_indices, v.layer_data);
         }
 
         match map.map_schedule_mut().update_and_redraw() {

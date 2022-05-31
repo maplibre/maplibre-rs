@@ -7,7 +7,7 @@ use crate::io::source_client::{HttpSourceClient, SourceClient};
 use crate::io::tile_cache::TileCache;
 use crate::io::TileRequest;
 use crate::schedule::Stage;
-use crate::stages::shared_thread_state::SharedThreadState;
+use crate::stages::SharedThreadState;
 use crate::{HttpClient, ScheduleMethod, Style};
 use std::collections::HashSet;
 

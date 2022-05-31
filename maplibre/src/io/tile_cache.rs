@@ -1,14 +1,15 @@
 //! Tile cache.
 
 use crate::coords::{Quadkey, WorldTileCoords};
-
-use crate::io::LayerTessellateMessage;
-
+use crate::render::ShaderVertex;
+use crate::stages::LayerTessellateMessage;
+use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
+use geozero::mvt::tile;
 use std::collections::{btree_map, BTreeMap, HashSet};
 
 /// Stores the multiple [crate::io::LayerTessellateMessage] of a cached tile.
 pub struct CachedTile {
-    layers: Vec<LayerTessellateMessage>,
+    layers: Vec<LayerTessellateMessage>, // TODO: Changen type here, its no message
 }
 
 impl CachedTile {
@@ -22,6 +23,7 @@ impl CachedTile {
 /// Stores and provides access to a quad tree of cached tiles with world tile coords.
 #[derive(Default)]
 pub struct TileCache {
+    // TODO: Change name to TileStore
     cache: BTreeMap<Quadkey, CachedTile>,
 }
 
@@ -30,6 +32,21 @@ impl TileCache {
         Self {
             cache: BTreeMap::new(),
         }
+    }
+
+    pub fn put_tessellated_layer_(
+        &mut self,
+        coords: WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+        feature_indices: Vec<u32>,
+        layer_data: tile::Layer,
+    ) {
+        self.put_tessellated_layer(LayerTessellateMessage::TessellatedLayer {
+            coords,
+            buffer,
+            feature_indices,
+            layer_data,
+        })
     }
 
     /// Inserts a tessellated layer into the quad tree at its world tile coords.

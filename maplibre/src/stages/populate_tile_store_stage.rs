@@ -1,10 +1,8 @@
 //! Receives data from async threads and populates the [`crate::io::tile_cache::TileCache`].
 
 use crate::context::MapContext;
-use crate::io::{TessellateMessage, TileTessellateMessage};
 use crate::schedule::Stage;
-use crate::stages::shared_thread_state::SharedThreadState;
-use crate::stages::MessageReceiver;
+use crate::stages::{MessageReceiver, SharedThreadState, TessellateMessage, TileTessellateMessage};
 use std::sync::mpsc;
 
 pub struct PopulateTileStore {

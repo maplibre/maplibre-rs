@@ -3,7 +3,6 @@
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, Zoom};
 use crate::io::tile_cache::TileCache;
-use crate::io::LayerTessellateMessage;
 use crate::render::camera::ViewProjection;
 use crate::render::resource::IndexEntry;
 use crate::render::shaders::{
@@ -14,6 +13,7 @@ use crate::render::util::Eventually::Initialized;
 use crate::schedule::Stage;
 use crate::{RenderState, Renderer, Style};
 
+use crate::stages::LayerTessellateMessage;
 use std::iter;
 
 #[derive(Default)]
