@@ -136,6 +136,8 @@ impl<I, O> Processable for fn(input: I, context: &mut PipelineContext) -> O {
     }
 }
 
+// TODO: Implementing Processable directly on Fn is not possible for some strange reason:
+//       https://github.com/rust-lang/rust/issues/25041
 pub struct ClosureProcessable<F, I, O>
 where
     F: Fn(I, &mut PipelineContext) -> O,
