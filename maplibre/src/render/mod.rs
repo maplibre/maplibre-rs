@@ -32,7 +32,7 @@ use log::info;
 use std::sync::Arc;
 
 // Rendering internals
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "headless")]
 mod copy_surface_to_buffer_node;
 pub mod graph;
 mod graph_runner;
@@ -78,7 +78,7 @@ pub struct RenderState {
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
 
-    pub surface: Surface,
+    surface: Surface,
 
     mask_phase: RenderPhase<TileInView>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
@@ -100,11 +100,18 @@ impl RenderState {
             tile_phase: Default::default(),
         }
     }
+
+    pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    where
+        MW: MapWindow + HeadedMapWindow,
+    {
+        self.surface.recreate::<MW>(window, instance);
+    }
 }
 
 pub struct Renderer {
     pub instance: wgpu::Instance,
-    pub device: Arc<wgpu::Device>,
+    pub device: Arc<wgpu::Device>, // TODO: Arc is needed for headless rendering. Is there a simpler solution?
     pub queue: wgpu::Queue,
     pub adapter_info: wgpu::AdapterInfo,
 
@@ -117,18 +124,17 @@ pub struct Renderer {
 impl Renderer {
     /// Initializes the renderer by retrieving and preparing the GPU instance, device and queue
     /// for the specified backend.
-    pub async fn initialize<MWC>(
-        window: &MWC::MapWindow,
+    pub async fn initialize<MW>(
+        window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
     ) -> Result<Self, wgpu::RequestDeviceError>
     where
-        MWC: MapWindowConfig,
-        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
+        MW: MapWindow + HeadedMapWindow,
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        let surface = Surface::from_window::<MWC>(&instance, window, &settings);
+        let surface = Surface::from_window(&instance, window, &settings);
 
         let compatible_surface = match &surface.head() {
             Head::Headed(window_head) => Some(window_head.surface()),
@@ -162,13 +168,13 @@ impl Renderer {
         })
     }
 
-    pub async fn initialize_headless<MWC>(
-        window: &MWC::MapWindow,
+    pub async fn initialize_headless<MW>(
+        window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
     ) -> Result<Self, wgpu::RequestDeviceError>
     where
-        MWC: MapWindowConfig,
+        MW: MapWindow,
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
@@ -183,7 +189,7 @@ impl Renderer {
         )
         .await?;
 
-        let surface = Surface::from_image::<MWC>(&device, window, &settings);
+        let surface = Surface::from_image(&device, window, &settings);
 
         Ok(Self {
             instance,
@@ -440,9 +446,9 @@ mod tests {
     }
 }
 
-// Plugins that contribute to the RenderGraph should use the following label conventions:
+// Contributors to the RenderGraph should use the following label conventions:
 // 1. Graph modules should have a NAME, input module, and node module (where relevant)
-// 2. The "top level" graph is the plugin module root. Just add things like `pub mod node` directly under the plugin module
+// 2. The "main_graph" graph is the root.
 // 3. "sub graph" modules should be nested beneath their parent graph module
 pub mod main_graph {
     // Labels for input nodes
@@ -462,7 +468,7 @@ pub mod draw_graph {
     // Labels for non-input nodes
     pub mod node {
         pub const MAIN_PASS: &str = "main_pass";
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(feature = "headless")]
         pub const COPY: &str = "copy";
     }
 }

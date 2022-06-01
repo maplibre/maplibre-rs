@@ -55,6 +55,7 @@ impl ViewState {
     }
 }
 
+/// Stores the context of the map.
 pub struct MapContext {
     pub view_state: ViewState,
     pub style: Style,

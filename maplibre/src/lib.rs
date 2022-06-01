@@ -160,7 +160,7 @@ where
         #[cfg(target_os = "android")]
         let renderer = None;
         #[cfg(not(target_os = "android"))]
-        let renderer = Renderer::initialize::<MWC>(
+        let renderer = Renderer::initialize(
             &window,
             self.wgpu_settings.clone(),
             self.renderer_settings.clone(),
@@ -186,7 +186,7 @@ where
         let window = self.map_window_config.create();
         let window_size = window.size();
 
-        let renderer = Renderer::initialize_headless::<MWC>(
+        let renderer = Renderer::initialize_headless(
             &window,
             self.wgpu_settings.clone(),
             self.renderer_settings.clone(),

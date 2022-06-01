@@ -1,5 +1,3 @@
-//! Stores the state of the map such as `[crate::coords::Zoom]`, `[crate::camera::Camera]`, `[crate::style::Style]`, `[crate::io::tile_repository::TileCache]` and more.
-
 use crate::context::{MapContext, ViewState};
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
@@ -162,8 +160,7 @@ where
             let mut renderer = &mut map_context.renderer;
             renderer
                 .state
-                .surface
-                .recreate::<MWC>(window, &renderer.instance);
+                .recreate_surface::<MWC::MapWindow>(window, &renderer.instance);
             self.suspended = false;
         }
     }
@@ -187,13 +184,10 @@ where
                 ..
             }) => {
                 let window = self.map_window_config.create();
-                let renderer = Renderer::initialize::<MWC>(
-                    &window,
-                    wgpu_settings.clone(),
-                    renderer_settings.clone(),
-                )
-                .await
-                .unwrap();
+                let renderer =
+                    Renderer::initialize(&window, wgpu_settings.clone(), renderer_settings.clone())
+                        .await
+                        .unwrap();
                 self.map_context.make_full(renderer);
                 true
             }

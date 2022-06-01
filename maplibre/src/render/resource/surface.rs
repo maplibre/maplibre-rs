@@ -44,10 +44,9 @@ impl WindowHead {
         self.surface.configure(device, &self.surface_config);
     }
 
-    pub fn recreate_surface<MWC>(&mut self, window: &MWC::MapWindow, instance: &wgpu::Instance)
+    pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
     where
-        MWC: MapWindowConfig,
-        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
+        MW: MapWindow + HeadedMapWindow,
     {
         self.surface = unsafe { instance.create_surface(window.inner()) };
     }
@@ -121,14 +120,13 @@ pub struct Surface {
 }
 
 impl Surface {
-    pub fn from_window<MWC>(
+    pub fn from_window<MW>(
         instance: &wgpu::Instance,
-        window: &MWC::MapWindow,
+        window: &MW,
         settings: &RendererSettings,
     ) -> Self
     where
-        MWC: MapWindowConfig,
-        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
+        MW: MapWindow + HeadedMapWindow,
     {
         let size = window.size();
         let surface_config = wgpu::SurfaceConfiguration {
@@ -151,13 +149,10 @@ impl Surface {
         }
     }
 
-    pub fn from_image<MWC>(
-        device: &wgpu::Device,
-        window: &MWC::MapWindow,
-        settings: &RendererSettings,
-    ) -> Self
+    // TODO: Give better name
+    pub fn from_image<MW>(device: &wgpu::Device, window: &MW, settings: &RendererSettings) -> Self
     where
-        MWC: MapWindowConfig,
+        MW: MapWindow,
     {
         let size = window.size();
 
@@ -250,15 +245,14 @@ impl Surface {
         }
     }
 
-    pub fn recreate<MWC>(&mut self, window: &MWC::MapWindow, instance: &wgpu::Instance)
+    pub fn recreate<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
     where
-        MWC: MapWindowConfig,
-        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
+        MW: MapWindow + HeadedMapWindow,
     {
         match &mut self.head {
             Head::Headed(window_head) => {
                 if window_head.has_changed(&(self.size.width(), self.size.height())) {
-                    window_head.recreate_surface::<MWC>(window, instance);
+                    window_head.recreate_surface(window, instance);
                 }
             }
             Head::Headless(_) => {}

@@ -1,4 +1,4 @@
-//! Receives data from async threads and populates the [`crate::io::tile_repository::TileCache`].
+//! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].
 
 use super::{MessageReceiver, SharedThreadState, TessellateMessage, TileTessellateMessage};
 use crate::context::MapContext;

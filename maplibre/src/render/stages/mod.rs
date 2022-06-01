@@ -19,7 +19,7 @@ mod phase_sort_stage;
 mod queue_stage;
 mod resource_stage;
 mod upload_stage;
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "headless")]
 mod write_surface_buffer_stage;
 
 /// The labels of the default App rendering stages.
@@ -69,7 +69,7 @@ pub fn register_render_stages(
     let input_node_id = draw_graph.set_input(vec![]);
     draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(feature = "headless")]
     if headless {
         use crate::render::copy_surface_to_buffer_node::CopySurfaceBufferNode;
         draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
@@ -89,7 +89,7 @@ pub fn register_render_stages(
     schedule.add_stage(RenderStageLabel::PhaseSort, PhaseSortStage::default());
     schedule.add_stage(RenderStageLabel::Render, GraphRunnerStage::new(graph));
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(feature = "headless")]
     if headless {
         use crate::render::stages::write_surface_buffer_stage::WriteSurfaceBufferStage;
         schedule.add_stage(

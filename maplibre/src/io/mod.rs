@@ -1,14 +1,10 @@
 //! Handles IO related processing as well as multithreading.
 
 use crate::coords::WorldTileCoords;
-
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-
 use crate::render::ShaderVertex;
-use geozero::mvt::tile;
+use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use std::collections::HashSet;
 use std::fmt;
-
 pub mod scheduler;
 pub mod source_client;
 pub mod static_tile_fetcher;
@@ -18,6 +14,8 @@ pub mod pipeline;
 pub mod pipeline_steps;
 pub mod tile_repository;
 pub mod tile_request_state;
+
+pub use geozero::mvt::tile::Layer as RawLayer;
 
 /// A request for a tile at the given coordinates and in the given layers.
 #[derive(Clone)]
