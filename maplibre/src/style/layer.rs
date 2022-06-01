@@ -1,3 +1,5 @@
+//! Vector tile layer drawing utilities.
+
 use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
@@ -27,6 +29,7 @@ pub struct LinePaint {
     // TODO a lot
 }
 
+/// The different types of paints.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", content = "paint")]
 pub enum LayerPaint {
@@ -51,6 +54,7 @@ impl LayerPaint {
     }
 }
 
+/// Stores all the styles for a specific layer.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct StyleLayer {
     #[serde(skip)]
