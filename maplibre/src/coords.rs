@@ -38,7 +38,7 @@ pub struct Quadkey([ZoomLevel; MAX_ZOOM]);
 impl Quadkey {
     pub fn new(quad_encoded: &[ZoomLevel]) -> Self {
         let mut key = [ZoomLevel::default(); MAX_ZOOM];
-        key[0] = ZoomLevel::new(quad_encoded.len() as u8);
+        key[0] = (quad_encoded.len() as u8).into();
         for (i, part) in quad_encoded.iter().enumerate() {
             key[i + 1] = *part;
         }
@@ -48,7 +48,9 @@ impl Quadkey {
 
 impl fmt::Debug for Quadkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let len = self.0[0].0 as usize;
+        let key = self.0;
+        let ZoomLevel(level) = key[0];
+        let len = level as usize;
         for part in &self.0[0..len] {
             write!(f, "{:?}", part)?;
         }
@@ -60,8 +62,8 @@ impl fmt::Debug for Quadkey {
 pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
-    pub fn new(zoom_level: u8) -> Self {
-        ZoomLevel(zoom_level)
+    pub fn is_root(self) -> bool {
+        return self.0 == 0;
     }
 }
 
@@ -75,7 +77,8 @@ impl std::ops::Add<i32> for ZoomLevel {
     type Output = ZoomLevel;
 
     fn add(self, rhs: i32) -> Self::Output {
-        ZoomLevel(self.0 + rhs as u8)
+        let zoom_level = self.0.checked_add(rhs as u8).unwrap();
+        ZoomLevel(zoom_level)
     }
 }
 
@@ -83,7 +86,8 @@ impl std::ops::Sub<i32> for ZoomLevel {
     type Output = ZoomLevel;
 
     fn sub(self, rhs: i32) -> Self::Output {
-        ZoomLevel(self.0 - rhs as u8)
+        let zoom_level = self.0.checked_sub(rhs as u8).unwrap();
+        ZoomLevel(zoom_level)
     }
 }
 
@@ -91,13 +95,20 @@ impl std::ops::Mul<i32> for ZoomLevel {
     type Output = ZoomLevel;
 
     fn mul(self, rhs: i32) -> Self::Output {
-        ZoomLevel(self.0 * rhs as u8)
+        let zoom_level = self.0.checked_mul(rhs as u8).unwrap();
+        ZoomLevel(zoom_level)
     }
 }
 
 impl fmt::Display for ZoomLevel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl From<u8> for ZoomLevel {
+    fn from(zoom_level: u8) -> Self {
+        ZoomLevel(zoom_level)
     }
 }
 
@@ -166,7 +177,7 @@ impl Zoom {
     }
 
     pub fn level(&self) -> ZoomLevel {
-        ZoomLevel::new(self.0.floor() as u8)
+        ZoomLevel::from(self.0.floor() as u8)
     }
 }
 
@@ -239,7 +250,7 @@ impl From<(u32, u32, u8)> for TileCoords {
         TileCoords {
             x: tuple.0,
             y: tuple.1,
-            z: ZoomLevel::new(tuple.2),
+            z: ZoomLevel::from(tuple.2),
         }
     }
 }
@@ -342,7 +353,7 @@ impl WorldTileCoords {
             if (self.y & mask) != 0 {
                 b += 2u8;
             }
-            key[z as usize] = ZoomLevel::new(b);
+            key[z as usize] = ZoomLevel::from(b);
         }
         Some(Quadkey(key))
     }
@@ -375,7 +386,7 @@ impl WorldTileCoords {
 
     /// Get the tile which is one zoom level lower and contains this one
     pub fn get_parent(&self) -> Option<WorldTileCoords> {
-        if self.z == ZoomLevel::default() {
+        if self.z.is_root() {
             return None;
         }
 
@@ -387,12 +398,12 @@ impl WorldTileCoords {
     }
 }
 
-impl From<(i32, i32, u8)> for WorldTileCoords {
-    fn from(tuple: (i32, i32, u8)) -> Self {
+impl From<(i32, i32, ZoomLevel)> for WorldTileCoords {
+    fn from(tuple: (i32, i32, ZoomLevel)) -> Self {
         WorldTileCoords {
             x: tuple.0,
             y: tuple.1,
-            z: ZoomLevel::new(tuple.2),
+            z: tuple.2,
         }
     }
 }
@@ -538,7 +549,7 @@ impl ViewRegion {
     pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
         (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding).flat_map(move |x| {
             (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding).map(move |y| {
-                let tile_coord: WorldTileCoords = (x, y, self.z.0 as u8).into();
+                let tile_coord: WorldTileCoords = (x, y, self.z).into();
                 tile_coord
             })
         })
@@ -588,7 +599,7 @@ mod tests {
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
     const BOTTOM_RIGHT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
 
-    fn to_from_world(tile: (i32, i32, u8), zoom: Zoom) {
+    fn to_from_world(tile: (i32, i32, ZoomLevel), zoom: Zoom) {
         let tile = WorldTileCoords::from(tile);
         let p1 = tile.transform_for_zoom(zoom) * TOP_LEFT;
         let p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT;
@@ -602,9 +613,9 @@ mod tests {
 
     #[test]
     fn world_coords_tests() {
-        to_from_world((1, 0, 1), Zoom::new(1.0));
-        to_from_world((67, 42, 7), Zoom::new(7.0));
-        to_from_world((17421, 11360, 15), Zoom::new(15.0));
+        to_from_world((1, 0, ZoomLevel::from(1)), Zoom::new(1.0));
+        to_from_world((67, 42, ZoomLevel::from(7)), Zoom::new(7.0));
+        to_from_world((17421, 11360, ZoomLevel::from(15)), Zoom::new(15.0));
     }
 
     #[test]
@@ -613,45 +624,45 @@ mod tests {
             TileCoords {
                 x: 0,
                 y: 0,
-                z: ZoomLevel::new(1)
+                z: ZoomLevel::from(1)
             }
             .into_world_tile(TileAddressingScheme::TMS)
             .unwrap()
             .build_quad_key(),
-            Some(Quadkey::new(&[ZoomLevel::new(2)]))
+            Some(Quadkey::new(&[ZoomLevel::from(2)]))
         );
         assert_eq!(
             TileCoords {
                 x: 0,
                 y: 1,
-                z: ZoomLevel::new(1)
+                z: ZoomLevel::from(1)
             }
             .into_world_tile(TileAddressingScheme::TMS)
             .unwrap()
             .build_quad_key(),
-            Some(Quadkey::new(&[ZoomLevel::new(0)]))
+            Some(Quadkey::new(&[ZoomLevel::from(0)]))
         );
         assert_eq!(
             TileCoords {
                 x: 1,
                 y: 1,
-                z: ZoomLevel::new(1)
+                z: ZoomLevel::from(1)
             }
             .into_world_tile(TileAddressingScheme::TMS)
             .unwrap()
             .build_quad_key(),
-            Some(Quadkey::new(&[ZoomLevel::new(1)]))
+            Some(Quadkey::new(&[ZoomLevel::from(1)]))
         );
         assert_eq!(
             TileCoords {
                 x: 1,
                 y: 0,
-                z: ZoomLevel::new(1)
+                z: ZoomLevel::from(1)
             }
             .into_world_tile(TileAddressingScheme::TMS)
             .unwrap()
             .build_quad_key(),
-            Some(Quadkey::new(&[ZoomLevel::new(3)]))
+            Some(Quadkey::new(&[ZoomLevel::from(3)]))
         );
     }
 
