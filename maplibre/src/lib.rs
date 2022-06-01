@@ -17,12 +17,12 @@
 //! ```
 
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
-use crate::io::source_client::HTTPClient;
-use crate::map_schedule::MapSchedule;
+use crate::io::source_client::HttpClient;
+use crate::map_schedule::{InteractiveMapSchedule, SimpleMapSchedule};
 use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::{RenderState, Renderer};
 use crate::style::Style;
-use crate::window::{MapWindow, MapWindowConfig, Runnable, WindowSize};
+use crate::window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
 
 pub mod context;
 pub mod coords;
@@ -37,43 +37,51 @@ pub mod style;
 pub mod window;
 // Exposed because of doc-strings
 pub mod schedule;
+// Exposed because of SharedThreadState
+pub mod stages;
 
 // Used for benchmarking
 pub mod benchmarking;
 
 // Internal modules
-pub(crate) mod stages;
 pub(crate) mod tessellation;
-pub(crate) mod util;
+pub mod util;
 
-/// Map's configuration and execution.
-pub struct Map<W, SM, HC>
+/// The [`Map`] defines the public interface of the map renderer.
+// DO NOT IMPLEMENT INTERNALS ON THIS STRUCT.
+pub struct Map<MWC, SM, HC>
 where
-    W: MapWindow,
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
-    map_state: MapSchedule<W::MapWindowConfig, SM, HC>,
-    window: W,
+    map_schedule: InteractiveMapSchedule<MWC, SM, HC>,
+    window: MWC::MapWindow,
 }
 
-impl<W, SM, HC> Map<W, SM, HC>
+impl<MWC, SM, HC> Map<MWC, SM, HC>
 where
-    W: MapWindow + Runnable<W::MapWindowConfig, SM, HC>,
+    MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
-    /// Starts the [`crate::map_state::MapState`] Runnable with the configured event loop.
-    pub fn run(self) {
+    /// Starts the [`crate::map_schedule::MapState`] Runnable with the configured event loop.
+    pub fn run(self)
+    where
+        MWC::MapWindow: EventLoop<MWC, SM, HC>,
+    {
         self.run_with_optionally_max_frames(None);
     }
 
-    /// Starts the [`crate::map_state::MapState`] Runnable with the configured event loop.
+    /// Starts the [`crate::map_schedule::MapState`] Runnable with the configured event loop.
     ///
     /// # Arguments
     ///
     /// * `max_frames` - Maximum number of frames per second.
-    pub fn run_with_max_frames(self, max_frames: u64) {
+    pub fn run_with_max_frames(self, max_frames: u64)
+    where
+        MWC::MapWindow: EventLoop<MWC, SM, HC>,
+    {
         self.run_with_optionally_max_frames(Some(max_frames));
     }
 
@@ -82,20 +90,49 @@ where
     /// # Arguments
     ///
     /// * `max_frames` - Optional maximum number of frames per second.
-    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
-        self.window.run(self.map_state, max_frames);
+    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>)
+    where
+        MWC::MapWindow: EventLoop<MWC, SM, HC>,
+    {
+        self.window.run(self.map_schedule, max_frames);
+    }
+
+    pub fn map_schedule(&self) -> &InteractiveMapSchedule<MWC, SM, HC> {
+        &self.map_schedule
+    }
+
+    pub fn map_schedule_mut(&mut self) -> &mut InteractiveMapSchedule<MWC, SM, HC> {
+        &mut self.map_schedule
+    }
+}
+
+pub struct HeadlessMap<MWC, SM, HC>
+where
+    MWC: MapWindowConfig,
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    map_schedule: SimpleMapSchedule<MWC, SM, HC>,
+    window: MWC::MapWindow,
+}
+
+impl<MWC, SM, HC> HeadlessMap<MWC, SM, HC>
+where
+    MWC: MapWindowConfig,
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    pub fn map_schedule_mut(&mut self) -> &mut SimpleMapSchedule<MWC, SM, HC> {
+        &mut self.map_schedule
     }
 }
 
 /// Stores the map configuration before the map's state has been fully initialized.
-///
-/// FIXME: We could maybe remove this class, and store the render_state in an Optional in [`crate::map_state::MapState`].
-/// FIXME: I think we can find a workaround so that this class doesn't exist.
 pub struct UninitializedMap<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     scheduler: Scheduler<SM>,
     http_client: HC,
@@ -110,12 +147,16 @@ impl<MWC, SM, HC> UninitializedMap<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     /// Initializes the whole rendering pipeline for the given configuration.
     /// Returns the initialized map, ready to be run.
-    pub async fn initialize(self) -> Map<MWC::MapWindow, SM, HC> {
-        let window = MWC::MapWindow::create(&self.map_window_config);
+    pub async fn initialize(self) -> Map<MWC, SM, HC>
+    where
+        MWC: MapWindowConfig,
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
+    {
+        let window = self.map_window_config.create();
         let window_size = window.size();
 
         #[cfg(target_os = "android")]
@@ -129,7 +170,7 @@ where
         .await
         .ok();
         Map {
-            map_state: MapSchedule::new(
+            map_schedule: InteractiveMapSchedule::new(
                 self.map_window_config,
                 window_size,
                 renderer,
@@ -138,6 +179,30 @@ where
                 self.style,
                 self.wgpu_settings,
                 self.renderer_settings,
+            ),
+            window,
+        }
+    }
+
+    pub async fn initialize_headless(self) -> HeadlessMap<MWC, SM, HC> {
+        let window = self.map_window_config.create();
+        let window_size = window.size();
+
+        let renderer = Renderer::initialize_headless(
+            &window,
+            self.wgpu_settings.clone(),
+            self.renderer_settings.clone(),
+        )
+        .await
+        .expect("Failed to initialize renderer");
+        HeadlessMap {
+            map_schedule: SimpleMapSchedule::new(
+                self.map_window_config,
+                window_size,
+                renderer,
+                self.scheduler,
+                self.http_client,
+                self.style,
             ),
             window,
         }
@@ -162,7 +227,7 @@ impl<MWC, SM, HC> MapBuilder<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     pub fn new() -> Self {
         Self {

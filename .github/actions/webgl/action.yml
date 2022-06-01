@@ -18,3 +18,8 @@ runs:
     - name: Check
       shell: bash
       run: just check web wasm32-unknown-unknown
+    - name: Test
+      shell: bash
+      run: |
+        cargo install wasm-bindgen-cli --version "0.2.80"
+        just web-test "web-webgl"

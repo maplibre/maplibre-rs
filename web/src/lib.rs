@@ -65,3 +65,15 @@ pub async fn run(scheduler_ptr: *mut Scheduler<WebWorkerPoolScheduleMethod>) {
 
     // std::mem::forget(scheduler);
 }
+
+#[cfg(test)]
+/// See https://rustwasm.github.io/wasm-bindgen/wasm-bindgen-test/browsers.html
+mod tests {
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    #[wasm_bindgen_test]
+    fn pass() {
+        assert_eq!(1, 1);
+    }
+}
