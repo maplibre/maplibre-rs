@@ -17,6 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/benchmarks
+  run-tests:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/tests
   build-android:
     runs-on: ubuntu-20.04
     steps:
