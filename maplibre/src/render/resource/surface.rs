@@ -207,7 +207,7 @@ impl Surface {
                 let frame = match surface.get_current_texture() {
                     Ok(view) => view,
                     Err(wgpu::SurfaceError::Outdated) => {
-                        tracing::trace!("surface outdated");
+                        log::warn!("surface outdated");
                         window.configure(device);
                         surface
                             .get_current_texture()
@@ -278,6 +278,6 @@ impl HasChanged for WindowHead {
     type Criteria = (u32, u32);
 
     fn has_changed(&self, criteria: &Self::Criteria) -> bool {
-        self.surface_config.height != criteria.0 || self.surface_config.width != criteria.1
+        self.surface_config.width != criteria.0 || self.surface_config.height != criteria.1
     }
 }

@@ -159,6 +159,6 @@ fn main() {
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    run_headless();
+    //run_headless();
     run_in_window();
 }
