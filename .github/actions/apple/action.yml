@@ -22,14 +22,14 @@ runs:
     - name: Check x86_64 darwin
       shell: bash
       run: just check apple x86_64-apple-darwin
-    - name: Check aarch64 darwin
+    - name: Check x86_64 darwin
       shell: bash
       # TODO: Additional clippy checks for different targets (iOS)
-      run: just check apple aarch64-apple-darwin
-    - name: Test
+      run: just check apple x86_64-apple-darwin
+    - name: Test x86_64 darwin
       shell: bash
-      # TODO: Additional test runs for different targets
-      run: just test apple aarch64-apple-darwin
+      # TODO: Additional test runs for different targets (Different targets might require emulation)
+      run: just test apple x86_64-apple-darwin
     - name: Build Example
       shell: bash
       run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO

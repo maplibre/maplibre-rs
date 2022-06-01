@@ -18,6 +18,6 @@ runs:
     - name: Check
       shell: bash
       run: just check web wasm32-unknown-unknown
-    - name: Check
+    - name: Test
       shell: bash
-      run: just test web wasm32-unknown-unknown
+      run: just web-test ""

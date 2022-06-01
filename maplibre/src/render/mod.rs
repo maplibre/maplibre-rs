@@ -409,6 +409,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
+    #[ignore] // FIXME: We do not have a GPU in CI
     async fn test_render() {
         let graph = RenderGraph::default();
 
