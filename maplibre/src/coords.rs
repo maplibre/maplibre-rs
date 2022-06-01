@@ -73,29 +73,20 @@ impl Default for ZoomLevel {
     }
 }
 
-impl std::ops::Add<i32> for ZoomLevel {
+impl std::ops::Add<u8> for ZoomLevel {
     type Output = ZoomLevel;
 
-    fn add(self, rhs: i32) -> Self::Output {
-        let zoom_level = self.0.checked_add(rhs as u8).unwrap();
+    fn add(self, rhs: u8) -> Self::Output {
+        let zoom_level = self.0.checked_add(rhs).unwrap();
         ZoomLevel(zoom_level)
     }
 }
 
-impl std::ops::Sub<i32> for ZoomLevel {
+impl std::ops::Sub<u8> for ZoomLevel {
     type Output = ZoomLevel;
 
-    fn sub(self, rhs: i32) -> Self::Output {
-        let zoom_level = self.0.checked_sub(rhs as u8).unwrap();
-        ZoomLevel(zoom_level)
-    }
-}
-
-impl std::ops::Mul<i32> for ZoomLevel {
-    type Output = ZoomLevel;
-
-    fn mul(self, rhs: i32) -> Self::Output {
-        let zoom_level = self.0.checked_mul(rhs as u8).unwrap();
+    fn sub(self, rhs: u8) -> Self::Output {
+        let zoom_level = self.0.checked_sub(rhs).unwrap();
         ZoomLevel(zoom_level)
     }
 }
