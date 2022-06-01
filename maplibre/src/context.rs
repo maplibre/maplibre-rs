@@ -1,4 +1,4 @@
-use crate::coords::{Zoom, TILE_SIZE};
+use crate::coords::{Zoom, ZoomLevel, TILE_SIZE};
 use crate::io::tile_repository::TileRepository;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::util::ChangeObserver;
@@ -41,7 +41,7 @@ impl ViewState {
         self.camera.calc_view_proj(&self.perspective)
     }
 
-    pub fn visible_level(&self) -> u8 {
+    pub fn visible_level(&self) -> ZoomLevel {
         self.zoom.level()
     }
 

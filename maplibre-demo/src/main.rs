@@ -1,5 +1,5 @@
 use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use maplibre::coords::WorldTileCoords;
+use maplibre::coords::{WorldTileCoords, ZoomLevel};
 use maplibre::error::Error;
 use maplibre::io::pipeline::Processable;
 use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
@@ -105,7 +105,7 @@ fn run_headless() {
         let http_source_client: HttpSourceClient<ReqwestHttpClient> =
             HttpSourceClient::new(ReqwestHttpClient::new(None));
 
-        let coords = WorldTileCoords::from((0, 0, 0));
+        let coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
         let request_id = 0;
 
         let data = http_source_client

@@ -1,16 +1,23 @@
 //! [Stages](Stage) for requesting and preparing data
 
+use crate::coords::ZoomLevel;
 use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
 use crate::io::geometry_index::{IndexProcessor, IndexedGeometry, TileIndex};
+use crate::io::pipeline::Processable;
 use crate::io::pipeline::{PipelineContext, PipelineProcessor};
 use crate::io::pipeline_steps::build_vector_tile_pipeline;
 use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::io::tile_repository::StoredLayer;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TileRequest, TileRequestID};
 use crate::render::ShaderVertex;
 use crate::schedule::Schedule;
+use crate::stages::message::{
+    LayerTessellateMessage, MessageReceiver, MessageSender, TessellateMessage,
+    TileTessellateMessage,
+};
 use crate::stages::populate_tile_store_stage::PopulateTileStore;
 use crate::tessellation::zero_tessellator::ZeroTessellator;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
@@ -22,13 +29,6 @@ use request_stage::RequestStage;
 use std::collections::HashSet;
 use std::fmt;
 use std::sync::{mpsc, Arc, Mutex};
-
-use crate::io::pipeline::Processable;
-use crate::io::tile_repository::StoredLayer;
-use crate::stages::message::{
-    LayerTessellateMessage, MessageReceiver, MessageSender, TessellateMessage,
-    TileTessellateMessage,
-};
 
 mod message;
 mod populate_tile_store_stage;
@@ -167,7 +167,7 @@ impl SharedThreadState {
     pub fn query_point(
         &self,
         world_coords: &WorldCoords,
-        z: u8,
+        z: ZoomLevel,
         zoom: Zoom,
     ) -> Option<Vec<IndexedGeometry<f64>>> {
         if let Ok(geometry_index) = self.geometry_index.lock() {
