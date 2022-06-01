@@ -331,12 +331,12 @@ impl Renderer {
 mod tests {
     use crate::render::graph::RenderGraph;
     use crate::render::graph_runner::RenderGraphRunner;
-    use crate::render::pass_pipeline::build_graph;
-    use crate::render::World;
+    use crate::render::RenderState;
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
     async fn test_render() {
-        let graph = build_graph();
+        let graph = RenderGraph::default();
 
         let instance = wgpu::Instance::new(wgpu::Backends::all());
 
@@ -362,6 +362,8 @@ mod tests {
             .ok()
             .unwrap();
 
-        RenderGraphRunner::run(&graph, &device, &queue, &World {});
+        let render_state = RenderState::default();
+
+        RenderGraphRunner::run(&graph, &device, &queue, &render_state);
     }
 }

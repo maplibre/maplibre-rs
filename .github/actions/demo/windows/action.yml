@@ -22,6 +22,9 @@ runs:
     - name: Build
       shell: bash
       run: cargo build -p maplibre-demo --release --target x86_64-pc-windows-msvc
+    - name: Test
+      shell: bash
+      run: just test maplibre-demo x86_64-pc-windows-msvc
     - uses: actions/upload-artifact@v3
       with:
         name: maplibre-x86_64-windows-demo

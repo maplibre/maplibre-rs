@@ -202,8 +202,8 @@ impl<'a> TrackedRenderPass<'a> {
     /// Push a new debug group over the internal stack. Subsequent render commands and debug
     /// markers are grouped into this new group, until [`pop_debug_group`] is called.
     ///
-    /// ```
-    /// # fn example(mut pass: bevy_render::render_phase::TrackedRenderPass<'static>) {
+    /// ```ignore
+    /// # fn example(mut pass: maplibre::render::resource::TrackedRenderPass<'static>) {
     /// pass.push_debug_group("Render the car");
     /// // [setup pipeline etc...]
     /// pass.draw(0..64, 0..1);
