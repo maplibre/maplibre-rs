@@ -14,7 +14,7 @@ trace = ["maplibre/trace", "tracing-subscriber", "tracing-tracy", "tracy-client"
 
 [dependencies]
 env_logger = "0.9"
-maplibre = { path = "../maplibre", version = "0.0.2"  }
+maplibre = { path = "../maplibre", version = "0.0.2", features = ["headless"]  }
 maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
 
 tracing = { version = "0.1" }

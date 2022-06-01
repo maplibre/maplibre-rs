@@ -45,11 +45,17 @@ web-lib TARGET: nightly-toolchain (web-install "lib")
 web-demo TARGET: (web-install "demo")
   cd web/demo && npm run {{TARGET}}
 
+web-test FEATURES: nightly-toolchain
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
+
 #profile-bench:
 # cargo flamegraph --bench render -- --bench
 
-build-android: print-android-env
+build-android: nightly-toolchain print-android-env
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd android/gradle && ./gradlew assembleDebug
+
+test-android TARGET: nightly-toolchain print-android-env
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p maplibre-android --target {{TARGET}} -Z build-std=std,panic_abort
 
 # language=bash
 print-android-env:
