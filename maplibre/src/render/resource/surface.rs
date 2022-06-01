@@ -61,6 +61,7 @@ pub struct BufferedTextureHead {
     pub buffer_dimensions: BufferDimensions,
 }
 
+#[cfg(feature = "headless")]
 impl BufferedTextureHead {
     pub async fn create_png<'a>(
         &self,
