@@ -1,4 +1,5 @@
 use std::future::Future;
+use std::pin::Pin;
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -7,7 +8,6 @@ use web_sys::Worker;
 
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
-use maplibre::io::shared_thread_state::SharedThreadState;
 
 use super::pool::WorkerPool;
 
@@ -36,8 +36,7 @@ impl WebWorkerPoolScheduleMethod {
 impl ScheduleMethod for WebWorkerPoolScheduleMethod {
     fn schedule<T>(
         &self,
-        shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
+        future_factory: impl (FnOnce() -> T) + Send + 'static,
     ) -> Result<(), Error>
     where
         T: Future<Output = ()> + 'static,
@@ -45,7 +44,7 @@ impl ScheduleMethod for WebWorkerPoolScheduleMethod {
         self.pool
             .run(move || {
                 wasm_bindgen_futures::future_to_promise(async move {
-                    future_factory(shared_thread_state).await;
+                    future_factory().await;
                     Ok(JsValue::undefined())
                 })
             })

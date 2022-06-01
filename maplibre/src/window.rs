@@ -1,31 +1,42 @@
-use crate::{HTTPClient, MapState, ScheduleMethod};
+//! Utilities for the window system.
 
+use crate::{HttpClient, InteractiveMapSchedule, ScheduleMethod};
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+
+/// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.
 pub trait MapWindow {
-    type EventLoop;
-    type Window: raw_window_handle::HasRawWindowHandle;
-    type MapWindowConfig: MapWindowConfig<MapWindow = Self>;
-
-    fn create(map_window_config: &Self::MapWindowConfig) -> Self;
-
     fn size(&self) -> WindowSize;
-
-    fn inner(&self) -> &Self::Window;
 }
 
+/// Window which references a physical `RawWindow`. This is only implemented by headed windows and
+/// not by headless windows.
+pub trait HeadedMapWindow: MapWindow {
+    type RawWindow: HasRawWindowHandle;
+
+    fn inner(&self) -> &Self::RawWindow;
+}
+
+/// A configuration for a window which determines the corresponding implementation of a
+/// [`MapWindow`] and is able to create it.
 pub trait MapWindowConfig: 'static {
-    type MapWindow: MapWindow<MapWindowConfig = Self>;
+    type MapWindow: MapWindow;
+
+    fn create(&self) -> Self::MapWindow;
 }
 
-pub trait Runnable<MWC, SM, HC>
+/// The event loop is responsible for processing events and propagating them to the map renderer.
+/// Only non-headless windows use an [`EventLoop`].
+pub trait EventLoop<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
-    fn run(self, map_state: MapState<MWC, SM, HC>, max_frames: Option<u64>);
+    fn run(self, map_schedule: InteractiveMapSchedule<MWC, SM, HC>, max_frames: Option<u64>);
 }
 
-#[derive(Clone, Copy)]
+/// Window size with a width and an height in pixels.
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub struct WindowSize {
     width: u32,
     height: u32,

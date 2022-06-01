@@ -11,7 +11,7 @@ pub fn run_multithreaded<F: Future>(future: F) -> F::Output {
         .enable_io()
         .enable_time()
         .on_thread_start(|| {
-            #[cfg(feature = "enable-tracing")]
+            #[cfg(feature = "trace")]
             tracy_client::set_thread_name("tokio-runtime-worker");
         })
         .build()

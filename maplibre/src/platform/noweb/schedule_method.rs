@@ -1,9 +1,10 @@
 use crate::error::Error;
-use crate::io::shared_thread_state::SharedThreadState;
 use crate::ScheduleMethod;
 use std::future::Future;
 use tokio::task;
 use tokio_util::task::LocalPoolHandle;
+
+/// Multi-threading with Tokio.
 pub struct TokioScheduleMethod {
     pool: LocalPoolHandle,
 }
@@ -17,16 +18,12 @@ impl TokioScheduleMethod {
 }
 
 impl ScheduleMethod for TokioScheduleMethod {
-    fn schedule<T>(
-        &self,
-        shared_thread_state: SharedThreadState,
-        future_factory: impl FnOnce(SharedThreadState) -> T + Send + 'static,
-    ) -> Result<(), Error>
+    fn schedule<T>(&self, future_factory: impl FnOnce() -> T + Send + 'static) -> Result<(), Error>
     where
         T: Future<Output = ()> + 'static,
     {
         self.pool.spawn_pinned(|| {
-            let unsend_data = (future_factory)(shared_thread_state);
+            let unsend_data = (future_factory)();
 
             async move { unsend_data.await }
         });

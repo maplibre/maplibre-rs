@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::HTTPClient;
+use crate::HttpClient;
 use async_trait::async_trait;
 use reqwest::{Client, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
@@ -41,7 +41,7 @@ impl ReqwestHttpClient {
 }
 
 #[async_trait(?Send)]
-impl HTTPClient for ReqwestHttpClient {
+impl HttpClient for ReqwestHttpClient {
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
         let response = self.client.get(url).send().await?;
         match response.error_for_status() {

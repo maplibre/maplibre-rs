@@ -4,7 +4,6 @@ use lyon::tessellation::TessellationError;
 use std::fmt;
 use std::fmt::Formatter;
 use std::sync::mpsc::SendError;
-use wgpu::SurfaceError;
 
 #[derive(Debug)]
 pub enum RenderError {
@@ -23,13 +22,14 @@ impl RenderError {
     pub fn should_exit(&self) -> bool {
         match self {
             RenderError::Surface(e) => match e {
-                SurfaceError::OutOfMemory => true,
+                wgpu::SurfaceError::OutOfMemory => true,
                 _ => false,
             },
         }
     }
 }
 
+/// Enumeration of errors which can happen during the operation of the library.
 #[derive(Debug)]
 pub enum Error {
     Schedule,
@@ -38,8 +38,8 @@ pub enum Error {
     Render(RenderError),
 }
 
-impl From<SurfaceError> for Error {
-    fn from(e: SurfaceError) -> Self {
+impl From<wgpu::SurfaceError> for Error {
+    fn from(e: wgpu::SurfaceError) -> Self {
         Error::Render(RenderError::Surface(e))
     }
 }

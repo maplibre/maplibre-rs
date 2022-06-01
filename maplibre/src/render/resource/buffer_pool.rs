@@ -1,15 +1,20 @@
+//! A ring-buffer like pool of [buffers](wgpu::Buffer).
+
+use crate::coords::{Quadkey, WorldTileCoords};
+use crate::style::layer::StyleLayer;
+use crate::tessellation::OverAlignedVertexBuffer;
+use bytemuck::Pod;
 use std::collections::{btree_map, BTreeMap, HashSet, VecDeque};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
 
-use crate::style::layer::StyleLayer;
-use wgpu::BufferAddress;
+pub const VERTEX_SIZE: wgpu::BufferAddress = 1_000_000;
+pub const INDICES_SIZE: wgpu::BufferAddress = 1_000_000;
 
-use crate::coords::{Quadkey, WorldTileCoords};
-
-use crate::tessellation::OverAlignedVertexBuffer;
+pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 1024 * 1000;
+pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 1024;
 
 pub trait Queue<B> {
     fn write_buffer(&self, buffer: &B, offset: wgpu::BufferAddress, data: &[u8]);
@@ -24,7 +29,7 @@ impl Queue<wgpu::Buffer> for wgpu::Queue {
 /// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
 #[derive(Debug)]
-pub struct BufferPool<Q, B, V, I, M, FM> {
+pub struct BufferPool<Q, B, V, I, TM, FM> {
     vertices: BackingBuffer<B>,
     indices: BackingBuffer<B>,
     layer_metadata: BackingBuffer<B>,
@@ -34,21 +39,69 @@ pub struct BufferPool<Q, B, V, I, M, FM> {
     phantom_v: PhantomData<V>,
     phantom_i: PhantomData<I>,
     phantom_q: PhantomData<Q>,
-    phantom_m: PhantomData<M>,
+    phantom_m: PhantomData<TM>,
     phantom_fm: PhantomData<FM>,
 }
 
 #[derive(Debug)]
-enum BackingBufferType {
+pub enum BackingBufferType {
     Vertices,
     Indices,
     Metadata,
     FeatureMetadata,
 }
 
-impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: bytemuck::Pod>
-    BufferPool<Q, B, V, I, TM, FM>
-{
+impl<V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<wgpu::Queue, wgpu::Buffer, V, I, TM, FM> {
+    pub fn from_device(device: &wgpu::Device) -> Self {
+        let vertex_buffer_desc = wgpu::BufferDescriptor {
+            label: Some("vertex buffer"),
+            size: size_of::<V>() as wgpu::BufferAddress * VERTEX_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        };
+
+        let indices_buffer_desc = wgpu::BufferDescriptor {
+            label: Some("indices buffer"),
+            size: size_of::<I>() as wgpu::BufferAddress * INDICES_SIZE,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        };
+
+        let feature_metadata_desc = wgpu::BufferDescriptor {
+            label: Some("feature metadata buffer"),
+            size: size_of::<FM>() as wgpu::BufferAddress * FEATURE_METADATA_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        };
+
+        let layer_metadata_desc = wgpu::BufferDescriptor {
+            label: Some("layer metadata buffer"),
+            size: size_of::<TM>() as wgpu::BufferAddress * LAYER_METADATA_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        };
+
+        BufferPool::new(
+            BackingBufferDescriptor::new(
+                device.create_buffer(&vertex_buffer_desc),
+                vertex_buffer_desc.size,
+            ),
+            BackingBufferDescriptor::new(
+                device.create_buffer(&indices_buffer_desc),
+                indices_buffer_desc.size,
+            ),
+            BackingBufferDescriptor::new(
+                device.create_buffer(&layer_metadata_desc),
+                layer_metadata_desc.size,
+            ),
+            BackingBufferDescriptor::new(
+                device.create_buffer(&feature_metadata_desc),
+                feature_metadata_desc.size,
+            ),
+        )
+    }
+}
+impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM, FM> {
     pub fn new(
         vertices: BackingBufferDescriptor<B>,
         indices: BackingBufferDescriptor<B>,
@@ -120,7 +173,7 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
         stride: wgpu::BufferAddress,
         elements: wgpu::BufferAddress,
         usable_elements: wgpu::BufferAddress,
-    ) -> (BufferAddress, BufferAddress) {
+    ) -> (wgpu::BufferAddress, wgpu::BufferAddress) {
         let bytes = elements * stride;
 
         let usable_bytes = (usable_elements * stride) as wgpu::BufferAddress;
@@ -164,21 +217,21 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
 
         let (vertices_bytes, aligned_vertices_bytes) = Self::align(
             vertices_stride,
-            geometry.buffer.vertices.len() as BufferAddress,
-            geometry.buffer.vertices.len() as BufferAddress,
+            geometry.buffer.vertices.len() as wgpu::BufferAddress,
+            geometry.buffer.vertices.len() as wgpu::BufferAddress,
         );
         let (indices_bytes, aligned_indices_bytes) = Self::align(
             indices_stride,
-            geometry.buffer.indices.len() as BufferAddress,
-            geometry.usable_indices as BufferAddress,
+            geometry.buffer.indices.len() as wgpu::BufferAddress,
+            geometry.usable_indices as wgpu::BufferAddress,
         );
         let (layer_metadata_bytes, aligned_layer_metadata_bytes) =
             Self::align(layer_metadata_stride, 1, 1);
 
         let (feature_metadata_bytes, aligned_feature_metadata_bytes) = Self::align(
             feature_metadata_stride,
-            feature_metadata.len() as BufferAddress,
-            feature_metadata.len() as BufferAddress,
+            feature_metadata.len() as wgpu::BufferAddress,
+            feature_metadata.len() as wgpu::BufferAddress,
         );
 
         if feature_metadata_bytes != aligned_feature_metadata_bytes {
@@ -255,8 +308,8 @@ impl<Q: Queue<B>, B, V: bytemuck::Pod, I: bytemuck::Pod, TM: bytemuck::Pod, FM: 
 
         let (feature_metadata_bytes, aligned_feature_metadata_bytes) = Self::align(
             feature_metadata_stride,
-            feature_metadata.len() as BufferAddress,
-            feature_metadata.len() as BufferAddress,
+            feature_metadata.len() as wgpu::BufferAddress,
+            feature_metadata.len() as wgpu::BufferAddress,
         );
 
         if entry.buffer_feature_metadata.end - entry.buffer_feature_metadata.start
@@ -321,7 +374,10 @@ impl<B> BackingBuffer<B> {
         index: &mut RingIndex,
     ) -> Range<wgpu::BufferAddress> {
         if new_data > self.inner_size {
-            panic!("can not allocate because backing buffers are too small")
+            panic!(
+                "can not allocate because backing buffer {:?} are too small",
+                self.typ
+            )
         }
 
         let mut available_gap = self.find_largest_gap(index);
@@ -380,7 +436,7 @@ impl<B> BackingBuffer<B> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IndexEntry {
     pub coords: WorldTileCoords,
     pub style_layer: StyleLayer,
@@ -522,23 +578,22 @@ impl RingIndex {
 
 #[cfg(test)]
 mod tests {
+    use crate::coords::ZoomLevel;
     use crate::style::layer::StyleLayer;
     use lyon::tessellation::VertexBuffers;
-    use wgpu::BufferAddress;
 
-    use crate::render::buffer_pool::{
-        BackingBufferDescriptor, BackingBufferType, BufferPool, Queue,
-    };
+    use crate::render::resource::buffer_pool::BackingBufferType;
+    use crate::render::resource::{BackingBufferDescriptor, BufferPool, Queue};
 
     #[derive(Debug)]
     struct TestBuffer {
-        size: BufferAddress,
+        size: wgpu::BufferAddress,
     }
     struct TestQueue;
 
     impl Queue<TestBuffer> for TestQueue {
-        fn write_buffer(&self, buffer: &TestBuffer, offset: BufferAddress, data: &[u8]) {
-            if offset + data.len() as BufferAddress > buffer.size {
+        fn write_buffer(&self, buffer: &TestBuffer, offset: wgpu::BufferAddress, data: &[u8]) {
+            if offset + data.len() as wgpu::BufferAddress > buffer.size {
                 panic!("write out of bounds");
             }
         }
@@ -584,7 +639,7 @@ mod tests {
         for _ in 0..2 {
             pool.allocate_layer_geometry(
                 &queue,
-                (0, 0, 0).into(),
+                (0, 0, ZoomLevel::default()).into(),
                 style_layer.clone(),
                 &data48bytes_aligned,
                 2,
@@ -598,7 +653,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -612,7 +667,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -624,7 +679,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -635,7 +690,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -646,7 +701,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer,
             &data24bytes_aligned,
             2,

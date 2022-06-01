@@ -267,7 +267,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "arch=\"unknown\"\nvendor=\"apple\"\nos_type=\"unknown\"\nenvironment_type=\"\"\n\nmode=\"\"\n\necho \"ARCH: $ARCHS\"\n\nif [[ $CONFIGURATION == \"Release\" ]]\nthen\n    mode=\"--release\"\nfi\n\nif [[ $ARCHS == \"x86_64\" ]]\nthen\n    arch=\"x86_64\"\nelif [[ $ARCHS == \"arm64\" ]]\nthen\n    arch=\"aarch64\"\nfi\n\nif [[ $SDK_NAME == *\"iphoneos\"* ]]\nthen\n    os_type=\"ios\"\nelif [[ $SDK_NAME == *\"macos\"* ]]\nthen\n    os_type=\"darwin\"\nelif [[ $SDK_NAME == *\"iphonesimulator\"* ]]\nthen\n    os_type=\"ios\"\n    environment_type=\"sim\"\nfi\n\n\ntriplet=\"$arch-$vendor-$os_type\"\n\nif [ -n \"$environment_type\" ]\nthen\n    triplet=\"$triplet-$environment_type\"\nfi\n\necho \"Mode: $mode\"\necho \"Triplet: $triplet\"\necho \"Shell: $SHELL\"\n\ncmd=\"export HOME=$HOME && . $HOME/.cargo/env && cargo build -p apple $mode --target $triplet --lib\"\n\necho \"Command: $cmd\"\n\nenv -i /bin/bash -c \"$cmd\"\n";
+			shellScript = "arch=\"unknown\"\nvendor=\"apple\"\nos_type=\"unknown\"\nenvironment_type=\"\"\n\nmode=\"\"\n\necho \"ARCH: $ARCHS\"\n\nif [[ $CONFIGURATION == \"Release\" ]]\nthen\n    mode=\"--release\"\nfi\n\nif [[ $ARCHS == \"x86_64\" ]]\nthen\n    arch=\"x86_64\"\nelif [[ $ARCHS == \"arm64\" ]]\nthen\n    arch=\"aarch64\"\nfi\n\nif [[ $SDK_NAME == *\"iphoneos\"* ]]\nthen\n    os_type=\"ios\"\nelif [[ $SDK_NAME == *\"macos\"* ]]\nthen\n    os_type=\"darwin\"\nelif [[ $SDK_NAME == *\"iphonesimulator\"* ]]\nthen\n    os_type=\"ios\"\n    if [[ $ARCHS == \"arm64\" ]]\n    then\n        environment_type=\"sim\"\n    fi\nfi\n\n\ntriplet=\"$arch-$vendor-$os_type\"\n\nif [ -n \"$environment_type\" ]\nthen\n    triplet=\"$triplet-$environment_type\"\nfi\n\necho \"Mode: $mode\"\necho \"Triplet: $triplet\"\necho \"Shell: $SHELL\"\n\ncmd=\"export HOME=$HOME && . $HOME/.cargo/env && cargo build -p apple $mode --target $triplet --lib\"\n\necho \"Command: $cmd\"\n\nenv -i /bin/bash -c \"$cmd\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -385,7 +385,7 @@
 					"$(PROJECT_DIR)",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios/debug";
-				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/debug";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/debug";
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios-sim/debug";
 				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-darwin/debug";
 				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-darwin/debug";
@@ -480,7 +480,7 @@
 					"$(PROJECT_DIR)",
 				);
 				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios/release";
-				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/release";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/release";
 				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios-sim/release";
 				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-darwin/release";
 				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-darwin/release";
@@ -570,7 +570,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -647,7 +647,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -727,11 +727,12 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -800,11 +801,12 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;

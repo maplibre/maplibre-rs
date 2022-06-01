@@ -2,6 +2,7 @@
 
 mod fps_meter;
 pub mod grid;
+pub mod label;
 pub mod math;
 
 use crate::coords::WorldTileCoords;

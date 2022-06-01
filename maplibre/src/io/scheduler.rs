@@ -1,9 +1,11 @@
+//! Scheduling.
+
 use std::future::Future;
+use std::pin::Pin;
 
 use crate::error::Error;
 
-use crate::io::shared_thread_state::SharedThreadState;
-
+/// Async/await scheduler.
 pub struct Scheduler<SM>
 where
     SM: ScheduleMethod,
@@ -24,11 +26,11 @@ where
     }
 }
 
+/// Can schedule a task from a future factory and a shared state.
 pub trait ScheduleMethod: 'static {
     fn schedule<T>(
         &self,
-        shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
+        future_factory: impl (FnOnce() -> T) + Send + 'static,
     ) -> Result<(), Error>
     where
         T: Future<Output = ()> + 'static;

@@ -1,6 +1,12 @@
+//! # Build
+//!
+//! This script is built and executed just before building the package.
+//! It will validate the WGSL (WebGPU Shading Language) shaders and embed static files.
+
 use std::path::{Path, PathBuf};
 use std::{env, fs};
 
+#[cfg(feature = "embed-static-tiles")]
 use maplibre_build_tools::mbtiles::extract;
 use maplibre_build_tools::wgsl::validate_project_wgsl;
 
@@ -8,7 +14,8 @@ const MUNICH_X: u32 = 17425;
 const MUNICH_Y: u32 = 11365;
 const MUNICH_Z: u8 = 15;
 
-/// Tiles which can be used by StaticTileFetcher
+/// Tiles which can be used by StaticTileFetcher.
+#[cfg(feature = "embed-static-tiles")]
 fn clean_static_tiles() -> PathBuf {
     let out_dir = env::var("OUT_DIR").unwrap();
 
@@ -43,6 +50,7 @@ fn generate_type_def() -> Option<u32> {
     Some(5)
 }
 
+#[cfg(feature = "embed-static-tiles")]
 fn embed_tiles_statically() {
     let out = clean_static_tiles();
 
@@ -69,5 +77,6 @@ fn embed_tiles_statically() {
 fn main() {
     validate_project_wgsl();
 
+    #[cfg(feature = "embed-static-tiles")]
     embed_tiles_statically();
 }
