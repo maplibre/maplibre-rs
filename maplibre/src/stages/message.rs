@@ -3,7 +3,7 @@ use crate::error::Error;
 use crate::io::geometry_index::{GeometryIndex, IndexedGeometry};
 use crate::io::pipeline::PipelineContext;
 use crate::io::pipeline::Processable;
-use crate::io::pipeline_steps::build_vector_tile_pipeline;
+use crate::io::tile_pipelines::build_vector_tile_pipeline;
 use crate::io::tile_repository::StoredLayer;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TileRequest, TileRequestID};

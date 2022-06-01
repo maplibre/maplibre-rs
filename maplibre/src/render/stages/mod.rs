@@ -19,8 +19,10 @@ mod phase_sort_stage;
 mod queue_stage;
 mod resource_stage;
 mod upload_stage;
+
 #[cfg(feature = "headless")]
-mod write_surface_buffer_stage;
+// Exposed because it should be addable conditionally
+pub mod write_surface_buffer_stage;
 
 /// The labels of the default App rendering stages.
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]

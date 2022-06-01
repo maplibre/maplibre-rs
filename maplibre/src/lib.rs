@@ -47,7 +47,8 @@ pub mod benchmarking;
 pub(crate) mod tessellation;
 pub mod util;
 
-/// Map's configuration and execution.
+/// The [`Map`] defines the public interface of the map renderer.
+// DO NOT IMPLEMENT INTERNALS ON THIS STRUCT.
 pub struct Map<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
@@ -114,6 +115,7 @@ where
     map_schedule: SimpleMapSchedule<MWC, SM, HC>,
     window: MWC::MapWindow,
 }
+
 impl<MWC, SM, HC> HeadlessMap<MWC, SM, HC>
 where
     MWC: MapWindowConfig,

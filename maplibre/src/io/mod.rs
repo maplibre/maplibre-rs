@@ -11,7 +11,7 @@ pub mod static_tile_fetcher;
 
 pub mod geometry_index;
 pub mod pipeline;
-pub mod pipeline_steps;
+pub mod tile_pipelines;
 pub mod tile_repository;
 pub mod tile_request_state;
 

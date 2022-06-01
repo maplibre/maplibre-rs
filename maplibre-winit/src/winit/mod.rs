@@ -136,9 +136,7 @@ where
                     let dt = now - last_render_time;
                     last_render_time = now;
 
-                    {
-                        input_controller.update_state(map_schedule.view_state_mut(), dt);
-                    }
+                    input_controller.update_state(map_schedule.view_state_mut(), dt);
 
                     match map_schedule.update_and_redraw() {
                         Ok(_) => {}

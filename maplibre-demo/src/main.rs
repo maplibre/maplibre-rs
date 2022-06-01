@@ -3,9 +3,9 @@ use maplibre::coords::{WorldTileCoords, ZoomLevel};
 use maplibre::error::Error;
 use maplibre::io::pipeline::Processable;
 use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
-use maplibre::io::pipeline_steps::build_vector_tile_pipeline;
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::{HttpClient, HttpSourceClient};
+use maplibre::io::tile_pipelines::build_vector_tile_pipeline;
 use maplibre::io::tile_repository::StoredLayer;
 use maplibre::io::{RawLayer, TileRequest, TileRequestID};
 use maplibre::map_schedule::{EventuallyMapContext, InteractiveMapSchedule};
@@ -70,7 +70,7 @@ struct HeadlessPipelineProcessor {
 }
 
 impl PipelineProcessor for HeadlessPipelineProcessor {
-    fn finished_layer_tesselation(
+    fn layer_tesselation_finished(
         &mut self,
         coords: &WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,

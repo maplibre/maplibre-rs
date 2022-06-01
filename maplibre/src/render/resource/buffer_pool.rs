@@ -578,6 +578,7 @@ impl RingIndex {
 
 #[cfg(test)]
 mod tests {
+    use crate::coords::ZoomLevel;
     use crate::style::layer::StyleLayer;
     use lyon::tessellation::VertexBuffers;
 
@@ -638,7 +639,7 @@ mod tests {
         for _ in 0..2 {
             pool.allocate_layer_geometry(
                 &queue,
-                (0, 0, 0).into(),
+                (0, 0, ZoomLevel::default()).into(),
                 style_layer.clone(),
                 &data48bytes_aligned,
                 2,
@@ -652,7 +653,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -666,7 +667,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -678,7 +679,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -689,7 +690,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -700,7 +701,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer,
             &data24bytes_aligned,
             2,

@@ -10,19 +10,19 @@ use std::marker::PhantomData;
 use std::process::Output;
 use std::sync::mpsc;
 
+/// Processes events which happen during the pipeline execution
 pub trait PipelineProcessor: Downcast {
-    fn finished_tile_tesselation(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {}
-    fn unavailable_layer(&mut self, coords: &WorldTileCoords, layer_name: &str) {}
-    fn finished_layer_tesselation(
+    fn tile_finished(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {}
+    fn layer_unavailable(&mut self, coords: &WorldTileCoords, layer_name: &str) {}
+    fn layer_tesselation_finished(
         &mut self,
         coords: &WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-        // Holds for each feature the count of indices.
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
     ) {
     }
-    fn finished_layer_indexing(
+    fn layer_indexing_finished(
         &mut self,
         coords: &WorldTileCoords,
         geometries: Vec<IndexedGeometry<f64>>,
@@ -32,6 +32,7 @@ pub trait PipelineProcessor: Downcast {
 
 impl_downcast!(PipelineProcessor);
 
+/// Context which is available to each step within a [`DataPipeline`]
 pub struct PipelineContext {
     processor: Box<dyn PipelineProcessor>,
 }
@@ -52,6 +53,7 @@ impl PipelineContext {
     {
         self.processor.into_any().downcast::<P>().ok()
     }
+
     pub fn processor_mut(&mut self) -> &mut dyn PipelineProcessor {
         self.processor.as_mut()
     }
@@ -64,26 +66,28 @@ pub trait Processable {
     fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output;
 }
 
-pub struct PipelineStep<P, N>
+/// A pipeline which consists of multiple steps. Steps are [`Processable`] workloads. Later steps
+/// depend on previous ones.
+pub struct DataPipeline<P, N>
 where
     P: Processable,
     N: Processable<Input = P::Output>,
 {
-    process: P,
-    next: N,
+    step: P,
+    next_step: N,
 }
 
-impl<P, N> PipelineStep<P, N>
+impl<P, N> DataPipeline<P, N>
 where
     P: Processable,
     N: Processable<Input = P::Output>,
 {
-    pub fn new(process: P, next: N) -> Self {
-        Self { process, next }
+    pub fn new(step: P, next_step: N) -> Self {
+        Self { step, next_step }
     }
 }
 
-impl<P, N> Processable for PipelineStep<P, N>
+impl<P, N> Processable for DataPipeline<P, N>
 where
     P: Processable,
     N: Processable<Input = P::Output>,
@@ -92,16 +96,17 @@ where
     type Output = N::Output;
 
     fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output {
-        let output = self.process.process(input, context);
-        self.next.process(output, context)
+        let output = self.step.process(input, context);
+        self.next_step.process(output, context)
     }
 }
 
-pub struct EndStep<I> {
+/// Marks the end of a [`DataPipeline`]
+pub struct PipelineEnd<I> {
     phantom: PhantomData<I>,
 }
 
-impl<I> Default for EndStep<I> {
+impl<I> Default for PipelineEnd<I> {
     fn default() -> Self {
         Self {
             phantom: PhantomData::default(),
@@ -109,7 +114,7 @@ impl<I> Default for EndStep<I> {
     }
 }
 
-impl<I> Processable for EndStep<I> {
+impl<I> Processable for PipelineEnd<I> {
     type Input = I;
     type Output = I;
 
@@ -173,7 +178,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::io::pipeline::{
-        ClosureProcessable, EndStep, PipelineContext, PipelineProcessor, PipelineStep, Processable,
+        ClosureProcessable, DataPipeline, PipelineContext, PipelineEnd, PipelineProcessor,
+        Processable,
     };
     use std::sync::mpsc;
 
@@ -190,65 +196,48 @@ mod tests {
     }
 
     #[test]
-    fn test() {
-        let mut context = PipelineContext {
-            processor: Box::new(DummyPipelineProcessor),
-        };
-        let output: u32 = PipelineStep {
-            process: add_two as fn(u8, &mut PipelineContext) -> u32,
-            next: EndStep::default(),
-        }
-        .process(5u8, &mut context);
-
-        assert_eq!(output, 7);
-
-        let output = PipelineStep {
-            process: add_one as fn(u32, &mut PipelineContext) -> u8,
-            next: PipelineStep {
-                process: add_two as fn(u8, &mut PipelineContext) -> u32,
-                next: EndStep::default(),
-            },
-        }
-        .process(5u32, &mut context);
-
-        assert_eq!(output, 8);
-
-        let mut a = 3;
-        let closure = |input: u8, context: &mut PipelineContext| -> u32 {
-            return input as u32 + 2 + a;
-        };
-        let output: u32 = PipelineStep {
-            process: ClosureProcessable {
-                func: closure,
-                phantom_i: Default::default(),
-            },
-            next: EndStep::default(),
-        }
-        .process(5u8, &mut context);
-
-        assert_eq!(output, 10);
-
-        let processable =
-            ClosureProcessable::from(|input: u8, context: &mut PipelineContext| -> u32 {
-                return input as u32 + 2 + a;
-            });
-        let output: u32 = PipelineStep {
-            process: processable,
-            next: EndStep::default(),
-        }
-        .process(5u8, &mut context);
-
-        assert_eq!(output, 10);
-
-        let output: u32 = PipelineStep::<ClosureProcessable<_, u8, u32>, _>::new(
-            (|input: u8, context: &mut PipelineContext| -> u32 {
-                return input as u32 + 2 + a;
-            })
-            .into(),
-            EndStep::<u32>::default(),
+    fn test_fn_pointer() {
+        let mut context = PipelineContext::new(DummyPipelineProcessor);
+        let output: u32 = DataPipeline::new(
+            add_two as fn(u8, &mut PipelineContext) -> u32,
+            PipelineEnd::default(),
         )
         .process(5u8, &mut context);
+        assert_eq!(output, 7);
 
+        let output: u32 = DataPipeline::new(
+            add_one as fn(u32, &mut PipelineContext) -> u8,
+            DataPipeline::new(
+                add_two as fn(u8, &mut PipelineContext) -> u32,
+                PipelineEnd::default(),
+            ),
+        )
+        .process(5u32, &mut context);
+        assert_eq!(output, 8);
+    }
+
+    #[test]
+    fn test_closure() {
+        let mut context = PipelineContext::new(DummyPipelineProcessor);
+        let mut outer_value = 3;
+
+        // using from()
+        let closure = ClosureProcessable::from(|input: u8, context: &mut PipelineContext| -> u32 {
+            return input as u32 + 2 + outer_value;
+        });
+        let output: u32 =
+            DataPipeline::new(closure, PipelineEnd::default()).process(5u8, &mut context);
+        assert_eq!(output, 10);
+
+        // with into()
+        let output: u32 = DataPipeline::<ClosureProcessable<_, u8, u32>, _>::new(
+            (|input: u8, context: &mut PipelineContext| -> u32 {
+                return input as u32 + 2 + outer_value;
+            })
+            .into(),
+            PipelineEnd::<u32>::default(),
+        )
+        .process(5u8, &mut context);
         assert_eq!(output, 10);
     }
 }

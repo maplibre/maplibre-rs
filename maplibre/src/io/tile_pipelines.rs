@@ -1,5 +1,5 @@
 use crate::io::geometry_index::IndexProcessor;
-use crate::io::pipeline::{EndStep, PipelineContext, PipelineStep, Processable};
+use crate::io::pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable};
 use crate::io::{TileRequest, TileRequestID};
 use crate::tessellation::zero_tessellator::ZeroTessellator;
 use crate::tessellation::IndexDataType;
@@ -7,9 +7,9 @@ use geozero::GeozeroDatasource;
 use prost::Message;
 use std::collections::HashSet;
 
-pub struct ParseTileStep;
+pub struct ParseTile;
 
-impl Processable for ParseTileStep {
+impl Processable for ParseTile {
     type Input = (TileRequest, TileRequestID, Box<[u8]>);
     type Output = (TileRequest, TileRequestID, geozero::mvt::Tile);
 
@@ -24,9 +24,9 @@ impl Processable for ParseTileStep {
     }
 }
 
-pub struct IndexLayerStep;
+pub struct IndexLayer;
 
-impl Processable for IndexLayerStep {
+impl Processable for IndexLayer {
     type Input = (TileRequest, TileRequestID, geozero::mvt::Tile);
     type Output = (TileRequest, TileRequestID, geozero::mvt::Tile);
 
@@ -40,14 +40,14 @@ impl Processable for IndexLayerStep {
 
         context
             .processor_mut()
-            .finished_layer_indexing(&tile_request.coords, index.get_geometries());
+            .layer_indexing_finished(&tile_request.coords, index.get_geometries());
         (tile_request, request_id, tile)
     }
 }
 
-pub struct TessellateLayerStep;
+pub struct TessellateLayer;
 
-impl Processable for TessellateLayerStep {
+impl Processable for TessellateLayer {
     type Input = (TileRequest, TileRequestID, geozero::mvt::Tile);
     type Output = (TileRequest, TileRequestID, geozero::mvt::Tile);
 
@@ -72,7 +72,7 @@ impl Processable for TessellateLayerStep {
             if let Err(e) = layer.process(&mut tessellator) {
                 context
                     .processor_mut()
-                    .unavailable_layer(coords, layer_name);
+                    .layer_unavailable(coords, layer_name);
 
                 tracing::error!(
                     "layer {} at {} tesselation failed {:?}",
@@ -81,7 +81,7 @@ impl Processable for TessellateLayerStep {
                     e
                 );
             } else {
-                context.processor_mut().finished_layer_tesselation(
+                context.processor_mut().layer_tesselation_finished(
                     coords,
                     tessellator.buffer.into(),
                     tessellator.feature_indices,
@@ -99,7 +99,7 @@ impl Processable for TessellateLayerStep {
         for missing_layer in tile_request.layers.difference(&available_layers) {
             context
                 .processor_mut()
-                .unavailable_layer(coords, missing_layer);
+                .layer_unavailable(coords, missing_layer);
 
             tracing::info!(
                 "requested layer {} at {} not found in tile",
@@ -112,23 +112,23 @@ impl Processable for TessellateLayerStep {
 
         context
             .processor_mut()
-            .finished_tile_tesselation(request_id, &tile_request.coords);
+            .tile_finished(request_id, &tile_request.coords);
 
         (tile_request, request_id, tile)
     }
 }
 
-pub fn build_vector_tile_pipeline(
-) -> impl Processable<Input = <ParseTileStep as Processable>::Input> {
-    PipelineStep::new(
-        ParseTileStep,
-        PipelineStep::new(TessellateLayerStep, EndStep::default()),
+pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Processable>::Input> {
+    DataPipeline::new(
+        ParseTile,
+        DataPipeline::new(TessellateLayer, PipelineEnd::default()),
     )
 }
 
 #[cfg(test)]
 mod tests {
     use super::build_vector_tile_pipeline;
+    use crate::coords::ZoomLevel;
     use crate::io::pipeline::{PipelineContext, PipelineProcessor, Processable};
     use crate::io::TileRequest;
     pub struct DummyPipelineProcessor;
@@ -144,7 +144,7 @@ mod tests {
         let output = pipeline.process(
             (
                 TileRequest {
-                    coords: (0, 0, 0).into(),
+                    coords: (0, 0, ZoomLevel::default()).into(),
                     layers: Default::default(),
                 },
                 0,

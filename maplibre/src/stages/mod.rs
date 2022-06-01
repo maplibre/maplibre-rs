@@ -7,8 +7,8 @@ use crate::io::geometry_index::GeometryIndex;
 use crate::io::geometry_index::{IndexProcessor, IndexedGeometry, TileIndex};
 use crate::io::pipeline::Processable;
 use crate::io::pipeline::{PipelineContext, PipelineProcessor};
-use crate::io::pipeline_steps::build_vector_tile_pipeline;
 use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::io::tile_pipelines::build_vector_tile_pipeline;
 use crate::io::tile_repository::StoredLayer;
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TileRequest, TileRequestID};
@@ -34,6 +34,7 @@ mod message;
 mod populate_tile_store_stage;
 mod request_stage;
 
+/// Register stages required for requesting and preparing new tiles.
 pub fn register_stages<HC: HttpClient, SM: ScheduleMethod>(
     schedule: &mut Schedule,
     http_source_client: HttpSourceClient<HC>,
@@ -61,7 +62,7 @@ pub struct HeadedPipelineProcessor {
 }
 
 impl PipelineProcessor for HeadedPipelineProcessor {
-    fn finished_tile_tesselation(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {
+    fn tile_finished(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {
         self.state
             .message_sender
             .send(TessellateMessage::Tile(TileTessellateMessage {
@@ -71,7 +72,7 @@ impl PipelineProcessor for HeadedPipelineProcessor {
             .unwrap();
     }
 
-    fn unavailable_layer(&mut self, coords: &WorldTileCoords, layer_name: &str) {
+    fn layer_unavailable(&mut self, coords: &WorldTileCoords, layer_name: &str) {
         self.state
             .message_sender
             .send(TessellateMessage::Layer(
@@ -83,7 +84,7 @@ impl PipelineProcessor for HeadedPipelineProcessor {
             .unwrap();
     }
 
-    fn finished_layer_tesselation(
+    fn layer_tesselation_finished(
         &mut self,
         coords: &WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -103,7 +104,7 @@ impl PipelineProcessor for HeadedPipelineProcessor {
             .unwrap();
     }
 
-    fn finished_layer_indexing(
+    fn layer_indexing_finished(
         &mut self,
         coords: &WorldTileCoords,
         geometries: Vec<IndexedGeometry<f64>>,

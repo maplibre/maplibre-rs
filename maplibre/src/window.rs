@@ -3,23 +3,29 @@
 use crate::{HttpClient, InteractiveMapSchedule, ScheduleMethod};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 
-/// Window with a [carte::window::WindowSize].
+/// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.
 pub trait MapWindow {
     fn size(&self) -> WindowSize;
 }
 
+/// Window which references a physical `RawWindow`. This is only implemented by headed windows and
+/// not by headless windows.
 pub trait HeadedMapWindow: MapWindow {
     type RawWindow: HasRawWindowHandle;
 
     fn inner(&self) -> &Self::RawWindow;
 }
 
+/// A configuration for a window which determines the corresponding implementation of a
+/// [`MapWindow`] and is able to create it.
 pub trait MapWindowConfig: 'static {
     type MapWindow: MapWindow;
 
     fn create(&self) -> Self::MapWindow;
 }
 
+/// The event loop is responsible for processing events and propagating them to the map renderer.
+/// Only non-headless windows use an [`EventLoop`].
 pub trait EventLoop<MWC, SM, HC>
 where
     MWC: MapWindowConfig,

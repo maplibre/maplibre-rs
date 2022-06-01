@@ -1,4 +1,5 @@
-//! Sorts items of the [RenderPhases](RenderPhase).
+//! Stage which writes the current contents of the GPU/CPU buffer in [`BufferedTextureHead`]
+//! to disk as PNG.
 
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, Zoom};
@@ -18,6 +19,7 @@ use std::future::Future;
 use std::io::Write;
 use std::iter;
 use std::ops::Deref;
+use std::sync::Arc;
 use tokio::runtime::Handle;
 use tokio::task;
 use wgpu::{BufferAsyncError, BufferSlice};
@@ -38,7 +40,7 @@ impl Stage for WriteSurfaceBufferStage {
         match state.surface.head() {
             Head::Headed(_) => {}
             Head::Headless(buffered_texture) => {
-                let buffered_texture = buffered_texture.clone();
+                let buffered_texture: Arc<BufferedTextureHead> = buffered_texture.clone();
 
                 let device = device.clone();
                 let current_frame = self.frame;

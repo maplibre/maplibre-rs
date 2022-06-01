@@ -31,17 +31,19 @@ use crate::{HeadedMapWindow, MapWindow, MapWindowConfig};
 use log::info;
 use std::sync::Arc;
 
-// Rendering internals
 #[cfg(feature = "headless")]
-mod copy_surface_to_buffer_node;
+// Exposed because it should be addable conditionally
+pub mod copy_surface_to_buffer_node;
 pub mod graph;
+pub mod resource;
+pub mod stages;
+
+// Rendering internals
 mod graph_runner;
 mod main_pass;
 mod render_commands;
 mod render_phase;
-pub mod resource;
 mod shaders;
-mod stages;
 mod tile_pipeline;
 mod tile_view_pattern;
 mod util;
@@ -434,7 +436,7 @@ mod tests {
             .ok()
             .unwrap();
 
-        let render_state = RenderState::new(Surface::from_image::<HeadlessMapWindowConfig>(
+        let render_state = RenderState::new(Surface::from_image(
             &device,
             &HeadlessMapWindow {
                 size: WindowSize::new(100, 100).unwrap(),
