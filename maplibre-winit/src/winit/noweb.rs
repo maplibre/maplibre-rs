@@ -10,26 +10,9 @@ use super::WinitMapWindow;
 use super::WinitWindow;
 
 use super::WinitMapWindowConfig;
-use maplibre::window::{MapWindow, WindowSize};
+use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
 
 impl MapWindow for WinitMapWindow {
-    type EventLoop = WinitEventLoop;
-    type Window = WinitWindow;
-    type MapWindowConfig = WinitMapWindowConfig;
-
-    fn create(map_window_config: &Self::MapWindowConfig) -> Self {
-        let event_loop = WinitEventLoop::new();
-        let window = WindowBuilder::new()
-            .with_title(&map_window_config.title)
-            .build(&event_loop)
-            .unwrap();
-
-        Self {
-            window,
-            event_loop: Some(event_loop),
-        }
-    }
-
     fn size(&self) -> WindowSize {
         let size = self.window.inner_size();
         #[cfg(target_os = "android")]
@@ -43,8 +26,28 @@ impl MapWindow for WinitMapWindow {
             WindowSize::new(size.width, size.height).expect("failed to get window dimensions.");
         window_size
     }
+}
+impl HeadedMapWindow for WinitMapWindow {
+    type RawWindow = WinitWindow;
 
-    fn inner(&self) -> &Self::Window {
+    fn inner(&self) -> &Self::RawWindow {
         &self.window
+    }
+}
+
+impl MapWindowConfig for WinitMapWindowConfig {
+    type MapWindow = WinitMapWindow;
+
+    fn create(&self) -> Self::MapWindow {
+        let event_loop = WinitEventLoop::new();
+        let window = WindowBuilder::new()
+            .with_title(&self.title)
+            .build(&event_loop)
+            .unwrap();
+
+        Self::MapWindow {
+            window,
+            event_loop: Some(event_loop),
+        }
     }
 }

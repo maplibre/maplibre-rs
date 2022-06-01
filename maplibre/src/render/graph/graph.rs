@@ -27,7 +27,8 @@ use super::EdgeExistence;
 ///
 /// ## Example
 /// Here is a simple render graph example with two nodes connected by a node edge.
-/// ```ignore
+/// ```
+/// #
 /// # use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
 /// # use maplibre::render::{RenderState};
 /// # struct MyNode;
@@ -574,10 +575,8 @@ mod tests {
         Edge, Node, NodeId, NodeRunError, RenderGraph, RenderGraphContext, RenderGraphError,
         SlotInfo,
     };
-    use crate::render::{
-        graph::{RenderContext, SlotType},
-        RenderState,
-    };
+    use crate::render::graph::{RenderContext, SlotType};
+    use crate::RenderState;
     use std::collections::HashSet;
 
     #[derive(Debug)]
@@ -610,9 +609,9 @@ mod tests {
 
         fn run(
             &self,
-            _: &mut RenderGraphContext,
-            _: &mut RenderContext,
-            _: &RenderState,
+            graph: &mut RenderGraphContext,
+            render_context: &mut RenderContext,
+            state: &RenderState,
         ) -> Result<(), NodeRunError> {
             Ok(())
         }
@@ -683,9 +682,9 @@ mod tests {
         impl Node for MyNode {
             fn run(
                 &self,
-                _: &mut RenderGraphContext,
-                _: &mut RenderContext,
-                _: &RenderState,
+                graph: &mut RenderGraphContext,
+                render_context: &mut RenderContext,
+                state: &RenderState,
             ) -> Result<(), NodeRunError> {
                 Ok(())
             }

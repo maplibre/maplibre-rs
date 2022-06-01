@@ -1,35 +1,27 @@
-//! Stores the state of the map such as `[crate::coords::Zoom]`, `[crate::camera::Camera]`, `[crate::style::Style]`, `[crate::io::tile_cache::TileCache]` and more.
-
 use crate::context::{MapContext, ViewState};
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
 use crate::io::scheduler::Scheduler;
-use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::source_client::{HTTPClient, HttpSourceClient, SourceClient};
-use crate::io::tile_cache::TileCache;
+use crate::io::source_client::{HttpClient, HttpSourceClient, SourceClient};
+use crate::io::tile_repository::TileRepository;
 use crate::io::tile_request_state::TileRequestState;
-use crate::io::TessellateMessage;
 use crate::render::register_render_stages;
 use crate::schedule::{Schedule, Stage};
 use crate::stages::register_stages;
 use crate::style::Style;
 use crate::{
-    MapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod, WgpuSettings,
-    WindowSize,
+    HeadedMapWindow, MapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod,
+    WgpuSettings, WindowSize,
 };
 use std::marker::PhantomData;
 use std::mem;
 use std::sync::{mpsc, Arc, Mutex};
 
 pub struct PrematureMapContext {
-    pub view_state: ViewState,
-    pub style: Style,
+    view_state: ViewState,
+    style: Style,
 
-    pub tile_cache: TileCache,
-    pub scheduler: Box<dyn ScheduleMethod>,
-
-    pub message_receiver: mpsc::Receiver<TessellateMessage>,
-    pub shared_thread_state: SharedThreadState,
+    tile_repository: TileRepository,
 
     wgpu_settings: WgpuSettings,
     renderer_settings: RendererSettings,
@@ -38,53 +30,43 @@ pub struct PrematureMapContext {
 pub enum EventuallyMapContext {
     Full(MapContext),
     Premature(PrematureMapContext),
-    Empty,
+    _Uninitialized,
 }
 
 impl EventuallyMapContext {
     pub fn make_full(&mut self, renderer: Renderer) {
-        let context = mem::replace(self, EventuallyMapContext::Empty);
+        let context = mem::replace(self, EventuallyMapContext::_Uninitialized);
 
         match context {
             EventuallyMapContext::Full(_) => {}
             EventuallyMapContext::Premature(PrematureMapContext {
                 view_state,
                 style,
-                tile_cache,
-                scheduler,
-                message_receiver,
-                shared_thread_state,
-                wgpu_settings,
-                renderer_settings,
+                tile_repository,
+                ..
             }) => {
-                mem::replace(
-                    self,
-                    EventuallyMapContext::Full(MapContext {
-                        view_state,
-                        style,
-                        tile_cache,
-                        renderer,
-                        scheduler,
-                        message_receiver,
-                        shared_thread_state,
-                    }),
-                );
+                *self = EventuallyMapContext::Full(MapContext {
+                    view_state,
+                    style,
+                    tile_repository,
+                    renderer,
+                });
             }
-            EventuallyMapContext::Empty => {}
+            EventuallyMapContext::_Uninitialized => {}
         }
     }
 }
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
-pub struct MapSchedule<MWC, SM, HC>
+pub struct InteractiveMapSchedule<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     map_window_config: MWC,
 
-    map_context: EventuallyMapContext,
+    pub map_context: EventuallyMapContext,
 
     schedule: Schedule,
 
@@ -94,11 +76,11 @@ where
     suspended: bool,
 }
 
-impl<MWC, SM, HC> MapSchedule<MWC, SM, HC>
+impl<MWC, SM, HC> InteractiveMapSchedule<MWC, SM, HC>
 where
     MWC: MapWindowConfig,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     pub fn new(
         map_window_config: MWC,
@@ -111,42 +93,29 @@ where
         renderer_settings: RendererSettings,
     ) -> Self {
         let view_state = ViewState::new(&window_size);
-        let tile_cache = TileCache::new();
-
+        let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
-        let client: SourceClient<HC> = SourceClient::Http(HttpSourceClient::new(http_client));
-        register_stages(&mut schedule, client);
-        register_render_stages(&mut schedule);
 
-        let (message_sender, message_receiver) = mpsc::channel();
+        let http_source_client: HttpSourceClient<HC> = HttpSourceClient::new(http_client);
+        register_stages(&mut schedule, http_source_client, Box::new(scheduler));
 
-        let scheduler = Box::new(scheduler.take());
-        let shared_thread_state = SharedThreadState {
-            tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
-            message_sender,
-            geometry_index: Arc::new(Mutex::new(GeometryIndex::new())),
-        };
+        register_render_stages(&mut schedule, false).unwrap();
+
         Self {
             map_window_config,
             map_context: match renderer {
                 None => EventuallyMapContext::Premature(PrematureMapContext {
                     view_state,
                     style,
-                    tile_cache,
-                    scheduler,
-                    shared_thread_state,
+                    tile_repository,
                     wgpu_settings,
-                    message_receiver,
                     renderer_settings,
                 }),
                 Some(renderer) => EventuallyMapContext::Full(MapContext {
                     view_state,
                     style,
-                    tile_cache,
+                    tile_repository,
                     renderer,
-                    scheduler,
-                    shared_thread_state,
-                    message_receiver,
                 }),
             },
             schedule,
@@ -183,13 +152,15 @@ where
         self.suspended = true;
     }
 
-    pub fn resume<MW>(&mut self, window: &MW)
+    pub fn resume(&mut self, window: &MWC::MapWindow)
     where
-        MW: MapWindow,
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
     {
         if let EventuallyMapContext::Full(map_context) = &mut self.map_context {
             let mut renderer = &mut map_context.renderer;
-            renderer.surface.recreate(window, &renderer.instance);
+            renderer
+                .state
+                .recreate_surface::<MWC::MapWindow>(window, &renderer.instance);
             self.suspended = false;
         }
     }
@@ -201,28 +172,26 @@ where
         }
     }
 
-    pub async fn late_init(&mut self) -> bool {
+    pub async fn late_init(&mut self) -> bool
+    where
+        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
+    {
         match &self.map_context {
             EventuallyMapContext::Full(_) => false,
             EventuallyMapContext::Premature(PrematureMapContext {
-                view_state,
-                style,
-                tile_cache,
-                scheduler,
-                message_receiver,
-                shared_thread_state,
                 wgpu_settings,
                 renderer_settings,
+                ..
             }) => {
-                let window = MWC::MapWindow::create(&self.map_window_config);
+                let window = self.map_window_config.create();
                 let renderer =
                     Renderer::initialize(&window, wgpu_settings.clone(), renderer_settings.clone())
                         .await
                         .unwrap();
-                &self.map_context.make_full(renderer);
+                self.map_context.make_full(renderer);
                 true
             }
-            EventuallyMapContext::Empty => false,
+            EventuallyMapContext::_Uninitialized => false,
         }
     }
 
@@ -232,5 +201,73 @@ where
             EventuallyMapContext::Premature(PrematureMapContext { view_state, .. }) => view_state,
             _ => panic!("should not happen"),
         }
+    }
+}
+
+/// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
+pub struct SimpleMapSchedule<MWC, SM, HC>
+where
+    MWC: MapWindowConfig,
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    map_window_config: MWC,
+
+    pub map_context: MapContext,
+
+    schedule: Schedule,
+    scheduler: Scheduler<SM>,
+    http_client: HC,
+}
+
+impl<MWC, SM, HC> SimpleMapSchedule<MWC, SM, HC>
+where
+    MWC: MapWindowConfig,
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    pub fn new(
+        map_window_config: MWC,
+        window_size: WindowSize,
+        renderer: Renderer,
+        scheduler: Scheduler<SM>,
+        http_client: HC,
+        style: Style,
+    ) -> Self {
+        let view_state = ViewState::new(&window_size);
+        let tile_repository = TileRepository::new();
+        let mut schedule = Schedule::default();
+
+        register_render_stages(&mut schedule, true).unwrap();
+
+        Self {
+            map_window_config,
+            map_context: MapContext {
+                view_state,
+                style,
+                tile_repository,
+                renderer,
+            },
+            schedule,
+            scheduler,
+            http_client,
+        }
+    }
+
+    #[tracing::instrument(name = "update_and_redraw", skip_all)]
+    pub fn update_and_redraw(&mut self) -> Result<(), Error> {
+        self.schedule.run(&mut self.map_context);
+
+        Ok(())
+    }
+
+    pub fn schedule(&self) -> &Schedule {
+        &self.schedule
+    }
+    pub fn scheduler(&self) -> &Scheduler<SM> {
+        &self.scheduler
+    }
+    pub fn http_client(&self) -> &HC {
+        &self.http_client
     }
 }

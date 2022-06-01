@@ -4,14 +4,18 @@
 use crate::render::resource::texture::TextureView;
 use crate::render::settings::RendererSettings;
 use crate::render::util::HasChanged;
-use crate::{MapWindow, WindowSize};
+use crate::window::HeadedMapWindow;
+use crate::{MapWindow, MapWindowConfig, WindowSize};
+use std::fs::File;
+use std::io::Write;
 use std::mem::size_of;
+use std::sync::Arc;
 
-struct BufferDimensions {
-    width: usize,
-    height: usize,
-    unpadded_bytes_per_row: usize,
-    padded_bytes_per_row: usize,
+pub struct BufferDimensions {
+    pub width: usize,
+    pub height: usize,
+    pub unpadded_bytes_per_row: usize,
+    pub padded_bytes_per_row: usize,
 }
 
 impl BufferDimensions {
@@ -42,7 +46,7 @@ impl WindowHead {
 
     pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
     where
-        MW: MapWindow,
+        MW: MapWindow + HeadedMapWindow,
     {
         self.surface = unsafe { instance.create_surface(window.inner()) };
     }
@@ -52,14 +56,63 @@ impl WindowHead {
 }
 
 pub struct BufferedTextureHead {
-    texture: wgpu::Texture,
-    output_buffer: wgpu::Buffer,
-    buffer_dimensions: BufferDimensions,
+    pub texture: wgpu::Texture,
+    pub output_buffer: wgpu::Buffer,
+    pub buffer_dimensions: BufferDimensions,
+}
+
+#[cfg(feature = "headless")]
+impl BufferedTextureHead {
+    pub async fn create_png<'a>(
+        &self,
+        device: &wgpu::Device,
+        png_output_path: &str,
+        // device: &wgpu::Device,
+    ) {
+        // Note that we're not calling `.await` here.
+        let buffer_slice = self.output_buffer.slice(..);
+        let buffer_future = buffer_slice.map_async(wgpu::MapMode::Read);
+
+        // Poll the device in a blocking manner so that our future resolves.
+        // In an actual application, `device.poll(...)` should
+        // be called in an event loop or on another thread.
+        device.poll(wgpu::Maintain::Wait);
+        if let Ok(()) = buffer_future.await {
+            let padded_buffer = buffer_slice.get_mapped_range();
+
+            let mut png_encoder = png::Encoder::new(
+                File::create(png_output_path).unwrap(),
+                self.buffer_dimensions.width as u32,
+                self.buffer_dimensions.height as u32,
+            );
+            png_encoder.set_depth(png::BitDepth::Eight);
+            png_encoder.set_color(png::ColorType::Rgba);
+            let mut png_writer = png_encoder
+                .write_header()
+                .unwrap()
+                .into_stream_writer_with_size(self.buffer_dimensions.unpadded_bytes_per_row)
+                .unwrap();
+
+            // from the padded_buffer we write just the unpadded bytes into the image
+            for chunk in padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row) {
+                png_writer
+                    .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row])
+                    .unwrap();
+            }
+            png_writer.finish().unwrap();
+
+            // With the current interface, we have to make sure all mapped views are
+            // dropped before we unmap the buffer.
+            drop(padded_buffer);
+
+            self.output_buffer.unmap();
+        }
+    }
 }
 
 pub enum Head {
     Headed(WindowHead),
-    Headless(BufferedTextureHead),
+    Headless(Arc<BufferedTextureHead>),
 }
 
 pub struct Surface {
@@ -74,7 +127,7 @@ impl Surface {
         settings: &RendererSettings,
     ) -> Self
     where
-        MW: MapWindow,
+        MW: MapWindow + HeadedMapWindow,
     {
         let size = window.size();
         let surface_config = wgpu::SurfaceConfiguration {
@@ -97,6 +150,7 @@ impl Surface {
         }
     }
 
+    // TODO: Give better name
     pub fn from_image<MW>(device: &wgpu::Device, window: &MW, settings: &RendererSettings) -> Self
     where
         MW: MapWindow,
@@ -111,7 +165,7 @@ impl Surface {
             BufferDimensions::new(size.width() as usize, size.height() as usize);
         // The output buffer lets us retrieve the data as an array
         let output_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
+            label: Some("BufferedTextureHead buffer"),
             size: (buffer_dimensions.padded_bytes_per_row * buffer_dimensions.height) as u64,
             usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
@@ -133,11 +187,11 @@ impl Surface {
 
         Self {
             size,
-            head: Head::Headless(BufferedTextureHead {
+            head: Head::Headless(Arc::new(BufferedTextureHead {
                 texture,
                 output_buffer,
                 buffer_dimensions,
-            }),
+            })),
         }
     }
 
@@ -149,7 +203,7 @@ impl Surface {
                 let frame = match surface.get_current_texture() {
                     Ok(view) => view,
                     Err(wgpu::SurfaceError::Outdated) => {
-                        tracing::trace!("surface outdated");
+                        log::warn!("surface outdated");
                         window.configure(device);
                         surface
                             .get_current_texture()
@@ -159,7 +213,8 @@ impl Surface {
                 };
                 frame.into()
             }
-            Head::Headless(BufferedTextureHead { texture, .. }) => texture
+            Head::Headless(arc) => arc
+                .texture
                 .create_view(&wgpu::TextureViewDescriptor::default())
                 .into(),
         }
@@ -193,11 +248,13 @@ impl Surface {
 
     pub fn recreate<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
     where
-        MW: MapWindow,
+        MW: MapWindow + HeadedMapWindow,
     {
         match &mut self.head {
-            Head::Headed(head) => {
-                head.recreate_surface(window, instance);
+            Head::Headed(window_head) => {
+                if window_head.has_changed(&(self.size.width(), self.size.height())) {
+                    window_head.recreate_surface(window, instance);
+                }
             }
             Head::Headless(_) => {}
         }
@@ -216,6 +273,6 @@ impl HasChanged for WindowHead {
     type Criteria = (u32, u32);
 
     fn has_changed(&self, criteria: &Self::Criteria) -> bool {
-        self.surface_config.height != criteria.0 || self.surface_config.width != criteria.1
+        self.surface_config.width != criteria.0 || self.surface_config.height != criteria.1
     }
 }

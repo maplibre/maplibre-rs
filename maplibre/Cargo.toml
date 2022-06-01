@@ -14,6 +14,7 @@ web-webgl = ["wgpu/webgl"]
 trace = [ "tracing-subscriber", "tracing-tracy", "tracy-client"]
 no-thread-safe-futures = []
 embed-static-tiles = ["maplibre-build-tools/sqlite"]
+headless = ["png"]
 
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
@@ -33,24 +34,25 @@ reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"
 async-trait = "0.1"
 instant = { version = "0.1", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
 
-raw-window-handle = "0.4"
-
+# Tracing
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", optional = true }
 
+# Maths
 cgmath = "0.18"
 
+# Geo
 geo = { version = "0.19" }
 geo-types = { version = "0.7", features = ["use-rstar_0_9"] }
 rstar = { version = "0.9" }
 prost = "0.10.1"
 geozero = { version = "0.9.4", default-features = false, features = ["with-mvt", "with-geo"]}
-
 tile-grid = "0.3"
 
 # Rendering
 wgpu = { version = "0.12" }
 lyon = { version = "0.17", features = [] }
+raw-window-handle = "0.4"
 
 # cached = "0.32"
 
@@ -61,16 +63,24 @@ log = "0.4"
 bytemuck = "1.2.0"
 bytemuck_derive = "1.0"
 
+# Static tiles inclusion
 include_dir = "0.7.2"
 
+# JSON
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+# Colors
 csscolorparser = { version = "0.5", features = ["serde", "cint"]}
 cint = "0.2"
 
+# Required by bevy renderer
 thiserror = "1"
 downcast-rs = "1.2"
 smallvec = "1.8"
+
+# Headless
+png = { version = "0.17", optional = true }
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0", features = ["sqlite"] }
