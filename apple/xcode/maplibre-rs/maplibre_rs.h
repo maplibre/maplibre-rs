@@ -1,10 +1,3 @@
-//
-//  maplibre_rs.h
-//  maplibre-rs
-//
-//  Created by Ehrenamtskarte on 22.04.22.
-//
-
 #import <Foundation/Foundation.h>
 
 //! Project version number for maplibre_rs.

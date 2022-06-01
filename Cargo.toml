@@ -4,6 +4,7 @@ resolver = "2"
 
 members = [
     "maplibre",
+    "maplibre-winit",
     "maplibre-build-tools",
     "maplibre-demo",
 

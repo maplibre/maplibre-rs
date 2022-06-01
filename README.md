@@ -98,19 +98,13 @@ https://user-images.githubusercontent.com/905221/163552617-5db04c66-23e3-4915-87
 
 ## Building & Running
 
-Now, to clone the project:
+Clone the project
 
 ```bash
-git clone --recursive git@github.com:maplibre/maplibre-rs
+git clone https://github.com/maplibre/maplibre-rs.git
 ```
 
-and then build it for running on a desktop:
-
-```bash
-cargo build
-```
-
-After that, you can run it on your desktop:
+Build and run it on a desktop
 
 ```bash
 cargo run -p maplibre-demo
@@ -118,12 +112,6 @@ cargo run -p maplibre-demo
 
 More information about building for different platforms can be
 found [here](https://maxammann.org/maplibre-rs/docs/development-guide/building.html).
-
-> __Note for Mac__: Before opening the XCode project, you need to build manually using the following command:
-> `cargo build --target aarch64-apple-darwin --lib`
->
-> After that, open the XCode project and run it.
-> (XCode seems to set some environment variables which cause problems with the build directly within XCode)
 
 ## Rust Setup
 

@@ -17,9 +17,13 @@
       <sourceFolder url="file://$MODULE_DIR$/maplibre-demo/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/experiments/wgpu_for_fontrendering/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/experiments/wgpu_for_fontrendering/tests" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/experiments/wgpu_for_fontrendering/target" />
+      <sourceFolder url="file://$MODULE_DIR$/maplibre-winit/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/web/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
-      <excludeFolder url="file://$MODULE_DIR$/experiments/wgpu_for_fontrendering/target" />
+      <excludeFolder url="file://$MODULE_DIR$/docs/book" />
+      <excludeFolder url="file://$MODULE_DIR$/web/lib/.parcel-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/maplibre-cache" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

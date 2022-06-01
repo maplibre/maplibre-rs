@@ -1,77 +1,55 @@
+//! Scheduling.
+
 use std::future::Future;
+use std::pin::Pin;
 
 use crate::error::Error;
 
 use crate::io::shared_thread_state::SharedThreadState;
 
-pub struct Scheduler {
-    schedule_method: ScheduleMethod,
+/// Async/await scheduler.
+pub struct Scheduler<SM>
+where
+    SM: ScheduleMethod,
+{
+    schedule_method: SM,
 }
 
-impl Scheduler {
-    pub fn new(schedule_method: ScheduleMethod) -> Self {
+impl<SM> Scheduler<SM>
+where
+    SM: ScheduleMethod,
+{
+    pub fn new(schedule_method: SM) -> Self {
         Self { schedule_method }
     }
 
-    pub fn schedule_method(&self) -> &ScheduleMethod {
+    pub fn schedule_method(&self) -> &SM {
         &self.schedule_method
     }
-}
 
-pub enum ScheduleMethod {
-    #[cfg(not(target_arch = "wasm32"))]
-    Tokio(crate::platform::schedule_method::TokioScheduleMethod),
-    #[cfg(target_arch = "wasm32")]
-    WebWorkerPool(crate::platform::schedule_method::WebWorkerPoolScheduleMethod),
-}
-
-impl Default for ScheduleMethod {
-    fn default() -> Self {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            ScheduleMethod::Tokio(crate::platform::schedule_method::TokioScheduleMethod::new())
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            panic!("No default ScheduleMethod on web")
-        }
+    pub fn take(self) -> SM {
+        self.schedule_method
     }
 }
 
-impl ScheduleMethod {
-    #[cfg(target_arch = "wasm32")]
-    pub fn schedule<T>(
+/// Can schedule a task from a future factory and a shared state.
+// Should be object safe in order to be able to have a dyn object in MapContext
+pub trait ScheduleMethod: 'static {
+    #[cfg(not(feature = "no-thread-safe-futures"))]
+    fn schedule(
         &self,
         shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
-    ) -> Result<(), Error>
-    where
-        T: Future<Output = ()> + 'static,
-    {
-        match self {
-            ScheduleMethod::WebWorkerPool(method) => {
-                Ok(method.schedule(shared_thread_state, future_factory))
-            }
-            _ => Err(Error::Schedule),
-        }
-    }
+        future_factory: Box<
+            (dyn (FnOnce(SharedThreadState) -> Pin<Box<dyn Future<Output = ()> + Send>>) + Send),
+        >,
+    ) -> Result<(), Error>;
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn schedule<T>(
+    #[cfg(feature = "no-thread-safe-futures")]
+    fn schedule(
         &self,
         shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
-    ) -> Result<(), Error>
-    where
-        T: Future + Send + 'static,
-        T::Output: Send + 'static,
-    {
-        match self {
-            ScheduleMethod::Tokio(method) => {
-                method.schedule(shared_thread_state, future_factory);
-                Ok(())
-            }
-            _ => Err(Error::Schedule),
-        }
-    }
+        future_factory: Box<
+            (dyn (FnOnce(SharedThreadState) -> Pin<Box<dyn Future<Output = ()>>>) + Send),
+        >,
+    ) -> Result<(), Error>;
 }

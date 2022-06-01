@@ -8,7 +8,8 @@ publish = false
 
 [features]
 web-webgl = ["maplibre/web-webgl"]
-enable-tracing = ["maplibre/enable-tracing"]
+trace = ["maplibre/trace", "tracing-wasm"]
+default = []
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = true
@@ -17,5 +18,20 @@ wasm-opt = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+async-trait = "0.1"
+maplibre = { path = "../maplibre", features = ["no-thread-safe-futures"] }
+maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
+log = "0.4"
 
-maplibre = { path = "../maplibre" }
+console_error_panic_hook = "0.1"
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Worker", "WorkerGlobalScope", "DedicatedWorkerGlobalScope", "MessageEvent",
+    "Request", "RequestInit", "RequestMode", "Response", "Headers",
+    "ErrorEvent"
+] }
+js-sys = "0.3"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+console_log = { version = "0.2", features = ["color"] }
+tracing-wasm = { version = "0.2", optional = true } # FIXME: Low quality dependency

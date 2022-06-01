@@ -1,0 +1,9 @@
+node_modules
+
+libs/maplibre*
+
+dist
+
+src/wasm-pack
+
+.parcel-cache

@@ -1,9 +1,12 @@
+//! Tile cache.
+
 use crate::coords::{Quadkey, WorldTileCoords};
 
 use crate::io::LayerTessellateMessage;
 
 use std::collections::{btree_map, BTreeMap, HashSet};
 
+/// Stores the multiple [crate::io::LayerTessellateMessage] of a cached tile.
 pub struct CachedTile {
     layers: Vec<LayerTessellateMessage>,
 }
@@ -16,6 +19,7 @@ impl CachedTile {
     }
 }
 
+/// Stores and provides access to a quad tree of cached tiles with world tile coords.
 #[derive(Default)]
 pub struct TileCache {
     cache: BTreeMap<Quadkey, CachedTile>,
@@ -28,6 +32,11 @@ impl TileCache {
         }
     }
 
+    /// Inserts a tessellated layer into the quad tree at its world tile coords.
+    /// If the space is vacant, the tessellated layer is inserted into a new
+    /// [crate::io::tile_cache::CachedTile].
+    /// If the space is occupied, the tessellated layer is added to the current
+    /// [crate::io::tile_cache::CachedTile].
     pub fn put_tessellated_layer(&mut self, message: LayerTessellateMessage) {
         if let Some(entry) = message
             .get_coords()
@@ -45,6 +54,8 @@ impl TileCache {
         }
     }
 
+    /// Returns the list of tessellated layers at the given world tile coords. None if tile is
+    /// missing from the cache.
     pub fn iter_tessellated_layers_at(
         &self,
         coords: &WorldTileCoords,
@@ -55,6 +66,8 @@ impl TileCache {
             .map(|results| results.layers.iter())
     }
 
+    /// Removes all the cached tessellate layers that are not contained within the given
+    /// layers hashset.
     pub fn retain_missing_layer_names(
         &self,
         coords: &WorldTileCoords,
@@ -71,6 +84,7 @@ impl TileCache {
         }
     }
 
+    /// Checks if a layer is missing from the given layers set at the given coords.
     pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
         if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.cache.get(&key)) {
             let tessellated_set: HashSet<&str> = cached_tile

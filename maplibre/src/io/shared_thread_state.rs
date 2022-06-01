@@ -1,20 +1,22 @@
-use crate::coords::{TileCoords, WorldCoords, WorldTileCoords, Zoom};
+//! Shared thread state.
+
+use crate::coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel};
 use crate::error::Error;
 use crate::io::geometry_index::{GeometryIndex, IndexProcessor, IndexedGeometry, TileIndex};
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{
-    LayerTessellateMessage, TessellateMessage, TileFetchResult, TileRequest, TileRequestID,
-    TileTessellateMessage,
+    LayerTessellateMessage, TessellateMessage, TileRequest, TileRequestID, TileTessellateMessage,
 };
-use crate::tessellation::Tessellated;
+
 use std::collections::HashSet;
 
 use crate::tessellation::zero_tessellator::ZeroTessellator;
-use geozero::mvt::tile;
+
 use geozero::GeozeroDatasource;
 use prost::Message;
 use std::sync::{mpsc, Arc, Mutex};
 
+/// Stores and provides access to the thread safe data shared between the schedulers.
 #[derive(Clone)]
 pub struct SharedThreadState {
     pub tile_request_state: Arc<Mutex<TileRequestState>>,
@@ -41,9 +43,9 @@ impl SharedThreadState {
 
             let mut tile = geozero::mvt::Tile::decode(data.as_ref()).expect("failed to load tile");
 
-            let mut index = IndexProcessor::new();
+            let index = IndexProcessor::new();
 
-            for mut layer in &mut tile.layers {
+            for layer in &mut tile.layers {
                 let cloned_layer = layer.clone();
                 let layer_name: &str = &cloned_layer.name;
                 if !tile_request.layers.contains(layer_name) {
@@ -148,7 +150,7 @@ impl SharedThreadState {
     pub fn query_point(
         &self,
         world_coords: &WorldCoords,
-        z: u8,
+        z: ZoomLevel,
         zoom: Zoom,
     ) -> Option<Vec<IndexedGeometry<f64>>> {
         if let Ok(geometry_index) = self.geometry_index.lock() {

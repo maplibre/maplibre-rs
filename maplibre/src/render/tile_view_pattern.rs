@@ -1,7 +1,8 @@
-use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
+//! Utility for generating a tile pattern which can be used for masking.
 
-use crate::render::buffer_pool::{BackingBufferDescriptor, BufferPool, Queue};
+use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
 use crate::render::camera::ViewProjection;
+use crate::render::resource::{BackingBufferDescriptor, BufferPool, Queue};
 use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata};
 use cgmath::Matrix4;
 
@@ -10,7 +11,6 @@ use crate::tessellation::IndexDataType;
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
-use wgpu::Buffer;
 
 /// The tile mask pattern assigns each tile a value which can be used for stencil testing.
 pub struct TileViewPattern<Q, B> {
@@ -19,6 +19,7 @@ pub struct TileViewPattern<Q, B> {
     phantom_q: PhantomData<Q>,
 }
 
+#[derive(Clone)]
 pub struct TileShape {
     pub zoom_factor: f64,
 
@@ -40,6 +41,7 @@ impl TileShape {
     }
 }
 
+#[derive(Clone)]
 pub struct TileInView {
     pub shape: TileShape,
 
@@ -75,7 +77,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         view_region: &ViewRegion,
         buffer_pool: &BufferPool<
             wgpu::Queue,
-            Buffer,
+            wgpu::Buffer,
             ShaderVertex,
             IndexDataType,
             ShaderLayerMetadata,
@@ -165,13 +167,12 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     pub fn stencil_reference_value(&self, world_coords: &WorldTileCoords) -> u8 {
-        world_coords.z * 5
-            + match (world_coords.x, world_coords.y) {
-                (x, y) if x % 2 == 0 && y % 2 == 0 => 2,
-                (x, y) if x % 2 == 0 && y % 2 != 0 => 1,
-                (x, y) if x % 2 != 0 && y % 2 == 0 => 4,
-                (x, y) if x % 2 != 0 && y % 2 != 0 => 3,
-                _ => unreachable!(),
-            }
+        match (world_coords.x, world_coords.y) {
+            (x, y) if x % 2 == 0 && y % 2 == 0 => 2,
+            (x, y) if x % 2 == 0 && y % 2 != 0 => 1,
+            (x, y) if x % 2 != 0 && y % 2 == 0 => 4,
+            (x, y) if x % 2 != 0 && y % 2 != 0 => 3,
+            _ => unreachable!(),
+        }
     }
 }

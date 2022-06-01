@@ -14,11 +14,13 @@ runs:
       run: just build-android
     - name: Check x86_64
       shell: bash
-      run: just check maplibre-android x86_64-linux-android
+      run: |
+        env "AR_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" \
+        env "CC_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang" \
+        just check maplibre-android x86_64-linux-android
     - name: Check aarch64
       shell: bash
-      run: just check maplibre-android aarch64-linux-android
-    - uses: actions/upload-artifact@v2
-      with:
-        name: maplibre-rs.apk
-        path: target/debug/apk/maplibre-rs-linux-demo.apk
+      run: |
+        env "AR_aarch64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" \
+        env "CC_aarch64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang" \
+        just check maplibre-android aarch64-linux-android

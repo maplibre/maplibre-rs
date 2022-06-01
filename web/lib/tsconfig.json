@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "module": "es2022",
+    "target": "es2022",
+    "lib": [ "es6", "dom" ],
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "types": ["maplibre", "env"],
+    "typeRoots": ["@types"]
+  },
+  "include": ["./src/**/*"]
+}

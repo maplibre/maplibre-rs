@@ -1,17 +1,21 @@
 [package]
 name = "maplibre-demo"
 version = "0.1.0"
-description = ""
 categories = []
 edition = "2021"
+authors = ["Maximilian Ammann <max@maxammann.org>"]
+license = "MIT OR Apache-2.0"
+description = "Demo of maplibre"
+readme = "../README.md"
 
 [features]
 web-webgl = ["maplibre/web-webgl"]
-enable-tracing = ["maplibre/enable-tracing", "tracing-subscriber", "tracing-tracy", "tracy-client"]
+trace = ["maplibre/trace", "tracing-subscriber", "tracing-tracy", "tracy-client"]
 
 [dependencies]
 env_logger = "0.9"
-maplibre = { path = "../maplibre", version = "0.1.0"  }
+maplibre = { path = "../maplibre", version = "0.0.2"  }
+maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
 
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", optional = true }

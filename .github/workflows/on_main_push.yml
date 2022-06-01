@@ -17,11 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/benchmarks
-  build-linux-demo:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/linux-demo
   build-android:
     runs-on: ubuntu-20.04
     steps:
@@ -34,7 +29,7 @@ jobs:
       - uses: ./.github/actions/webgpu
       - uses: ./.github/actions/deploy
         with:
-          source: web/web/dist/linux-demo/.
+          source: web/demo/dist/.
           destination: webgpu
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-deploy-webgl:
@@ -44,7 +39,7 @@ jobs:
       - uses: ./.github/actions/webgl
       - uses: ./.github/actions/deploy
         with:
-          source: web/web/dist/linux-demo/.
+          source: web/demo/dist/.
           destination: webgl
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-deploy-docs:
@@ -54,7 +49,7 @@ jobs:
       - uses: ./.github/actions/docs
       - uses: ./.github/actions/deploy
         with:
-          source: target/x86_64-unknown-linux-gnu/doc/.
+          source: target/doc/.
           destination: api-docs
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
       - uses: ./.github/actions/deploy
@@ -63,7 +58,27 @@ jobs:
           destination: docs
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
   build-ios:
-    runs-on: macOS-11
+    runs-on: macos-11
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/apple
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-demo-linux:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/demo/linux
+  build-demo-windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/demo/windows
+  build-demo-macos:
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/demo/macos
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
