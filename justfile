@@ -45,6 +45,9 @@ web-lib TARGET: nightly-toolchain (web-install "lib")
 web-demo TARGET: (web-install "demo")
   cd web/demo && npm run {{TARGET}}
 
+web-check FEATURES: nightly-toolchain
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo clippy --no-deps -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
+
 web-test FEATURES: nightly-toolchain
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
 
