@@ -35,3 +35,6 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 console_log = { version = "0.2", features = ["color"] }
 tracing-wasm = { version = "0.2", optional = true } # FIXME: Low quality dependency
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"

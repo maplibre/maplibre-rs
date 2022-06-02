@@ -44,7 +44,7 @@ pub struct BufferPool<Q, B, V, I, TM, FM> {
 }
 
 #[derive(Debug)]
-enum BackingBufferType {
+pub enum BackingBufferType {
     Vertices,
     Indices,
     Metadata,
@@ -578,12 +578,12 @@ impl RingIndex {
 
 #[cfg(test)]
 mod tests {
+    use crate::coords::ZoomLevel;
     use crate::style::layer::StyleLayer;
     use lyon::tessellation::VertexBuffers;
 
-    use crate::render::buffer_pool::{
-        BackingBufferDescriptor, BackingBufferType, BufferPool, Queue,
-    };
+    use crate::render::resource::buffer_pool::BackingBufferType;
+    use crate::render::resource::{BackingBufferDescriptor, BufferPool, Queue};
 
     #[derive(Debug)]
     struct TestBuffer {
@@ -639,7 +639,7 @@ mod tests {
         for _ in 0..2 {
             pool.allocate_layer_geometry(
                 &queue,
-                (0, 0, 0).into(),
+                (0, 0, ZoomLevel::default()).into(),
                 style_layer.clone(),
                 &data48bytes_aligned,
                 2,
@@ -653,7 +653,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -667,7 +667,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -679,7 +679,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -690,7 +690,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer.clone(),
             &data24bytes_aligned,
             2,
@@ -701,7 +701,7 @@ mod tests {
 
         pool.allocate_layer_geometry(
             &queue,
-            (0, 0, 0).into(),
+            (0, 0, ZoomLevel::default()).into(),
             style_layer,
             &data24bytes_aligned,
             2,

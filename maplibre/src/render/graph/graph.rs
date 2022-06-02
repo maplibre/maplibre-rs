@@ -575,9 +575,8 @@ mod tests {
         Edge, Node, NodeId, NodeRunError, RenderGraph, RenderGraphContext, RenderGraphError,
         SlotInfo,
     };
-    use crate::render::graph::SlotType;
-    use crate::render::renderer::RenderContext;
-    use crate::render::World;
+    use crate::render::graph::{RenderContext, SlotType};
+    use crate::RenderState;
     use std::collections::HashSet;
 
     #[derive(Debug)]
@@ -610,9 +609,9 @@ mod tests {
 
         fn run(
             &self,
-            _: &mut RenderGraphContext,
-            _: &mut RenderContext,
-            _: &World,
+            graph: &mut RenderGraphContext,
+            render_context: &mut RenderContext,
+            state: &RenderState,
         ) -> Result<(), NodeRunError> {
             Ok(())
         }
@@ -683,9 +682,9 @@ mod tests {
         impl Node for MyNode {
             fn run(
                 &self,
-                _: &mut RenderGraphContext,
-                _: &mut RenderContext,
-                _: &World,
+                graph: &mut RenderGraphContext,
+                render_context: &mut RenderContext,
+                state: &RenderState,
             ) -> Result<(), NodeRunError> {
                 Ok(())
             }
