@@ -5,9 +5,14 @@
 set shell := ["bash", "-c"]
 
 export NIGHTLY_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
+export CARGO_TERM_COLOR := "always"
+export RUST_BACKTRACE := "1"
 
 install-clippy:
   rustup component add clippy
+
+install-nightly-clippy:
+  rustup component add clippy --toolchain $NIGHTLY_TOOLCHAIN
 
 check PROJECT ARCH: install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
@@ -44,6 +49,9 @@ web-lib TARGET: nightly-toolchain (web-install "lib")
 
 web-demo TARGET: (web-install "demo")
   cd web/demo && npm run {{TARGET}}
+
+web-check FEATURES: nightly-toolchain install-nightly-clippy
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo clippy --no-deps -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
 
 web-test FEATURES: nightly-toolchain
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
