@@ -18,6 +18,13 @@ jobs:
         shell: bash
         run: just nightly-toolchain-android
       - uses: Swatinem/rust-cache@v1
+      - name: Set NDK Version
+        shell: bash
+        run: |
+          ANDROID_ROOT=/usr/local/lib/android
+          ANDROID_SDK_ROOT=${ANDROID_ROOT}/sdk
+          ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk-bundle
+          ln -sfn $ANDROID_SDK_ROOT/ndk/23.2.8568313 $ANDROID_NDK_ROOT
       - name: Build
         shell: bash
         run: just build-android
