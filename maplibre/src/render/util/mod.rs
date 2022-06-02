@@ -79,7 +79,7 @@ where
         };
 
         if should_replace {
-            mem::replace(self, Eventually::Initialized(f()));
+            *self = Eventually::Initialized(f());
         }
     }
 }
@@ -87,7 +87,7 @@ impl<T> Eventually<T> {
     #[tracing::instrument(name = "initialize", skip_all)]
     pub fn initialize(&mut self, f: impl FnOnce() -> T) {
         if let Eventually::Uninitialized = self {
-            mem::replace(self, Eventually::Initialized(f()));
+            *self = Eventually::Initialized(f());
         }
     }
 

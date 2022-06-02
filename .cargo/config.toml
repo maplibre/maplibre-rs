@@ -8,6 +8,7 @@ rustflags = [
     # Without --shared-memory it is not possible to use shared WebAssembly.Memory.
     "-C", "link-args=--shared-memory --import-memory",
 ]
+runner = 'wasm-bindgen-test-runner'
 
 # We can use this once build-std is stable
 #[unstable]

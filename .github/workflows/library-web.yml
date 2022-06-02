@@ -1,0 +1,84 @@
+name: Build library for WebGL
+
+on:
+  workflow_call:
+    secrets:
+      SSH_KEY_MAXAMMANN_ORG:
+        required: false
+    inputs:
+      deploy:
+        required: true
+        type: boolean
+      webgl:
+        required: true
+        type: boolean
+
+jobs:
+  library-web:
+    name: Build
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+      - name: Install nightly toolchain
+        shell: bash
+        run: just nightly-toolchain
+      - uses: Swatinem/rust-cache@v1
+      - name: Build lib
+        if: inputs.webgl
+        shell: bash
+        run: just web-lib esbuild-webgl
+      - name: Build lib
+        if: "!inputs.webgl"
+        shell: bash
+        run: just web-lib esbuild
+      - name: Build demo
+        shell: bash
+        run: just web-demo build
+      - name: Check
+        if: inputs.webgl
+        shell: bash
+        run: just web-check "web-webgl"
+      - name: Check
+        if: "!inputs.webgl"
+        shell: bash
+        run: just web-check ""
+      - name: Test
+        if: inputs.webgl
+        shell: bash
+        run: |
+          cargo install wasm-bindgen-cli --version "0.2.80"
+          just web-test "web-webgl"
+      - name: Test
+        if: "!inputs.webgl"
+        shell: bash
+        run: |
+          cargo install wasm-bindgen-cli --version "0.2.80"
+          just web-test ""
+      - uses: actions/upload-artifact@v2
+        with:
+          name: webgpu-demo
+          path: web/demo/dist/
+  deploy:
+    needs: library-web
+    if: inputs.deploy
+    name: Deploy
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: webgpu-demo
+      - name: Deploy
+        if: "!inputs.webgl"
+        uses: ./.github/actions/deploy
+        with:
+          source: .
+          destination: webgl
+          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+      - name: Deploy
+        if: "!inputs.webgl"
+        uses: ./.github/actions/deploy
+        with:
+          source: .
+          destination: webgpu
+          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}

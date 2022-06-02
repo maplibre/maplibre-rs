@@ -1,5 +1,5 @@
 use js_sys::{ArrayBuffer, Uint8Array};
-use maplibre::io::source_client::HTTPClient;
+use maplibre::io::source_client::HttpClient;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
@@ -61,7 +61,7 @@ impl Clone for WHATWGFetchHttpClient {
 }
 
 #[async_trait(?Send)]
-impl HTTPClient for WHATWGFetchHttpClient {
+impl HttpClient for WHATWGFetchHttpClient {
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
         self.fetch_bytes(url)
             .await

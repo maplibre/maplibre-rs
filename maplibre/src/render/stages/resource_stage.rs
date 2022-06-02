@@ -28,13 +28,14 @@ impl Stage for ResourceStage {
                 Renderer {
                     settings,
                     device,
-                    surface,
                     state,
                     ..
                 },
             ..
         }: &mut MapContext,
     ) {
+        let surface = &mut state.surface;
+
         let size = surface.size();
 
         surface.reconfigure(device);

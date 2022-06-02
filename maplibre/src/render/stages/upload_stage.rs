@@ -2,8 +2,7 @@
 
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, Zoom};
-use crate::io::tile_cache::TileCache;
-use crate::io::LayerTessellateMessage;
+use crate::io::tile_repository::{StoredLayer, TileRepository};
 use crate::render::camera::ViewProjection;
 use crate::render::resource::IndexEntry;
 use crate::render::shaders::{
@@ -26,16 +25,8 @@ impl Stage for UploadStage {
         MapContext {
             view_state,
             style,
-            tile_cache,
-            renderer:
-                Renderer {
-                    settings: _,
-                    device: _,
-                    queue,
-                    surface: _,
-                    state,
-                    ..
-                },
+            tile_repository,
+            renderer: Renderer { queue, state, .. },
             ..
         }: &mut MapContext,
     ) {
@@ -67,10 +58,8 @@ impl Stage for UploadStage {
             .map(|bounding_box| ViewRegion::new(bounding_box, 0, *view_state.zoom, visible_level));
 
         if let Some(view_region) = &view_region {
-            let zoom = view_state.zoom();
-
-            self.upload_tile_geometry(state, queue, tile_cache, style, view_region);
-            self.update_tile_view_pattern(state, queue, view_region, &view_proj, zoom);
+            self.upload_tile_geometry(state, queue, tile_repository, style, view_region);
+            self.upload_tile_view_pattern(state, queue, &view_proj);
             self.update_metadata();
         }
     }
@@ -99,7 +88,7 @@ impl UploadStage {
         /*let source_layer = entry.style_layer.source_layer.as_ref().unwrap();
 
         if let Some(result) = scheduler
-            .get_tile_cache()
+            .get_tile_repository()
             .iter_tessellated_layers_at(&world_coords)
             .unwrap()
             .find(|layer| source_layer.as_str() == layer.layer_name())
@@ -147,22 +136,15 @@ impl UploadStage {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn update_tile_view_pattern(
+    pub fn upload_tile_view_pattern(
         &self,
         RenderState {
-            tile_view_pattern,
-            buffer_pool,
-            ..
+            tile_view_pattern, ..
         }: &mut RenderState,
         queue: &wgpu::Queue,
-        view_region: &ViewRegion,
         view_proj: &ViewProjection,
-        zoom: Zoom,
     ) {
-        if let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (tile_view_pattern, buffer_pool)
-        {
-            tile_view_pattern.update_pattern(view_region, buffer_pool, zoom);
+        if let Initialized(tile_view_pattern) = tile_view_pattern {
             tile_view_pattern.upload_pattern(queue, view_proj);
         }
     }
@@ -172,7 +154,7 @@ impl UploadStage {
         &self,
         RenderState { buffer_pool, .. }: &mut RenderState,
         queue: &wgpu::Queue,
-        tile_cache: &TileCache,
+        tile_repository: &TileRepository,
         style: &Style,
         view_region: &ViewRegion,
     ) {
@@ -182,7 +164,7 @@ impl UploadStage {
                 let loaded_layers = buffer_pool
                     .get_loaded_layers_at(&world_coords)
                     .unwrap_or_default();
-                if let Some(available_layers) = tile_cache
+                if let Some(available_layers) = tile_repository
                     .iter_tessellated_layers_at(&world_coords)
                     .map(|layers| {
                         layers
@@ -204,10 +186,10 @@ impl UploadStage {
                                 .map(|color| color.into());
 
                             match message {
-                                LayerTessellateMessage::UnavailableLayer { coords: _, .. } => {
+                                StoredLayer::UnavailableLayer { coords: _, .. } => {
                                     /*self.buffer_pool.mark_layer_unavailable(*coords);*/
                                 }
-                                LayerTessellateMessage::TessellatedLayer {
+                                StoredLayer::TessellatedLayer {
                                     coords,
                                     feature_indices,
                                     layer_data,
