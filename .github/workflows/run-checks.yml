@@ -1,0 +1,23 @@
+name: Run checks
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  run-checks:
+    name: Run checks
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+      - name: Install toolchain
+        shell: bash
+        run: just default-toolchain
+      - uses: Swatinem/rust-cache@v1
+      - name: Format
+        shell: bash
+        run: just fmt-check

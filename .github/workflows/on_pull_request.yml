@@ -8,61 +8,27 @@ on:
 
 jobs:
   run-check:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/check
+    uses: ./.github/workflows/run-checks.yml
   run-benchmarks:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/benchmarks
+    uses: ./.github/workflows/run-benchmarks.yml
   run-tests:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/tests
-  build-android:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/android
-  build-webgpu:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/webgpu
-  build-webgl:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/webgl
-  build-docs:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/docs
-  build-apple:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/apple
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/run-tests.yml
+  build-deploy-docs:
+    uses: ./.github/workflows/build-deploy-docs.yml
+    with:
+      deploy: false
+  library-android:
+    uses: ./.github/workflows/library-android.yml
+  library-webgpu:
+    uses: ./.github/workflows/library-webgpu.yml
+  library-webgl:
+    uses: ./.github/workflows/library-webgl.yml
+  library-apple:
+    uses: ./.github/workflows/library-apple.yml
   build-demo-linux:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/demo/linux
+    uses: ./.github/workflows/demo-linux.yml
   build-demo-windows:
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/demo/windows
+    uses: ./.github/workflows/demo-windows.yml
   build-demo-macos:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/demo/macos
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/demo-macos.yml
+    secrets: inherit

@@ -1,0 +1,46 @@
+name: Build apple library
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  library-apple:
+    name: Build apple library
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install toolchain
+        shell: bash
+        run: just default-toolchain
+      - uses: Swatinem/rust-cache@v1
+      - name: Build
+        shell: bash
+        run: just xcodebuild-xcframework
+      - name: Check x86_64 darwin
+        shell: bash
+        run: just check apple x86_64-apple-darwin
+      - name: Check x86_64 darwin
+        shell: bash
+        # TODO: Additional clippy checks for different targets (iOS)
+        run: just check apple x86_64-apple-darwin
+      - name: Test x86_64 darwin
+        shell: bash
+        # TODO: Additional test runs for different targets (Different targets might require emulation)
+        run: just test apple x86_64-apple-darwin
+      - name: Build Example
+        shell: bash
+        run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
+      - name: Build Swift Package (arm64)
+        shell: bash
+        run: cd apple/MapLibreRs && swift build --arch=arm64
+      - name: Build Swift Package (x86_64)
+        shell: bash
+        run: cd apple/MapLibreRs && swift build --arch=x86_64
+

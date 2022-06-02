@@ -1,0 +1,38 @@
+name: Run tests of "maplibre"
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  run-tests:
+    name: Run tests of "maplibre"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+      - name: Install toolchain
+        shell: bash
+        run: just default-toolchain
+      - uses: Swatinem/rust-cache@v1
+      - name: Install Mesa Dependencies
+        shell: bash
+        run: sudo apt install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers
+      - name: wgpu info
+        shell: bash
+        run: |
+          cargo install --git "https://github.com/gfx-rs/wgpu" wgpu-info
+          wgpu-info
+      - name: Test Vulkan
+        shell: bash
+        # TODO: Additional test runs for different targets
+        run: |
+          WGPU_BACKEND=vulkan just test maplibre x86_64-unknown-linux-gnu
+      - name: Test EGL
+        shell: bash
+        # TODO: Additional test runs for different targets
+        run: |
+          EGL_LOG_LEVEL=debug WGPU_BACKEND=gl just test maplibre x86_64-unknown-linux-gnu

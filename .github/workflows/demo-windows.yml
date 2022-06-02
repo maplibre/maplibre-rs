@@ -1,0 +1,44 @@
+name: Build demo for Windows
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  demo-windows:
+    name: Build demo for Windows
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+      - name: Install toolchain
+        shell: bash
+        run: just default-toolchain
+      - uses: Swatinem/rust-cache@v1
+      - uses: ilammy/msvc-dev-cmd@v1 # Provide access to lib.exe
+      - name: Install SQLite
+        shell: powershell
+        run: choco install sqlite -y --params "/NoTools"
+      - name: Build SQLite lib
+        shell: powershell
+        run: |
+          cd "C:\ProgramData\chocolatey\lib\SQLite\tools"
+          lib /DEF:sqlite3.def /OUT:sqlite3.lib /MACHINE:x64
+          echo "SQLITE3_LIB_DIR=C:\ProgramData\chocolatey\lib\SQLite\tools" >> $env:GITHUB_ENV
+      - name: Build
+        shell: bash
+        run: cargo build -p maplibre-demo --release --target x86_64-pc-windows-msvc
+      - name: Check x86_64 windows
+        shell: bash
+        run: just check maplibre-demo x86_64-pc-windows-msvc
+      - name: Test x86_64 windows
+        shell: bash
+        run: just test maplibre-demo x86_64-pc-windows-msvc
+      - uses: actions/upload-artifact@v3
+        with:
+          name: maplibre-x86_64-windows-demo
+          path: target/x86_64-pc-windows-msvc/release/maplibre-demo.exe
+          if-no-files-found: error

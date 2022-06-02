@@ -1,0 +1,69 @@
+name: Build documentation
+
+on:
+  workflow_call:
+    secrets:
+      SSH_KEY_MAXAMMANN_ORG:
+        required: false
+    inputs:
+      deploy:
+        required: true
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  build-docs:
+    name: Build documentation
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+      - name: Install toolchain
+        shell: bash
+        run: just default-toolchain
+      - uses: Swatinem/rust-cache@v1
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+      - name: Install Dependencies
+        shell: bash
+        run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
+      - name: Build
+        working-directory: docs
+        shell: bash
+        run: mdbook build
+      - name: API Documentation
+        shell: bash
+        run: cargo doc -p maplibre --no-deps --lib --document-private-items
+      - uses: actions/upload-artifact@v2
+        with:
+          name: api-docs
+          path: target/doc
+      - uses: actions/upload-artifact@v2
+        with:
+          name: book
+          path: docs/book
+  deploy-docs:
+    needs: build-docs
+    if: inputs.deploy
+    name: Deploy documentation
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: api-docs
+      - uses: actions/download-artifact@v2
+        with:
+          name: book
+      - uses: ./.github/actions/deploy
+        with:
+          source: target/doc/.
+          destination: api-docs
+          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+      - uses: ./.github/actions/deploy
+        with:
+          source: docs/book/.
+          destination: docs
+          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}

@@ -1,0 +1,36 @@
+name: Build demo for macOS
+
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  demo-macos:
+    name: Build demo for macOS
+    runs-on: macos-11
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install toolchain
+        shell: bash
+        run: just default-toolchain
+      - uses: Swatinem/rust-cache@v1
+      - name: Build
+        shell: bash
+        run: cd apple/xcode && xcodebuild -scheme "example (macOS)" build CODE_SIGNING_ALLOWED=NO MACOSX_DEPLOYMENT_TARGET=10.9 -derivedDataPath build
+      - name: Check x86_64 darwin
+        shell: bash
+        run: just check maplibre-demo x86_64-apple-darwin
+      - name: Test x86_64 darwin
+        shell: bash
+        run: just test maplibre-demo x86_64-apple-darwin
+      - uses: actions/upload-artifact@v3
+        with:
+          name: maplibre-x86_64-apple-darwin-demo
+          path: apple/xcode/build/Build/Products/Debug/*.app
+          if-no-files-found: error
