@@ -1,0 +1,44 @@
+name: Build android library
+
+on:
+  workflow_call:
+
+jobs:
+  library-android:
+    name: Build
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+      - name: Install nightly toolchain
+        shell: bash
+        run: just nightly-toolchain-android
+      - uses: Swatinem/rust-cache@v1
+      - name: Set NDK Version
+        shell: bash
+        run: |
+          ANDROID_ROOT=/usr/local/lib/android
+          ANDROID_SDK_ROOT=${ANDROID_ROOT}/sdk
+          ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk-bundle
+          ln -sfn $ANDROID_SDK_ROOT/ndk/23.2.8568313 $ANDROID_NDK_ROOT
+      - name: Build
+        shell: bash
+        run: just build-android
+        # TODO: Additional clippy checks for different targets
+      - name: Check x86_64
+        shell: bash
+        run: |
+          env "AR_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" \
+          env "CC_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang" \
+          just check maplibre-android x86_64-linux-android
+      - name: Check aarch64
+        shell: bash
+        run: |
+          env "AR_aarch64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" \
+          env "CC_aarch64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang" \
+          just check maplibre-android aarch64-linux-android
+    # FIXME: Requires cross-compilation
+    #- name: Test
+    #  shell: bash
+    #  # TODO: Additional test runs for different targets
+    #  run: just test maplibre-android aarch64-linux-android

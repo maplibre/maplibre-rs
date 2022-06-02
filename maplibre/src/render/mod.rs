@@ -384,6 +384,7 @@ mod tests {
     use crate::render::graph_runner::RenderGraphRunner;
     use crate::render::resource::Surface;
     use crate::{MapWindow, MapWindowConfig, RenderState, Renderer, RendererSettings, WindowSize};
+    use log::LevelFilter;
 
     pub struct HeadlessMapWindowConfig {
         size: WindowSize,
@@ -409,18 +410,16 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
-    #[ignore] // FIXME: We do not have a GPU in CI
     async fn test_render() {
+        let _ = env_logger::builder()
+            .filter_level(LevelFilter::Trace)
+            .is_test(true)
+            .try_init();
         let graph = RenderGraph::default();
 
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
-
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: Default::default(),
-                force_fallback_adapter: false,
-                compatible_surface: None,
-            })
+        let backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all());
+        let instance = wgpu::Instance::new(backends);
+        let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
             .await
             .unwrap();
 
