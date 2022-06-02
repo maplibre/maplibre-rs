@@ -12,7 +12,7 @@ readme = "../README.md"
 sqlite = ["rusqlite"]
 
 [dependencies]
-naga = { version = "0.8", features = ["wgsl-in"] }
+naga = { git = "https://github.com/gfx-rs/naga", branch = "master", features = ["wgsl-in"] }
 walkdir = "2.3"
 log = "0.4"
 rusqlite = {version= "0.26", optional=true}
