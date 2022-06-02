@@ -4,7 +4,7 @@ use std::process::exit;
 
 use naga::front::wgsl;
 use naga::valid::{Capabilities, ValidationFlags, Validator};
-use naga::{front::wgsl::ParseError, valid::ValidationError};
+use naga::{front::wgsl::ParseError, valid::ValidationError, SourceLocation};
 use walkdir::WalkDir;
 
 #[derive(Debug)]
@@ -12,8 +12,7 @@ pub enum WgslError {
     ValidationErr(ValidationError),
     ParserErr {
         error: String,
-        line: usize,
-        pos: usize,
+        location: Option<SourceLocation>,
     },
     IoErr(std::io::Error),
 }
@@ -26,9 +25,9 @@ impl From<std::io::Error> for WgslError {
 
 impl WgslError {
     pub fn from_parse_err(err: ParseError, src: &str) -> Self {
-        let (line, pos) = err.location(src);
+        let location = err.location(src);
         let error = err.emit_to_string(src);
-        Self::ParserErr { error, line, pos }
+        Self::ParserErr { error, location }
     }
 }
 
@@ -72,8 +71,17 @@ pub fn validate_project_wgsl() {
                                 path.to_str().unwrap(),
                                 match err {
                                     WgslError::ValidationErr(error) => format!(": {:?}", error),
-                                    WgslError::ParserErr { error, line, pos } =>
-                                        format!(":{}:{} {}", line, pos, error),
+                                    WgslError::ParserErr { error, location } =>
+                                        if let Some(SourceLocation {
+                                            line_number,
+                                            line_position,
+                                            ..
+                                        }) = location
+                                        {
+                                            format!(":{}:{} {}", line_number, line_position, error)
+                                        } else {
+                                            format!("{}", error)
+                                        },
                                     WgslError::IoErr(error) => format!(": {:?}", error),
                                 }
                             );
