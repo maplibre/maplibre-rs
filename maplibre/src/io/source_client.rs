@@ -16,7 +16,7 @@ pub type HTTPClientFactory<HC> = dyn Fn() -> HC;
 /// the future "no-thread-safe-futures". Tokio futures are thread-safe.
 #[cfg_attr(feature = "no-thread-safe-futures", async_trait(?Send))]
 #[cfg_attr(not(feature = "no-thread-safe-futures"), async_trait)]
-pub trait HTTPClient: Clone + Sync + Send + 'static {
+pub trait HttpClient: Clone + Sync + Send + 'static {
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error>;
 }
 
@@ -25,7 +25,7 @@ pub trait HTTPClient: Clone + Sync + Send + 'static {
 #[derive(Clone)]
 pub struct HttpSourceClient<HC>
 where
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     inner_client: HC,
 }
@@ -35,7 +35,7 @@ where
 #[derive(Clone)]
 pub enum SourceClient<HC>
 where
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     Http(HttpSourceClient<HC>),
     Mbtiles {
@@ -45,7 +45,7 @@ where
 
 impl<HC> SourceClient<HC>
 where
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
         match self {
@@ -57,7 +57,7 @@ where
 
 impl<HC> HttpSourceClient<HC>
 where
-    HC: HTTPClient,
+    HC: HttpClient,
 {
     pub fn new(http_client: HC) -> Self {
         Self {

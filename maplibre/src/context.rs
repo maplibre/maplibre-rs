@@ -1,7 +1,5 @@
-use crate::coords::{Zoom, TILE_SIZE};
-use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::tile_cache::TileCache;
-use crate::io::TessellateMessage;
+use crate::coords::{Zoom, ZoomLevel, TILE_SIZE};
+use crate::io::tile_repository::TileRepository;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::util::ChangeObserver;
 use crate::{Renderer, ScheduleMethod, Style, WindowSize};
@@ -43,7 +41,7 @@ impl ViewState {
         self.camera.calc_view_proj(&self.perspective)
     }
 
-    pub fn visible_level(&self) -> u8 {
+    pub fn visible_level(&self) -> ZoomLevel {
         self.zoom.level()
     }
 
@@ -57,14 +55,11 @@ impl ViewState {
     }
 }
 
+/// Stores the context of the map.
 pub struct MapContext {
     pub view_state: ViewState,
     pub style: Style,
 
-    pub tile_cache: TileCache,
+    pub tile_repository: TileRepository,
     pub renderer: Renderer,
-    pub scheduler: Box<dyn ScheduleMethod>,
-
-    pub message_receiver: mpsc::Receiver<TessellateMessage>,
-    pub shared_thread_state: SharedThreadState,
 }

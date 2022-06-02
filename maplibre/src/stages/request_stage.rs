@@ -3,46 +3,55 @@
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, WorldTileCoords};
 use crate::error::Error;
-use crate::io::shared_thread_state::SharedThreadState;
-use crate::io::source_client::SourceClient;
-use crate::io::tile_cache::TileCache;
+use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::io::tile_repository::TileRepository;
 use crate::io::TileRequest;
 use crate::schedule::Stage;
-use crate::{HTTPClient, ScheduleMethod, Style};
+use crate::stages::SharedThreadState;
+use crate::{HttpClient, ScheduleMethod, Scheduler, Style};
 use std::collections::HashSet;
 
-pub struct RequestStage<HC>
+pub struct RequestStage<SM, HC>
 where
-    HC: HTTPClient,
+    SM: ScheduleMethod,
+    HC: HttpClient,
 {
-    pub source_client: SourceClient<HC>,
-    pub try_failed: bool,
+    shared_thread_state: SharedThreadState,
+    scheduler: Scheduler<SM>,
+    http_source_client: HttpSourceClient<HC>,
+    try_failed: bool,
 }
 
-impl<HC> RequestStage<HC>
+impl<SM, HC> RequestStage<SM, HC>
 where
-    HC: HTTPClient,
+    SM: ScheduleMethod,
+    HC: HttpClient,
 {
-    pub fn new(source_client: SourceClient<HC>) -> Self {
+    pub fn new(
+        shared_thread_state: SharedThreadState,
+        http_source_client: HttpSourceClient<HC>,
+        scheduler: Scheduler<SM>,
+    ) -> Self {
         Self {
-            source_client,
+            shared_thread_state,
+            scheduler,
+            http_source_client,
             try_failed: false,
         }
     }
 }
 
-impl<HC> Stage for RequestStage<HC>
+impl<SM, HC> Stage for RequestStage<SM, HC>
 where
-    HC: HTTPClient,
+    SM: ScheduleMethod,
+    HC: HttpClient,
 {
     fn run(
         &mut self,
         MapContext {
             view_state,
             style,
-            tile_cache,
-            scheduler,
-            shared_thread_state,
+            tile_repository,
             ..
         }: &mut MapContext,
     ) {
@@ -59,13 +68,7 @@ where
         {
             if let Some(view_region) = &view_region {
                 // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
-                self.try_failed = self.request_tiles_in_view(
-                    tile_cache,
-                    style,
-                    shared_thread_state,
-                    scheduler,
-                    view_region,
-                );
+                self.try_failed = self.request_tiles_in_view(tile_repository, style, view_region);
             }
         }
 
@@ -74,18 +77,17 @@ where
     }
 }
 
-impl<HC> RequestStage<HC>
+impl<SM, HC> RequestStage<SM, HC>
 where
-    HC: HTTPClient,
+    SM: ScheduleMethod,
+    HC: HttpClient,
 {
     /// Request tiles which are currently in view.
     #[tracing::instrument(skip_all)]
     fn request_tiles_in_view(
         &self,
-        tile_cache: &TileCache,
+        tile_repository: &TileRepository,
         style: &Style,
-        shared_thread_state: &SharedThreadState,
-        scheduler: &Box<dyn ScheduleMethod>,
         view_region: &ViewRegion,
     ) -> bool {
         let mut try_failed = false;
@@ -99,13 +101,7 @@ where
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
                 try_failed = self
-                    .try_request_tile(
-                        tile_cache,
-                        shared_thread_state,
-                        scheduler,
-                        &coords,
-                        &source_layers,
-                    )
+                    .try_request_tile(tile_repository, &coords, &source_layers)
                     .unwrap();
             }
         }
@@ -114,17 +110,15 @@ where
 
     fn try_request_tile(
         &self,
-        tile_cache: &TileCache,
-        shared_thread_state: &SharedThreadState,
-        scheduler: &Box<dyn ScheduleMethod>,
+        tile_repository: &TileRepository,
         coords: &WorldTileCoords,
         layers: &HashSet<String>,
     ) -> Result<bool, Error> {
-        if !tile_cache.is_layers_missing(coords, layers) {
+        if !tile_repository.is_layers_missing(coords, layers) {
             return Ok(false);
         }
 
-        if let Ok(mut tile_request_state) = shared_thread_state.tile_request_state.try_lock() {
+        if let Ok(mut tile_request_state) = self.shared_thread_state.tile_request_state.try_lock() {
             if let Some(request_id) = tile_request_state.start_tile_request(TileRequest {
                 coords: *coords,
                 layers: layers.clone(),
@@ -141,26 +135,25 @@ where
                     );
                 }*/
 
-                let client = self.source_client.clone();
+                let client = SourceClient::Http(self.http_source_client.clone());
                 let coords = *coords;
 
-                scheduler
-                    .schedule(
-                        shared_thread_state.clone(),
-                        Box::new(move |state: SharedThreadState| {
-                            Box::pin(async move {
-                                match client.fetch(&coords).await {
-                                    Ok(data) => state
-                                        .process_tile(request_id, data.into_boxed_slice())
-                                        .unwrap(),
-                                    Err(e) => {
-                                        log::error!("{:?}", &e);
-                                        state.tile_unavailable(&coords, request_id).unwrap()
-                                    }
+                let state = self.shared_thread_state.clone();
+                self.scheduler
+                    .schedule_method()
+                    .schedule(Box::new(move || {
+                        Box::pin(async move {
+                            match client.fetch(&coords).await {
+                                Ok(data) => state
+                                    .process_tile(request_id, data.into_boxed_slice())
+                                    .unwrap(),
+                                Err(e) => {
+                                    log::error!("{:?}", &e);
+                                    state.tile_unavailable(&coords, request_id).unwrap()
                                 }
-                            })
-                        }),
-                    )
+                            }
+                        })
+                    }))
                     .unwrap();
             }
 

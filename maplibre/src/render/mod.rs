@@ -27,18 +27,23 @@ use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata};
 use crate::render::tile_view_pattern::{TileInView, TileShape, TileViewPattern};
 use crate::render::util::Eventually;
 use crate::tessellation::IndexDataType;
-use crate::MapWindow;
+use crate::{HeadedMapWindow, MapWindow, MapWindowConfig};
 use log::info;
+use std::sync::Arc;
+
+#[cfg(feature = "headless")]
+// Exposed because it should be addable conditionally
+pub mod copy_surface_to_buffer_node;
+pub mod graph;
+pub mod resource;
+pub mod stages;
 
 // Rendering internals
-mod graph;
 mod graph_runner;
 mod main_pass;
 mod render_commands;
 mod render_phase;
-mod resource;
 mod shaders;
-mod stages;
 mod tile_pipeline;
 mod tile_view_pattern;
 mod util;
@@ -52,7 +57,6 @@ pub use stages::register_render_stages;
 
 pub const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
-#[derive(Default)]
 pub struct RenderState {
     render_target: Eventually<TextureView>,
 
@@ -76,13 +80,40 @@ pub struct RenderState {
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
 
+    surface: Surface,
+
     mask_phase: RenderPhase<TileInView>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
 }
 
+impl RenderState {
+    pub fn new(surface: Surface) -> Self {
+        Self {
+            render_target: Default::default(),
+            buffer_pool: Default::default(),
+            tile_view_pattern: Default::default(),
+            tile_pipeline: Default::default(),
+            mask_pipeline: Default::default(),
+            globals_bind_group: Default::default(),
+            depth_texture: Default::default(),
+            multisampling_texture: Default::default(),
+            surface,
+            mask_phase: Default::default(),
+            tile_phase: Default::default(),
+        }
+    }
+
+    pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    where
+        MW: MapWindow + HeadedMapWindow,
+    {
+        self.surface.recreate::<MW>(window, instance);
+    }
+}
+
 pub struct Renderer {
     pub instance: wgpu::Instance,
-    pub device: wgpu::Device,
+    pub device: Arc<wgpu::Device>, // TODO: Arc is needed for headless rendering. Is there a simpler solution?
     pub queue: wgpu::Queue,
     pub adapter_info: wgpu::AdapterInfo,
 
@@ -90,7 +121,6 @@ pub struct Renderer {
     pub settings: RendererSettings,
 
     pub state: RenderState,
-    pub surface: Surface,
 }
 
 impl Renderer {
@@ -102,22 +132,15 @@ impl Renderer {
         settings: RendererSettings,
     ) -> Result<Self, wgpu::RequestDeviceError>
     where
-        MW: MapWindow,
+        MW: MapWindow + HeadedMapWindow,
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        let maybe_surface = match &settings.surface_type {
-            SurfaceType::Headless => None,
-            SurfaceType::Headed => Some(Surface::from_window(&instance, window, &settings)),
-        };
+        let surface = Surface::from_window(&instance, window, &settings);
 
-        let compatible_surface = if let Some(surface) = &maybe_surface {
-            match &surface.head() {
-                Head::Headed(window_head) => Some(window_head.surface()),
-                Head::Headless(_) => None,
-            }
-        } else {
-            None
+        let compatible_surface = match &surface.head() {
+            Head::Headed(window_head) => Some(window_head.surface()),
+            Head::Headless(_) => None,
         };
 
         let (device, queue, adapter_info) = Self::request_device(
@@ -131,11 +154,6 @@ impl Renderer {
         )
         .await?;
 
-        let surface = maybe_surface.unwrap_or_else(|| match &settings.surface_type {
-            SurfaceType::Headless => Surface::from_image(&device, window, &settings),
-            SurfaceType::Headed => Surface::from_window(&instance, window, &settings),
-        });
-
         match surface.head() {
             Head::Headed(window) => window.configure(&device),
             Head::Headless(_) => {}
@@ -143,18 +161,51 @@ impl Renderer {
 
         Ok(Self {
             instance,
-            device,
+            device: Arc::new(device),
             queue,
             adapter_info,
             wgpu_settings,
             settings,
-            state: Default::default(),
-            surface,
+            state: RenderState::new(surface),
+        })
+    }
+
+    pub async fn initialize_headless<MW>(
+        window: &MW,
+        wgpu_settings: WgpuSettings,
+        settings: RendererSettings,
+    ) -> Result<Self, wgpu::RequestDeviceError>
+    where
+        MW: MapWindow,
+    {
+        let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+
+        let (device, queue, adapter_info) = Self::request_device(
+            &instance,
+            &wgpu_settings,
+            &wgpu::RequestAdapterOptions {
+                power_preference: wgpu_settings.power_preference,
+                force_fallback_adapter: false,
+                compatible_surface: None,
+            },
+        )
+        .await?;
+
+        let surface = Surface::from_image(&device, window, &settings);
+
+        Ok(Self {
+            instance,
+            device: Arc::new(device),
+            queue,
+            adapter_info,
+            wgpu_settings,
+            settings,
+            state: RenderState::new(surface),
         })
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.surface.resize(width, height)
+        self.state.surface.resize(width, height)
     }
 
     /// Requests a device
@@ -323,7 +374,7 @@ impl Renderer {
         &self.state
     }
     pub fn surface(&self) -> &Surface {
-        &self.surface
+        &self.state.surface
     }
 }
 
@@ -331,12 +382,36 @@ impl Renderer {
 mod tests {
     use crate::render::graph::RenderGraph;
     use crate::render::graph_runner::RenderGraphRunner;
-    use crate::render::pass_pipeline::build_graph;
-    use crate::render::World;
+    use crate::render::resource::Surface;
+    use crate::{MapWindow, MapWindowConfig, RenderState, Renderer, RendererSettings, WindowSize};
 
+    pub struct HeadlessMapWindowConfig {
+        size: WindowSize,
+    }
+
+    impl MapWindowConfig for HeadlessMapWindowConfig {
+        type MapWindow = HeadlessMapWindow;
+
+        fn create(&self) -> Self::MapWindow {
+            Self::MapWindow { size: self.size }
+        }
+    }
+
+    pub struct HeadlessMapWindow {
+        size: WindowSize,
+    }
+
+    impl MapWindow for HeadlessMapWindow {
+        fn size(&self) -> WindowSize {
+            self.size
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
+    #[ignore] // FIXME: We do not have a GPU in CI
     async fn test_render() {
-        let graph = build_graph();
+        let graph = RenderGraph::default();
 
         let instance = wgpu::Instance::new(wgpu::Backends::all());
 
@@ -362,6 +437,41 @@ mod tests {
             .ok()
             .unwrap();
 
-        RenderGraphRunner::run(&graph, &device, &queue, &World {});
+        let render_state = RenderState::new(Surface::from_image(
+            &device,
+            &HeadlessMapWindow {
+                size: WindowSize::new(100, 100).unwrap(),
+            },
+            &RendererSettings::default(),
+        ));
+
+        RenderGraphRunner::run(&graph, &device, &queue, &render_state).unwrap();
+    }
+}
+
+// Contributors to the RenderGraph should use the following label conventions:
+// 1. Graph modules should have a NAME, input module, and node module (where relevant)
+// 2. The "main_graph" graph is the root.
+// 3. "sub graph" modules should be nested beneath their parent graph module
+pub mod main_graph {
+    // Labels for input nodes
+    pub mod input {}
+    // Labels for non-input nodes
+    pub mod node {
+        pub const MAIN_PASS_DEPENDENCIES: &str = "main_pass_dependencies";
+        pub const MAIN_PASS_DRIVER: &str = "main_pass_driver";
+    }
+}
+
+/// Labels for the "draw" graph
+pub mod draw_graph {
+    pub const NAME: &str = "draw";
+    // Labels for input nodes
+    pub mod input {}
+    // Labels for non-input nodes
+    pub mod node {
+        pub const MAIN_PASS: &str = "main_pass";
+        #[cfg(feature = "headless")]
+        pub const COPY: &str = "copy";
     }
 }

@@ -1,0 +1,18 @@
+name: tests
+description: Run tests
+
+runs:
+  using: "composite"
+  steps:
+    - uses: extractions/setup-just@v1
+    - name: Install toolchain
+      shell: bash
+      run: just default-toolchain
+    - uses: Swatinem/rust-cache@v1
+    - name: Install Dependencies
+      shell: bash
+      run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
+    - name: Test
+      shell: bash
+      # TODO: Additional test runs for different targets
+      run: just test maplibre x86_64-unknown-linux-gnu

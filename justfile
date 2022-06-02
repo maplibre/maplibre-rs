@@ -6,14 +6,14 @@ set shell := ["bash", "-c"]
 
 export NIGHTLY_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
 
-test:
-  cargo test
-
 install-clippy:
   rustup component add clippy
 
 check PROJECT ARCH: install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
+
+test PROJECT ARCH:
+  cargo test -p {{PROJECT}} --target {{ARCH}}
 
 install-rustfmt:
   rustup component add rustfmt
@@ -45,11 +45,17 @@ web-lib TARGET: nightly-toolchain (web-install "lib")
 web-demo TARGET: (web-install "demo")
   cd web/demo && npm run {{TARGET}}
 
+web-test FEATURES: nightly-toolchain
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
+
 #profile-bench:
 # cargo flamegraph --bench render -- --bench
 
-build-android: print-android-env
+build-android: nightly-toolchain print-android-env
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd android/gradle && ./gradlew assembleDebug
+
+test-android TARGET: nightly-toolchain print-android-env
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p maplibre-android --target {{TARGET}} -Z build-std=std,panic_abort
 
 # language=bash
 print-android-env:
