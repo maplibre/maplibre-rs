@@ -3,13 +3,9 @@ name: Build demo for Linux
 on:
   workflow_call:
 
-env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
-
 jobs:
   demo-linux:
-    name: Build demo for Linux
+    name: Build
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2

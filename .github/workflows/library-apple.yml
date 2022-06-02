@@ -3,13 +3,10 @@ name: Build apple library
 on:
   workflow_call:
 
-env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
 
 jobs:
   library-apple:
-    name: Build apple library
+    name: Build
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v2

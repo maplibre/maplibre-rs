@@ -3,13 +3,9 @@ name: Run benchmarks
 on:
   workflow_call:
 
-env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
-
 jobs:
   run-benchmarks:
-    name: Run benchmarks
+    name: Benchmark
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2

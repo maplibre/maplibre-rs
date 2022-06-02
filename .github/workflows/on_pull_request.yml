@@ -20,15 +20,21 @@ jobs:
   library-android:
     uses: ./.github/workflows/library-android.yml
   library-webgpu:
-    uses: ./.github/workflows/library-webgpu.yml
+    uses: ./.github/workflows/library-web.yml
+    with:
+      deploy: false
+      webgl: false
   library-webgl:
-    uses: ./.github/workflows/library-webgl.yml
+    uses: ./.github/workflows/library-web.yml
+    with:
+      deploy: false
+      webgl: true
   library-apple:
     uses: ./.github/workflows/library-apple.yml
-  build-demo-linux:
+  demo-linux:
     uses: ./.github/workflows/demo-linux.yml
-  build-demo-windows:
+  demo-windows:
     uses: ./.github/workflows/demo-windows.yml
-  build-demo-macos:
+  demo-macos:
     uses: ./.github/workflows/demo-macos.yml
     secrets: inherit

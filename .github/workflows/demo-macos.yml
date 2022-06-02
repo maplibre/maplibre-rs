@@ -3,13 +3,9 @@ name: Build demo for macOS
 on:
   workflow_call:
 
-env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
-
 jobs:
   demo-macos:
-    name: Build demo for macOS
+    name: Build
     runs-on: macos-11
     steps:
       - uses: actions/checkout@v2

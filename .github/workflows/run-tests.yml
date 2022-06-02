@@ -3,13 +3,9 @@ name: Run tests of "maplibre"
 on:
   workflow_call:
 
-env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
-
 jobs:
   run-tests:
-    name: Run tests of "maplibre"
+    name: Test
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2

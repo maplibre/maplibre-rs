@@ -3,13 +3,9 @@ name: Build android library
 on:
   workflow_call:
 
-env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
-
 jobs:
   library-android:
-    name: Build android library
+    name: Build
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2

@@ -3,13 +3,9 @@ name: Build demo for Windows
 on:
   workflow_call:
 
-env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
-
 jobs:
   demo-windows:
-    name: Build demo for Windows
+    name: Build
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v2

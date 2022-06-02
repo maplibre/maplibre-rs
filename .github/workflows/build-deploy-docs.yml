@@ -10,13 +10,10 @@ on:
         required: true
         type: boolean
 
-env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
 
 jobs:
   build-docs:
-    name: Build documentation
+    name: Build
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -40,15 +37,15 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: api-docs
-          path: target/doc
+          path: target/doc/
       - uses: actions/upload-artifact@v2
         with:
           name: book
-          path: docs/book
+          path: docs/book/
   deploy-docs:
     needs: build-docs
     if: inputs.deploy
-    name: Deploy documentation
+    name: Deploy
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/download-artifact@v2
@@ -59,11 +56,11 @@ jobs:
           name: book
       - uses: ./.github/actions/deploy
         with:
-          source: target/doc/.
+          source: .
           destination: api-docs
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
       - uses: ./.github/actions/deploy
         with:
-          source: docs/book/.
+          source: .
           destination: docs
           key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
