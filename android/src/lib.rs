@@ -76,13 +76,18 @@ pub extern "system" fn Java_org_maplibre_1rs_MapLibreRs_android_1main(
     }
 
     run_multithreaded(async {
-        MapBuilder::new()
+        let mut map = MapBuilder::new()
             .with_map_window_config(AndroidMapWindowConfig::new(env, surface))
             .with_http_client(ReqwestHttpClient::new(None))
             .with_schedule_method(TokioScheduleMethod::new())
+            .with_wgpu_settings(WgpuSettings {
+                backends: Some(Backends::VULKAN),
+                ..WgpuSettings::default()
+            })
             .build()
             .initialize()
-            .await
-            .run()
+            .await;
+        map.map_schedule_mut().late_init().await;
+        map.run()
     })
 }

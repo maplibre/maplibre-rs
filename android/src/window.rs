@@ -2,15 +2,15 @@ use jni::objects::JObject;
 use jni::JNIEnv;
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
-use maplibre::io::source_client::HTTPClient;
+use maplibre::io::source_client::HttpClient;
+use maplibre::map_schedule::InteractiveMapSchedule;
 use ndk::native_window::NativeWindow;
 use raw_window_handle::{AndroidNdkHandle, RawWindowHandle};
 use std::marker::PhantomData;
 use std::thread::sleep;
 use std::time::Duration;
 
-use maplibre::map_state::MapState;
-use maplibre::window::{MapWindow, MapWindowConfig, Runnable, WindowSize};
+use maplibre::window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
 
 pub struct AndroidNativeWindow {
     window: NativeWindow,
@@ -37,6 +37,18 @@ impl<'a> AndroidMapWindowConfig<'a> {
 
 impl<'a> MapWindowConfig for AndroidMapWindowConfig<'a> {
     type MapWindow = AndroidMapWindow<'a>;
+
+    fn create(&self) -> Self::MapWindow {
+        let window = unsafe {
+            NativeWindow::from_surface(self.env.get_native_interface(), self.surface.into_inner())
+        }
+        .unwrap();
+
+        Self::MapWindow {
+            window: AndroidNativeWindow { window },
+            phantom: Default::default(),
+        }
+    }
 }
 
 pub struct AndroidMapWindow<'a> {
@@ -50,19 +62,23 @@ impl AndroidMapWindow<'_> {
     }
 }
 
-impl<'a, MWC, SM, HC> Runnable<MWC, SM, HC> for AndroidMapWindow<'a>
+impl<'a, MWC, SM, HC> EventLoop<MWC, SM, HC> for AndroidMapWindow<'a>
 where
     MWC: MapWindowConfig<MapWindow = AndroidMapWindow<'a>>,
     SM: ScheduleMethod,
-    HC: HTTPClient,
+    HC: HttpClient,
 {
-    fn run(mut self, mut map_state: MapState<MWC, SM, HC>, max_frames: Option<u64>) {
+    fn run(
+        mut self,
+        mut map_schedule: InteractiveMapSchedule<MWC, SM, HC>,
+        max_frames: Option<u64>,
+    ) {
         for i in 0..100 {
-            map_state.update_and_redraw();
+            map_schedule.update_and_redraw();
             sleep(Duration::from_millis(16))
         }
 
-        match map_state.update_and_redraw() {
+        match map_schedule.update_and_redraw() {
             Ok(_) => {}
             Err(Error::Render(e)) => {
                 eprintln!("{}", e);
@@ -70,38 +86,22 @@ where
             e => eprintln!("{:?}", e),
         };
 
-        map_state.recreate_surface(&self);
         let size = self.size();
-        map_state.resize(size.width(), size.height()); // FIXME: Resumed is also called when the app launches for the first time. Instead of first using a "fake" inner_size() in State::new we should initialize with a proper size from the beginning
-        map_state.resume();
+        map_schedule.resize(size.width(), size.height()); // FIXME: Resumed is also called when the app launches for the first time. Instead of first using a "fake" inner_size() in State::new we should initialize with a proper size from the beginning
+        map_schedule.resume(&self);
     }
 }
 
 impl<'a> MapWindow for AndroidMapWindow<'a> {
-    type EventLoop = ();
-    type Window = AndroidNativeWindow;
-    type MapWindowConfig = AndroidMapWindowConfig<'a>;
-
-    fn create(map_window_config: &Self::MapWindowConfig) -> Self {
-        let window = unsafe {
-            NativeWindow::from_surface(
-                map_window_config.env.get_native_interface(),
-                map_window_config.surface.into_inner(),
-            )
-        }
-        .unwrap();
-
-        Self {
-            window: AndroidNativeWindow { window },
-            phantom: Default::default(),
-        }
-    }
-
     fn size(&self) -> WindowSize {
         WindowSize::new(100, 100).unwrap()
     }
+}
 
-    fn inner(&self) -> &Self::Window {
+impl<'a> HeadedMapWindow for AndroidMapWindow<'a> {
+    type RawWindow = AndroidNativeWindow;
+
+    fn inner(&self) -> &Self::RawWindow {
         &self.window
     }
 }

@@ -12,8 +12,8 @@ maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
 env_logger = "0.9"
 log = "0.4.16"
 #ndk-glue = "0.5.0" # version is required by winit
-ndk-glue = { git = "https://github.com/rust-windowing/android-ndk-rs.git", branch = "native-window-jni-surface" }
-ndk = { git = "https://github.com/rust-windowing/android-ndk-rs.git", branch = "native-window-jni-surface" }
+ndk-glue = { git = "https://github.com/rust-windowing/android-ndk-rs.git", rev = "7e33384" }
+ndk = { git = "https://github.com/rust-windowing/android-ndk-rs.git", rev = "7e33384" }
 jni = "0.19.0"
 raw-window-handle = "0.4"
 libc = "0.2"
