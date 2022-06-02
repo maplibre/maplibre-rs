@@ -13,12 +13,6 @@ runs:
     - name: Install SQLite
       shell: powershell
       run: choco install sqlite -y --params "/NoTools"
-    - name: Build SQLite lib
-      shell: powershell
-      run: |
-        cd "C:\ProgramData\chocolatey\lib\SQLite\tools"
-        lib /DEF:sqlite3.def /OUT:sqlite3.lib /MACHINE:x64
-        echo "SQLITE3_LIB_DIR=C:\ProgramData\chocolatey\lib\SQLite\tools" >> $env:GITHUB_ENV
     - name: Build
       shell: bash
       run: cargo build -p maplibre-demo --release --target x86_64-pc-windows-msvc
