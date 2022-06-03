@@ -1,0 +1,264 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>How to Run Demos - MapLibre Rust Documentation</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../diff.css">
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="../supported-platforms.html">Supported Platforms</a></li><li class="chapter-item expanded affix "><a href="../developer-log.html">Developer Log</a></li><li class="chapter-item expanded "><a href="../user-guide/index.html"><strong aria-hidden="true">1.</strong> User Guide</a></li><li class="chapter-item expanded "><a href="../development-guide/index.html"><strong aria-hidden="true">2.</strong> Development Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-guide/how-to-run.html" class="active"><strong aria-hidden="true">2.1.</strong> How to Run Demos</a></li><li class="chapter-item expanded "><a href="../development-guide/building-libraries.html"><strong aria-hidden="true">2.2.</strong> Building Libraries</a></li><li class="chapter-item expanded "><a href="../development-guide/debugging.html"><strong aria-hidden="true">2.3.</strong> Debugging</a></li></ol></li><li class="chapter-item expanded "><a href="../development-documents/index.html"><strong aria-hidden="true">3.</strong> Development Documents</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-documents/architecture.html"><strong aria-hidden="true">3.1.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="../development-documents/design.html"><strong aria-hidden="true">3.2.</strong> Design</a></li><li class="chapter-item expanded "><a href="../development-documents/caching.html"><strong aria-hidden="true">3.3.</strong> Caching</a></li><li class="chapter-item expanded "><a href="../development-documents/stencil-masking.html"><strong aria-hidden="true">3.4.</strong> Stencil Masking</a></li><li class="chapter-item expanded "><a href="../development-documents/font-rendering.html"><strong aria-hidden="true">3.5.</strong> Font Rendering</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging.html"><strong aria-hidden="true">3.6.</strong> Library Packaging</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-documents/library-packaging/apple.html"><strong aria-hidden="true">3.6.1.</strong> Apple</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging/android.html"><strong aria-hidden="true">3.6.2.</strong> Android</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging/web.html"><strong aria-hidden="true">3.6.3.</strong> Web</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../appendix/index.html"><strong aria-hidden="true">4.</strong> Appendix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../appendix/link-collection.html"><strong aria-hidden="true">4.1.</strong> Link Collection</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MapLibre Rust Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="running-maplibre-rs-demos-on-various-platforms"><a class="header" href="#running-maplibre-rs-demos-on-various-platforms">Running maplibre-rs demos on various platforms</a></h1>
+<p>During development, you will want to run the maplibre demos on your local machine to test out your changes.
+There are multiple demos of maplibre-rs for different targets. Some targets have prerequisites
+depending on your operating system.</p>
+<ul>
+<li><strong>maplibre-demo</strong> - targets Windows, MacOS and Linux, it is built directly with cargo.</li>
+<li><strong>apple</strong> - targets iOS and MacOS and relies on the xcode IDE.</li>
+<li><strong>android</strong> - targets Android devices and builds in Android Studio.</li>
+<li><strong>web</strong> - targets the web using a WASM binary.</li>
+<li><strong>maplibre-headless</strong> - <em>TBD</em></li>
+</ul>
+<p>All the targets below require you to install <a href="https://rustup.rs/">rustup</a> to manage your Rust toolchain.</p>
+<blockquote>
+<p><strong>Note</strong>: Make sure you have selected the right toolchain target within rustup. You can use <code>rustup show</code> to see your
+active toolchain. If you want to change the target of the build manually, use the cargo <code>--target</code> parameter.</p>
+</blockquote>
+<h2 id="maplibre-demo"><a class="header" href="#maplibre-demo">Maplibre-demo</a></h2>
+<h3 id="linuxmacos"><a class="header" href="#linuxmacos">Linux/MacOS</a></h3>
+<p>The build for desktop is very simple, you just have to run the following command from the root of the
+maplibre-rs project:</p>
+<pre><code class="language-bash">cargo run -p maplibre-demo
+</code></pre>
+<h3 id="windows"><a class="header" href="#windows">Windows</a></h3>
+<p>Windows has two additional prerequisites to be able to run. You will need CMake, Visual Studio C++ build tools and the
+sqlite3 library.</p>
+<p>Install <a href="https://cmake.org/download/">CMake</a> and add it to your path environment variables.</p>
+<p>For the C++ build tools, download the <a href="https://visualstudio.microsoft.com/downloads/">Visual Studio 2022 Build tools</a>
+from the Microsoft website. After the download, while installing the Build tools, make sure that you select the
+<em>C++ build tools</em>.</p>
+<p>To install sqlite3 you need to build the sqlite3.lib manually with the following
+<a href="https://gist.github.com/zeljic/d8b542788b225b1bcb5fce169ee28c55">steps</a>. This will generate a .lib file that
+you will have to add to the SQLITE3_LIB_DIR environment variable.</p>
+<p>Restart your shell to make sure you are using up-to-date environment variables.</p>
+<p>Finally, the command below should execute successfully:</p>
+<pre><code class="language-bash">cargo run -p maplibre-demo
+</code></pre>
+<h2 id="android"><a class="header" href="#android">Android</a></h2>
+<p>Start by installing the 
+<a href="https://developer.android.com/studio?gclid=CjwKCAjwj42UBhAAEiwACIhADmF7uHXnEHGnmOgFnjp0Z6n-TnBvutC5faGA89lwouMIXiR6OXK4hBoCq78QAvD_BwE&amp;gclsrc=aw.ds">Android Studio IDE</a>.</p>
+<p>Make sure the NDK version 23.1.7779620 is installed. The Native Development Kit (NDK) is a set of tools that allows 
+you to use C and C++ code with Android.</p>
+<pre><code>ANDROID STUDIO -&gt; tools -&gt; SDK manager -&gt; SDK tools -&gt; tick show package details -&gt; ndk (side by side) version 23.1.7779620
+</code></pre>
+<p>Open the project within <code>./android/gradle</code> and create a new virtual device with the device manager. Minimum SDK version
+should be 21. This was tested on a x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and 
+run the maplibre-rs Android demo on it. Alternatively you can also run it on your own Android device.</p>
+<blockquote>
+<p>Note: If you are building for a x86 Android device, you probably need to install the following target using<br />
+rustup with the following command <code>rustup target add i686-linux-android</code>.</p>
+</blockquote>
+<blockquote>
+<p>Note: Android is configured to support OpenGL ES 3.1 (This API specification is supported by Android 5.0 (API level 21) and higher).
+Your Android device is required to support OpenGL ES 3.1 at least. There are some issues 
+<a href="https://stackoverflow.com/questions/40797975/android-emulator-and-opengl-es3-egl-bad-config">here</a> and 
+<a href="https://www.reddit.com/r/Arcore/comments/8squbo/opengl_es_31_is_required_for_android_emulator_to/">here</a> that
+discuss configuration of Android Studio for OpenGL ES 3.1 support in emulators.</p>
+</blockquote>
+<h2 id="apple"><a class="header" href="#apple">Apple</a></h2>
+<p>Apple builds rely on the <a href="https://apps.apple.com/us/app/xcode/id497799835?ls=1&amp;mt=12">XCode IDE</a>.
+Start by installing XCode and open the project within <code>./apple/xcode</code>.</p>
+<blockquote>
+<p>Cargo is used in to build the maplibre library in the build phases of the XCode project configuration.</p>
+</blockquote>
+<h3 id="ios"><a class="header" href="#ios">iOS</a></h3>
+<p>You can use XCode to run on a iOS Simulator or a real device. Install a simulator in XCode.
+Version 9 is the minimum version supported theoretically.</p>
+<p>Select the scheme called <em>example (iOS)</em> and click on run. This will start the iOS application.</p>
+<h3 id="macos"><a class="header" href="#macos">MacOS</a></h3>
+<p>As you might have seen in the maplibre-demo section, you can build Unix executables directly with Cargo.
+In order to build a proper MacOS application (in OSX terminology) you have to use the <code>./apple/xcode</code> project.</p>
+<p>Open the project from the folder <code>./apple/xcode</code> with XCode. Select the scheme called <em>example (macOS)</em> and
+click on run. This will start the MacOS application. </p>
+<blockquote>
+<p>The minimum target OSX version for the MacOS build is defined inside <em>Build settings -&gt; Deployment -&gt; MacOS deployment target</em>.
+If you are using a lower version of OSX, you will not be able to run the application on your computer.</p>
+</blockquote>
+<h2 id="web-webgl-webgpu"><a class="header" href="#web-webgl-webgpu">Web (WebGL, WebGPU)</a></h2>
+<p>If you have a browser which already supports a recent version of the WebGPU specification then you can start a
+development server using the following commands.</p>
+<pre><code class="language-bash">cd web
+npm run start
+</code></pre>
+<p>If you want to run maplibre-rs with WebGL which is supported on every major browser, then you have to use the following
+command.</p>
+<pre><code class="language-bash">just web-lib esbuild
+just web-demo start
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../development-guide/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../development-guide/building-libraries.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../development-guide/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../development-guide/building-libraries.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>
