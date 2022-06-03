@@ -68,17 +68,18 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: webgpu-demo
-      - name: Deploy
-        if: "!inputs.webgl"
-        uses: ./.github/actions/deploy
-        with:
-          source: .
-          destination: webgl
-          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
-      - name: Deploy
-        if: "!inputs.webgl"
-        uses: ./.github/actions/deploy
-        with:
-          source: .
-          destination: webgpu
-          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+          path: demo
+#      - name: Deploy
+#        if: "!inputs.webgl"
+#        uses: ./.github/actions/deploy
+#        with:
+#          source: .
+#          destination: webgl
+#          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+#      - name: Deploy
+#        if: "!inputs.webgl"
+#        uses: ./.github/actions/deploy
+#        with:
+#          source: .
+#          destination: webgpu
+#          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
