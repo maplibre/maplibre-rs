@@ -16,6 +16,8 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - name: Install GPU Drivers
         uses: ./.github/actions/install-driver
-      - name: Check
+      - name: Download test data
+        uses: ./.github/actions/download-test-data
+      - name: Benchmark
         shell: bash
         run: WGPU_BACKEND=vulkan just benchmark
