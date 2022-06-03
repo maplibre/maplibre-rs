@@ -1,0 +1,14 @@
+name: install-driver
+description: Install drivers
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Mesa Dependencies
+      shell: bash
+      run: sudo apt install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers
+    - name: wgpu info
+      shell: bash
+      run: |
+        cargo install --git "https://github.com/gfx-rs/wgpu" wgpu-info
+        wgpu-info
