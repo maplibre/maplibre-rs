@@ -92,8 +92,8 @@ jobs:
         shell: bash
         run: |
           echo "/*
-            Cross-Origin-Opener-Policy: \"same-origin\"
-            Cross-Origin-Embedder-Policy: \"require-corp\"" > demo/_headers
+            Cross-Origin-Opener-Policy: same-origin
+            Cross-Origin-Embedder-Policy: require-corp" > demo/_headers
       - name: Deploy
         uses: ./.github/actions/cloudflare-deploy
         with:
