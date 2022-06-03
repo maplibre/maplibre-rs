@@ -19,16 +19,10 @@ jobs:
       deploy: false
   library-android:
     uses: ./.github/workflows/library-android.yml
-  library-webgpu:
+  library-web:
     uses: ./.github/workflows/library-web.yml
     with:
       deploy: false
-      webgl: false
-  library-webgl:
-    uses: ./.github/workflows/library-web.yml
-    with:
-      deploy: false
-      webgl: true
   library-apple:
     uses: ./.github/workflows/library-apple.yml
   demo-linux:
