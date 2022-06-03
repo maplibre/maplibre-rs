@@ -1,0 +1,26 @@
+name: deploy
+description: Deploy on maxammann.org
+
+inputs:
+  project:
+    required: true
+    description: TODO
+  source:
+    required: true
+    description: TODO
+  CF_API_TOKEN:
+    required: true
+    description: TODO
+  CF_ACCOUNT_ID:
+    required: true
+    description: TODO
+
+runs:
+  using: "composite"
+  steps:
+    - name: Publish
+      uses: cloudflare/wrangler-action@2.0.0
+      with:
+        apiToken: ${{ inputs.CF_API_TOKEN }}
+        accountId: ${{ inputs.CF_ACCOUNT_ID }}
+        command: pages publish --branch production --project-name=${{ inputs.project }} ${{ inputs.source }}

@@ -3,6 +3,7 @@
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use lyon::geom;
 
+use crate::render::ShaderVertex;
 use lyon::lyon_tessellation::VertexBuffers;
 use lyon::path::path::Builder;
 use lyon::path::Path;
@@ -12,7 +13,6 @@ use lyon::tessellation::{
 };
 use std::cell::RefCell;
 
-use crate::render::ShaderVertex;
 use crate::tessellation::{VertexConstructor, DEFAULT_TOLERANCE};
 
 type GeoResult<T> = geozero::error::Result<T>;

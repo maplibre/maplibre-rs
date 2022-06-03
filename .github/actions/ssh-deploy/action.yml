@@ -1,0 +1,26 @@
+name: deploy
+description: Deploy on cloudflare
+
+inputs:
+  source:
+    required: true
+    description: TODO
+  destination:
+    required: true
+    description: TODO
+  key:
+    required: true
+    description: TODO
+
+runs:
+  using: "composite"
+  steps:
+    - name: Deploy to maxammann.org
+      env:
+        SSH_KEY: ${{ inputs.key }}
+      shell: bash
+      run: |
+        echo "$SSH_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa max@maxammann.org 'mkdir -p ~/public_html/maplibre-rs/${{ inputs.destination }} && find ~/public_html/maplibre-rs/${{ inputs.destination }} -type f -not -name ".htaccess" -delete'
+        rsync -e "ssh -o StrictHostKeyChecking=no -i id_rsa" -r "${{ inputs.source }}" max@maxammann.org:~/public_html/maplibre-rs/${{ inputs.destination }}/
