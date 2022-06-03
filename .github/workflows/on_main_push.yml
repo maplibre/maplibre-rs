@@ -8,82 +8,30 @@ on:
 
 jobs:
   run-check:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/check
+    uses: ./.github/workflows/run-checks.yml
   run-benchmarks:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/benchmarks
+    uses: ./.github/workflows/run-benchmarks.yml
   run-tests:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/tests
-  build-android:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/android
-  build-deploy-webgpu:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/webgpu
-      - uses: ./.github/actions/deploy
-        with:
-          source: web/demo/dist/.
-          destination: webgpu
-          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
-  build-deploy-webgl:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/webgl
-      - uses: ./.github/actions/deploy
-        with:
-          source: web/demo/dist/.
-          destination: webgl
-          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+    uses: ./.github/workflows/run-tests.yml
   build-deploy-docs:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/docs
-      - uses: ./.github/actions/deploy
-        with:
-          source: target/doc/.
-          destination: api-docs
-          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
-      - uses: ./.github/actions/deploy
-        with:
-          source: docs/book/.
-          destination: docs
-          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
-  build-apple:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/apple
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  build-demo-linux:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/demo/linux
-  build-demo-windows:
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/demo/windows
-  build-demo-macos:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/demo/macos
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/build-deploy-docs.yml
+    with:
+      deploy: true
+    secrets: inherit
+  library-android:
+    uses: ./.github/workflows/library-android.yml
+  library-web:
+    uses: ./.github/workflows/library-web.yml
+    with:
+      deploy: true
+    secrets: inherit
+  library-apple:
+    uses: ./.github/workflows/library-apple.yml
+  demo-linux:
+    uses: ./.github/workflows/demo-linux.yml
+  demo-windows:
+    uses: ./.github/workflows/demo-windows.yml
+  demo-macos:
+    uses: ./.github/workflows/demo-macos.yml
+    secrets: inherit
 
