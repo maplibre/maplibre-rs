@@ -27,14 +27,16 @@ use crate::window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig, Wind
 pub mod context;
 pub mod coords;
 pub mod error;
+#[cfg(feature = "headless")]
+pub mod headless;
 pub mod io;
 // Exposed because of input handlers in maplibre-winit
 pub mod map_schedule;
 pub mod platform;
 // Exposed because of camera
-pub mod headless;
 pub mod render;
 pub mod style;
+
 pub mod window;
 // Exposed because of doc-strings
 pub mod schedule;

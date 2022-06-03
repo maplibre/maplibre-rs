@@ -1,18 +1,13 @@
 //! Queues [PhaseItems](crate::render::render_phase::PhaseItem) for rendering.
 
 use crate::context::MapContext;
-use crate::coords::{ViewRegion, Zoom};
-use crate::io::tile_repository::TileRepository;
-use crate::render::camera::ViewProjection;
+
 use crate::render::resource::IndexEntry;
-use crate::render::shaders::{
-    ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32,
-};
+
 use crate::render::tile_view_pattern::TileInView;
 use crate::render::util::Eventually::Initialized;
 use crate::schedule::Stage;
-use crate::{RenderState, Renderer, Style};
-use std::iter;
+use crate::{RenderState, Renderer};
 
 #[derive(Default)]
 pub struct QueueStage;
@@ -22,7 +17,7 @@ impl Stage for QueueStage {
     fn run(
         &mut self,
         MapContext {
-            view_state,
+            view_state: _,
             renderer:
                 Renderer {
                     state:

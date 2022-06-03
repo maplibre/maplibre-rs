@@ -1,21 +1,20 @@
 use crate::context::{MapContext, ViewState};
 use crate::error::Error;
-use crate::io::geometry_index::GeometryIndex;
+
 use crate::io::scheduler::Scheduler;
-use crate::io::source_client::{HttpClient, HttpSourceClient, SourceClient};
+use crate::io::source_client::{HttpClient, HttpSourceClient};
 use crate::io::tile_repository::TileRepository;
-use crate::io::tile_request_state::TileRequestState;
+
 use crate::render::{create_default_render_graph, register_default_render_stages};
 use crate::schedule::{Schedule, Stage};
 use crate::stages::register_stages;
 use crate::style::Style;
 use crate::{
-    HeadedMapWindow, MapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod,
-    WgpuSettings, WindowSize,
+    HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod, WgpuSettings,
+    WindowSize,
 };
 use std::marker::PhantomData;
 use std::mem;
-use std::sync::{mpsc, Arc, Mutex};
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
 pub struct InteractiveMapSchedule<MWC, SM, HC>
@@ -118,7 +117,7 @@ where
         <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
     {
         if let EventuallyMapContext::Full(map_context) = &mut self.map_context {
-            let mut renderer = &mut map_context.renderer;
+            let renderer = &mut map_context.renderer;
             renderer
                 .state
                 .recreate_surface::<MWC::MapWindow>(window, &renderer.instance);

@@ -22,12 +22,12 @@ use crate::render::render_phase::RenderPhase;
 use crate::render::resource::{BufferPool, Globals, IndexEntry};
 use crate::render::resource::{Head, Surface};
 use crate::render::resource::{Texture, TextureView};
-use crate::render::settings::{RendererSettings, SurfaceType, WgpuSettings};
+use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata};
 use crate::render::tile_view_pattern::{TileInView, TileShape, TileViewPattern};
 use crate::render::util::Eventually;
 use crate::tessellation::IndexDataType;
-use crate::{HeadedMapWindow, MapWindow, MapWindowConfig};
+use crate::{HeadedMapWindow, MapWindow};
 use log::info;
 use std::sync::Arc;
 
@@ -379,11 +379,8 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-    use crate::render::graph::RenderGraph;
-    use crate::render::graph_runner::RenderGraphRunner;
-    use crate::render::resource::Surface;
-    use crate::{MapWindow, MapWindowConfig, RenderState, Renderer, RendererSettings, WindowSize};
-    use log::LevelFilter;
+
+    use crate::{MapWindow, MapWindowConfig, WindowSize};
 
     pub struct HeadlessMapWindowConfig {
         size: WindowSize,

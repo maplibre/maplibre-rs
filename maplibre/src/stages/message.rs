@@ -1,18 +1,14 @@
-use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
-use crate::error::Error;
-use crate::io::geometry_index::{GeometryIndex, IndexedGeometry};
-use crate::io::pipeline::PipelineContext;
-use crate::io::pipeline::Processable;
-use crate::io::tile_pipelines::build_vector_tile_pipeline;
+use crate::coords::WorldTileCoords;
+
 use crate::io::tile_repository::StoredLayer;
-use crate::io::tile_request_state::TileRequestState;
-use crate::io::{TileRequest, TileRequestID};
+
+use crate::io::TileRequestID;
 use crate::render::ShaderVertex;
-use crate::stages::HeadedPipelineProcessor;
+
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use geozero::mvt::tile;
 use std::fmt;
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::mpsc;
 
 pub type MessageSender = mpsc::Sender<TessellateMessage>;
 pub type MessageReceiver = mpsc::Receiver<TessellateMessage>;

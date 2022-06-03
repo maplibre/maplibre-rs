@@ -68,13 +68,7 @@ where
     #[tracing::instrument(name = "reinitialize", skip_all)]
     pub fn reinitialize(&mut self, f: impl FnOnce() -> T, criteria: &T::Criteria) {
         let should_replace = match &self {
-            Eventually::Initialized(current) => {
-                if current.has_changed(criteria) {
-                    true
-                } else {
-                    false
-                }
-            }
+            Eventually::Initialized(current) => current.has_changed(criteria),
             Eventually::Uninitialized => true,
         };
 

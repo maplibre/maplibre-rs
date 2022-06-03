@@ -3,9 +3,6 @@
 //! This script is built and executed just before building the package.
 //! It will validate the WGSL (WebGPU Shading Language) shaders and embed static files.
 
-use std::path::{Path, PathBuf};
-use std::{env, fs};
-
 #[cfg(feature = "embed-static-tiles")]
 use maplibre_build_tools::mbtiles::extract;
 use maplibre_build_tools::wgsl::validate_project_wgsl;
@@ -16,13 +13,13 @@ const MUNICH_Z: u8 = 15;
 
 /// Tiles which can be used by StaticTileFetcher.
 #[cfg(feature = "embed-static-tiles")]
-fn clean_static_tiles() -> PathBuf {
-    let out_dir = env::var("OUT_DIR").unwrap();
+fn clean_static_tiles() -> std::path::PathBuf {
+    let out_dir = std::env::var("OUT_DIR").unwrap();
 
-    let out = Path::new(&out_dir).join("extracted-tiles");
+    let out = std::path::Path::new(&out_dir).join("extracted-tiles");
 
     if out.exists() && out.is_dir() {
-        fs::remove_dir_all(&out).unwrap()
+        std::fs::remove_dir_all(&out).unwrap()
     }
 
     out
@@ -52,6 +49,8 @@ fn generate_type_def() -> Option<u32> {
 
 #[cfg(feature = "embed-static-tiles")]
 fn embed_tiles_statically() {
+    use std::env;
+    use std::path::Path;
     let out = clean_static_tiles();
 
     let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();

@@ -1,7 +1,6 @@
 //! Scheduling.
 
 use std::future::Future;
-use std::pin::Pin;
 
 use crate::error::Error;
 
