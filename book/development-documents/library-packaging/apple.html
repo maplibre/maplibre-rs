@@ -1,0 +1,3788 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Apple - MapLibre Rust Documentation</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../../favicon.svg">
+        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../highlight.css">
+        <link rel="stylesheet" href="../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../diff.css">
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../../introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="../../supported-platforms.html">Supported Platforms</a></li><li class="chapter-item expanded affix "><a href="../../developer-log.html">Developer Log</a></li><li class="chapter-item expanded "><a href="../../user-guide/index.html"><strong aria-hidden="true">1.</strong> User Guide</a></li><li class="chapter-item expanded "><a href="../../development-guide/index.html"><strong aria-hidden="true">2.</strong> Development Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../development-guide/building.html"><strong aria-hidden="true">2.1.</strong> Building</a></li><li class="chapter-item expanded "><a href="../../development-guide/debugging.html"><strong aria-hidden="true">2.2.</strong> Debugging</a></li></ol></li><li class="chapter-item expanded "><a href="../../development-documents/index.html"><strong aria-hidden="true">3.</strong> Development Documents</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../development-documents/architecture.html"><strong aria-hidden="true">3.1.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="../../development-documents/design.html"><strong aria-hidden="true">3.2.</strong> Design</a></li><li class="chapter-item expanded "><a href="../../development-documents/caching.html"><strong aria-hidden="true">3.3.</strong> Caching</a></li><li class="chapter-item expanded "><a href="../../development-documents/stencil-masking.html"><strong aria-hidden="true">3.4.</strong> Stencil Masking</a></li><li class="chapter-item expanded "><a href="../../development-documents/font-rendering.html"><strong aria-hidden="true">3.5.</strong> Font Rendering</a></li><li class="chapter-item expanded "><a href="../../development-documents/library-packaging.html"><strong aria-hidden="true">3.6.</strong> Library Packaging</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../development-documents/library-packaging/apple.html" class="active"><strong aria-hidden="true">3.6.1.</strong> Apple</a></li><li class="chapter-item expanded "><a href="../../development-documents/library-packaging/android.html"><strong aria-hidden="true">3.6.2.</strong> Android</a></li><li class="chapter-item expanded "><a href="../../development-documents/library-packaging/web.html"><strong aria-hidden="true">3.6.3.</strong> Web</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../appendix/index.html"><strong aria-hidden="true">4.</strong> Appendix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../appendix/link-collection.html"><strong aria-hidden="true">4.1.</strong> Link Collection</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MapLibre Rust Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="apple"><a class="header" href="#apple">Apple</a></h1>
+<p>On Apple maplibre-rs is packaged as:</p>
+<ul>
+<li>Multiple .xcarchive packages which include a framework. Each for a different architecture and platform.</li>
+<li>A single .xcframework package which contains multiple frameworks of different architectures and platforms.</li>
+<li>A swift package which just references the .xcframework package and makes distributing easier.</li>
+</ul>
+<p>The following diffs are extracted from <a href="../../../../apple/framework.diff">this diff</a>. They should serve as documentation
+for the XCode project. This is required because XCode is a mess.</p>
+<h2 id="xcode-project-description"><a class="header" href="#xcode-project-description">XCode Project description</a></h2>
+<h3 id="library-entry"><a class="header" href="#library-entry">Library Entry</a></h3>
+<div id="d2h-374920" class="d2h-file-wrapper" data-lang="swift">
+    <div class="d2h-file-header">
+    <span class="d2h-file-name-wrapper">
+    <svg aria-hidden="true" class="d2h-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12">
+        <path d="M6 5H2v-1h4v1zM2 8h7v-1H2v1z m0 2h7v-1H2v1z m0 2h7v-1H2v1z m10-7.5v9.5c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V2c0-0.55 0.45-1 1-1h7.5l3.5 3.5z m-1 0.5L8 2H1v12h10V5z"></path>
+    </svg>    <span class="d2h-file-name">xcode/maplibre-rs/maplibre.swift</span>
+    <span class="d2h-tag d2h-added d2h-added-tag">ADDED</span></span>
+        <label class="d2h-file-collapse">
+            <input class="d2h-file-collapse-input" type="checkbox" name="viewed" value="viewed">
+            Viewed
+        </label>
+    </div>
+    <div class="d2h-file-diff">
+        <div class="d2h-code-wrapper">
+            <table class="d2h-diff-table">
+                <tbody class="d2h-diff-tbody">
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -0,0 +1,5 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">1</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">public class MapLibre {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">2</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">    public static func start() {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">3</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">        maplibre_apple_main();</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">4</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">    }</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">5</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">}</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<p>The swift code above is the main entry for the Swift API. From this entry file we can expose more API of maplibre-rs.
+Any C functions which are referenced in the XCode framework's header are available automatically in Swift.</p>
+<h3 id="framework"><a class="header" href="#framework">Framework</a></h3>
+<div class="d2h-file-wrapper" data-lang="pbxproj">
+    <div class="d2h-file-header">
+    <span class="d2h-file-name-wrapper">
+    <svg aria-hidden="true" class="d2h-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12">
+        <path d="M6 5H2v-1h4v1zM2 8h7v-1H2v1z m0 2h7v-1H2v1z m0 2h7v-1H2v1z m10-7.5v9.5c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V2c0-0.55 0.45-1 1-1h7.5l3.5 3.5z m-1 0.5L8 2H1v12h10V5z"></path>
+    </svg>    <span class="d2h-file-name">{diff/maplibre-rs → xcode}/maplibre-rs.xcodeproj/project.pbxproj</span>
+    <span class="d2h-tag d2h-moved d2h-moved-tag">RENAMED</span></span>
+        <label class="d2h-file-collapse">
+            <input class="d2h-file-collapse-input" type="checkbox" name="viewed" value="viewed">
+            Viewed
+        </label>
+    </div>
+    <div class="d2h-file-diff">
+        <div class="d2h-code-wrapper">
+            <table class="d2h-diff-table">
+                <tbody class="d2h-diff-tbody">
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">29</div>
+                        <div class="line-num2">33</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn"><br></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">30</div>
+                        <div class="line-num2">34</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">/* Begin PBXFrameworksBuildPhase section */</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">31</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452E128132EA6003BD2A5</del> /* Frameworks */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">35</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D5682812903700906D21</ins> /* Frameworks */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">32</div>
+                        <div class="line-num2">36</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			isa = PBXFrameworksBuildPhase;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">33</div>
+                        <div class="line-num2">37</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			buildActionMask = 2147483647;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">34</div>
+                        <div class="line-num2">38</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			files = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">39</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				0B85D5A42812991100906D21 /* libmaplibre_apple.a in Frameworks */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">35</div>
+                        <div class="line-num2">40</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">36</div>
+                        <div class="line-num2">41</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			runOnlyForDeploymentPostprocessing = 0;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">37</div>
+                        <div class="line-num2">42</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">		};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">38</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452F128132EB5003BD2A5</del> /* Frameworks */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">43</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D57B281290F800906D21</ins> /* Frameworks */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">39</div>
+                        <div class="line-num2">44</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			isa = PBXFrameworksBuildPhase;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">40</div>
+                        <div class="line-num2">45</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			buildActionMask = 2147483647;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">41</div>
+                        <div class="line-num2">46</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			files = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">47</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				0B85D596281291A400906D21 /* maplibre_rs.framework in Frameworks */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">42</div>
+                        <div class="line-num2">48</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">43</div>
+                        <div class="line-num2">49</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			runOnlyForDeploymentPostprocessing = 0;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">44</div>
+                        <div class="line-num2">50</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">		};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">45</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452F628132EB5003BD2A5</del> /* Frameworks */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">51</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D580281290F800906D21</ins> /* Frameworks */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">46</div>
+                        <div class="line-num2">52</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			isa = PBXFrameworksBuildPhase;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">47</div>
+                        <div class="line-num2">53</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			buildActionMask = 2147483647;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">48</div>
+                        <div class="line-num2">54</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			files = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">55</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">49</div>
+                        <div class="line-num2">56</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">50</div>
+                        <div class="line-num2">57</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			runOnlyForDeploymentPostprocessing = 0;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">51</div>
+                        <div class="line-num2">58</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">		};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">59</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">/* End PBXFrameworksBuildPhase section */</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<p>The framework needs to link against the static library <code>libmaplibre_apple.a</code>, which has been generated by Cargo.
+In order to allow XCode to dynamically select the library based on the <code>Library Search Path</code> (Build Settings) one needs
+to add a relative file to XCode. The entry in the <code>project.pbxproj</code> should look like that:</p>
+<pre><code class="language-js">B085D5A32812987B00906D21 /* libmaplibre_apple.a */ = {
+    isa = PBXFileReference;
+    lastKnownFileType = archive.ar;
+    path = libmaplibre_apple.a;
+    sourceTree = SOURCE_ROOT;
+};
+</code></pre>
+<p>Note the <code>path = libmaplibre_apple.a</code>. This path does not link to a concrete file, but to a file which can be found
+during building.</p>
+<p>A file can be added to the frameworks and library link phase in XCode.</p>
+<h3 id="cargo-build-phase"><a class="header" href="#cargo-build-phase">Cargo Build Phase</a></h3>
+<div class="d2h-file-wrapper" data-lang="pbxproj">
+    <div class="d2h-file-header">
+    <span class="d2h-file-name-wrapper">
+    <svg aria-hidden="true" class="d2h-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12">
+        <path d="M6 5H2v-1h4v1zM2 8h7v-1H2v1z m0 2h7v-1H2v1z m0 2h7v-1H2v1z m10-7.5v9.5c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V2c0-0.55 0.45-1 1-1h7.5l3.5 3.5z m-1 0.5L8 2H1v12h10V5z"></path>
+    </svg>    <span class="d2h-file-name">{diff/maplibre-rs → xcode}/maplibre-rs.xcodeproj/project.pbxproj</span>
+    <span class="d2h-tag d2h-moved d2h-moved-tag">RENAMED</span></span>
+        <label class="d2h-file-collapse">
+            <input class="d2h-file-collapse-input" type="checkbox" name="viewed" value="viewed">
+            Viewed
+        </label>
+    </div>
+    <div class="d2h-file-diff">
+        <div class="d2h-code-wrapper">
+            <table class="d2h-diff-table">
+                <tbody class="d2h-diff-tbody">
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">114</div>
+                        <div class="line-num2">131</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">/* Begin PBXNativeTarget section */</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">115</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452E328132EA6003BD2A5</del> /* maplibre-rs */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">132</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D56A2812903700906D21</ins> /* maplibre-rs */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">116</div>
+                        <div class="line-num2">133</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			isa = PBXNativeTarget;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">117</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">			buildConfigurationList = <del>0BE452E928132EA6003BD2A5</del> /* Build configuration list for PBXNativeTarget "maplibre-rs" */;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">134</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			buildConfigurationList = <ins>0B85D5702812903700906D21</ins> /* Build configuration list for PBXNativeTarget "maplibre-rs" */;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">118</div>
+                        <div class="line-num2">135</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			buildPhases = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">119</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				<del>0BE452DF28132EA6003BD2A5</del> /* Headers */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">120</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				<del>0BE452E028132EA6003BD2A5</del> /* Sources */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">121</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				<del>0BE452E128132EA6003BD2A5</del> /* Frameworks */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">122</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				<del>0BE452E228132EA6003BD2A5</del> /* Resources */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">136</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				<ins>0B85D5662812903700906D21</ins> /* Headers */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">137</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				<ins>0B85D5672812903700906D21</ins> /* Sources */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">138</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				<ins>0B85D5682812903700906D21</ins> /* Frameworks */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">139</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				<ins>0B85D5692812903700906D21</ins> /* Resources */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">140</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				0BE452D72812EFC1003BD2A5 /* Cargo Build */,</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">229</div>
+                        <div class="line-num2">248</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">230</div>
+                        <div class="line-num2">249</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			runOnlyForDeploymentPostprocessing = 0;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">231</div>
+                        <div class="line-num2">250</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">		};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">232</div>
+                        <div class="line-num2">251</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">/* End PBXResourcesBuildPhase section */</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">233</div>
+                        <div class="line-num2">252</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn"><br></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">253</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">/* Begin PBXShellScriptBuildPhase section */</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">254</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		0BE452D72812EFC1003BD2A5 /* Cargo Build */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">255</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			isa = PBXShellScriptBuildPhase;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">256</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			buildActionMask = 2147483647;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">257</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			files = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">258</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">259</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			inputFileListPaths = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">260</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">261</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			inputPaths = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">262</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">263</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			name = "Cargo Build";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">264</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			outputFileListPaths = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">265</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">266</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			outputPaths = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">267</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">268</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			runOnlyForDeploymentPostprocessing = 0;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">269</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			shellPath = /bin/bash;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">270</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">			shellScript = ". \"$HOME/.cargo/env\"\n\narch=\"unknown\"\nvendor=\"apple\"\nos_type=\"unknown\"\nenvironment_type=\"\"\n\nmode=\"\"\n\necho \"ARCH: $ARCHS\"\n\nif [[ $CONFIGURATION == \"Release\" ]]\nthen\n    mode=\"--release\"\nfi\n\nif [[ $ARCHS == \"x86_64\" ]]\nthen\n    arch=\"x86_64\"\nelif [[ $ARCHS == \"arm64\" ]]\nthen\n    arch=\"aarch64\"\nfi\n\nif [[ $SDK_NAME == *\"iphoneos\"* ]]\nthen\n    os_type=\"ios\"\nelif [[ $SDK_NAME == *\"macos\"* ]]\nthen\n    os_type=\"darwin\"\nelif [[ $SDK_NAME == *\"iphonesimulator\"* ]]\nthen\n    os_type=\"ios\"\n    environment_type=\"sim\"\nfi\n\n\ntriplet=\"$arch-$vendor-$os_type\"\n\nif [ -n \"$environment_type\" ]\nthen\n    triplet=\"$triplet-$environment_type\"\nfi\n\necho \"$mode\"\necho \"$triplet\"\n\nenv -i zsh -c \"cargo build -p maplibre-apple $mode --target $triplet --lib\"\n\n";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">271</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">272</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">/* End PBXShellScriptBuildPhase section */</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<p>In order to trigger Cargo builds when starting a XCode build we include a <code>Cargo Build</code> script. This build script needs
+to run before the linking phase (drag and drop it to the top).</p>
+<p>The following build script builds based on XCode environment variables the correct static library. We depend on
+the <code>$ARCHS</code>
+environment variable, as the others seem unreliable. Note that this can include multiple architectures, unless the build
+setting <code>ONLY_ACTIVE_ARCH</code> is set to <code>YES</code>.</p>
+<pre><code class="language-bash">arch=&quot;unknown&quot;
+vendor=&quot;apple&quot;
+os_type=&quot;unknown&quot;
+environment_type=&quot;&quot;
+
+mode=&quot;&quot;
+
+echo &quot;ARCH: $ARCHS&quot;
+
+if [[ $CONFIGURATION == &quot;Release&quot; ]]
+then
+    mode=&quot;--release&quot;
+fi
+
+if [[ $ARCHS == &quot;x86_64&quot; ]]
+then
+    arch=&quot;x86_64&quot;
+elif [[ $ARCHS == &quot;arm64&quot; ]]
+then
+    arch=&quot;aarch64&quot;
+fi
+
+if [[ $SDK_NAME == *&quot;iphoneos&quot;* ]]
+then
+    os_type=&quot;ios&quot;
+elif [[ $SDK_NAME == *&quot;macos&quot;* ]]
+then
+    os_type=&quot;darwin&quot;
+elif [[ $SDK_NAME == *&quot;iphonesimulator&quot;* ]]
+then
+    os_type=&quot;ios&quot;
+    if [[ $ARCHS == &quot;arm64&quot; ]]
+    then
+        environment_type=&quot;sim&quot;
+    fi
+fi
+
+
+triplet=&quot;$arch-$vendor-$os_type&quot;
+
+if [ -n &quot;$environment_type&quot; ]
+then
+    triplet=&quot;$triplet-$environment_type&quot;
+fi
+
+echo &quot;Mode: $mode&quot;
+echo &quot;Triplet: $triplet&quot;
+echo &quot;Shell: $SHELL&quot;
+
+cmd=&quot;export HOME=$HOME &amp;&amp; . $HOME/.cargo/env &amp;&amp; cargo build -p apple $mode --target $triplet --lib&quot;
+
+echo &quot;Command: $cmd&quot;
+
+env -i /bin/bash -c &quot;$cmd&quot;
+</code></pre>
+<h3 id="build-settings"><a class="header" href="#build-settings">Build Settings</a></h3>
+<div class="d2h-file-wrapper" data-lang="pbxproj">
+    <div class="d2h-file-header">
+    <span class="d2h-file-name-wrapper">
+    <svg aria-hidden="true" class="d2h-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12">
+        <path d="M6 5H2v-1h4v1zM2 8h7v-1H2v1z m0 2h7v-1H2v1z m0 2h7v-1H2v1z m10-7.5v9.5c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V2c0-0.55 0.45-1 1-1h7.5l3.5 3.5z m-1 0.5L8 2H1v12h10V5z"></path>
+    </svg>    <span class="d2h-file-name">{diff/maplibre-rs → xcode}/maplibre-rs.xcodeproj/project.pbxproj</span>
+    <span class="d2h-tag d2h-moved d2h-moved-tag">RENAMED</span></span>
+        <label class="d2h-file-collapse">
+            <input class="d2h-file-collapse-input" type="checkbox" name="viewed" value="viewed">
+            Viewed
+        </label>
+    </div>
+    <div class="d2h-file-diff">
+        <div class="d2h-code-wrapper">
+            <table class="d2h-diff-table">
+                <tbody class="d2h-diff-tbody">
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">260</div>
+                        <div class="line-num2">299</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">/* End PBXSourcesBuildPhase section */</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">275</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452EA28132EA6003BD2A5</del> /* Debug */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">314</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D5712812903700906D21</ins> /* Debug */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">276</div>
+                        <div class="line-num2">315</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			isa = XCBuildConfiguration;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">277</div>
+                        <div class="line-num2">316</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			buildSettings = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">317</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">278</div>
+                        <div class="line-num2">318</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				ALWAYS_SEARCH_USER_PATHS = NO;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">319</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">279</div>
+                        <div class="line-num2">320</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_ANALYZER_NONNULL = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">280</div>
+                        <div class="line-num2">321</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">281</div>
+                        <div class="line-num2">322</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -304,11 +345,13 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">304</div>
+                        <div class="line-num2">345</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">305</div>
+                        <div class="line-num2">346</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_WARN_UNREACHABLE_CODE = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">306</div>
+                        <div class="line-num2">347</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">307</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				<del>CODE_SIGN_STYLE</del> = <del>Automatic</del>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">348</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				<ins>CODE_SIGN_IDENTITY</ins> = <ins>"Apple Development"</ins>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">349</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				CODE_SIGN_STYLE = Manual;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">308</div>
+                        <div class="line-num2">350</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				COPY_PHASE_STRIP = NO;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">309</div>
+                        <div class="line-num2">351</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CURRENT_PROJECT_VERSION = 1;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">310</div>
+                        <div class="line-num2">352</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DEBUG_INFORMATION_FORMAT = dwarf;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">311</div>
+                        <div class="line-num2">353</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DEFINES_MODULE = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">354</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				DEVELOPMENT_TEAM = "";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">312</div>
+                        <div class="line-num2">355</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DYLIB_COMPATIBILITY_VERSION = 1;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">313</div>
+                        <div class="line-num2">356</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DYLIB_CURRENT_VERSION = 1;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">314</div>
+                        <div class="line-num2">357</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DYLIB_INSTALL_NAME_BASE = "@rpath";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -337,14 +380,28 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">337</div>
+                        <div class="line-num2">380</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">					"@executable_path/Frameworks",</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">338</div>
+                        <div class="line-num2">381</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">					"@loader_path/Frameworks",</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">339</div>
+                        <div class="line-num2">382</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">383</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				LIBRARY_SEARCH_PATHS = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">384</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">					"$(inherited)",</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">385</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">					"$(PROJECT_DIR)",</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">386</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">387</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios/debug";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">388</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/debug";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">389</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios-sim/debug";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">390</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-darwin/debug";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">391</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-darwin/debug";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">392</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				MACH_O_TYPE = staticlib;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">340</div>
+                        <div class="line-num2">393</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				MARKETING_VERSION = 1.0;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">341</div>
+                        <div class="line-num2">394</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">342</div>
+                        <div class="line-num2">395</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				MTL_FAST_MATH = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">343</div>
+                        <div class="line-num2">396</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				ONLY_ACTIVE_ARCH = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">344</div>
+                        <div class="line-num2">397</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				PRODUCT_BUNDLE_IDENTIFIER = "org.maplibre.maplibre-rs";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">345</div>
+                        <div class="line-num2">398</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">399</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				PROVISIONING_PROFILE_SPECIFIER = "";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">400</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">346</div>
+                        <div class="line-num2">401</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				SDKROOT = iphoneos;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">347</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				SKIP_INSTALL = <del>YES</del>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">402</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				SKIP_INSTALL = <ins>NO</ins>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">403</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				SUPPORTED_PLATFORMS = "watchsimulator watchos macosx iphonesimulator iphoneos driverkit appletvsimulator appletvos";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">404</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				SUPPORTS_MACCATALYST = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">348</div>
+                        <div class="line-num2">405</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">349</div>
+                        <div class="line-num2">406</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				SWIFT_EMIT_LOC_STRINGS = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">350</div>
+                        <div class="line-num2">407</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				SWIFT_OPTIMIZATION_LEVEL = "-Onone";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -355,10 +412,12 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">355</div>
+                        <div class="line-num2">412</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">356</div>
+                        <div class="line-num2">413</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			name = Debug;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">357</div>
+                        <div class="line-num2">414</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">		};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">358</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452EB28132EA6003BD2A5</del> /* Release */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">415</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D5722812903700906D21</ins> /* Release */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">359</div>
+                        <div class="line-num2">416</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			isa = XCBuildConfiguration;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">360</div>
+                        <div class="line-num2">417</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			buildSettings = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">418</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">361</div>
+                        <div class="line-num2">419</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				ALWAYS_SEARCH_USER_PATHS = NO;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">420</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">362</div>
+                        <div class="line-num2">421</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_ANALYZER_NONNULL = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">363</div>
+                        <div class="line-num2">422</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">364</div>
+                        <div class="line-num2">423</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -387,11 +446,13 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">387</div>
+                        <div class="line-num2">446</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">388</div>
+                        <div class="line-num2">447</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_WARN_UNREACHABLE_CODE = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">389</div>
+                        <div class="line-num2">448</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">390</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				<del>CODE_SIGN_STYLE</del> = <del>Automatic</del>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">449</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				<ins>CODE_SIGN_IDENTITY</ins> = <ins>"Apple Development"</ins>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">450</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				CODE_SIGN_STYLE = Manual;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">391</div>
+                        <div class="line-num2">451</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				COPY_PHASE_STRIP = NO;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">392</div>
+                        <div class="line-num2">452</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				CURRENT_PROJECT_VERSION = 1;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">393</div>
+                        <div class="line-num2">453</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">394</div>
+                        <div class="line-num2">454</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DEFINES_MODULE = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">455</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				DEVELOPMENT_TEAM = "";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">395</div>
+                        <div class="line-num2">456</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DYLIB_COMPATIBILITY_VERSION = 1;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">396</div>
+                        <div class="line-num2">457</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DYLIB_CURRENT_VERSION = 1;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">397</div>
+                        <div class="line-num2">458</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				DYLIB_INSTALL_NAME_BASE = "@rpath";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -414,13 +475,28 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">414</div>
+                        <div class="line-num2">475</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">					"@executable_path/Frameworks",</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">415</div>
+                        <div class="line-num2">476</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">					"@loader_path/Frameworks",</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">416</div>
+                        <div class="line-num2">477</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">478</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				LIBRARY_SEARCH_PATHS = (</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">479</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">					"$(inherited)",</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">480</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">					"$(PROJECT_DIR)",</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">481</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				);</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">482</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios/release";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">483</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-ios/release";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">484</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-ios-sim/release";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">485</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=arm64]" = "$(PROJECT_DIR)/libs/aarch64-apple-darwin/release";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">486</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"LIBRARY_SEARCH_PATHS[sdk=macosx*][arch=x86_64]" = "$(PROJECT_DIR)/libs/x86_64-apple-darwin/release";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">487</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				MACH_O_TYPE = staticlib;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">417</div>
+                        <div class="line-num2">488</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				MARKETING_VERSION = 1.0;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">418</div>
+                        <div class="line-num2">489</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				MTL_ENABLE_DEBUG_INFO = NO;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">419</div>
+                        <div class="line-num2">490</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				MTL_FAST_MATH = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">491</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				ONLY_ACTIVE_ARCH = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">420</div>
+                        <div class="line-num2">492</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				PRODUCT_BUNDLE_IDENTIFIER = "org.maplibre.maplibre-rs";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">421</div>
+                        <div class="line-num2">493</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">494</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				PROVISIONING_PROFILE_SPECIFIER = "";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">495</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">422</div>
+                        <div class="line-num2">496</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				SDKROOT = iphoneos;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">423</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				SKIP_INSTALL = <del>YES</del>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">497</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				SKIP_INSTALL = <ins>NO</ins>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">498</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				SUPPORTED_PLATFORMS = "watchsimulator watchos macosx iphonesimulator iphoneos driverkit appletvsimulator appletvos";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">499</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				SUPPORTS_MACCATALYST = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">424</div>
+                        <div class="line-num2">500</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				SWIFT_COMPILATION_MODE = wholemodule;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">425</div>
+                        <div class="line-num2">501</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				SWIFT_EMIT_LOC_STRINGS = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">426</div>
+                        <div class="line-num2">502</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				SWIFT_OPTIMIZATION_LEVEL = "-O";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -432,7 +508,7 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">432</div>
+                        <div class="line-num2">508</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">433</div>
+                        <div class="line-num2">509</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			name = Release;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">510</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">		};</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<p>Explanations for the settings:</p>
+<ul>
+<li><code>BUILD_LIBRARY_FOR_DISTRIBUTION</code>: Define that this is a library (effect unknown to me)</li>
+<li><code>CODE_SIGN_STYLE</code>: The framework is not signed</li>
+<li><code>DEVELOPMENT_TEAM</code>: No development team is set</li>
+<li><code>LIBRARY_SEARCH_PATHS[sdk=x][arch=y]</code>: We set the path for the <code>libmaplibre_apple.a</code> lies</li>
+<li><code>MACH_O_TYPE</code> / <code>SKIP_INSTALL</code>: If this is not set to <code>staticlib</code> and <code>NO</code>, then the <code>libmaplibre_apple.a</code> binary is not included in the final framework xcarchive.</li>
+<li><code>SUPPORTED_PLATFORMS</code>: Explicitly says that this library works on any platform. </li>
+<li><code>SUPPORTS_MACCATALYST</code>: Explicitly says that this library works on Mac Catalyst.</li>
+</ul>
+<p>The same settings are done for Release and Debug.</p>
+<h2 id="xcframework-packaging"><a class="header" href="#xcframework-packaging">xcframework packaging</a></h2>
+<p>Creating a xcframework is usually quite straight forward. Just execute the following:</p>
+<pre><code class="language-bash">xargs xcodebuild -create-xcframework -framework ./a -framework ./b -output out.xcframework
+</code></pre>
+<p>Unfortunately, it is not possible to bundle some frameworks together like:</p>
+<ul>
+<li>macOS-arm64 and macOS-x86_64</li>
+</ul>
+<p>In order to package these architectures and platforms together a fat binary needs to be created using the <code>lipo</code> tool.
+This means from two frameworks we create a unified framework with a fat binary.
+There are two important steps:</p>
+<ol>
+<li>Create a fat binary using <code>lipo -create binA binB -output binfat</code></li>
+<li>Copy for example the arm64 framework and add the <code>.swiftmodule</code> definitions from the x86_64 framework</li>
+</ol>
+<h2 id="single-uiapplication"><a class="header" href="#single-uiapplication">Single UIApplication</a></h2>
+<p>Right now <code>winit</code> only allows the usage of a <code>UIApplication</code>. This means the application needs to run in fullscreen.
+<a href="https://github.com/maplibre/maplibre-rs/issues/28">Tracking Issue</a></p>
+<h2 id="example-app"><a class="header" href="#example-app">Example App</a></h2>
+<p>The following settings are important for the example application within the XCode project.</p>
+<h3 id="info-plist-for-applications"><a class="header" href="#info-plist-for-applications">Info Plist for Applications</a></h3>
+<div class="d2h-file-wrapper" data-lang="pbxproj">
+    <div class="d2h-file-header">
+    <span class="d2h-file-name-wrapper">
+    <svg aria-hidden="true" class="d2h-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12">
+        <path d="M6 5H2v-1h4v1zM2 8h7v-1H2v1z m0 2h7v-1H2v1z m0 2h7v-1H2v1z m10-7.5v9.5c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V2c0-0.55 0.45-1 1-1h7.5l3.5 3.5z m-1 0.5L8 2H1v12h10V5z"></path>
+    </svg>    <span class="d2h-file-name">{diff/maplibre-rs → xcode}/maplibre-rs.xcodeproj/project.pbxproj</span>
+    <span class="d2h-tag d2h-moved d2h-moved-tag">RENAMED</span></span>
+        <label class="d2h-file-collapse">
+            <input class="d2h-file-collapse-input" type="checkbox" name="viewed" value="viewed">
+            Viewed
+        </label>
+    </div>
+    <div class="d2h-file-diff">
+        <div class="d2h-code-wrapper">
+            <table class="d2h-diff-table">
+                <tbody class="d2h-diff-tbody">
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">435</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE4530328132EB5003BD2A5</del> /* Debug */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">511</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D58D281290F800906D21</ins> /* Debug */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">436</div>
+                        <div class="line-num2">512</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			isa = XCBuildConfiguration;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">437</div>
+                        <div class="line-num2">513</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			buildSettings = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">438</div>
+                        <div class="line-num2">514</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				ALWAYS_SEARCH_USER_PATHS = NO;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -489,7 +565,7 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">489</div>
+                        <div class="line-num2">565</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				GCC_WARN_UNUSED_FUNCTION = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">490</div>
+                        <div class="line-num2">566</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				GCC_WARN_UNUSED_VARIABLE = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">491</div>
+                        <div class="line-num2">567</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				GENERATE_INFOPLIST_FILE = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">492</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				<del>INFOPLIST_KEY_UIApplicationSceneManifest_Generation</del> = <del>YES</del>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">568</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				<ins>INFOPLIST_FILE</ins> = <ins>"example--iOS--Info.plist"</ins>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">493</div>
+                        <div class="line-num2">569</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">494</div>
+                        <div class="line-num2">570</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				INFOPLIST_KEY_UILaunchScreen_Generation = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">495</div>
+                        <div class="line-num2">571</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -514,7 +590,7 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">514</div>
+                        <div class="line-num2">590</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">515</div>
+                        <div class="line-num2">591</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			name = Debug;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">516</div>
+                        <div class="line-num2">592</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">		};</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">517</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE4530428132EB5003BD2A5</del> /* Release */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">593</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D58E281290F800906D21</ins> /* Release */ = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">518</div>
+                        <div class="line-num2">594</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			isa = XCBuildConfiguration;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">519</div>
+                        <div class="line-num2">595</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">			buildSettings = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">520</div>
+                        <div class="line-num2">596</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				ALWAYS_SEARCH_USER_PATHS = NO;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -565,7 +641,7 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">565</div>
+                        <div class="line-num2">641</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				GCC_WARN_UNUSED_FUNCTION = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">566</div>
+                        <div class="line-num2">642</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				GCC_WARN_UNUSED_VARIABLE = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">567</div>
+                        <div class="line-num2">643</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				GENERATE_INFOPLIST_FILE = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">568</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">				<del>INFOPLIST_KEY_UIApplicationSceneManifest_Generation</del> = <del>YES</del>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">644</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">				<ins>INFOPLIST_FILE</ins> = <ins>"example--iOS--Info.plist"</ins>;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">569</div>
+                        <div class="line-num2">645</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">570</div>
+                        <div class="line-num2">646</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				INFOPLIST_KEY_UILaunchScreen_Generation = YES;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">571</div>
+                        <div class="line-num2">647</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -590,7 +666,7 @@</div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<ul>
+<li>The <code>INFOPLIST_KEY_UIApplicationSceneManifest_Generation</code> needs to be unset. Else the application screen is just black.</li>
+</ul>
+<h3 id="files--assets"><a class="header" href="#files--assets">Files &amp; Assets</a></h3>
+<div class="d2h-file-wrapper" data-lang="pbxproj">
+    <div class="d2h-file-header">
+    <span class="d2h-file-name-wrapper">
+    <svg aria-hidden="true" class="d2h-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12">
+        <path d="M6 5H2v-1h4v1zM2 8h7v-1H2v1z m0 2h7v-1H2v1z m0 2h7v-1H2v1z m10-7.5v9.5c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V2c0-0.55 0.45-1 1-1h7.5l3.5 3.5z m-1 0.5L8 2H1v12h10V5z"></path>
+    </svg>    <span class="d2h-file-name">{diff/maplibre-rs → xcode}/maplibre-rs.xcodeproj/project.pbxproj</span>
+    <span class="d2h-tag d2h-moved d2h-moved-tag">RENAMED</span></span>
+        <label class="d2h-file-collapse">
+            <input class="d2h-file-collapse-input" type="checkbox" name="viewed" value="viewed">
+            Viewed
+        </label>
+    </div>
+    <div class="d2h-file-diff">
+        <div class="d2h-code-wrapper">
+            <table class="d2h-diff-table">
+                <tbody class="d2h-diff-tbody">
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -7,93 +7,110 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">7</div>
+                        <div class="line-num2">7</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">	objects = {</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">8</div>
+                        <div class="line-num2">8</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn"><br></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">9</div>
+                        <div class="line-num2">9</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">/* Begin PBXBuildFile section */</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">10</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452E828132EA6003BD2A5</del> /* maplibre_rs.h in Headers */ = {isa = PBXBuildFile; fileRef = <del>0BE452E728132EA6003BD2A5</del> /* maplibre_rs.h */; settings = {ATTRIBUTES = (Public, ); }; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">11</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452FC28132EB5003BD2A5</del> /* exampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = <del>0BE452ED28132EB5003BD2A5</del> /* exampleApp.swift */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">12</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452FD28132EB5003BD2A5</del> /* exampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = <del>0BE452ED28132EB5003BD2A5</del> /* exampleApp.swift */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">13</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452FE28132EB5003BD2A5</del> /* <del>ContentView</del>.<del>swift</del> in <del>Sources</del> */ = {isa = PBXBuildFile; fileRef = <del>0BE452EE28132EB5003BD2A5</del> /* <del>ContentView</del>.<del>swift</del> */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">14</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452FF28132EB5003BD2A5</del> /* <del>ContentView</del>.<del>swift</del> in <del>Sources</del> */ = {isa = PBXBuildFile; fileRef = <del>0BE452EE28132EB5003BD2A5</del> /* <del>ContentView</del>.<del>swift</del> */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">15</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE4530028132EB5003BD2A5</del> /* <del>Assets</del>.<del>xcassets</del> in <del>Resources</del> */ = {isa = PBXBuildFile; fileRef = <del>0BE452EF28132EB5003BD2A5</del> /* <del>Assets</del>.<del>xcassets</del> */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">16</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE4530128132EB5003BD2A5</del> /* <del>Assets</del>.<del>xcassets</del> in <del>Resources</del> */ = {isa = PBXBuildFile; fileRef = <del>0BE452EF28132EB5003BD2A5</del> /* <del>Assets</del>.<del>xcassets</del> */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">10</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D56F2812903700906D21</ins> /* maplibre_rs.h in Headers */ = {isa = PBXBuildFile; fileRef = <ins>0B85D56E2812903700906D21</ins> /* maplibre_rs.h */; settings = {ATTRIBUTES = (Public, ); }; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">11</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D586281290F800906D21</ins> /* exampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = <ins>0B85D577281290F800906D21</ins> /* exampleApp.swift */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">12</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D587281290F800906D21</ins> /* exampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = <ins>0B85D577281290F800906D21</ins> /* exampleApp.swift */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">13</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D58A281290F800906D21</ins> /* <ins>Assets</ins>.<ins>xcassets</ins> in <ins>Resources</ins> */ = {isa = PBXBuildFile; fileRef = <ins>0B85D579281290F800906D21</ins> /* <ins>Assets</ins>.<ins>xcassets</ins> */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">14</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D58B281290F800906D21</ins> /* <ins>Assets</ins>.<ins>xcassets</ins> in <ins>Resources</ins> */ = {isa = PBXBuildFile; fileRef = <ins>0B85D579281290F800906D21</ins> /* <ins>Assets</ins>.<ins>xcassets</ins> */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">15</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D5952812913700906D21</ins> /* <ins>maplibre</ins>.<ins>swift</ins> in <ins>Sources</ins> */ = {isa = PBXBuildFile; fileRef = <ins>0B85D5942812913700906D21</ins> /* <ins>maplibre</ins>.<ins>swift</ins> */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">16</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D596281291A400906D21</ins> /* <ins>maplibre_rs</ins>.<ins>framework</ins> in <ins>Frameworks</ins> */ = {isa = PBXBuildFile; fileRef = <ins>0B85D56B2812903700906D21</ins> /* <ins>maplibre_rs</ins>.<ins>framework</ins> */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">17</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D56B2812903700906D21 /* maplibre_rs.framework */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">18</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		0B85D5A42812991100906D21 /* libmaplibre_apple.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D5A32812987B00906D21 /* libmaplibre_apple.a */; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">17</div>
+                        <div class="line-num2">19</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">/* End PBXBuildFile section */</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">18</div>
+                        <div class="line-num2">20</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn"><br></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx">
+                        <div class="line-num1">19</div>
+                        <div class="line-num2">21</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">/* Begin PBXFileReference section */</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">20</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452E428132EA6003BD2A5</del> /* maplibre_rs.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = maplibre_rs.framework; sourceTree = BUILT_PRODUCTS_DIR; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">21</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452E728132EA6003BD2A5</del> /* maplibre_rs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = maplibre_rs.h; sourceTree = "&lt;group&gt;"; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">22</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452ED28132EB5003BD2A5</del> /* exampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = exampleApp.swift; sourceTree = "&lt;group&gt;"; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">23</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452EE28132EB5003BD2A5</del> /* <del>ContentView</del>.<del>swift</del> */ = {isa = PBXFileReference; lastKnownFileType = <del>sourcecode</del>.<del>swift</del>; path = <del>ContentView</del>.<del>swift</del>; sourceTree = "&lt;group&gt;"; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">24</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452EF28132EB5003BD2A5</del> /* <del>Assets</del>.<del>xcassets</del> */ = {isa = PBXFileReference; <del>lastKnownFileType</del> = <del>folder</del>.<del>assetcatalog</del>; path = <del>Assets</del>.<del>xcassets</del>; sourceTree = <del>"&lt;group&gt;"</del>; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">25</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452F428132EB5003BD2A5</del> /* example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = example.app; sourceTree = BUILT_PRODUCTS_DIR; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">26</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452F928132EB5003BD2A5</del> /* <del>example</del>.<del>app</del> */ = {isa = PBXFileReference; <del>explicitFileType</del> = <del>wrapper</del>.<del>application</del>; <del>includeInIndex = 0; </del>path = <del>example</del>.<del>app</del>; sourceTree = <del>BUILT_PRODUCTS_DIR</del>; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-del d2h-change">
+                        <div class="line-num1">27</div>
+                        <div class="line-num2"></div>
+                    </td>
+                    <td class="d2h-del d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">-</span>
+                            <span class="d2h-code-line-ctn">		<del>0BE452FB28132EB5003BD2A5</del> /* <del>macOS</del>.<del>entitlements</del> */ = {isa = PBXFileReference; lastKnownFileType = <del>text</del>.<del>plist.entitlements</del>; path = <del>macOS</del>.<del>entitlements</del>; sourceTree = "&lt;group&gt;"; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">22</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D56B2812903700906D21</ins> /* maplibre_rs.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = maplibre_rs.framework; sourceTree = BUILT_PRODUCTS_DIR; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">23</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D56E2812903700906D21</ins> /* maplibre_rs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = maplibre_rs.h; sourceTree = "&lt;group&gt;"; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">24</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D577281290F800906D21</ins> /* exampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = exampleApp.swift; sourceTree = "&lt;group&gt;"; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">25</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D579281290F800906D21</ins> /* <ins>Assets</ins>.<ins>xcassets</ins> */ = {isa = PBXFileReference; lastKnownFileType = <ins>folder</ins>.<ins>assetcatalog</ins>; path = <ins>Assets</ins>.<ins>xcassets</ins>; sourceTree = "&lt;group&gt;"; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">26</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D57E281290F800906D21</ins> /* <ins>example</ins>.<ins>app</ins> */ = {isa = PBXFileReference; <ins>explicitFileType</ins> = <ins>wrapper</ins>.<ins>application</ins>; <ins>includeInIndex = 0; </ins>path = <ins>example</ins>.<ins>app</ins>; sourceTree = <ins>BUILT_PRODUCTS_DIR</ins>; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">27</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D583281290F800906D21</ins> /* example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = example.app; sourceTree = BUILT_PRODUCTS_DIR; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">28</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D585281290F800906D21</ins> /* <ins>macOS</ins>.<ins>entitlements</ins> */ = {isa = PBXFileReference; <ins>lastKnownFileType</ins> = <ins>text</ins>.<ins>plist.entitlements</ins>; path = <ins>macOS</ins>.<ins>entitlements</ins>; sourceTree = <ins>"&lt;group&gt;"</ins>; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins d2h-change">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">29</div>
+                    </td>
+                    <td class="d2h-ins d2h-change">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		<ins>0B85D5942812913700906D21</ins> /* <ins>maplibre</ins>.<ins>swift</ins> */ = {isa = PBXFileReference; lastKnownFileType = <ins>sourcecode</ins>.<ins>swift</ins>; path = <ins>maplibre</ins>.<ins>swift</ins>; sourceTree = "&lt;group&gt;"; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">30</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		0B85D5A32812987B00906D21 /* libmaplibre_apple.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmaplibre_apple.a; sourceTree = SOURCE_ROOT; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">31</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">		0BE452D62812EEA8003BD2A5 /* example--iOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "example--iOS--Info.plist"; sourceTree = "&lt;group&gt;"; };</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-cntx d2h-info">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">32</div>
+                    </td>
+                    <td class="d2h-cntx">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">&nbsp;</span>
+                            <span class="d2h-code-line-ctn">/* End PBXFileReference section */</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<ul>
+<li>The example/demo application within the XCode project references the <code>maplibre_rs.framework</code>. Some default files have
+been removed.</li>
+</ul>
+<h3 id="macos-entitlements"><a class="header" href="#macos-entitlements">MacOS Entitlements</a></h3>
+<div id="d2h-648583" class="d2h-file-wrapper" data-lang="entitlements">
+    <div class="d2h-file-header">
+    <span class="d2h-file-name-wrapper">
+    <svg aria-hidden="true" class="d2h-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12">
+        <path d="M6 5H2v-1h4v1zM2 8h7v-1H2v1z m0 2h7v-1H2v1z m0 2h7v-1H2v1z m10-7.5v9.5c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V2c0-0.55 0.45-1 1-1h7.5l3.5 3.5z m-1 0.5L8 2H1v12h10V5z"></path>
+    </svg>    <span class="d2h-file-name">xcode/macOS/macOS.entitlements</span>
+    <span class="d2h-tag d2h-added d2h-added-tag">ADDED</span></span>
+        <label class="d2h-file-collapse">
+            <input class="d2h-file-collapse-input" type="checkbox" name="viewed" value="viewed">
+            Viewed
+        </label>
+    </div>
+    <div class="d2h-file-diff">
+        <div class="d2h-code-wrapper">
+            <table class="d2h-diff-table">
+                <tbody class="d2h-diff-tbody">
+                <tr>
+                    <td class="d2h-code-linenumber d2h-info"></td>
+                    <td class="d2h-info">
+                        <div class="d2h-code-line">@@ -0,0 +1,12 @@</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">1</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">2</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">3</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">&lt;plist version="1.0"&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">4</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">&lt;dict&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">5</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">	&lt;key&gt;com.apple.security.app-sandbox&lt;/key&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">6</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">	&lt;true/&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">7</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">	&lt;key&gt;com.apple.security.files.user-selected.read-only&lt;/key&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">8</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">	&lt;true/&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">9</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">	&lt;key&gt;com.apple.security.network.client&lt;/key&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">10</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">	&lt;true/&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">11</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">&lt;/dict&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="d2h-code-linenumber d2h-ins">
+                        <div class="line-num1"></div>
+                        <div class="line-num2">12</div>
+                    </td>
+                    <td class="d2h-ins">
+                        <div class="d2h-code-line">
+                            <span class="d2h-code-line-prefix">+</span>
+                            <span class="d2h-code-line-ctn">&lt;/plist&gt;</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<ul>
+<li>On macOS one needs to allow network access via <code>com.apple.security.network.client</code></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../development-documents/library-packaging.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../../development-documents/library-packaging/android.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../development-documents/library-packaging.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../../development-documents/library-packaging/android.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

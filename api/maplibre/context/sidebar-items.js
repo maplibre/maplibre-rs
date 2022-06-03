@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MapContext","Stores the context of the map."],["ViewState","Stores the camera configuration."]]});

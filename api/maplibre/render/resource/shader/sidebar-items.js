@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["FragmentState","Describes the fragment process in a render pipeline."],["VertexBufferLayout","Describes how the vertex buffer is interpreted."],["VertexState",""]]});

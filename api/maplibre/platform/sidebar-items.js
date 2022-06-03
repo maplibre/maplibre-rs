@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["COLOR_TEXTURE_FORMAT","For Vulkan/OpenGL"],["MIN_BUFFER_SIZE","Minimum WebGPU buffer size"]],"fn":[["run_multithreaded",""]],"mod":[["http_client","Http client for non-web targets."],["noweb","Module which is used target platform is not web related."],["schedule_method","Scheduler for non-web targets."]]});

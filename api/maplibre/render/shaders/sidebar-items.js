@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ShaderCamera",""],["ShaderFeatureStyle",""],["ShaderGlobals",""],["ShaderLayerMetadata",""],["ShaderTileMetadata",""],["ShaderVertex",""],["TileMaskShader",""],["TileShader",""]],"trait":[["Shader",""]],"type":[["Mat4x4f32",""],["Vec2f32",""],["Vec3f32",""],["Vec4f32",""]]});

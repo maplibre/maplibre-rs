@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["TrackedRenderPass","A [`RenderPass`], which tracks the current pipeline state to ensure all draw calls are valid. It is used to set the current [`RenderPipeline`], `BindGroups` and buffers. After all requirements are specified, draw calls can be issued."]]});

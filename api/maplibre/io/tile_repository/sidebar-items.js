@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["StoredLayer","A layer which is stored for future use."]],"struct":[["StoredTile","Stores multiple StoredLayers."],["TileRepository","Stores and provides access to a quad tree of cached tiles with world tile coords."]]});

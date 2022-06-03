@@ -1,0 +1,1 @@
+initSidebarItems({"static":[["TILES",""]],"struct":[["StaticTileFetcher","Load PBF files which were statically embedded in the `build.rs`"]]});

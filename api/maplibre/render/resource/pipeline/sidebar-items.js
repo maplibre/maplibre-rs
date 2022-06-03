@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["RenderPipelineDescriptor",""]],"trait":[["RenderPipeline",""]]});

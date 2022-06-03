@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ZeroTessellator","Build tessellations with vectors."]]});
