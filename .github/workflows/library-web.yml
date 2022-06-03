@@ -40,7 +40,7 @@ jobs:
           just web-test "web-webgl"
       - uses: actions/upload-artifact@v2
         with:
-          name: webgpu-demo
+          name: webgl-demo
           path: web/demo/dist/
 
   library-webgpu:
@@ -70,7 +70,7 @@ jobs:
           just web-test ""
       - uses: actions/upload-artifact@v2
         with:
-          name: webgl-demo
+          name: webgpu-demo
           path: web/demo/dist/
 
   deploy:
