@@ -24,14 +24,14 @@
 
 <div align="center">
   <h3>
-    <a href="https://maxammann.org/maplibre-rs/webgl">
+    <a href="https://maplibre-rs-demos.pages.dev/webgl">
       WebGL Demo
     </a>
     <span> | </span>
-    <a href="https://maxammann.org/maplibre-rs/docs">
+    <a href="https://maplibre.org/maplibre-rs/docs/book/">
       Book
     </a> | </span>
-    <a href="https://maxammann.org/maplibre-rs/api-docs/maplibre/">
+    <a href="https://maplibre.org/maplibre-rs/docs/api/maplibre/">
       API
     </a> | </span>
     <a href="https://matrix.to/#/#maplibre:matrix.org">
@@ -111,7 +111,7 @@ cargo run -p maplibre-demo
 ```
 
 More information about building for different platforms can be
-found [here](https://maxammann.org/maplibre-rs/docs/development-guide/building.html).
+found [here](https://maplibre.org/maplibre-rs/docs/book/development-guide/building.html).
 
 ## Rust Setup
 
@@ -129,7 +129,7 @@ dependency.
 cargo doc --open
 ```
 
-You can also view the up-to-date documentation [here](https://maxammann.org/maplibre-rs/docs/).
+You can also view the up-to-date documentation [here](https://maplibre.org/maplibre-rs/docs/api/maplibre/).
 
 ## Acknowledgements
 

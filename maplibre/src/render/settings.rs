@@ -4,6 +4,10 @@ use crate::platform::COLOR_TEXTURE_FORMAT;
 use std::borrow::Cow;
 
 pub use wgpu::Backends;
+pub use wgpu::Features;
+pub use wgpu::Limits;
+pub use wgpu::PowerPreference;
+pub use wgpu::TextureFormat;
 
 /// Provides configuration for renderer initialization. Use [`Device::features`](crate::renderer::Device::features),
 /// [`Device::limits`](crate::renderer::Device::limits), and the [`WgpuAdapterInfo`](crate::render_resource::WgpuAdapterInfo)
@@ -11,17 +15,17 @@ pub use wgpu::Backends;
 #[derive(Clone)]
 pub struct WgpuSettings {
     pub device_label: Option<Cow<'static, str>>,
-    pub backends: Option<wgpu::Backends>,
-    pub power_preference: wgpu::PowerPreference,
+    pub backends: Option<Backends>,
+    pub power_preference: PowerPreference,
     /// The features to ensure are enabled regardless of what the adapter/backend supports.
     /// Setting these explicitly may cause renderer initialization to fail.
-    pub features: wgpu::Features,
+    pub features: Features,
     /// The features to ensure are disabled regardless of what the adapter/backend supports
-    pub disabled_features: Option<wgpu::Features>,
+    pub disabled_features: Option<Features>,
     /// The imposed limits.
-    pub limits: wgpu::Limits,
+    pub limits: Limits,
     /// The constraints on limits allowed regardless of what the adapter/backend supports
-    pub constrained_limits: Option<wgpu::Limits>,
+    pub constrained_limits: Option<Limits>,
 
     /// Whether a trace is recorded an stored in the current working directory
     pub record_trace: bool,
@@ -32,12 +36,12 @@ impl Default for WgpuSettings {
         let backends = Some(wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all()));
 
         let limits = if cfg!(feature = "web-webgl") {
-            wgpu::Limits {
+            Limits {
                 max_texture_dimension_2d: 4096,
-                ..wgpu::Limits::downlevel_webgl2_defaults()
+                ..Limits::downlevel_webgl2_defaults()
             }
         } else if cfg!(target_os = "android") {
-            wgpu::Limits {
+            Limits {
                 max_storage_textures_per_shader_stage: 4,
                 max_compute_workgroups_per_dimension: 0,
                 max_compute_workgroup_size_z: 0,
@@ -45,19 +49,19 @@ impl Default for WgpuSettings {
                 max_compute_workgroup_size_x: 0,
                 max_compute_workgroup_storage_size: 0,
                 max_compute_invocations_per_workgroup: 0,
-                ..wgpu::Limits::downlevel_defaults()
+                ..Limits::downlevel_defaults()
             }
         } else {
-            wgpu::Limits {
-                ..wgpu::Limits::default()
+            Limits {
+                ..Limits::default()
             }
         };
 
         Self {
             device_label: Default::default(),
             backends,
-            power_preference: wgpu::PowerPreference::HighPerformance,
-            features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
+            power_preference: PowerPreference::HighPerformance,
+            features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
             disabled_features: None,
             limits,
             constrained_limits: None,
@@ -101,8 +105,7 @@ impl Default for Msaa {
 #[derive(Clone)]
 pub struct RendererSettings {
     pub msaa: Msaa,
-    pub texture_format: wgpu::TextureFormat,
-    pub surface_type: SurfaceType,
+    pub texture_format: TextureFormat,
 }
 
 impl Default for RendererSettings {
@@ -110,7 +113,6 @@ impl Default for RendererSettings {
         Self {
             msaa: Msaa::default(),
             texture_format: COLOR_TEXTURE_FORMAT,
-            surface_type: SurfaceType::Headed,
         }
     }
 }

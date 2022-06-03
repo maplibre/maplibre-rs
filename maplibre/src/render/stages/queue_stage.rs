@@ -2,8 +2,7 @@
 
 use crate::context::MapContext;
 use crate::coords::{ViewRegion, Zoom};
-use crate::io::tile_cache::TileCache;
-use crate::io::LayerTessellateMessage;
+use crate::io::tile_repository::TileRepository;
 use crate::render::camera::ViewProjection;
 use crate::render::resource::IndexEntry;
 use crate::render::shaders::{
@@ -23,15 +22,27 @@ impl Stage for QueueStage {
     fn run(
         &mut self,
         MapContext {
-            renderer: Renderer { state, .. },
+            view_state,
+            renderer:
+                Renderer {
+                    state:
+                        RenderState {
+                            mask_phase,
+                            tile_phase,
+                            tile_view_pattern,
+                            buffer_pool,
+                            ..
+                        },
+                    ..
+                },
             ..
         }: &mut MapContext,
     ) {
-        state.mask_phase.items.clear();
-        state.tile_phase.items.clear();
+        mask_phase.items.clear();
+        tile_phase.items.clear();
 
         if let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (&state.tile_view_pattern, &state.buffer_pool)
+            (tile_view_pattern, &buffer_pool)
         {
             let index = buffer_pool.index();
 
@@ -43,7 +54,7 @@ impl Stage for QueueStage {
                 let shape_to_render = fallback.as_ref().unwrap_or(shape);
 
                 // Draw mask
-                state.mask_phase.add(tile_in_view.clone());
+                mask_phase.add(tile_in_view.clone());
 
                 if let Some(entries) = index.get_layers(&shape_to_render.coords) {
                     let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
@@ -51,9 +62,7 @@ impl Stage for QueueStage {
 
                     for entry in layers_to_render {
                         // Draw tile
-                        state
-                            .tile_phase
-                            .add((entry.clone(), shape_to_render.clone()))
+                        tile_phase.add((entry.clone(), shape_to_render.clone()))
                     }
                 } else {
                     tracing::trace!("No layers found at {}", &shape_to_render.coords);
