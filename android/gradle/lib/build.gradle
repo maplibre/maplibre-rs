@@ -31,7 +31,8 @@ android {
 
 cargo {
     module = "../../"
-    targets = ["arm64", "x86_64"]
+    // targets = ["arm64", "x86_64"]
+    targets = ["x86_64"]
     libname = "maplibre_android"
     targetDirectory = "${module}/../target"
     profile = "debug"
