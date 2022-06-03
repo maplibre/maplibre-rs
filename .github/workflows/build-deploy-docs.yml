@@ -48,19 +48,20 @@ jobs:
     name: Deploy
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v2
+      - name: Download api-docs
+        uses: actions/download-artifact@v2
         with:
           name: api-docs
-      - uses: actions/download-artifact@v2
+          path: artifacts/api
+      - name: Download book
+        uses: actions/download-artifact@v2
         with:
           name: book
-      - uses: ./.github/actions/deploy
+          path: artifacts/book
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
         with:
-          source: .
-          destination: api-docs
-          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
-      - uses: ./.github/actions/deploy
-        with:
-          source: .
-          destination: docs
-          key: ${{ secrets.SSH_KEY_MAXAMMANN_ORG }}
+          branch: gh-pages
+          folder: artifacts
+          target-folder: docs
