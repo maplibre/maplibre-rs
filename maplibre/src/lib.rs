@@ -18,7 +18,7 @@
 
 use crate::io::scheduler::{ScheduleMethod, Scheduler};
 use crate::io::source_client::HttpClient;
-use crate::map_schedule::{InteractiveMapSchedule, SimpleMapSchedule};
+use crate::map_schedule::InteractiveMapSchedule;
 use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::{RenderState, Renderer};
 use crate::style::Style;
@@ -32,6 +32,7 @@ pub mod io;
 pub mod map_schedule;
 pub mod platform;
 // Exposed because of camera
+pub mod headless;
 pub mod render;
 pub mod style;
 pub mod window;
@@ -106,27 +107,6 @@ where
     }
 }
 
-pub struct HeadlessMap<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    map_schedule: SimpleMapSchedule<MWC, SM, HC>,
-    window: MWC::MapWindow,
-}
-
-impl<MWC, SM, HC> HeadlessMap<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    pub fn map_schedule_mut(&mut self) -> &mut SimpleMapSchedule<MWC, SM, HC> {
-        &mut self.map_schedule
-    }
-}
-
 /// Stores the map configuration before the map's state has been fully initialized.
 pub struct UninitializedMap<MWC, SM, HC>
 where
@@ -184,7 +164,8 @@ where
         }
     }
 
-    pub async fn initialize_headless(self) -> HeadlessMap<MWC, SM, HC> {
+    #[cfg(feature = "headless")]
+    pub async fn initialize_headless(self) -> headless::HeadlessMap<MWC, SM, HC> {
         let window = self.map_window_config.create();
         let window_size = window.size();
 
@@ -195,8 +176,8 @@ where
         )
         .await
         .expect("Failed to initialize renderer");
-        HeadlessMap {
-            map_schedule: SimpleMapSchedule::new(
+        headless::HeadlessMap {
+            map_schedule: headless::HeadlessMapSchedule::new(
                 self.map_window_config,
                 window_size,
                 renderer,

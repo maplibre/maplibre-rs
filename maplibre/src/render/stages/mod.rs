@@ -20,10 +20,6 @@ mod queue_stage;
 mod resource_stage;
 mod upload_stage;
 
-#[cfg(feature = "headless")]
-// Exposed because it should be addable conditionally
-pub mod write_surface_buffer_stage;
-
 /// The labels of the default App rendering stages.
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub enum RenderStageLabel {
@@ -60,45 +56,9 @@ multi_stage!(
     upload: UploadStage
 );
 
-pub fn register_render_stages(
-    schedule: &mut Schedule,
-    headless: bool,
-) -> Result<(), RenderGraphError> {
-    let mut graph = RenderGraph::default();
-
-    let mut draw_graph = RenderGraph::default();
-    draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
-    let input_node_id = draw_graph.set_input(vec![]);
-    draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
-
-    #[cfg(feature = "headless")]
-    if headless {
-        use crate::render::copy_surface_to_buffer_node::CopySurfaceBufferNode;
-        draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
-        draw_graph.add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)?;
-    }
-
-    graph.add_sub_graph(draw_graph::NAME, draw_graph);
-    graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
-    graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
-    graph.add_node_edge(
-        main_graph::node::MAIN_PASS_DEPENDENCIES,
-        main_graph::node::MAIN_PASS_DRIVER,
-    )?;
-
+pub fn register_default_render_stages(graph: RenderGraph, schedule: &mut Schedule) {
     schedule.add_stage(RenderStageLabel::Prepare, PrepareStage::default());
     schedule.add_stage(RenderStageLabel::Queue, QueueStage::default());
     schedule.add_stage(RenderStageLabel::PhaseSort, PhaseSortStage::default());
     schedule.add_stage(RenderStageLabel::Render, GraphRunnerStage::new(graph));
-
-    #[cfg(feature = "headless")]
-    if headless {
-        use crate::render::stages::write_surface_buffer_stage::WriteSurfaceBufferStage;
-        schedule.add_stage(
-            RenderStageLabel::Cleanup,
-            WriteSurfaceBufferStage::default(),
-        );
-    }
-
-    Ok(())
 }

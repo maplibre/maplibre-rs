@@ -1,6 +1,7 @@
 use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use maplibre::coords::{WorldTileCoords, ZoomLevel};
 use maplibre::error::Error;
+use maplibre::headless::HeadlessMapWindowConfig;
 use maplibre::io::pipeline::Processable;
 use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
 use maplibre::io::scheduler::ScheduleMethod;
@@ -28,27 +29,6 @@ fn enable_tracing() {
     let subscriber = Registry::default().with(tracing_tracy::TracyLayer::new());
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-}
-pub struct HeadlessMapWindowConfig {
-    size: WindowSize,
-}
-
-impl MapWindowConfig for HeadlessMapWindowConfig {
-    type MapWindow = HeadlessMapWindow;
-
-    fn create(&self) -> Self::MapWindow {
-        Self::MapWindow { size: self.size }
-    }
-}
-
-pub struct HeadlessMapWindow {
-    size: WindowSize,
-}
-
-impl MapWindow for HeadlessMapWindow {
-    fn size(&self) -> WindowSize {
-        self.size
-    }
 }
 
 fn run_in_window() {
@@ -157,6 +137,6 @@ fn main() {
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    //run_headless();
+    run_headless();
     run_in_window();
 }

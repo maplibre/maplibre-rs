@@ -31,9 +31,6 @@ use crate::{HeadedMapWindow, MapWindow, MapWindowConfig};
 use log::info;
 use std::sync::Arc;
 
-#[cfg(feature = "headless")]
-// Exposed because it should be addable conditionally
-pub mod copy_surface_to_buffer_node;
 pub mod graph;
 pub mod resource;
 pub mod stages;
@@ -52,8 +49,10 @@ mod util;
 pub mod camera;
 pub mod settings;
 
+use crate::render::graph::{EmptyNode, RenderGraph, RenderGraphError};
+use crate::render::main_pass::{MainPassDriverNode, MainPassNode};
 pub use shaders::ShaderVertex;
-pub use stages::register_render_stages;
+pub use stages::register_default_render_stages;
 
 pub const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
@@ -80,7 +79,7 @@ pub struct RenderState {
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
 
-    surface: Surface,
+    pub surface: Surface,
 
     mask_phase: RenderPhase<TileInView>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
@@ -473,4 +472,23 @@ pub mod draw_graph {
         #[cfg(feature = "headless")]
         pub const COPY: &str = "copy";
     }
+}
+
+pub fn create_default_render_graph() -> Result<RenderGraph, RenderGraphError> {
+    let mut graph = RenderGraph::default();
+
+    let mut draw_graph = RenderGraph::default();
+    draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+    let input_node_id = draw_graph.set_input(vec![]);
+    draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
+
+    graph.add_sub_graph(draw_graph::NAME, draw_graph);
+    graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
+    graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
+    graph.add_node_edge(
+        main_graph::node::MAIN_PASS_DEPENDENCIES,
+        main_graph::node::MAIN_PASS_DRIVER,
+    )?;
+
+    Ok(graph)
 }
