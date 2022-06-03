@@ -379,7 +379,6 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-
     use crate::{MapWindow, MapWindowConfig, WindowSize};
 
     pub struct HeadlessMapWindowConfig {
@@ -407,6 +406,12 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
     async fn test_render() {
+        use crate::render::graph::RenderGraph;
+        use crate::render::graph_runner::RenderGraphRunner;
+        use crate::render::resource::Surface;
+        use crate::{RenderState, RendererSettings};
+        use log::LevelFilter;
+
         let _ = env_logger::builder()
             .filter_level(LevelFilter::Trace)
             .is_test(true)
