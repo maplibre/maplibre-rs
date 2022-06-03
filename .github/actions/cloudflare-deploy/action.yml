@@ -23,4 +23,4 @@ runs:
       with:
         apiToken: ${{ inputs.CF_API_TOKEN }}
         accountId: ${{ inputs.CF_ACCOUNT_ID }}
-        command: pages publish --project-name=${{ inputs.project }} ${{ inputs.source }}
+        command: pages publish --env production --project-name=${{ inputs.project }} ${{ inputs.source }}
