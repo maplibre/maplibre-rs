@@ -130,3 +130,8 @@ cargo doc --open
 ```
 
 You can also view the up-to-date documentation [here](https://maxammann.org/maplibre-rs/docs/).
+
+## Acknowledgements
+
+The renderer of maplibre-rs is heavily based on the renderer of [bevy](https://bevyengine.org/). Bevy's renderer was 
+forked into this project in order to have a solid and generic base.
