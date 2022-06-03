@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Style","Stores the style for a multi-layered map."]]});
