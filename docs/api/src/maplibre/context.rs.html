@@ -67,13 +67,11 @@
 <span id="62">62</span>
 <span id="63">63</span>
 <span id="64">64</span>
-<span id="65">65</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">TILE_SIZE</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::TileRepository</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera</span>::{<span class="ident">Camera</span>, <span class="ident">Perspective</span>, <span class="ident">ViewProjection</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util::ChangeObserver</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Renderer</span>, <span class="ident">ScheduleMethod</span>, <span class="ident">Style</span>, <span class="ident">WindowSize</span>};
-<span class="kw">use</span> <span class="ident">std::sync::mpsc</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Renderer</span>, <span class="ident">Style</span>, <span class="ident">WindowSize</span>};
 
 <span class="doccomment">/// Stores the camera configuration.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ViewState</span> {

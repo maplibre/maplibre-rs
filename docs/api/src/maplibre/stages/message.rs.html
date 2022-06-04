@@ -79,25 +79,17 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
-<span id="77">77</span>
-<span id="78">78</span>
-<span id="79">79</span>
-<span id="80">80</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">WorldCoords</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error::Error</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::geometry_index</span>::{<span class="ident">GeometryIndex</span>, <span class="ident">IndexedGeometry</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::pipeline::PipelineContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::pipeline::Processable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_pipelines::build_vector_tile_pipeline</span>;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::WorldTileCoords</span>;
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::StoredLayer</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_request_state::TileRequestState</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io</span>::{<span class="ident">TileRequest</span>, <span class="ident">TileRequestID</span>};
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::TileRequestID</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::ShaderVertex</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stages::HeadedPipelineProcessor</span>;
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>};
 <span class="kw">use</span> <span class="ident">geozero::mvt::tile</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">mpsc</span>, <span class="ident">Arc</span>, <span class="ident">Mutex</span>};
+<span class="kw">use</span> <span class="ident">std::sync::mpsc</span>;
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MessageSender</span> <span class="op">=</span> <span class="ident">mpsc::Sender</span><span class="op">&lt;</span><span class="ident">TessellateMessage</span><span class="op">&gt;</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MessageReceiver</span> <span class="op">=</span> <span class="ident">mpsc::Receiver</span><span class="op">&lt;</span><span class="ident">TessellateMessage</span><span class="op">&gt;</span>;

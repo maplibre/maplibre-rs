@@ -190,19 +190,18 @@
 <span id="185">185</span>
 <span id="186">186</span>
 <span id="187">187</span>
-<span id="188">188</span>
 </pre><pre class="rust"><code><span class="doccomment">//! [Stages](Stage) for requesting and preparing data</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::ZoomLevel</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">WorldCoords</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error::Error</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::geometry_index::GeometryIndex</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::geometry_index</span>::{<span class="ident">IndexProcessor</span>, <span class="ident">IndexedGeometry</span>, <span class="ident">TileIndex</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::geometry_index</span>::{<span class="ident">IndexedGeometry</span>, <span class="ident">TileIndex</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::pipeline::Processable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::pipeline</span>::{<span class="ident">PipelineContext</span>, <span class="ident">PipelineProcessor</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::source_client</span>::{<span class="ident">HttpSourceClient</span>, <span class="ident">SourceClient</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::source_client::HttpSourceClient</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_pipelines::build_vector_tile_pipeline</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::StoredLayer</span>;
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_request_state::TileRequestState</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io</span>::{<span class="ident">TileRequest</span>, <span class="ident">TileRequestID</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::ShaderVertex</span>;
@@ -212,15 +211,14 @@
     <span class="ident">TileTessellateMessage</span>,
 };
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stages::populate_tile_store_stage::PopulateTileStore</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tessellation::zero_tessellator::ZeroTessellator</span>;
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">HttpClient</span>, <span class="ident">ScheduleMethod</span>, <span class="ident">Scheduler</span>};
 <span class="kw">use</span> <span class="ident">geozero::mvt::tile</span>;
 <span class="kw">use</span> <span class="ident">geozero::GeozeroDatasource</span>;
-<span class="kw">use</span> <span class="ident">prost::Message</span>;
+
 <span class="kw">use</span> <span class="ident">request_stage::RequestStage</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
+
 <span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">mpsc</span>, <span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 
 <span class="kw">mod</span> <span class="ident">message</span>;
@@ -303,7 +301,7 @@
         <span class="ident">geometries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">geometry_index</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">geometry_index</span>.<span class="ident">lock</span>() {
-            <span class="ident">geometry_index</span>.<span class="ident">index_tile</span>(<span class="kw-2">&amp;</span><span class="ident">coords</span>, <span class="ident">TileIndex::Linear</span> { <span class="ident">list</span>: <span class="ident">geometries</span> })
+            <span class="ident">geometry_index</span>.<span class="ident">index_tile</span>(<span class="ident">coords</span>, <span class="ident">TileIndex::Linear</span> { <span class="ident">list</span>: <span class="ident">geometries</span> })
         }
     }
 }

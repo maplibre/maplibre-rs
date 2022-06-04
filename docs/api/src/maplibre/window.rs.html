@@ -66,7 +66,7 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for the window system.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">HttpClient</span>, <span class="ident">InteractiveMapSchedule</span>, <span class="ident">ScheduleMethod</span>};
-<span class="kw">use</span> <span class="ident">raw_window_handle</span>::{<span class="ident">HasRawWindowHandle</span>, <span class="ident">RawWindowHandle</span>};
+<span class="kw">use</span> <span class="ident">raw_window_handle::HasRawWindowHandle</span>;
 
 <span class="doccomment">/// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MapWindow</span> {

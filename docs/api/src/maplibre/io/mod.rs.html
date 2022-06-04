@@ -36,12 +36,10 @@
 <span id="31">31</span>
 <span id="32">32</span>
 <span id="33">33</span>
-<span id="34">34</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Handles IO related processing as well as multithreading.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::WorldTileCoords</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::ShaderVertex</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>};
+
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">scheduler</span>;

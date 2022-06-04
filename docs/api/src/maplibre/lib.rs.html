@@ -281,23 +281,6 @@
 <span id="276">276</span>
 <span id="277">277</span>
 <span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
-<span id="283">283</span>
-<span id="284">284</span>
-<span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
 </pre><pre class="rust"><code><span class="doccomment">//! # Maplibre-rs</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A multi-platform library for rendering vector tile maps with WebGPU.</span>
@@ -318,7 +301,7 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::scheduler</span>::{<span class="ident">ScheduleMethod</span>, <span class="ident">Scheduler</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::source_client::HttpClient</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::map_schedule</span>::{<span class="ident">InteractiveMapSchedule</span>, <span class="ident">SimpleMapSchedule</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::map_schedule::InteractiveMapSchedule</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::settings</span>::{<span class="ident">RendererSettings</span>, <span class="ident">WgpuSettings</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{<span class="ident">RenderState</span>, <span class="ident">Renderer</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style::Style</span>;
@@ -327,6 +310,8 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">context</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">coords</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">error</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;headless&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">headless</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">io</span>;
 <span class="comment">// Exposed because of input handlers in maplibre-winit</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">map_schedule</span>;
@@ -334,6 +319,7 @@
 <span class="comment">// Exposed because of camera</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">render</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">style</span>;
+
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">window</span>;
 <span class="comment">// Exposed because of doc-strings</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">schedule</span>;
@@ -406,27 +392,6 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HeadlessMap</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">MWC</span>: <span class="ident">MapWindowConfig</span>,
-    <span class="ident">SM</span>: <span class="ident">ScheduleMethod</span>,
-    <span class="ident">HC</span>: <span class="ident">HttpClient</span>,
-{
-    <span class="ident">map_schedule</span>: <span class="ident">SimpleMapSchedule</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>,
-    <span class="ident">window</span>: <span class="ident">MWC::MapWindow</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span> <span class="ident">HeadlessMap</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">MWC</span>: <span class="ident">MapWindowConfig</span>,
-    <span class="ident">SM</span>: <span class="ident">ScheduleMethod</span>,
-    <span class="ident">HC</span>: <span class="ident">HttpClient</span>,
-{
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_schedule_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">SimpleMapSchedule</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map_schedule</span>
-    }
-}
-
 <span class="doccomment">/// Stores the map configuration before the map&#39;s state has been fully initialized.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UninitializedMap</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -484,7 +449,8 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">initialize_headless</span>(<span class="self">self</span>) -&gt; <span class="ident">HeadlessMap</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;headless&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">initialize_headless</span>(<span class="self">self</span>) -&gt; <span class="ident">headless::HeadlessMap</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">window</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">map_window_config</span>.<span class="ident">create</span>();
         <span class="kw">let</span> <span class="ident">window_size</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">size</span>();
 
@@ -495,8 +461,8 @@
         )
         .<span class="kw">await</span>
         .<span class="ident">expect</span>(<span class="string">&quot;Failed to initialize renderer&quot;</span>);
-        <span class="ident">HeadlessMap</span> {
-            <span class="ident">map_schedule</span>: <span class="ident">SimpleMapSchedule::new</span>(
+        <span class="ident">headless::HeadlessMap</span> {
+            <span class="ident">map_schedule</span>: <span class="ident">headless::HeadlessMapSchedule::new</span>(
                 <span class="self">self</span>.<span class="ident">map_window_config</span>,
                 <span class="ident">window_size</span>,
                 <span class="ident">renderer</span>,

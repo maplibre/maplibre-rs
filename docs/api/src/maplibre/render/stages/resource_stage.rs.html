@@ -146,17 +146,17 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::MapContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::platform::MIN_BUFFER_SIZE</span>;
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::Texture</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">BackingBufferDescriptor</span>, <span class="ident">BufferPool</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">Globals</span>, <span class="ident">RenderPipeline</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders</span>::{<span class="ident">Shader</span>, <span class="ident">ShaderGlobals</span>, <span class="ident">ShaderTileMetadata</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders</span>::{<span class="ident">Shader</span>, <span class="ident">ShaderTileMetadata</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::tile_pipeline::TilePipeline</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::tile_view_pattern::TileViewPattern</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::Stage</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Renderer</span>;
-<span class="kw">use</span> <span class="ident">std::cmp</span>;
+
 <span class="kw">use</span> <span class="ident">std::mem::size_of</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TILE_VIEW_SIZE</span>: <span class="ident">wgpu::BufferAddress</span> <span class="op">=</span> <span class="number">32</span>;

@@ -29,30 +29,14 @@
 <span id="24">24</span>
 <span id="25">25</span>
 <span id="26">26</span>
-<span id="27">27</span>
-<span id="28">28</span>
-<span id="29">29</span>
-<span id="30">30</span>
-<span id="31">31</span>
-<span id="32">32</span>
-<span id="33">33</span>
-<span id="34">34</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Sorts items of the [RenderPhases](RenderPhase).</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::MapContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">Zoom</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::TileRepository</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera::ViewProjection</span>;
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::render_phase::RenderPhase</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::IndexEntry</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders</span>::{
-    <span class="ident">ShaderCamera</span>, <span class="ident">ShaderFeatureStyle</span>, <span class="ident">ShaderGlobals</span>, <span class="ident">ShaderLayerMetadata</span>, <span class="ident">Vec4f32</span>,
-};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::tile_view_pattern::TileInView</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::util::Eventually::Initialized</span>;
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::Stage</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">RenderState</span>, <span class="ident">Renderer</span>, <span class="ident">Style</span>};
-<span class="kw">use</span> <span class="ident">std::iter</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Renderer</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PhaseSortStage</span>;

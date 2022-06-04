@@ -279,6 +279,7 @@
 <span id="274">274</span>
 <span id="275">275</span>
 <span id="276">276</span>
+<span id="277">277</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for handling surfaces which can be either headless or headed. A headed surface has</span>
 <span class="doccomment">//! a handle to a window. A headless surface renders to a texture.</span>
 
@@ -286,9 +287,8 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::settings::RendererSettings</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::util::HasChanged</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::window::HeadedMapWindow</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">WindowSize</span>};
-<span class="kw">use</span> <span class="ident">std::fs::File</span>;
-<span class="kw">use</span> <span class="ident">std::io::Write</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">MapWindow</span>, <span class="ident">WindowSize</span>};
+
 <span class="kw">use</span> <span class="ident">std::mem::size_of</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
@@ -350,6 +350,8 @@
         <span class="ident">png_output_path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="comment">// device: &amp;wgpu::Device,</span>
     ) {
+        <span class="kw">use</span> <span class="ident">std::fs::File</span>;
+        <span class="kw">use</span> <span class="ident">std::io::Write</span>;
         <span class="comment">// Note that we&#39;re not calling `.await` here.</span>
         <span class="kw">let</span> <span class="ident">buffer_slice</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">output_buffer</span>.<span class="ident">slice</span>(..);
         <span class="kw">let</span> <span class="ident">buffer_future</span> <span class="op">=</span> <span class="ident">buffer_slice</span>.<span class="ident">map_async</span>(<span class="ident">wgpu::MapMode::Read</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> ());

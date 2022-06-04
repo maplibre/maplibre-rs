@@ -55,14 +55,12 @@
 <span id="50">50</span>
 <span id="51">51</span>
 <span id="52">52</span>
-<span id="53">53</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].</span>
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">MessageReceiver</span>, <span class="ident">SharedThreadState</span>, <span class="ident">TessellateMessage</span>, <span class="ident">TileTessellateMessage</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::MapContext</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::StoredLayer</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::Stage</span>;
-<span class="kw">use</span> <span class="ident">std::sync::mpsc</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PopulateTileStore</span> {
     <span class="ident">shared_thread_state</span>: <span class="ident">SharedThreadState</span>,

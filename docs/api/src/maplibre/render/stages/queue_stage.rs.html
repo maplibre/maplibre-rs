@@ -71,26 +71,16 @@
 <span id="66">66</span>
 <span id="67">67</span>
 <span id="68">68</span>
-<span id="69">69</span>
-<span id="70">70</span>
-<span id="71">71</span>
-<span id="72">72</span>
-<span id="73">73</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Queues [PhaseItems](crate::render::render_phase::PhaseItem) for rendering.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::MapContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">Zoom</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::TileRepository</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera::ViewProjection</span>;
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::IndexEntry</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders</span>::{
-    <span class="ident">ShaderCamera</span>, <span class="ident">ShaderFeatureStyle</span>, <span class="ident">ShaderGlobals</span>, <span class="ident">ShaderLayerMetadata</span>, <span class="ident">Vec4f32</span>,
-};
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::tile_view_pattern::TileInView</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::util::Eventually::Initialized</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::Stage</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">RenderState</span>, <span class="ident">Renderer</span>, <span class="ident">Style</span>};
-<span class="kw">use</span> <span class="ident">std::iter</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">RenderState</span>, <span class="ident">Renderer</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueueStage</span>;
@@ -100,7 +90,7 @@
     <span class="kw">fn</span> <span class="ident">run</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">MapContext</span> {
-            <span class="ident">view_state</span>,
+            <span class="ident">view_state</span>: <span class="kw">_</span>,
             <span class="ident">renderer</span>:
                 <span class="ident">Renderer</span> {
                     <span class="ident">state</span>:
