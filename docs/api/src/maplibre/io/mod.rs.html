@@ -39,15 +39,15 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Handles IO related processing as well as multithreading.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::WorldTileCoords</span>;
-
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">scheduler</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">source_client</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">static_tile_fetcher</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">geometry_index</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pipeline</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">scheduler</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">source_client</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;embed-static-tiles&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">static_tile_fetcher</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tile_pipelines</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tile_repository</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tile_request_state</span>;

@@ -159,6 +159,9 @@
 <span id="154">154</span>
 <span id="155">155</span>
 <span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::geometry_index::IndexProcessor</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::pipeline</span>::{<span class="ident">DataPipeline</span>, <span class="ident">PipelineContext</span>, <span class="ident">PipelineEnd</span>, <span class="ident">Processable</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io</span>::{<span class="ident">TileRequest</span>, <span class="ident">TileRequestID</span>};
@@ -168,6 +171,7 @@
 <span class="kw">use</span> <span class="ident">prost::Message</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ParseTile</span>;
 
 <span class="kw">impl</span> <span class="ident">Processable</span> <span class="kw">for</span> <span class="ident">ParseTile</span> {
@@ -185,6 +189,7 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IndexLayer</span>;
 
 <span class="kw">impl</span> <span class="ident">Processable</span> <span class="kw">for</span> <span class="ident">IndexLayer</span> {
@@ -206,6 +211,7 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TessellateLayer</span>;
 
 <span class="kw">impl</span> <span class="ident">Processable</span> <span class="kw">for</span> <span class="ident">TessellateLayer</span> {

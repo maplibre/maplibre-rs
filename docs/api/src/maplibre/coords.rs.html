@@ -676,6 +676,9 @@
 <span id="671">671</span>
 <span id="672">672</span>
 <span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Provides utilities related to coordinates.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style::source::TileAddressingScheme</span>;
@@ -740,6 +743,9 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ZoomLevel</span>(<span class="ident">u8</span>);
 
 <span class="kw">impl</span> <span class="ident">ZoomLevel</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">z</span>: <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
+        <span class="ident">ZoomLevel</span>(<span class="ident">z</span>)
+    }
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_root</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">==</span> <span class="number">0</span>
     }
@@ -914,12 +920,12 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u8</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TileCoords</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">tuple</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u8</span>)) -&gt; <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">ZoomLevel</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TileCoords</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">tuple</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">ZoomLevel</span>)) -&gt; <span class="self">Self</span> {
         <span class="ident">TileCoords</span> {
             <span class="ident">x</span>: <span class="ident">tuple</span>.<span class="number">0</span>,
             <span class="ident">y</span>: <span class="ident">tuple</span>.<span class="number">1</span>,
-            <span class="ident">z</span>: <span class="ident">ZoomLevel::from</span>(<span class="ident">tuple</span>.<span class="number">2</span>),
+            <span class="ident">z</span>: <span class="ident">tuple</span>.<span class="number">2</span>,
         }
     }
 }
