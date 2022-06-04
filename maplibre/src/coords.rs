@@ -63,7 +63,7 @@ pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
     pub fn is_root(self) -> bool {
-        return self.0 == 0;
+        self.0 == 0
     }
 }
 

@@ -55,11 +55,6 @@ impl StaticTileFetcher {
 
 #[cfg(test)]
 mod tests {
-    use crate::style::source::TileAddressingScheme;
-
-    use crate::coords::WorldTileCoords;
-
-    use super::StaticTileFetcher;
 
     #[cfg(all(static_tiles, not(target_arch = "wasm32")))]
     #[tokio::test]

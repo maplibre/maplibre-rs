@@ -1,10 +1,8 @@
 use crate::context::MapContext;
 use crate::define_label;
 use downcast_rs::{impl_downcast, Downcast};
-use std::any::Any;
+
 use std::collections::HashMap;
-use std::fmt::Debug;
-use std::rc::Rc;
 
 pub struct NopStage;
 

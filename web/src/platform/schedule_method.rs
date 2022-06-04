@@ -1,5 +1,4 @@
 use std::future::Future;
-use std::pin::Pin;
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;

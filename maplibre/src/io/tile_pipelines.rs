@@ -141,7 +141,7 @@ mod tests {
         let mut context = PipelineContext::new(DummyPipelineProcessor);
 
         let pipeline = build_vector_tile_pipeline();
-        let output = pipeline.process(
+        let _output = pipeline.process(
             (
                 TileRequest {
                     coords: (0, 0, ZoomLevel::default()).into(),
