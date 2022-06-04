@@ -242,3 +242,34 @@ impl Stage for WriteSurfaceBufferStage {
         }
     }
 }
+
+pub mod utils {
+    use crate::coords::WorldTileCoords;
+    use crate::io::pipeline::PipelineProcessor;
+    use crate::io::tile_repository::StoredLayer;
+    use crate::io::RawLayer;
+    use crate::render::ShaderVertex;
+    use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
+
+    #[derive(Default)]
+    pub struct HeadlessPipelineProcessor {
+        pub layers: Vec<StoredLayer>,
+    }
+
+    impl PipelineProcessor for HeadlessPipelineProcessor {
+        fn layer_tesselation_finished(
+            &mut self,
+            coords: &WorldTileCoords,
+            buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+            feature_indices: Vec<u32>,
+            layer_data: RawLayer,
+        ) {
+            self.layers.push(StoredLayer::TessellatedLayer {
+                coords: *coords,
+                buffer,
+                feature_indices,
+                layer_data,
+            })
+        }
+    }
+}

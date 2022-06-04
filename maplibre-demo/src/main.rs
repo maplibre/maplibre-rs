@@ -19,6 +19,7 @@ use maplibre::window::{EventLoop, WindowSize};
 use maplibre::MapBuilder;
 use maplibre_winit::winit::WinitMapWindowConfig;
 
+use maplibre::headless::utils::HeadlessPipelineProcessor;
 use std::collections::HashSet;
 
 #[cfg(feature = "trace")]
@@ -42,28 +43,6 @@ fn run_in_window() {
             .await
             .run()
     })
-}
-
-#[derive(Default)]
-struct HeadlessPipelineProcessor {
-    layers: Vec<StoredLayer>,
-}
-
-impl PipelineProcessor for HeadlessPipelineProcessor {
-    fn layer_tesselation_finished(
-        &mut self,
-        coords: &WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
-        layer_data: RawLayer,
-    ) {
-        self.layers.push(StoredLayer::TessellatedLayer {
-            coords: *coords,
-            buffer,
-            feature_indices,
-            layer_data,
-        })
-    }
 }
 
 fn run_headless() {

@@ -7,6 +7,7 @@ use geozero::GeozeroDatasource;
 use prost::Message;
 use std::collections::HashSet;
 
+#[derive(Default)]
 pub struct ParseTile;
 
 impl Processable for ParseTile {
@@ -24,6 +25,7 @@ impl Processable for ParseTile {
     }
 }
 
+#[derive(Default)]
 pub struct IndexLayer;
 
 impl Processable for IndexLayer {
@@ -45,6 +47,7 @@ impl Processable for IndexLayer {
     }
 }
 
+#[derive(Default)]
 pub struct TessellateLayer;
 
 impl Processable for TessellateLayer {
