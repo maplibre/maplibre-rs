@@ -3,6 +3,7 @@ use crate::io::tile_repository::TileRepository;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::util::ChangeObserver;
 use crate::{Renderer, Style, WindowSize};
+use cgmath::Angle;
 
 /// Stores the camera configuration.
 pub struct ViewState {
@@ -13,8 +14,11 @@ pub struct ViewState {
 
 impl ViewState {
     pub fn new(window_size: &WindowSize) -> Self {
+        let fovy = cgmath::Deg(110.0);
+        let t = TILE_SIZE / 2.0;
+        let height = t / (fovy / 2.0).tan();
         let camera = Camera::new(
-            (TILE_SIZE / 2.0, TILE_SIZE / 2.0, 150.0),
+            (t, t, height),
             cgmath::Deg(-90.0),
             cgmath::Deg(0.0),
             window_size.width(),
@@ -24,7 +28,7 @@ impl ViewState {
         let perspective = Perspective::new(
             window_size.width(),
             window_size.height(),
-            cgmath::Deg(110.0),
+            fovy,
             100.0,
             2000.0,
         );

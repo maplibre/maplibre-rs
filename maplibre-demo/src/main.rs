@@ -53,7 +53,7 @@ fn run_headless() {
     run_multithreaded(async {
         let mut map = MapBuilder::new()
             .with_map_window_config(HeadlessMapWindowConfig {
-                size: WindowSize::new(1000, 1500).unwrap(),
+                size: WindowSize::new(1000, 1000).unwrap(),
             })
             .with_http_client(ReqwestHttpClient::new(None))
             .with_schedule_method(TokioScheduleMethod::new())
@@ -67,10 +67,10 @@ fn run_headless() {
 
         let tile_limits = google_mercator().tile_limits(
             extent_wgs84_to_merc(&Extent {
-                minx: 8.9771580802,
-                miny: 47.2703623267,
-                maxx: 13.8350427083,
-                maxy: 50.5644529365,
+                minx: 11.3475219363,
+                miny: 48.0345697188,
+                maxx: 11.7917815798,
+                maxy: 48.255861,
             }),
             0,
         );
@@ -101,6 +101,6 @@ fn main() {
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    //run_headless();
-    run_in_window();
+    run_headless();
+    //run_in_window();
 }
