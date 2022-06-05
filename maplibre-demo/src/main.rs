@@ -61,43 +61,10 @@ fn run_headless() {
             .initialize_headless()
             .await;
 
-        let http_source_client: HttpSourceClient<ReqwestHttpClient> =
-            HttpSourceClient::new(ReqwestHttpClient::new(None));
-
-        let coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
-        let request_id = 0;
-
-        let data = http_source_client
-            .fetch(&coords)
+        map.map_schedule
+            .fetch_process(&WorldTileCoords::from((0, 0, ZoomLevel::default())))
             .await
-            .unwrap()
-            .into_boxed_slice();
-
-        let processor = HeadlessPipelineProcessor::default();
-        let mut pipeline_context = PipelineContext::new(processor);
-        let pipeline = build_vector_tile_pipeline();
-        pipeline.process(
-            (
-                TileRequest {
-                    coords,
-                    layers: HashSet::from(["boundary".to_owned(), "water".to_owned()]),
-                },
-                request_id,
-                data,
-            ),
-            &mut pipeline_context,
-        );
-
-        let mut processor = pipeline_context
-            .take_processor::<HeadlessPipelineProcessor>()
-            .unwrap();
-
-        while let Some(v) = processor.layers.pop() {
-            map.map_schedule_mut()
-                .map_context
-                .tile_repository
-                .put_tessellated_layer(v);
-        }
+            .expect("Failed to fetch and process!");
 
         match map.map_schedule_mut().update_and_redraw() {
             Ok(_) => {}
