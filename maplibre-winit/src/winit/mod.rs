@@ -1,15 +1,13 @@
+use crate::input::{InputController, UpdateState};
 use instant::Instant;
 use maplibre::error::Error;
 use maplibre::io::scheduler::ScheduleMethod;
 use maplibre::io::source_client::HttpClient;
-use std::borrow::BorrowMut;
+use maplibre::map_schedule::InteractiveMapSchedule;
+use maplibre::window::{EventLoop, HeadedMapWindow, MapWindowConfig};
+use winit::event::Event;
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use winit::event_loop::ControlFlow;
-
-use crate::input::{InputController, UpdateState};
-use maplibre::map_schedule::InteractiveMapSchedule;
-use maplibre::window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig};
-use winit::event::Event;
 
 #[cfg(target_arch = "wasm32")]
 mod web;
@@ -89,7 +87,7 @@ where
                     use tokio::runtime::Handle;
                     use tokio::task;
 
-                    let state = task::block_in_place(|| {
+                    task::block_in_place(|| {
                         Handle::current().block_on(async {
                             map_schedule.late_init().await;
                         })
