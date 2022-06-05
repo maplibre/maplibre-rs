@@ -58,7 +58,7 @@ impl fmt::Debug for Quadkey {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug, Default)]
 pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
@@ -67,12 +67,6 @@ impl ZoomLevel {
     }
     pub fn is_root(self) -> bool {
         self.0 == 0
-    }
-}
-
-impl Default for ZoomLevel {
-    fn default() -> Self {
-        ZoomLevel(0)
     }
 }
 
@@ -190,7 +184,7 @@ impl SignificantlyDifferent for Zoom {
 /// # Coordinate System Origin
 ///
 /// The origin is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct InnerCoords {
     pub x: f64,
     pub y: f64,
@@ -202,7 +196,7 @@ pub struct InnerCoords {
 /// # Coordinate System Origin
 ///
 /// For Web Mercator the origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, Default)]
 pub struct TileCoords {
     pub x: u32,
     pub y: u32,
@@ -256,7 +250,7 @@ impl From<(u32, u32, ZoomLevel)> for TileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct WorldTileCoords {
     pub x: i32,
     pub y: i32,
@@ -449,7 +443,7 @@ impl AlignedWorldTileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct WorldCoords {
     pub x: f64,
     pub y: f64,

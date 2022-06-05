@@ -161,28 +161,32 @@ where
         let data = http_source_client
             .fetch(&coords)
             .await
-            .ok()?
+            .unwrap()
             .into_boxed_slice();
 
         let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
         let pipeline = build_vector_tile_pipeline();
 
         let request = TileRequest {
-            coords: *coords,
+            coords: WorldTileCoords::default(),
             layers: source_layers,
         };
 
         let request_id = self
             .tile_request_state
             .start_tile_request(request.clone())?;
-
         pipeline.process((request, request_id, data), &mut pipeline_context);
-
         self.tile_request_state.finish_tile_request(request_id);
 
         let mut processor = pipeline_context
             .take_processor::<HeadlessPipelineProcessor>()
             .unwrap();
+
+        if let Some(pool) = self.map_context.renderer.state.buffer_pool.ok_mut() {
+            pool.clear();
+        }
+
+        self.map_context.tile_repository.clear();
 
         while let Some(layer) = processor.layers.pop() {
             self.map_context

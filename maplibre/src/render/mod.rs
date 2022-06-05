@@ -59,7 +59,7 @@ pub const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must m
 pub struct RenderState {
     render_target: Eventually<TextureView>,
 
-    buffer_pool: Eventually<
+    pub buffer_pool: Eventually<
         BufferPool<
             wgpu::Queue,
             wgpu::Buffer,

@@ -1,5 +1,5 @@
 use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use maplibre::coords::{WorldTileCoords, ZoomLevel};
+use maplibre::coords::{TileCoords, ViewRegion, WorldTileCoords, ZoomLevel};
 use maplibre::error::Error;
 use maplibre::headless::HeadlessMapWindowConfig;
 use maplibre::io::pipeline::Processable;
@@ -20,7 +20,11 @@ use maplibre::MapBuilder;
 use maplibre_winit::winit::WinitMapWindowConfig;
 
 use maplibre::headless::utils::HeadlessPipelineProcessor;
+use maplibre::style::source::TileAddressingScheme;
+use maplibre::util::grid::google_mercator;
+use maplibre::util::math::Aabb2;
 use std::collections::HashSet;
+use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
@@ -49,7 +53,7 @@ fn run_headless() {
     run_multithreaded(async {
         let mut map = MapBuilder::new()
             .with_map_window_config(HeadlessMapWindowConfig {
-                size: WindowSize::new(1000, 1000).unwrap(),
+                size: WindowSize::new(1000, 1500).unwrap(),
             })
             .with_http_client(ReqwestHttpClient::new(None))
             .with_schedule_method(TokioScheduleMethod::new())
@@ -61,19 +65,33 @@ fn run_headless() {
             .initialize_headless()
             .await;
 
-        map.map_schedule
-            .fetch_process(&WorldTileCoords::from((0, 0, ZoomLevel::default())))
-            .await
-            .expect("Failed to fetch and process!");
+        let tile_limits = google_mercator().tile_limits(
+            extent_wgs84_to_merc(&Extent {
+                minx: 8.9771580802,
+                miny: 47.2703623267,
+                maxx: 13.8350427083,
+                maxy: 50.5644529365,
+            }),
+            0,
+        );
 
-        match map.map_schedule_mut().update_and_redraw() {
-            Ok(_) => {}
-            Err(Error::Render(e)) => {
-                eprintln!("{}", e);
-                if e.should_exit() {}
-            }
-            e => eprintln!("{:?}", e),
-        };
+        for (z, x, y) in GridIterator::new(10, 10, tile_limits) {
+            let coords = WorldTileCoords::from((x as i32, y as i32, z.into()));
+            println!("Rendering {}", &coords);
+            map.map_schedule
+                .fetch_process(&coords)
+                .await
+                .expect("Failed to fetch and process!");
+
+            match map.map_schedule_mut().update_and_redraw() {
+                Ok(_) => {}
+                Err(Error::Render(e)) => {
+                    eprintln!("{}", e);
+                    if e.should_exit() {}
+                }
+                e => eprintln!("{:?}", e),
+            };
+        }
     })
 }
 
@@ -83,6 +101,6 @@ fn main() {
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    run_headless();
+    //run_headless();
     run_in_window();
 }

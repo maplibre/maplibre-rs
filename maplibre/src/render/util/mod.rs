@@ -88,6 +88,13 @@ impl<T> Eventually<T> {
     pub fn take(&mut self) -> Eventually<T> {
         mem::replace(self, Eventually::Uninitialized)
     }
+
+    pub fn ok_mut(&mut self) -> Option<&mut T> {
+        match self {
+            Eventually::Initialized(e) => Some(e),
+            Eventually::Uninitialized => None,
+        }
+    }
 }
 
 impl<T> Default for Eventually<T> {
