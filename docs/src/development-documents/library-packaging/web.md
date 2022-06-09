@@ -190,7 +190,7 @@ module.exports = (env) => ({
             // command. Default arguments are `--verbose`.
             //args: '--log-level warn',
             // Default arguments are `--typescript --target browser --mode normal`.
-            extraArgs: ` --target web -- . -Z build-std=std,panic_abort ${env.webgl ? '--features web-webgl' : ''} ${env.tracing ? '--features enable-tracing' : ''}`,
+            extraArgs: ` --target web -- . -Z build-std=std,panic_abort ${env.webgl ? '--features web-webgl' : ''} ${env.tracing ? '--features trace' : ''}`,
 
             // Optional array of absolute paths to directories, changes to which
             // will trigger the build.

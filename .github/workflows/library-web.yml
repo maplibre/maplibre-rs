@@ -1,0 +1,103 @@
+name: Build library for Web
+
+on:
+  workflow_call:
+    secrets:
+      CF_API_TOKEN:
+        required: false
+      CF_ACCOUNT_ID:
+        required: false
+    inputs:
+      deploy:
+        required: true
+        type: boolean
+
+jobs:
+  library-webgl:
+    name: Build WebGL
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+      - name: Install nightly toolchain
+        shell: bash
+        run: just nightly-toolchain
+      - uses: Swatinem/rust-cache@v1
+      - name: Build lib
+        shell: bash
+        run: just web-lib esbuild-webgl
+      - name: Build demo
+        shell: bash
+        run: just web-demo build
+      - name: Check
+        shell: bash
+        run: just web-check "web-webgl"
+      - name: Test
+        shell: bash
+        run: |
+          # Install test runner
+          cargo install wasm-bindgen-cli --version "0.2.80"
+          just web-test "web-webgl"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: webgl-demo
+          path: web/demo/dist/
+
+  library-webgpu:
+    name: Build WebGPU
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: extractions/setup-just@v1
+      - name: Install nightly toolchain
+        shell: bash
+        run: just nightly-toolchain
+      - uses: Swatinem/rust-cache@v1
+      - name: Build lib
+        shell: bash
+        run: just web-lib esbuild
+      - name: Build demo
+        shell: bash
+        run: just web-demo build
+      - name: Check
+        shell: bash
+        run: just web-check ""
+      - name: Test
+        shell: bash
+        run: |
+          # Install test runner
+          cargo install wasm-bindgen-cli --version "0.2.80"
+          just web-test ""
+      - uses: actions/upload-artifact@v2
+        with:
+          name: webgpu-demo
+          path: web/demo/dist/
+
+  deploy:
+    needs: [library-webgl, library-webgpu]
+    if: inputs.deploy
+    name: Deploy
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: webgl-demo
+          path: demo/webgl
+      - uses: actions/download-artifact@v2
+        with:
+          name: webgpu-demo
+          path: demo/webgpu
+      - name: Set HTTP Headers for Cloudflare
+        shell: bash
+        run: |
+          echo "/*
+            Cross-Origin-Opener-Policy: same-origin
+            Cross-Origin-Embedder-Policy: require-corp" > demo/_headers
+      - name: Deploy
+        uses: ./.github/actions/cloudflare-deploy
+        with:
+          project: maplibre-rs-demos
+          source: demo
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}

@@ -1,10 +1,9 @@
 //! Scheduling.
 
 use std::future::Future;
+use std::pin::Pin;
 
 use crate::error::Error;
-
-use crate::io::shared_thread_state::SharedThreadState;
 
 /// Async/await scheduler.
 pub struct Scheduler<SM>
@@ -32,8 +31,7 @@ pub trait ScheduleMethod: 'static {
     #[cfg(not(feature = "no-thread-safe-futures"))]
     fn schedule<T>(
         &self,
-        shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
+        future_factory: impl (FnOnce() -> T) + Send + 'static,
     ) -> Result<(), Error>
     where
         T: Future<Output = ()> + Send + 'static;
@@ -41,8 +39,7 @@ pub trait ScheduleMethod: 'static {
     #[cfg(feature = "no-thread-safe-futures")]
     fn schedule<T>(
         &self,
-        shared_thread_state: SharedThreadState,
-        future_factory: impl (FnOnce(SharedThreadState) -> T) + Send + 'static,
+        future_factory: impl (FnOnce() -> T) + Send + 'static,
     ) -> Result<(), Error>
     where
         T: Future<Output = ()> + 'static;

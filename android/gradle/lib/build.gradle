@@ -7,7 +7,7 @@ plugins {
 apply plugin: 'kotlin-android'
 
 android {
-    ndkVersion "23.1.7779620"
+    ndkVersion "23.2.8568313"
 
     compileSdkVersion 31
     
