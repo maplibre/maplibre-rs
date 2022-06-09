@@ -67,8 +67,9 @@ impl PanHandler {
         }
     }
 
-    pub fn process_touch_start(&mut self) -> bool {
+    pub fn process_touch_start(&mut self, window_position: &Vector2<f64>) -> bool {
         self.is_panning = true;
+        self.start_window_position = Some(*window_position);
         true
     }
 
