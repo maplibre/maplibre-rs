@@ -54,11 +54,12 @@ cargo run -p maplibre-demo
 Start by installing the 
 [Android Studio IDE](https://developer.android.com/studio?gclid=CjwKCAjwj42UBhAAEiwACIhADmF7uHXnEHGnmOgFnjp0Z6n-TnBvutC5faGA89lwouMIXiR6OXK4hBoCq78QAvD_BwE&gclsrc=aw.ds).
 
-Make sure the NDK version 23.1.7779620 is installed. The Native Development Kit (NDK) is a set of tools that allows 
-you to use C and C++ code with Android.
+Make sure the NDK is installed. The Native Development Kit (NDK) is a set of tools that allows 
+you to use C and C++ code with Android. You have to install manually the version that is used in 
+`./android/gradle/lib/build.gradle`.
 
 ```
-ANDROID STUDIO -> tools -> SDK manager -> SDK tools -> tick show package details -> ndk (side by side) version 23.1.7779620
+ANDROID STUDIO -> tools -> SDK manager -> SDK tools -> tick show package details -> ndk (side by side)
 ```
 
 Open the project within `./android/gradle` and create a new virtual device with the device manager. Minimum SDK version
