@@ -2,8 +2,7 @@ use crate::coords::{Zoom, ZoomLevel, TILE_SIZE};
 use crate::io::tile_repository::TileRepository;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::util::ChangeObserver;
-use crate::{Renderer, ScheduleMethod, Style, WindowSize};
-use std::sync::mpsc;
+use crate::{Renderer, Style, WindowSize};
 
 /// Stores the camera configuration.
 pub struct ViewState {

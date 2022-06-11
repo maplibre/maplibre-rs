@@ -1,7 +1,5 @@
 use crate::render::resource::TrackedRenderPass;
 use crate::RenderState;
-use std::collections::HashMap;
-use std::{any::TypeId, fmt::Debug, hash::Hash};
 
 /// A draw function which is used to draw a specific [`PhaseItem`].
 ///
