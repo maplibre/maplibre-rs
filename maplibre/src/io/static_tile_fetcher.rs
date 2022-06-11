@@ -8,11 +8,11 @@ use include_dir::Dir;
 use crate::coords::TileCoords;
 use crate::error::Error;
 
-#[cfg(static_tiles)]
+#[cfg(static_tiles_found)]
 use include_dir::include_dir;
-#[cfg(static_tiles)]
+#[cfg(static_tiles_found)]
 static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
-#[cfg(not(static_tiles))]
+#[cfg(not(static_tiles_found))]
 static TILES: Dir = Dir::new("/path", &[]);
 
 /// Load PBF files which were statically embedded in the `build.rs`
@@ -38,7 +38,7 @@ impl StaticTileFetcher {
     /// could not be fetched.
     pub fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
         if TILES.entries().is_empty() {
-            log::error!(
+            panic!(
                 "There are not tiles statically embedded in this binary! StaticTileFetcher will \
                 not return any tiles!"
             )
@@ -55,13 +55,11 @@ impl StaticTileFetcher {
 
 #[cfg(test)]
 mod tests {
+    use super::StaticTileFetcher;
+    use crate::coords::WorldTileCoords;
     use crate::style::source::TileAddressingScheme;
 
-    use crate::coords::WorldTileCoords;
-
-    use super::StaticTileFetcher;
-
-    #[cfg(all(static_tiles, not(target_arch = "wasm32")))]
+    #[cfg(static_tiles_found)]
     #[tokio::test]
     async fn test_tiles_available() {
         const MUNICH_X: i32 = 17425;

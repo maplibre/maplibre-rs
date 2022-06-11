@@ -14,11 +14,27 @@ install-clippy:
 install-nightly-clippy:
   rustup component add clippy --toolchain $NIGHTLY_TOOLCHAIN
 
+fixup:
+  cargo clippy --no-deps -p maplibre --fix
+  cargo clippy --allow-dirty --no-deps -p maplibre-winit --fix
+  cargo clippy --allow-dirty --no-deps -p maplibre-demo --fix
+  cargo clippy --allow-dirty --no-deps -p benchmarks --fix
+  # Web
+  cargo clippy --allow-dirty --no-deps -p web --target wasm32-unknown-unknown --fix
+  cargo clippy --allow-dirty --no-deps -p maplibre --target wasm32-unknown-unknown --fix
+  cargo clippy --allow-dirty --no-deps -p maplibre-winit --target wasm32-unknown-unknown --fix
+  # Android
+  cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
+  cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
+
 check PROJECT ARCH: install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
 
 test PROJECT ARCH:
   cargo test -p {{PROJECT}} --target {{ARCH}}
+
+benchmark:
+  cargo bench -p benchmarks
 
 install-rustfmt:
   rustup component add rustfmt

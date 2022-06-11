@@ -5,27 +5,25 @@ use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use downcast_rs::{impl_downcast, Downcast};
 use geozero::mvt::tile;
-use std::any::Any;
+
 use std::marker::PhantomData;
-use std::process::Output;
-use std::sync::mpsc;
 
 /// Processes events which happen during the pipeline execution
 pub trait PipelineProcessor: Downcast {
-    fn tile_finished(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {}
-    fn layer_unavailable(&mut self, coords: &WorldTileCoords, layer_name: &str) {}
+    fn tile_finished(&mut self, _request_id: TileRequestID, _coords: &WorldTileCoords) {}
+    fn layer_unavailable(&mut self, _coords: &WorldTileCoords, _layer_name: &str) {}
     fn layer_tesselation_finished(
         &mut self,
-        coords: &WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
-        layer_data: tile::Layer,
+        _coords: &WorldTileCoords,
+        _buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+        _feature_indices: Vec<u32>,
+        _layer_data: tile::Layer,
     ) {
     }
     fn layer_indexing_finished(
         &mut self,
-        coords: &WorldTileCoords,
-        geometries: Vec<IndexedGeometry<f64>>,
+        _coords: &WorldTileCoords,
+        _geometries: Vec<IndexedGeometry<f64>>,
     ) {
     }
 }
@@ -181,17 +179,16 @@ mod tests {
         ClosureProcessable, DataPipeline, PipelineContext, PipelineEnd, PipelineProcessor,
         Processable,
     };
-    use std::sync::mpsc;
 
     pub struct DummyPipelineProcessor;
 
     impl PipelineProcessor for DummyPipelineProcessor {}
 
-    fn add_one(input: u32, context: &mut PipelineContext) -> u8 {
+    fn add_one(input: u32, _context: &mut PipelineContext) -> u8 {
         input as u8 + 1
     }
 
-    fn add_two(input: u8, context: &mut PipelineContext) -> u32 {
+    fn add_two(input: u8, _context: &mut PipelineContext) -> u32 {
         input as u32 + 2
     }
 
@@ -219,22 +216,21 @@ mod tests {
     #[test]
     fn test_closure() {
         let mut context = PipelineContext::new(DummyPipelineProcessor);
-        let mut outer_value = 3;
+        let outer_value = 3;
 
         // using from()
-        let closure = ClosureProcessable::from(|input: u8, context: &mut PipelineContext| -> u32 {
-            return input as u32 + 2 + outer_value;
-        });
+        let closure =
+            ClosureProcessable::from(|input: u8, _context: &mut PipelineContext| -> u32 {
+                input as u32 + 2 + outer_value
+            });
         let output: u32 =
             DataPipeline::new(closure, PipelineEnd::default()).process(5u8, &mut context);
         assert_eq!(output, 10);
 
         // with into()
         let output: u32 = DataPipeline::<ClosureProcessable<_, u8, u32>, _>::new(
-            (|input: u8, context: &mut PipelineContext| -> u32 {
-                return input as u32 + 2 + outer_value;
-            })
-            .into(),
+            (|input: u8, _context: &mut PipelineContext| -> u32 { input as u32 + 2 + outer_value })
+                .into(),
             PipelineEnd::<u32>::default(),
         )
         .process(5u8, &mut context);

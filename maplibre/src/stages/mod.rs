@@ -4,12 +4,12 @@ use crate::coords::ZoomLevel;
 use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
 use crate::error::Error;
 use crate::io::geometry_index::GeometryIndex;
-use crate::io::geometry_index::{IndexProcessor, IndexedGeometry, TileIndex};
+use crate::io::geometry_index::{IndexedGeometry, TileIndex};
 use crate::io::pipeline::Processable;
 use crate::io::pipeline::{PipelineContext, PipelineProcessor};
-use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::io::source_client::HttpSourceClient;
 use crate::io::tile_pipelines::build_vector_tile_pipeline;
-use crate::io::tile_repository::StoredLayer;
+
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TileRequest, TileRequestID};
 use crate::render::ShaderVertex;
@@ -19,15 +19,14 @@ use crate::stages::message::{
     TileTessellateMessage,
 };
 use crate::stages::populate_tile_store_stage::PopulateTileStore;
-use crate::tessellation::zero_tessellator::ZeroTessellator;
+
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use crate::{HttpClient, ScheduleMethod, Scheduler};
 use geozero::mvt::tile;
 use geozero::GeozeroDatasource;
-use prost::Message;
+
 use request_stage::RequestStage;
-use std::collections::HashSet;
-use std::fmt;
+
 use std::sync::{mpsc, Arc, Mutex};
 
 mod message;
@@ -110,7 +109,7 @@ impl PipelineProcessor for HeadedPipelineProcessor {
         geometries: Vec<IndexedGeometry<f64>>,
     ) {
         if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
-            geometry_index.index_tile(&coords, TileIndex::Linear { list: geometries })
+            geometry_index.index_tile(coords, TileIndex::Linear { list: geometries })
         }
     }
 }

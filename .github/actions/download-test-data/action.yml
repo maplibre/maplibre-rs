@@ -1,0 +1,9 @@
+name: download-test-data
+description: Download test data
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download
+      shell: bash
+      run: wget -O test-data/munich-15.mbtiles https://maplibre-rs-test-data.pages.dev/munich-15.mbtiles

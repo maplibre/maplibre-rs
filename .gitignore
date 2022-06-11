@@ -27,3 +27,5 @@ perf.data*
 *.folded
 *flamegraph.svg
 *flamechart.svg
+
+frame_*.png

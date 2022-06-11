@@ -1,14 +1,14 @@
 //! Uploads data to the GPU which is needed for rendering.
 
 use crate::context::MapContext;
-use crate::coords::{ViewRegion, Zoom};
+use crate::coords::ViewRegion;
 use crate::io::tile_repository::{StoredLayer, TileRepository};
 use crate::render::camera::ViewProjection;
-use crate::render::resource::IndexEntry;
+
 use crate::render::shaders::{
     ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32,
 };
-use crate::render::tile_view_pattern::TileInView;
+
 use crate::render::util::Eventually::Initialized;
 use crate::schedule::Stage;
 use crate::{RenderState, Renderer, Style};
