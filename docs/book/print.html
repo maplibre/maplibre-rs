@@ -231,9 +231,10 @@ you will have to add to the SQLITE3_LIB_DIR environment variable.</p>
 <h2 id="android"><a class="header" href="#android">Android</a></h2>
 <p>Start by installing the 
 <a href="https://developer.android.com/studio?gclid=CjwKCAjwj42UBhAAEiwACIhADmF7uHXnEHGnmOgFnjp0Z6n-TnBvutC5faGA89lwouMIXiR6OXK4hBoCq78QAvD_BwE&amp;gclsrc=aw.ds">Android Studio IDE</a>.</p>
-<p>Make sure the NDK version 23.1.7779620 is installed. The Native Development Kit (NDK) is a set of tools that allows 
-you to use C and C++ code with Android.</p>
-<pre><code>ANDROID STUDIO -&gt; tools -&gt; SDK manager -&gt; SDK tools -&gt; tick show package details -&gt; ndk (side by side) version 23.1.7779620
+<p>Make sure the NDK is installed. The Native Development Kit (NDK) is a set of tools that allows 
+you to use C and C++ code with Android. You have to install manually the version that is used in 
+<code>./android/gradle/lib/build.gradle</code>.</p>
+<pre><code>ANDROID STUDIO -&gt; tools -&gt; SDK manager -&gt; SDK tools -&gt; tick show package details -&gt; ndk (side by side)
 </code></pre>
 <p>Open the project within <code>./android/gradle</code> and create a new virtual device with the device manager. Minimum SDK version
 should be 21. This was tested on a x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and 
