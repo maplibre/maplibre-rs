@@ -62,8 +62,11 @@ impl fmt::Debug for Quadkey {
 pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
+    pub const fn new(z: u8) -> Self {
+        ZoomLevel(z)
+    }
     pub fn is_root(self) -> bool {
-        return self.0 == 0;
+        self.0 == 0
     }
 }
 
@@ -236,12 +239,12 @@ impl TileCoords {
     }
 }
 
-impl From<(u32, u32, u8)> for TileCoords {
-    fn from(tuple: (u32, u32, u8)) -> Self {
+impl From<(u32, u32, ZoomLevel)> for TileCoords {
+    fn from(tuple: (u32, u32, ZoomLevel)) -> Self {
         TileCoords {
             x: tuple.0,
             y: tuple.1,
-            z: ZoomLevel::from(tuple.2),
+            z: tuple.2,
         }
     }
 }

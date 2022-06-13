@@ -1,5 +1,5 @@
 plugins {
-    id 'org.mozilla.rust-android-gradle.rust-android' version '0.9.2' apply true
+    id 'org.mozilla.rust-android-gradle.rust-android' version '0.9.3' apply true
     id 'com.android.library' version '7.0.4' apply true
     id 'org.jetbrains.kotlin.android' version '1.6.21' apply true
 }
@@ -9,11 +9,11 @@ apply plugin: 'kotlin-android'
 android {
     ndkVersion "23.2.8568313"
 
-    compileSdkVersion 29
+    compileSdkVersion 31
     
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 31
         
         versionCode 1
         versionName "1.0"
@@ -31,7 +31,7 @@ android {
 
 cargo {
     module = "../../"
-    targets = ["arm64", "x86_64"]
+    targets = ["arm64", "x86_64", "x86"]
     libname = "maplibre_android"
     targetDirectory = "${module}/../target"
     profile = "debug"
@@ -40,24 +40,6 @@ cargo {
         defaultAnd "foo", "bar"
         noDefaultBut("foo", "bar")
         all()
-    }
-
-    def ndkDir = android.ndkDirectory
-
-    exec = { spec, toolchain ->
-        spec.environment("TEST", "test")
-
-        // https://github.com/mozilla/rust-android-gradle/issues/91
-        if (toolchain.target == "x86_64-linux-android") {
-        	spec.environment("AR_x86_64-linux-android", "$ndkDir/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
-        }
-        if (toolchain.target == "armv7-linux-androideabi") {
-        	spec.environment("AR_armv7-linux-androideabi", "$ndkDir/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
-        }
-
-        if (toolchain.target == "aarch64-linux-android") {
-        	spec.environment("AR_aarch64-linux-android", "$ndkDir/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar")
-        }
     }
 }
 

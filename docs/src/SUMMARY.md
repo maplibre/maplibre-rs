@@ -9,7 +9,8 @@
 
 
 - [Development Guide](./development-guide/index.md)
-  - [Building](./development-guide/building.md)
+  - [How to Run Demos](./development-guide/how-to-run.md)
+  - [Building Libraries](./development-guide/building-libraries.md)
   - [Debugging](./development-guide/debugging.md)
 
 
