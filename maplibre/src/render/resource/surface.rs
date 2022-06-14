@@ -225,19 +225,14 @@ impl Surface {
 
     pub fn resize(&mut self, width: u32, height: u32) {
         self.size = WindowSize::new(width, height).expect("Invalid size for resizing the surface.");
-        match &mut self.head {
-            Head::Headed(window) => {
-                window.surface_config.height = height;
-                window.surface_config.width = width;
-            }
-            Head::Headless(_) => {}
-        }
     }
 
     pub fn reconfigure(&mut self, device: &wgpu::Device) {
         match &mut self.head {
             Head::Headed(window) => {
                 if window.has_changed(&(self.size.width(), self.size.height())) {
+                    window.surface_config.height = self.size.height();
+                    window.surface_config.width = self.size.width();
                     window.configure(device);
                 }
             }
