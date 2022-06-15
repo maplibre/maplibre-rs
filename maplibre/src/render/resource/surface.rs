@@ -39,6 +39,11 @@ pub struct WindowHead {
 }
 
 impl WindowHead {
+    pub fn resize_and_configure(&mut self, width: u32, height: u32, device: &wgpu::Device) {
+        self.surface_config.height = width;
+        self.surface_config.width = height;
+        self.surface.configure(device, &self.surface_config);
+    }
     pub fn configure(&self, device: &wgpu::Device) {
         self.surface.configure(device, &self.surface_config);
     }
@@ -231,9 +236,7 @@ impl Surface {
         match &mut self.head {
             Head::Headed(window) => {
                 if window.has_changed(&(self.size.width(), self.size.height())) {
-                    window.surface_config.height = self.size.height();
-                    window.surface_config.width = self.size.width();
-                    window.configure(device);
+                    window.resize_and_configure(self.size.height(), self.size.width(), device);
                 }
             }
             Head::Headless(_) => {}
