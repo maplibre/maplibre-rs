@@ -25,7 +25,7 @@ impl ViewState {
             window_size.width(),
             window_size.height(),
             cgmath::Deg(110.0),
-            100.0,
+            1.0,
             2000.0,
         );
 
