@@ -51,7 +51,7 @@ where
         wgpu_settings: WgpuSettings,
         renderer_settings: RendererSettings,
     ) -> Self {
-        let view_state = ViewState::new(&window_size);
+        let view_state = ViewState::new(&window_size, &style);
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 

@@ -1,4 +1,4 @@
-use crate::coords::{Zoom, ZoomLevel, TILE_SIZE};
+use crate::coords::{Zoom, ZoomLevel, TILE_SIZE, WorldCoords};
 use crate::io::tile_repository::TileRepository;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::util::ChangeObserver;
@@ -12,11 +12,14 @@ pub struct ViewState {
 }
 
 impl ViewState {
-    pub fn new(window_size: &WindowSize) -> Self {
+    pub fn new(window_size: &WindowSize, style: &Style) -> Self {
+        let zoom = style.zoom.map_or_else(|| ChangeObserver::default(), |zoom| ChangeObserver::new(Zoom::new(zoom)));
+        let (lat, lon) = style.center.map_or((0.0, 0.0), |center| (center[0], center[1]));
+        let position = WorldCoords::from_lat_lon(lat, lon, zoom.0);
         let camera = Camera::new(
-            (TILE_SIZE / 2.0, TILE_SIZE / 2.0, 150.0),
+            (position.x, position.y, 150.0),
             cgmath::Deg(-90.0),
-            cgmath::Deg(0.0),
+            cgmath::Deg(style.pitch.unwrap_or(0.0)),
             window_size.width(),
             window_size.height(),
         );
@@ -30,7 +33,7 @@ impl ViewState {
         );
 
         Self {
-            zoom: ChangeObserver::default(),
+            zoom,
             camera: ChangeObserver::new(camera),
             perspective,
         }
