@@ -1,11 +1,11 @@
 //! Provides utilities related to coordinates.
 
-use std::f64::consts::PI;
 use crate::style::source::TileAddressingScheme;
 use crate::util::math::{div_floor, Aabb2};
 use crate::util::SignificantlyDifferent;
 use cgmath::num_traits::Pow;
 use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
+use std::f64::consts::PI;
 use std::fmt;
 
 pub const EXTENT_UINT: u32 = 4096;
@@ -473,7 +473,7 @@ impl WorldCoords {
         let merc_n = f64::ln(f64::tan((PI / 4.0) + (lat_rad / 2.0)));
         let y = (tile_size / 2.0) - (tile_size * merc_n / (2.0 * PI));
 
-        WorldCoords{x, y}
+        WorldCoords { x, y }
     }
 
     pub fn at_ground(x: f64, y: f64) -> Self {

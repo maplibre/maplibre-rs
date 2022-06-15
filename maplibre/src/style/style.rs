@@ -27,9 +27,7 @@ impl Default for Style {
             name: "Default Style".to_string(),
             metadata: Default::default(),
             sources: Default::default(),
-            center: Some([
-                46.5197, 6.6323
-            ]),
+            center: Some([46.5197, 6.6323]),
             pitch: Some(0.0),
             zoom: Some(13.0),
             layers: vec![
