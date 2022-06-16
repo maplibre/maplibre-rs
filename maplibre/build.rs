@@ -31,6 +31,7 @@ fn generate_type_def() -> Option<u32> {
     Some(5)
 }
 
+#[cfg(feature = "embed-static-tiles")]
 fn embed_tiles_statically() {
     use maplibre_build_tools::mbtiles::extract;
     use std::env;
@@ -74,5 +75,6 @@ fn embed_tiles_statically() {
 fn main() {
     validate_project_wgsl();
 
+    #[cfg(feature = "embed-static-tiles")]
     embed_tiles_statically();
 }

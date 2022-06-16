@@ -56,6 +56,7 @@ nightly-toolchain:
 nightly-toolchain-android: nightly-toolchain
   rustup target add --toolchain $NIGHTLY_TOOLCHAIN x86_64-linux-android
   rustup target add --toolchain $NIGHTLY_TOOLCHAIN aarch64-linux-android
+  rustup target add --toolchain $NIGHTLY_TOOLCHAIN i686-linux-android
 
 web-install PROJECT:
   cd web/{{PROJECT}} && npm install
