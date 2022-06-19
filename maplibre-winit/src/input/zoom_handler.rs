@@ -5,7 +5,6 @@ use maplibre::coords::Zoom;
 
 use cgmath::{Vector2, Vector3};
 
-use log::info;
 use std::time::Duration;
 
 pub struct ZoomHandler {
@@ -40,7 +39,6 @@ impl UpdateState for ZoomHandler {
                     ) - cursor_position;
 
                     state.camera.position += delta;
-                    info!("Camera at {:?}", state.camera.position);
                 }
             }
         }
