@@ -9,7 +9,7 @@ use crate::stages::message::{
     TileTessellateMessage,
 };
 use crate::tile::tile_parser::TileParser;
-use crate::tile::tile_repository::{StoredLayer};
+use crate::tile::tile_repository::StoredLayer;
 use crate::tile::tile_tessellator::TileTessellator;
 use crate::{HttpClient, ScheduleMethod, Scheduler, Style};
 use geozero::mvt::Tile;

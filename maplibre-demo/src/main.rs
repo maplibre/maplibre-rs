@@ -2,13 +2,13 @@ use maplibre::coords::{WorldTileCoords, ZoomLevel};
 use maplibre::error::Error;
 use maplibre::headless::HeadlessMapWindowConfig;
 
-use maplibre::io::source_client::{HttpSourceClient};
+use maplibre::io::source_client::HttpSourceClient;
 
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::render::settings::{RendererSettings, TextureFormat};
-use maplibre::window::{WindowSize};
+use maplibre::window::WindowSize;
 use maplibre::MapBuilder;
 use maplibre_winit::winit::WinitMapWindowConfig;
 
