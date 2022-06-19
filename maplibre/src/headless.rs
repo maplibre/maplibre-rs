@@ -1,8 +1,8 @@
 use crate::context::{MapContext, ViewState};
 use crate::error::Error;
 use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
-use crate::render::resource::{BufferedTextureHead};
-use crate::render::resource::{Head};
+use crate::render::resource::BufferedTextureHead;
+use crate::render::resource::Head;
 use crate::render::stages::RenderStageLabel;
 use crate::render::{
     create_default_render_graph, draw_graph, register_default_render_stages, RenderState,
