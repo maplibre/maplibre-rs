@@ -85,7 +85,7 @@ where
         }
 
         // Receive all tessellations messages
-        if let Ok(result) = self.message_receiver.try_recv() {
+        while let Ok(result) = self.message_receiver.try_recv() {
             match result {
                 TessellateMessage::Layer(layer_result) => {
                     let layer: StoredLayer = layer_result.into();
