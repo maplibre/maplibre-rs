@@ -1,26 +1,21 @@
-use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use maplibre::coords::{WorldTileCoords, ZoomLevel};
 use maplibre::error::Error;
 use maplibre::headless::HeadlessMapWindowConfig;
-use maplibre::io::pipeline::Processable;
-use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
 
-use maplibre::io::source_client::{HttpClient, HttpSourceClient};
-use maplibre::io::tile_pipelines::build_vector_tile_pipeline;
-use maplibre::io::tile_repository::StoredLayer;
-use maplibre::io::{RawLayer, TileRequest};
+use maplibre::io::source_client::{HttpSourceClient};
 
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::render::settings::{RendererSettings, TextureFormat};
-use maplibre::render::ShaderVertex;
-use maplibre::window::{EventLoop, WindowSize};
+use maplibre::window::{WindowSize};
 use maplibre::MapBuilder;
 use maplibre_winit::winit::WinitMapWindowConfig;
 
-use maplibre::headless::utils::HeadlessPipelineProcessor;
-use std::collections::HashSet;
+use maplibre::style::Style;
+use maplibre::tile::tile_parser::TileParser;
+use maplibre::tile::tile_repository::StoredLayer::TessellatedLayer;
+use maplibre::tile::tile_tessellator::TileTessellator;
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
@@ -57,6 +52,7 @@ fn run_headless() {
                 texture_format: TextureFormat::Rgba8UnormSrgb,
                 ..RendererSettings::default()
             })
+            .with_style(Style::default())
             .build()
             .initialize_headless()
             .await;
@@ -65,7 +61,6 @@ fn run_headless() {
             HttpSourceClient::new(ReqwestHttpClient::new(None));
 
         let coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
-        let request_id = 0;
 
         let data = http_source_client
             .fetch(&coords)
@@ -73,30 +68,42 @@ fn run_headless() {
             .unwrap()
             .into_boxed_slice();
 
-        let processor = HeadlessPipelineProcessor::default();
-        let mut pipeline_context = PipelineContext::new(processor);
-        let pipeline = build_vector_tile_pipeline();
-        pipeline.process(
-            (
-                TileRequest {
-                    coords,
-                    layers: HashSet::from(["boundary".to_owned(), "water".to_owned()]),
-                },
-                request_id,
-                data,
-            ),
-            &mut pipeline_context,
-        );
+        let tile = TileParser::parse(data);
 
-        let mut processor = pipeline_context
-            .take_processor::<HeadlessPipelineProcessor>()
-            .unwrap();
-
-        while let Some(v) = processor.layers.pop() {
-            map.map_schedule_mut()
+        for mut layer in tile.layers {
+            if !map
+                .map_schedule
                 .map_context
-                .tile_repository
-                .put_tessellated_layer(v);
+                .style
+                .layers
+                .iter()
+                .any(|style_layer| {
+                    style_layer
+                        .source_layer
+                        .as_ref()
+                        .map_or(false, |layer_name| *layer_name == layer.name)
+                })
+            {
+                continue;
+            }
+
+            tracing::info!("layer {} at {} ready", &layer.name, coords);
+
+            match TileTessellator::tessellate_layer(&mut layer, &map.map_schedule.map_context.style)
+            {
+                Err(_) => {}
+                Ok((vertex_buffer, feature_indices)) => {
+                    map.map_schedule_mut()
+                        .map_context
+                        .tile_repository
+                        .put_tessellated_layer(TessellatedLayer {
+                            coords,
+                            buffer: vertex_buffer,
+                            feature_indices,
+                            layer_data: layer,
+                        });
+                }
+            }
         }
 
         match map.map_schedule_mut().update_and_redraw() {

@@ -96,7 +96,7 @@ impl TileIndex {
 }
 
 /// An indexed geometry contains an exact vector geometry, computed bounds which
-/// can be helpful when interacting with the geometry and a hashmap of properties.
+/// can be helpful when interacting with the geometry, and a hashmap of properties.
 #[derive(Debug, Clone)]
 pub struct IndexedGeometry<T>
 where

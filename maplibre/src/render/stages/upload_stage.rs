@@ -2,8 +2,8 @@
 
 use crate::context::MapContext;
 use crate::coords::ViewRegion;
-use crate::io::tile_repository::{StoredLayer, TileRepository};
 use crate::render::camera::ViewProjection;
+use crate::tile::tile_repository::{StoredLayer, TileRepository};
 
 use crate::render::shaders::{
     ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32,

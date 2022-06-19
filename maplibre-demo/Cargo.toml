@@ -21,3 +21,6 @@ tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", optional = true }
 tracing-tracy = { version = "0.8", optional = true }
 tracy-client = { version = "0.12.7", optional = true }
+
+# Logging
+log = "0.4"

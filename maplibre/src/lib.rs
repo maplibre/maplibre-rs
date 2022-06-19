@@ -42,6 +42,7 @@ pub mod window;
 pub mod schedule;
 // Exposed because of SharedThreadState
 pub mod stages;
+pub mod tile;
 
 // Used for benchmarking
 pub mod benchmarking;

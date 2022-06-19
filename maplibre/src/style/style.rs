@@ -43,6 +43,7 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("park".to_string()),
+                    osm_3d_extrusion: false,
                 },
                 StyleLayer {
                     index: 1,
@@ -56,6 +57,7 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("landuse".to_string()),
+                    osm_3d_extrusion: false,
                 },
                 StyleLayer {
                     index: 2,
@@ -69,6 +71,7 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("landcover".to_string()),
+                    osm_3d_extrusion: false,
                 },
                 StyleLayer {
                     index: 3,
@@ -82,6 +85,7 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("transportation".to_string()),
+                    osm_3d_extrusion: false,
                 },
                 StyleLayer {
                     index: 4,
@@ -95,6 +99,7 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("building".to_string()),
+                    osm_3d_extrusion: true,
                 },
                 StyleLayer {
                     index: 4,
@@ -108,6 +113,7 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("water".to_string()),
+                    osm_3d_extrusion: false,
                 },
                 StyleLayer {
                     index: 6,
@@ -121,6 +127,7 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("waterway".to_string()),
+                    osm_3d_extrusion: false,
                 },
                 StyleLayer {
                     index: 7,
@@ -134,6 +141,7 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("boundary".to_string()),
+                    osm_3d_extrusion: false,
                 },
             ],
         }

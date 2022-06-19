@@ -1,8 +1,7 @@
 use crate::coords::WorldTileCoords;
 
-use crate::io::tile_repository::StoredLayer;
+use crate::tile::tile_repository::StoredLayer;
 
-use crate::io::TileRequestID;
 use crate::render::ShaderVertex;
 
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
@@ -21,8 +20,8 @@ pub enum TessellateMessage {
 
 ///  The result of the tessellation of a tile.
 pub struct TileTessellateMessage {
-    pub request_id: TileRequestID,
     pub coords: WorldTileCoords,
+    pub success: bool,
 }
 
 /// `TessellatedLayer` contains the result of the tessellation for a specific layer, otherwise

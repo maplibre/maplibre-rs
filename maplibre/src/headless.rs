@@ -1,28 +1,20 @@
 use crate::context::{MapContext, ViewState};
-use crate::coords::{ViewRegion, Zoom};
 use crate::error::Error;
-use crate::io::tile_repository::TileRepository;
-use crate::render::camera::ViewProjection;
 use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
-use crate::render::resource::{BufferDimensions, BufferedTextureHead, IndexEntry};
-use crate::render::resource::{Head, TrackedRenderPass};
+use crate::render::resource::{BufferedTextureHead};
+use crate::render::resource::{Head};
 use crate::render::stages::RenderStageLabel;
 use crate::render::{
     create_default_render_graph, draw_graph, register_default_render_stages, RenderState,
 };
 use crate::schedule::{Schedule, Stage};
+use crate::tile::tile_repository::TileRepository;
 use crate::{
     HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler, Style, WindowSize,
 };
-use std::fs::File;
-use std::future::Future;
-use std::io::Write;
-use std::iter;
-use std::ops::{Deref, Range};
 use std::sync::Arc;
 use tokio::runtime::Handle;
 use tokio::task;
-use wgpu::{BufferAsyncError, BufferSlice};
 
 pub struct HeadlessMapWindowConfig {
     pub size: WindowSize,
@@ -239,37 +231,6 @@ impl Stage for WriteSurfaceBufferStage {
 
                 self.frame += 1;
             }
-        }
-    }
-}
-
-pub mod utils {
-    use crate::coords::WorldTileCoords;
-    use crate::io::pipeline::PipelineProcessor;
-    use crate::io::tile_repository::StoredLayer;
-    use crate::io::RawLayer;
-    use crate::render::ShaderVertex;
-    use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-
-    #[derive(Default)]
-    pub struct HeadlessPipelineProcessor {
-        pub layers: Vec<StoredLayer>,
-    }
-
-    impl PipelineProcessor for HeadlessPipelineProcessor {
-        fn layer_tesselation_finished(
-            &mut self,
-            coords: &WorldTileCoords,
-            buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-            feature_indices: Vec<u32>,
-            layer_data: RawLayer,
-        ) {
-            self.layers.push(StoredLayer::TessellatedLayer {
-                coords: *coords,
-                buffer,
-                feature_indices,
-                layer_data,
-            })
         }
     }
 }
