@@ -15,5 +15,5 @@ pub fn register_stages<HC: HttpClient, SM: ScheduleMethod>(
     http_source_client: HttpSourceClient<HC>,
     scheduler: Box<Scheduler<SM>>,
 ) {
-    schedule.add_stage("request", FetchStage::new(http_source_client, *scheduler));
+    schedule.add_stage("fetch", FetchStage::new(http_source_client, *scheduler));
 }
