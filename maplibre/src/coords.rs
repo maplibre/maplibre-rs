@@ -113,10 +113,25 @@ impl Into<u8> for ZoomLevel {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct LatLon(f64, f64);
+
+impl LatLon {
+    pub fn new(latitude: f64, longitude: f64) -> Self {
+        LatLon(latitude, longitude)
+    }
+}
+
+impl Default for LatLon {
+    fn default() -> Self {
+        LatLon(0.0, 0.0)
+    }
+}
+
 /// `Zoom` is an exponential scale that defines the zoom of the camera on the map.
 /// We can derive the `ZoomLevel` from `Zoom` by using the `[crate::coords::ZOOM_BOUNDS]`.
 #[derive(Copy, Clone, Debug)]
-pub struct Zoom(pub(crate) f64);
+pub struct Zoom(f64);
 
 impl Zoom {
     pub fn new(zoom: f64) -> Self {
@@ -461,13 +476,13 @@ fn tiles_with_z(z: u8) -> f64 {
 }
 
 impl WorldCoords {
-    pub fn from_lat_lon(latitude: f64, longitude: f64, zoom: f64) -> WorldCoords {
-        let tile_size = TILE_SIZE * 2.0_f64.powf(zoom);
+    pub fn from_lat_lon(lat_lon: LatLon, zoom: Zoom) -> WorldCoords {
+        let tile_size = TILE_SIZE * 2.0_f64.powf(zoom.0);
         // Get x value
-        let x = (longitude + 180.0) * (tile_size / 360.0);
+        let x = (lat_lon.1 + 180.0) * (tile_size / 360.0);
 
         // Convert from degrees to radians
-        let lat_rad = (latitude * PI) / 180.0;
+        let lat_rad = (lat_lon.0 * PI) / 180.0;
 
         // get y value
         let merc_n = f64::ln(f64::tan((PI / 4.0) + (lat_rad / 2.0)));

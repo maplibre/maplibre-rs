@@ -5,6 +5,7 @@ use crate::io::scheduler::Scheduler;
 use crate::io::source_client::{HttpClient, HttpSourceClient};
 use crate::io::tile_repository::TileRepository;
 
+use crate::coords::{LatLon, Zoom};
 use crate::render::{create_default_render_graph, register_default_render_stages};
 use crate::schedule::{Schedule, Stage};
 use crate::stages::register_stages;
@@ -51,7 +52,12 @@ where
         wgpu_settings: WgpuSettings,
         renderer_settings: RendererSettings,
     ) -> Self {
-        let view_state = ViewState::new(&window_size, &style);
+        let view_state = ViewState::new(
+            &window_size,
+            style.zoom.map_or(Zoom::default(), |zoom| Zoom::new(zoom)),
+            style.center.map_or(LatLon::default(), |center| LatLon::new(center[0], center[1])),
+            style.pitch.unwrap_or(0.0)
+        );
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
