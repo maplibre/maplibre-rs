@@ -91,7 +91,9 @@ impl InputController {
             }
             WindowEvent::Touch(touch) => match touch.phase {
                 TouchPhase::Started => {
-                    self.pan_handler.process_touch_start();
+                    let position: (f64, f64) = touch.location.to_owned().into();
+                    self.pan_handler
+                        .process_touch_start(&Vector2::from(position));
                     self.query_handler.process_touch_start();
                     true
                 }
