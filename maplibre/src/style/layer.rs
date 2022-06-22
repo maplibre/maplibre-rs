@@ -1,5 +1,6 @@
 //! Vector tile layer drawing utilities.
 
+use crate::style::raster::RasterLayer;
 use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
@@ -29,6 +30,32 @@ pub struct LinePaint {
     // TODO a lot
 }
 
+pub enum PaintType {
+    Argb(Alpha<EncodedSrgb<f32>>),
+    Raster(RasterLayer),
+}
+
+impl From<Alpha<EncodedSrgb<f32>>> for PaintType {
+    fn from(argb: Alpha<EncodedSrgb<f32>>) -> Self {
+        PaintType::Argb(argb)
+    }
+}
+
+impl From<Color> for PaintType {
+    fn from(color: Color) -> Self {
+        PaintType::Argb(color.into())
+    }
+}
+
+impl From<PaintType> for [f32; 4] {
+    fn from(paint_type: PaintType) -> Self {
+        match paint_type {
+            PaintType::Argb(argb) => argb.into(),
+            PaintType::Raster(_) => [0.0, 1.0, 1.0, 1.0],
+        }
+    }
+}
+
 /// The different types of paints.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", content = "paint")]
@@ -39,10 +66,12 @@ pub enum LayerPaint {
     Line(LinePaint),
     #[serde(rename = "fill")]
     Fill(FillPaint),
+    #[serde(rename = "raster")]
+    Raster(RasterLayer),
 }
 
 impl LayerPaint {
-    pub fn get_color(&self) -> Option<Alpha<EncodedSrgb<f32>>> {
+    pub fn get_color(&self) -> Option<PaintType> {
         match self {
             LayerPaint::Background(paint) => paint
                 .background_color
@@ -50,6 +79,7 @@ impl LayerPaint {
                 .map(|color| color.clone().into()),
             LayerPaint::Line(paint) => paint.line_color.as_ref().map(|color| color.clone().into()),
             LayerPaint::Fill(paint) => paint.fill_color.as_ref().map(|color| color.clone().into()),
+            LayerPaint::Raster(raster) => Some(PaintType::Raster(raster.clone())),
         }
     }
 }

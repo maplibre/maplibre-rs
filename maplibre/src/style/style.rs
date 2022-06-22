@@ -1,6 +1,7 @@
 //! Default vector tile styles configuration.
 
 use crate::style::layer::{LayerPaint, LinePaint, StyleLayer};
+use crate::style::raster::RasterLayer;
 use crate::style::source::Source;
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
@@ -128,6 +129,17 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("boundary".to_string()),
+                },
+                StyleLayer {
+                    index: 8,
+                    id: "raster".to_string(),
+                    typ: "raster".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Raster(RasterLayer::default())),
+                    source: None,
+                    source_layer: Some("raster".to_string()),
                 },
             ],
         }
