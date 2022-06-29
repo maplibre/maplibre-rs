@@ -225,6 +225,11 @@ impl UploadStage {
                                         &feature_metadata,
                                     );
                                 }
+                                StoredLayer::RasterLayer {
+                                    coords,
+                                    layer_name,
+                                    layer_data,
+                                } => (),
                             }
                         }
                     }

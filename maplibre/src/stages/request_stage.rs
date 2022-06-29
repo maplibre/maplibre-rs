@@ -77,6 +77,80 @@ where
     }
 }
 
+pub trait Source<SM, HC>
+where
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    fn load(request_stage: &RequestStage<SM, HC>, coords: &WorldTileCoords, request_id: u32);
+}
+
+pub struct TessellateSource;
+
+impl<SM, HC> Source<SM, HC> for TessellateSource
+where
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    fn load(request_stage: &RequestStage<SM, HC>, coords: &WorldTileCoords, request_id: u32) {
+        let client = SourceClient::Http(request_stage.http_source_client.clone());
+        let coords = *coords;
+
+        let state = request_stage.shared_thread_state.clone();
+        request_stage
+            .scheduler
+            .schedule_method()
+            .schedule(Box::new(move || {
+                Box::pin(async move {
+                    match client.fetch(&coords).await {
+                        Ok(data) => state
+                            .process_tile(request_id, data.into_boxed_slice())
+                            .unwrap(),
+                        Err(e) => {
+                            log::error!("{:?}", &e);
+                            state.tile_unavailable(&coords, request_id).unwrap()
+                        }
+                    }
+                })
+            }))
+            .unwrap();
+    }
+}
+
+pub struct RasterSource;
+
+impl<SM, HC> Source<SM, HC> for RasterSource
+where
+    SM: ScheduleMethod,
+    HC: HttpClient,
+{
+    fn load(request_stage: &RequestStage<SM, HC>, coords: &WorldTileCoords, request_id: u32) {
+        // Sould have a RasterSourceClient or should fetching happen depending
+        // on the tile type ?
+        let client = SourceClient::Http(request_stage.http_source_client.clone());
+        let coords = *coords;
+
+        let state = request_stage.shared_thread_state.clone();
+        request_stage
+            .scheduler
+            .schedule_method()
+            .schedule(Box::new(move || {
+                Box::pin(async move {
+                    match client.fetch(&coords).await {
+                        Ok(data) => state
+                            .process_tile(request_id, data.into_boxed_slice())
+                            .unwrap(),
+                        Err(e) => {
+                            log::error!("{:?}", &e);
+                            state.tile_unavailable(&coords, request_id).unwrap()
+                        }
+                    }
+                })
+            }))
+            .unwrap();
+    }
+}
+
 impl<SM, HC> RequestStage<SM, HC>
 where
     SM: ScheduleMethod,
@@ -114,7 +188,11 @@ where
         coords: &WorldTileCoords,
         layers: &HashSet<String>,
     ) -> Result<bool, Error> {
-        if !tile_repository.is_layers_missing(coords, layers) {
+        // if !tile_repository.is_layers_missing(coords, layers) {
+        //     return Ok(false);
+        // }
+        let missed_sources = tile_repository.is_layers_missing(coords, layers);
+        if missed_sources.is_empty() {
             return Ok(false);
         }
 
@@ -135,26 +213,33 @@ where
                     );
                 }*/
 
-                let client = SourceClient::Http(self.http_source_client.clone());
-                let coords = *coords;
+                // let client = SourceClient::Http(self.http_source_client.clone());
+                // let coords = *coords;
 
-                let state = self.shared_thread_state.clone();
-                self.scheduler
-                    .schedule_method()
-                    .schedule(Box::new(move || {
-                        Box::pin(async move {
-                            match client.fetch(&coords).await {
-                                Ok(data) => state
-                                    .process_tile(request_id, data.into_boxed_slice())
-                                    .unwrap(),
-                                Err(e) => {
-                                    log::error!("{:?}", &e);
-                                    state.tile_unavailable(&coords, request_id).unwrap()
-                                }
-                            }
-                        })
-                    }))
-                    .unwrap();
+                // let state = self.shared_thread_state.clone();
+                // self.scheduler
+                //     .schedule_method()
+                //     .schedule(Box::new(move || {
+                //         Box::pin(async move {
+                //             match client.fetch(&coords).await {
+                //                 Ok(data) => state
+                //                     .process_tile(request_id, data.into_boxed_slice())
+                //                     .unwrap(),
+                //                 Err(e) => {
+                //                     log::error!("{:?}", &e);
+                //                     state.tile_unavailable(&coords, request_id).unwrap()
+                //                 }
+                //             }
+                //         })
+                //     }))
+                //     .unwrap();
+                let raster = "raster".to_string();
+                for source in missed_sources {
+                    match source {
+                        raster => RasterSource::load(self, coords, request_id),
+                        _ => TessellateSource::load(self, coords, request_id),
+                    }
+                }
             }
 
             Ok(false)

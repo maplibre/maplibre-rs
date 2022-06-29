@@ -131,7 +131,7 @@ impl Default for Style {
                     source_layer: Some("boundary".to_string()),
                 },
                 StyleLayer {
-                    index: 8,
+                    index: 0,
                     id: "raster".to_string(),
                     typ: "raster".to_string(),
                     maxzoom: None,
