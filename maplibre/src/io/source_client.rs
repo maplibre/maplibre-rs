@@ -47,9 +47,9 @@ impl<HC> SourceClient<HC>
 where
     HC: HttpClient,
 {
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
+    pub async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
         match self {
-            SourceClient::Http(client) => client.fetch(coords).await,
+            SourceClient::Http(client) => client.fetch(url).await,
             SourceClient::Mbtiles { .. } => unimplemented!(),
         }
     }
@@ -65,18 +65,7 @@ where
         }
     }
 
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
-        let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
-        self.inner_client
-            .fetch(
-                format!(
-                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
-                    x = tile_coords.x,
-                    y = tile_coords.y,
-                    z = tile_coords.z
-                )
-                .as_str(),
-            )
-            .await
+    pub async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
+        self.inner_client.fetch(url).await
     }
 }

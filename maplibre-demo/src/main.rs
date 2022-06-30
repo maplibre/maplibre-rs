@@ -15,6 +15,7 @@ use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::render::settings::{RendererSettings, TextureFormat};
 use maplibre::render::ShaderVertex;
+use maplibre::style::source::TileAddressingScheme;
 use maplibre::window::{EventLoop, WindowSize};
 use maplibre::MapBuilder;
 use maplibre_winit::winit::WinitMapWindowConfig;
@@ -67,8 +68,16 @@ fn run_headless() {
         let coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
         let request_id = 0;
 
+        let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
+        let url = format!(
+            "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
+            x = tile_coords.x,
+            y = tile_coords.y,
+            z = tile_coords.z
+        );
+
         let data = http_source_client
-            .fetch(&coords)
+            .fetch(&url)
             .await
             .unwrap()
             .into_boxed_slice();

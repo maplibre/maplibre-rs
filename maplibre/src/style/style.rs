@@ -137,7 +137,7 @@ impl Default for Style {
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Raster(RasterLayer::default())),
+                    paint: None,
                     source: None,
                     source_layer: Some("raster".to_string()),
                 },

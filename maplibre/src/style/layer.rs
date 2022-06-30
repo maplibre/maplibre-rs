@@ -66,8 +66,6 @@ pub enum LayerPaint {
     Line(LinePaint),
     #[serde(rename = "fill")]
     Fill(FillPaint),
-    #[serde(rename = "raster")]
-    Raster(RasterLayer),
 }
 
 impl LayerPaint {
@@ -79,7 +77,6 @@ impl LayerPaint {
                 .map(|color| color.clone().into()),
             LayerPaint::Line(paint) => paint.line_color.as_ref().map(|color| color.clone().into()),
             LayerPaint::Fill(paint) => paint.fill_color.as_ref().map(|color| color.clone().into()),
-            LayerPaint::Raster(raster) => Some(PaintType::Raster(raster.clone())),
         }
     }
 }

@@ -124,25 +124,7 @@ impl TileRepository {
     }
 
     /// Checks if a layer is missing from the given layers set at the given coords.
-    // pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
-    //     if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.tree.get(&key)) {
-    //         let tessellated_set: HashSet<&str> = cached_tile
-    //             .layers
-    //             .iter()
-    //             .map(|tessellated_layer| tessellated_layer.layer_name())
-    //             .collect();
-
-    //         for layer in layers {
-    //             if !tessellated_set.contains(layer.as_str()) {
-    //                 return true;
-    //             }
-    //         }
-
-    //         return false;
-    //     }
-    //     true
-    // }
-    pub fn is_layers_missing(
+    pub fn missed_layer(
         &self,
         coords: &WorldTileCoords,
         layers: &HashSet<String>,
