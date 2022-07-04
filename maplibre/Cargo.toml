@@ -50,9 +50,7 @@ geozero = { version = "0.9.4", default-features = false, features = ["with-mvt",
 tile-grid = "0.3"
 
 # Rendering
-wgpu = { git = "https://github.com/gfx-rs/wgpu.git", branch = "master" }
-wgpu-core = { git = "https://github.com/gfx-rs/wgpu.git", branch = "master" }
-wgpu-hal = { git = "https://github.com/gfx-rs/wgpu.git", branch = "master" }
+wgpu = "0.13.0"
 lyon = { version = "0.17", features = [] }
 raw-window-handle = "0.4"
 

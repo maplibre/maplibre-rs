@@ -45,11 +45,11 @@ impl RenderPipelineDescriptor {
             ..Default::default()
         });
 
-        let vertex_shader_module = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+        let vertex_shader_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: None,
             source: wgpu::ShaderSource::Wgsl(self.vertex.source.into()),
         });
-        let fragment_shader_module = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+        let fragment_shader_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: None,
             source: wgpu::ShaderSource::Wgsl(self.fragment.source.into()),
         });
