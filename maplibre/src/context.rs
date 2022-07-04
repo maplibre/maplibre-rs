@@ -25,8 +25,13 @@ impl ViewState {
             window_size.width(),
             window_size.height(),
             cgmath::Deg(110.0),
-            1.0,
-            2000.0,
+            // in tile.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
+            // This means that regardless of the `znear` value all layers will be rendered as part
+            // of the near plane.
+            // These values have been selected experimentally:
+            // https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
+            1024.0,
+            2048.0,
         );
 
         Self {
