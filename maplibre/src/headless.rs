@@ -1,8 +1,16 @@
 use crate::context::{MapContext, ViewState};
-use crate::coords::{ViewRegion, Zoom};
+use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
 use crate::error::Error;
-use crate::io::tile_repository::TileRepository;
+use crate::headless::utils::HeadlessPipelineProcessor;
+use crate::io::pipeline::PipelineContext;
+use crate::io::pipeline::Processable;
+use crate::io::source_client::HttpSourceClient;
+use crate::io::tile_pipelines::build_vector_tile_pipeline;
+use crate::io::tile_repository::{StoredLayer, TileRepository};
+use crate::io::tile_request_state::TileRequestState;
+use crate::io::TileRequest;
 use crate::render::camera::ViewProjection;
+use crate::render::eventually::Eventually;
 use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
 use crate::render::resource::{BufferDimensions, BufferedTextureHead, IndexEntry};
 use crate::render::resource::{Head, TrackedRenderPass};
@@ -14,6 +22,7 @@ use crate::schedule::{Schedule, Stage};
 use crate::{
     HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler, Style, WindowSize,
 };
+use std::collections::HashSet;
 use std::fs::File;
 use std::future::Future;
 use std::io::Write;
@@ -81,6 +90,7 @@ where
     schedule: Schedule,
     scheduler: Scheduler<SM>,
     http_client: HC,
+    tile_request_state: TileRequestState,
 }
 
 impl<MWC, SM, HC> HeadlessMapSchedule<MWC, SM, HC>
@@ -126,13 +136,13 @@ where
             schedule,
             scheduler,
             http_client,
+            tile_request_state: Default::default(),
         }
     }
 
     #[tracing::instrument(name = "update_and_redraw", skip_all)]
     pub fn update_and_redraw(&mut self) -> Result<(), Error> {
         self.schedule.run(&mut self.map_context);
-
         Ok(())
     }
 
@@ -144,6 +154,55 @@ where
     }
     pub fn http_client(&self) -> &HC {
         &self.http_client
+    }
+
+    pub async fn fetch_process(&mut self, coords: &WorldTileCoords) -> Option<()> {
+        let source_layers: HashSet<String> = self
+            .map_context
+            .style
+            .layers
+            .iter()
+            .filter_map(|layer| layer.source_layer.clone())
+            .collect();
+
+        let http_source_client: HttpSourceClient<HC> =
+            HttpSourceClient::new(self.http_client.clone());
+
+        let data = http_source_client
+            .fetch(&coords)
+            .await
+            .unwrap()
+            .into_boxed_slice();
+
+        let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
+        let pipeline = build_vector_tile_pipeline();
+
+        let request = TileRequest {
+            coords: WorldTileCoords::default(),
+            layers: source_layers,
+        };
+
+        let request_id = self
+            .tile_request_state
+            .start_tile_request(request.clone())?;
+        pipeline.process((request, request_id, data), &mut pipeline_context);
+        self.tile_request_state.finish_tile_request(request_id);
+
+        let mut processor = pipeline_context
+            .take_processor::<HeadlessPipelineProcessor>()
+            .unwrap();
+
+        if let Eventually::Initialized(pool) = self.map_context.renderer.state.buffer_pool_mut() {
+            pool.clear();
+        }
+
+        while let Some(layer) = processor.layers.pop() {
+            self.map_context
+                .tile_repository
+                .put_tessellated_layer(layer);
+        }
+
+        Some(())
     }
 }
 
@@ -174,10 +233,11 @@ impl Node for CopySurfaceBufferNode {
         }: &mut RenderContext,
         state: &RenderState,
     ) -> Result<(), NodeRunError> {
-        match state.surface.head() {
+        let surface = state.surface();
+        match surface.head() {
             Head::Headed(_) => {}
             Head::Headless(buffered_texture) => {
-                let size = state.surface.size();
+                let size = surface.size();
                 command_encoder.copy_texture_to_buffer(
                     buffered_texture.texture.as_image_copy(),
                     wgpu::ImageCopyBuffer {
@@ -221,7 +281,8 @@ impl Stage for WriteSurfaceBufferStage {
             ..
         }: &mut MapContext,
     ) {
-        match state.surface.head() {
+        let surface = state.surface();
+        match surface.head() {
             Head::Headed(_) => {}
             Head::Headless(buffered_texture) => {
                 let buffered_texture: Arc<BufferedTextureHead> = buffered_texture.clone();
