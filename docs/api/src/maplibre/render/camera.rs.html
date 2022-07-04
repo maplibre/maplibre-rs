@@ -560,7 +560,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Camera</span> {
-    <span class="kw">pub</span> <span class="ident">position</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">position</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>, <span class="comment">// The z axis never changes, the zoom is used instead</span>
     <span class="kw">pub</span> <span class="ident">yaw</span>: <span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">pitch</span>: <span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
 

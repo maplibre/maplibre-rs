@@ -199,6 +199,12 @@
 <span id="194">194</span>
 <span id="195">195</span>
 <span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Default vector tile styles configuration.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style::layer</span>::{<span class="ident">LayerPaint</span>, <span class="ident">LinePaint</span>, <span class="ident">StyleLayer</span>};
@@ -216,6 +222,9 @@
     <span class="kw">pub</span> <span class="ident">metadata</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">sources</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Source</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">layers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StyleLayer</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">center</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">f64</span>; <span class="number">2</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">zoom</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">pitch</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Style</span> {
@@ -225,6 +234,9 @@
             <span class="ident">name</span>: <span class="string">&quot;Default Style&quot;</span>.<span class="ident">to_string</span>(),
             <span class="ident">metadata</span>: <span class="ident">Default::default</span>(),
             <span class="ident">sources</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">center</span>: <span class="prelude-val">Some</span>([<span class="number">46.5197</span>, <span class="number">6.6323</span>]),
+            <span class="ident">pitch</span>: <span class="prelude-val">Some</span>(<span class="number">0.0</span>),
+            <span class="ident">zoom</span>: <span class="prelude-val">Some</span>(<span class="number">13.0</span>),
             <span class="ident">layers</span>: <span class="macro">vec!</span>[
                 <span class="ident">StyleLayer</span> {
                     <span class="ident">index</span>: <span class="number">0</span>,
