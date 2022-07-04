@@ -38,7 +38,7 @@ impl UpdateState for ZoomHandler {
                         cursor_position.z,
                     ) - cursor_position;
 
-                    state.camera.position += delta;
+                    state.camera.move_position(delta);
                 }
             }
         }

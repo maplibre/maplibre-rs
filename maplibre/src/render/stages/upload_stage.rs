@@ -43,8 +43,7 @@ impl Stage for UploadStage {
                     view_proj.downcast().into(),
                     view_state
                         .camera
-                        .position
-                        .to_homogeneous()
+                        .homogenous_position()
                         .cast::<f32>()
                         .unwrap()
                         .into(),

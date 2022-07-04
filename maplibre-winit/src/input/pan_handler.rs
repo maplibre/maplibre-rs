@@ -41,13 +41,13 @@ impl UpdateState for PanHandler {
                 };
 
                 if self.start_camera_position.is_none() {
-                    self.start_camera_position = Some(state.camera.position.to_vec());
+                    self.start_camera_position = Some(state.camera.position().to_vec());
                 }
 
                 if let Some(start_camera_position) = self.start_camera_position {
-                    state.camera.position = Point3::from_vec(
+                    state.camera.set_position(Point3::from_vec(
                         start_camera_position + Vector3::new(delta.x, delta.y, 0.0),
-                    );
+                    ));
                 }
             }
         } else {

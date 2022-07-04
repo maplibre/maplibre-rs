@@ -17,9 +17,11 @@ impl UpdateState for TiltHandler {
     fn update_state(&mut self, state: &mut ViewState, dt: Duration) {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
-        let delta = self.delta_pitch * dt;
-        state.camera.pitch += Rad::from(delta);
-        self.delta_pitch -= delta;
+        if !self.delta_pitch.is_zero() {
+            let delta = self.delta_pitch * dt;
+            state.camera.tilt(Rad::from(delta));
+            self.delta_pitch -= delta;
+        }
     }
 }
 

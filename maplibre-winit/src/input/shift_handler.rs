@@ -16,7 +16,7 @@ impl UpdateState for ShiftHandler {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.camera_translate * dt;
-        state.camera.position += delta;
+        state.camera.move_position(delta);
         self.camera_translate -= delta;
     }
 }
