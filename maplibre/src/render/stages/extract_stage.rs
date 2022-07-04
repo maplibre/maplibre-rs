@@ -3,7 +3,7 @@
 use crate::context::MapContext;
 use crate::coords::ViewRegion;
 
-use crate::render::util::Eventually::Initialized;
+use crate::render::eventually::Eventually::Initialized;
 use crate::schedule::Stage;
 use crate::{RenderState, Renderer};
 

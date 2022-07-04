@@ -1,9 +1,9 @@
 //! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
+use crate::render::eventually::HasChanged;
 use crate::render::resource::texture::TextureView;
 use crate::render::settings::RendererSettings;
-use crate::render::util::HasChanged;
 use crate::window::HeadedMapWindow;
 use crate::{MapWindow, WindowSize};
 

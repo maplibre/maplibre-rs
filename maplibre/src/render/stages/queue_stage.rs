@@ -4,8 +4,8 @@ use crate::context::MapContext;
 
 use crate::render::resource::IndexEntry;
 
+use crate::render::eventually::Eventually::Initialized;
 use crate::render::tile_view_pattern::TileInView;
-use crate::render::util::Eventually::Initialized;
 use crate::schedule::Stage;
 use crate::{RenderState, Renderer};
 

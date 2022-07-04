@@ -36,6 +36,7 @@ pub mod platform;
 // Exposed because of camera
 pub mod render;
 pub mod style;
+pub mod util;
 
 pub mod window;
 // Exposed because of doc-strings
@@ -48,7 +49,6 @@ pub mod benchmarking;
 
 // Internal modules
 pub(crate) mod tessellation;
-pub mod util;
 
 /// The [`Map`] defines the public interface of the map renderer.
 // DO NOT IMPLEMENT INTERNALS ON THIS STRUCT.
