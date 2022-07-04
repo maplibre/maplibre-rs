@@ -678,6 +678,7 @@ mod tests {
         for tile_coords in ViewRegion::new(
             Aabb2::new(Point2::new(0.0, 0.0), Point2::new(2000.0, 2000.0)),
             1,
+            32,
             Zoom::default(),
             ZoomLevel::default(),
         )
