@@ -33,16 +33,7 @@ impl Stage for ExtractStage {
         if let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
             (tile_view_pattern, &buffer_pool)
         {
-            let visible_level = view_state.visible_level();
-
-            let view_proj = view_state.view_projection();
-
-            let view_region = view_state
-                .camera
-                .view_region_bounding_box(&view_proj.invert())
-                .map(|bounding_box| {
-                    ViewRegion::new(bounding_box, 0, *view_state.zoom, visible_level)
-                });
+            let view_region = view_state.create_view_region();
 
             if let Some(view_region) = &view_region {
                 let zoom = view_state.zoom();

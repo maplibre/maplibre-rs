@@ -1,4 +1,4 @@
-use crate::coords::{Zoom, ZoomLevel, TILE_SIZE};
+use crate::coords::{ViewRegion, Zoom, ZoomLevel, TILE_SIZE};
 use crate::io::tile_repository::TileRepository;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
 use crate::util::ChangeObserver;
@@ -34,6 +34,14 @@ impl ViewState {
             camera: ChangeObserver::new(camera),
             perspective,
         }
+    }
+
+    pub fn create_view_region(&self) -> Option<ViewRegion> {
+        self.camera
+            .view_region_bounding_box(&self.view_projection().invert())
+            .map(|bounding_box| {
+                ViewRegion::new(bounding_box, 0, 32, *self.zoom, self.visible_level())
+            })
     }
 
     pub fn view_projection(&self) -> ViewProjection {

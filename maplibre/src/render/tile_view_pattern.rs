@@ -12,6 +12,8 @@ use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
 
+pub const DEFAULT_TILE_VIEW_SIZE: wgpu::BufferAddress = 32 * 4;
+
 /// The tile mask pattern assigns each tile a value which can be used for stencil testing.
 pub struct TileViewPattern<Q, B> {
     in_view: Vec<TileInView>,
@@ -159,11 +161,13 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             }
         }
 
-        queue.write_buffer(
-            &self.buffer.inner,
-            0,
-            bytemuck::cast_slice(buffer.as_slice()),
-        );
+        let raw_buffer = bytemuck::cast_slice(buffer.as_slice());
+        if raw_buffer.len() as wgpu::BufferAddress > self.buffer.inner_size {
+            /* FIXME: We need to avoid this case by either choosing a proper size
+            (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */
+            panic!("Buffer is too small to store the tile pattern!");
+        }
+        queue.write_buffer(&self.buffer.inner, 0, raw_buffer);
     }
 
     pub fn stencil_reference_value(&self, world_coords: &WorldTileCoords) -> u8 {

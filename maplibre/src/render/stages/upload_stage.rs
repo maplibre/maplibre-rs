@@ -30,8 +30,6 @@ impl Stage for UploadStage {
             ..
         }: &mut MapContext,
     ) {
-        let visible_level = view_state.visible_level();
-
         let view_proj = view_state.view_projection();
 
         if let Initialized(globals_bind_group) = &state.globals_bind_group {
@@ -52,10 +50,7 @@ impl Stage for UploadStage {
             );
         }
 
-        let view_region = view_state
-            .camera
-            .view_region_bounding_box(&view_proj.invert())
-            .map(|bounding_box| ViewRegion::new(bounding_box, 0, *view_state.zoom, visible_level));
+        let view_region = view_state.create_view_region();
 
         if let Some(view_region) = &view_region {
             self.upload_tile_geometry(state, queue, tile_repository, style, view_region);

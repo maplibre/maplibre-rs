@@ -509,12 +509,22 @@ impl From<Point3<f64>> for WorldCoords {
 pub struct ViewRegion {
     min_tile: WorldTileCoords,
     max_tile: WorldTileCoords,
-    z: ZoomLevel,
+    /// At which zoom level does this region exist
+    zoom_level: ZoomLevel,
+    /// Padding around this view region
     padding: i32,
+    /// The maximum amount of tiles this view region contains
+    max_n_tiles: usize,
 }
 
 impl ViewRegion {
-    pub fn new(view_region: Aabb2<f64>, padding: i32, zoom: Zoom, z: ZoomLevel) -> Self {
+    pub fn new(
+        view_region: Aabb2<f64>,
+        padding: i32,
+        max_n_tiles: usize,
+        zoom: Zoom,
+        z: ZoomLevel,
+    ) -> Self {
         let min_world: WorldCoords = WorldCoords::at_ground(view_region.min.x, view_region.min.y);
         let min_world_tile: WorldTileCoords = min_world.into_world_tile(z, zoom);
         let max_world: WorldCoords = WorldCoords::at_ground(view_region.max.x, view_region.max.y);
@@ -523,13 +533,14 @@ impl ViewRegion {
         Self {
             min_tile: min_world_tile,
             max_tile: max_world_tile,
-            z,
+            zoom_level: z,
+            max_n_tiles,
             padding,
         }
     }
 
     pub fn zoom_level(&self) -> ZoomLevel {
-        self.z
+        self.zoom_level
     }
 
     pub fn is_in_view(&self, &world_coords: &WorldTileCoords) -> bool {
@@ -537,16 +548,18 @@ impl ViewRegion {
             && world_coords.y <= self.max_tile.y + self.padding
             && world_coords.x >= self.min_tile.x - self.padding
             && world_coords.y >= self.min_tile.y - self.padding
-            && world_coords.z == self.z
+            && world_coords.z == self.zoom_level
     }
 
     pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
-        (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding).flat_map(move |x| {
-            (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding).map(move |y| {
-                let tile_coord: WorldTileCoords = (x, y, self.z).into();
-                tile_coord
+        (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding)
+            .flat_map(move |x| {
+                (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding).map(move |y| {
+                    let tile_coord: WorldTileCoords = (x, y, self.zoom_level).into();
+                    tile_coord
+                })
             })
-        })
+            .take(self.max_n_tiles)
     }
 }
 
