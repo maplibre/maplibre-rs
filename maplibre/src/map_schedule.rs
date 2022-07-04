@@ -54,9 +54,12 @@ where
     ) -> Self {
         let view_state = ViewState::new(
             &window_size,
-            style.zoom.map_or(Zoom::default(), |zoom| Zoom::new(zoom)),
-            style.center.map_or(LatLon::default(), |center| LatLon::new(center[0], center[1])),
-            style.pitch.unwrap_or(0.0)
+            style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default(),
+            style
+                .center
+                .map(|center| LatLon::new(center[0], center[1]))
+                .unwrap_or_default(),
+            style.pitch.unwrap_or_default(),
         );
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
