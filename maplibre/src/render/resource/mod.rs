@@ -16,3 +16,13 @@ pub use shader::*;
 pub use surface::*;
 pub use texture::*;
 pub use tracked_render_pass::*;
+
+pub trait Queue<B> {
+    fn write_buffer(&self, buffer: &B, offset: wgpu::BufferAddress, data: &[u8]);
+}
+
+impl Queue<wgpu::Buffer> for wgpu::Queue {
+    fn write_buffer(&self, buffer: &wgpu::Buffer, offset: wgpu::BufferAddress, data: &[u8]) {
+        self.write_buffer(buffer, offset, data)
+    }
+}
