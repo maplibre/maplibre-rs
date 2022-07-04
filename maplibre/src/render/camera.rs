@@ -67,7 +67,7 @@ impl ModelViewProjection {
 
 #[derive(Debug, Clone)]
 pub struct Camera {
-    pub position: Point3<f64>,
+    pub position: Point3<f64>, // The z axis never changes, the zoom is used instead
     pub yaw: cgmath::Rad<f64>,
     pub pitch: cgmath::Rad<f64>,
 
