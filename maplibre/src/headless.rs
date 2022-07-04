@@ -97,7 +97,7 @@ where
         http_client: HC,
         style: Style,
     ) -> Self {
-        let view_state = ViewState::new(&window_size);
+        let view_state = ViewState::new(&window_size, cgmath::Deg(110.0));
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
