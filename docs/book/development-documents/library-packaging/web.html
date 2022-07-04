@@ -190,7 +190,7 @@ Therefore, we should stick to the <code>web</code> output format.</p>
 <li>Predictable Paths: Without predictable paths, it's difficult for users to reference the wasm file directly from the <code>node_modules</code> directory if requried.</li>
 </ul>
 <h2 id="bundler-feature-comparison"><a class="header" href="#bundler-feature-comparison">Bundler Feature Comparison</a></h2>
-<table><thead><tr><th>Bundler</th><th><em>ESM</em></th><th><em>IIFE</em></th><th>CJS</th><th>UMD</th><th><em>WebWorker Inlining</em></th><th>Web Worker Bundling</th><th><em>WASM Bundling</em></th><th><em>Predictable Paths</em></th><th>Inlining Environment Variables</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Bundler</th><th><em>ESM</em></th><th><em>IIFE</em></th><th>CJS</th><th>UMD</th><th><em>WebWorker Inlining</em></th><th>Web Worker Bundling</th><th><em>WASM Bundling</em></th><th><em>Predictable Paths</em></th><th>Inlining Environment Variables</th></tr></thead><tbody>
 <tr><td>Babel 1)</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td></tr>
 <tr><td>TypeScript 1)</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>❌</td></tr>
 <tr><td>Webpack</td><td>❌ 4)</td><td>❓</td><td>❌</td><td>❓</td><td>❌ 2)</td><td>✅</td><td>✅</td><td>❓</td><td>✅</td></tr>
@@ -198,6 +198,7 @@ Therefore, we should stick to the <code>web</code> output format.</p>
 <tr><td>ESBuild</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td><td>✅ 6)</td><td>❓</td><td>✅ 6)</td><td>✅</td><td>✅</td></tr>
 <tr><td>Rollup</td><td>❓</td><td>❓</td><td>❓</td><td>❓</td><td>❓</td><td>❓</td><td>❓</td><td>❓</td><td>✅</td></tr>
 </tbody></table>
+</div>
 <p>Features in <em><strong>italic</strong></em>s are required for maplibre-rs.</p>
 <blockquote>
 <ol>

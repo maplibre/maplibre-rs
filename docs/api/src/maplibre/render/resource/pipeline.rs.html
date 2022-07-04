@@ -139,11 +139,11 @@
             ..<span class="ident">Default::default</span>()
         });
 
-        <span class="kw">let</span> <span class="ident">vertex_shader_module</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">create_shader_module</span>(<span class="kw-2">&amp;</span><span class="ident">wgpu::ShaderModuleDescriptor</span> {
+        <span class="kw">let</span> <span class="ident">vertex_shader_module</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">create_shader_module</span>(<span class="ident">wgpu::ShaderModuleDescriptor</span> {
             <span class="ident">label</span>: <span class="prelude-val">None</span>,
             <span class="ident">source</span>: <span class="ident">wgpu::ShaderSource::Wgsl</span>(<span class="self">self</span>.<span class="ident">vertex</span>.<span class="ident">source</span>.<span class="ident">into</span>()),
         });
-        <span class="kw">let</span> <span class="ident">fragment_shader_module</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">create_shader_module</span>(<span class="kw-2">&amp;</span><span class="ident">wgpu::ShaderModuleDescriptor</span> {
+        <span class="kw">let</span> <span class="ident">fragment_shader_module</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">create_shader_module</span>(<span class="ident">wgpu::ShaderModuleDescriptor</span> {
             <span class="ident">label</span>: <span class="prelude-val">None</span>,
             <span class="ident">source</span>: <span class="ident">wgpu::ShaderSource::Wgsl</span>(<span class="self">self</span>.<span class="ident">fragment</span>.<span class="ident">source</span>.<span class="ident">into</span>()),
         });

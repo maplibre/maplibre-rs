@@ -499,6 +499,9 @@
 <span id="494">494</span>
 <span id="495">495</span>
 <span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole</span>
 <span class="doccomment">//! communication with the GPU.</span>
 <span class="doccomment">//!</span>
@@ -845,6 +848,9 @@
                 <span class="ident">max_compute_workgroups_per_dimension</span>: <span class="ident">limits</span>
                     .<span class="ident">max_compute_workgroups_per_dimension</span>
                     .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_compute_workgroups_per_dimension</span>),
+                <span class="ident">max_buffer_size</span>: <span class="ident">limits</span>
+                    .<span class="ident">max_buffer_size</span>
+                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_buffer_size</span>),
             };
         }
 

@@ -359,7 +359,7 @@
         <span class="ident">FragmentState</span> {
             <span class="ident">source</span>: <span class="macro">include_str!</span>(<span class="string">&quot;tile_mask.fragment.wgsl&quot;</span>),
             <span class="ident">entry_point</span>: <span class="string">&quot;main&quot;</span>,
-            <span class="ident">targets</span>: <span class="macro">vec!</span>[<span class="ident">wgpu::ColorTargetState</span> {
+            <span class="ident">targets</span>: <span class="macro">vec!</span>[<span class="prelude-val">Some</span>(<span class="ident">wgpu::ColorTargetState</span> {
                 <span class="ident">format</span>: <span class="self">self</span>.<span class="ident">format</span>,
                 <span class="ident">blend</span>: <span class="prelude-val">None</span>,
                 <span class="ident">write_mask</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">draw_colors</span> {
@@ -367,7 +367,7 @@
                 } <span class="kw">else</span> {
                     <span class="ident">wgpu::ColorWrites::empty</span>()
                 },
-            }],
+            })],
         }
     }
 }
@@ -469,7 +469,7 @@
         <span class="ident">FragmentState</span> {
             <span class="ident">source</span>: <span class="macro">include_str!</span>(<span class="string">&quot;tile.fragment.wgsl&quot;</span>),
             <span class="ident">entry_point</span>: <span class="string">&quot;main&quot;</span>,
-            <span class="ident">targets</span>: <span class="macro">vec!</span>[<span class="ident">wgpu::ColorTargetState</span> {
+            <span class="ident">targets</span>: <span class="macro">vec!</span>[<span class="prelude-val">Some</span>(<span class="ident">wgpu::ColorTargetState</span> {
                 <span class="ident">format</span>: <span class="self">self</span>.<span class="ident">format</span>,
                 <span class="comment">/*blend: Some(wgpu::BlendState {
                     color: wgpu::BlendComponent {
@@ -485,7 +485,7 @@
                 }),*/</span>
                 <span class="ident">blend</span>: <span class="prelude-val">None</span>,
                 <span class="ident">write_mask</span>: <span class="ident">wgpu::ColorWrites::ALL</span>,
-            }],
+            })],
         }
     }
 }

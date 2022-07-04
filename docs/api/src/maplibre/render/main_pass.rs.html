@@ -212,7 +212,7 @@
                 .<span class="ident">command_encoder</span>
                 .<span class="ident">begin_render_pass</span>(<span class="kw-2">&amp;</span><span class="ident">wgpu::RenderPassDescriptor</span> {
                     <span class="ident">label</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">color_attachments</span>: <span class="kw-2">&amp;</span>[<span class="ident">color_attachment</span>],
+                    <span class="ident">color_attachments</span>: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(<span class="ident">color_attachment</span>)],
                     <span class="ident">depth_stencil_attachment</span>: <span class="prelude-val">Some</span>(<span class="ident">wgpu::RenderPassDepthStencilAttachment</span> {
                         <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">depth_texture</span>.<span class="ident">view</span>,
                         <span class="ident">depth_ops</span>: <span class="prelude-val">Some</span>(<span class="ident">wgpu::Operations</span> {
