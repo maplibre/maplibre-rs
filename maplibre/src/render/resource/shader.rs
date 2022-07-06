@@ -20,7 +20,7 @@ pub struct FragmentState {
     /// function with this name in the shader.
     pub entry_point: &'static str,
     /// The color state of the render targets.
-    pub targets: Vec<wgpu::ColorTargetState>,
+    pub targets: Vec<Option<wgpu::ColorTargetState>>,
 }
 
 #[derive(Clone, Debug)]

@@ -82,7 +82,7 @@ impl Node for MainPassNode {
                 .command_encoder
                 .begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: None,
-                    color_attachments: &[color_attachment],
+                    color_attachments: &[Some(color_attachment)],
                     depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                         view: &depth_texture.view,
                         depth_ops: Some(wgpu::Operations {
