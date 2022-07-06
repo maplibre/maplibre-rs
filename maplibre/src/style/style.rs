@@ -16,6 +16,9 @@ pub struct Style {
     pub metadata: HashMap<String, String>,
     pub sources: HashMap<String, Source>,
     pub layers: Vec<StyleLayer>,
+    pub center: Option<[f64; 2]>,
+    pub zoom: Option<f64>,
+    pub pitch: Option<f64>,
 }
 
 impl Default for Style {
@@ -25,6 +28,9 @@ impl Default for Style {
             name: "Default Style".to_string(),
             metadata: Default::default(),
             sources: Default::default(),
+            center: Some([46.5197, 6.6323]),
+            pitch: Some(0.0),
+            zoom: Some(13.0),
             layers: vec![
                 StyleLayer {
                     index: 0,
