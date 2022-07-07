@@ -4,7 +4,7 @@
 
 set shell := ["bash", "-c"]
 
-export NIGHTLY_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
+export NIGHTLY_TOOLCHAIN := "nightly-2022-07-03-x86_64-unknown-linux-gnu"
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
 
