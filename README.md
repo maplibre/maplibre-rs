@@ -110,7 +110,7 @@ Build and run it on a desktop
 cargo run -p maplibre-demo
 ```
 
-More information about building for different platforms can be
+More information about running the demos on different platforms can be
 found [here](https://maplibre.org/maplibre-rs/docs/book/development-guide/how-to-run.html).
 
 ## Rust Setup
