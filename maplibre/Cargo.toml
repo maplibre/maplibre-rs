@@ -51,7 +51,7 @@ tile-grid = "0.3.0"
 
 # Rendering
 wgpu = "0.13.1"
-lyon = { version = "0.17.10", features = [] }
+lyon = { version = "1.0.0", features = [] }
 raw-window-handle = "0.4.3"
 
 # cached = "0.32"
