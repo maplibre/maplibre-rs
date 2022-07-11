@@ -68,16 +68,8 @@ fn run_headless() {
         let coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
         let request_id = 0;
 
-        let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
-        let url = format!(
-            "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
-            x = tile_coords.x,
-            y = tile_coords.y,
-            z = tile_coords.z
-        );
-
         let data = http_source_client
-            .fetch(&url)
+            .fetch(&coords)
             .await
             .unwrap()
             .into_boxed_slice();

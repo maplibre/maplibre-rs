@@ -34,7 +34,7 @@ pub fn new_thread_local_state(_scheduler_ptr: *mut Scheduler<WebWorkerPoolSchedu
 pub fn tessellate_layers(state_ptr: *mut SharedThreadState, request_id: u32, data: Box<[u8]>) {
     let state: Box<SharedThreadState> = unsafe { Box::from_raw(state_ptr) };
 
-    state.process_tile(request_id, data).unwrap();
+    state.process_vector_data(request_id, data).unwrap();
 
     // Call forget such that scheduler does not get deallocated
     std::mem::forget(state);

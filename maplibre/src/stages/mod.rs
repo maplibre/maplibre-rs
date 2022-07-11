@@ -8,7 +8,7 @@ use crate::io::geometry_index::{IndexedGeometry, TileIndex};
 use crate::io::pipeline::Processable;
 use crate::io::pipeline::{PipelineContext, PipelineProcessor};
 use crate::io::source_client::HttpSourceClient;
-use crate::io::tile_pipelines::build_vector_tile_pipeline;
+use crate::io::tile_pipelines::{build_raster_tile_pipeline, build_vector_tile_pipeline};
 
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TileRequest, TileRequestID};
@@ -103,6 +103,24 @@ impl PipelineProcessor for HeadedPipelineProcessor {
             .unwrap();
     }
 
+    fn layer_raster_finished(
+        &mut self,
+        coords: &WorldTileCoords,
+        layer_name: &str,
+        layer_data: Vec<u8>,
+    ) {
+        self.state
+            .message_sender
+            .send(TessellateMessage::Layer(
+                LayerTessellateMessage::RasterLayer {
+                    coords: *coords,
+                    layer_name: layer_name.to_owned(),
+                    layer_data: layer_data,
+                },
+            ))
+            .unwrap();
+    }
+
     fn layer_indexing_finished(
         &mut self,
         coords: &WorldTileCoords,
@@ -131,12 +149,32 @@ impl SharedThreadState {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn process_tile(&self, request_id: TileRequestID, data: Box<[u8]>) -> Result<(), Error> {
+    pub fn process_vector_data(
+        &self,
+        request_id: TileRequestID,
+        data: Box<[u8]>,
+    ) -> Result<(), Error> {
         if let Some(tile_request) = self.get_tile_request(request_id) {
             let mut pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
                 state: self.clone(),
             });
             let pipeline = build_vector_tile_pipeline();
+            pipeline.process((tile_request, request_id, data), &mut pipeline_context);
+        }
+
+        Ok(())
+    }
+
+    pub fn process_raster_data(
+        &self,
+        request_id: TileRequestID,
+        data: Box<[u8]>,
+    ) -> Result<(), Error> {
+        if let Some(tile_request) = self.get_tile_request(request_id) {
+            let mut pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
+                state: self.clone(),
+            });
+            let pipeline = build_raster_tile_pipeline();
             pipeline.process((tile_request, request_id, data), &mut pipeline_context);
         }
 

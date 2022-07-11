@@ -20,6 +20,13 @@ pub trait PipelineProcessor: Downcast {
         _layer_data: tile::Layer,
     ) {
     }
+    fn layer_raster_finished(
+        &mut self,
+        _coords: &WorldTileCoords,
+        _layer_name: &str,
+        _layer_data: Vec<u8>,
+    ) {
+    }
     fn layer_indexing_finished(
         &mut self,
         _coords: &WorldTileCoords,

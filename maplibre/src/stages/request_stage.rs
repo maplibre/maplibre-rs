@@ -4,6 +4,7 @@ use crate::context::MapContext;
 use crate::coords::{ViewRegion, WorldTileCoords};
 use crate::error::Error;
 use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::io::source_type::{RasterSource, Source, TessellateSource};
 use crate::io::tile_repository::TileRepository;
 use crate::io::TileRequest;
 use crate::io::TileRequestID;
@@ -79,85 +80,6 @@ where
     }
 }
 
-pub trait Source<SM, HC>
-where
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    fn load(
-        request_stage: &RequestStage<SM, HC>,
-        coords: &WorldTileCoords,
-        request_id: TileRequestID,
-    );
-}
-
-pub struct TessellateSource;
-
-impl<SM, HC> Source<SM, HC> for TessellateSource
-where
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    fn load(
-        request_stage: &RequestStage<SM, HC>,
-        coords: &WorldTileCoords,
-        request_id: TileRequestID,
-    ) {
-        let client = SourceClient::Http(request_stage.http_source_client.clone());
-        let coords = *coords;
-        let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
-        let url = format!(
-            "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
-            x = tile_coords.x,
-            y = tile_coords.y,
-            z = tile_coords.z
-        );
-
-        let state = request_stage.shared_thread_state.clone();
-        request_stage
-            .scheduler
-            .schedule_method()
-            .schedule(Box::new(move || {
-                Box::pin(async move {
-                    match client.fetch(&url).await {
-                        Ok(data) => state
-                            .process_tile(request_id, data.into_boxed_slice())
-                            .unwrap(),
-                        Err(e) => {
-                            log::error!("{:?}", &e);
-                            state.tile_unavailable(&coords, request_id).unwrap()
-                        }
-                    }
-                })
-            }))
-            .unwrap();
-    }
-}
-
-pub struct RasterSource;
-
-impl<SM, HC> Source<SM, HC> for RasterSource
-where
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    fn load(
-        request_stage: &RequestStage<SM, HC>,
-        coords: &WorldTileCoords,
-        request_id: TileRequestID,
-    ) {
-        let client = SourceClient::Http(request_stage.http_source_client.clone());
-        let coords = *coords;
-        let tile_coords = coords.into_tile(TileAddressingScheme::XYZ).unwrap();
-        let url = format!(
-            "https://api.maptiler.com/tiles/satellite/{z}/{x}/{y}.jpg?key=qnePkfbGpMsLCi3KFBs3",
-            x = tile_coords.x,
-            y = tile_coords.y,
-            z = tile_coords.z
-        );
-    }
-}
-
 impl<SM, HC> RequestStage<SM, HC>
 where
     SM: ScheduleMethod,
@@ -220,8 +142,20 @@ where
                 let raster = "raster".to_string();
                 for source in missed_sources {
                     match source {
-                        raster => RasterSource::load(self, coords, request_id),
-                        _ => TessellateSource::load(self, coords, request_id),
+                        // raster => RasterSource::load(
+                        //     self.http_source_client.clone(),
+                        //     &self.scheduler,
+                        //     self.shared_thread_state.clone(),
+                        //     coords,
+                        //     request_id,
+                        // ),
+                        _ => TessellateSource::load(
+                            self.http_source_client.clone(),
+                            &self.scheduler,
+                            self.shared_thread_state.clone(),
+                            coords,
+                            request_id,
+                        ),
                     }
                 }
             }
