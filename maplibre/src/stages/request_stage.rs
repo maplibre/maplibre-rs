@@ -142,20 +142,26 @@ where
                 let raster = "raster".to_string();
                 for source in missed_sources {
                     match source {
-                        // raster => RasterSource::load(
-                        //     self.http_source_client.clone(),
-                        //     &self.scheduler,
-                        //     self.shared_thread_state.clone(),
-                        //     coords,
-                        //     request_id,
-                        // ),
-                        _ => TessellateSource::load(
-                            self.http_source_client.clone(),
-                            &self.scheduler,
-                            self.shared_thread_state.clone(),
-                            coords,
-                            request_id,
-                        ),
+                        raster => {
+                            let raster_source = RasterSource::default();
+                            raster_source.load(
+                                self.http_source_client.clone(),
+                                &self.scheduler,
+                                self.shared_thread_state.clone(),
+                                coords,
+                                request_id,
+                            );
+                        }
+                        _ => {
+                            let tessellate_source = TessellateSource::default();
+                            tessellate_source.load(
+                                self.http_source_client.clone(),
+                                &self.scheduler,
+                                self.shared_thread_state.clone(),
+                                coords,
+                                request_id,
+                            );
+                        }
                     }
                 }
             }

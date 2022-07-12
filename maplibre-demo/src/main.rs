@@ -6,6 +6,7 @@ use maplibre::io::pipeline::Processable;
 use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
 
 use maplibre::io::source_client::{HttpClient, HttpSourceClient};
+use maplibre::io::source_type::{SourceType, TessellateSource};
 use maplibre::io::tile_pipelines::build_vector_tile_pipeline;
 use maplibre::io::tile_repository::StoredLayer;
 use maplibre::io::{RawLayer, TileRequest};
@@ -68,8 +69,10 @@ fn run_headless() {
         let coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
         let request_id = 0;
 
+        let tessellate_source = SourceType::Tessellate(TessellateSource::default());
+
         let data = http_source_client
-            .fetch(&coords)
+            .fetch(&coords, &tessellate_source)
             .await
             .unwrap()
             .into_boxed_slice();
