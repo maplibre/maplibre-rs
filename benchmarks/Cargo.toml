@@ -9,8 +9,8 @@ edition = "2021"
 maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles"] }
 
 [dev-dependencies]
-criterion = { version = "0.3", features = ["async_tokio"] }
-tokio = "1.18.2"
+criterion = { version = "0.3.6", features = ["async_tokio"] }
+tokio = "1.19.2"
 
 [[bench]]
 name = "render"
