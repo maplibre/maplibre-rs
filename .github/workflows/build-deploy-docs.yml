@@ -2,9 +2,6 @@ name: Build documentation
 
 on:
   workflow_call:
-    secrets:
-      SSH_KEY_MAXAMMANN_ORG:
-        required: false
     inputs:
       deploy:
         required: true

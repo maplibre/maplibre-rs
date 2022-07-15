@@ -10,7 +10,7 @@
     <option name="buildTarget" value="REMOTE" />
     <option name="backtrace" value="SHORT" />
     <envs>
-      <env name="RUSTUP_TOOLCHAIN" value="nightly-2022-04-04-x86_64-unknown-linux-gnu" />
+      <env name="RUSTUP_TOOLCHAIN" value="nightly-2022-07-03-x86_64-unknown-linux-gnu" />
     </envs>
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />

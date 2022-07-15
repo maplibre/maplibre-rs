@@ -18,23 +18,23 @@ wasm-opt = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-async-trait = "0.1"
+async-trait = "0.1.56"
 maplibre = { path = "../maplibre", features = ["no-thread-safe-futures"] }
 maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
-log = "0.4"
+log = "0.4.17"
 
-console_error_panic_hook = "0.1"
-web-sys = { version = "0.3", features = [
+console_error_panic_hook = "0.1.7"
+web-sys = { version = "0.3.58", features = [
     "Window",
     "Worker", "WorkerGlobalScope", "DedicatedWorkerGlobalScope", "MessageEvent",
     "Request", "RequestInit", "RequestMode", "Response", "Headers",
     "ErrorEvent"
 ] }
-js-sys = "0.3"
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
-console_log = { version = "0.2", features = ["color"] }
-tracing-wasm = { version = "0.2", optional = true } # FIXME: Low quality dependency
+js-sys = "0.3.58"
+wasm-bindgen = "0.2.81"
+wasm-bindgen-futures = "0.4.31"
+console_log = { version = "0.2.0", features = ["color"] }
+tracing-wasm = { version = "0.2.1", optional = true } # FIXME: Low quality dependency
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3"
+wasm-bindgen-test = "0.3.31"

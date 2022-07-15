@@ -18,69 +18,69 @@ headless = ["png"]
 
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
-tokio = { version = "1.17", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
-env_logger = "0.9"
-reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "gzip"] }
-reqwest-middleware-cache = "0.1" # FIXME: Untrusted dependency
-reqwest-middleware = { version = "0.1" } # FIXME: Untrusted dependency
+tokio = { version = "1.19.2", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+env_logger = "0.9.0"
+reqwest = { version = "0.11.11", default-features = false, features = ["rustls-tls", "gzip"] }
+reqwest-middleware-cache = "0.1.1" # FIXME: Untrusted dependency
+reqwest-middleware = "0.1.6" # FIXME: Untrusted dependency
 tracing-tracy = { version = "0.8", optional = true }
 tracy-client = { version = "0.12.7", optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 # Use rusttls on android because cross compiling is difficult
-reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "gzip"] }
+reqwest = { version = "0.11.11", default-features = false, features = ["rustls-tls", "gzip"] }
 
 [dependencies]
-async-trait = "0.1"
-instant = { version = "0.1", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
+async-trait = "0.1.56"
+instant = { version = "0.1.12", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
 
 # Tracing
-tracing = { version = "0.1" }
-tracing-subscriber = { version = "0.3", optional = true }
+tracing = "0.1.35"
+tracing-subscriber = { version = "0.3.14", optional = true }
 
 # Maths
-cgmath = "0.18"
+cgmath = "0.18.0"
 
 # Geo
-geo = { version = "0.19" }
-geo-types = { version = "0.7", features = ["use-rstar_0_9"] }
-rstar = { version = "0.9" }
-prost = "0.10.1"
-geozero = { version = "0.9.4", default-features = false, features = ["with-mvt", "with-geo"]}
-tile-grid = "0.3"
+geo = "0.22.1"
+geo-types = { version = "0.7.6", features = ["use-rstar_0_9"] }
+rstar = "0.9.3"
+prost = "0.10.4"
+geozero = { version = "0.9.4", default-features = false, features = ["with-mvt", "with-geo"] }
+tile-grid = "0.3.0"
 
 # Rendering
-wgpu = "0.13.0"
-lyon = { version = "0.17", features = [] }
-raw-window-handle = "0.4"
+wgpu = "0.13.1"
+lyon = { version = "1.0.0", features = [] }
+raw-window-handle = "0.4.3"
 
 # cached = "0.32"
 
 # Logging
-log = "0.4"
+log = "0.4.17"
 
 # Utils
-bytemuck = "1.2.0"
-bytemuck_derive = "1.0"
+bytemuck = "1.10.0"
+bytemuck_derive = "1.1.0"
 
 # Static tiles inclusion
 include_dir = "0.7.2"
 
 # JSON
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde = { version = "1.0.138", features = ["derive"] }
+serde_json = "1.0.82"
 
 # Colors
-csscolorparser = { version = "0.5", features = ["serde", "cint"]}
-cint = "0.2"
+csscolorparser = { version = "0.6.0", features = ["serde", "cint"] }
+cint = "0.3.1"
 
 # Required by bevy renderer
-thiserror = "1"
-downcast-rs = "1.2"
-smallvec = "1.8"
+thiserror = "1.0.31"
+downcast-rs = "1.2.0"
+smallvec = "1.9.0"
 
 # Headless
-png = { version = "0.17", optional = true }
+png = { version = "0.17.5", optional = true }
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }

@@ -1,6 +1,7 @@
 //! A ring-buffer like pool of [buffers](wgpu::Buffer).
 
 use crate::coords::{Quadkey, WorldTileCoords};
+use crate::render::resource::Queue;
 use crate::style::layer::StyleLayer;
 use crate::tessellation::OverAlignedVertexBuffer;
 use bytemuck::Pod;
@@ -15,16 +16,6 @@ pub const INDICES_SIZE: wgpu::BufferAddress = 1_000_000;
 
 pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 1024 * 1000;
 pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 1024;
-
-pub trait Queue<B> {
-    fn write_buffer(&self, buffer: &B, offset: wgpu::BufferAddress, data: &[u8]);
-}
-
-impl Queue<wgpu::Buffer> for wgpu::Queue {
-    fn write_buffer(&self, buffer: &wgpu::Buffer, offset: wgpu::BufferAddress, data: &[u8]) {
-        self.write_buffer(buffer, offset, data)
-    }
-}
 
 /// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).

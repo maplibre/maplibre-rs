@@ -1,5 +1,5 @@
 use crate::context::{MapContext, ViewState};
-use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
+use crate::coords::{LatLon, ViewRegion, WorldTileCoords, Zoom};
 use crate::error::Error;
 use crate::headless::utils::HeadlessPipelineProcessor;
 use crate::io::pipeline::PipelineContext;
@@ -107,7 +107,16 @@ where
         http_client: HC,
         style: Style,
     ) -> Self {
-        let view_state = ViewState::new(&window_size, cgmath::Deg(110.0));
+        let view_state = ViewState::new(
+            &window_size,
+            style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default(),
+            style
+                .center
+                .map(|center| LatLon::new(center[0], center[1]))
+                .unwrap_or_default(),
+            style.pitch.unwrap_or_default(),
+            cgmath::Deg(110.0),
+        );
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 

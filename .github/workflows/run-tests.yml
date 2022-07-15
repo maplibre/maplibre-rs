@@ -1,4 +1,4 @@
-name: Run tests of "maplibre"
+name: Run tests
 
 on:
   workflow_call:
