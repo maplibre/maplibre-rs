@@ -4,22 +4,22 @@ version = "0.0.1"
 edition = "2021"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
-tokio = { version = "1.17", features = ["rt"] }
+tokio = { version = "1.19.2", features = ["rt"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
-winit = { version = "0.26", default-features = false }
+winit = { version = "0.26.1", default-features = false }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-winit = { version = "0.26", default-features = false, features = ["x11", "wayland"] }
+winit = { version = "0.26.1", default-features = false, features = ["x11", "wayland"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3", features = ["Window"] }
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3.58", features = ["Window"] }
+wasm-bindgen = "0.2.81"
+wasm-bindgen-futures = "0.4.31"
 
 [dependencies]
 maplibre = { path = "../maplibre", version = "0.0.2" }
-winit = { version = "0.26", default-features = false }
+winit = { version = "0.26.1", default-features = false }
 cgmath = "0.18.0"
-instant = { version = "0.1", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
-log = "0.4"
+instant = { version = "0.1.12", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
+log = "0.4.17"

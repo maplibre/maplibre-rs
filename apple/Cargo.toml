@@ -10,7 +10,7 @@ publish = false
 maplibre = { path = "../maplibre" }
 maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
 
-env_logger = "0.9"
+env_logger = "0.9.0"
 
 [lib]
 name = "maplibre_apple"
