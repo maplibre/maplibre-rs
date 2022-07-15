@@ -68,6 +68,11 @@
 <span id="63">63</span>
 <span id="64">64</span>
 <span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">LatLon</span>, <span class="ident">WorldCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">TILE_SIZE</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::TileRepository</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera</span>::{<span class="ident">Camera</span>, <span class="ident">Perspective</span>, <span class="ident">ViewProjection</span>};
@@ -96,8 +101,13 @@
             <span class="ident">window_size</span>.<span class="ident">width</span>(),
             <span class="ident">window_size</span>.<span class="ident">height</span>(),
             <span class="ident">cgmath::Deg</span>(<span class="number">110.0</span>),
-            <span class="number">100.0</span>,
-            <span class="number">2000.0</span>,
+            <span class="comment">// in tile.vertex.wgsl we are setting each layer&#39;s final `z` in ndc space to `z_index`.</span>
+            <span class="comment">// This means that regardless of the `znear` value all layers will be rendered as part</span>
+            <span class="comment">// of the near plane.</span>
+            <span class="comment">// These values have been selected experimentally:</span>
+            <span class="comment">// https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html</span>
+            <span class="number">1024.0</span>,
+            <span class="number">2048.0</span>,
         );
 
         <span class="self">Self</span> {
