@@ -1,5 +1,5 @@
 [toolchain]
-channel = "1.60"
+channel = "1.62"
 targets = [
     "wasm32-unknown-unknown", "x86_64-unknown-linux-gnu", "x86_64-linux-android", "aarch64-linux-android",
     "x86_64-apple-darwin", "aarch64-apple-darwin", "x86_64-apple-ios", "aarch64-apple-ios", "aarch64-apple-ios-sim"

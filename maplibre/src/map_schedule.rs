@@ -1,61 +1,21 @@
 use crate::context::{MapContext, ViewState};
 use crate::error::Error;
-use crate::io::geometry_index::GeometryIndex;
+
 use crate::io::scheduler::Scheduler;
-use crate::io::source_client::{HttpClient, HttpSourceClient, SourceClient};
+use crate::io::source_client::{HttpClient, HttpSourceClient};
 use crate::io::tile_repository::TileRepository;
-use crate::io::tile_request_state::TileRequestState;
-use crate::render::register_render_stages;
+
+use crate::coords::{LatLon, Zoom};
+use crate::render::{create_default_render_graph, register_default_render_stages};
 use crate::schedule::{Schedule, Stage};
 use crate::stages::register_stages;
 use crate::style::Style;
 use crate::{
-    HeadedMapWindow, MapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod,
-    WgpuSettings, WindowSize,
+    HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod, WgpuSettings,
+    WindowSize,
 };
 use std::marker::PhantomData;
 use std::mem;
-use std::sync::{mpsc, Arc, Mutex};
-
-pub struct PrematureMapContext {
-    view_state: ViewState,
-    style: Style,
-
-    tile_repository: TileRepository,
-
-    wgpu_settings: WgpuSettings,
-    renderer_settings: RendererSettings,
-}
-
-pub enum EventuallyMapContext {
-    Full(MapContext),
-    Premature(PrematureMapContext),
-    _Uninitialized,
-}
-
-impl EventuallyMapContext {
-    pub fn make_full(&mut self, renderer: Renderer) {
-        let context = mem::replace(self, EventuallyMapContext::_Uninitialized);
-
-        match context {
-            EventuallyMapContext::Full(_) => {}
-            EventuallyMapContext::Premature(PrematureMapContext {
-                view_state,
-                style,
-                tile_repository,
-                ..
-            }) => {
-                *self = EventuallyMapContext::Full(MapContext {
-                    view_state,
-                    style,
-                    tile_repository,
-                    renderer,
-                });
-            }
-            EventuallyMapContext::_Uninitialized => {}
-        }
-    }
-}
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
 pub struct InteractiveMapSchedule<MWC, SM, HC>
@@ -66,7 +26,7 @@ where
 {
     map_window_config: MWC,
 
-    pub map_context: EventuallyMapContext,
+    map_context: EventuallyMapContext,
 
     schedule: Schedule,
 
@@ -92,14 +52,23 @@ where
         wgpu_settings: WgpuSettings,
         renderer_settings: RendererSettings,
     ) -> Self {
-        let view_state = ViewState::new(&window_size);
+        let view_state = ViewState::new(
+            &window_size,
+            style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default(),
+            style
+                .center
+                .map(|center| LatLon::new(center[0], center[1]))
+                .unwrap_or_default(),
+            style.pitch.unwrap_or_default(),
+        );
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
         let http_source_client: HttpSourceClient<HC> = HttpSourceClient::new(http_client);
         register_stages(&mut schedule, http_source_client, Box::new(scheduler));
 
-        register_render_stages(&mut schedule, false).unwrap();
+        let graph = create_default_render_graph().unwrap();
+        register_default_render_stages(graph, &mut schedule);
 
         Self {
             map_window_config,
@@ -157,7 +126,7 @@ where
         <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
     {
         if let EventuallyMapContext::Full(map_context) = &mut self.map_context {
-            let mut renderer = &mut map_context.renderer;
+            let renderer = &mut map_context.renderer;
             renderer
                 .state
                 .recreate_surface::<MWC::MapWindow>(window, &renderer.instance);
@@ -204,70 +173,42 @@ where
     }
 }
 
-/// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
-pub struct SimpleMapSchedule<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    map_window_config: MWC,
+pub struct PrematureMapContext {
+    view_state: ViewState,
+    style: Style,
 
-    pub map_context: MapContext,
+    tile_repository: TileRepository,
 
-    schedule: Schedule,
-    scheduler: Scheduler<SM>,
-    http_client: HC,
+    wgpu_settings: WgpuSettings,
+    renderer_settings: RendererSettings,
 }
 
-impl<MWC, SM, HC> SimpleMapSchedule<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    pub fn new(
-        map_window_config: MWC,
-        window_size: WindowSize,
-        renderer: Renderer,
-        scheduler: Scheduler<SM>,
-        http_client: HC,
-        style: Style,
-    ) -> Self {
-        let view_state = ViewState::new(&window_size);
-        let tile_repository = TileRepository::new();
-        let mut schedule = Schedule::default();
+pub enum EventuallyMapContext {
+    Full(MapContext),
+    Premature(PrematureMapContext),
+    _Uninitialized,
+}
 
-        register_render_stages(&mut schedule, true).unwrap();
+impl EventuallyMapContext {
+    pub fn make_full(&mut self, renderer: Renderer) {
+        let context = mem::replace(self, EventuallyMapContext::_Uninitialized);
 
-        Self {
-            map_window_config,
-            map_context: MapContext {
+        match context {
+            EventuallyMapContext::Full(_) => {}
+            EventuallyMapContext::Premature(PrematureMapContext {
                 view_state,
                 style,
                 tile_repository,
-                renderer,
-            },
-            schedule,
-            scheduler,
-            http_client,
+                ..
+            }) => {
+                *self = EventuallyMapContext::Full(MapContext {
+                    view_state,
+                    style,
+                    tile_repository,
+                    renderer,
+                });
+            }
+            EventuallyMapContext::_Uninitialized => {}
         }
-    }
-
-    #[tracing::instrument(name = "update_and_redraw", skip_all)]
-    pub fn update_and_redraw(&mut self) -> Result<(), Error> {
-        self.schedule.run(&mut self.map_context);
-
-        Ok(())
-    }
-
-    pub fn schedule(&self) -> &Schedule {
-        &self.schedule
-    }
-    pub fn scheduler(&self) -> &Scheduler<SM> {
-        &self.scheduler
-    }
-    pub fn http_client(&self) -> &HC {
-        &self.http_client
     }
 }

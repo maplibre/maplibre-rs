@@ -1,16 +1,15 @@
 //! Handles IO related processing as well as multithreading.
 
 use crate::coords::WorldTileCoords;
-use crate::render::ShaderVertex;
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use std::collections::HashSet;
 use std::fmt;
-pub mod scheduler;
-pub mod source_client;
-pub mod static_tile_fetcher;
 
 pub mod geometry_index;
 pub mod pipeline;
+pub mod scheduler;
+pub mod source_client;
+#[cfg(feature = "embed-static-tiles")]
+pub mod static_tile_fetcher;
 pub mod tile_pipelines;
 pub mod tile_repository;
 pub mod tile_request_state;

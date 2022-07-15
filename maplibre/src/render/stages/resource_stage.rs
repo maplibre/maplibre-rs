@@ -1,17 +1,17 @@
 //! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.
 
 use crate::context::MapContext;
-use crate::platform::MIN_BUFFER_SIZE;
+
 use crate::render::resource::Texture;
 use crate::render::resource::{BackingBufferDescriptor, BufferPool};
 use crate::render::resource::{Globals, RenderPipeline};
 use crate::render::shaders;
-use crate::render::shaders::{Shader, ShaderGlobals, ShaderTileMetadata};
+use crate::render::shaders::{Shader, ShaderTileMetadata};
 use crate::render::tile_pipeline::TilePipeline;
 use crate::render::tile_view_pattern::TileViewPattern;
 use crate::schedule::Stage;
 use crate::Renderer;
-use std::cmp;
+
 use std::mem::size_of;
 
 pub const TILE_VIEW_SIZE: wgpu::BufferAddress = 32;
