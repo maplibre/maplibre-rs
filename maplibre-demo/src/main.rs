@@ -1,23 +1,25 @@
 use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use maplibre::coords::{WorldTileCoords, ZoomLevel};
 use maplibre::error::Error;
+use maplibre::headless::HeadlessMapWindowConfig;
 use maplibre::io::pipeline::Processable;
 use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
-use maplibre::io::scheduler::ScheduleMethod;
+
 use maplibre::io::source_client::{HttpClient, HttpSourceClient};
 use maplibre::io::tile_pipelines::build_vector_tile_pipeline;
 use maplibre::io::tile_repository::StoredLayer;
-use maplibre::io::{RawLayer, TileRequest, TileRequestID};
-use maplibre::map_schedule::{EventuallyMapContext, InteractiveMapSchedule};
+use maplibre::io::{RawLayer, TileRequest};
+
 use maplibre::platform::http_client::ReqwestHttpClient;
 use maplibre::platform::run_multithreaded;
 use maplibre::platform::schedule_method::TokioScheduleMethod;
 use maplibre::render::settings::{RendererSettings, TextureFormat};
 use maplibre::render::ShaderVertex;
-use maplibre::window::{EventLoop, MapWindow, MapWindowConfig, WindowSize};
+use maplibre::window::{EventLoop, WindowSize};
 use maplibre::MapBuilder;
-use maplibre_winit::winit::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
-use std::any::Any;
+use maplibre_winit::winit::WinitMapWindowConfig;
+
+use maplibre::headless::utils::HeadlessPipelineProcessor;
 use std::collections::HashSet;
 
 #[cfg(feature = "trace")]
@@ -28,27 +30,6 @@ fn enable_tracing() {
     let subscriber = Registry::default().with(tracing_tracy::TracyLayer::new());
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-}
-pub struct HeadlessMapWindowConfig {
-    size: WindowSize,
-}
-
-impl MapWindowConfig for HeadlessMapWindowConfig {
-    type MapWindow = HeadlessMapWindow;
-
-    fn create(&self) -> Self::MapWindow {
-        Self::MapWindow { size: self.size }
-    }
-}
-
-pub struct HeadlessMapWindow {
-    size: WindowSize,
-}
-
-impl MapWindow for HeadlessMapWindow {
-    fn size(&self) -> WindowSize {
-        self.size
-    }
 }
 
 fn run_in_window() {
@@ -62,28 +43,6 @@ fn run_in_window() {
             .await
             .run()
     })
-}
-
-#[derive(Default)]
-struct HeadlessPipelineProcessor {
-    layers: Vec<StoredLayer>,
-}
-
-impl PipelineProcessor for HeadlessPipelineProcessor {
-    fn layer_tesselation_finished(
-        &mut self,
-        coords: &WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
-        layer_data: RawLayer,
-    ) {
-        self.layers.push(StoredLayer::TessellatedLayer {
-            coords: *coords,
-            buffer,
-            feature_indices,
-            layer_data,
-        })
-    }
 }
 
 fn run_headless() {
@@ -157,6 +116,6 @@ fn main() {
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    //run_headless();
+    run_headless();
     run_in_window();
 }

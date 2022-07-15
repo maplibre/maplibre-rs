@@ -609,9 +609,9 @@ mod tests {
 
         fn run(
             &self,
-            graph: &mut RenderGraphContext,
-            render_context: &mut RenderContext,
-            state: &RenderState,
+            _graph: &mut RenderGraphContext,
+            _render_context: &mut RenderContext,
+            _state: &RenderState,
         ) -> Result<(), NodeRunError> {
             Ok(())
         }
@@ -682,9 +682,9 @@ mod tests {
         impl Node for MyNode {
             fn run(
                 &self,
-                graph: &mut RenderGraphContext,
-                render_context: &mut RenderContext,
-                state: &RenderState,
+                _graph: &mut RenderGraphContext,
+                _render_context: &mut RenderContext,
+                _state: &RenderState,
             ) -> Result<(), NodeRunError> {
                 Ok(())
             }

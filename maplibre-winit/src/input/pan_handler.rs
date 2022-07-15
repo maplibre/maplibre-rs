@@ -30,10 +30,16 @@ impl UpdateState for PanHandler {
                 let inverted_view_proj = view_proj.invert();
 
                 let delta = if let (Some(start), Some(current)) = (
-                    reference_camera
-                        .window_to_world_at_ground(&start_window_position, &inverted_view_proj),
-                    reference_camera
-                        .window_to_world_at_ground(&window_position, &inverted_view_proj),
+                    reference_camera.window_to_world_at_ground(
+                        &start_window_position,
+                        &inverted_view_proj,
+                        false,
+                    ),
+                    reference_camera.window_to_world_at_ground(
+                        &window_position,
+                        &inverted_view_proj,
+                        false,
+                    ),
                 ) {
                     start - current
                 } else {
@@ -67,8 +73,9 @@ impl PanHandler {
         }
     }
 
-    pub fn process_touch_start(&mut self) -> bool {
+    pub fn process_touch_start(&mut self, window_position: &Vector2<f64>) -> bool {
         self.is_panning = true;
+        self.start_window_position = Some(*window_position);
         true
     }
 

@@ -1,6 +1,10 @@
 name: Build & Deploy
 
 on:
+  # We do not use a .lock file, as maplibre is a library. Therefore, build could potentially fail if new updates
+  # to dependencies are pushed. By building maplibre scheduled we get to know that.
+  schedule:
+    - cron:  '0 3 * * 5' # Run "At 03:00 on Friday"
   workflow_dispatch:
   push:
     branches:

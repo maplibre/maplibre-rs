@@ -4,7 +4,6 @@ use super::{MessageReceiver, SharedThreadState, TessellateMessage, TileTessellat
 use crate::context::MapContext;
 use crate::io::tile_repository::StoredLayer;
 use crate::schedule::Stage;
-use std::sync::mpsc;
 
 pub struct PopulateTileStore {
     shared_thread_state: SharedThreadState,

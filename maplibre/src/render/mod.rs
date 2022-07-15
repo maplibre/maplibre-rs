@@ -22,18 +22,15 @@ use crate::render::render_phase::RenderPhase;
 use crate::render::resource::{BufferPool, Globals, IndexEntry};
 use crate::render::resource::{Head, Surface};
 use crate::render::resource::{Texture, TextureView};
-use crate::render::settings::{RendererSettings, SurfaceType, WgpuSettings};
+use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata};
 use crate::render::tile_view_pattern::{TileInView, TileShape, TileViewPattern};
 use crate::render::util::Eventually;
 use crate::tessellation::IndexDataType;
-use crate::{HeadedMapWindow, MapWindow, MapWindowConfig};
+use crate::{HeadedMapWindow, MapWindow};
 use log::info;
 use std::sync::Arc;
 
-#[cfg(feature = "headless")]
-// Exposed because it should be addable conditionally
-pub mod copy_surface_to_buffer_node;
 pub mod graph;
 pub mod resource;
 pub mod stages;
@@ -52,8 +49,10 @@ mod util;
 pub mod camera;
 pub mod settings;
 
+use crate::render::graph::{EmptyNode, RenderGraph, RenderGraphError};
+use crate::render::main_pass::{MainPassDriverNode, MainPassNode};
 pub use shaders::ShaderVertex;
-pub use stages::register_render_stages;
+pub use stages::register_default_render_stages;
 
 pub const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
@@ -80,7 +79,7 @@ pub struct RenderState {
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
 
-    surface: Surface,
+    pub surface: Surface,
 
     mask_phase: RenderPhase<TileInView>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
@@ -345,6 +344,9 @@ impl Renderer {
                 max_compute_workgroups_per_dimension: limits
                     .max_compute_workgroups_per_dimension
                     .min(constrained_limits.max_compute_workgroups_per_dimension),
+                max_buffer_size: limits
+                    .max_buffer_size
+                    .min(constrained_limits.max_buffer_size),
             };
         }
 
@@ -380,11 +382,7 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-    use crate::render::graph::RenderGraph;
-    use crate::render::graph_runner::RenderGraphRunner;
-    use crate::render::resource::Surface;
-    use crate::{MapWindow, MapWindowConfig, RenderState, Renderer, RendererSettings, WindowSize};
-    use log::LevelFilter;
+    use crate::{MapWindow, MapWindowConfig, WindowSize};
 
     pub struct HeadlessMapWindowConfig {
         size: WindowSize,
@@ -411,6 +409,12 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
     async fn test_render() {
+        use crate::render::graph::RenderGraph;
+        use crate::render::graph_runner::RenderGraphRunner;
+        use crate::render::resource::Surface;
+        use crate::{RenderState, RendererSettings};
+        use log::LevelFilter;
+
         let _ = env_logger::builder()
             .filter_level(LevelFilter::Trace)
             .is_test(true)
@@ -473,4 +477,23 @@ pub mod draw_graph {
         #[cfg(feature = "headless")]
         pub const COPY: &str = "copy";
     }
+}
+
+pub fn create_default_render_graph() -> Result<RenderGraph, RenderGraphError> {
+    let mut graph = RenderGraph::default();
+
+    let mut draw_graph = RenderGraph::default();
+    draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+    let input_node_id = draw_graph.set_input(vec![]);
+    draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
+
+    graph.add_sub_graph(draw_graph::NAME, draw_graph);
+    graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
+    graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
+    graph.add_node_edge(
+        main_graph::node::MAIN_PASS_DEPENDENCIES,
+        main_graph::node::MAIN_PASS_DRIVER,
+    )?;
+
+    Ok(graph)
 }

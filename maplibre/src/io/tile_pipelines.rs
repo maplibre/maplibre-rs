@@ -7,6 +7,7 @@ use geozero::GeozeroDatasource;
 use prost::Message;
 use std::collections::HashSet;
 
+#[derive(Default)]
 pub struct ParseTile;
 
 impl Processable for ParseTile {
@@ -24,6 +25,7 @@ impl Processable for ParseTile {
     }
 }
 
+#[derive(Default)]
 pub struct IndexLayer;
 
 impl Processable for IndexLayer {
@@ -45,6 +47,7 @@ impl Processable for IndexLayer {
     }
 }
 
+#[derive(Default)]
 pub struct TessellateLayer;
 
 impl Processable for TessellateLayer {
@@ -141,7 +144,7 @@ mod tests {
         let mut context = PipelineContext::new(DummyPipelineProcessor);
 
         let pipeline = build_vector_tile_pipeline();
-        let output = pipeline.process(
+        let _output = pipeline.process(
             (
                 TileRequest {
                     coords: (0, 0, ZoomLevel::default()).into(),

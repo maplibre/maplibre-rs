@@ -4,7 +4,7 @@ use crate::platform::schedule_method::WebWorkerPoolScheduleMethod;
 use maplibre::io::scheduler::Scheduler;
 
 use maplibre::MapBuilder;
-use maplibre_winit::winit::{WinitMapWindow, WinitMapWindowConfig};
+use maplibre_winit::winit::WinitMapWindowConfig;
 use std::panic;
 use wasm_bindgen::prelude::*;
 
