@@ -10,7 +10,7 @@ maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles"]
 
 [dev-dependencies]
 criterion = { version = "0.3.6", features = ["async_tokio"] }
-tokio = "1.19.2"
+tokio = "1.20.0"
 
 [[bench]]
 name = "render"
