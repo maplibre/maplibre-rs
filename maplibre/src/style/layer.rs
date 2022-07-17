@@ -2,10 +2,11 @@
 
 use std::collections::HashMap;
 
-use crate::style::raster::RasterLayer;
 use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
+
+use crate::style::raster::RasterLayer;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {

@@ -12,7 +12,7 @@ use crate::{
         geometry_index::{GeometryIndex, IndexedGeometry, TileIndex},
         pipeline::{PipelineContext, PipelineProcessor, Processable},
         source_client::HttpSourceClient,
-        tile_pipelines::build_vector_tile_pipeline,
+        tile_pipelines::{build_raster_tile_pipeline, build_vector_tile_pipeline},
         tile_request_state::TileRequestState,
         TileRequest, TileRequestID,
     },

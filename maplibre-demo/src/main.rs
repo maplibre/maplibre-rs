@@ -1,25 +1,3 @@
-use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use maplibre::coords::{WorldTileCoords, ZoomLevel};
-use maplibre::error::Error;
-use maplibre::headless::HeadlessMapWindowConfig;
-use maplibre::io::pipeline::Processable;
-use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
-
-use maplibre::io::source_client::{HttpClient, HttpSourceClient};
-use maplibre::io::tile_pipelines::build_vector_tile_pipeline;
-use maplibre::io::tile_repository::StoredLayer;
-use maplibre::io::{RawLayer, TileRequest};
-
-use maplibre::platform::http_client::ReqwestHttpClient;
-use maplibre::platform::run_multithreaded;
-use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::render::settings::{RendererSettings, TextureFormat};
-use maplibre::render::ShaderVertex;
-use maplibre::window::{EventLoop, WindowSize};
-use maplibre::MapBuilder;
-use maplibre_winit::winit::WinitMapWindowConfig;
-
-use maplibre::headless::utils::HeadlessPipelineProcessor;
 use std::collections::HashSet;
 
 use maplibre::{

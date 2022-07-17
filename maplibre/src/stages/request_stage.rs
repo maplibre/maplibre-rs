@@ -8,6 +8,7 @@ use crate::{
     error::Error,
     io::{
         source_client::{HttpSourceClient, SourceClient},
+        source_type::{RasterSource, Source, TessellateSource},
         tile_repository::TileRepository,
         TileRequest,
     },

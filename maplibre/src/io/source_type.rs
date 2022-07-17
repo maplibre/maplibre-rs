@@ -1,16 +1,13 @@
-use crate::coords::WorldTileCoords;
-use crate::error::Error;
-use crate::stages::SharedThreadState;
-use crate::style::source::TileAddressingScheme;
-
-use super::scheduler;
-use super::scheduler::ScheduleMethod;
-use super::scheduler::Scheduler;
-use super::source_client::HttpClient;
-use super::source_client::HttpSourceClient;
-use super::source_client::SourceClient;
-use super::TileRequest;
-use super::TileRequestID;
+use super::{
+    scheduler,
+    scheduler::{ScheduleMethod, Scheduler},
+    source_client::{HttpClient, HttpSourceClient, SourceClient},
+    TileRequest, TileRequestID,
+};
+use crate::{
+    coords::WorldTileCoords, error::Error, stages::SharedThreadState,
+    style::source::TileAddressingScheme,
+};
 
 pub trait Source<SM, HC>
 where

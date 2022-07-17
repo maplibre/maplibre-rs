@@ -2,7 +2,10 @@
 
 use async_trait::async_trait;
 
-use crate::{coords::WorldTileCoords, error::Error, style::source::TileAddressingScheme};
+use crate::{
+    coords::WorldTileCoords, error::Error, io::source_type::SourceType,
+    style::source::TileAddressingScheme,
+};
 
 /// A closure that returns a HTTP client.
 pub type HTTPClientFactory<HC> = dyn Fn() -> HC;
