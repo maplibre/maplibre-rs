@@ -1,28 +1,39 @@
-use crate::context::{MapContext, ViewState};
-use crate::coords::{LatLon, ViewRegion, Zoom};
-use crate::error::Error;
-use crate::render::camera::ViewProjection;
-use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
-use crate::render::resource::{BufferDimensions, BufferedTextureHead, IndexEntry};
-use crate::render::resource::{Head, TrackedRenderPass};
-use crate::render::stages::RenderStageLabel;
-use crate::render::{
-    create_default_render_graph, draw_graph, register_default_render_stages, RenderState,
+use std::{
+    collections::HashSet,
+    fs::File,
+    future::Future,
+    io::Write,
+    iter,
+    ops::{Deref, Range},
+    sync::Arc,
 };
-use crate::schedule::{Schedule, Stage};
-use crate::tile::tile_repository::TileRepository;
+
+use tokio::{runtime::Handle, task};
+use wgpu::{BufferAsyncError, BufferSlice};
+
 use crate::{
+    context::{MapContext, ViewState},
+    coords::{LatLon, ViewRegion, WorldTileCoords, Zoom},
+    error::Error,
+    headless::utils::HeadlessPipelineProcessor,
+    render::{
+        camera::ViewProjection,
+        create_default_render_graph, draw_graph,
+        eventually::Eventually,
+        graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        register_default_render_stages,
+        resource::{BufferDimensions, BufferedTextureHead, Head, IndexEntry, TrackedRenderPass},
+        stages::RenderStageLabel,
+        RenderState,
+    },
+    schedule::{Schedule, Stage},
+    tile::{
+        pipeline::{PipelineContext, Processable},
+        tile_pipelines::build_vector_tile_pipeline,
+        tile_repository::{StoredLayer, TileRepository},
+    },
     HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler, Style, WindowSize,
 };
-use std::fs::File;
-use std::future::Future;
-use std::io::Write;
-use std::iter;
-use std::ops::{Deref, Range};
-use std::sync::Arc;
-use tokio::runtime::Handle;
-use tokio::task;
-use wgpu::{BufferAsyncError, BufferSlice};
 
 pub struct HeadlessMapWindowConfig {
     pub size: WindowSize,
@@ -81,6 +92,7 @@ where
     schedule: Schedule,
     scheduler: Scheduler<SM>,
     http_client: HC,
+    tile_request_state: TileRequestState,
 }
 
 impl<MWC, SM, HC> HeadlessMapSchedule<MWC, SM, HC>
@@ -105,6 +117,7 @@ where
                 .map(|center| LatLon::new(center[0], center[1]))
                 .unwrap_or_default(),
             style.pitch.unwrap_or_default(),
+            cgmath::Deg(110.0),
         );
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
@@ -134,13 +147,13 @@ where
             schedule,
             scheduler,
             http_client,
+            tile_request_state: Default::default(),
         }
     }
 
     #[tracing::instrument(name = "update_and_redraw", skip_all)]
     pub fn update_and_redraw(&mut self) -> Result<(), Error> {
         self.schedule.run(&mut self.map_context);
-
         Ok(())
     }
 
@@ -152,6 +165,55 @@ where
     }
     pub fn http_client(&self) -> &HC {
         &self.http_client
+    }
+
+    pub async fn fetch_process(&mut self, coords: &WorldTileCoords) -> Option<()> {
+        let source_layers: HashSet<String> = self
+            .map_context
+            .style
+            .layers
+            .iter()
+            .filter_map(|layer| layer.source_layer.clone())
+            .collect();
+
+        let http_source_client: HttpSourceClient<HC> =
+            HttpSourceClient::new(self.http_client.clone());
+
+        let data = http_source_client
+            .fetch(&coords)
+            .await
+            .unwrap()
+            .into_boxed_slice();
+
+        let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
+        let pipeline = build_vector_tile_pipeline();
+
+        let request = TileRequest {
+            coords: WorldTileCoords::default(),
+            layers: source_layers,
+        };
+
+        let request_id = self
+            .tile_request_state
+            .start_tile_request(request.clone())?;
+        pipeline.process((request, request_id, data), &mut pipeline_context);
+        self.tile_request_state.finish_tile_request(request_id);
+
+        let mut processor = pipeline_context
+            .take_processor::<HeadlessPipelineProcessor>()
+            .unwrap();
+
+        if let Eventually::Initialized(pool) = self.map_context.renderer.state.buffer_pool_mut() {
+            pool.clear();
+        }
+
+        while let Some(layer) = processor.layers.pop() {
+            self.map_context
+                .tile_repository
+                .put_tessellated_layer(layer);
+        }
+
+        Some(())
     }
 }
 
@@ -182,10 +244,11 @@ impl Node for CopySurfaceBufferNode {
         }: &mut RenderContext,
         state: &RenderState,
     ) -> Result<(), NodeRunError> {
-        match state.surface.head() {
+        let surface = state.surface();
+        match surface.head() {
             Head::Headed(_) => {}
             Head::Headless(buffered_texture) => {
-                let size = state.surface.size();
+                let size = surface.size();
                 command_encoder.copy_texture_to_buffer(
                     buffered_texture.texture.as_image_copy(),
                     wgpu::ImageCopyBuffer {
@@ -229,7 +292,8 @@ impl Stage for WriteSurfaceBufferStage {
             ..
         }: &mut MapContext,
     ) {
-        match state.surface.head() {
+        let surface = state.surface();
+        match surface.head() {
             Head::Headed(_) => {}
             Head::Headless(buffered_texture) => {
                 let buffered_texture: Arc<BufferedTextureHead> = buffered_texture.clone();
@@ -252,12 +316,12 @@ impl Stage for WriteSurfaceBufferStage {
 }
 
 pub mod utils {
-    use crate::coords::WorldTileCoords;
-    use crate::render::ShaderVertex;
-    use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-    use crate::tile::pipeline::PipelineProcessor;
-    use crate::tile::tile_repository::StoredLayer;
-    use crate::tile::RawLayer;
+    use crate::{
+        coords::WorldTileCoords,
+        render::ShaderVertex,
+        tessellation::{IndexDataType, OverAlignedVertexBuffer},
+        tile::{pipeline::PipelineProcessor, tile_repository::StoredLayer, RawLayer},
+    };
 
     #[derive(Default)]
     pub struct HeadlessPipelineProcessor {

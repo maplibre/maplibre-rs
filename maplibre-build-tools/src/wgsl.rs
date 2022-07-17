@@ -1,10 +1,10 @@
-use std::env;
-use std::path::Path;
-use std::process::exit;
+use std::{env, path::Path, process::exit};
 
-use naga::front::wgsl;
-use naga::valid::{Capabilities, ValidationFlags, Validator};
-use naga::{front::wgsl::ParseError, valid::ValidationError, SourceLocation};
+use naga::{
+    front::{wgsl, wgsl::ParseError},
+    valid::{Capabilities, ValidationError, ValidationFlags, Validator},
+    SourceLocation,
+};
 use walkdir::WalkDir;
 
 #[derive(Debug)]

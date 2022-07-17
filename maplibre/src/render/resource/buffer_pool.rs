@@ -1,15 +1,21 @@
 //! A ring-buffer like pool of [buffers](wgpu::Buffer).
 
-use crate::coords::{Quadkey, WorldTileCoords};
-use crate::render::resource::Queue;
-use crate::style::layer::StyleLayer;
-use crate::tessellation::OverAlignedVertexBuffer;
+use std::{
+    collections::{btree_map, BTreeMap, HashSet, VecDeque},
+    fmt::Debug,
+    marker::PhantomData,
+    mem::size_of,
+    ops::Range,
+};
+
 use bytemuck::Pod;
-use std::collections::{btree_map, BTreeMap, HashSet, VecDeque};
-use std::fmt::Debug;
-use std::marker::PhantomData;
-use std::mem::size_of;
-use std::ops::Range;
+
+use crate::{
+    coords::{Quadkey, WorldTileCoords},
+    render::resource::Queue,
+    style::layer::StyleLayer,
+    tessellation::OverAlignedVertexBuffer,
+};
 
 pub const VERTEX_SIZE: wgpu::BufferAddress = 1_000_000;
 pub const INDICES_SIZE: wgpu::BufferAddress = 1_000_000;
@@ -127,6 +133,10 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
             phantom_m: Default::default(),
             phantom_fm: Default::default(),
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.index.clear()
     }
 
     #[cfg(test)]
@@ -480,6 +490,11 @@ impl RingIndex {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.linear_index.clear();
+        self.tree_index.clear();
+    }
+
     pub fn front(&self) -> Option<&IndexEntry> {
         self.linear_index
             .front()
@@ -569,12 +584,15 @@ impl RingIndex {
 
 #[cfg(test)]
 mod tests {
-    use crate::coords::ZoomLevel;
-    use crate::style::layer::StyleLayer;
     use lyon::tessellation::VertexBuffers;
 
-    use crate::render::resource::buffer_pool::BackingBufferType;
-    use crate::render::resource::{BackingBufferDescriptor, BufferPool, Queue};
+    use crate::{
+        coords::ZoomLevel,
+        render::resource::{
+            buffer_pool::BackingBufferType, BackingBufferDescriptor, BufferPool, Queue,
+        },
+        style::layer::StyleLayer,
+    };
 
     #[derive(Debug)]
     struct TestBuffer {

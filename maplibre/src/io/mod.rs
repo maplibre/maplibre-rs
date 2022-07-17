@@ -1,8 +1,8 @@
 //! Handles IO related processing as well as multithreading.
 
+use std::{collections::HashSet, fmt};
+
 use crate::coords::WorldTileCoords;
-use std::collections::HashSet;
-use std::fmt;
 
 pub mod scheduler;
 pub mod source_client;

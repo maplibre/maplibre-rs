@@ -1,13 +1,10 @@
 //! Settings for the renderer
 
-use crate::platform::COLOR_TEXTURE_FORMAT;
 use std::borrow::Cow;
 
-pub use wgpu::Backends;
-pub use wgpu::Features;
-pub use wgpu::Limits;
-pub use wgpu::PowerPreference;
-pub use wgpu::TextureFormat;
+pub use wgpu::{Backends, Features, Limits, PowerPreference, TextureFormat};
+
+use crate::platform::COLOR_TEXTURE_FORMAT;
 
 /// Provides configuration for renderer initialization. Use [`Device::features`](crate::renderer::Device::features),
 /// [`Device::limits`](crate::renderer::Device::limits), and the [`WgpuAdapterInfo`](crate::render_resource::WgpuAdapterInfo)

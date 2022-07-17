@@ -1,12 +1,10 @@
-use super::UpdateState;
-
-use maplibre::context::ViewState;
-use maplibre::render::camera::Camera;
+use std::time::Duration;
 
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
-
-use std::time::Duration;
+use maplibre::{context::ViewState, render::camera::Camera};
 use winit::event::{ElementState, MouseButton};
+
+use super::UpdateState;
 
 pub struct PanHandler {
     window_position: Option<Vector2<f64>>,

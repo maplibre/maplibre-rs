@@ -1,8 +1,11 @@
 //! Tile request state.
 
-use crate::coords::WorldTileCoords;
-use crate::io::{TileRequest, TileRequestID};
 use std::collections::{HashMap, HashSet};
+
+use crate::{
+    coords::WorldTileCoords,
+    io::{TileRequest, TileRequestID},
+};
 
 /// Stores a map of pending requests, coords and the current tile being requested.
 #[derive(Default)]
