@@ -136,11 +136,10 @@ pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Pr
 #[cfg(test)]
 mod tests {
     use super::build_vector_tile_pipeline;
-    use crate::tile::pipeline::Processable;
     use crate::{
         coords::ZoomLevel,
         io::TileRequest,
-        tile::pipeline::{PipelineContext, PipelineProcessor},
+        tile::pipeline::{PipelineContext, PipelineProcessor, Processable},
     };
     pub struct DummyPipelineProcessor;
 
