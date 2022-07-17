@@ -494,11 +494,12 @@
 <span id="489">489</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Main camera</span>
 
-<span class="kw">use</span> <span class="ident">cgmath::prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">cgmath</span>::{<span class="ident">AbsDiffEq</span>, <span class="ident">Matrix4</span>, <span class="ident">Point2</span>, <span class="ident">Point3</span>, <span class="ident">Vector2</span>, <span class="ident">Vector3</span>, <span class="ident">Vector4</span>};
+<span class="kw">use</span> <span class="ident">cgmath</span>::{<span class="ident">prelude</span>::<span class="kw-2">*</span>, <span class="ident">AbsDiffEq</span>, <span class="ident">Matrix4</span>, <span class="ident">Point2</span>, <span class="ident">Point3</span>, <span class="ident">Vector2</span>, <span class="ident">Vector3</span>, <span class="ident">Vector4</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util::math</span>::{<span class="ident">bounds_from_points</span>, <span class="ident">Aabb2</span>, <span class="ident">Aabb3</span>, <span class="ident">Plane</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util::SignificantlyDifferent</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util</span>::{
+    <span class="ident">math</span>::{<span class="ident">bounds_from_points</span>, <span class="ident">Aabb2</span>, <span class="ident">Aabb3</span>, <span class="ident">Plane</span>},
+    <span class="ident">SignificantlyDifferent</span>,
+};
 
 <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">OPENGL_TO_WGPU_MATRIX</span>: <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Matrix4::new</span>(
@@ -885,9 +886,8 @@
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="ident">cgmath</span>::{<span class="ident">AbsDiffEq</span>, <span class="ident">Vector2</span>, <span class="ident">Vector3</span>, <span class="ident">Vector4</span>};
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera</span>::{<span class="ident">InvertedViewProjection</span>, <span class="ident">ViewProjection</span>};
-
     <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Camera</span>, <span class="ident">Perspective</span>};
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera</span>::{<span class="ident">InvertedViewProjection</span>, <span class="ident">ViewProjection</span>};
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test</span>() {

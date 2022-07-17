@@ -292,12 +292,18 @@
 <span id="287">287</span>
 <span id="288">288</span>
 <span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::identity_op</span>)]</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::WorldCoords</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">FragmentState</span>, <span class="ident">VertexBufferLayout</span>, <span class="ident">VertexState</span>};
 <span class="kw">use</span> <span class="ident">bytemuck_derive</span>::{<span class="ident">Pod</span>, <span class="ident">Zeroable</span>};
 <span class="kw">use</span> <span class="ident">cgmath::SquareMatrix</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">coords::WorldCoords</span>,
+    <span class="ident">render::resource</span>::{<span class="ident">FragmentState</span>, <span class="ident">VertexBufferLayout</span>, <span class="ident">VertexState</span>},
+};
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Vec2f32</span> <span class="op">=</span> [<span class="ident">f32</span>; <span class="number">2</span>];
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Vec3f32</span> <span class="op">=</span> [<span class="ident">f32</span>; <span class="number">3</span>];

@@ -107,18 +107,16 @@
 <span id="102">102</span>
 <span id="103">103</span>
 <span id="104">104</span>
-<span id="105">105</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Tessellation for lines and polygons is implemented here.</span>
 
-<span class="kw">use</span> <span class="ident">bytemuck::Pod</span>;
 <span class="kw">use</span> <span class="ident">std::ops::Add</span>;
 
+<span class="kw">use</span> <span class="ident">bytemuck::Pod</span>;
 <span class="kw">use</span> <span class="ident">lyon::tessellation</span>::{
     <span class="ident">FillVertex</span>, <span class="ident">FillVertexConstructor</span>, <span class="ident">StrokeVertex</span>, <span class="ident">StrokeVertexConstructor</span>, <span class="ident">VertexBuffers</span>,
 };
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error::Error</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::ShaderVertex</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">error::Error</span>, <span class="ident">render::ShaderVertex</span>};
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">zero_tessellator</span>;
 

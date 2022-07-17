@@ -214,20 +214,28 @@
 <span id="209">209</span>
 <span id="210">210</span>
 <span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Executes a [`RenderGraph`]</span>
 
+<span class="kw">use</span> <span class="ident">std</span>::{
+    <span class="ident">borrow::Cow</span>,
+    <span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">VecDeque</span>},
+};
+
 <span class="kw">use</span> <span class="ident">log::error</span>;
-<span class="kw">use</span> <span class="ident">smallvec::smallvec</span>;
-<span class="kw">use</span> <span class="ident">smallvec::SmallVec</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">collections::VecDeque</span>};
+<span class="kw">use</span> <span class="ident">smallvec</span>::{<span class="ident">smallvec</span>, <span class="ident">SmallVec</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph</span>::{
-    <span class="ident">Edge</span>, <span class="ident">NodeId</span>, <span class="ident">NodeRunError</span>, <span class="ident">NodeState</span>, <span class="ident">RenderContext</span>, <span class="ident">RenderGraph</span>, <span class="ident">RenderGraphContext</span>,
-    <span class="ident">SlotLabel</span>, <span class="ident">SlotType</span>, <span class="ident">SlotValue</span>,
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
+    <span class="ident">graph</span>::{
+        <span class="ident">Edge</span>, <span class="ident">NodeId</span>, <span class="ident">NodeRunError</span>, <span class="ident">NodeState</span>, <span class="ident">RenderContext</span>, <span class="ident">RenderGraph</span>, <span class="ident">RenderGraphContext</span>,
+        <span class="ident">SlotLabel</span>, <span class="ident">SlotType</span>, <span class="ident">SlotValue</span>,
+    },
+    <span class="ident">RenderState</span>,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::RenderState</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">RenderGraphRunner</span>;
 

@@ -39,13 +39,11 @@
 <span id="34">34</span>
 <span id="35">35</span>
 <span id="36">36</span>
-<span id="37">37</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A bind group which binds a buffer with global data like the current camera transformations.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::platform::MIN_BUFFER_SIZE</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders::ShaderGlobals</span>;
-<span class="kw">use</span> <span class="ident">std::cmp</span>;
-<span class="kw">use</span> <span class="ident">std::mem::size_of</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cmp</span>, <span class="ident">mem::size_of</span>};
+
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">platform::MIN_BUFFER_SIZE</span>, <span class="ident">render::shaders::ShaderGlobals</span>};
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Globals</span> {
     <span class="kw">pub</span> <span class="ident">uniform_buffer</span>: <span class="ident">wgpu::Buffer</span>,

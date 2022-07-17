@@ -241,10 +241,14 @@
 <span id="236">236</span>
 <span id="237">237</span>
 <span id="238">238</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">NodeState</span>, <span class="ident">RenderGraph</span>, <span class="ident">SlotInfos</span>, <span class="ident">SlotLabel</span>, <span class="ident">SlotType</span>, <span class="ident">SlotValue</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::TextureView</span>;
-<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+<span id="239">239</span>
+<span id="240">240</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">NodeState</span>, <span class="ident">RenderGraph</span>, <span class="ident">SlotInfos</span>, <span class="ident">SlotLabel</span>, <span class="ident">SlotType</span>, <span class="ident">SlotValue</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::TextureView</span>;
 
 <span class="doccomment">/// A command that signals the graph runner to run the sub graph corresponding to the `name`</span>
 <span class="doccomment">/// with the specified `inputs` next.</span>

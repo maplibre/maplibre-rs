@@ -59,13 +59,11 @@
 <span id="54">54</span>
 <span id="55">55</span>
 <span id="56">56</span>
-<span id="57">57</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Errors which can happen in various parts of the library.</span>
 
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">fmt::Formatter</span>, <span class="ident">sync::mpsc::SendError</span>};
+
 <span class="kw">use</span> <span class="ident">lyon::tessellation::TessellationError</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std::fmt::Formatter</span>;
-<span class="kw">use</span> <span class="ident">std::sync::mpsc::SendError</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RenderError</span> {

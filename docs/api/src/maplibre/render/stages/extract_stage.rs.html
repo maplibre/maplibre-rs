@@ -45,16 +45,12 @@
 <span id="40">40</span>
 <span id="41">41</span>
 <span id="42">42</span>
-<span id="43">43</span>
-<span id="44">44</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Extracts data from the current state.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::MapContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::ViewRegion</span>;
-
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::eventually::Eventually::Initialized</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::Stage</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">RenderState</span>, <span class="ident">Renderer</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">context::MapContext</span>, <span class="ident">coords::ViewRegion</span>, <span class="ident">render::eventually::Eventually::Initialized</span>,
+    <span class="ident">schedule::Stage</span>, <span class="ident">RenderState</span>, <span class="ident">Renderer</span>,
+};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExtractStage</span>;

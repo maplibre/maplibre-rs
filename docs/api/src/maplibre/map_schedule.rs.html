@@ -218,24 +218,24 @@
 <span id="213">213</span>
 <span id="214">214</span>
 <span id="215">215</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context</span>::{<span class="ident">MapContext</span>, <span class="ident">ViewState</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error::Error</span>;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">mem</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::scheduler::Scheduler</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::source_client</span>::{<span class="ident">HttpClient</span>, <span class="ident">HttpSourceClient</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::TileRepository</span>;
-
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">LatLon</span>, <span class="ident">Zoom</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{<span class="ident">create_default_render_graph</span>, <span class="ident">register_default_render_stages</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule</span>::{<span class="ident">Schedule</span>, <span class="ident">Stage</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stages::register_stages</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style::Style</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">context</span>::{<span class="ident">MapContext</span>, <span class="ident">ViewState</span>},
+    <span class="ident">coords</span>::{<span class="ident">LatLon</span>, <span class="ident">Zoom</span>},
+    <span class="ident">error::Error</span>,
+    <span class="ident">io</span>::{
+        <span class="ident">scheduler::Scheduler</span>,
+        <span class="ident">source_client</span>::{<span class="ident">HttpClient</span>, <span class="ident">HttpSourceClient</span>},
+        <span class="ident">tile_repository::TileRepository</span>,
+    },
+    <span class="ident">render</span>::{<span class="ident">create_default_render_graph</span>, <span class="ident">register_default_render_stages</span>},
+    <span class="ident">schedule</span>::{<span class="ident">Schedule</span>, <span class="ident">Stage</span>},
+    <span class="ident">stages::register_stages</span>,
+    <span class="ident">style::Style</span>,
     <span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">Renderer</span>, <span class="ident">RendererSettings</span>, <span class="ident">ScheduleMethod</span>, <span class="ident">WgpuSettings</span>,
     <span class="ident">WindowSize</span>,
 };
-<span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std::mem</span>;
 
 <span class="doccomment">/// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InteractiveMapSchedule</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>

@@ -521,6 +521,14 @@
 <span id="516">516</span>
 <span id="517">517</span>
 <span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole</span>
 <span class="doccomment">//! communication with the GPU.</span>
 <span class="doccomment">//!</span>
@@ -541,18 +549,22 @@
 <span class="doccomment">//! We appreciate the design and implementation work which as gone into it.</span>
 <span class="doccomment">//!</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::eventually::Eventually</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::render_phase::RenderPhase</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">BufferPool</span>, <span class="ident">Globals</span>, <span class="ident">IndexEntry</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">Head</span>, <span class="ident">Surface</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">Texture</span>, <span class="ident">TextureView</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::settings</span>::{<span class="ident">RendererSettings</span>, <span class="ident">WgpuSettings</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders</span>::{<span class="ident">ShaderFeatureStyle</span>, <span class="ident">ShaderLayerMetadata</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::tile_view_pattern</span>::{<span class="ident">TileInView</span>, <span class="ident">TileShape</span>, <span class="ident">TileViewPattern</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tessellation::IndexDataType</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>};
-<span class="kw">use</span> <span class="ident">log::info</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+
+<span class="kw">use</span> <span class="ident">log::info</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">render</span>::{
+        <span class="ident">eventually::Eventually</span>,
+        <span class="ident">render_phase::RenderPhase</span>,
+        <span class="ident">resource</span>::{<span class="ident">BufferPool</span>, <span class="ident">Globals</span>, <span class="ident">Head</span>, <span class="ident">IndexEntry</span>, <span class="ident">Surface</span>, <span class="ident">Texture</span>, <span class="ident">TextureView</span>},
+        <span class="ident">settings</span>::{<span class="ident">RendererSettings</span>, <span class="ident">WgpuSettings</span>},
+        <span class="ident">shaders</span>::{<span class="ident">ShaderFeatureStyle</span>, <span class="ident">ShaderLayerMetadata</span>},
+        <span class="ident">tile_view_pattern</span>::{<span class="ident">TileInView</span>, <span class="ident">TileShape</span>, <span class="ident">TileViewPattern</span>},
+    },
+    <span class="ident">tessellation::IndexDataType</span>,
+    <span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>,
+};
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">graph</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">resource</span>;
@@ -572,10 +584,13 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">eventually</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">settings</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph</span>::{<span class="ident">EmptyNode</span>, <span class="ident">RenderGraph</span>, <span class="ident">RenderGraphError</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::main_pass</span>::{<span class="ident">MainPassDriverNode</span>, <span class="ident">MainPassNode</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">shaders::ShaderVertex</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">stages::register_default_render_stages</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
+    <span class="ident">graph</span>::{<span class="ident">EmptyNode</span>, <span class="ident">RenderGraph</span>, <span class="ident">RenderGraphError</span>},
+    <span class="ident">main_pass</span>::{<span class="ident">MainPassDriverNode</span>, <span class="ident">MainPassNode</span>},
+};
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">INDEX_FORMAT</span>: <span class="ident">wgpu::IndexFormat</span> <span class="op">=</span> <span class="ident">wgpu::IndexFormat::Uint32</span>; <span class="comment">// Must match IndexDataType</span>
 
@@ -951,11 +966,12 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_render</span>() {
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph::RenderGraph</span>;
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph_runner::RenderGraphRunner</span>;
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::Surface</span>;
-        <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">RenderState</span>, <span class="ident">RendererSettings</span>};
         <span class="kw">use</span> <span class="ident">log::LevelFilter</span>;
+
+        <span class="kw">use</span> <span class="kw">crate</span>::{
+            <span class="ident">render</span>::{<span class="ident">graph::RenderGraph</span>, <span class="ident">graph_runner::RenderGraphRunner</span>, <span class="ident">resource::Surface</span>},
+            <span class="ident">RenderState</span>, <span class="ident">RendererSettings</span>,
+        };
 
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">env_logger::builder</span>()
             .<span class="ident">filter_level</span>(<span class="ident">LevelFilter::Trace</span>)

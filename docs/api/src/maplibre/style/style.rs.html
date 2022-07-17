@@ -205,14 +205,20 @@
 <span id="200">200</span>
 <span id="201">201</span>
 <span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Default vector tile styles configuration.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style::layer</span>::{<span class="ident">LayerPaint</span>, <span class="ident">LinePaint</span>, <span class="ident">StyleLayer</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style::source::Source</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">str::FromStr</span>};
+
 <span class="kw">use</span> <span class="ident">csscolorparser::Color</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style</span>::{
+    <span class="ident">layer</span>::{<span class="ident">LayerPaint</span>, <span class="ident">LinePaint</span>, <span class="ident">StyleLayer</span>},
+    <span class="ident">source::Source</span>,
+};
 
 <span class="doccomment">/// Stores the style for a multi-layered map.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>

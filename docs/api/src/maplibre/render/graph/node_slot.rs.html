@@ -194,9 +194,9 @@
 <span id="189">189</span>
 <span id="190">190</span>
 <span id="191">191</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::TextureView</span>;
-<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">fmt</span>};
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">fmt</span>, <span class="ident">rc::Rc</span>};
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::TextureView</span>;
 
 <span class="doccomment">/// A value passed between render [`Nodes`](super::Node).</span>
 <span class="doccomment">/// Corresponds to the [`SlotType`] specified in the [`RenderGraph`](super::RenderGraph).</span>

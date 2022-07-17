@@ -99,12 +99,14 @@
 <span id="94">94</span>
 <span id="95">95</span>
 <span id="96">96</span>
+<span id="97">97</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Vector tile layer drawing utilities.</span>
+
+<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 
 <span class="kw">use</span> <span class="ident">cint</span>::{<span class="ident">Alpha</span>, <span class="ident">EncodedSrgb</span>};
 <span class="kw">use</span> <span class="ident">csscolorparser::Color</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BackgroundPaint</span> {

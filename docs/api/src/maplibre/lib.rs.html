@@ -281,6 +281,12 @@
 <span id="276">276</span>
 <span id="277">277</span>
 <span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
 </pre><pre class="rust"><code><span class="doccomment">//! # Maplibre-rs</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! A multi-platform library for rendering vector tile maps with WebGPU.</span>
@@ -299,13 +305,19 @@
 <span class="doccomment">//! maplibre = &quot;0.0.2&quot;</span>
 <span class="doccomment">//! ```</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::scheduler</span>::{<span class="ident">ScheduleMethod</span>, <span class="ident">Scheduler</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::source_client::HttpClient</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::map_schedule::InteractiveMapSchedule</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::settings</span>::{<span class="ident">RendererSettings</span>, <span class="ident">WgpuSettings</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{<span class="ident">RenderState</span>, <span class="ident">Renderer</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style::Style</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::window</span>::{<span class="ident">EventLoop</span>, <span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">WindowSize</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">io</span>::{
+        <span class="ident">scheduler</span>::{<span class="ident">ScheduleMethod</span>, <span class="ident">Scheduler</span>},
+        <span class="ident">source_client::HttpClient</span>,
+    },
+    <span class="ident">map_schedule::InteractiveMapSchedule</span>,
+    <span class="ident">render</span>::{
+        <span class="ident">settings</span>::{<span class="ident">RendererSettings</span>, <span class="ident">WgpuSettings</span>},
+        <span class="ident">RenderState</span>, <span class="ident">Renderer</span>,
+    },
+    <span class="ident">style::Style</span>,
+    <span class="ident">window</span>::{<span class="ident">EventLoop</span>, <span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">WindowSize</span>},
+};
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">context</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">coords</span>;

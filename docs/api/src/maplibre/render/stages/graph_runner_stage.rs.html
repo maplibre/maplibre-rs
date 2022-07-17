@@ -75,16 +75,20 @@
 <span id="70">70</span>
 <span id="71">71</span>
 <span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Executes the [`RenderGraph`] current render graph.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::MapContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph::RenderGraph</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph_runner::RenderGraphRunner</span>;
-
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::eventually::Eventually::Initialized</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::Stage</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Renderer</span>;
 <span class="kw">use</span> <span class="ident">log::error</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">context::MapContext</span>,
+    <span class="ident">render</span>::{
+        <span class="ident">eventually::Eventually::Initialized</span>, <span class="ident">graph::RenderGraph</span>, <span class="ident">graph_runner::RenderGraphRunner</span>,
+    },
+    <span class="ident">schedule::Stage</span>,
+    <span class="ident">Renderer</span>,
+};
 
 <span class="doccomment">/// Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GraphRunnerStage</span> {

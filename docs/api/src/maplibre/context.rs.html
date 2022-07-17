@@ -93,13 +93,21 @@
 <span id="88">88</span>
 <span id="89">89</span>
 <span id="90">90</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">LatLon</span>, <span class="ident">ViewRegion</span>, <span class="ident">WorldCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">TILE_SIZE</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::TileRepository</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera</span>::{<span class="ident">Camera</span>, <span class="ident">Perspective</span>, <span class="ident">ViewProjection</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util::ChangeObserver</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Renderer</span>, <span class="ident">Style</span>, <span class="ident">WindowSize</span>};
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::ops::Div</span>;
+
 <span class="kw">use</span> <span class="ident">cgmath::Angle</span>;
-<span class="kw">use</span> <span class="ident">std::ops::Div</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">coords</span>::{<span class="ident">LatLon</span>, <span class="ident">ViewRegion</span>, <span class="ident">WorldCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">TILE_SIZE</span>},
+    <span class="ident">io::tile_repository::TileRepository</span>,
+    <span class="ident">render::camera</span>::{<span class="ident">Camera</span>, <span class="ident">Perspective</span>, <span class="ident">ViewProjection</span>},
+    <span class="ident">util::ChangeObserver</span>,
+    <span class="ident">Renderer</span>, <span class="ident">Style</span>, <span class="ident">WindowSize</span>,
+};
 
 <span class="doccomment">/// Stores the camera configuration.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ViewState</span> {

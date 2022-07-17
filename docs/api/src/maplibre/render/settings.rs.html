@@ -118,19 +118,13 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Settings for the renderer</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::platform::COLOR_TEXTURE_FORMAT</span>;
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wgpu::Backends</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wgpu::Features</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wgpu::Limits</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wgpu::PowerPreference</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wgpu::TextureFormat</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wgpu</span>::{<span class="ident">Backends</span>, <span class="ident">Features</span>, <span class="ident">Limits</span>, <span class="ident">PowerPreference</span>, <span class="ident">TextureFormat</span>};
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::platform::COLOR_TEXTURE_FORMAT</span>;
 
 <span class="doccomment">/// Provides configuration for renderer initialization. Use [`Device::features`](crate::renderer::Device::features),</span>
 <span class="doccomment">/// [`Device::limits`](crate::renderer::Device::limits), and the [`WgpuAdapterInfo`](crate::render_resource::WgpuAdapterInfo)</span>

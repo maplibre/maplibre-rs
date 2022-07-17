@@ -128,19 +128,25 @@
 <span id="123">123</span>
 <span id="124">124</span>
 <span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The main render pass for this application.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Right now there is only one render graph. A use case for multiple render passes would be</span>
 <span class="doccomment">//! [shadows](https://www.raywenderlich.com/books/metal-by-tutorials/v2.0/chapters/14-multipass-deferred-rendering).</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph</span>::{<span class="ident">Node</span>, <span class="ident">NodeRunError</span>, <span class="ident">RenderContext</span>, <span class="ident">RenderGraphContext</span>, <span class="ident">SlotInfo</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::render_commands</span>::{<span class="ident">DrawMasks</span>, <span class="ident">DrawTiles</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::render_phase::RenderCommand</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::TrackedRenderPass</span>;
-
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::Eventually::Initialized</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{<span class="ident">draw_graph</span>, <span class="ident">RenderState</span>};
 <span class="kw">use</span> <span class="ident">std::ops::Deref</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
+    <span class="ident">draw_graph</span>,
+    <span class="ident">graph</span>::{<span class="ident">Node</span>, <span class="ident">NodeRunError</span>, <span class="ident">RenderContext</span>, <span class="ident">RenderGraphContext</span>, <span class="ident">SlotInfo</span>},
+    <span class="ident">render_commands</span>::{<span class="ident">DrawMasks</span>, <span class="ident">DrawTiles</span>},
+    <span class="ident">render_phase::RenderCommand</span>,
+    <span class="ident">resource::TrackedRenderPass</span>,
+    <span class="ident">Eventually::Initialized</span>,
+    <span class="ident">RenderState</span>,
+};
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">graph</span> {
     <span class="comment">// Labels for input nodes</span>

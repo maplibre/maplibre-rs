@@ -750,16 +750,13 @@
 <span id="745">745</span>
 <span id="746">746</span>
 <span id="747">747</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{
-    <span class="ident">Edge</span>, <span class="ident">Node</span>, <span class="ident">NodeId</span>, <span class="ident">NodeLabel</span>, <span class="ident">NodeRunError</span>, <span class="ident">NodeState</span>, <span class="ident">RenderGraphContext</span>, <span class="ident">RenderGraphError</span>,
-    <span class="ident">SlotInfo</span>, <span class="ident">SlotLabel</span>,
-};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph::RenderContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::RenderState</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">fmt::Debug</span>};
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">collections::HashMap</span>, <span class="ident">fmt::Debug</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::EdgeExistence</span>;
+<span class="kw">use</span> <span class="kw">super</span>::{
+    <span class="ident">Edge</span>, <span class="ident">EdgeExistence</span>, <span class="ident">Node</span>, <span class="ident">NodeId</span>, <span class="ident">NodeLabel</span>, <span class="ident">NodeRunError</span>, <span class="ident">NodeState</span>, <span class="ident">RenderGraphContext</span>,
+    <span class="ident">RenderGraphError</span>, <span class="ident">SlotInfo</span>, <span class="ident">SlotLabel</span>,
+};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{<span class="ident">graph::RenderContext</span>, <span class="ident">RenderState</span>};
 
 <span class="doccomment">/// The render graph configures the modular, parallel and re-usable render logic.</span>
 <span class="doccomment">/// It is a retained and stateless (nodes itself my have their internal state) structure,</span>
@@ -1323,13 +1320,16 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+
     <span class="kw">use</span> <span class="kw">super</span>::{
         <span class="ident">Edge</span>, <span class="ident">Node</span>, <span class="ident">NodeId</span>, <span class="ident">NodeRunError</span>, <span class="ident">RenderGraph</span>, <span class="ident">RenderGraphContext</span>, <span class="ident">RenderGraphError</span>,
         <span class="ident">SlotInfo</span>,
     };
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph</span>::{<span class="ident">RenderContext</span>, <span class="ident">SlotType</span>};
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::RenderState</span>;
-    <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::{
+        <span class="ident">render::graph</span>::{<span class="ident">RenderContext</span>, <span class="ident">SlotType</span>},
+        <span class="ident">RenderState</span>,
+    };
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
     <span class="kw">struct</span> <span class="ident">TestNode</span> {

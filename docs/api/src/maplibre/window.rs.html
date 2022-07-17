@@ -63,10 +63,12 @@
 <span id="58">58</span>
 <span id="59">59</span>
 <span id="60">60</span>
+<span id="61">61</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for the window system.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">HttpClient</span>, <span class="ident">InteractiveMapSchedule</span>, <span class="ident">ScheduleMethod</span>};
 <span class="kw">use</span> <span class="ident">raw_window_handle::HasRawWindowHandle</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">HttpClient</span>, <span class="ident">InteractiveMapSchedule</span>, <span class="ident">ScheduleMethod</span>};
 
 <span class="doccomment">/// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MapWindow</span> {

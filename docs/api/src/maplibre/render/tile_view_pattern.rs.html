@@ -185,19 +185,25 @@
 <span id="180">180</span>
 <span id="181">181</span>
 <span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility for generating a tile pattern which can be used for masking.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera::ViewProjection</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">BackingBufferDescriptor</span>, <span class="ident">BufferPool</span>, <span class="ident">Queue</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders</span>::{<span class="ident">ShaderFeatureStyle</span>, <span class="ident">ShaderLayerMetadata</span>, <span class="ident">ShaderTileMetadata</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">mem::size_of</span>, <span class="ident">ops::Range</span>};
+
 <span class="kw">use</span> <span class="ident">cgmath::Matrix4</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::ShaderVertex</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tessellation::IndexDataType</span>;
-<span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std::mem::size_of</span>;
-<span class="kw">use</span> <span class="ident">std::ops::Range</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>},
+    <span class="ident">render</span>::{
+        <span class="ident">camera::ViewProjection</span>,
+        <span class="ident">resource</span>::{<span class="ident">BackingBufferDescriptor</span>, <span class="ident">BufferPool</span>, <span class="ident">Queue</span>},
+        <span class="ident">shaders</span>::{<span class="ident">ShaderFeatureStyle</span>, <span class="ident">ShaderLayerMetadata</span>, <span class="ident">ShaderTileMetadata</span>},
+        <span class="ident">ShaderVertex</span>,
+    },
+    <span class="ident">tessellation::IndexDataType</span>,
+};
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_TILE_VIEW_SIZE</span>: <span class="ident">wgpu::BufferAddress</span> <span class="op">=</span> <span class="number">32</span> <span class="op">*</span> <span class="number">4</span>;
 

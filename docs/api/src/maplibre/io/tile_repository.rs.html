@@ -140,13 +140,21 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Tile cache.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">Quadkey</span>, <span class="ident">WorldTileCoords</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::ShaderVertex</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>};
-<span class="kw">use</span> <span class="ident">geozero::mvt::tile</span>;
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">btree_map</span>, <span class="ident">BTreeMap</span>, <span class="ident">HashSet</span>};
+
+<span class="kw">use</span> <span class="ident">geozero::mvt::tile</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">coords</span>::{<span class="ident">Quadkey</span>, <span class="ident">WorldTileCoords</span>},
+    <span class="ident">render::ShaderVertex</span>,
+    <span class="ident">tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>},
+};
 
 <span class="doccomment">/// A layer which is stored for future use.</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StoredLayer</span> {

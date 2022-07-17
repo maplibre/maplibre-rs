@@ -249,10 +249,12 @@
 <span id="244">244</span>
 <span id="245">245</span>
 <span id="246">246</span>
+<span id="247">247</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A render pass which allows tracking, for example using a tracing framework.</span>
 
-<span class="kw">use</span> <span class="ident">log::trace</span>;
 <span class="kw">use</span> <span class="ident">std::ops::Range</span>;
+
+<span class="kw">use</span> <span class="ident">log::trace</span>;
 
 <span class="doccomment">/// A [`RenderPass`], which tracks the current pipeline state to ensure all draw calls are valid.</span>
 <span class="doccomment">/// It is used to set the current [`RenderPipeline`], [`BindGroups`](BindGroup) and buffers.</span>

@@ -192,34 +192,34 @@
 <span id="187">187</span>
 </pre><pre class="rust"><code><span class="doccomment">//! [Stages](Stage) for requesting and preparing data</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::ZoomLevel</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">WorldCoords</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error::Error</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::geometry_index::GeometryIndex</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::geometry_index</span>::{<span class="ident">IndexedGeometry</span>, <span class="ident">TileIndex</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::pipeline::Processable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::pipeline</span>::{<span class="ident">PipelineContext</span>, <span class="ident">PipelineProcessor</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::source_client::HttpSourceClient</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_pipelines::build_vector_tile_pipeline</span>;
+<span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">mpsc</span>, <span class="ident">Arc</span>, <span class="ident">Mutex</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_request_state::TileRequestState</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io</span>::{<span class="ident">TileRequest</span>, <span class="ident">TileRequestID</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::ShaderVertex</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::Schedule</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stages::message</span>::{
-    <span class="ident">LayerTessellateMessage</span>, <span class="ident">MessageReceiver</span>, <span class="ident">MessageSender</span>, <span class="ident">TessellateMessage</span>,
-    <span class="ident">TileTessellateMessage</span>,
-};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stages::populate_tile_store_stage::PopulateTileStore</span>;
-
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">HttpClient</span>, <span class="ident">ScheduleMethod</span>, <span class="ident">Scheduler</span>};
-<span class="kw">use</span> <span class="ident">geozero::mvt::tile</span>;
-<span class="kw">use</span> <span class="ident">geozero::GeozeroDatasource</span>;
-
+<span class="kw">use</span> <span class="ident">geozero</span>::{<span class="ident">mvt::tile</span>, <span class="ident">GeozeroDatasource</span>};
 <span class="kw">use</span> <span class="ident">request_stage::RequestStage</span>;
 
-<span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">mpsc</span>, <span class="ident">Arc</span>, <span class="ident">Mutex</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">coords</span>::{<span class="ident">WorldCoords</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>},
+    <span class="ident">error::Error</span>,
+    <span class="ident">io</span>::{
+        <span class="ident">geometry_index</span>::{<span class="ident">GeometryIndex</span>, <span class="ident">IndexedGeometry</span>, <span class="ident">TileIndex</span>},
+        <span class="ident">pipeline</span>::{<span class="ident">PipelineContext</span>, <span class="ident">PipelineProcessor</span>, <span class="ident">Processable</span>},
+        <span class="ident">source_client::HttpSourceClient</span>,
+        <span class="ident">tile_pipelines::build_vector_tile_pipeline</span>,
+        <span class="ident">tile_request_state::TileRequestState</span>,
+        <span class="ident">TileRequest</span>, <span class="ident">TileRequestID</span>,
+    },
+    <span class="ident">render::ShaderVertex</span>,
+    <span class="ident">schedule::Schedule</span>,
+    <span class="ident">stages</span>::{
+        <span class="ident">message</span>::{
+            <span class="ident">LayerTessellateMessage</span>, <span class="ident">MessageReceiver</span>, <span class="ident">MessageSender</span>, <span class="ident">TessellateMessage</span>,
+            <span class="ident">TileTessellateMessage</span>,
+        },
+        <span class="ident">populate_tile_store_stage::PopulateTileStore</span>,
+    },
+    <span class="ident">tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>},
+    <span class="ident">HttpClient</span>, <span class="ident">ScheduleMethod</span>, <span class="ident">Scheduler</span>,
+};
 
 <span class="kw">mod</span> <span class="ident">message</span>;
 <span class="kw">mod</span> <span class="ident">populate_tile_store_stage</span>;

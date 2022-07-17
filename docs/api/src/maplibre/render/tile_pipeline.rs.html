@@ -123,14 +123,22 @@
 <span id="118">118</span>
 <span id="119">119</span>
 <span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility for declaring pipelines.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::platform::MIN_BUFFER_SIZE</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">FragmentState</span>, <span class="ident">VertexState</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">RenderPipeline</span>, <span class="ident">RenderPipelineDescriptor</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::settings::Msaa</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders::ShaderGlobals</span>;
 <span class="kw">use</span> <span class="ident">std::cmp</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">platform::MIN_BUFFER_SIZE</span>,
+    <span class="ident">render</span>::{
+        <span class="ident">resource</span>::{<span class="ident">FragmentState</span>, <span class="ident">RenderPipeline</span>, <span class="ident">RenderPipelineDescriptor</span>, <span class="ident">VertexState</span>},
+        <span class="ident">settings::Msaa</span>,
+        <span class="ident">shaders::ShaderGlobals</span>,
+    },
+};
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TilePipeline</span> {
     <span class="ident">bind_globals</span>: <span class="ident">bool</span>,

@@ -276,19 +276,16 @@
 <span id="271">271</span>
 <span id="272">272</span>
 <span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for handling surfaces which can be either headless or headed. A headed surface has</span>
 <span class="doccomment">//! a handle to a window. A headless surface renders to a texture.</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::eventually::HasChanged</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::texture::TextureView</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::settings::RendererSettings</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::window::HeadedMapWindow</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">MapWindow</span>, <span class="ident">WindowSize</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem::size_of</span>, <span class="ident">sync::Arc</span>};
 
-<span class="kw">use</span> <span class="ident">std::mem::size_of</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">render</span>::{<span class="ident">eventually::HasChanged</span>, <span class="ident">resource::texture::TextureView</span>, <span class="ident">settings::RendererSettings</span>},
+    <span class="ident">window::HeadedMapWindow</span>,
+    <span class="ident">MapWindow</span>, <span class="ident">WindowSize</span>,
+};
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferDimensions</span> {
     <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">usize</span>,
@@ -353,8 +350,7 @@
         <span class="ident">png_output_path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="comment">// device: &amp;wgpu::Device,</span>
     ) {
-        <span class="kw">use</span> <span class="ident">std::fs::File</span>;
-        <span class="kw">use</span> <span class="ident">std::io::Write</span>;
+        <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fs::File</span>, <span class="ident">io::Write</span>};
         <span class="comment">// Note that we&#39;re not calling `.await` here.</span>
         <span class="kw">let</span> <span class="ident">buffer_slice</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">output_buffer</span>.<span class="ident">slice</span>(..);
         <span class="kw">let</span> <span class="ident">buffer_future</span> <span class="op">=</span> <span class="ident">buffer_slice</span>.<span class="ident">map_async</span>(<span class="ident">wgpu::MapMode::Read</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> ());

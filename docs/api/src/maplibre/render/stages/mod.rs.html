@@ -67,20 +67,26 @@
 <span id="62">62</span>
 <span id="63">63</span>
 <span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Rendering specific [Stages](Stage)</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::MapContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::multi_stage</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::graph::RenderGraph</span>;
-
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::stages::extract_stage::ExtractStage</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::stages::phase_sort_stage::PhaseSortStage</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::stages::queue_stage::QueueStage</span>;
-
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule</span>::{<span class="ident">Schedule</span>, <span class="ident">Stage</span>, <span class="ident">StageLabel</span>};
 <span class="kw">use</span> <span class="ident">graph_runner_stage::GraphRunnerStage</span>;
 <span class="kw">use</span> <span class="ident">resource_stage::ResourceStage</span>;
 <span class="kw">use</span> <span class="ident">upload_stage::UploadStage</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">context::MapContext</span>,
+    <span class="ident">multi_stage</span>,
+    <span class="ident">render</span>::{
+        <span class="ident">graph::RenderGraph</span>,
+        <span class="ident">stages</span>::{
+            <span class="ident">extract_stage::ExtractStage</span>, <span class="ident">phase_sort_stage::PhaseSortStage</span>, <span class="ident">queue_stage::QueueStage</span>,
+        },
+    },
+    <span class="ident">schedule</span>::{<span class="ident">Schedule</span>, <span class="ident">Stage</span>, <span class="ident">StageLabel</span>},
+};
 
 <span class="kw">mod</span> <span class="ident">extract_stage</span>;
 <span class="kw">mod</span> <span class="ident">graph_runner_stage</span>;

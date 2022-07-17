@@ -119,6 +119,8 @@
 <span id="114">114</span>
 <span id="115">115</span>
 <span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utils which are used internally</span>
 
 <span class="kw">mod</span> <span class="ident">fps_meter</span>;
@@ -126,9 +128,11 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">label</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">math</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::WorldTileCoords</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">fps_meter::FPSMeter</span>;
 <span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">fps_meter::FPSMeter</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::WorldTileCoords</span>;
 
 <span class="kw">struct</span> <span class="ident">MinMaxBoundingBox</span> {
     <span class="ident">min_x</span>: <span class="ident">i32</span>,

@@ -302,23 +302,27 @@
 <span id="297">297</span>
 <span id="298">298</span>
 <span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Geometry index.</span>
 
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeMap</span>, <span class="ident">HashMap</span>};
 
-<span class="kw">use</span> <span class="ident">cgmath::num_traits::Signed</span>;
-<span class="kw">use</span> <span class="ident">cgmath::Bounded</span>;
+<span class="kw">use</span> <span class="ident">cgmath</span>::{<span class="ident">num_traits::Signed</span>, <span class="ident">Bounded</span>};
 <span class="kw">use</span> <span class="ident">geo::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">geo_types</span>::{<span class="ident">CoordFloat</span>, <span class="ident">Coordinate</span>, <span class="ident">Geometry</span>, <span class="ident">LineString</span>, <span class="ident">Point</span>, <span class="ident">Polygon</span>};
-<span class="kw">use</span> <span class="ident">geozero::error::GeozeroError</span>;
-<span class="kw">use</span> <span class="ident">geozero::geo_types::GeoWriter</span>;
-<span class="kw">use</span> <span class="ident">geozero</span>::{<span class="ident">ColumnValue</span>, <span class="ident">FeatureProcessor</span>, <span class="ident">GeomProcessor</span>, <span class="ident">PropertyProcessor</span>};
+<span class="kw">use</span> <span class="ident">geozero</span>::{
+    <span class="ident">error::GeozeroError</span>, <span class="ident">geo_types::GeoWriter</span>, <span class="ident">ColumnValue</span>, <span class="ident">FeatureProcessor</span>, <span class="ident">GeomProcessor</span>,
+    <span class="ident">PropertyProcessor</span>,
+};
 <span class="kw">use</span> <span class="ident">rstar</span>::{<span class="ident">Envelope</span>, <span class="ident">PointDistance</span>, <span class="ident">RTree</span>, <span class="ident">RTreeObject</span>, <span class="ident">AABB</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{
-    <span class="ident">InnerCoords</span>, <span class="ident">Quadkey</span>, <span class="ident">WorldCoords</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">EXTENT</span>, <span class="ident">TILE_SIZE</span>,
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">coords</span>::{
+        <span class="ident">InnerCoords</span>, <span class="ident">Quadkey</span>, <span class="ident">WorldCoords</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">EXTENT</span>, <span class="ident">TILE_SIZE</span>,
+    },
+    <span class="ident">util::math::bounds_from_points</span>,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util::math::bounds_from_points</span>;
 
 <span class="doccomment">/// A quad tree storing the currently loaded tiles.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GeometryIndex</span> {

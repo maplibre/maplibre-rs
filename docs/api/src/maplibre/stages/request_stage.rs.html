@@ -161,18 +161,28 @@
 <span id="156">156</span>
 <span id="157">157</span>
 <span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view</span>
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::MapContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">WorldTileCoords</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error::Error</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::source_client</span>::{<span class="ident">HttpSourceClient</span>, <span class="ident">SourceClient</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::TileRepository</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::TileRequest</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::Stage</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::stages::SharedThreadState</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">HttpClient</span>, <span class="ident">ScheduleMethod</span>, <span class="ident">Scheduler</span>, <span class="ident">Style</span>};
 <span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">context::MapContext</span>,
+    <span class="ident">coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">WorldTileCoords</span>},
+    <span class="ident">error::Error</span>,
+    <span class="ident">io</span>::{
+        <span class="ident">source_client</span>::{<span class="ident">HttpSourceClient</span>, <span class="ident">SourceClient</span>},
+        <span class="ident">tile_repository::TileRepository</span>,
+        <span class="ident">TileRequest</span>,
+    },
+    <span class="ident">schedule::Stage</span>,
+    <span class="ident">stages::SharedThreadState</span>,
+    <span class="ident">HttpClient</span>, <span class="ident">ScheduleMethod</span>, <span class="ident">Scheduler</span>, <span class="ident">Style</span>,
+};
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RequestStage</span><span class="op">&lt;</span><span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>
 <span class="kw">where</span>
