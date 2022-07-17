@@ -8,13 +8,11 @@ use crate::render::resource::{Globals, RenderPipeline};
 use crate::render::shaders;
 use crate::render::shaders::{Shader, ShaderTileMetadata};
 use crate::render::tile_pipeline::TilePipeline;
-use crate::render::tile_view_pattern::TileViewPattern;
+use crate::render::tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE};
 use crate::schedule::Stage;
 use crate::Renderer;
 
 use std::mem::size_of;
-
-pub const TILE_VIEW_SIZE: wgpu::BufferAddress = 32;
 
 #[derive(Default)]
 pub struct ResourceStage;
@@ -83,7 +81,8 @@ impl Stage for ResourceStage {
         state.tile_view_pattern.initialize(|| {
             let tile_view_buffer_desc = wgpu::BufferDescriptor {
                 label: Some("tile view buffer"),
-                size: size_of::<ShaderTileMetadata>() as wgpu::BufferAddress * TILE_VIEW_SIZE,
+                size: size_of::<ShaderTileMetadata>() as wgpu::BufferAddress
+                    * DEFAULT_TILE_VIEW_SIZE,
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
                 mapped_at_creation: false,
             };
