@@ -18,6 +18,7 @@
 //! We appreciate the design and implementation work which as gone into it.
 //!
 
+use crate::render::eventually::Eventually;
 use crate::render::render_phase::RenderPhase;
 use crate::render::resource::{BufferPool, Globals, IndexEntry};
 use crate::render::resource::{Head, Surface};
@@ -25,7 +26,6 @@ use crate::render::resource::{Texture, TextureView};
 use crate::render::settings::{RendererSettings, WgpuSettings};
 use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata};
 use crate::render::tile_view_pattern::{TileInView, TileShape, TileViewPattern};
-use crate::render::util::Eventually;
 use crate::tessellation::IndexDataType;
 use crate::{HeadedMapWindow, MapWindow};
 use log::info;
@@ -43,10 +43,10 @@ mod render_phase;
 mod shaders;
 mod tile_pipeline;
 mod tile_view_pattern;
-mod util;
 
 // Public API
 pub mod camera;
+pub mod eventually;
 pub mod settings;
 
 use crate::render::graph::{EmptyNode, RenderGraph, RenderGraphError};
@@ -79,7 +79,7 @@ pub struct RenderState {
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
 
-    pub surface: Surface,
+    surface: Surface,
 
     mask_phase: RenderPhase<TileInView>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
@@ -107,6 +107,25 @@ impl RenderState {
         MW: MapWindow + HeadedMapWindow,
     {
         self.surface.recreate::<MW>(window, instance);
+    }
+
+    pub fn surface(&self) -> &Surface {
+        &self.surface
+    }
+
+    pub fn buffer_pool_mut(
+        &mut self,
+    ) -> &mut Eventually<
+        BufferPool<
+            wgpu::Queue,
+            wgpu::Buffer,
+            ShaderVertex,
+            IndexDataType,
+            ShaderLayerMetadata,
+            ShaderFeatureStyle,
+        >,
+    > {
+        &mut self.buffer_pool
     }
 }
 

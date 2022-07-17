@@ -9,7 +9,7 @@ use crate::render::shaders::{
     ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32,
 };
 
-use crate::render::util::Eventually::Initialized;
+use crate::render::eventually::Eventually::Initialized;
 use crate::schedule::Stage;
 use crate::{RenderState, Renderer, Style};
 

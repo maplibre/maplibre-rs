@@ -129,6 +129,10 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         }
     }
 
+    pub fn clear(&mut self) {
+        self.index.clear()
+    }
+
     #[cfg(test)]
     fn available_space(&self, typ: BackingBufferType) -> wgpu::BufferAddress {
         let gap = match typ {
@@ -478,6 +482,11 @@ impl RingIndex {
             tree_index: Default::default(),
             linear_index: Default::default(),
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.linear_index.clear();
+        self.tree_index.clear();
     }
 
     pub fn front(&self) -> Option<&IndexEntry> {

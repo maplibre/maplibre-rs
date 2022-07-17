@@ -4,7 +4,7 @@ use crate::context::MapContext;
 use crate::render::graph::RenderGraph;
 use crate::render::graph_runner::RenderGraphRunner;
 
-use crate::render::util::Eventually::Initialized;
+use crate::render::eventually::Eventually::Initialized;
 use crate::schedule::Stage;
 use crate::Renderer;
 use log::error;

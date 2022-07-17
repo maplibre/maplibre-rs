@@ -60,6 +60,7 @@ where
                 .map(|center| LatLon::new(center[0], center[1]))
                 .unwrap_or_default(),
             style.pitch.unwrap_or_default(),
+            cgmath::Deg(110.0),
         );
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
