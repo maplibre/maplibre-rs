@@ -1,13 +1,16 @@
+use std::{collections::HashSet, io::Cursor};
+
 use criterion::{criterion_group, criterion_main, Criterion};
-use maplibre::benchmarking::io::static_tile_fetcher::StaticTileFetcher;
-use maplibre::benchmarking::tessellation::Tessellated;
-use maplibre::coords::{TileCoords, WorldTileCoords, ZoomLevel};
-use maplibre::io::pipeline::{PipelineContext, PipelineProcessor, Processable};
-use maplibre::io::tile_pipelines::{ParseTile, TessellateLayer};
-use maplibre::io::TileRequest;
-use maplibre::style::source::TileAddressingScheme;
-use std::collections::HashSet;
-use std::io::Cursor;
+use maplibre::{
+    benchmarking::{io::static_tile_fetcher::StaticTileFetcher, tessellation::Tessellated},
+    coords::{TileCoords, WorldTileCoords, ZoomLevel},
+    io::{
+        pipeline::{PipelineContext, PipelineProcessor, Processable},
+        tile_pipelines::{ParseTile, TessellateLayer},
+        TileRequest,
+    },
+    style::source::TileAddressingScheme,
+};
 
 const MUNICH_COORDS: TileCoords = TileCoords {
     x: 17425,

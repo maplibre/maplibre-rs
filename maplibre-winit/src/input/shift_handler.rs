@@ -1,8 +1,9 @@
-use super::UpdateState;
+use std::time::Duration;
 
 use cgmath::{Vector3, Zero};
 use maplibre::context::ViewState;
-use std::time::Duration;
+
+use super::UpdateState;
 
 pub struct ShiftHandler {
     camera_translate: Vector3<f64>,

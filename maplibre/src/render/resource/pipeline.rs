@@ -1,7 +1,8 @@
 //! Utility for creating [RenderPipelines](wgpu::RenderPipeline)
 
-use crate::render::resource::shader::{FragmentState, VertexState};
 use std::borrow::Cow;
+
+use crate::render::resource::shader::{FragmentState, VertexState};
 
 pub trait RenderPipeline {
     fn describe_render_pipeline(self) -> RenderPipelineDescriptor;

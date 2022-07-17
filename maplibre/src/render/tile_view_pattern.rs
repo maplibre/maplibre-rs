@@ -1,16 +1,19 @@
 //! Utility for generating a tile pattern which can be used for masking.
 
-use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
-use crate::render::camera::ViewProjection;
-use crate::render::resource::{BackingBufferDescriptor, BufferPool, Queue};
-use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata};
+use std::{marker::PhantomData, mem::size_of, ops::Range};
+
 use cgmath::Matrix4;
 
-use crate::render::ShaderVertex;
-use crate::tessellation::IndexDataType;
-use std::marker::PhantomData;
-use std::mem::size_of;
-use std::ops::Range;
+use crate::{
+    coords::{ViewRegion, WorldTileCoords, Zoom},
+    render::{
+        camera::ViewProjection,
+        resource::{BackingBufferDescriptor, BufferPool, Queue},
+        shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata},
+        ShaderVertex,
+    },
+    tessellation::IndexDataType,
+};
 
 pub const DEFAULT_TILE_VIEW_SIZE: wgpu::BufferAddress = 32 * 4;
 

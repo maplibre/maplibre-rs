@@ -18,18 +18,22 @@
 //! We appreciate the design and implementation work which as gone into it.
 //!
 
-use crate::render::eventually::Eventually;
-use crate::render::render_phase::RenderPhase;
-use crate::render::resource::{BufferPool, Globals, IndexEntry};
-use crate::render::resource::{Head, Surface};
-use crate::render::resource::{Texture, TextureView};
-use crate::render::settings::{RendererSettings, WgpuSettings};
-use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata};
-use crate::render::tile_view_pattern::{TileInView, TileShape, TileViewPattern};
-use crate::tessellation::IndexDataType;
-use crate::{HeadedMapWindow, MapWindow};
-use log::info;
 use std::sync::Arc;
+
+use log::info;
+
+use crate::{
+    render::{
+        eventually::Eventually,
+        render_phase::RenderPhase,
+        resource::{BufferPool, Globals, Head, IndexEntry, Surface, Texture, TextureView},
+        settings::{RendererSettings, WgpuSettings},
+        shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
+        tile_view_pattern::{TileInView, TileShape, TileViewPattern},
+    },
+    tessellation::IndexDataType,
+    HeadedMapWindow, MapWindow,
+};
 
 pub mod graph;
 pub mod resource;
@@ -49,10 +53,13 @@ pub mod camera;
 pub mod eventually;
 pub mod settings;
 
-use crate::render::graph::{EmptyNode, RenderGraph, RenderGraphError};
-use crate::render::main_pass::{MainPassDriverNode, MainPassNode};
 pub use shaders::ShaderVertex;
 pub use stages::register_default_render_stages;
+
+use crate::render::{
+    graph::{EmptyNode, RenderGraph, RenderGraphError},
+    main_pass::{MainPassDriverNode, MainPassNode},
+};
 
 pub const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
@@ -428,11 +435,12 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
     async fn test_render() {
-        use crate::render::graph::RenderGraph;
-        use crate::render::graph_runner::RenderGraphRunner;
-        use crate::render::resource::Surface;
-        use crate::{RenderState, RendererSettings};
         use log::LevelFilter;
+
+        use crate::{
+            render::{graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface},
+            RenderState, RendererSettings,
+        };
 
         let _ = env_logger::builder()
             .filter_level(LevelFilter::Trace)

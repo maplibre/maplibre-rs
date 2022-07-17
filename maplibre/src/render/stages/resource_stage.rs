@@ -1,18 +1,19 @@
 //! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.
 
-use crate::context::MapContext;
-
-use crate::render::resource::Texture;
-use crate::render::resource::{BackingBufferDescriptor, BufferPool};
-use crate::render::resource::{Globals, RenderPipeline};
-use crate::render::shaders;
-use crate::render::shaders::{Shader, ShaderTileMetadata};
-use crate::render::tile_pipeline::TilePipeline;
-use crate::render::tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE};
-use crate::schedule::Stage;
-use crate::Renderer;
-
 use std::mem::size_of;
+
+use crate::{
+    context::MapContext,
+    render::{
+        resource::{BackingBufferDescriptor, BufferPool, Globals, RenderPipeline, Texture},
+        shaders,
+        shaders::{Shader, ShaderTileMetadata},
+        tile_pipeline::TilePipeline,
+        tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE},
+    },
+    schedule::Stage,
+    Renderer,
+};
 
 #[derive(Default)]
 pub struct ResourceStage;

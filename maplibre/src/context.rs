@@ -1,10 +1,14 @@
-use crate::coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE};
-use crate::io::tile_repository::TileRepository;
-use crate::render::camera::{Camera, Perspective, ViewProjection};
-use crate::util::ChangeObserver;
-use crate::{Renderer, Style, WindowSize};
-use cgmath::Angle;
 use std::ops::Div;
+
+use cgmath::Angle;
+
+use crate::{
+    coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
+    io::tile_repository::TileRepository,
+    render::camera::{Camera, Perspective, ViewProjection},
+    util::ChangeObserver,
+    Renderer, Style, WindowSize,
+};
 
 /// Stores the camera configuration.
 pub struct ViewState {

@@ -1,15 +1,20 @@
 //! Requests tiles which are currently in view
 
-use crate::context::MapContext;
-use crate::coords::{ViewRegion, WorldTileCoords};
-use crate::error::Error;
-use crate::io::source_client::{HttpSourceClient, SourceClient};
-use crate::io::tile_repository::TileRepository;
-use crate::io::TileRequest;
-use crate::schedule::Stage;
-use crate::stages::SharedThreadState;
-use crate::{HttpClient, ScheduleMethod, Scheduler, Style};
 use std::collections::HashSet;
+
+use crate::{
+    context::MapContext,
+    coords::{ViewRegion, WorldTileCoords},
+    error::Error,
+    io::{
+        source_client::{HttpSourceClient, SourceClient},
+        tile_repository::TileRepository,
+        TileRequest,
+    },
+    schedule::Stage,
+    stages::SharedThreadState,
+    HttpClient, ScheduleMethod, Scheduler, Style,
+};
 
 pub struct RequestStage<SM, HC>
 where

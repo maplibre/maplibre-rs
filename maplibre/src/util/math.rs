@@ -1,8 +1,8 @@
+use std::{cmp::Ordering, fmt};
+
 use cgmath::{
     ulps_eq, BaseFloat, BaseNum, EuclideanSpace, InnerSpace, Point2, Point3, Vector3, Zero,
 };
-use std::cmp::Ordering;
-use std::fmt;
 
 /// A 3-dimensional plane formed from the equation: `A*x + B*y + C*z - D = 0`.
 ///
@@ -412,8 +412,7 @@ pub const fn div_floor(lhs: i32, rhs: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::coords::EXTENT_SINT;
-    use crate::util::math::div_ceil;
+    use crate::{coords::EXTENT_SINT, util::math::div_ceil};
 
     #[test]
     pub fn test_div_floor() {

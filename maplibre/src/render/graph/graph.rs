@@ -1,13 +1,10 @@
-use super::{
-    Edge, Node, NodeId, NodeLabel, NodeRunError, NodeState, RenderGraphContext, RenderGraphError,
-    SlotInfo, SlotLabel,
-};
-use crate::render::graph::RenderContext;
-use crate::render::RenderState;
-use std::collections::HashMap;
-use std::{borrow::Cow, fmt::Debug};
+use std::{borrow::Cow, collections::HashMap, fmt::Debug};
 
-use super::EdgeExistence;
+use super::{
+    Edge, EdgeExistence, Node, NodeId, NodeLabel, NodeRunError, NodeState, RenderGraphContext,
+    RenderGraphError, SlotInfo, SlotLabel,
+};
+use crate::render::{graph::RenderContext, RenderState};
 
 /// The render graph configures the modular, parallel and re-usable render logic.
 /// It is a retained and stateless (nodes itself my have their internal state) structure,
@@ -571,13 +568,16 @@ impl Node for GraphInputNode {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::{
         Edge, Node, NodeId, NodeRunError, RenderGraph, RenderGraphContext, RenderGraphError,
         SlotInfo,
     };
-    use crate::render::graph::{RenderContext, SlotType};
-    use crate::RenderState;
-    use std::collections::HashSet;
+    use crate::{
+        render::graph::{RenderContext, SlotType},
+        RenderState,
+    };
 
     #[derive(Debug)]
     struct TestNode {

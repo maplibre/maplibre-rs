@@ -1,7 +1,8 @@
-use super::UpdateState;
+use std::time::Duration;
 
 use maplibre::context::ViewState;
-use std::time::Duration;
+
+use super::UpdateState;
 
 pub struct PinchHandler {}
 
