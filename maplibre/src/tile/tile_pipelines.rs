@@ -1,8 +1,8 @@
-use crate::io::geometry_index::IndexProcessor;
-use crate::io::pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable};
 use crate::io::{TileRequest, TileRequestID};
 use crate::tessellation::zero_tessellator::ZeroTessellator;
 use crate::tessellation::IndexDataType;
+use crate::tile::geometry_index::IndexProcessor;
+use crate::tile::pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable};
 use geozero::GeozeroDatasource;
 use prost::Message;
 use std::collections::HashSet;
@@ -132,8 +132,9 @@ pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Pr
 mod tests {
     use super::build_vector_tile_pipeline;
     use crate::coords::ZoomLevel;
-    use crate::io::pipeline::{PipelineContext, PipelineProcessor, Processable};
     use crate::io::TileRequest;
+    use crate::tile::pipeline::{PipelineContext, PipelineProcessor};
+
     pub struct DummyPipelineProcessor;
 
     impl PipelineProcessor for DummyPipelineProcessor {}

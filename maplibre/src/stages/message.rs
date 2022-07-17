@@ -1,11 +1,10 @@
 use crate::coords::WorldTileCoords;
 
-use crate::io::tile_repository::StoredLayer;
-
 use crate::io::TileRequestID;
 use crate::render::ShaderVertex;
 
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
+use crate::tile::tile_repository::StoredLayer;
 use geozero::mvt::tile;
 use std::fmt;
 use std::sync::mpsc;

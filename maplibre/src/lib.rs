@@ -30,6 +30,7 @@ pub mod error;
 #[cfg(feature = "headless")]
 pub mod headless;
 pub mod io;
+pub mod tile;
 // Exposed because of input handlers in maplibre-winit
 pub mod map_schedule;
 pub mod platform;

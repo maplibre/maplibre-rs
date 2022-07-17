@@ -1,11 +1,11 @@
 use crate::coords::WorldTileCoords;
-use crate::io::geometry_index::IndexedGeometry;
 use crate::io::TileRequestID;
 use crate::render::ShaderVertex;
 use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use downcast_rs::{impl_downcast, Downcast};
 use geozero::mvt::tile;
 
+use crate::tile::geometry_index::IndexedGeometry;
 use std::marker::PhantomData;
 
 /// Processes events which happen during the pipeline execution
@@ -176,6 +176,10 @@ where
 #[cfg(test)]
 mod tests {
     use crate::io::pipeline::{
+        ClosureProcessable, DataPipeline, PipelineContext, PipelineEnd, PipelineProcessor,
+        Processable,
+    };
+    use crate::tile::pipeline::{
         ClosureProcessable, DataPipeline, PipelineContext, PipelineEnd, PipelineProcessor,
         Processable,
     };

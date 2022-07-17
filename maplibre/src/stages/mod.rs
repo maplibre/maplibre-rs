@@ -3,12 +3,7 @@
 use crate::coords::ZoomLevel;
 use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
 use crate::error::Error;
-use crate::io::geometry_index::GeometryIndex;
-use crate::io::geometry_index::{IndexedGeometry, TileIndex};
-use crate::io::pipeline::Processable;
-use crate::io::pipeline::{PipelineContext, PipelineProcessor};
 use crate::io::source_client::HttpSourceClient;
-use crate::io::tile_pipelines::build_vector_tile_pipeline;
 
 use crate::io::tile_request_state::TileRequestState;
 use crate::io::{TileRequest, TileRequestID};
@@ -27,6 +22,10 @@ use geozero::GeozeroDatasource;
 
 use request_stage::RequestStage;
 
+use crate::tile::geometry_index::{GeometryIndex, IndexedGeometry, TileIndex};
+use crate::tile::pipeline::Processable;
+use crate::tile::pipeline::{PipelineContext, PipelineProcessor};
+use crate::tile::tile_pipelines::build_vector_tile_pipeline;
 use std::sync::{mpsc, Arc, Mutex};
 
 mod message;

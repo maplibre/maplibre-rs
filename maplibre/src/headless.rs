@@ -1,7 +1,6 @@
 use crate::context::{MapContext, ViewState};
 use crate::coords::{LatLon, ViewRegion, Zoom};
 use crate::error::Error;
-use crate::io::tile_repository::TileRepository;
 use crate::render::camera::ViewProjection;
 use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
 use crate::render::resource::{BufferDimensions, BufferedTextureHead, IndexEntry};
@@ -11,6 +10,7 @@ use crate::render::{
     create_default_render_graph, draw_graph, register_default_render_stages, RenderState,
 };
 use crate::schedule::{Schedule, Stage};
+use crate::tile::tile_repository::TileRepository;
 use crate::{
     HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler, Style, WindowSize,
 };
@@ -253,11 +253,11 @@ impl Stage for WriteSurfaceBufferStage {
 
 pub mod utils {
     use crate::coords::WorldTileCoords;
-    use crate::io::pipeline::PipelineProcessor;
-    use crate::io::tile_repository::StoredLayer;
-    use crate::io::RawLayer;
     use crate::render::ShaderVertex;
     use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
+    use crate::tile::pipeline::PipelineProcessor;
+    use crate::tile::tile_repository::StoredLayer;
+    use crate::tile::RawLayer;
 
     #[derive(Default)]
     pub struct HeadlessPipelineProcessor {

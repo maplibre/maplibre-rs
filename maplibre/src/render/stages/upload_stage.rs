@@ -2,7 +2,6 @@
 
 use crate::context::MapContext;
 use crate::coords::ViewRegion;
-use crate::io::tile_repository::{StoredLayer, TileRepository};
 use crate::render::camera::ViewProjection;
 
 use crate::render::shaders::{
@@ -13,6 +12,7 @@ use crate::render::util::Eventually::Initialized;
 use crate::schedule::Stage;
 use crate::{RenderState, Renderer, Style};
 
+use crate::tile::tile_repository::{StoredLayer, TileRepository};
 use std::iter;
 
 #[derive(Default)]

@@ -2,8 +2,8 @@
 
 use super::{MessageReceiver, SharedThreadState, TessellateMessage, TileTessellateMessage};
 use crate::context::MapContext;
-use crate::io::tile_repository::StoredLayer;
 use crate::schedule::Stage;
+use crate::tile::tile_repository::StoredLayer;
 
 pub struct PopulateTileStore {
     shared_thread_state: SharedThreadState,

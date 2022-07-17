@@ -4,10 +4,10 @@ use crate::context::MapContext;
 use crate::coords::{ViewRegion, WorldTileCoords};
 use crate::error::Error;
 use crate::io::source_client::{HttpSourceClient, SourceClient};
-use crate::io::tile_repository::TileRepository;
 use crate::io::TileRequest;
 use crate::schedule::Stage;
 use crate::stages::SharedThreadState;
+use crate::tile::tile_repository::TileRepository;
 use crate::{HttpClient, ScheduleMethod, Scheduler, Style};
 use std::collections::HashSet;
 

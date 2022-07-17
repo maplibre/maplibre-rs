@@ -1,6 +1,6 @@
 use crate::coords::{LatLon, WorldCoords, Zoom, ZoomLevel, TILE_SIZE};
-use crate::io::tile_repository::TileRepository;
 use crate::render::camera::{Camera, Perspective, ViewProjection};
+use crate::tile::tile_repository::TileRepository;
 use crate::util::ChangeObserver;
 use crate::{Renderer, Style, WindowSize};
 

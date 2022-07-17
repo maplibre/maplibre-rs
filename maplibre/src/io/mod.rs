@@ -4,17 +4,11 @@ use crate::coords::WorldTileCoords;
 use std::collections::HashSet;
 use std::fmt;
 
-pub mod geometry_index;
-pub mod pipeline;
 pub mod scheduler;
 pub mod source_client;
 #[cfg(feature = "embed-static-tiles")]
 pub mod static_tile_fetcher;
-pub mod tile_pipelines;
-pub mod tile_repository;
 pub mod tile_request_state;
-
-pub use geozero::mvt::tile::Layer as RawLayer;
 
 /// A request for a tile at the given coordinates and in the given layers.
 #[derive(Clone)]

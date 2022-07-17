@@ -3,13 +3,13 @@ use crate::error::Error;
 
 use crate::io::scheduler::Scheduler;
 use crate::io::source_client::{HttpClient, HttpSourceClient};
-use crate::io::tile_repository::TileRepository;
 
 use crate::coords::{LatLon, Zoom};
 use crate::render::{create_default_render_graph, register_default_render_stages};
 use crate::schedule::{Schedule, Stage};
 use crate::stages::register_stages;
 use crate::style::Style;
+use crate::tile::tile_repository::TileRepository;
 use crate::{
     HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod, WgpuSettings,
     WindowSize,
