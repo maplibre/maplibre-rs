@@ -67,6 +67,10 @@ impl TileRepository {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.tree.clear();
+    }
+
     /// Inserts a tessellated layer into the quad tree at its world tile coords.
     /// If the space is vacant, the tessellated layer is inserted into a new
     /// [crate::io::tile_repository::CachedTile].
