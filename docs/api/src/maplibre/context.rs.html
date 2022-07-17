@@ -73,7 +73,15 @@
 <span id="68">68</span>
 <span id="69">69</span>
 <span id="70">70</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">LatLon</span>, <span class="ident">WorldCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">TILE_SIZE</span>};
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">LatLon</span>, <span class="ident">ViewRegion</span>, <span class="ident">WorldCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">TILE_SIZE</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::io::tile_repository::TileRepository</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera</span>::{<span class="ident">Camera</span>, <span class="ident">Perspective</span>, <span class="ident">ViewProjection</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util::ChangeObserver</span>;
@@ -115,6 +123,14 @@
             <span class="ident">camera</span>: <span class="ident">ChangeObserver::new</span>(<span class="ident">camera</span>),
             <span class="ident">perspective</span>,
         }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_view_region</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ViewRegion</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">camera</span>
+            .<span class="ident">view_region_bounding_box</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">view_projection</span>().<span class="ident">invert</span>())
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">bounding_box</span><span class="op">|</span> {
+                <span class="ident">ViewRegion::new</span>(<span class="ident">bounding_box</span>, <span class="number">0</span>, <span class="number">32</span>, <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">zoom</span>, <span class="self">self</span>.<span class="ident">visible_level</span>())
+            })
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">view_projection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ViewProjection</span> {

@@ -181,6 +181,10 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility for generating a tile pattern which can be used for masking.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>};
@@ -194,6 +198,8 @@
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 <span class="kw">use</span> <span class="ident">std::mem::size_of</span>;
 <span class="kw">use</span> <span class="ident">std::ops::Range</span>;
+
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_TILE_VIEW_SIZE</span>: <span class="ident">wgpu::BufferAddress</span> <span class="op">=</span> <span class="number">32</span> <span class="op">*</span> <span class="number">4</span>;
 
 <span class="doccomment">/// The tile mask pattern assigns each tile a value which can be used for stencil testing.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TileViewPattern</span><span class="op">&lt;</span><span class="ident">Q</span>, <span class="ident">B</span><span class="op">&gt;</span> {
@@ -342,11 +348,13 @@
             }
         }
 
-        <span class="ident">queue</span>.<span class="ident">write_buffer</span>(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">inner</span>,
-            <span class="number">0</span>,
-            <span class="ident">bytemuck::cast_slice</span>(<span class="ident">buffer</span>.<span class="ident">as_slice</span>()),
-        );
+        <span class="kw">let</span> <span class="ident">raw_buffer</span> <span class="op">=</span> <span class="ident">bytemuck::cast_slice</span>(<span class="ident">buffer</span>.<span class="ident">as_slice</span>());
+        <span class="kw">if</span> <span class="ident">raw_buffer</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">inner_size</span> {
+            <span class="comment">/* FIXME: We need to avoid this case by either choosing a proper size
+            (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */</span>
+            <span class="macro">panic!</span>(<span class="string">&quot;Buffer is too small to store the tile pattern!&quot;</span>);
+        }
+        <span class="ident">queue</span>.<span class="ident">write_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">inner</span>, <span class="number">0</span>, <span class="ident">raw_buffer</span>);
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stencil_reference_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">world_coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="ident">u8</span> {

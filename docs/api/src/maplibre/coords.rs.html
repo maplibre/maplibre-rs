@@ -710,6 +710,20 @@
 <span id="705">705</span>
 <span id="706">706</span>
 <span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Provides utilities related to coordinates.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style::source::TileAddressingScheme</span>;
@@ -1252,12 +1266,22 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ViewRegion</span> {
     <span class="ident">min_tile</span>: <span class="ident">WorldTileCoords</span>,
     <span class="ident">max_tile</span>: <span class="ident">WorldTileCoords</span>,
-    <span class="ident">z</span>: <span class="ident">ZoomLevel</span>,
+    <span class="doccomment">/// At which zoom level does this region exist</span>
+    <span class="ident">zoom_level</span>: <span class="ident">ZoomLevel</span>,
+    <span class="doccomment">/// Padding around this view region</span>
     <span class="ident">padding</span>: <span class="ident">i32</span>,
+    <span class="doccomment">/// The maximum amount of tiles this view region contains</span>
+    <span class="ident">max_n_tiles</span>: <span class="ident">usize</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">ViewRegion</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">view_region</span>: <span class="ident">Aabb2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>, <span class="ident">padding</span>: <span class="ident">i32</span>, <span class="ident">zoom</span>: <span class="ident">Zoom</span>, <span class="ident">z</span>: <span class="ident">ZoomLevel</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">view_region</span>: <span class="ident">Aabb2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
+        <span class="ident">padding</span>: <span class="ident">i32</span>,
+        <span class="ident">max_n_tiles</span>: <span class="ident">usize</span>,
+        <span class="ident">zoom</span>: <span class="ident">Zoom</span>,
+        <span class="ident">z</span>: <span class="ident">ZoomLevel</span>,
+    ) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">min_world</span>: <span class="ident">WorldCoords</span> <span class="op">=</span> <span class="ident">WorldCoords::at_ground</span>(<span class="ident">view_region</span>.<span class="ident">min</span>.<span class="ident">x</span>, <span class="ident">view_region</span>.<span class="ident">min</span>.<span class="ident">y</span>);
         <span class="kw">let</span> <span class="ident">min_world_tile</span>: <span class="ident">WorldTileCoords</span> <span class="op">=</span> <span class="ident">min_world</span>.<span class="ident">into_world_tile</span>(<span class="ident">z</span>, <span class="ident">zoom</span>);
         <span class="kw">let</span> <span class="ident">max_world</span>: <span class="ident">WorldCoords</span> <span class="op">=</span> <span class="ident">WorldCoords::at_ground</span>(<span class="ident">view_region</span>.<span class="ident">max</span>.<span class="ident">x</span>, <span class="ident">view_region</span>.<span class="ident">max</span>.<span class="ident">y</span>);
@@ -1266,13 +1290,14 @@
         <span class="self">Self</span> {
             <span class="ident">min_tile</span>: <span class="ident">min_world_tile</span>,
             <span class="ident">max_tile</span>: <span class="ident">max_world_tile</span>,
-            <span class="ident">z</span>,
+            <span class="ident">zoom_level</span>: <span class="ident">z</span>,
+            <span class="ident">max_n_tiles</span>,
             <span class="ident">padding</span>,
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zoom_level</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ZoomLevel</span> {
-        <span class="self">self</span>.<span class="ident">z</span>
+        <span class="self">self</span>.<span class="ident">zoom_level</span>
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_in_view</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">&amp;</span><span class="ident">world_coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="ident">bool</span> {
@@ -1280,16 +1305,18 @@
             <span class="op">&amp;&amp;</span> <span class="ident">world_coords</span>.<span class="ident">y</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">max_tile</span>.<span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">padding</span>
             <span class="op">&amp;&amp;</span> <span class="ident">world_coords</span>.<span class="ident">x</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">min_tile</span>.<span class="ident">x</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">padding</span>
             <span class="op">&amp;&amp;</span> <span class="ident">world_coords</span>.<span class="ident">y</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">min_tile</span>.<span class="ident">y</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">padding</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">world_coords</span>.<span class="ident">z</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">z</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">world_coords</span>.<span class="ident">z</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">zoom_level</span>
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">WorldTileCoords</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-        (<span class="self">self</span>.<span class="ident">min_tile</span>.<span class="ident">x</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">padding</span>..<span class="self">self</span>.<span class="ident">max_tile</span>.<span class="ident">x</span> <span class="op">+</span> <span class="number">1</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">padding</span>).<span class="ident">flat_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
-            (<span class="self">self</span>.<span class="ident">min_tile</span>.<span class="ident">y</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">padding</span>..<span class="self">self</span>.<span class="ident">max_tile</span>.<span class="ident">y</span> <span class="op">+</span> <span class="number">1</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">padding</span>).<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">y</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">tile_coord</span>: <span class="ident">WorldTileCoords</span> <span class="op">=</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="self">self</span>.<span class="ident">z</span>).<span class="ident">into</span>();
-                <span class="ident">tile_coord</span>
+        (<span class="self">self</span>.<span class="ident">min_tile</span>.<span class="ident">x</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">padding</span>..<span class="self">self</span>.<span class="ident">max_tile</span>.<span class="ident">x</span> <span class="op">+</span> <span class="number">1</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">padding</span>)
+            .<span class="ident">flat_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
+                (<span class="self">self</span>.<span class="ident">min_tile</span>.<span class="ident">y</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">padding</span>..<span class="self">self</span>.<span class="ident">max_tile</span>.<span class="ident">y</span> <span class="op">+</span> <span class="number">1</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">padding</span>).<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">y</span><span class="op">|</span> {
+                    <span class="kw">let</span> <span class="ident">tile_coord</span>: <span class="ident">WorldTileCoords</span> <span class="op">=</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="self">self</span>.<span class="ident">zoom_level</span>).<span class="ident">into</span>();
+                    <span class="ident">tile_coord</span>
+                })
             })
-        })
+            .<span class="ident">take</span>(<span class="self">self</span>.<span class="ident">max_n_tiles</span>)
     }
 }
 
@@ -1408,6 +1435,7 @@
         <span class="kw">for</span> <span class="ident">tile_coords</span> <span class="kw">in</span> <span class="ident">ViewRegion::new</span>(
             <span class="ident">Aabb2::new</span>(<span class="ident">Point2::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>), <span class="ident">Point2::new</span>(<span class="number">2000.0</span>, <span class="number">2000.0</span>)),
             <span class="number">1</span>,
+            <span class="number">32</span>,
             <span class="ident">Zoom::default</span>(),
             <span class="ident">ZoomLevel::default</span>(),
         )

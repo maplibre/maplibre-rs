@@ -142,7 +142,6 @@
 <span id="137">137</span>
 <span id="138">138</span>
 <span id="139">139</span>
-<span id="140">140</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.</span>
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context::MapContext</span>;
@@ -153,13 +152,11 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::shaders</span>::{<span class="ident">Shader</span>, <span class="ident">ShaderTileMetadata</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::tile_pipeline::TilePipeline</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::tile_view_pattern::TileViewPattern</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::tile_view_pattern</span>::{<span class="ident">TileViewPattern</span>, <span class="ident">DEFAULT_TILE_VIEW_SIZE</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::schedule::Stage</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Renderer</span>;
 
 <span class="kw">use</span> <span class="ident">std::mem::size_of</span>;
-
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TILE_VIEW_SIZE</span>: <span class="ident">wgpu::BufferAddress</span> <span class="op">=</span> <span class="number">32</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResourceStage</span>;
@@ -228,7 +225,8 @@
         <span class="ident">state</span>.<span class="ident">tile_view_pattern</span>.<span class="ident">initialize</span>(<span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">tile_view_buffer_desc</span> <span class="op">=</span> <span class="ident">wgpu::BufferDescriptor</span> {
                 <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;tile view buffer&quot;</span>),
-                <span class="ident">size</span>: <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderTileMetadata</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span> <span class="op">*</span> <span class="ident">TILE_VIEW_SIZE</span>,
+                <span class="ident">size</span>: <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderTileMetadata</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>
+                    <span class="op">*</span> <span class="ident">DEFAULT_TILE_VIEW_SIZE</span>,
                 <span class="ident">usage</span>: <span class="ident">wgpu::BufferUsages::VERTEX</span> <span class="op">|</span> <span class="ident">wgpu::BufferUsages::COPY_DST</span>,
                 <span class="ident">mapped_at_creation</span>: <span class="bool-val">false</span>,
             };
