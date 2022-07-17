@@ -4,9 +4,10 @@ use geozero::mvt::tile;
 
 use crate::{
     coords::WorldTileCoords,
-    io::{tile_repository::StoredLayer, TileRequestID},
+    io::TileRequestID,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    tile::tile_repository::StoredLayer,
 };
 
 pub type MessageSender = mpsc::Sender<TessellateMessage>;

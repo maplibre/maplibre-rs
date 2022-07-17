@@ -5,16 +5,15 @@ use maplibre::{
     coords::{WorldTileCoords, ZoomLevel},
     error::Error,
     headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
-    io::{
-        pipeline::{PipelineContext, Processable},
-        source_client::HttpSourceClient,
-        tile_pipelines::build_vector_tile_pipeline,
-        TileRequest,
-    },
+    io::{source_client::HttpSourceClient, TileRequest},
     platform::{
         http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
     },
     render::settings::{RendererSettings, TextureFormat},
+    tile::{
+        pipeline::{PipelineContext, Processable},
+        tile_pipelines::build_vector_tile_pipeline,
+    },
     window::WindowSize,
     MapBuilder,
 };

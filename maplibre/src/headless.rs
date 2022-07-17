@@ -16,14 +16,7 @@ use crate::{
     coords::{LatLon, ViewRegion, WorldTileCoords, Zoom},
     error::Error,
     headless::utils::HeadlessPipelineProcessor,
-    io::{
-        pipeline::{PipelineContext, Processable},
-        source_client::HttpSourceClient,
-        tile_pipelines::build_vector_tile_pipeline,
-        tile_repository::{StoredLayer, TileRepository},
-        tile_request_state::TileRequestState,
-        TileRequest,
-    },
+    io::{source_client::HttpSourceClient, tile_request_state::TileRequestState, TileRequest},
     render::{
         camera::ViewProjection,
         create_default_render_graph, draw_graph,
@@ -35,6 +28,11 @@ use crate::{
         RenderState,
     },
     schedule::{Schedule, Stage},
+    tile::{
+        pipeline::{PipelineContext, Processable},
+        tile_pipelines::build_vector_tile_pipeline,
+        tile_repository::{StoredLayer, TileRepository},
+    },
     HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler, Style, WindowSize,
 };
 
@@ -321,9 +319,9 @@ impl Stage for WriteSurfaceBufferStage {
 pub mod utils {
     use crate::{
         coords::WorldTileCoords,
-        io::{pipeline::PipelineProcessor, tile_repository::StoredLayer, RawLayer},
         render::ShaderVertex,
         tessellation::{IndexDataType, OverAlignedVertexBuffer},
+        tile::{pipeline::PipelineProcessor, tile_repository::StoredLayer, RawLayer},
     };
 
     #[derive(Default)]

@@ -8,11 +8,11 @@ use crate::{
     error::Error,
     io::{
         source_client::{HttpSourceClient, SourceClient},
-        tile_repository::TileRepository,
         TileRequest,
     },
     schedule::Stage,
     stages::SharedThreadState,
+    tile::tile_repository::TileRepository,
     HttpClient, ScheduleMethod, Scheduler, Style,
 };
 

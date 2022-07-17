@@ -4,8 +4,8 @@ use cgmath::Angle;
 
 use crate::{
     coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
-    io::tile_repository::TileRepository,
     render::camera::{Camera, Perspective, ViewProjection},
+    tile::tile_repository::TileRepository,
     util::ChangeObserver,
     Renderer, Style, WindowSize,
 };

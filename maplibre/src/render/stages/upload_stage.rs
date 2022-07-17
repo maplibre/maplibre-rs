@@ -5,13 +5,13 @@ use std::iter;
 use crate::{
     context::MapContext,
     coords::ViewRegion,
-    io::tile_repository::{StoredLayer, TileRepository},
     render::{
         camera::ViewProjection,
         eventually::Eventually::Initialized,
         shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
     },
     schedule::Stage,
+    tile::tile_repository::{StoredLayer, TileRepository},
     RenderState, Renderer, Style,
 };
 

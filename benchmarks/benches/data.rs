@@ -4,12 +4,12 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
     benchmarking::{io::static_tile_fetcher::StaticTileFetcher, tessellation::Tessellated},
     coords::{TileCoords, WorldTileCoords, ZoomLevel},
-    io::{
+    io::TileRequest,
+    style::source::TileAddressingScheme,
+    tile::{
         pipeline::{PipelineContext, PipelineProcessor, Processable},
         tile_pipelines::{ParseTile, TessellateLayer},
-        TileRequest,
     },
-    style::source::TileAddressingScheme,
 };
 
 const MUNICH_COORDS: TileCoords = TileCoords {

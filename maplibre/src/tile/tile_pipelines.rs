@@ -4,12 +4,12 @@ use geozero::GeozeroDatasource;
 use prost::Message;
 
 use crate::{
-    io::{
+    io::{TileRequest, TileRequestID},
+    tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
+    tile::{
         geometry_index::IndexProcessor,
         pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable},
-        TileRequest, TileRequestID,
     },
-    tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
 };
 
 #[derive(Default)]
@@ -138,10 +138,8 @@ mod tests {
     use super::build_vector_tile_pipeline;
     use crate::{
         coords::ZoomLevel,
-        io::{
-            pipeline::{PipelineContext, PipelineProcessor, Processable},
-            TileRequest,
-        },
+        io::TileRequest,
+        tile::pipeline::{PipelineContext, PipelineProcessor, Processable},
     };
     pub struct DummyPipelineProcessor;
 

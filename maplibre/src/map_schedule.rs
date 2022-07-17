@@ -4,17 +4,14 @@ use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, Zoom},
     error::Error,
-    io::{
-        scheduler::Scheduler,
-        source_client::{HttpClient, HttpSourceClient},
-        tile_repository::TileRepository,
-    },
+    io::source_client::HttpSourceClient,
     render::{create_default_render_graph, register_default_render_stages},
     schedule::{Schedule, Stage},
     stages::register_stages,
     style::Style,
-    HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod, WgpuSettings,
-    WindowSize,
+    tile::tile_repository::TileRepository,
+    HeadedMapWindow, HttpClient, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod,
+    Scheduler, WgpuSettings, WindowSize,
 };
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
