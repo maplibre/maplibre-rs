@@ -6,7 +6,7 @@ on:
 jobs:
   demo-macos:
     name: Build
-    runs-on: macos-11
+    runs-on: macos-12
     steps:
       - uses: actions/checkout@v2
       - uses: extractions/setup-just@v1
