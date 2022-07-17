@@ -1,15 +1,20 @@
 //! Requests tiles which are currently in view
 
-use crate::context::MapContext;
-use crate::coords::{ViewRegion, WorldTileCoords};
-use crate::error::Error;
-use crate::io::source_client::{HttpSourceClient, SourceClient};
-use crate::io::tile_repository::TileRepository;
-use crate::io::TileRequest;
-use crate::schedule::Stage;
-use crate::stages::SharedThreadState;
-use crate::{HttpClient, ScheduleMethod, Scheduler, Style};
 use std::collections::HashSet;
+
+use crate::{
+    context::MapContext,
+    coords::{ViewRegion, WorldTileCoords},
+    error::Error,
+    io::{
+        source_client::{HttpSourceClient, SourceClient},
+        tile_repository::TileRepository,
+        TileRequest,
+    },
+    schedule::Stage,
+    stages::SharedThreadState,
+    HttpClient, ScheduleMethod, Scheduler, Style,
+};
 
 pub struct RequestStage<SM, HC>
 where
@@ -55,14 +60,7 @@ where
             ..
         }: &mut MapContext,
     ) {
-        let visible_level = view_state.visible_level();
-
-        let view_proj = view_state.view_projection();
-
-        let view_region = view_state
-            .camera
-            .view_region_bounding_box(&view_proj.invert())
-            .map(|bounding_box| ViewRegion::new(bounding_box, 0, *view_state.zoom, visible_level));
+        let view_region = view_state.create_view_region();
 
         if view_state.camera.did_change(0.05) || view_state.zoom.did_change(0.05) || self.try_failed
         {

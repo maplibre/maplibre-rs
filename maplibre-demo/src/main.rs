@@ -1,31 +1,35 @@
-use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use maplibre::coords::{WorldTileCoords, ZoomLevel};
-use maplibre::error::Error;
-use maplibre::headless::HeadlessMapWindowConfig;
-use maplibre::io::pipeline::Processable;
-use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
-
-use maplibre::io::source_client::{HttpClient, HttpSourceClient};
-use maplibre::io::tile_pipelines::build_vector_tile_pipeline;
-use maplibre::io::tile_repository::StoredLayer;
-use maplibre::io::{RawLayer, TileRequest};
-
-use maplibre::platform::http_client::ReqwestHttpClient;
-use maplibre::platform::run_multithreaded;
-use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::render::settings::{RendererSettings, TextureFormat};
-use maplibre::render::ShaderVertex;
-use maplibre::window::{EventLoop, WindowSize};
-use maplibre::MapBuilder;
-use maplibre_winit::winit::WinitMapWindowConfig;
-
-use maplibre::headless::utils::HeadlessPipelineProcessor;
 use std::collections::HashSet;
+
+use maplibre::{
+    benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    coords::{TileCoords, ViewRegion, WorldTileCoords, ZoomLevel},
+    error::Error,
+    headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
+    io::{
+        pipeline::{PipelineContext, PipelineProcessor, Processable},
+        source_client::{HttpClient, HttpSourceClient},
+        tile_pipelines::build_vector_tile_pipeline,
+        tile_repository::StoredLayer,
+        RawLayer, TileRequest,
+    },
+    platform::{
+        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
+    },
+    render::{
+        settings::{RendererSettings, TextureFormat},
+        ShaderVertex,
+    },
+    style::source::TileAddressingScheme,
+    util::{grid::google_mercator, math::Aabb2},
+    window::{EventLoop, WindowSize},
+    MapBuilder,
+};
+use maplibre_winit::winit::WinitMapWindowConfig;
+use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
-    use tracing_subscriber::layer::SubscriberExt;
-    use tracing_subscriber::Registry;
+    use tracing_subscriber::{layer::SubscriberExt, Registry};
 
     let subscriber = Registry::default().with(tracing_tracy::TracyLayer::new());
 
@@ -61,52 +65,33 @@ fn run_headless() {
             .initialize_headless()
             .await;
 
-        let http_source_client: HttpSourceClient<ReqwestHttpClient> =
-            HttpSourceClient::new(ReqwestHttpClient::new(None));
-
-        let coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
-        let request_id = 0;
-
-        let data = http_source_client
-            .fetch(&coords)
-            .await
-            .unwrap()
-            .into_boxed_slice();
-
-        let processor = HeadlessPipelineProcessor::default();
-        let mut pipeline_context = PipelineContext::new(processor);
-        let pipeline = build_vector_tile_pipeline();
-        pipeline.process(
-            (
-                TileRequest {
-                    coords,
-                    layers: HashSet::from(["boundary".to_owned(), "water".to_owned()]),
-                },
-                request_id,
-                data,
-            ),
-            &mut pipeline_context,
+        let tile_limits = google_mercator().tile_limits(
+            extent_wgs84_to_merc(&Extent {
+                minx: 11.3475219363,
+                miny: 48.0345697188,
+                maxx: 11.7917815798,
+                maxy: 48.255861,
+            }),
+            0,
         );
 
-        let mut processor = pipeline_context
-            .take_processor::<HeadlessPipelineProcessor>()
-            .unwrap();
+        for (z, x, y) in GridIterator::new(10, 10, tile_limits) {
+            let coords = WorldTileCoords::from((x as i32, y as i32, z.into()));
+            println!("Rendering {}", &coords);
+            map.map_schedule
+                .fetch_process(&coords)
+                .await
+                .expect("Failed to fetch and process!");
 
-        while let Some(v) = processor.layers.pop() {
-            map.map_schedule_mut()
-                .map_context
-                .tile_repository
-                .put_tessellated_layer(v);
+            match map.map_schedule_mut().update_and_redraw() {
+                Ok(_) => {}
+                Err(Error::Render(e)) => {
+                    eprintln!("{}", e);
+                    if e.should_exit() {}
+                }
+                e => eprintln!("{:?}", e),
+            };
         }
-
-        match map.map_schedule_mut().update_and_redraw() {
-            Ok(_) => {}
-            Err(Error::Render(e)) => {
-                eprintln!("{}", e);
-                if e.should_exit() {}
-            }
-            e => eprintln!("{:?}", e),
-        };
     })
 }
 
@@ -116,6 +101,6 @@ fn main() {
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    run_headless();
+    //run_headless();
     run_in_window();
 }

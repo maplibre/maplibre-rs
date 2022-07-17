@@ -5,9 +5,11 @@ pub mod grid;
 pub mod label;
 pub mod math;
 
-use crate::coords::WorldTileCoords;
-pub use fps_meter::FPSMeter;
 use std::ops::{Deref, DerefMut};
+
+pub use fps_meter::FPSMeter;
+
+use crate::coords::WorldTileCoords;
 
 struct MinMaxBoundingBox {
     min_x: i32,

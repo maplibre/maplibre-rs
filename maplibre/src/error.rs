@@ -1,9 +1,8 @@
 //! Errors which can happen in various parts of the library.
 
+use std::{fmt, fmt::Formatter, sync::mpsc::SendError};
+
 use lyon::tessellation::TessellationError;
-use std::fmt;
-use std::fmt::Formatter;
-use std::sync::mpsc::SendError;
 
 #[derive(Debug)]
 pub enum RenderError {

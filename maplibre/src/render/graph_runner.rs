@@ -1,17 +1,21 @@
 //! Executes a [`RenderGraph`]
 
+use std::{
+    borrow::Cow,
+    collections::{HashMap, VecDeque},
+};
+
 use log::error;
-use smallvec::smallvec;
-use smallvec::SmallVec;
-use std::collections::HashMap;
-use std::{borrow::Cow, collections::VecDeque};
+use smallvec::{smallvec, SmallVec};
 use thiserror::Error;
 
-use crate::render::graph::{
-    Edge, NodeId, NodeRunError, NodeState, RenderContext, RenderGraph, RenderGraphContext,
-    SlotLabel, SlotType, SlotValue,
+use crate::render::{
+    graph::{
+        Edge, NodeId, NodeRunError, NodeState, RenderContext, RenderGraph, RenderGraphContext,
+        SlotLabel, SlotType, SlotValue,
+    },
+    RenderState,
 };
-use crate::render::RenderState;
 
 pub(crate) struct RenderGraphRunner;
 

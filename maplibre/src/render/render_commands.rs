@@ -1,12 +1,16 @@
 //! Specifies the instructions which are going to be sent to the GPU. Render commands can be concatenated
 //! into a new render command which executes multiple instruction sets.
 
-use crate::render::render_phase::{PhaseItem, RenderCommand, RenderCommandResult};
-use crate::render::resource::{Globals, IndexEntry, TrackedRenderPass};
-use crate::render::tile_view_pattern::{TileInView, TileShape};
-use crate::render::util::Eventually::Initialized;
-use crate::render::INDEX_FORMAT;
-use crate::RenderState;
+use crate::{
+    render::{
+        eventually::Eventually::Initialized,
+        render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
+        resource::{Globals, IndexEntry, TrackedRenderPass},
+        tile_view_pattern::{TileInView, TileShape},
+        INDEX_FORMAT,
+    },
+    RenderState,
+};
 
 impl PhaseItem for TileInView {
     type SortKey = ();

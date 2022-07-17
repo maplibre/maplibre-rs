@@ -1,20 +1,23 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use maplibre::coords::{WorldTileCoords, ZoomLevel};
-use maplibre::error::Error;
-use maplibre::headless::utils::HeadlessPipelineProcessor;
-use maplibre::headless::HeadlessMapWindowConfig;
-use maplibre::io::pipeline::PipelineContext;
-use maplibre::io::pipeline::Processable;
-use maplibre::io::source_client::HttpSourceClient;
-use maplibre::io::tile_pipelines::build_vector_tile_pipeline;
-use maplibre::io::TileRequest;
-use maplibre::platform::http_client::ReqwestHttpClient;
-use maplibre::platform::run_multithreaded;
-use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::render::settings::{RendererSettings, TextureFormat};
-use maplibre::window::WindowSize;
-use maplibre::MapBuilder;
 use std::collections::HashSet;
+
+use criterion::{criterion_group, criterion_main, Criterion};
+use maplibre::{
+    coords::{WorldTileCoords, ZoomLevel},
+    error::Error,
+    headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
+    io::{
+        pipeline::{PipelineContext, Processable},
+        source_client::HttpSourceClient,
+        tile_pipelines::build_vector_tile_pipeline,
+        TileRequest,
+    },
+    platform::{
+        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
+    },
+    render::settings::{RendererSettings, TextureFormat},
+    window::WindowSize,
+    MapBuilder,
+};
 
 fn headless_render(c: &mut Criterion) {
     c.bench_function("headless_render", |b| {
@@ -33,43 +36,10 @@ fn headless_render(c: &mut Criterion) {
                 .initialize_headless()
                 .await;
 
-            let http_source_client: HttpSourceClient<ReqwestHttpClient> =
-                HttpSourceClient::new(ReqwestHttpClient::new(None));
-
-            let coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
-            let request_id = 0;
-
-            let data = http_source_client
-                .fetch(&coords)
+            map.map_schedule
+                .fetch_process(&WorldTileCoords::from((0, 0, ZoomLevel::default())))
                 .await
-                .unwrap()
-                .into_boxed_slice();
-
-            let processor = HeadlessPipelineProcessor::default();
-            let mut pipeline_context = PipelineContext::new(processor);
-            let pipeline = build_vector_tile_pipeline();
-            pipeline.process(
-                (
-                    TileRequest {
-                        coords,
-                        layers: HashSet::from(["boundary".to_owned(), "water".to_owned()]),
-                    },
-                    request_id,
-                    data,
-                ),
-                &mut pipeline_context,
-            );
-
-            let mut processor = pipeline_context
-                .take_processor::<HeadlessPipelineProcessor>()
-                .unwrap();
-
-            while let Some(v) = processor.layers.pop() {
-                map.map_schedule_mut()
-                    .map_context
-                    .tile_repository
-                    .put_tessellated_layer(v);
-            }
+                .expect("Failed to fetch and process!");
 
             map
         });

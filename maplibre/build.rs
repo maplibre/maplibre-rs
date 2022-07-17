@@ -33,9 +33,9 @@ fn generate_type_def() -> Option<u32> {
 
 #[cfg(feature = "embed-static-tiles")]
 fn embed_tiles_statically() {
+    use std::{env, path::Path};
+
     use maplibre_build_tools::mbtiles::extract;
-    use std::env;
-    use std::path::Path;
 
     /// Tiles which can be used by StaticTileFetcher.
     fn clean_static_tiles() -> std::path::PathBuf {

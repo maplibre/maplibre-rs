@@ -1,10 +1,9 @@
-use super::UpdateState;
-
-use maplibre::context::ViewState;
+use std::time::Duration;
 
 use cgmath::{Deg, Rad, Zero};
+use maplibre::context::ViewState;
 
-use std::time::Duration;
+use super::UpdateState;
 
 pub struct TiltHandler {
     delta_pitch: Deg<f64>,

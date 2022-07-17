@@ -1,11 +1,9 @@
-use super::UpdateState;
-
-use maplibre::context::ViewState;
-use maplibre::coords::Zoom;
+use std::time::Duration;
 
 use cgmath::{Vector2, Vector3};
+use maplibre::{context::ViewState, coords::Zoom};
 
-use std::time::Duration;
+use super::UpdateState;
 
 pub struct ZoomHandler {
     window_position: Option<Vector2<f64>>,
