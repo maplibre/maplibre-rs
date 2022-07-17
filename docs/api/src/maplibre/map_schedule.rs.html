@@ -217,6 +217,7 @@
 <span id="212">212</span>
 <span id="213">213</span>
 <span id="214">214</span>
+<span id="215">215</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::context</span>::{<span class="ident">MapContext</span>, <span class="ident">ViewState</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error::Error</span>;
 
@@ -279,6 +280,7 @@
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">center</span><span class="op">|</span> <span class="ident">LatLon::new</span>(<span class="ident">center</span>[<span class="number">0</span>], <span class="ident">center</span>[<span class="number">1</span>]))
                 .<span class="ident">unwrap_or_default</span>(),
             <span class="ident">style</span>.<span class="ident">pitch</span>.<span class="ident">unwrap_or_default</span>(),
+            <span class="ident">cgmath::Deg</span>(<span class="number">110.0</span>),
         );
         <span class="kw">let</span> <span class="ident">tile_repository</span> <span class="op">=</span> <span class="ident">TileRepository::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">schedule</span> <span class="op">=</span> <span class="ident">Schedule::default</span>();

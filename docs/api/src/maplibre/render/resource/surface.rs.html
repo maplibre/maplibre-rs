@@ -281,9 +281,9 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for handling surfaces which can be either headless or headed. A headed surface has</span>
 <span class="doccomment">//! a handle to a window. A headless surface renders to a texture.</span>
 
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::eventually::HasChanged</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource::texture::TextureView</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::settings::RendererSettings</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::util::HasChanged</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::window::HeadedMapWindow</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">MapWindow</span>, <span class="ident">WindowSize</span>};
 

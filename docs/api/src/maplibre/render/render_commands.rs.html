@@ -160,10 +160,10 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Specifies the instructions which are going to be sent to the GPU. Render commands can be concatenated</span>
 <span class="doccomment">//! into a new render command which executes multiple instruction sets.</span>
 
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::eventually::Eventually::Initialized</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::render_phase</span>::{<span class="ident">PhaseItem</span>, <span class="ident">RenderCommand</span>, <span class="ident">RenderCommandResult</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::resource</span>::{<span class="ident">Globals</span>, <span class="ident">IndexEntry</span>, <span class="ident">TrackedRenderPass</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::tile_view_pattern</span>::{<span class="ident">TileInView</span>, <span class="ident">TileShape</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::util::Eventually::Initialized</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::INDEX_FORMAT</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::RenderState</span>;
 

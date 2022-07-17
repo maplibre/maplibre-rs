@@ -116,8 +116,8 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Utility for a texture view which can either be created by a [`TextureView`](wgpu::TextureView)</span>
 <span class="doccomment">//! or [`SurfaceTexture`](wgpu::SurfaceTexture)</span>
 
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::eventually::HasChanged</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::settings::Msaa</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::util::HasChanged</span>;
 <span class="kw">use</span> <span class="ident">std::ops::Deref</span>;
 
 <span class="doccomment">/// Describes a [`TextureView`].</span>
