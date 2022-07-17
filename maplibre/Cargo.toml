@@ -12,17 +12,18 @@ readme = "../README.md"
 web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web
 trace = ["tracing-subscriber", "tracing-tracy", "tracy-client"]
-no-thread-safe-futures = []
 embed-static-tiles = ["maplibre-build-tools/sqlite"]
 headless = ["png"]
 
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
 tokio = { version = "1.19.2", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+tokio-util = { version = "0.7.1", features = ["rt"] }
 env_logger = "0.9.0"
 reqwest = { version = "0.11.11", default-features = false, features = ["rustls-tls", "gzip"] }
 reqwest-middleware-cache = "0.1.1" # FIXME: Untrusted dependency
 reqwest-middleware = "0.1.6" # FIXME: Untrusted dependency
+
 tracing-tracy = { version = "0.8", optional = true }
 tracy-client = { version = "0.12.7", optional = true }
 

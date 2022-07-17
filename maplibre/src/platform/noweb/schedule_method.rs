@@ -1,22 +1,34 @@
 use std::future::Future;
 
+use tokio::task;
+use tokio_util::task::LocalPoolHandle;
+
 use crate::{error::Error, ScheduleMethod};
 
 /// Multi-threading with Tokio.
-pub struct TokioScheduleMethod;
+pub struct TokioScheduleMethod {
+    pool: LocalPoolHandle,
+}
 
 impl TokioScheduleMethod {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            pool: LocalPoolHandle::new(4),
+        }
     }
 }
 
 impl ScheduleMethod for TokioScheduleMethod {
     fn schedule<T>(&self, future_factory: impl FnOnce() -> T + Send + 'static) -> Result<(), Error>
     where
-        T: Future<Output = ()> + Send + 'static,
+        T: Future<Output = ()> + 'static,
     {
-        tokio::task::spawn((future_factory)());
+        self.pool.spawn_pinned(|| {
+            let unsend_data = (future_factory)();
+
+            async move { unsend_data.await }
+        });
+
         Ok(())
     }
 }

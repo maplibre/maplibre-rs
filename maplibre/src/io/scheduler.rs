@@ -27,15 +27,6 @@ where
 
 /// Can schedule a task from a future factory and a shared state.
 pub trait ScheduleMethod: 'static {
-    #[cfg(not(feature = "no-thread-safe-futures"))]
-    fn schedule<T>(
-        &self,
-        future_factory: impl (FnOnce() -> T) + Send + 'static,
-    ) -> Result<(), Error>
-    where
-        T: Future<Output = ()> + Send + 'static;
-
-    #[cfg(feature = "no-thread-safe-futures")]
     fn schedule<T>(
         &self,
         future_factory: impl (FnOnce() -> T) + Send + 'static,
