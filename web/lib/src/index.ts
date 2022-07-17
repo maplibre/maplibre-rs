@@ -1,4 +1,4 @@
-import init, {create_pool_scheduler, new_thread_local_state, run} from "./wasm-pack"
+import init, {create_pool_scheduler, run} from "./wasm-pack"
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 import {

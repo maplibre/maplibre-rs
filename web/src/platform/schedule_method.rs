@@ -37,7 +37,7 @@ impl ScheduleMethod for WebWorkerPoolScheduleMethod {
         T: Future<Output = ()> + 'static,
     {
         self.pool
-            .run(move || {
+            .execute(move || {
                 wasm_bindgen_futures::future_to_promise(async move {
                     future_factory().await;
                     Ok(JsValue::undefined())
