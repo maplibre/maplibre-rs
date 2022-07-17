@@ -1,17 +1,20 @@
 //! Rendering specific [Stages](Stage)
 
-use crate::context::MapContext;
-use crate::multi_stage;
-use crate::render::graph::RenderGraph;
-
-use crate::render::stages::extract_stage::ExtractStage;
-use crate::render::stages::phase_sort_stage::PhaseSortStage;
-use crate::render::stages::queue_stage::QueueStage;
-
-use crate::schedule::{Schedule, Stage, StageLabel};
 use graph_runner_stage::GraphRunnerStage;
 use resource_stage::ResourceStage;
 use upload_stage::UploadStage;
+
+use crate::{
+    context::MapContext,
+    multi_stage,
+    render::{
+        graph::RenderGraph,
+        stages::{
+            extract_stage::ExtractStage, phase_sort_stage::PhaseSortStage, queue_stage::QueueStage,
+        },
+    },
+    schedule::{Schedule, Stage, StageLabel},
+};
 
 mod extract_stage;
 mod graph_runner_stage;

@@ -1,14 +1,13 @@
-use crate::coords::WorldTileCoords;
+use std::{fmt, sync::mpsc};
 
-use crate::io::tile_repository::StoredLayer;
-
-use crate::io::TileRequestID;
-use crate::render::ShaderVertex;
-
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
 use geozero::mvt::tile;
-use std::fmt;
-use std::sync::mpsc;
+
+use crate::{
+    coords::WorldTileCoords,
+    io::{tile_repository::StoredLayer, TileRequestID},
+    render::ShaderVertex,
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
+};
 
 pub type MessageSender = mpsc::Sender<TessellateMessage>;
 pub type MessageReceiver = mpsc::Receiver<TessellateMessage>;

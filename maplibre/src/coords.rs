@@ -1,12 +1,16 @@
 //! Provides utilities related to coordinates.
 
-use crate::style::source::TileAddressingScheme;
-use crate::util::math::{div_floor, Aabb2};
-use crate::util::SignificantlyDifferent;
-use cgmath::num_traits::Pow;
-use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
-use std::f64::consts::PI;
-use std::fmt;
+use std::{f64::consts::PI, fmt};
+
+use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
+
+use crate::{
+    style::source::TileAddressingScheme,
+    util::{
+        math::{div_floor, Aabb2},
+        SignificantlyDifferent,
+    },
+};
 
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
@@ -621,12 +625,13 @@ impl fmt::Display for WorldCoords {
 mod tests {
     use cgmath::{Point2, Vector4};
 
-    use crate::style::source::TileAddressingScheme;
-
-    use crate::coords::{
-        Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
+    use crate::{
+        coords::{
+            Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
+        },
+        style::source::TileAddressingScheme,
+        util::math::Aabb2,
     };
-    use crate::util::math::Aabb2;
 
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
     const BOTTOM_RIGHT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);

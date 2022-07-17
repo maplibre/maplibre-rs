@@ -1,13 +1,11 @@
-use super::schedule_method::WebWorkerPoolScheduleMethod;
-
+use maplibre::{
+    coords::TileCoords,
+    io::{scheduler::Scheduler, TileRequestID},
+    stages::SharedThreadState,
+};
 use wasm_bindgen::prelude::*;
 
-use maplibre::coords::TileCoords;
-
-use maplibre::io::scheduler::Scheduler;
-
-use maplibre::io::TileRequestID;
-use maplibre::stages::SharedThreadState;
+use super::schedule_method::WebWorkerPoolScheduleMethod;
 
 #[wasm_bindgen]
 extern "C" {

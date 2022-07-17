@@ -1,9 +1,12 @@
 #![allow(clippy::identity_op)]
 
-use crate::coords::WorldCoords;
-use crate::render::resource::{FragmentState, VertexBufferLayout, VertexState};
 use bytemuck_derive::{Pod, Zeroable};
 use cgmath::SquareMatrix;
+
+use crate::{
+    coords::WorldCoords,
+    render::resource::{FragmentState, VertexBufferLayout, VertexState},
+};
 
 pub type Vec2f32 = [f32; 2];
 pub type Vec3f32 = [f32; 3];

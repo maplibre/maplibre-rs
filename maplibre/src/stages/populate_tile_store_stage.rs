@@ -1,9 +1,7 @@
 //! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].
 
 use super::{MessageReceiver, SharedThreadState, TessellateMessage, TileTessellateMessage};
-use crate::context::MapContext;
-use crate::io::tile_repository::StoredLayer;
-use crate::schedule::Stage;
+use crate::{context::MapContext, io::tile_repository::StoredLayer, schedule::Stage};
 
 pub struct PopulateTileStore {
     shared_thread_state: SharedThreadState,

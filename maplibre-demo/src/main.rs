@@ -1,35 +1,35 @@
-use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use maplibre::coords::{TileCoords, ViewRegion, WorldTileCoords, ZoomLevel};
-use maplibre::error::Error;
-use maplibre::headless::HeadlessMapWindowConfig;
-use maplibre::io::pipeline::Processable;
-use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
-
-use maplibre::io::source_client::{HttpClient, HttpSourceClient};
-use maplibre::io::tile_pipelines::build_vector_tile_pipeline;
-use maplibre::io::tile_repository::StoredLayer;
-use maplibre::io::{RawLayer, TileRequest};
-
-use maplibre::platform::http_client::ReqwestHttpClient;
-use maplibre::platform::run_multithreaded;
-use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::render::settings::{RendererSettings, TextureFormat};
-use maplibre::render::ShaderVertex;
-use maplibre::window::{EventLoop, WindowSize};
-use maplibre::MapBuilder;
-use maplibre_winit::winit::WinitMapWindowConfig;
-
-use maplibre::headless::utils::HeadlessPipelineProcessor;
-use maplibre::style::source::TileAddressingScheme;
-use maplibre::util::grid::google_mercator;
-use maplibre::util::math::Aabb2;
 use std::collections::HashSet;
+
+use maplibre::{
+    benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    coords::{TileCoords, ViewRegion, WorldTileCoords, ZoomLevel},
+    error::Error,
+    headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
+    io::{
+        pipeline::{PipelineContext, PipelineProcessor, Processable},
+        source_client::{HttpClient, HttpSourceClient},
+        tile_pipelines::build_vector_tile_pipeline,
+        tile_repository::StoredLayer,
+        RawLayer, TileRequest,
+    },
+    platform::{
+        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
+    },
+    render::{
+        settings::{RendererSettings, TextureFormat},
+        ShaderVertex,
+    },
+    style::source::TileAddressingScheme,
+    util::{grid::google_mercator, math::Aabb2},
+    window::{EventLoop, WindowSize},
+    MapBuilder,
+};
+use maplibre_winit::winit::WinitMapWindowConfig;
 use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
-    use tracing_subscriber::layer::SubscriberExt;
-    use tracing_subscriber::Registry;
+    use tracing_subscriber::{layer::SubscriberExt, Registry};
 
     let subscriber = Registry::default().with(tracing_tracy::TracyLayer::new());
 

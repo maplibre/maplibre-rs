@@ -1,5 +1,6 @@
-use instant::Instant;
 use std::time::Duration;
+
+use instant::Instant;
 
 /// Measures the frames per second.
 ///

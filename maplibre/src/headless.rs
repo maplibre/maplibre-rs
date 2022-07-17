@@ -1,37 +1,42 @@
-use crate::context::{MapContext, ViewState};
-use crate::coords::{LatLon, ViewRegion, WorldTileCoords, Zoom};
-use crate::error::Error;
-use crate::headless::utils::HeadlessPipelineProcessor;
-use crate::io::pipeline::PipelineContext;
-use crate::io::pipeline::Processable;
-use crate::io::source_client::HttpSourceClient;
-use crate::io::tile_pipelines::build_vector_tile_pipeline;
-use crate::io::tile_repository::{StoredLayer, TileRepository};
-use crate::io::tile_request_state::TileRequestState;
-use crate::io::TileRequest;
-use crate::render::camera::ViewProjection;
-use crate::render::eventually::Eventually;
-use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
-use crate::render::resource::{BufferDimensions, BufferedTextureHead, IndexEntry};
-use crate::render::resource::{Head, TrackedRenderPass};
-use crate::render::stages::RenderStageLabel;
-use crate::render::{
-    create_default_render_graph, draw_graph, register_default_render_stages, RenderState,
+use std::{
+    collections::HashSet,
+    fs::File,
+    future::Future,
+    io::Write,
+    iter,
+    ops::{Deref, Range},
+    sync::Arc,
 };
-use crate::schedule::{Schedule, Stage};
+
+use tokio::{runtime::Handle, task};
+use wgpu::{BufferAsyncError, BufferSlice};
+
 use crate::{
+    context::{MapContext, ViewState},
+    coords::{LatLon, ViewRegion, WorldTileCoords, Zoom},
+    error::Error,
+    headless::utils::HeadlessPipelineProcessor,
+    io::{
+        pipeline::{PipelineContext, Processable},
+        source_client::HttpSourceClient,
+        tile_pipelines::build_vector_tile_pipeline,
+        tile_repository::{StoredLayer, TileRepository},
+        tile_request_state::TileRequestState,
+        TileRequest,
+    },
+    render::{
+        camera::ViewProjection,
+        create_default_render_graph, draw_graph,
+        eventually::Eventually,
+        graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        register_default_render_stages,
+        resource::{BufferDimensions, BufferedTextureHead, Head, IndexEntry, TrackedRenderPass},
+        stages::RenderStageLabel,
+        RenderState,
+    },
+    schedule::{Schedule, Stage},
     HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler, Style, WindowSize,
 };
-use std::collections::HashSet;
-use std::fs::File;
-use std::future::Future;
-use std::io::Write;
-use std::iter;
-use std::ops::{Deref, Range};
-use std::sync::Arc;
-use tokio::runtime::Handle;
-use tokio::task;
-use wgpu::{BufferAsyncError, BufferSlice};
 
 pub struct HeadlessMapWindowConfig {
     pub size: WindowSize,
@@ -314,12 +319,12 @@ impl Stage for WriteSurfaceBufferStage {
 }
 
 pub mod utils {
-    use crate::coords::WorldTileCoords;
-    use crate::io::pipeline::PipelineProcessor;
-    use crate::io::tile_repository::StoredLayer;
-    use crate::io::RawLayer;
-    use crate::render::ShaderVertex;
-    use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
+    use crate::{
+        coords::WorldTileCoords,
+        io::{pipeline::PipelineProcessor, tile_repository::StoredLayer, RawLayer},
+        render::ShaderVertex,
+        tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    };
 
     #[derive(Default)]
     pub struct HeadlessPipelineProcessor {

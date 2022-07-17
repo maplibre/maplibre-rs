@@ -1,11 +1,14 @@
 //! Default vector tile styles configuration.
 
-use crate::style::layer::{LayerPaint, LinePaint, StyleLayer};
-use crate::style::source::Source;
+use std::{collections::HashMap, str::FromStr};
+
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::str::FromStr;
+
+use crate::style::{
+    layer::{LayerPaint, LinePaint, StyleLayer},
+    source::Source,
+};
 
 /// Stores the style for a multi-layered map.
 #[derive(Serialize, Deserialize, Debug, Clone)]

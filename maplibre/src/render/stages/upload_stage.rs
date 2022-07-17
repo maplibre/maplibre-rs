@@ -1,19 +1,19 @@
 //! Uploads data to the GPU which is needed for rendering.
 
-use crate::context::MapContext;
-use crate::coords::ViewRegion;
-use crate::io::tile_repository::{StoredLayer, TileRepository};
-use crate::render::camera::ViewProjection;
-
-use crate::render::shaders::{
-    ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32,
-};
-
-use crate::render::eventually::Eventually::Initialized;
-use crate::schedule::Stage;
-use crate::{RenderState, Renderer, Style};
-
 use std::iter;
+
+use crate::{
+    context::MapContext,
+    coords::ViewRegion,
+    io::tile_repository::{StoredLayer, TileRepository},
+    render::{
+        camera::ViewProjection,
+        eventually::Eventually::Initialized,
+        shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
+    },
+    schedule::Stage,
+    RenderState, Renderer, Style,
+};
 
 #[derive(Default)]
 pub struct UploadStage;

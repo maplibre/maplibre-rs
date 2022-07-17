@@ -1,11 +1,9 @@
 //! Extracts data from the current state.
 
-use crate::context::MapContext;
-use crate::coords::ViewRegion;
-
-use crate::render::eventually::Eventually::Initialized;
-use crate::schedule::Stage;
-use crate::{RenderState, Renderer};
+use crate::{
+    context::MapContext, coords::ViewRegion, render::eventually::Eventually::Initialized,
+    schedule::Stage, RenderState, Renderer,
+};
 
 #[derive(Default)]
 pub struct ExtractStage;
