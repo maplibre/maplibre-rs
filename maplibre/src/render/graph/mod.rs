@@ -9,7 +9,6 @@ pub use edge::*;
 pub use graph::*;
 pub use node::*;
 pub use node_slot::*;
-
 use thiserror::Error;
 
 #[derive(Error, Debug, Eq, PartialEq)]

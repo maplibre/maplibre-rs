@@ -16,13 +16,19 @@
 //! maplibre = "0.0.2"
 //! ```
 
-use crate::io::scheduler::{ScheduleMethod, Scheduler};
-use crate::io::source_client::HttpClient;
-use crate::map_schedule::InteractiveMapSchedule;
-use crate::render::settings::{RendererSettings, WgpuSettings};
-use crate::render::{RenderState, Renderer};
-use crate::style::Style;
-use crate::window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
+use crate::{
+    io::{
+        scheduler::{ScheduleMethod, Scheduler},
+        source_client::HttpClient,
+    },
+    map_schedule::InteractiveMapSchedule,
+    render::{
+        settings::{RendererSettings, WgpuSettings},
+        RenderState, Renderer,
+    },
+    style::Style,
+    window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
+};
 
 pub mod context;
 pub mod coords;
@@ -36,6 +42,7 @@ pub mod platform;
 // Exposed because of camera
 pub mod render;
 pub mod style;
+pub mod util;
 
 pub mod window;
 // Exposed because of doc-strings
@@ -48,7 +55,6 @@ pub mod benchmarking;
 
 // Internal modules
 pub(crate) mod tessellation;
-pub mod util;
 
 /// The [`Map`] defines the public interface of the map renderer.
 // DO NOT IMPLEMENT INTERNALS ON THIS STRUCT.

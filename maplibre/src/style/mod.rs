@@ -5,6 +5,5 @@ pub mod raster;
 pub mod source;
 mod style;
 
-pub use style::*;
-
 pub use cint::*;
+pub use style::*;

@@ -1,9 +1,10 @@
+use std::time::Duration;
+
 use cgmath::Vector2;
+use maplibre::context::ViewState;
+use winit::event::{ElementState, MouseButton};
 
 use crate::input::UpdateState;
-use maplibre::context::ViewState;
-use std::time::Duration;
-use winit::event::{ElementState, MouseButton};
 
 pub struct QueryHandler {
     window_position: Option<Vector2<f64>>,
@@ -65,10 +66,11 @@ impl UpdateState for QueryHandler {
                 let _z = state.visible_level(); // FIXME: can be wrong, if tiles of different z are visible
                 let _zoom = state.zoom();
 
-                if let Some(_coordinates) = state
-                    .camera
-                    .window_to_world_at_ground(&window_position, &inverted_view_proj)
-                {
+                if let Some(_coordinates) = state.camera.window_to_world_at_ground(
+                    &window_position,
+                    &inverted_view_proj,
+                    false,
+                ) {
                     /*state
                     .scheduler()
                     .schedule_method()

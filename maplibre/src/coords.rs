@@ -1,12 +1,16 @@
 //! Provides utilities related to coordinates.
 
-use crate::style::source::TileAddressingScheme;
-use crate::util::math::{div_floor, Aabb2};
-use crate::util::SignificantlyDifferent;
-use cgmath::num_traits::Pow;
-use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
-use std::f64::consts::PI;
-use std::fmt;
+use std::{f64::consts::PI, fmt};
+
+use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
+
+use crate::{
+    style::source::TileAddressingScheme,
+    util::{
+        math::{div_floor, Aabb2},
+        SignificantlyDifferent,
+    },
+};
 
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
@@ -59,7 +63,7 @@ impl fmt::Debug for Quadkey {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug, Default)]
 pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
@@ -68,12 +72,6 @@ impl ZoomLevel {
     }
     pub fn is_root(self) -> bool {
         self.0 == 0
-    }
-}
-
-impl Default for ZoomLevel {
-    fn default() -> Self {
-        ZoomLevel(0)
     }
 }
 
@@ -206,7 +204,7 @@ impl SignificantlyDifferent for Zoom {
 /// # Coordinate System Origin
 ///
 /// The origin is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct InnerCoords {
     pub x: f64,
     pub y: f64,
@@ -218,7 +216,7 @@ pub struct InnerCoords {
 /// # Coordinate System Origin
 ///
 /// For Web Mercator the origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, Default)]
 pub struct TileCoords {
     pub x: u32,
     pub y: u32,
@@ -272,7 +270,7 @@ impl From<(u32, u32, ZoomLevel)> for TileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct WorldTileCoords {
     pub x: i32,
     pub y: i32,
@@ -465,7 +463,7 @@ impl AlignedWorldTileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct WorldCoords {
     pub x: f64,
     pub y: f64,
@@ -540,12 +538,22 @@ impl From<Point3<f64>> for WorldCoords {
 pub struct ViewRegion {
     min_tile: WorldTileCoords,
     max_tile: WorldTileCoords,
-    z: ZoomLevel,
+    /// At which zoom level does this region exist
+    zoom_level: ZoomLevel,
+    /// Padding around this view region
     padding: i32,
+    /// The maximum amount of tiles this view region contains
+    max_n_tiles: usize,
 }
 
 impl ViewRegion {
-    pub fn new(view_region: Aabb2<f64>, padding: i32, zoom: Zoom, z: ZoomLevel) -> Self {
+    pub fn new(
+        view_region: Aabb2<f64>,
+        padding: i32,
+        max_n_tiles: usize,
+        zoom: Zoom,
+        z: ZoomLevel,
+    ) -> Self {
         let min_world: WorldCoords = WorldCoords::at_ground(view_region.min.x, view_region.min.y);
         let min_world_tile: WorldTileCoords = min_world.into_world_tile(z, zoom);
         let max_world: WorldCoords = WorldCoords::at_ground(view_region.max.x, view_region.max.y);
@@ -554,13 +562,14 @@ impl ViewRegion {
         Self {
             min_tile: min_world_tile,
             max_tile: max_world_tile,
-            z,
+            zoom_level: z,
+            max_n_tiles,
             padding,
         }
     }
 
     pub fn zoom_level(&self) -> ZoomLevel {
-        self.z
+        self.zoom_level
     }
 
     pub fn is_in_view(&self, &world_coords: &WorldTileCoords) -> bool {
@@ -568,16 +577,18 @@ impl ViewRegion {
             && world_coords.y <= self.max_tile.y + self.padding
             && world_coords.x >= self.min_tile.x - self.padding
             && world_coords.y >= self.min_tile.y - self.padding
-            && world_coords.z == self.z
+            && world_coords.z == self.zoom_level
     }
 
     pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
-        (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding).flat_map(move |x| {
-            (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding).map(move |y| {
-                let tile_coord: WorldTileCoords = (x, y, self.z).into();
-                tile_coord
+        (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding)
+            .flat_map(move |x| {
+                (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding).map(move |y| {
+                    let tile_coord: WorldTileCoords = (x, y, self.zoom_level).into();
+                    tile_coord
+                })
             })
-        })
+            .take(self.max_n_tiles)
     }
 }
 
@@ -614,12 +625,13 @@ impl fmt::Display for WorldCoords {
 mod tests {
     use cgmath::{Point2, Vector4};
 
-    use crate::style::source::TileAddressingScheme;
-
-    use crate::coords::{
-        Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
+    use crate::{
+        coords::{
+            Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
+        },
+        style::source::TileAddressingScheme,
+        util::math::Aabb2,
     };
-    use crate::util::math::Aabb2;
 
     const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
     const BOTTOM_RIGHT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
@@ -696,6 +708,7 @@ mod tests {
         for tile_coords in ViewRegion::new(
             Aabb2::new(Point2::new(0.0, 0.0), Point2::new(2000.0, 2000.0)),
             1,
+            32,
             Zoom::default(),
             ZoomLevel::default(),
         )

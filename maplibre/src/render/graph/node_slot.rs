@@ -1,6 +1,6 @@
+use std::{borrow::Cow, fmt, rc::Rc};
+
 use crate::render::resource::TextureView;
-use std::rc::Rc;
-use std::{borrow::Cow, fmt};
 
 /// A value passed between render [`Nodes`](super::Node).
 /// Corresponds to the [`SlotType`] specified in the [`RenderGraph`](super::RenderGraph).

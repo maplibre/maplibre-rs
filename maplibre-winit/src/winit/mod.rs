@@ -1,13 +1,16 @@
-use crate::input::{InputController, UpdateState};
 use instant::Instant;
-use maplibre::error::Error;
-use maplibre::io::scheduler::ScheduleMethod;
-use maplibre::io::source_client::HttpClient;
-use maplibre::map_schedule::InteractiveMapSchedule;
-use maplibre::window::{EventLoop, HeadedMapWindow, MapWindowConfig};
-use winit::event::Event;
-use winit::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
-use winit::event_loop::ControlFlow;
+use maplibre::{
+    error::Error,
+    io::{scheduler::ScheduleMethod, source_client::HttpClient},
+    map_schedule::InteractiveMapSchedule,
+    window::{EventLoop, HeadedMapWindow, MapWindowConfig},
+};
+use winit::{
+    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+    event_loop::ControlFlow,
+};
+
+use crate::input::{InputController, UpdateState};
 
 #[cfg(target_arch = "wasm32")]
 mod web;
@@ -15,11 +18,10 @@ mod web;
 #[cfg(not(target_arch = "wasm32"))]
 mod noweb;
 
-#[cfg(target_arch = "wasm32")]
-pub use web::*;
-
 #[cfg(not(target_arch = "wasm32"))]
 pub use noweb::*;
+#[cfg(target_arch = "wasm32")]
+pub use web::*;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct WinitMapWindowConfig {
@@ -84,8 +86,7 @@ where
             .run(move |event, _, control_flow| {
                 #[cfg(target_os = "android")]
                 if !map_schedule.is_initialized() && event == Event::Resumed {
-                    use tokio::runtime::Handle;
-                    use tokio::task;
+                    use tokio::{runtime::Handle, task};
 
                     task::block_in_place(|| {
                         Handle::current().block_on(async {

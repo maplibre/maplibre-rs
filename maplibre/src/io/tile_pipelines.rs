@@ -1,11 +1,16 @@
-use crate::io::geometry_index::IndexProcessor;
-use crate::io::pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable};
-use crate::io::{TileRequest, TileRequestID};
-use crate::tessellation::zero_tessellator::ZeroTessellator;
-use crate::tessellation::IndexDataType;
+use std::collections::HashSet;
+
 use geozero::GeozeroDatasource;
 use prost::Message;
-use std::collections::HashSet;
+
+use crate::{
+    io::{
+        geometry_index::IndexProcessor,
+        pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable},
+        TileRequest, TileRequestID,
+    },
+    tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
+};
 
 pub enum TileType {
     Vector(geozero::mvt::Tile),
@@ -190,9 +195,13 @@ pub fn build_raster_tile_pipeline() -> impl Processable<Input = <RasterLayer as 
 #[cfg(test)]
 mod tests {
     use super::build_vector_tile_pipeline;
-    use crate::coords::ZoomLevel;
-    use crate::io::pipeline::{PipelineContext, PipelineProcessor, Processable};
-    use crate::io::TileRequest;
+    use crate::{
+        coords::ZoomLevel,
+        io::{
+            pipeline::{PipelineContext, PipelineProcessor, Processable},
+            TileRequest,
+        },
+    };
     pub struct DummyPipelineProcessor;
 
     impl PipelineProcessor for DummyPipelineProcessor {}

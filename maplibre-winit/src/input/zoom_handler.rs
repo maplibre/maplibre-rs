@@ -1,11 +1,9 @@
-use super::UpdateState;
-
-use maplibre::context::ViewState;
-use maplibre::coords::Zoom;
+use std::time::Duration;
 
 use cgmath::{Vector2, Vector3};
+use maplibre::{context::ViewState, coords::Zoom};
 
-use std::time::Duration;
+use super::UpdateState;
 
 pub struct ZoomHandler {
     window_position: Option<Vector2<f64>>,
@@ -26,10 +24,11 @@ impl UpdateState for ZoomHandler {
                 let view_proj = state.view_projection();
                 let inverted_view_proj = view_proj.invert();
 
-                if let Some(cursor_position) = state
-                    .camera
-                    .window_to_world_at_ground(&window_position, &inverted_view_proj)
-                {
+                if let Some(cursor_position) = state.camera.window_to_world_at_ground(
+                    &window_position,
+                    &inverted_view_proj,
+                    false,
+                ) {
                     let scale = current_zoom.scale_delta(&next_zoom);
 
                     let delta = Vector3::new(

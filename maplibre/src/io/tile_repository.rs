@@ -1,11 +1,14 @@
 //! Tile cache.
 
-use crate::coords::{Quadkey, WorldTileCoords};
-use crate::render::ShaderVertex;
-use crate::style::Style;
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use geozero::mvt::tile;
 use std::collections::{btree_map, BTreeMap, HashSet};
+
+use geozero::mvt::tile;
+
+use crate::{
+    coords::{Quadkey, WorldTileCoords},
+    render::ShaderVertex,
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
+};
 
 /// A layer which is stored for future use.
 pub enum StoredLayer {

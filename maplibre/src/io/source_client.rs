@@ -1,13 +1,8 @@
 //! HTTP client.
 
-use crate::coords::WorldTileCoords;
-use crate::error::Error;
-use crate::stages::SharedThreadState;
-use crate::style::source::TileAddressingScheme;
 use async_trait::async_trait;
 
-use super::scheduler::Scheduler;
-use super::source_type::{RasterSource, SourceType, TessellateSource};
+use crate::{coords::WorldTileCoords, error::Error, style::source::TileAddressingScheme};
 
 /// A closure that returns a HTTP client.
 pub type HTTPClientFactory<HC> = dyn Fn() -> HC;

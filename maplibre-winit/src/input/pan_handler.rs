@@ -1,12 +1,10 @@
-use super::UpdateState;
-
-use maplibre::context::ViewState;
-use maplibre::render::camera::Camera;
+use std::time::Duration;
 
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
-
-use std::time::Duration;
+use maplibre::{context::ViewState, render::camera::Camera};
 use winit::event::{ElementState, MouseButton};
+
+use super::UpdateState;
 
 pub struct PanHandler {
     window_position: Option<Vector2<f64>>,
@@ -30,10 +28,16 @@ impl UpdateState for PanHandler {
                 let inverted_view_proj = view_proj.invert();
 
                 let delta = if let (Some(start), Some(current)) = (
-                    reference_camera
-                        .window_to_world_at_ground(&start_window_position, &inverted_view_proj),
-                    reference_camera
-                        .window_to_world_at_ground(&window_position, &inverted_view_proj),
+                    reference_camera.window_to_world_at_ground(
+                        &start_window_position,
+                        &inverted_view_proj,
+                        false,
+                    ),
+                    reference_camera.window_to_world_at_ground(
+                        &window_position,
+                        &inverted_view_proj,
+                        false,
+                    ),
                 ) {
                     start - current
                 } else {
