@@ -1,13 +1,15 @@
 //! Executes the [`RenderGraph`] current render graph.
 
-use crate::context::MapContext;
-use crate::render::graph::RenderGraph;
-use crate::render::graph_runner::RenderGraphRunner;
-
-use crate::render::util::Eventually::Initialized;
-use crate::schedule::Stage;
-use crate::Renderer;
 use log::error;
+
+use crate::{
+    context::MapContext,
+    render::{
+        eventually::Eventually::Initialized, graph::RenderGraph, graph_runner::RenderGraphRunner,
+    },
+    schedule::Stage,
+    Renderer,
+};
 
 /// Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame.
 pub struct GraphRunnerStage {

@@ -1,14 +1,13 @@
 //! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
-use crate::render::resource::texture::TextureView;
-use crate::render::settings::RendererSettings;
-use crate::render::util::HasChanged;
-use crate::window::HeadedMapWindow;
-use crate::{MapWindow, WindowSize};
+use std::{mem::size_of, sync::Arc};
 
-use std::mem::size_of;
-use std::sync::Arc;
+use crate::{
+    render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
+    window::HeadedMapWindow,
+    MapWindow, WindowSize,
+};
 
 pub struct BufferDimensions {
     pub width: usize,
@@ -73,8 +72,7 @@ impl BufferedTextureHead {
         png_output_path: &str,
         // device: &wgpu::Device,
     ) {
-        use std::fs::File;
-        use std::io::Write;
+        use std::{fs::File, io::Write};
         // Note that we're not calling `.await` here.
         let buffer_slice = self.output_buffer.slice(..);
         let buffer_future = buffer_slice.map_async(wgpu::MapMode::Read, |_| ());

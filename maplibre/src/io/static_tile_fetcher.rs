@@ -1,15 +1,12 @@
 //! Static tile fetcher
 
-use std::concat;
-use std::env;
-
-use include_dir::Dir;
-
-use crate::coords::TileCoords;
-use crate::error::Error;
+use std::{concat, env};
 
 #[cfg(static_tiles_found)]
 use include_dir::include_dir;
+use include_dir::Dir;
+
+use crate::{coords::TileCoords, error::Error};
 #[cfg(static_tiles_found)]
 static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 #[cfg(not(static_tiles_found))]
@@ -56,8 +53,7 @@ impl StaticTileFetcher {
 #[cfg(test)]
 mod tests {
     use super::StaticTileFetcher;
-    use crate::coords::WorldTileCoords;
-    use crate::style::source::TileAddressingScheme;
+    use crate::{coords::WorldTileCoords, style::source::TileAddressingScheme};
 
     #[cfg(static_tiles_found)]
     #[tokio::test]

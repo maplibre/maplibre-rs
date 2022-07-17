@@ -1,33 +1,33 @@
 //! [Stages](Stage) for requesting and preparing data
 
-use crate::coords::ZoomLevel;
-use crate::coords::{WorldCoords, WorldTileCoords, Zoom};
-use crate::error::Error;
-use crate::io::geometry_index::GeometryIndex;
-use crate::io::geometry_index::{IndexedGeometry, TileIndex};
-use crate::io::pipeline::Processable;
-use crate::io::pipeline::{PipelineContext, PipelineProcessor};
-use crate::io::source_client::HttpSourceClient;
-use crate::io::tile_pipelines::build_vector_tile_pipeline;
+use std::sync::{mpsc, Arc, Mutex};
 
-use crate::io::tile_request_state::TileRequestState;
-use crate::io::{TileRequest, TileRequestID};
-use crate::render::ShaderVertex;
-use crate::schedule::Schedule;
-use crate::stages::message::{
-    LayerTessellateMessage, MessageReceiver, MessageSender, TessellateMessage,
-    TileTessellateMessage,
-};
-use crate::stages::populate_tile_store_stage::PopulateTileStore;
-
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use crate::{HttpClient, ScheduleMethod, Scheduler};
-use geozero::mvt::tile;
-use geozero::GeozeroDatasource;
-
+use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
-use std::sync::{mpsc, Arc, Mutex};
+use crate::{
+    coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
+    error::Error,
+    io::{
+        geometry_index::{GeometryIndex, IndexedGeometry, TileIndex},
+        pipeline::{PipelineContext, PipelineProcessor, Processable},
+        source_client::HttpSourceClient,
+        tile_pipelines::build_vector_tile_pipeline,
+        tile_request_state::TileRequestState,
+        TileRequest, TileRequestID,
+    },
+    render::ShaderVertex,
+    schedule::Schedule,
+    stages::{
+        message::{
+            LayerTessellateMessage, MessageReceiver, MessageSender, TessellateMessage,
+            TileTessellateMessage,
+        },
+        populate_tile_store_stage::PopulateTileStore,
+    },
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    HttpClient, ScheduleMethod, Scheduler,
+};
 
 mod message;
 mod populate_tile_store_stage;

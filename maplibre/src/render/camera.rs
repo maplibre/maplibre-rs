@@ -1,10 +1,11 @@
 //! Main camera
 
-use cgmath::prelude::*;
-use cgmath::{AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
+use cgmath::{prelude::*, AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
-use crate::util::math::{bounds_from_points, Aabb2, Aabb3, Plane};
-use crate::util::SignificantlyDifferent;
+use crate::util::{
+    math::{bounds_from_points, Aabb2, Aabb3, Plane},
+    SignificantlyDifferent,
+};
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: Matrix4<f64> = Matrix4::new(
@@ -391,9 +392,8 @@ impl Perspective {
 mod tests {
     use cgmath::{AbsDiffEq, Vector2, Vector3, Vector4};
 
-    use crate::render::camera::{InvertedViewProjection, ViewProjection};
-
     use super::{Camera, Perspective};
+    use crate::render::camera::{InvertedViewProjection, ViewProjection};
 
     #[test]
     fn test() {

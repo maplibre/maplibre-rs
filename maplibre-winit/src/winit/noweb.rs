@@ -3,14 +3,10 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
+use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
 use winit::window::WindowBuilder;
 
-use super::WinitEventLoop;
-use super::WinitMapWindow;
-use super::WinitWindow;
-
-use super::WinitMapWindowConfig;
-use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
+use super::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
 
 impl MapWindow for WinitMapWindow {
     fn size(&self) -> WindowSize {

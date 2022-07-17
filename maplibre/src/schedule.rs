@@ -1,8 +1,8 @@
-use crate::context::MapContext;
-use crate::define_label;
+use std::collections::HashMap;
+
 use downcast_rs::{impl_downcast, Downcast};
 
-use std::collections::HashMap;
+use crate::{context::MapContext, define_label};
 
 pub struct NopStage;
 

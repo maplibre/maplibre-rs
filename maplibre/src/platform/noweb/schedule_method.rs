@@ -1,8 +1,8 @@
-use crate::error::Error;
-use crate::ScheduleMethod;
 use std::future::Future;
 use tokio::task;
 use tokio_util::task::LocalPoolHandle;
+
+use crate::{error::Error, ScheduleMethod};
 
 /// Multi-threading with Tokio.
 pub struct TokioScheduleMethod {

@@ -1,9 +1,10 @@
 //! Vector tile layer drawing utilities.
 
+use std::collections::HashMap;
+
 use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {

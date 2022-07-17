@@ -1,15 +1,11 @@
+use async_trait::async_trait;
 use js_sys::{ArrayBuffer, Uint8Array};
-use maplibre::io::source_client::HttpClient;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
+use maplibre::{error::Error, io::source_client::HttpClient};
+use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
-
 use web_sys::{Request, RequestInit, Response, WorkerGlobalScope};
 
 use crate::error::WebError;
-use async_trait::async_trait;
-
-use maplibre::error::Error;
 
 pub struct WHATWGFetchHttpClient {}
 

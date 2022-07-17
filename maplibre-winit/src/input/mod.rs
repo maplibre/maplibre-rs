@@ -3,16 +3,13 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
-
+use maplibre::context::ViewState;
 use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
-use crate::input::pan_handler::PanHandler;
-use crate::input::pinch_handler::PinchHandler;
-use crate::input::query_handler::QueryHandler;
-use crate::input::shift_handler::ShiftHandler;
-use crate::input::tilt_handler::TiltHandler;
-use crate::input::zoom_handler::ZoomHandler;
-use maplibre::context::ViewState;
+use crate::input::{
+    pan_handler::PanHandler, pinch_handler::PinchHandler, query_handler::QueryHandler,
+    shift_handler::ShiftHandler, tilt_handler::TiltHandler, zoom_handler::ZoomHandler,
+};
 
 mod pan_handler;
 mod pinch_handler;

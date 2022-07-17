@@ -1,12 +1,12 @@
-use crate::platform::http_client::WHATWGFetchHttpClient;
-use crate::platform::schedule_method::WebWorkerPoolScheduleMethod;
-
-use maplibre::io::scheduler::Scheduler;
-
-use maplibre::MapBuilder;
-use maplibre_winit::winit::WinitMapWindowConfig;
 use std::panic;
+
+use maplibre::{io::scheduler::Scheduler, MapBuilder};
+use maplibre_winit::winit::WinitMapWindowConfig;
 use wasm_bindgen::prelude::*;
+
+use crate::platform::{
+    http_client::WHATWGFetchHttpClient, schedule_method::WebWorkerPoolScheduleMethod,
+};
 
 mod error;
 mod platform;
@@ -16,8 +16,7 @@ compile_error!("web works only on wasm32.");
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
-    use tracing_subscriber::layer::SubscriberExt;
-    use tracing_subscriber::Registry;
+    use tracing_subscriber::{layer::SubscriberExt, Registry};
 
     let mut builder = tracing_wasm::WASMLayerConfigBuilder::new();
     builder.set_report_logs_in_timings(true);
