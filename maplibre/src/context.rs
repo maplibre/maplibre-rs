@@ -20,15 +20,14 @@ pub struct ViewState {
 impl ViewState {
     pub fn new<P: Into<cgmath::Rad<f64>>>(
         window_size: &WindowSize,
+        position: WorldCoords,
         zoom: Zoom,
-        center: LatLon,
         pitch: f64,
         fovy: P,
     ) -> Self {
         let tile_center = TILE_SIZE / 2.0;
         let fovy = fovy.into();
         let height = tile_center / (fovy / 2.0).tan();
-        let position = WorldCoords::from_lat_lon(center, zoom);
 
         let camera = Camera::new(
             (position.x, position.y, height),
