@@ -5,12 +5,13 @@ use std::sync::{mpsc, Arc, Mutex};
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
-use crate::io::source_client::HttpSourceClient;
-use crate::io::tile_request_state::TileRequestState;
-use crate::io::{TileRequest, TileRequestID};
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
     error::Error,
+    io::{
+        source_client::HttpSourceClient, tile_request_state::TileRequestState, TileRequest,
+        TileRequestID,
+    },
     render::ShaderVertex,
     schedule::Schedule,
     stages::{

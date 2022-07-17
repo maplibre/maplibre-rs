@@ -1,10 +1,10 @@
 use std::{marker::PhantomData, mem};
 
-use crate::io::source_client::HttpSourceClient;
 use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, Zoom},
     error::Error,
+    io::source_client::HttpSourceClient,
     render::{create_default_render_graph, register_default_render_stages},
     schedule::{Schedule, Stage},
     stages::register_stages,

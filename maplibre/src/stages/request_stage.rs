@@ -2,12 +2,14 @@
 
 use std::collections::HashSet;
 
-use crate::io::source_client::{HttpSourceClient, SourceClient};
-use crate::io::TileRequest;
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
     error::Error,
+    io::{
+        source_client::{HttpSourceClient, SourceClient},
+        TileRequest,
+    },
     schedule::Stage,
     stages::SharedThreadState,
     tile::tile_repository::TileRepository,

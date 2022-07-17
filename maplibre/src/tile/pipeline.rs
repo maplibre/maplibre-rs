@@ -178,10 +178,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::io::pipeline::{
-        ClosureProcessable, DataPipeline, PipelineContext, PipelineEnd, PipelineProcessor,
-        Processable,
-    };
     use crate::tile::pipeline::{
         ClosureProcessable, DataPipeline, PipelineContext, PipelineEnd, PipelineProcessor,
         Processable,

@@ -2,9 +2,9 @@ use std::{fmt, sync::mpsc};
 
 use geozero::mvt::tile;
 
-use crate::io::TileRequestID;
 use crate::{
     coords::WorldTileCoords,
+    io::TileRequestID,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     tile::tile_repository::StoredLayer,

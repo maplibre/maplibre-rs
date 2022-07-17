@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use geozero::GeozeroDatasource;
 use prost::Message;
 
-use crate::io::{TileRequest, TileRequestID};
 use crate::{
+    io::{TileRequest, TileRequestID},
     tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
     tile::{
         geometry_index::IndexProcessor,
@@ -136,12 +136,11 @@ pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Pr
 #[cfg(test)]
 mod tests {
     use super::build_vector_tile_pipeline;
+    use crate::tile::pipeline::Processable;
     use crate::{
         coords::ZoomLevel,
-        io::{
-            pipeline::{PipelineContext, PipelineProcessor, Processable},
-            TileRequest,
-        },
+        io::TileRequest,
+        tile::pipeline::{PipelineContext, PipelineProcessor},
     };
     pub struct DummyPipelineProcessor;
 
