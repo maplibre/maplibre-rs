@@ -9,3 +9,7 @@ rustflags = [
     "-C", "link-args=--shared-memory --import-memory",
 ]
 runner = 'wasm-bindgen-test-runner'
+
+# We can use this once build-std is stable
+#[unstable]
+#build-std = "std,panic_abort"
