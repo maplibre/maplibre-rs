@@ -2,11 +2,12 @@ use std::{fmt, sync::mpsc};
 
 use geozero::mvt::tile;
 
+use crate::io::TileRequestID;
 use crate::{
     coords::WorldTileCoords,
-    io::{tile_repository::StoredLayer, TileRequestID},
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    tile::tile_repository::StoredLayer,
 };
 
 pub type MessageSender = mpsc::Sender<TessellateMessage>;

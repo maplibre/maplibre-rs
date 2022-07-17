@@ -5,9 +5,10 @@ use geozero::mvt::tile;
 
 use crate::{
     coords::WorldTileCoords,
-    io::{geometry_index::IndexedGeometry, TileRequestID},
+    io::TileRequestID,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    tile::geometry_index::IndexedGeometry,
 };
 
 /// Processes events which happen during the pipeline execution

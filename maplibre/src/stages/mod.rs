@@ -5,17 +5,12 @@ use std::sync::{mpsc, Arc, Mutex};
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
+use crate::io::source_client::HttpSourceClient;
+use crate::io::tile_request_state::TileRequestState;
+use crate::io::{TileRequest, TileRequestID};
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
     error::Error,
-    io::{
-        geometry_index::{GeometryIndex, IndexedGeometry, TileIndex},
-        pipeline::{PipelineContext, PipelineProcessor, Processable},
-        source_client::HttpSourceClient,
-        tile_pipelines::build_vector_tile_pipeline,
-        tile_request_state::TileRequestState,
-        TileRequest, TileRequestID,
-    },
     render::ShaderVertex,
     schedule::Schedule,
     stages::{
@@ -26,6 +21,11 @@ use crate::{
         populate_tile_store_stage::PopulateTileStore,
     },
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    tile::{
+        geometry_index::{GeometryIndex, IndexedGeometry, TileIndex},
+        pipeline::{PipelineContext, PipelineProcessor, Processable},
+        tile_pipelines::build_vector_tile_pipeline,
+    },
     HttpClient, ScheduleMethod, Scheduler,
 };
 

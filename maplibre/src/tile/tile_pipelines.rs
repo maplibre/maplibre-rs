@@ -3,13 +3,13 @@ use std::collections::HashSet;
 use geozero::GeozeroDatasource;
 use prost::Message;
 
+use crate::io::{TileRequest, TileRequestID};
 use crate::{
-    io::{
+    tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
+    tile::{
         geometry_index::IndexProcessor,
         pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable},
-        TileRequest, TileRequestID,
     },
-    tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
 };
 
 #[derive(Default)]

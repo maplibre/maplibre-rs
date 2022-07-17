@@ -5,13 +5,6 @@ use maplibre::{
     coords::{TileCoords, ViewRegion, WorldTileCoords, ZoomLevel},
     error::Error,
     headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
-    io::{
-        pipeline::{PipelineContext, PipelineProcessor, Processable},
-        source_client::{HttpClient, HttpSourceClient},
-        tile_pipelines::build_vector_tile_pipeline,
-        tile_repository::StoredLayer,
-        RawLayer, TileRequest,
-    },
     platform::{
         http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
     },
@@ -20,6 +13,12 @@ use maplibre::{
         ShaderVertex,
     },
     style::source::TileAddressingScheme,
+    tile::{
+        pipeline::{PipelineContext, PipelineProcessor, Processable},
+        tile_pipelines::build_vector_tile_pipeline,
+        tile_repository::StoredLayer,
+        RawLayer,
+    },
     util::{grid::google_mercator, math::Aabb2},
     window::{EventLoop, WindowSize},
     MapBuilder,

@@ -11,6 +11,9 @@ use std::{
 use tokio::{runtime::Handle, task};
 use wgpu::{BufferAsyncError, BufferSlice};
 
+use crate::io::source_client::HttpSourceClient;
+use crate::io::tile_request_state::TileRequestState;
+use crate::io::TileRequest;
 use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, ViewRegion, WorldTileCoords, Zoom},
