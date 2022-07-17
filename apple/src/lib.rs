@@ -1,7 +1,9 @@
-use maplibre::platform::http_client::ReqwestHttpClient;
-use maplibre::platform::run_multithreaded;
-use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::MapBuilder;
+use maplibre::{
+    platform::{
+        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
+    },
+    MapBuilder,
+};
 use maplibre_winit::winit::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
 
 #[cfg(not(any(target_os = "macos", target_os = "ios")))]

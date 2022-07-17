@@ -1,12 +1,14 @@
-use crate::coords::WorldTileCoords;
-use crate::io::geometry_index::IndexedGeometry;
-use crate::io::TileRequestID;
-use crate::render::ShaderVertex;
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
+use std::marker::PhantomData;
+
 use downcast_rs::{impl_downcast, Downcast};
 use geozero::mvt::tile;
 
-use std::marker::PhantomData;
+use crate::{
+    coords::WorldTileCoords,
+    io::{geometry_index::IndexedGeometry, TileRequestID},
+    render::ShaderVertex,
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
+};
 
 /// Processes events which happen during the pipeline execution
 pub trait PipelineProcessor: Downcast {

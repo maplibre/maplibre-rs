@@ -1,9 +1,8 @@
 //! A bind group which binds a buffer with global data like the current camera transformations.
 
-use crate::platform::MIN_BUFFER_SIZE;
-use crate::render::shaders::ShaderGlobals;
-use std::cmp;
-use std::mem::size_of;
+use std::{cmp, mem::size_of};
+
+use crate::{platform::MIN_BUFFER_SIZE, render::shaders::ShaderGlobals};
 
 pub struct Globals {
     pub uniform_buffer: wgpu::Buffer,

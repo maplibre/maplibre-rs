@@ -1,14 +1,13 @@
 //! Tessellation for lines and polygons is implemented here.
 
-use bytemuck::Pod;
 use std::ops::Add;
 
+use bytemuck::Pod;
 use lyon::tessellation::{
     FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor, VertexBuffers,
 };
 
-use crate::error::Error;
-use crate::render::ShaderVertex;
+use crate::{error::Error, render::ShaderVertex};
 
 pub mod zero_tessellator;
 

@@ -1,7 +1,8 @@
 //! Utilities for the window system.
 
-use crate::{HttpClient, InteractiveMapSchedule, ScheduleMethod};
 use raw_window_handle::HasRawWindowHandle;
+
+use crate::{HttpClient, InteractiveMapSchedule, ScheduleMethod};
 
 /// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.
 pub trait MapWindow {

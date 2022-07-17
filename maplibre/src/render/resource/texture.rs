@@ -1,9 +1,9 @@
 //! Utility for a texture view which can either be created by a [`TextureView`](wgpu::TextureView)
 //! or [`SurfaceTexture`](wgpu::SurfaceTexture)
 
-use crate::render::settings::Msaa;
-use crate::render::util::HasChanged;
 use std::ops::Deref;
+
+use crate::render::{eventually::HasChanged, settings::Msaa};
 
 /// Describes a [`TextureView`].
 ///

@@ -1,12 +1,8 @@
 use std::future::Future;
 
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-
+use maplibre::{error::Error, io::scheduler::ScheduleMethod};
+use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Worker;
-
-use maplibre::error::Error;
-use maplibre::io::scheduler::ScheduleMethod;
 
 use super::pool::WorkerPool;
 

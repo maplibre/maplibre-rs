@@ -1,7 +1,9 @@
+use std::borrow::Cow;
+
+use thiserror::Error;
+
 use super::{NodeState, RenderGraph, SlotInfos, SlotLabel, SlotType, SlotValue};
 use crate::render::resource::TextureView;
-use std::borrow::Cow;
-use thiserror::Error;
 
 /// A command that signals the graph runner to run the sub graph corresponding to the `name`
 /// with the specified `inputs` next.
