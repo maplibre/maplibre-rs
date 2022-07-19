@@ -11,10 +11,9 @@ use std::{
 use tokio::{runtime::Handle, task};
 use wgpu::{BufferAsyncError, BufferSlice};
 
-use crate::coords::{WorldCoords, TILE_SIZE};
 use crate::{
     context::{MapContext, ViewState},
-    coords::{LatLon, ViewRegion, WorldTileCoords, Zoom},
+    coords::{LatLon, ViewRegion, WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
     error::Error,
     headless::utils::HeadlessPipelineProcessor,
     io::{

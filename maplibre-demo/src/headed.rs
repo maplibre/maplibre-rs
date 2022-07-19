@@ -1,6 +1,7 @@
-use maplibre::platform::http_client::ReqwestHttpClient;
-use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::MapBuilder;
+use maplibre::{
+    platform::{http_client::ReqwestHttpClient, schedule_method::TokioScheduleMethod},
+    MapBuilder,
+};
 use maplibre_winit::winit::WinitMapWindowConfig;
 
 pub async fn run_headed() {

@@ -1,9 +1,8 @@
 use std::{marker::PhantomData, mem};
 
-use crate::coords::{WorldCoords, TILE_SIZE};
 use crate::{
     context::{MapContext, ViewState},
-    coords::{LatLon, Zoom},
+    coords::{LatLon, WorldCoords, Zoom, TILE_SIZE},
     error::Error,
     io::{
         scheduler::Scheduler,
