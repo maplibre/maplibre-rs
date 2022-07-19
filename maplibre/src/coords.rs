@@ -1,7 +1,10 @@
 //! Provides utilities related to coordinates.
 
-use std::fmt::{Display, Formatter};
-use std::{f64::consts::PI, fmt};
+use std::{
+    f64::consts::PI,
+    fmt,
+    fmt::{Display, Formatter},
+};
 
 use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
 

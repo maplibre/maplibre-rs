@@ -1,31 +1,13 @@
-use std::collections::HashSet;
-
-use maplibre::coords::LatLon;
 use maplibre::{
-    benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    coords::{TileCoords, ViewRegion, WorldTileCoords, ZoomLevel},
+    coords::{LatLon, WorldTileCoords},
     error::Error,
-    headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
-    io::{
-        pipeline::{PipelineContext, PipelineProcessor, Processable},
-        source_client::{HttpClient, HttpSourceClient},
-        tile_pipelines::build_vector_tile_pipeline,
-        tile_repository::StoredLayer,
-        RawLayer, TileRequest,
-    },
-    platform::{
-        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
-    },
-    render::{
-        settings::{RendererSettings, TextureFormat},
-        ShaderVertex,
-    },
-    style::source::TileAddressingScheme,
-    util::{grid::google_mercator, math::Aabb2},
-    window::{EventLoop, WindowSize},
+    headless::HeadlessMapWindowConfig,
+    platform::{http_client::ReqwestHttpClient, schedule_method::TokioScheduleMethod},
+    render::settings::{RendererSettings, TextureFormat},
+    util::grid::google_mercator,
+    window::WindowSize,
     MapBuilder,
 };
-use maplibre_winit::winit::WinitMapWindowConfig;
 use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {

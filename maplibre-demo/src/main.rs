@@ -1,10 +1,9 @@
-use crate::headed::run_headed;
-use crate::headless::run_headless;
-use clap::builder::ValueParser;
-use clap::{Parser, Subcommand};
-use maplibre::coords::LatLon;
-use maplibre::platform::run_multithreaded;
 use std::io::ErrorKind;
+
+use clap::{builder::ValueParser, Parser, Subcommand};
+use maplibre::{coords::LatLon, platform::run_multithreaded};
+
+use crate::{headed::run_headed, headless::run_headless};
 
 mod headed;
 mod headless;
@@ -27,7 +26,7 @@ struct Cli {
 }
 
 fn parse_lat_long(env: &str) -> Result<LatLon, std::io::Error> {
-    let split = env.split(",").collect::<Vec<_>>();
+    let split = env.split(',').collect::<Vec<_>>();
     if let (Some(latitude), Some(longitude)) = (split.get(0), split.get(1)) {
         Ok(LatLon::new(
             latitude.parse::<f64>().unwrap(),
