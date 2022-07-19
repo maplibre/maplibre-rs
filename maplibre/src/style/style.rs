@@ -18,7 +18,7 @@ pub struct Style {
     pub metadata: HashMap<String, String>,
     pub sources: HashMap<String, Source>,
     pub layers: Vec<StyleLayer>,
-    pub center: Option<[f64; 2]>,
+    pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
     pub zoom: Option<f64>,
     pub pitch: Option<f64>,
 }

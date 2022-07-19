@@ -1,31 +1,12 @@
-use std::collections::HashSet;
+use std::io::ErrorKind;
 
-use maplibre::{
-    benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    coords::{TileCoords, ViewRegion, WorldTileCoords, ZoomLevel},
-    error::Error,
-    headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
-    io::{
-        pipeline::{PipelineContext, PipelineProcessor, Processable},
-        source_client::{HttpClient, HttpSourceClient},
-        tile_pipelines::build_vector_tile_pipeline,
-        tile_repository::StoredLayer,
-        RawLayer, TileRequest,
-    },
-    platform::{
-        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
-    },
-    render::{
-        settings::{RendererSettings, TextureFormat},
-        ShaderVertex,
-    },
-    style::source::TileAddressingScheme,
-    util::{grid::google_mercator, math::Aabb2},
-    window::{EventLoop, WindowSize},
-    MapBuilder,
-};
-use maplibre_winit::winit::WinitMapWindowConfig;
-use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
+use clap::{builder::ValueParser, Parser, Subcommand};
+use maplibre::{coords::LatLon, platform::run_multithreaded};
+
+use crate::{headed::run_headed, headless::run_headless};
+
+mod headed;
+mod headless;
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
@@ -36,63 +17,46 @@ fn enable_tracing() {
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 }
 
-fn run_in_window() {
-    run_multithreaded(async {
-        MapBuilder::new()
-            .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
-            .with_http_client(ReqwestHttpClient::new(None))
-            .with_schedule_method(TokioScheduleMethod::new())
-            .build()
-            .initialize()
-            .await
-            .run()
-    })
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+#[clap(propagate_version = true)]
+struct Cli {
+    #[clap(subcommand)]
+    command: Commands,
 }
 
-fn run_headless() {
-    run_multithreaded(async {
-        let mut map = MapBuilder::new()
-            .with_map_window_config(HeadlessMapWindowConfig {
-                size: WindowSize::new(1000, 1000).unwrap(),
-            })
-            .with_http_client(ReqwestHttpClient::new(None))
-            .with_schedule_method(TokioScheduleMethod::new())
-            .with_renderer_settings(RendererSettings {
-                texture_format: TextureFormat::Rgba8UnormSrgb,
-                ..RendererSettings::default()
-            })
-            .build()
-            .initialize_headless()
-            .await;
+fn parse_lat_long(env: &str) -> Result<LatLon, std::io::Error> {
+    let split = env.split(',').collect::<Vec<_>>();
+    if let (Some(latitude), Some(longitude)) = (split.get(0), split.get(1)) {
+        Ok(LatLon::new(
+            latitude.parse::<f64>().unwrap(),
+            longitude.parse::<f64>().unwrap(),
+        ))
+    } else {
+        Err(std::io::Error::new(
+            ErrorKind::InvalidData,
+            "Failed to parse latitude and longitude.",
+        ))
+    }
+}
 
-        let tile_limits = google_mercator().tile_limits(
-            extent_wgs84_to_merc(&Extent {
-                minx: 11.3475219363,
-                miny: 48.0345697188,
-                maxx: 11.7917815798,
-                maxy: 48.255861,
-            }),
-            0,
-        );
-
-        for (z, x, y) in GridIterator::new(10, 10, tile_limits) {
-            let coords = WorldTileCoords::from((x as i32, y as i32, z.into()));
-            println!("Rendering {}", &coords);
-            map.map_schedule
-                .fetch_process(&coords)
-                .await
-                .expect("Failed to fetch and process!");
-
-            match map.map_schedule_mut().update_and_redraw() {
-                Ok(_) => {}
-                Err(Error::Render(e)) => {
-                    eprintln!("{}", e);
-                    if e.should_exit() {}
-                }
-                e => eprintln!("{:?}", e),
-            };
-        }
-    })
+#[derive(Subcommand)]
+enum Commands {
+    Headed {},
+    Headless {
+        #[clap(default_value_t = 400)]
+        tile_size: u32,
+        #[clap(
+            value_parser = ValueParser::new(parse_lat_long),
+            default_value_t = LatLon::new(48.0345697188, 11.3475219363)
+        )]
+        min: LatLon,
+        #[clap(
+            value_parser = ValueParser::new(parse_lat_long),
+            default_value_t = LatLon::new(48.255861, 11.7917815798)
+        )]
+        max: LatLon,
+    },
 }
 
 fn main() {
@@ -101,6 +65,20 @@ fn main() {
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    //run_headless();
-    run_in_window();
+    let cli = Cli::parse();
+
+    // You can check for the existence of subcommands, and if found use their
+    // matches just as you would the top level cmd
+    match &cli.command {
+        Commands::Headed {} => {
+            run_multithreaded(async { run_headed().await });
+        }
+        Commands::Headless {
+            tile_size,
+            min,
+            max,
+        } => {
+            run_multithreaded(async { run_headless(*tile_size, *min, *max).await });
+        }
+    }
 }
