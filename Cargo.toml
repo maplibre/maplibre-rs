@@ -13,6 +13,8 @@ members = [
     "web",
 
     "benchmarks",
+
+    "experiments/wgpu_for_fontrendering"
 ]
 
 [profile.release]
