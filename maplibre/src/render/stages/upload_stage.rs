@@ -26,7 +26,13 @@ impl Stage for UploadStage {
             view_state,
             style,
             tile_repository,
-            renderer: Renderer { queue, state, .. },
+            renderer:
+                Renderer {
+                    device,
+                    queue,
+                    state,
+                    ..
+                },
             ..
         }: &mut MapContext,
     ) {
@@ -53,7 +59,7 @@ impl Stage for UploadStage {
         let view_region = view_state.create_view_region();
 
         if let Some(view_region) = &view_region {
-            self.upload_tile_geometry(state, queue, tile_repository, style, view_region);
+            self.upload_tile_geometry(state, device, queue, tile_repository, style, view_region);
             self.upload_tile_view_pattern(state, queue, &view_proj);
             self.update_metadata();
         }
@@ -147,7 +153,12 @@ impl UploadStage {
     #[tracing::instrument(skip_all)]
     pub fn upload_tile_geometry(
         &self,
-        RenderState { buffer_pool, .. }: &mut RenderState,
+        RenderState {
+            buffer_pool,
+            raster_resources,
+            ..
+        }: &mut RenderState,
+        device: &wgpu::Device,
         queue: &wgpu::Queue,
         tile_repository: &TileRepository,
         style: &Style,
@@ -224,7 +235,18 @@ impl UploadStage {
                                     coords,
                                     layer_name,
                                     layer_data,
-                                } => (),
+                                } => {
+                                    if let Initialized(raster_resources) = raster_resources {
+                                        buffer_pool.allocate_layer_raster(
+                                            device,
+                                            queue,
+                                            *coords,
+                                            style_layer.clone(),
+                                            layer_data.clone(),
+                                            raster_resources,
+                                        );
+                                    }
+                                }
                             }
                         }
                     }

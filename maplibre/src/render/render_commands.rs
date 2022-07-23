@@ -26,8 +26,8 @@ impl PhaseItem for (IndexEntry, TileShape) {
     }
 }
 
-pub struct SetViewBindGroup<const I: usize>;
-impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetViewBindGroup<I> {
+pub struct SetVectorViewBindGroup<const I: usize>;
+impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetVectorViewBindGroup<I> {
     fn render<'w>(
         state: &'w RenderState,
         _item: &P,
@@ -35,6 +35,22 @@ impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetViewBindGroup<I> {
     ) -> RenderCommandResult {
         if let Initialized(Globals { bind_group, .. }) = &state.globals_bind_group {
             pass.set_bind_group(0, bind_group, &[]);
+            RenderCommandResult::Success
+        } else {
+            RenderCommandResult::Failure
+        }
+    }
+}
+
+pub struct SetRasterViewBindGroup<const I: usize>;
+impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetRasterViewBindGroup<I> {
+    fn render<'w>(
+        state: &'w RenderState,
+        _item: &P,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        if let Initialized(raster_resources) = &state.raster_resources {
+            pass.set_bind_group(0, raster_resources.raster_bind_group.as_ref().unwrap(), &[]);
             RenderCommandResult::Success
         } else {
             RenderCommandResult::Failure
@@ -58,15 +74,31 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
     }
 }
 
-pub struct SetTilePipeline;
-impl<P: PhaseItem> RenderCommand<P> for SetTilePipeline {
+pub struct SetVectorTilePipeline;
+impl<P: PhaseItem> RenderCommand<P> for SetVectorTilePipeline {
     fn render<'w>(
         state: &'w RenderState,
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let Initialized(pipeline) = &state.tile_pipeline {
+        if let Initialized(pipeline) = &state.vector_tile_pipeline {
             pass.set_render_pipeline(pipeline);
+            RenderCommandResult::Success
+        } else {
+            RenderCommandResult::Failure
+        }
+    }
+}
+
+pub struct SetRasterTilePipeline;
+impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
+    fn render<'w>(
+        state: &'w RenderState,
+        _item: &P,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        if let Initialized(raster_resources) = &state.raster_resources {
+            pass.set_render_pipeline(raster_resources.raster_pipeline.as_ref().unwrap());
             RenderCommandResult::Success
         } else {
             RenderCommandResult::Failure
@@ -102,8 +134,8 @@ impl RenderCommand<TileInView> for DrawMask {
     }
 }
 
-pub struct DrawTile;
-impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
+pub struct DrawVectorTile;
+impl RenderCommand<(IndexEntry, TileShape)> for DrawVectorTile {
     fn render<'w>(
         state: &'w RenderState,
         (entry, shape): &(IndexEntry, TileShape),
@@ -153,6 +185,53 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
     }
 }
 
-pub type DrawTiles = (SetTilePipeline, SetViewBindGroup<0>, DrawTile);
+pub struct DrawRasterTile;
+impl RenderCommand<(IndexEntry, TileShape)> for DrawRasterTile {
+    fn render<'w>(
+        state: &'w RenderState,
+        (entry, shape): &(IndexEntry, TileShape),
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        if let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
+            (&state.buffer_pool, &state.tile_view_pattern)
+        {
+            let reference = tile_view_pattern.stencil_reference_value(&shape.coords) as u32;
+
+            tracing::trace!("Drawing raster layer");
+
+            pass.set_stencil_reference(reference);
+            pass.set_index_buffer(
+                buffer_pool.indices().slice(entry.indices_buffer_range()),
+                INDEX_FORMAT,
+            );
+
+            pass.set_vertex_buffer(
+                0,
+                buffer_pool.vertices().slice(entry.vertices_buffer_range()),
+            );
+
+            // pass.set_vertex_buffer(
+            //     1,
+            //     tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
+            // );
+            pass.draw_indexed(entry.indices_range(), 0, 0..1);
+            RenderCommandResult::Success
+        } else {
+            RenderCommandResult::Failure
+        }
+    }
+}
+
+pub type DrawRasterTiles = (
+    SetRasterTilePipeline,
+    SetRasterViewBindGroup<0>,
+    DrawRasterTile,
+);
+
+pub type DrawVectorTiles = (
+    SetVectorTilePipeline,
+    SetVectorViewBindGroup<0>,
+    DrawVectorTile,
+);
 
 pub type DrawMasks = (SetMaskPipeline, DrawMask);
