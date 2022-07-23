@@ -1,13 +1,15 @@
-use jni::objects::JClass;
-use jni::JNIEnv;
-use log::Level;
-use maplibre::platform::http_client::ReqwestHttpClient;
-use maplibre::platform::run_multithreaded;
-use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::render::settings::{Backends, WgpuSettings};
-use maplibre::MapBuilder;
-use maplibre_winit::winit::WinitMapWindowConfig;
 use std::ffi::CString;
+
+use jni::{objects::JClass, JNIEnv};
+use log::Level;
+use maplibre::{
+    platform::{
+        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
+    },
+    render::settings::{Backends, WgpuSettings},
+    MapBuilder,
+};
+use maplibre_winit::winit::WinitMapWindowConfig;
 
 #[cfg(not(target_os = "android"))]
 compile_error!("android works only on android.");

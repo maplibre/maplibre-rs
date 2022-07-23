@@ -1,16 +1,21 @@
 //! Utility for generating a tile pattern which can be used for masking.
 
-use crate::coords::{ViewRegion, WorldTileCoords, Zoom};
-use crate::render::camera::ViewProjection;
-use crate::render::resource::{BackingBufferDescriptor, BufferPool, Queue};
-use crate::render::shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata};
+use std::{marker::PhantomData, mem::size_of, ops::Range};
+
 use cgmath::Matrix4;
 
-use crate::render::ShaderVertex;
-use crate::tessellation::IndexDataType;
-use std::marker::PhantomData;
-use std::mem::size_of;
-use std::ops::Range;
+use crate::{
+    coords::{ViewRegion, WorldTileCoords, Zoom},
+    render::{
+        camera::ViewProjection,
+        resource::{BackingBufferDescriptor, BufferPool, Queue},
+        shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata},
+        ShaderVertex,
+    },
+    tessellation::IndexDataType,
+};
+
+pub const DEFAULT_TILE_VIEW_SIZE: wgpu::BufferAddress = 32 * 4;
 
 /// The tile mask pattern assigns each tile a value which can be used for stencil testing.
 pub struct TileViewPattern<Q, B> {
@@ -159,11 +164,13 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             }
         }
 
-        queue.write_buffer(
-            &self.buffer.inner,
-            0,
-            bytemuck::cast_slice(buffer.as_slice()),
-        );
+        let raw_buffer = bytemuck::cast_slice(buffer.as_slice());
+        if raw_buffer.len() as wgpu::BufferAddress > self.buffer.inner_size {
+            /* FIXME: We need to avoid this case by either choosing a proper size
+            (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */
+            panic!("Buffer is too small to store the tile pattern!");
+        }
+        queue.write_buffer(&self.buffer.inner, 0, raw_buffer);
     }
 
     pub fn stencil_reference_value(&self, world_coords: &WorldTileCoords) -> u8 {

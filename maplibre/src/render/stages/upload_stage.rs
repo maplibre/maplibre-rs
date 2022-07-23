@@ -1,19 +1,19 @@
 //! Uploads data to the GPU which is needed for rendering.
 
-use crate::context::MapContext;
-use crate::coords::ViewRegion;
-use crate::io::tile_repository::{StoredLayer, TileRepository};
-use crate::render::camera::ViewProjection;
-
-use crate::render::shaders::{
-    ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32,
-};
-
-use crate::render::util::Eventually::Initialized;
-use crate::schedule::Stage;
-use crate::{RenderState, Renderer, Style};
-
 use std::iter;
+
+use crate::{
+    context::MapContext,
+    coords::ViewRegion,
+    io::tile_repository::{StoredLayer, TileRepository},
+    render::{
+        camera::ViewProjection,
+        eventually::Eventually::Initialized,
+        shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
+    },
+    schedule::Stage,
+    RenderState, Renderer, Style,
+};
 
 #[derive(Default)]
 pub struct UploadStage;
@@ -30,8 +30,6 @@ impl Stage for UploadStage {
             ..
         }: &mut MapContext,
     ) {
-        let visible_level = view_state.visible_level();
-
         let view_proj = view_state.view_projection();
 
         if let Initialized(globals_bind_group) = &state.globals_bind_group {
@@ -52,10 +50,7 @@ impl Stage for UploadStage {
             );
         }
 
-        let view_region = view_state
-            .camera
-            .view_region_bounding_box(&view_proj.invert())
-            .map(|bounding_box| ViewRegion::new(bounding_box, 0, *view_state.zoom, visible_level));
+        let view_region = view_state.create_view_region();
 
         if let Some(view_region) = &view_region {
             self.upload_tile_geometry(state, queue, tile_repository, style, view_region);

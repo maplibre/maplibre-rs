@@ -1,7 +1,8 @@
 //! A render pass which allows tracking, for example using a tracing framework.
 
-use log::trace;
 use std::ops::Range;
+
+use log::trace;
 
 /// A [`RenderPass`], which tracks the current pipeline state to ensure all draw calls are valid.
 /// It is used to set the current [`RenderPipeline`], [`BindGroups`](BindGroup) and buffers.

@@ -1,9 +1,10 @@
+use std::time::Duration;
+
 use cgmath::Vector2;
+use maplibre::context::ViewState;
+use winit::event::{ElementState, MouseButton};
 
 use crate::input::UpdateState;
-use maplibre::context::ViewState;
-use std::time::Duration;
-use winit::event::{ElementState, MouseButton};
 
 pub struct QueryHandler {
     window_position: Option<Vector2<f64>>,

@@ -1,9 +1,4 @@
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::Write;
-use std::ops::Range;
-use std::path::Path;
-use std::{fs, io};
+use std::{collections::HashMap, fs, fs::File, io, io::Write, ops::Range, path::Path};
 
 use flate2::bufread::GzDecoder;
 use rusqlite::{params, Connection, Row};

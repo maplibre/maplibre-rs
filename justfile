@@ -36,14 +36,14 @@ test PROJECT ARCH:
 benchmark:
   cargo bench -p benchmarks
 
-install-rustfmt:
-  rustup component add rustfmt
+install-rustfmt: nightly-toolchain
+  rustup component add rustfmt --toolchain $NIGHTLY_TOOLCHAIN
 
 fmt: install-rustfmt
-  cargo fmt --all --
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo fmt
 
 fmt-check: install-rustfmt
-  cargo fmt --all -- --check
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo fmt -- --check
 
 default-toolchain:
   # Setups the toolchain from rust-toolchain.toml

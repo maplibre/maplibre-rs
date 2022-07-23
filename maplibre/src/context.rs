@@ -1,8 +1,14 @@
-use crate::coords::{LatLon, WorldCoords, Zoom, ZoomLevel, TILE_SIZE};
-use crate::io::tile_repository::TileRepository;
-use crate::render::camera::{Camera, Perspective, ViewProjection};
-use crate::util::ChangeObserver;
-use crate::{Renderer, Style, WindowSize};
+use std::ops::Div;
+
+use cgmath::Angle;
+
+use crate::{
+    coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
+    io::tile_repository::TileRepository,
+    render::camera::{Camera, Perspective, ViewProjection},
+    util::ChangeObserver,
+    Renderer, Style, WindowSize,
+};
 
 /// Stores the camera configuration.
 pub struct ViewState {
@@ -12,10 +18,20 @@ pub struct ViewState {
 }
 
 impl ViewState {
-    pub fn new(window_size: &WindowSize, zoom: Zoom, center: LatLon, pitch: f64) -> Self {
+    pub fn new<P: Into<cgmath::Rad<f64>>>(
+        window_size: &WindowSize,
+        zoom: Zoom,
+        center: LatLon,
+        pitch: f64,
+        fovy: P,
+    ) -> Self {
+        let tile_center = TILE_SIZE / 2.0;
+        let fovy = fovy.into();
+        let height = tile_center / (fovy / 2.0).tan();
         let position = WorldCoords::from_lat_lon(center, zoom);
+
         let camera = Camera::new(
-            (position.x, position.y, 150.0),
+            (position.x, position.y, height),
             cgmath::Deg(-90.0),
             cgmath::Deg(pitch),
             window_size.width(),
@@ -40,6 +56,14 @@ impl ViewState {
             camera: ChangeObserver::new(camera),
             perspective,
         }
+    }
+
+    pub fn create_view_region(&self) -> Option<ViewRegion> {
+        self.camera
+            .view_region_bounding_box(&self.view_projection().invert())
+            .map(|bounding_box| {
+                ViewRegion::new(bounding_box, 0, 32, *self.zoom, self.visible_level())
+            })
     }
 
     pub fn view_projection(&self) -> ViewProjection {

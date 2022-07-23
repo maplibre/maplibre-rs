@@ -1,19 +1,22 @@
 //! Tessellator implementation.
 
-use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
-use lyon::geom;
-
-use crate::render::ShaderVertex;
-use lyon::lyon_tessellation::VertexBuffers;
-use lyon::path::path::Builder;
-use lyon::path::Path;
-use lyon::tessellation::geometry_builder::MaxIndex;
-use lyon::tessellation::{
-    BuffersBuilder, FillOptions, FillRule, FillTessellator, StrokeOptions, StrokeTessellator,
-};
 use std::cell::RefCell;
 
-use crate::tessellation::{VertexConstructor, DEFAULT_TOLERANCE};
+use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
+use lyon::{
+    geom,
+    lyon_tessellation::VertexBuffers,
+    path::{path::Builder, Path},
+    tessellation::{
+        geometry_builder::MaxIndex, BuffersBuilder, FillOptions, FillRule, FillTessellator,
+        StrokeOptions, StrokeTessellator,
+    },
+};
+
+use crate::{
+    render::ShaderVertex,
+    tessellation::{VertexConstructor, DEFAULT_TOLERANCE},
+};
 
 type GeoResult<T> = geozero::error::Result<T>;
 

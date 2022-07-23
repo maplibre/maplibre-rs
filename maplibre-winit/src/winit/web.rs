@@ -1,14 +1,7 @@
-use winit::window::WindowBuilder;
+use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
+use winit::{platform::web::WindowBuilderExtWebSys, window::WindowBuilder};
 
-use super::WinitEventLoop;
-use super::WinitMapWindow;
-use super::WinitMapWindowConfig;
-use super::WinitWindow;
-use maplibre::window::HeadedMapWindow;
-use maplibre::window::MapWindowConfig;
-
-use maplibre::window::{MapWindow, WindowSize};
-use winit::platform::web::WindowBuilderExtWebSys;
+use super::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
 
 impl MapWindowConfig for WinitMapWindowConfig {
     type MapWindow = WinitMapWindow;
