@@ -1,6 +1,6 @@
 use crate::render::{
     resource::{BackingBufferDescriptor, BufferPool, Globals, RenderPipeline, Texture},
-    settings::RendererSettings,
+    settings::{Msaa, RendererSettings},
     shaders,
     shaders::{RasterTileShader, Shader},
     tile_pipeline::TilePipeline,
@@ -8,14 +8,36 @@ use crate::render::{
 
 pub struct RasterResources {
     pub sampler: Option<wgpu::Sampler>,
-    pub view: Option<wgpu::TextureView>,
+    pub msaa: Option<Msaa>,
+    // pub view: Option<wgpu::TextureView>,
+    pub texture: Option<Texture>,
     pub raster_pipeline: Option<wgpu::RenderPipeline>,
     pub raster_bind_group: Option<wgpu::BindGroup>,
 }
 
 impl RasterResources {
-    pub fn set_view(&mut self, texture: &wgpu::Texture) {
-        self.view = Some(texture.create_view(&wgpu::TextureViewDescriptor::default()));
+    pub fn set_msaa(&mut self, msaa: Msaa) {
+        self.msaa = Some(msaa);
+    }
+
+    pub fn set_texture(
+        &mut self,
+        label: wgpu::Label,
+        device: &wgpu::Device,
+        format: wgpu::TextureFormat,
+        width: u32,
+        height: u32,
+        usage: wgpu::TextureUsages,
+    ) {
+        self.texture = Some(Texture::new(
+            label,
+            device,
+            format,
+            width,
+            height,
+            self.msaa.unwrap().clone(),
+            usage,
+        ));
     }
 
     pub fn set_sampler(&mut self, device: &wgpu::Device) {
@@ -63,7 +85,9 @@ impl RasterResources {
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
-                        resource: wgpu::BindingResource::TextureView(self.view.as_ref().unwrap()),
+                        resource: wgpu::BindingResource::TextureView(
+                            &self.texture.as_ref().unwrap().view,
+                        ),
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
@@ -80,7 +104,8 @@ impl Default for RasterResources {
     fn default() -> Self {
         RasterResources {
             sampler: None,
-            view: None,
+            msaa: None,
+            texture: None,
             raster_pipeline: None,
             raster_bind_group: None,
         }

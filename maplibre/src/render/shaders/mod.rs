@@ -328,7 +328,7 @@ impl Shader for RasterTileShader {
                     },
                     // texture coordinate
                     wgpu::VertexAttribute {
-                        offset: wgpu::VertexFormat::Float32x3.size(),
+                        offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                         format: wgpu::VertexFormat::Float32x2,
                         shader_location: 1,
                     },

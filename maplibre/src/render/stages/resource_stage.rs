@@ -6,6 +6,7 @@ use crate::{
     context::MapContext,
     render::{
         resource::{BackingBufferDescriptor, BufferPool, Globals, RenderPipeline, Texture},
+        settings::Msaa,
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
@@ -53,6 +54,7 @@ impl Stage for ResourceStage {
                     size.width(),
                     size.height(),
                     settings.msaa,
+                    wgpu::TextureUsages::RENDER_ATTACHMENT,
                 )
             },
             &(size.width(), size.height()),
@@ -68,6 +70,7 @@ impl Stage for ResourceStage {
                         size.width(),
                         size.height(),
                         settings.msaa,
+                        wgpu::TextureUsages::RENDER_ATTACHMENT,
                     ))
                 } else {
                     None
@@ -127,6 +130,7 @@ impl Stage for ResourceStage {
 
             let mut raster_resources = RasterResources::default();
             raster_resources.set_sampler(device);
+            raster_resources.set_msaa(Msaa { samples: 1 });
             raster_resources.set_raster_pipeline(device, &settings, &tile_shader);
 
             raster_resources

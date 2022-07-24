@@ -23,10 +23,10 @@ use super::RasterResources;
 
 pub const VERTEX_SIZE: wgpu::BufferAddress = 1_000_000;
 pub const INDICES_SIZE: wgpu::BufferAddress = 1_000_000;
-pub const RASTER_DATA_SIZE: wgpu::BufferAddress = 1_000_000;
 
 pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 1024 * 1000;
 pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 1024;
+pub const RASTER_DATA_SIZE: wgpu::BufferAddress = 1024 * 1024;
 
 /// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
@@ -355,10 +355,10 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
             &self.vertices.inner,
             maybe_entry.buffer_vertices.start,
             &bytemuck::cast_slice(&[
-                ShaderTextureVertex::new([0.0, 0.0, 0.0], [0.0, 0.0]),
-                ShaderTextureVertex::new([0.0, 1.0, 0.0], [0.0, 1.0]),
-                ShaderTextureVertex::new([1.0, 1.0, 0.0], [1.0, 1.0]),
-                ShaderTextureVertex::new([1.0, 0.0, 0.0], [1.0, 0.0]),
+                ShaderTextureVertex::new([-1.0, 1.0, 0.0], [0.0, 0.0]),
+                ShaderTextureVertex::new([-1.0, -1.0, 0.0], [0.0, 1.0]),
+                ShaderTextureVertex::new([1.0, -1.0, 0.0], [1.0, 1.0]),
+                ShaderTextureVertex::new([1.0, 1.0, 0.0], [1.0, 0.0]),
             ])[0..aligned_vertices_bytes as usize],
         );
 
@@ -372,25 +372,19 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         let rgba = img.to_rgba8();
         let (width, height) = img.dimensions();
 
-        let size = wgpu::Extent3d {
+        raster_resources.set_texture(
+            None,
+            device,
+            wgpu::TextureFormat::Rgba8UnormSrgb,
             width,
             height,
-            depth_or_array_layers: 1,
-        };
-        let texture = device.create_texture(&wgpu::TextureDescriptor {
-            label: None,
-            size,
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-        });
+            wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+        );
 
         queue.write_texture(
             wgpu::ImageCopyTexture {
                 aspect: wgpu::TextureAspect::All,
-                texture: &texture,
+                texture: &raster_resources.texture.as_ref().unwrap().texture,
                 mip_level: 0,
                 origin: wgpu::Origin3d::ZERO,
             },
@@ -400,15 +394,14 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
                 bytes_per_row: NonZeroU32::new(4 * width),
                 rows_per_image: NonZeroU32::new(height),
             },
-            size,
+            raster_resources.texture.as_ref().unwrap().size.clone(),
         );
 
-        raster_resources.set_view(&texture);
         raster_resources.set_raster_bind_group(device);
         // queue.write_buffer(
         //     &self.raster_data.inner,
         //     maybe_entry.buffer_raster_data.as_ref().unwrap().start,
-        //     &layer_data,
+        //     &layer_data[0..aligned_data_bytes as usize],
         // );
 
         self.index.push_back(maybe_entry);
