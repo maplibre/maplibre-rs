@@ -257,6 +257,48 @@ impl Default for ShaderVertex {
     }
 }
 
+// impl Shader for ShaderVertex {
+//     fn describe_vertex(&self) -> VertexState {
+//         VertexState {
+//             source: include_str!("tile_raster.vertex.wgsl"),
+//             entry_point: "main",
+//             buffers: vec![VertexBufferLayout {
+//                 array_stride: std::mem::size_of::<ShaderVertex>() as u64,
+//                 step_mode: wgpu::VertexStepMode::Vertex,
+//                 attributes: vec![
+//                     // position
+//                     wgpu::VertexAttribute {
+//                         offset: 0,
+//                         format: wgpu::VertexFormat::Float32x2,
+//                         shader_location: 0,
+//                     },
+//                     // texture coordinate
+//                     wgpu::VertexAttribute {
+//                         offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
+//                         format: wgpu::VertexFormat::Float32x2,
+//                         shader_location: 1,
+//                     },
+//                 ],
+//             }],
+//         }
+//     }
+
+//     fn describe_fragment(&self) -> FragmentState {
+//         FragmentState {
+//             source: include_str!("tile_raster.fragment.wgsl"),
+//             entry_point: "main",
+//             targets: vec![Some(wgpu::ColorTargetState {
+//                 format: wgpu::TextureFormat::Bgra8UnormSrgb,
+//                 blend: Some(wgpu::BlendState {
+//                     color: wgpu::BlendComponent::REPLACE,
+//                     alpha: wgpu::BlendComponent::REPLACE,
+//                 }),
+//                 write_mask: wgpu::ColorWrites::ALL,
+//             })],
+//         }
+//     }
+// }
+
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Pod, Zeroable)]
 pub struct ShaderFeatureStyle {
@@ -295,14 +337,62 @@ impl ShaderTileMetadata {
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderTextureVertex {
     pub position: Vec3f32,
-    pub tex_coord: Vec2f32,
+    pub tex_coords: Vec2f32,
 }
 
 impl ShaderTextureVertex {
-    pub fn new(position: Vec3f32, tex_coord: Vec2f32) -> Self {
+    pub fn new(position: Vec3f32, tex_coords: Vec2f32) -> Self {
         Self {
             position,
-            tex_coord,
+            tex_coords,
+        }
+    }
+}
+
+impl Default for ShaderTextureVertex {
+    fn default() -> Self {
+        ShaderTextureVertex::new([0.0, 0.0, 0.0], [0.0, 0.0])
+    }
+}
+
+impl Shader for ShaderTextureVertex {
+    fn describe_vertex(&self) -> VertexState {
+        VertexState {
+            source: include_str!("tile_raster.vertex.wgsl"),
+            entry_point: "main",
+            buffers: vec![VertexBufferLayout {
+                array_stride: std::mem::size_of::<ShaderTextureVertex>() as wgpu::BufferAddress,
+                step_mode: wgpu::VertexStepMode::Vertex,
+                attributes: vec![
+                    // position
+                    wgpu::VertexAttribute {
+                        offset: 0,
+                        format: wgpu::VertexFormat::Float32x3,
+                        shader_location: 0,
+                    },
+                    // texture coordinate
+                    wgpu::VertexAttribute {
+                        offset: std::mem::size_of::<Vec3f32>() as wgpu::BufferAddress,
+                        format: wgpu::VertexFormat::Float32x2,
+                        shader_location: 1,
+                    },
+                ],
+            }],
+        }
+    }
+
+    fn describe_fragment(&self) -> FragmentState {
+        FragmentState {
+            source: include_str!("tile_raster.fragment.wgsl"),
+            entry_point: "main",
+            targets: vec![Some(wgpu::ColorTargetState {
+                format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                blend: Some(wgpu::BlendState {
+                    color: wgpu::BlendComponent::REPLACE,
+                    alpha: wgpu::BlendComponent::REPLACE,
+                }),
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
         }
     }
 }

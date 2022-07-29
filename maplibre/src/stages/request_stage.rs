@@ -135,10 +135,9 @@ where
                     );
                 }*/
 
-                let raster = "raster".to_string();
                 for source in missed_sources {
-                    match source {
-                        raster => {
+                    match source.as_str() {
+                        "raster" => {
                             let raster_source = RasterSource::default();
                             raster_source.load(
                                 self.http_source_client.clone(),
@@ -149,14 +148,14 @@ where
                             );
                         }
                         _ => {
-                            let tessellate_source = TessellateSource::default();
-                            tessellate_source.load(
-                                self.http_source_client.clone(),
-                                &self.scheduler,
-                                self.shared_thread_state.clone(),
-                                coords,
-                                request_id,
-                            );
+                            // let tessellate_source = TessellateSource::default();
+                            // tessellate_source.load(
+                            //     self.http_source_client.clone(),
+                            //     &self.scheduler,
+                            //     self.shared_thread_state.clone(),
+                            //     coords,
+                            //     request_id,
+                            // );
                         }
                     }
                 }

@@ -10,7 +10,7 @@ use crate::{
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
-        tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE},
+        tile_view_pattern::{TileShape, TileViewPattern, DEFAULT_TILE_VIEW_SIZE},
         RasterResources,
     },
     schedule::Stage,
@@ -124,14 +124,17 @@ impl Stage for ResourceStage {
         });
 
         state.raster_resources.initialize(|| {
-            let tile_shader = shaders::RasterTileShader {
+            let tile_vertex = shaders::ShaderTextureVertex::default();
+            let tile_fragment = shaders::RasterTileShader {
                 format: settings.texture_format,
             };
 
             let mut raster_resources = RasterResources::default();
             raster_resources.set_sampler(device);
             raster_resources.set_msaa(Msaa { samples: 1 });
-            raster_resources.set_raster_pipeline(device, &settings, &tile_shader);
+            raster_resources.set_raster_pipeline(device, &settings, &tile_vertex, &tile_vertex);
+            raster_resources.set_index_buffer(device);
+            raster_resources.set_vertex_buffer(device);
 
             raster_resources
         });

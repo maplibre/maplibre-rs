@@ -1,18 +1,118 @@
+use wgpu::util::DeviceExt;
+
 use crate::render::{
     resource::{BackingBufferDescriptor, BufferPool, Globals, RenderPipeline, Texture},
     settings::{Msaa, RendererSettings},
     shaders,
-    shaders::{RasterTileShader, Shader},
+    shaders::{RasterTileShader, Shader, ShaderTextureVertex},
     tile_pipeline::TilePipeline,
 };
+
+pub const INDICES: &[u32] = &[0, 1, 3, 1, 2, 3];
+
+pub const VERTICES: &[ShaderTextureVertex] = &[
+    ShaderTextureVertex {
+        position: [1.0, 1.0, 0.0],
+        tex_coords: [1.0, 1.0], // D
+    }, // D
+    ShaderTextureVertex {
+        position: [1.0, -1.0, 0.0],
+        tex_coords: [1.0, 0.0], // C
+    }, // C
+    ShaderTextureVertex {
+        position: [-1.0, -1.0, 0.0],
+        tex_coords: [0.0, 0.0], // B
+    }, // B
+    ShaderTextureVertex {
+        position: [-1.0, 1.0, 0.0],
+        tex_coords: [0.0, 1.0], // A
+    }, // A
+];
+
+// pub const VERTICES: &[ShaderTextureVertex] = &[
+//     ShaderTextureVertex {
+//         position: [-1.0, 1.0, 0.0],
+//         tex_coords: [0.0, 1.0],
+//     }, // A
+//     ShaderTextureVertex {
+//         position: [1.0, 1.0, 0.0],
+//         tex_coords: [1.0, 1.0],
+//     }, // D
+//     ShaderTextureVertex {
+//         position: [1.0, -1.0, 0.0],
+//         tex_coords: [1.0, 0.0],
+//     }, // C
+//     ShaderTextureVertex {
+//         position: [-1.0, -1.0, 0.0],
+//         tex_coords: [0.0, 0.0],
+//     }, // B
+// ];
+
+// pub const VERTICES: &[ShaderTextureVertex] = &[
+//     ShaderTextureVertex {
+//         position: [-1.0, 1.0, 0.0],
+//         tex_coords: [0.0, 1.0],
+//     }, // A
+//     ShaderTextureVertex {
+//         position: [1.0, 1.0, 0.0],
+//         tex_coords: [1.0, 0.0],
+//     }, // D
+//     ShaderTextureVertex {
+//         position: [1.0, -1.0, 0.0],
+//         tex_coords: [1.0, 1.0],
+//     }, // C
+//     ShaderTextureVertex {
+//         position: [-1.0, -1.0, 0.0],
+//         tex_coords: [0.0, 0.0],
+//     }, // B
+// ];
+
+// pub const VERTICES: &[ShaderTextureVertex] = &[
+//     ShaderTextureVertex {
+//         position: [-1.0, 1.0, 0.0],
+//         tex_coords: [1.0, 0.0],
+//     }, // A
+//     ShaderTextureVertex {
+//         position: [1.0, 1.0, 0.0],
+//         tex_coords: [1.0, 1.0],
+//     }, // D
+//     ShaderTextureVertex {
+//         position: [1.0, -1.0, 0.0],
+//         tex_coords: [0.0, 1.0],
+//     }, // C
+//     ShaderTextureVertex {
+//         position: [-1.0, -1.0, 0.0],
+//         tex_coords: [0.0, 0.0],
+//     }, // B
+// ];
+
+// pub const VERTICES: &[ShaderTextureVertex] = &[
+//     ShaderTextureVertex {
+//         position: [-1.0, 1.0, 0.0],
+//         tex_coords: [0.0, 1.0],
+//     }, // A
+//     ShaderTextureVertex {
+//         position: [-1.0, -1.0, 0.0],
+//         tex_coords: [1.0, 1.0],
+//     }, // B
+//     ShaderTextureVertex {
+//         position: [1.0, -1.0, 0.0],
+//         tex_coords: [1.0, 0.0],
+//     }, // C
+//     ShaderTextureVertex {
+//         position: [1.0, 1.0, 0.0],
+//         tex_coords: [0.0, 0.0],
+//     }, // D
+// ];
 
 pub struct RasterResources {
     pub sampler: Option<wgpu::Sampler>,
     pub msaa: Option<Msaa>,
-    // pub view: Option<wgpu::TextureView>,
     pub texture: Option<Texture>,
-    pub raster_pipeline: Option<wgpu::RenderPipeline>,
-    pub raster_bind_group: Option<wgpu::BindGroup>,
+    pub pipeline: Option<wgpu::RenderPipeline>,
+    pub bind_group: Option<wgpu::BindGroup>,
+    pub index_buffer: Option<wgpu::Buffer>,
+    pub vertex_buffer: Option<wgpu::Buffer>,
 }
 
 impl RasterResources {
@@ -56,13 +156,14 @@ impl RasterResources {
         &mut self,
         device: &wgpu::Device,
         settings: &RendererSettings,
-        tile_shader: &RasterTileShader,
+        tile_vertex: &ShaderTextureVertex,
+        tile_fragment: &ShaderTextureVertex,
     ) {
-        self.raster_pipeline = Some(
+        self.pipeline = Some(
             TilePipeline::new(
                 settings.msaa,
-                tile_shader.describe_vertex(),
-                tile_shader.describe_fragment(),
+                tile_vertex.describe_vertex(),
+                tile_fragment.describe_fragment(),
                 false,
                 false,
                 false,
@@ -75,26 +176,40 @@ impl RasterResources {
     }
 
     pub fn set_raster_bind_group(&mut self, device: &wgpu::Device) {
-        self.raster_bind_group = Some(
-            device.create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &self
-                    .raster_pipeline
-                    .as_ref()
-                    .unwrap()
-                    .get_bind_group_layout(0),
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(
-                            &self.texture.as_ref().unwrap().view,
-                        ),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::Sampler(self.sampler.as_ref().unwrap()),
-                    },
-                ],
+        self.bind_group = Some(device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &self.pipeline.as_ref().unwrap().get_bind_group_layout(0),
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(
+                        &self.texture.as_ref().unwrap().view,
+                    ),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(self.sampler.as_ref().unwrap()),
+                },
+            ],
+            label: None,
+        }));
+    }
+
+    pub fn set_vertex_buffer(&mut self, device: &wgpu::Device) {
+        self.vertex_buffer = Some(
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
+                contents: bytemuck::cast_slice(VERTICES),
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            }),
+        );
+    }
+
+    pub fn set_index_buffer(&mut self, device: &wgpu::Device) {
+        self.index_buffer = Some(
+            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: None,
+                contents: bytemuck::cast_slice(INDICES),
+                usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
             }),
         );
     }
@@ -106,8 +221,10 @@ impl Default for RasterResources {
             sampler: None,
             msaa: None,
             texture: None,
-            raster_pipeline: None,
-            raster_bind_group: None,
+            pipeline: None,
+            bind_group: None,
+            index_buffer: None,
+            vertex_buffer: None,
         }
     }
 }

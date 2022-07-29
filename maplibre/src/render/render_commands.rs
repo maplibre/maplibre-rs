@@ -3,12 +3,14 @@
 
 use crate::{
     render::{
+        self,
         eventually::Eventually::Initialized,
         render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
         resource::{Globals, IndexEntry, TrackedRenderPass},
         tile_view_pattern::{TileInView, TileShape},
-        INDEX_FORMAT,
+        RasterResources, INDEX_FORMAT,
     },
+    style::raster,
     RenderState,
 };
 
@@ -50,7 +52,7 @@ impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetRasterViewBindGroup<I
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         if let Initialized(raster_resources) = &state.raster_resources {
-            pass.set_bind_group(0, raster_resources.raster_bind_group.as_ref().unwrap(), &[]);
+            pass.set_bind_group(0, raster_resources.bind_group.as_ref().unwrap(), &[]);
             RenderCommandResult::Success
         } else {
             RenderCommandResult::Failure
@@ -98,7 +100,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         if let Initialized(raster_resources) = &state.raster_resources {
-            pass.set_render_pipeline(raster_resources.raster_pipeline.as_ref().unwrap());
+            pass.set_render_pipeline(raster_resources.pipeline.as_ref().unwrap());
             RenderCommandResult::Success
         } else {
             RenderCommandResult::Failure
@@ -192,29 +194,39 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawRasterTile {
         (entry, shape): &(IndexEntry, TileShape),
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
-            (&state.buffer_pool, &state.tile_view_pattern)
-        {
+        if let (
+            Initialized(buffer_pool),
+            Initialized(tile_view_pattern),
+            Initialized(raster_resources),
+        ) = (
+            &state.buffer_pool,
+            &state.tile_view_pattern,
+            &state.raster_resources,
+        ) {
             let reference = tile_view_pattern.stencil_reference_value(&shape.coords) as u32;
 
             tracing::trace!("Drawing raster layer");
 
             pass.set_stencil_reference(reference);
             pass.set_index_buffer(
+                // raster_resources.index_buffer.as_ref().unwrap().slice(..),
                 buffer_pool.indices().slice(entry.indices_buffer_range()),
                 INDEX_FORMAT,
             );
 
             pass.set_vertex_buffer(
                 0,
+                // tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
+                // raster_resources.vertex_buffer.as_ref().unwrap().slice(..),
                 buffer_pool.vertices().slice(entry.vertices_buffer_range()),
             );
 
-            // pass.set_vertex_buffer(
-            //     1,
-            //     tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-            // );
-            pass.draw_indexed(entry.indices_range(), 0, 0..1);
+            pass.set_vertex_buffer(
+                1,
+                tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
+                // raster_resources.vertex_buffer.as_ref().unwrap().slice(..),
+            );
+            pass.draw_indexed(0..render::resource::INDICES.len() as u32, 0, 0..1);
             RenderCommandResult::Success
         } else {
             RenderCommandResult::Failure

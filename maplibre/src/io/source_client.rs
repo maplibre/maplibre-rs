@@ -76,17 +76,20 @@ where
         coords: &WorldTileCoords,
         source_type: &SourceType,
     ) -> Result<Vec<u8>, Error> {
-        match source_type {
-            SourceType::Tessellate(tessellate_source) => {
-                self.inner_client
-                    .fetch(tessellate_source.format(coords).as_str())
-                    .await
-            }
-            SourceType::Raster(raster_source) => {
-                self.inner_client
-                    .fetch(raster_source.format(coords).as_str())
-                    .await
-            }
-        }
+        self.inner_client
+            .fetch(source_type.format(coords).as_str())
+            .await
+        // match source_type {
+        //     SourceType::Tessellate(tessellate_source) => {
+        //         self.inner_client
+        //             .fetch(tessellate_source.format(coords).as_str())
+        //             .await
+        //     }
+        //     SourceType::Raster(raster_source) => {
+        //         self.inner_client
+        //             .fetch(raster_source.format(coords).as_str())
+        //             .await
+        //     }
+        // }
     }
 }
