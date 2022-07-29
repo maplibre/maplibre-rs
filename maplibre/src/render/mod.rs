@@ -53,6 +53,7 @@ pub mod camera;
 pub mod eventually;
 pub mod settings;
 
+pub use resource::RasterResources;
 pub use shaders::ShaderVertex;
 pub use stages::register_default_render_stages;
 
@@ -78,7 +79,8 @@ pub struct RenderState {
     >,
     tile_view_pattern: Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
 
-    tile_pipeline: Eventually<wgpu::RenderPipeline>,
+    vector_tile_pipeline: Eventually<wgpu::RenderPipeline>,
+    raster_resources: Eventually<RasterResources>,
     mask_pipeline: Eventually<wgpu::RenderPipeline>,
 
     globals_bind_group: Eventually<Globals>,
@@ -98,7 +100,8 @@ impl RenderState {
             render_target: Default::default(),
             buffer_pool: Default::default(),
             tile_view_pattern: Default::default(),
-            tile_pipeline: Default::default(),
+            vector_tile_pipeline: Default::default(),
+            raster_resources: Default::default(),
             mask_pipeline: Default::default(),
             globals_bind_group: Default::default(),
             depth_texture: Default::default(),

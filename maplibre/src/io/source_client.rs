@@ -2,7 +2,10 @@
 
 use async_trait::async_trait;
 
-use crate::{coords::WorldTileCoords, error::Error, style::source::TileAddressingScheme};
+use crate::{
+    coords::WorldTileCoords, error::Error, io::source_type::SourceType,
+    style::source::TileAddressingScheme,
+};
 
 /// A closure that returns a HTTP client.
 pub type HTTPClientFactory<HC> = dyn Fn() -> HC;
@@ -46,9 +49,13 @@ impl<HC> SourceClient<HC>
 where
     HC: HttpClient,
 {
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
+    pub async fn fetch(
+        &self,
+        coords: &WorldTileCoords,
+        source_type: &SourceType,
+    ) -> Result<Vec<u8>, Error> {
         match self {
-            SourceClient::Http(client) => client.fetch(coords).await,
+            SourceClient::Http(client) => client.fetch(coords, source_type).await,
             SourceClient::Mbtiles { .. } => unimplemented!(),
         }
     }
@@ -64,18 +71,25 @@ where
         }
     }
 
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
-        let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
+    pub async fn fetch(
+        &self,
+        coords: &WorldTileCoords,
+        source_type: &SourceType,
+    ) -> Result<Vec<u8>, Error> {
         self.inner_client
-            .fetch(
-                format!(
-                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
-                    x = tile_coords.x,
-                    y = tile_coords.y,
-                    z = tile_coords.z
-                )
-                .as_str(),
-            )
+            .fetch(source_type.format(coords).as_str())
             .await
+        // match source_type {
+        //     SourceType::Tessellate(tessellate_source) => {
+        //         self.inner_client
+        //             .fetch(tessellate_source.format(coords).as_str())
+        //             .await
+        //     }
+        //     SourceType::Raster(raster_source) => {
+        //         self.inner_client
+        //             .fetch(raster_source.format(coords).as_str())
+        //             .await
+        //     }
+        // }
     }
 }

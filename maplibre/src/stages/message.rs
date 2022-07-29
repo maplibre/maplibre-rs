@@ -38,6 +38,11 @@ pub enum LayerTessellateMessage {
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
     },
+    RasterLayer {
+        coords: WorldTileCoords,
+        layer_name: String,
+        layer_data: Vec<u8>,
+    },
 }
 
 impl Into<StoredLayer> for LayerTessellateMessage {
@@ -57,6 +62,15 @@ impl Into<StoredLayer> for LayerTessellateMessage {
                 feature_indices,
                 layer_data,
             },
+            LayerTessellateMessage::RasterLayer {
+                coords,
+                layer_name,
+                layer_data,
+            } => StoredLayer::RasterLayer {
+                coords,
+                layer_name,
+                layer_data,
+            },
         }
     }
 }
@@ -69,6 +83,7 @@ impl fmt::Debug for LayerTessellateMessage {
             match self {
                 LayerTessellateMessage::UnavailableLayer { coords, .. } => coords,
                 LayerTessellateMessage::TessellatedLayer { coords, .. } => coords,
+                LayerTessellateMessage::RasterLayer { coords, .. } => coords,
             }
         )
     }

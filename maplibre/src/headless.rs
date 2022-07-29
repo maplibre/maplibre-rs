@@ -19,6 +19,7 @@ use crate::{
     io::{
         pipeline::{PipelineContext, Processable},
         source_client::HttpSourceClient,
+        source_type::{SourceType, TessellateSource},
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::{StoredLayer, TileRepository},
         tile_request_state::TileRequestState,
@@ -182,8 +183,10 @@ where
         let http_source_client: HttpSourceClient<HC> =
             HttpSourceClient::new(self.http_client.clone());
 
+        let tessellate_source = SourceType::Tessellate(TessellateSource::default());
+
         let data = http_source_client
-            .fetch(&coords)
+            .fetch(&coords, &tessellate_source)
             .await
             .unwrap()
             .into_boxed_slice();

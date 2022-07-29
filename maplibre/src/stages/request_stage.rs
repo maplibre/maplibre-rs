@@ -8,6 +8,7 @@ use crate::{
     error::Error,
     io::{
         source_client::{HttpSourceClient, SourceClient},
+        source_type::{RasterSource, Source, TessellateSource},
         tile_repository::TileRepository,
         TileRequest,
     },
@@ -112,7 +113,8 @@ where
         coords: &WorldTileCoords,
         layers: &HashSet<String>,
     ) -> Result<bool, Error> {
-        if !tile_repository.is_layers_missing(coords, layers) {
+        let missed_sources = tile_repository.missed_layer(coords, layers);
+        if missed_sources.is_empty() {
             return Ok(false);
         }
 
@@ -133,26 +135,30 @@ where
                     );
                 }*/
 
-                let client = SourceClient::Http(self.http_source_client.clone());
-                let coords = *coords;
-
-                let state = self.shared_thread_state.clone();
-                self.scheduler
-                    .schedule_method()
-                    .schedule(Box::new(move || {
-                        Box::pin(async move {
-                            match client.fetch(&coords).await {
-                                Ok(data) => state
-                                    .process_tile(request_id, data.into_boxed_slice())
-                                    .unwrap(),
-                                Err(e) => {
-                                    log::error!("{:?}", &e);
-                                    state.tile_unavailable(&coords, request_id).unwrap()
-                                }
-                            }
-                        })
-                    }))
-                    .unwrap();
+                for source in missed_sources {
+                    match source.as_str() {
+                        "raster" => {
+                            let raster_source = RasterSource::default();
+                            raster_source.load(
+                                self.http_source_client.clone(),
+                                &self.scheduler,
+                                self.shared_thread_state.clone(),
+                                coords,
+                                request_id,
+                            );
+                        }
+                        _ => {
+                            // let tessellate_source = TessellateSource::default();
+                            // tessellate_source.load(
+                            //     self.http_source_client.clone(),
+                            //     &self.scheduler,
+                            //     self.shared_thread_state.clone(),
+                            //     coords,
+                            //     request_id,
+                            // );
+                        }
+                    }
+                }
             }
 
             Ok(false)

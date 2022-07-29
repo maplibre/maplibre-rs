@@ -23,6 +23,11 @@ pub enum StoredLayer {
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
     },
+    RasterLayer {
+        coords: WorldTileCoords,
+        layer_name: String,
+        layer_data: Vec<u8>,
+    },
 }
 
 impl StoredLayer {
@@ -30,6 +35,7 @@ impl StoredLayer {
         match self {
             StoredLayer::UnavailableLayer { coords, .. } => *coords,
             StoredLayer::TessellatedLayer { coords, .. } => *coords,
+            StoredLayer::RasterLayer { coords, .. } => *coords,
         }
     }
 
@@ -37,6 +43,7 @@ impl StoredLayer {
         match self {
             StoredLayer::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
             StoredLayer::TessellatedLayer { layer_data, .. } => &layer_data.name,
+            StoredLayer::RasterLayer { layer_name, .. } => layer_name.as_str(),
         }
     }
 }
@@ -120,22 +127,27 @@ impl TileRepository {
     }
 
     /// Checks if a layer is missing from the given layers set at the given coords.
-    pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
+    pub fn missed_layer(
+        &self,
+        coords: &WorldTileCoords,
+        layers: &HashSet<String>,
+    ) -> HashSet<String> {
         if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.tree.get(&key)) {
-            let tessellated_set: HashSet<&str> = cached_tile
+            let mut missing_layers: HashSet<String> = HashSet::new();
+            let layers_set: HashSet<&str> = cached_tile
                 .layers
                 .iter()
                 .map(|tessellated_layer| tessellated_layer.layer_name())
                 .collect();
 
             for layer in layers {
-                if !tessellated_set.contains(layer.as_str()) {
-                    return true;
+                if !layers_set.contains(layer.as_str()) {
+                    missing_layers.insert(layer.clone());
                 }
             }
 
-            return false;
+            return missing_layers;
         }
-        true
+        return layers.clone();
     }
 }

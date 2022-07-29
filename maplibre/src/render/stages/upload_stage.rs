@@ -2,6 +2,8 @@
 
 use std::iter;
 
+use image::GenericImageView;
+
 use crate::{
     context::MapContext,
     coords::ViewRegion,
@@ -26,7 +28,13 @@ impl Stage for UploadStage {
             view_state,
             style,
             tile_repository,
-            renderer: Renderer { queue, state, .. },
+            renderer:
+                Renderer {
+                    device,
+                    queue,
+                    state,
+                    ..
+                },
             ..
         }: &mut MapContext,
     ) {
@@ -53,7 +61,7 @@ impl Stage for UploadStage {
         let view_region = view_state.create_view_region();
 
         if let Some(view_region) = &view_region {
-            self.upload_tile_geometry(state, queue, tile_repository, style, view_region);
+            self.upload_tile_geometry(state, device, queue, tile_repository, style, view_region);
             self.upload_tile_view_pattern(state, queue, &view_proj);
             self.update_metadata();
         }
@@ -147,7 +155,13 @@ impl UploadStage {
     #[tracing::instrument(skip_all)]
     pub fn upload_tile_geometry(
         &self,
-        RenderState { buffer_pool, .. }: &mut RenderState,
+        RenderState {
+            buffer_pool,
+            raster_resources,
+            tile_view_pattern,
+            ..
+        }: &mut RenderState,
+        device: &wgpu::Device,
         queue: &wgpu::Queue,
         tile_repository: &TileRepository,
         style: &Style,
@@ -219,6 +233,57 @@ impl UploadStage {
                                         ShaderLayerMetadata::new(style_layer.index as f32),
                                         &feature_metadata,
                                     );
+                                }
+                                StoredLayer::RasterLayer {
+                                    coords,
+                                    layer_name,
+                                    layer_data,
+                                } => {
+                                    if let Initialized(raster_resources) = raster_resources {
+                                        buffer_pool.allocate_layer_raster(
+                                            device,
+                                            queue,
+                                            *coords,
+                                            style_layer.clone(),
+                                            layer_data.clone(),
+                                            raster_resources,
+                                        );
+                                        let img = image::load_from_memory(&layer_data).unwrap();
+                                        let rgba = img.to_rgba8();
+                                        let (width, height) = img.dimensions();
+
+                                        raster_resources.set_texture(
+                                            None,
+                                            device,
+                                            wgpu::TextureFormat::Rgba8UnormSrgb,
+                                            width,
+                                            height,
+                                            wgpu::TextureUsages::TEXTURE_BINDING
+                                                | wgpu::TextureUsages::COPY_DST,
+                                        );
+
+                                        queue.write_texture(
+                                            wgpu::ImageCopyTexture {
+                                                aspect: wgpu::TextureAspect::All,
+                                                texture: &raster_resources
+                                                    .texture
+                                                    .as_ref()
+                                                    .unwrap()
+                                                    .texture,
+                                                mip_level: 0,
+                                                origin: wgpu::Origin3d::ZERO,
+                                            },
+                                            &rgba,
+                                            wgpu::ImageDataLayout {
+                                                offset: 0,
+                                                bytes_per_row: std::num::NonZeroU32::new(4 * width),
+                                                rows_per_image: std::num::NonZeroU32::new(height),
+                                            },
+                                            raster_resources.texture.as_ref().unwrap().size.clone(),
+                                        );
+
+                                        raster_resources.set_raster_bind_group(device);
+                                    }
                                 }
                             }
                         }

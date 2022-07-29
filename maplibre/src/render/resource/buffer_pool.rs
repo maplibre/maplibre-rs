@@ -5,23 +5,32 @@ use std::{
     fmt::Debug,
     marker::PhantomData,
     mem::size_of,
+    num::NonZeroU32,
     ops::Range,
 };
 
 use bytemuck::Pod;
+use image::GenericImageView;
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
-    render::resource::Queue,
+    render::{
+        eventually::Eventually::Initialized,
+        resource::{raster::INDICES, raster::VERTICES, Queue},
+        shaders::ShaderTextureVertex,
+    },
     style::layer::StyleLayer,
     tessellation::OverAlignedVertexBuffer,
 };
+
+use super::RasterResources;
 
 pub const VERTEX_SIZE: wgpu::BufferAddress = 1_000_000;
 pub const INDICES_SIZE: wgpu::BufferAddress = 1_000_000;
 
 pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 1024 * 1000;
 pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 1024;
+pub const RASTER_DATA_SIZE: wgpu::BufferAddress = 1024 * 1024;
 
 /// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
@@ -31,7 +40,7 @@ pub struct BufferPool<Q, B, V, I, TM, FM> {
     indices: BackingBuffer<B>,
     layer_metadata: BackingBuffer<B>,
     feature_metadata: BackingBuffer<B>,
-
+    // raster_data: BackingBuffer<B>,
     index: RingIndex,
     phantom_v: PhantomData<V>,
     phantom_i: PhantomData<I>,
@@ -46,6 +55,7 @@ pub enum BackingBufferType {
     Indices,
     Metadata,
     FeatureMetadata,
+    // RasterData,
 }
 
 impl<V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<wgpu::Queue, wgpu::Buffer, V, I, TM, FM> {
@@ -78,6 +88,13 @@ impl<V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<wgpu::Queue, wgpu::Buffer, V, 
             mapped_at_creation: false,
         };
 
+        // let raster_data_desc = wgpu::BufferDescriptor {
+        //     label: Some("raster data buffer"),
+        //     size: size_of::<u8>() as wgpu::BufferAddress * RASTER_DATA_SIZE,
+        //     usage: wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::COPY_DST,
+        //     mapped_at_creation: false,
+        // };
+
         BufferPool::new(
             BackingBufferDescriptor::new(
                 device.create_buffer(&vertex_buffer_desc),
@@ -95,6 +112,10 @@ impl<V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<wgpu::Queue, wgpu::Buffer, V, 
                 device.create_buffer(&feature_metadata_desc),
                 feature_metadata_desc.size,
             ),
+            // BackingBufferDescriptor::new(
+            //     device.create_buffer(&raster_data_desc),
+            //     raster_data_desc.size,
+            // ),
         )
     }
 }
@@ -104,6 +125,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         indices: BackingBufferDescriptor<B>,
         layer_metadata: BackingBufferDescriptor<B>,
         feature_metadata: BackingBufferDescriptor<B>,
+        // raster_data: BackingBufferDescriptor<B>,
     ) -> Self {
         Self {
             vertices: BackingBuffer::new(
@@ -126,6 +148,11 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
                 feature_metadata.inner_size,
                 BackingBufferType::FeatureMetadata,
             ),
+            // raster_data: BackingBuffer::new(
+            //     raster_data.buffer,
+            //     raster_data.inner_size,
+            //     BackingBufferType::RasterData,
+            // ),
             index: RingIndex::new(),
             phantom_v: Default::default(),
             phantom_i: Default::default(),
@@ -146,6 +173,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
             BackingBufferType::Indices => &self.indices,
             BackingBufferType::Metadata => &self.layer_metadata,
             BackingBufferType::FeatureMetadata => &self.feature_metadata,
+            BackingBufferType::RasterData => &self.raster_data,
         }
         .find_largest_gap(&self.index);
 
@@ -167,6 +195,10 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
     pub fn feature_metadata(&self) -> &B {
         &self.feature_metadata.inner
     }
+
+    // pub fn raster_data(&self) -> &B {
+    //     &self.raster_data.inner
+    // }
 
     /// The VertexBuffers can contain padding elements. Not everything from a VertexBuffers is useable.
     /// The function returns the `bytes` and `aligned_bytes`. See [`OverAlignedVertexBuffer`].
@@ -248,12 +280,22 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
             buffer_vertices: self.vertices.make_room(vertices_bytes, &mut self.index),
             buffer_indices: self.indices.make_room(indices_bytes, &mut self.index),
             usable_indices: geometry.usable_indices as u32,
-            buffer_layer_metadata: self
-                .layer_metadata
-                .make_room(layer_metadata_bytes, &mut self.index),
-            buffer_feature_metadata: self
-                .feature_metadata
-                .make_room(feature_metadata_bytes, &mut self.index),
+            // buffer_layer_metadata: self
+            //     .layer_metadata
+            //     .make_room(layer_metadata_bytes, &mut self.index),
+            // buffer_feature_metadata: self
+            //     .feature_metadata
+            //     .make_room(feature_metadata_bytes, &mut self.index),
+            buffer_layer_metadata: Some(
+                self.layer_metadata
+                    .make_room(layer_metadata_bytes, &mut self.index),
+            ),
+            buffer_feature_metadata: Some(
+                self.feature_metadata
+                    .make_room(feature_metadata_bytes, &mut self.index),
+            ),
+            // buffer_raster_data: None,
+            raster: false,
         };
 
         // write_buffer() is the preferred method for WASM: https://toji.github.io/webgpu-best-practices/buffer-uploads.html#when-in-doubt-writebuffer
@@ -271,15 +313,107 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
 
         queue.write_buffer(
             &self.layer_metadata.inner,
-            maybe_entry.buffer_layer_metadata.start,
+            maybe_entry.buffer_layer_metadata.as_ref().unwrap().start,
             &bytemuck::cast_slice(&[layer_metadata])[0..aligned_layer_metadata_bytes as usize],
         );
 
         queue.write_buffer(
             &self.feature_metadata.inner,
-            maybe_entry.buffer_feature_metadata.start,
+            maybe_entry.buffer_feature_metadata.as_ref().unwrap().start,
             &bytemuck::cast_slice(feature_metadata)[0..aligned_feature_metadata_bytes as usize],
         );
+
+        self.index.push_back(maybe_entry);
+    }
+
+    #[tracing::instrument(skip_all)]
+    pub fn allocate_layer_raster(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &Q,
+        coords: WorldTileCoords,
+        style_layer: StyleLayer,
+        layer_data: Vec<u8>,
+        raster_resources: &mut RasterResources,
+    ) {
+        let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
+        let indices_stride = size_of::<I>() as wgpu::BufferAddress;
+
+        let (vertices_bytes, aligned_vertices_bytes) = Self::align(vertices_stride, 4, 4);
+
+        let (indices_bytes, aligned_indices_bytes) = Self::align(indices_stride, 6, 6);
+
+        let maybe_entry = IndexEntry {
+            coords,
+            style_layer,
+            buffer_vertices: self.vertices.make_room(vertices_bytes, &mut self.index),
+            buffer_indices: self.indices.make_room(indices_bytes, &mut self.index),
+            usable_indices: 6,
+            buffer_feature_metadata: None,
+            buffer_layer_metadata: None,
+            // buffer_raster_data: Some(0..layer_data.len() as u64),
+            raster: true,
+        };
+
+        // let align_coords = coords.into_aligned();
+        // let upper_left = align_coords.upper_left().clone();
+        // let lower_left = align_coords.lower_left().clone();
+        // let upper_right = align_coords.upper_right().clone();
+        // let lower_right = align_coords.lower_right().clone();
+
+        queue.write_buffer(
+            &self.vertices.inner,
+            maybe_entry.buffer_vertices.start,
+            // &bytemuck::cast_slice(&[
+            //     ShaderTextureVertex::new([-1.0, 1.0, 0.0], [0.0, 0.0]),
+            //     ShaderTextureVertex::new([-1.0, -1.0, 0.0], [0.0, 1.0]),
+            //     ShaderTextureVertex::new([1.0, -1.0, 0.0], [1.0, 1.0]),
+            //     ShaderTextureVertex::new([1.0, 1.0, 0.0], [1.0, 0.0]),
+            // ])[0..aligned_vertices_bytes as usize],
+            &bytemuck::cast_slice(VERTICES)[0..aligned_vertices_bytes as usize],
+        );
+
+        queue.write_buffer(
+            &self.indices.inner,
+            maybe_entry.buffer_indices.start,
+            &bytemuck::cast_slice(INDICES)[0..aligned_indices_bytes as usize],
+        );
+
+        // let img: image::DynamicImage = image::load_from_memory(&layer_data).unwrap();
+        // let rgba = img.to_rgba8();
+        // let (width, height) = img.dimensions();
+
+        // raster_resources.set_texture(
+        //     None,
+        //     device,
+        //     wgpu::TextureFormat::Rgba8UnormSrgb,
+        //     width,
+        //     height,
+        //     wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+        // );
+
+        // queue.write_texture(
+        //     wgpu::ImageCopyTexture {
+        //         aspect: wgpu::TextureAspect::All,
+        //         texture: &raster_resources.texture.as_ref().unwrap().texture,
+        //         mip_level: 0,
+        //         origin: wgpu::Origin3d::ZERO,
+        //     },
+        //     &rgba,
+        //     wgpu::ImageDataLayout {
+        //         offset: 0,
+        //         bytes_per_row: NonZeroU32::new(4 * width),
+        //         rows_per_image: NonZeroU32::new(height),
+        //     },
+        //     raster_resources.texture.as_ref().unwrap().size.clone(),
+        // );
+
+        // raster_resources.set_raster_bind_group(device);
+        // queue.write_buffer(
+        //     &self.raster_data.inner,
+        //     maybe_entry.buffer_raster_data.as_ref().unwrap().start,
+        //     &layer_data[0..aligned_data_bytes as usize],
+        // );
 
         self.index.push_back(maybe_entry);
     }
@@ -290,7 +424,8 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         let (layer_metadata_bytes, aligned_layer_metadata_bytes) =
             Self::align(layer_metadata_stride, 1, 1);
 
-        if entry.buffer_layer_metadata.end - entry.buffer_layer_metadata.start
+        if entry.buffer_layer_metadata.as_ref().unwrap().end
+            - entry.buffer_layer_metadata.as_ref().unwrap().start
             != layer_metadata_bytes
         {
             panic!("Updated layer metadata has wrong size!");
@@ -298,7 +433,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
 
         queue.write_buffer(
             &self.layer_metadata.inner,
-            entry.buffer_layer_metadata.start,
+            entry.buffer_feature_metadata.as_ref().unwrap().start,
             &bytemuck::cast_slice(&[layer_metadata])[0..aligned_layer_metadata_bytes as usize],
         );
     }
@@ -313,7 +448,8 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
             feature_metadata.len() as wgpu::BufferAddress,
         );
 
-        if entry.buffer_feature_metadata.end - entry.buffer_feature_metadata.start
+        if entry.buffer_feature_metadata.as_ref().unwrap().end
+            - entry.buffer_feature_metadata.as_ref().unwrap().start
             != feature_metadata_bytes
         {
             panic!("Updated feature metadata has wrong size!");
@@ -328,7 +464,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
 
         queue.write_buffer(
             &self.feature_metadata.inner,
-            entry.buffer_feature_metadata.start,
+            entry.buffer_feature_metadata.as_ref().unwrap().start,
             &bytemuck::cast_slice(feature_metadata)[0..aligned_feature_metadata_bytes as usize],
         );
     }
@@ -399,14 +535,18 @@ impl<B> BackingBuffer<B> {
         let start = index.front().map(|first| match self.typ {
             BackingBufferType::Vertices => first.buffer_vertices.start,
             BackingBufferType::Indices => first.buffer_indices.start,
-            BackingBufferType::Metadata => first.buffer_layer_metadata.start,
-            BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.start,
+            BackingBufferType::Metadata => first.buffer_layer_metadata.as_ref().unwrap().start,
+            BackingBufferType::FeatureMetadata => {
+                first.buffer_feature_metadata.as_ref().unwrap().start
+            } // BackingBufferType::RasterData => first.buffer_raster_data.as_ref().unwrap().start,
         });
         let end = index.back().map(|first| match self.typ {
             BackingBufferType::Vertices => first.buffer_vertices.end,
             BackingBufferType::Indices => first.buffer_indices.end,
-            BackingBufferType::Metadata => first.buffer_layer_metadata.end,
-            BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.end,
+            BackingBufferType::Metadata => first.buffer_layer_metadata.as_ref().unwrap().end,
+            BackingBufferType::FeatureMetadata => {
+                first.buffer_feature_metadata.as_ref().unwrap().end
+            } // BackingBufferType::RasterData => first.buffer_raster_data.as_ref().unwrap().end,
         });
 
         if let Some(start) = start {
@@ -446,12 +586,17 @@ pub struct IndexEntry {
     // Range of bytes within the backing buffer for indices
     buffer_indices: Range<wgpu::BufferAddress>,
     // Range of bytes within the backing buffer for metadata
-    buffer_layer_metadata: Range<wgpu::BufferAddress>,
+    // buffer_layer_metadata: Range<wgpu::BufferAddress>,
+    buffer_layer_metadata: Option<Range<wgpu::BufferAddress>>,
     // Range of bytes within the backing buffer for feature metadata
-    buffer_feature_metadata: Range<wgpu::BufferAddress>,
+    // buffer_feature_metadata: Range<wgpu::BufferAddress>,
+    buffer_feature_metadata: Option<Range<wgpu::BufferAddress>>,
+
+    // buffer_raster_data: Option<Range<wgpu::BufferAddress>>,
     // Amount of actually usable indices. Each index has the size/format `IndexDataType`.
     // Can be lower than size(buffer_indices) / indices_stride because of alignment.
     usable_indices: u32,
+    raster: bool,
 }
 
 impl IndexEntry {
@@ -468,11 +613,19 @@ impl IndexEntry {
     }
 
     pub fn layer_metadata_buffer_range(&self) -> Range<wgpu::BufferAddress> {
-        self.buffer_layer_metadata.clone()
+        self.buffer_layer_metadata.as_ref().unwrap().clone()
     }
 
     pub fn feature_metadata_buffer_range(&self) -> Range<wgpu::BufferAddress> {
-        self.buffer_feature_metadata.clone()
+        self.buffer_feature_metadata.as_ref().unwrap().clone()
+    }
+
+    // pub fn raster_data_buffer_range(&self) -> Range<wgpu::BufferAddress> {
+    //     self.buffer_raster_data.as_ref().unwrap().clone()
+    // }
+
+    pub fn is_raster(&self) -> bool {
+        self.raster
     }
 }
 
@@ -630,6 +783,7 @@ mod tests {
                 BackingBufferDescriptor::new(TestBuffer { size: 128 }, 128),
                 BackingBufferDescriptor::new(TestBuffer { size: 128 }, 128),
                 BackingBufferDescriptor::new(TestBuffer { size: 128 }, 128),
+                // BackingBufferDescriptor::new(TestBuffer { size: 128 }, 128),
             );
 
         let queue = TestQueue {};
