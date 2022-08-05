@@ -8,102 +8,105 @@ use crate::render::{
     tile_pipeline::TilePipeline,
 };
 
-pub const INDICES: &[u32] = &[0, 1, 3, 1, 2, 3];
-
-pub const VERTICES: &[ShaderTextureVertex] = &[
-    ShaderTextureVertex {
-        position: [1.0, 1.0, 0.0],
-        tex_coords: [1.0, 1.0], // D
-    }, // D
-    ShaderTextureVertex {
-        position: [1.0, -1.0, 0.0],
-        tex_coords: [1.0, 0.0], // C
-    }, // C
-    ShaderTextureVertex {
-        position: [-1.0, -1.0, 0.0],
-        tex_coords: [0.0, 0.0], // B
-    }, // B
-    ShaderTextureVertex {
-        position: [-1.0, 1.0, 0.0],
-        tex_coords: [0.0, 1.0], // A
-    }, // A
+pub const INDICES: &[u32] = &[
+    0, 1, 3,
+    1, 2, 3
 ];
 
-// pub const VERTICES: &[ShaderTextureVertex] = &[
-//     ShaderTextureVertex {
-//         position: [-1.0, 1.0, 0.0],
-//         tex_coords: [0.0, 1.0],
-//     }, // A
-//     ShaderTextureVertex {
-//         position: [1.0, 1.0, 0.0],
-//         tex_coords: [1.0, 1.0],
-//     }, // D
-//     ShaderTextureVertex {
-//         position: [1.0, -1.0, 0.0],
-//         tex_coords: [1.0, 0.0],
-//     }, // C
-//     ShaderTextureVertex {
-//         position: [-1.0, -1.0, 0.0],
-//         tex_coords: [0.0, 0.0],
-//     }, // B
-// ];
+pub const ROOT: &[ShaderTextureVertex] = &[
+    ShaderTextureVertex {
+        position: [-1.0, 1.0],
+        tex_coords: [0.0, 0.0], // A
+    }, // A
+    ShaderTextureVertex {
+        position: [-1.0, -1.0],
+        tex_coords: [0.0, 1.0], // B
+    }, // B
+    ShaderTextureVertex {
+        position: [1.0, -1.0],
+        tex_coords: [1.0, 1.0], // C
+    }, // C
+    ShaderTextureVertex {
+        position: [1.0, 1.0],
+        tex_coords: [1.0, 0.0], // D
+    }, // D
+];
 
-// pub const VERTICES: &[ShaderTextureVertex] = &[
-//     ShaderTextureVertex {
-//         position: [-1.0, 1.0, 0.0],
-//         tex_coords: [0.0, 1.0],
-//     }, // A
-//     ShaderTextureVertex {
-//         position: [1.0, 1.0, 0.0],
-//         tex_coords: [1.0, 0.0],
-//     }, // D
-//     ShaderTextureVertex {
-//         position: [1.0, -1.0, 0.0],
-//         tex_coords: [1.0, 1.0],
-//     }, // C
-//     ShaderTextureVertex {
-//         position: [-1.0, -1.0, 0.0],
-//         tex_coords: [0.0, 0.0],
-//     }, // B
-// ];
+pub const UPPER_LEFT: &[ShaderTextureVertex] = &[
+    ShaderTextureVertex {
+        position: [-1.0, 1.0],
+        tex_coords: [0.0, 0.0], // A
+    }, // A
+    ShaderTextureVertex {
+        position: [-1.0, 0.0],
+        tex_coords: [0.0, 1.0], // B
+    }, // B
+    ShaderTextureVertex {
+        position: [0.0, 0.0],
+        tex_coords: [1.0, 1.0], // C
+    }, // C
+    ShaderTextureVertex {
+        position: [0.0, 1.0],
+        tex_coords: [1.0, 0.0], // D
+    }, // D
+];
 
-// pub const VERTICES: &[ShaderTextureVertex] = &[
-//     ShaderTextureVertex {
-//         position: [-1.0, 1.0, 0.0],
-//         tex_coords: [1.0, 0.0],
-//     }, // A
-//     ShaderTextureVertex {
-//         position: [1.0, 1.0, 0.0],
-//         tex_coords: [1.0, 1.0],
-//     }, // D
-//     ShaderTextureVertex {
-//         position: [1.0, -1.0, 0.0],
-//         tex_coords: [0.0, 1.0],
-//     }, // C
-//     ShaderTextureVertex {
-//         position: [-1.0, -1.0, 0.0],
-//         tex_coords: [0.0, 0.0],
-//     }, // B
-// ];
+pub const UPPER_RIGHT: &[ShaderTextureVertex] = &[
+    ShaderTextureVertex {
+        position: [0.0, 1.0],
+        tex_coords: [0.0, 0.0], // A
+    }, // A
+    ShaderTextureVertex {
+        position: [0.0, 0.0],
+        tex_coords: [0.0, 1.0], // B
+    }, // B
+    ShaderTextureVertex {
+        position: [1.0, 0.0],
+        tex_coords: [1.0, 1.0], // C
+    }, // C
+    ShaderTextureVertex {
+        position: [1.0, 1.0],
+        tex_coords: [1.0, 0.0], // D
+    }, // D
+];
 
-// pub const VERTICES: &[ShaderTextureVertex] = &[
-//     ShaderTextureVertex {
-//         position: [-1.0, 1.0, 0.0],
-//         tex_coords: [0.0, 1.0],
-//     }, // A
-//     ShaderTextureVertex {
-//         position: [-1.0, -1.0, 0.0],
-//         tex_coords: [1.0, 1.0],
-//     }, // B
-//     ShaderTextureVertex {
-//         position: [1.0, -1.0, 0.0],
-//         tex_coords: [1.0, 0.0],
-//     }, // C
-//     ShaderTextureVertex {
-//         position: [1.0, 1.0, 0.0],
-//         tex_coords: [0.0, 0.0],
-//     }, // D
-// ];
+pub const LOWER_LEFT: &[ShaderTextureVertex] = &[
+    ShaderTextureVertex {
+        position: [-1.0, 0.0],
+        tex_coords: [0.0, 0.0], // A
+    }, // A
+    ShaderTextureVertex {
+        position: [-1.0, -1.0],
+        tex_coords: [0.0, 1.0], // B
+    }, // B
+    ShaderTextureVertex {
+        position: [0.0, -1.0],
+        tex_coords: [1.0, 1.0], // C
+    }, // C
+    ShaderTextureVertex {
+        position: [0.0, 0.0],
+        tex_coords: [1.0, 0.0], // D
+    }, // D
+];
+
+pub const LOWER_RIGHT: &[ShaderTextureVertex] = &[
+    ShaderTextureVertex {
+        position: [0.0, 0.0],
+        tex_coords: [0.0, 0.0], // A
+    }, // A
+    ShaderTextureVertex {
+        position: [0.0, -1.0],
+        tex_coords: [0.0, 1.0], // B
+    }, // B
+    ShaderTextureVertex {
+        position: [1.0, -1.0],
+        tex_coords: [1.0, 1.0], // C
+    }, // C
+    ShaderTextureVertex {
+        position: [1.0, 0.0],
+        tex_coords: [1.0, 0.0], // D
+    }, // D
+];
 
 pub struct RasterResources {
     pub sampler: Option<wgpu::Sampler>,
@@ -111,8 +114,6 @@ pub struct RasterResources {
     pub texture: Option<Texture>,
     pub pipeline: Option<wgpu::RenderPipeline>,
     pub bind_group: Option<wgpu::BindGroup>,
-    pub index_buffer: Option<wgpu::Buffer>,
-    pub vertex_buffer: Option<wgpu::Buffer>,
 }
 
 impl RasterResources {
@@ -156,14 +157,13 @@ impl RasterResources {
         &mut self,
         device: &wgpu::Device,
         settings: &RendererSettings,
-        tile_vertex: &ShaderTextureVertex,
-        tile_fragment: &ShaderTextureVertex,
+        shader: &RasterTileShader,
     ) {
         self.pipeline = Some(
             TilePipeline::new(
                 settings.msaa,
-                tile_vertex.describe_vertex(),
-                tile_fragment.describe_fragment(),
+                shader.describe_vertex(),
+                shader.describe_fragment(),
                 false,
                 false,
                 false,
@@ -193,26 +193,6 @@ impl RasterResources {
             label: None,
         }));
     }
-
-    pub fn set_vertex_buffer(&mut self, device: &wgpu::Device) {
-        self.vertex_buffer = Some(
-            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: None,
-                contents: bytemuck::cast_slice(VERTICES),
-                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            }),
-        );
-    }
-
-    pub fn set_index_buffer(&mut self, device: &wgpu::Device) {
-        self.index_buffer = Some(
-            device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: None,
-                contents: bytemuck::cast_slice(INDICES),
-                usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-            }),
-        );
-    }
 }
 
 impl Default for RasterResources {
@@ -223,8 +203,6 @@ impl Default for RasterResources {
             texture: None,
             pipeline: None,
             bind_group: None,
-            index_buffer: None,
-            vertex_buffer: None,
         }
     }
 }

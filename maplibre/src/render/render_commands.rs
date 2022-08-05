@@ -209,22 +209,18 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawRasterTile {
 
             pass.set_stencil_reference(reference);
             pass.set_index_buffer(
-                // raster_resources.index_buffer.as_ref().unwrap().slice(..),
                 buffer_pool.indices().slice(entry.indices_buffer_range()),
                 INDEX_FORMAT,
             );
 
             pass.set_vertex_buffer(
                 0,
-                // tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-                // raster_resources.vertex_buffer.as_ref().unwrap().slice(..),
                 buffer_pool.vertices().slice(entry.vertices_buffer_range()),
             );
 
             pass.set_vertex_buffer(
                 1,
                 tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-                // raster_resources.vertex_buffer.as_ref().unwrap().slice(..),
             );
             pass.draw_indexed(0..render::resource::INDICES.len() as u32, 0, 0..1);
             RenderCommandResult::Success

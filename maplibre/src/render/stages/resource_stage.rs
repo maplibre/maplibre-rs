@@ -124,17 +124,14 @@ impl Stage for ResourceStage {
         });
 
         state.raster_resources.initialize(|| {
-            let tile_vertex = shaders::ShaderTextureVertex::default();
-            let tile_fragment = shaders::RasterTileShader {
+            let shader = shaders::RasterTileShader {
                 format: settings.texture_format,
             };
 
             let mut raster_resources = RasterResources::default();
             raster_resources.set_sampler(device);
             raster_resources.set_msaa(Msaa { samples: 1 });
-            raster_resources.set_raster_pipeline(device, &settings, &tile_vertex, &tile_vertex);
-            raster_resources.set_index_buffer(device);
-            raster_resources.set_vertex_buffer(device);
+            raster_resources.set_raster_pipeline(device, &settings, &shader);
 
             raster_resources
         });

@@ -90,7 +90,7 @@ impl RasterSource {
 impl Default for RasterSource {
     fn default() -> Self {
         Self::new(
-            "https://api.maptiler.com/tiles/satellite",
+            "https://api.maptiler.com/tiles/satellite-v2",
             "jpg",
             "qnePkfbGpMsLCi3KFBs3",
         )
