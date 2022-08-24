@@ -50,7 +50,7 @@ geozero = { version = "0.9.4", default-features = false, features = ["with-mvt",
 tile-grid = "0.3.0"
 
 # Rendering
-wgpu = "0.13.1"
+wgpu = "0.13.2"
 lyon = { version = "1.0.0", features = [] }
 raw-window-handle = "0.4.3"
 
