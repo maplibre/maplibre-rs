@@ -95,7 +95,7 @@ impl Msaa {
 
 impl Default for Msaa {
     fn default() -> Self {
-        Self { samples: 4 }
+        Self { samples: 1 }
     }
 }
 
