@@ -589,7 +589,7 @@
     }
     <span class="doccomment">/// End of feature geometry processing.</span>
     <span class="kw">fn</span> <span class="ident">geometry_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">geometry</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">geometry</span>().<span class="ident">cloned</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">geometry</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">take_geometry</span>().<span class="ident">unwrap</span>();
 
         <span class="kw">match</span> <span class="ident">geometry</span> {
             <span class="ident">Geometry::Polygon</span>(<span class="ident">polygon</span>) =&gt; <span class="self">self</span>.<span class="ident">geometries</span>.<span class="ident">push</span>(

@@ -128,10 +128,14 @@ the consequences.</p>
 </ul>
 <p>This is a native only feature.</p>
 </div></details><details class="rustdoc-toggle" open><summary><section id="associatedconstant.TEXTURE_BINDING_ARRAY" class="associatedconstant has-srclink"><a href="#associatedconstant.TEXTURE_BINDING_ARRAY" class="anchor"></a><h4 class="code-header">pub const <a href="#associatedconstant.TEXTURE_BINDING_ARRAY" class="constant">TEXTURE_BINDING_ARRAY</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = Self{bits: 1 << 17,}</h4></section></summary><div class="docblock"><p>Allows the user to create uniform arrays of textures in shaders:</p>
-<p>eg. <code>uniform texture2D textures[10]</code>.</p>
+<p>ex.
+<code>var textures: binding_array&lt;texture_2d&lt;f32&gt;, 10&gt;</code> (WGSL)<br />
+<code>uniform texture2D textures[10]</code> (GLSL)</p>
 <p>If <a href="struct.Features.html#associatedconstant.STORAGE_RESOURCE_BINDING_ARRAY" title="Features::STORAGE_RESOURCE_BINDING_ARRAY"><code>Features::STORAGE_RESOURCE_BINDING_ARRAY</code></a> is supported as well as this, the user
 may also create uniform arrays of storage textures.</p>
-<p>eg. <code>uniform image2D textures[10]</code>.</p>
+<p>ex.
+<code>var textures: array&lt;texture_storage_2d&lt;f32, write&gt;, 10&gt;</code> (WGSL)<br />
+<code>uniform image2D textures[10]</code> (GLSL)</p>
 <p>This capability allows them to exist and to be indexed by dynamically uniform
 values.</p>
 <p>Supported platforms:</p>
@@ -142,12 +146,16 @@ values.</p>
 </ul>
 <p>This is a native only feature.</p>
 </div></details><details class="rustdoc-toggle" open><summary><section id="associatedconstant.BUFFER_BINDING_ARRAY" class="associatedconstant has-srclink"><a href="#associatedconstant.BUFFER_BINDING_ARRAY" class="anchor"></a><h4 class="code-header">pub const <a href="#associatedconstant.BUFFER_BINDING_ARRAY" class="constant">BUFFER_BINDING_ARRAY</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = Self{bits: 1 << 18,}</h4></section></summary><div class="docblock"><p>Allows the user to create arrays of buffers in shaders:</p>
-<p>eg. <code>uniform myBuffer { .... } buffer_array[10]</code>.</p>
+<p>ex.
+<code>var&lt;uniform&gt; buffer_array: array&lt;MyBuffer, 10&gt;</code> (WGSL)<br />
+<code>uniform myBuffer { ... } buffer_array[10]</code> (GLSL)</p>
 <p>This capability allows them to exist and to be indexed by dynamically uniform
 values.</p>
 <p>If <a href="struct.Features.html#associatedconstant.STORAGE_RESOURCE_BINDING_ARRAY" title="Features::STORAGE_RESOURCE_BINDING_ARRAY"><code>Features::STORAGE_RESOURCE_BINDING_ARRAY</code></a> is supported as well as this, the user
 may also create arrays of storage buffers.</p>
-<p>eg. <code>buffer myBuffer { ... } buffer_array[10]</code></p>
+<p>ex.
+<code>var&lt;storage&gt; buffer_array: array&lt;MyBuffer, 10&gt;</code> (WGSL)<br />
+<code>buffer myBuffer { ... } buffer_array[10]</code> (GLSL)</p>
 <p>Supported platforms:</p>
 <ul>
 <li>DX12</li>
@@ -166,14 +174,14 @@ values.</p>
 </ul>
 <p>This is a native only feature.</p>
 </div></details><details class="rustdoc-toggle" open><summary><section id="associatedconstant.SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING" class="associatedconstant has-srclink"><a href="#associatedconstant.SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING" class="anchor"></a><h4 class="code-header">pub const <a href="#associatedconstant.SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING" class="constant">SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = Self{bits: 1 << 20,}</h4></section></summary><div class="docblock"><p>Allows shaders to index sampled texture and storage buffer resource arrays with dynamically non-uniform values:</p>
-<p>eg. <code>texture_array[vertex_data]</code></p>
+<p>ex. <code>texture_array[vertex_data]</code></p>
 <p>In order to use this capability, the corresponding GLSL extension must be enabled like so:</p>
 <p><code>#extension GL_EXT_nonuniform_qualifier : require</code></p>
 <p>and then used either as <code>nonuniformEXT</code> qualifier in variable declaration:</p>
-<p>eg. <code>layout(location = 0) nonuniformEXT flat in int vertex_data;</code></p>
+<p>ex. <code>layout(location = 0) nonuniformEXT flat in int vertex_data;</code></p>
 <p>or as <code>nonuniformEXT</code> constructor:</p>
-<p>eg. <code>texture_array[nonuniformEXT(vertex_data)]</code></p>
-<p>HLSL does not need any extension.</p>
+<p>ex. <code>texture_array[nonuniformEXT(vertex_data)]</code></p>
+<p>WGSL and HLSL do not need any extension.</p>
 <p>Supported platforms:</p>
 <ul>
 <li>DX12</li>
@@ -182,14 +190,14 @@ values.</p>
 </ul>
 <p>This is a native only feature.</p>
 </div></details><details class="rustdoc-toggle" open><summary><section id="associatedconstant.UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING" class="associatedconstant has-srclink"><a href="#associatedconstant.UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING" class="anchor"></a><h4 class="code-header">pub const <a href="#associatedconstant.UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING" class="constant">UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = Self{bits: 1 << 21,}</h4></section></summary><div class="docblock"><p>Allows shaders to index uniform buffer and storage texture resource arrays with dynamically non-uniform values:</p>
-<p>eg. <code>texture_array[vertex_data]</code></p>
+<p>ex. <code>texture_array[vertex_data]</code></p>
 <p>In order to use this capability, the corresponding GLSL extension must be enabled like so:</p>
 <p><code>#extension GL_EXT_nonuniform_qualifier : require</code></p>
 <p>and then used either as <code>nonuniformEXT</code> qualifier in variable declaration:</p>
-<p>eg. <code>layout(location = 0) nonuniformEXT flat in int vertex_data;</code></p>
+<p>ex. <code>layout(location = 0) nonuniformEXT flat in int vertex_data;</code></p>
 <p>or as <code>nonuniformEXT</code> constructor:</p>
-<p>eg. <code>texture_array[nonuniformEXT(vertex_data)]</code></p>
-<p>HLSL does not need any extension.</p>
+<p>ex. <code>texture_array[nonuniformEXT(vertex_data)]</code></p>
+<p>WGSL and HLSL do not need any extension.</p>
 <p>Supported platforms:</p>
 <ul>
 <li>DX12</li>
@@ -350,6 +358,7 @@ bandwidth usage.</p>
 <p>Supported Platforms:</p>
 <ul>
 <li>Metal</li>
+<li>Vulkan</li>
 </ul>
 <p>This is a native-only feature.</p>
 </div></details><details class="rustdoc-toggle" open><summary><section id="associatedconstant.WRITE_TIMESTAMP_INSIDE_PASSES" class="associatedconstant has-srclink"><a href="#associatedconstant.WRITE_TIMESTAMP_INSIDE_PASSES" class="anchor"></a><h4 class="code-header">pub const <a href="#associatedconstant.WRITE_TIMESTAMP_INSIDE_PASSES" class="constant">WRITE_TIMESTAMP_INSIDE_PASSES</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = Self{bits: 1 << 41,}</h4></section></summary><div class="docblock"><p>Allows for timestamp queries inside renderpasses. Metal does not allow this
