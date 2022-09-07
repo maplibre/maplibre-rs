@@ -7,6 +7,7 @@ import {spawnSync} from "child_process"
 import {unlink} from "fs";
 import {dirname} from "path";
 import {fileURLToPath} from "url";
+import rimraf from "rimraf";
 
 let argv = yargs(process.argv.slice(2))
     .option('watch', {
@@ -84,14 +85,38 @@ const getLibDirectory = () => {
     return dirname(fileURLToPath(import.meta.url))
 }
 
-console.log(getWebDirectory())
+const emitTypeScript = () => {
+    let outDirectory = `${getLibDirectory()}/dist/ts`;
+
+    // Clean typescript types
+    rimraf.sync(outDirectory);
+
+    let child = spawnSync('npm', ["exec",
+        "tsc",
+        "--",
+        "-m", "es2022",
+        "-outDir", outDirectory,
+        "--emitDeclarationOnly"
+
+    ], {
+        cwd: '.',
+        stdio: 'inherit',
+    });
+
+    if (child.status !== 0) {
+        console.error("Failed to execute tsc")
+        process.exit(1)
+    }
+}
 
 const wasmPack = () => {
+    let outDirectory = `${getLibDirectory()}/src/wasm-pack`;
+
     let child = spawnSync('npm', ["exec",
-        "wasm-pack", "build",
-        "--",
+        "wasm-pack","--",
+        "build",
         "--out-name", "index",
-        "--out-dir", `${getLibDirectory()}/src/wasm-pack`,
+        "--out-dir", outDirectory,
         getWebDirectory(),
         "--target", "web",
         "--",
@@ -107,6 +132,7 @@ const wasmPack = () => {
         process.exit(1)
     }
 
+    // Having package.json within another npm package is not supported. Remove that.
     unlink(`${getLibDirectory()}/src/wasm-pack/package.json`, (err) => {
         if (err) throw err;
     })
@@ -130,6 +156,9 @@ const watchResult = async (result) => {
 
         console.log("Rebuilding...")
         await result.rebuild();
+
+        console.log("Emitting TypeScript types...")
+        emitTypeScript();
     }
 
     console.log("Watching...")
@@ -166,6 +195,9 @@ const start = async () => {
         console.log("Building iife bundle...")
         await esbuild("iife", "maplibre")
     }
+
+    console.log("Emitting TypeScript types...")
+    emitTypeScript();
 }
 
 const _ = start()

@@ -4,20 +4,20 @@
   "description": "",
   "scripts": {
     "clean": "rm -rf dist && rm -rf src/wasm-pack",
-    "build-types": "tsc -m es2022 -outDir ./dist/esbuild --emitDeclarationOnly",
-    "watch": "npm run build-types && node build.mjs --esm --watch",
-    "watch-webgl": "npm run build-types && node build.mjs --esm --webgl --watch",
-    "build": "npm run build-types && node build.mjs",
-    "build-webgl": "npm run build-types && node build.mjs --webgl"
+    "watch": "node build.mjs --esm --watch",
+    "watch-webgl": "node build.mjs --esm --webgl --watch",
+    "build": "node build.mjs",
+    "build-webgl": "node build.mjs --webgl"
   },
   "files": [
     "dist/**/*"
   ],
   "module": "dist/esbuild-esm/module.js",
   "main": "dist/esbuild-cjs/main.js",
-  "types": "dist/esbuild/index.d.ts",
+  "types": "dist/ts/index.d.ts",
   "dependencies": {
     "chokidar": "^3.5.3",
+    "rimraf": "^3.0.2",
     "spectorjs": "^0.9.27",
     "wasm-feature-detect": "^1.2.11"
   },
@@ -25,7 +25,6 @@
     "@chialab/esbuild-plugin-meta-url": "^0.15.28",
     "esbuild": "^0.14.38",
     "esbuild-plugin-inline-worker": "^0.1.1",
-    "ts-loader": "^9.2.8",
     "typescript": "^4.5.4",
     "wasm-pack": "^0.10.2",
     "yargs": "^17.5.1"
