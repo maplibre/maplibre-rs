@@ -7,4 +7,3 @@ export type WebWorkerMessageType = {
     url: string,
     request_id: number,
 }
-
