@@ -48,6 +48,8 @@ The Rust ecosystem is suited very well for this project.
 In the future, this project could be adopted and supported by [Maplibre](https://github.com/maplibre) to implement a
 next-gen mapping solution.
 
+📰 We recently released a paper about maplibre-rs called [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
+
 ## Description
 
 maplibre-rs is a portable and performant vector maps renderer. We aim to support web, mobile and desktop applications. This
@@ -134,6 +136,23 @@ cargo doc --open
 ```
 
 You can also view the up-to-date documentation [here](https://maplibre.org/maplibre-rs/docs/api/maplibre/).
+
+## Citing
+
+If you wish to cite this project in a scientific publication use the following format:
+
+```bibtex
+@article{maplibre_rs,
+	title        = {maplibre-rs: toward portable map renderers},
+	author       = {Ammann, M. and Drabble, A. and Ingensand, J. and Chapuis, B.},
+	year         = 2022,
+	journal      = {The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
+	volume       = {XLVIII-4/W1-2022},
+	pages        = {35--42},
+	doi          = {10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022},
+	url          = {https://www.int-arch-photogramm-remote-sens-spatial-inf-sci.net/XLVIII-4-W1-2022/35/2022/}
+}
+```
 
 ## Acknowledgements
 
