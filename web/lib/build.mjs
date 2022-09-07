@@ -7,7 +7,6 @@ import {spawnSync} from "child_process"
 import {unlink} from "fs";
 import {dirname} from "path";
 import {fileURLToPath} from "url";
-import rimraf from "rimraf";
 
 let argv = yargs(process.argv.slice(2))
     .option('watch', {
@@ -87,9 +86,6 @@ const getLibDirectory = () => {
 
 const emitTypeScript = () => {
     let outDirectory = `${getLibDirectory()}/dist/ts`;
-
-    // Clean typescript types
-    rimraf.sync(outDirectory);
 
     let child = spawnSync('npm', ["exec",
         "tsc",

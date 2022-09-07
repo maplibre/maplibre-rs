@@ -16,12 +16,11 @@
   "main": "dist/esbuild-cjs/main.js",
   "types": "dist/ts/index.d.ts",
   "dependencies": {
-    "chokidar": "^3.5.3",
-    "rimraf": "^3.0.2",
     "spectorjs": "^0.9.27",
     "wasm-feature-detect": "^1.2.11"
   },
   "devDependencies": {
+    "chokidar": "^3.5.3",
     "@chialab/esbuild-plugin-meta-url": "^0.15.28",
     "esbuild": "^0.14.38",
     "esbuild-plugin-inline-worker": "^0.1.1",
