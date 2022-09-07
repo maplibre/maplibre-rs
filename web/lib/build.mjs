@@ -39,6 +39,12 @@ let argv = yargs(process.argv.slice(2))
 let esm = argv.esm;
 let iife = argv.iife;
 let cjs = argv.cjs;
+
+if (!esm && !iife && !cjs) {
+    console.warn("Enabling ESM bundling as no other bundle is enabled.")
+    esm = true;
+}
+
 let webgl = argv.webgl;
 
 if (webgl) {
@@ -51,7 +57,7 @@ let baseSettings = {
     platform: "browser",
     assetNames: "assets/[name]",
     define: {"WEBGL": `${webgl}`},
-    incremental: true,
+    incremental: argv.watch,
     plugins: [
         inlineWorker({
             format: "cjs", platform: "browser",
@@ -169,6 +175,7 @@ const esbuild = async (name, globalName = undefined) => {
     let result = await build({...baseSettings, format: name, globalName, outfile: `dist/esbuild-${name}/module.js`,});
 
     if (argv.watch) {
+        console.log("Watching is enabled.")
         await watchResult(result)
     }
 }
