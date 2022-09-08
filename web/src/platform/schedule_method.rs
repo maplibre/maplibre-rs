@@ -1,10 +1,12 @@
+use futures::executor::LocalPool;
+use futures::task::{LocalSpawnExt, SpawnExt};
+use log::warn;
 use std::future::Future;
 
+use super::pool::WorkerPool;
 use maplibre::{error::Error, io::scheduler::ScheduleMethod};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Worker;
-
-use super::pool::WorkerPool;
 
 pub struct WebWorkerPoolScheduleMethod {
     pool: WorkerPool,
@@ -38,10 +40,15 @@ impl ScheduleMethod for WebWorkerPoolScheduleMethod {
     {
         self.pool
             .execute(move || {
-                wasm_bindgen_futures::future_to_promise(async move {
-                    future_factory().await;
-                    Ok(JsValue::undefined())
-                })
+                pool.spawner()
+                    .spawn_local(async move {
+                        future_factory().await;
+                    })
+                    .unwrap();
+
+                warn!("Running tasks");
+                pool.run_until_stalled();
+                warn!("All tasks done");
             })
             .unwrap();
         Ok(())

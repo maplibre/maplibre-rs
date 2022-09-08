@@ -26,7 +26,9 @@ impl WHATWGFetchHttpClient {
         let scope = global.dyn_into::<WorkerGlobalScope>().unwrap();
 
         // Call fetch on global scope
+        log::warn!("starting fetching");
         let maybe_response = JsFuture::from(scope.fetch_with_request(&request)).await?;
+        log::warn!("fetching done 1");
         assert!(maybe_response.is_instance_of::<Response>());
         let response: Response = maybe_response.dyn_into().unwrap();
 

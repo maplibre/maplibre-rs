@@ -142,9 +142,12 @@ where
                     .schedule(Box::new(move || {
                         Box::pin(async move {
                             match client.fetch(&coords).await {
-                                Ok(data) => state
-                                    .process_tile(request_id, data.into_boxed_slice())
-                                    .unwrap(),
+                                Ok(data) => {
+                                    log::warn!("fetching done");
+                                    state
+                                        .process_tile(request_id, data.into_boxed_slice())
+                                        .unwrap()
+                                }
                                 Err(e) => {
                                     log::error!("{:?}", &e);
                                     state.tile_unavailable(&coords, request_id).unwrap()
