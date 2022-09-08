@@ -107,7 +107,6 @@ const emitTypeScript = () => {
 
     if (child.status !== 0) {
         console.error("Failed to execute tsc")
-        process.exit(1)
     }
 }
 
@@ -135,7 +134,6 @@ const wasmPack = () => {
 
     // Having package.json within another npm package is not supported. Remove that.
     unlink(`${getLibDirectory()}/src/wasm-pack/package.json`, (err) => {
-        if (err) throw err;
     })
 }
 
@@ -149,17 +147,22 @@ const watchResult = async (result) => {
     });
 
     const update = async (path) => {
-        console.log(`Updating: ${path}`)
-        if (path.endsWith(".rs")) {
-            console.log("Rebuilding Rust...")
-            wasmPack();
+        try {
+            console.log(`Updating: ${path}`)
+            if (path.endsWith(".rs")) {
+                console.log("Rebuilding Rust...")
+                wasmPack();
+            }
+
+            console.log("Rebuilding...")
+            await result.rebuild();
+
+            console.log("Emitting TypeScript types...")
+            emitTypeScript();
+        } catch (e) {
+            console.error("Error while updating:")
+            console.error(e)
         }
-
-        console.log("Rebuilding...")
-        await result.rebuild();
-
-        console.log("Emitting TypeScript types...")
-        emitTypeScript();
     }
 
     console.log("Watching...")
