@@ -145,10 +145,24 @@
 <a href="https://renderdoc.org/">RenderDoc</a>.</li>
 </ul>
 <h2 id="frame-profiling"><a class="header" href="#frame-profiling">Frame Profiling</a></h2>
-<ul>
-<li>tracing crate</li>
-</ul>
-
+<p>maplibre-rs is set up to use the Tracy profiler (https://github.com/wolfpld/tracy). It's mainly designed for C++ but has some Rust support.</p>
+<p>The connection to Rust uses a project that connects to the tracing crate (https://github.com/nagisa/rust_tracy_client). This uses a set of three crates (tracing-tracy, tracy-client, tracy-client-sys).</p>
+<p>Unfortunately, the Tracy project does not use semantic versioning, whereas tracing-tracy, tracy-client, tracy-client sys do.</p>
+<p>The current version of the Rust client is at v0.8.1 of Tracy. See the correlating versions in the table below (original at https://github.com/nagisa/rust_tracy_client#version-support-table):</p>
+<div class="table-wrapper"><table><thead><tr><th>Tracy</th><th>tracy-client-sys</th><th>tracy-client</th><th>tracing-tracy</th></tr></thead><tbody>
+<tr><td>0.7.1</td><td>0.9.0</td><td>0.8.0</td><td>0.2.0</td></tr>
+<tr><td>0.7.3</td><td>0.10.0</td><td>0.9.0</td><td>0.3.0</td></tr>
+<tr><td>0.7.4</td><td>0.11.0</td><td>0.10.0</td><td>0.4.0</td></tr>
+<tr><td>0.7.5</td><td>0.12.0</td><td>0.11.0</td><td>0.5.0</td></tr>
+<tr><td>0.7.6</td><td>0.13.0, 0.14.0</td><td>0.12.*</td><td>0.6.*</td></tr>
+<tr><td>v0.7.7</td><td>0.15.0</td><td>0.12.*</td><td>0.6.*</td></tr>
+<tr><td>v0.7.8</td><td>0.16.0</td><td>0.12.*</td><td>0.6.*</td></tr>
+<tr><td>v0.7.8</td><td>0.16.0</td><td>0.12.*</td><td>0.7.*</td></tr>
+<tr><td>v0.7.8</td><td>0.16.0</td><td>0.12.*</td><td>0.8.*</td></tr>
+<tr><td>v0.8.1</td><td>0.17.*</td><td>0.13.*</td><td>0.9.*</td></tr>
+<tr><td>v0.8.1</td><td>0.17.*</td><td>0.14.*</td><td>0.10.*</td></tr>
+</tbody></table>
+</div>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
