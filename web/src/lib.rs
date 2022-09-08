@@ -42,9 +42,8 @@ pub fn wasm_bindgen_start() {
 pub fn create_pool_scheduler(
     new_worker: js_sys::Function,
 ) -> *mut Scheduler<WebWorkerPoolScheduleMethod> {
-    let scheduler = Box::new(Scheduler::new(WebWorkerPoolScheduleMethod::new(new_worker)));
-
-    Box::into_raw(scheduler)
+    let scheduler = Scheduler::new(WebWorkerPoolScheduleMethod::new(new_worker));
+    Box::into_raw(Box::new(scheduler))
 }
 
 #[wasm_bindgen]

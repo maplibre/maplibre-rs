@@ -41,11 +41,3 @@ tracing-wasm = { version = "0.2.1", optional = true } # FIXME: Low quality depen
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.31"
-
-
-[profile.dev]
-lto = true
-codegen-units = 1
-opt-level = 's'
-panic = "abort"
-strip = "debuginfo"

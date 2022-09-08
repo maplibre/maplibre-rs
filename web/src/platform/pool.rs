@@ -4,7 +4,6 @@
 
 use std::borrow::BorrowMut;
 use std::future::Future;
-use std::sync::Mutex;
 use std::{cell::RefCell, rc::Rc};
 
 use js_sys::Promise;
