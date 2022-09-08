@@ -1,5 +1,8 @@
-import {worker_entry} from "./wasm/maplibre"
-import {initializeExisting} from "./module";
+import init, {worker_entry} from "../wasm/maplibre"
+
+const initializeExisting = async (module: string, memory?: string) => {
+    await init(module, memory)
+}
 
 onmessage = async message => {
     const initialised = initializeExisting(message.data[0], message.data[1]).catch(err => {

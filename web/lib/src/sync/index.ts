@@ -1,18 +1,17 @@
-import {create_pool_scheduler, run} from "./wasm/maplibre"
+import {create_pool_scheduler, run} from "../wasm/maplibre"
 import {Spector} from "spectorjs"
-// @ts-ignore esbuild plugin is handling this
-import MultithreadedPoolWorker from './multithreaded-pool.worker.js';
+import {checkRequirements, checkWasmFeatures} from "../browser";
+import init from "../wasm/maplibre";
+import {preventDefaultTouchActions} from "../canvas";
 // @ts-ignore esbuild plugin is handling this
 import PoolWorker from './pool.worker.js';
 
-import {initialize} from "./module";
-import {checkRequirements, checkWasmFeatures} from "./browser";
+const initializeSharedModule = async (wasmPath) => {
+    let MEMORY_PAGES = 16 * 1024
 
-const preventDefaultTouchActions = () => {
-    document.body.querySelectorAll("canvas").forEach(canvas => {
-        canvas.addEventListener("touchstart", e => e.preventDefault())
-        canvas.addEventListener("touchmove", e => e.preventDefault())
-    })
+    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
+    // @ts-ignore
+    await init(wasmPath, memory)
 }
 
 export const startMapLibre = async (wasmPath: string | undefined, workerPath: string | undefined) => {
@@ -32,14 +31,12 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
 
     preventDefaultTouchActions();
 
-    await initialize(wasmPath);
+    await initializeSharedModule(wasmPath);
 
     const schedulerPtr = create_pool_scheduler(() => {
-        let CurrentWorker = MULTITHREADED ? MultithreadedPoolWorker : PoolWorker;
-
         return workerPath ? new Worker(workerPath, {
             type: 'module'
-        }) : CurrentWorker();
+        }) : PoolWorker();
     })
 
     await run(schedulerPtr)

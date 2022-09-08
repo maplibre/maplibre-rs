@@ -72,7 +72,7 @@ let baseConfig = {
 
 let config = {
     ...baseConfig,
-    entryPoints: ['src/index.ts'],
+    entryPoints: multithreaded ? ['src/sync/index.ts'] : ['src/unsync/index.ts'],
     incremental: argv.watch,
     plugins: [
         inlineWorker({
@@ -112,9 +112,10 @@ const emitTypeScript = () => {
         "tsc",
         "--",
         "-m", "es2022",
+        "--project", multithreaded ? `${getLibDirectory()}/tsconfig.sync.json` : `${getLibDirectory()}/tsconfig.unsync.json`,
         "-outDir", outDirectory,
+        "--declaration",
         "--emitDeclarationOnly"
-
     ], {
         cwd: '.',
         stdio: 'inherit',
