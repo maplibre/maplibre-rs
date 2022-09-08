@@ -1,4 +1,4 @@
-import init, {create_pool_scheduler, new_thread_local_state, run} from "./wasm-pack"
+import init, {create_pool_scheduler, run} from "./wasm-pack"
 import {Spector} from "spectorjs"
 import {WebWorkerMessageType} from "./types"
 import {
@@ -16,9 +16,7 @@ import {
 } from "wasm-feature-detect"
 
 // @ts-ignore
-import Worker from './pool.worker.js';
-
-const WEBGL = process.env.WEBGL === "true"
+import PoolWorker from './pool.worker.js';
 
 const isWebGLSupported = () => {
     try {
@@ -139,9 +137,9 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
     await init(wasmPath, memory)
 
     const schedulerPtr = create_pool_scheduler(() => {
-        return workerPath ? new Worker(workerPath, {
+        return workerPath ? new PoolWorker(workerPath, {
             type: 'module'
-        }) : Worker();
+        }) : PoolWorker();
     })
 
     // setupLegacyWebWorker(schedulerPtr, memory)

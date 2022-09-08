@@ -25,7 +25,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - name: Build lib
         shell: bash
-        run: just web-lib esbuild-webgl
+        run: just web-lib build-webgl
       - name: Build demo
         shell: bash
         run: just web-demo build
@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           # Install test runner
-          cargo install wasm-bindgen-cli --version "0.2.80"
+          cargo install wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
           just web-test "web-webgl"
       - uses: actions/upload-artifact@v2
         with:
@@ -55,7 +55,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - name: Build lib
         shell: bash
-        run: just web-lib esbuild
+        run: just web-lib build
       - name: Build demo
         shell: bash
         run: just web-demo build
@@ -66,7 +66,7 @@ jobs:
         shell: bash
         run: |
           # Install test runner
-          cargo install wasm-bindgen-cli --version "0.2.80"
+          cargo install wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
           just web-test ""
       - uses: actions/upload-artifact@v2
         with:

@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run demo (release+enable-tracing)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run -p maplibre-demo --release --features trace" />
+  <configuration default="false" name="Run demo (debug " type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="command" value="run -p maplibre-demo" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

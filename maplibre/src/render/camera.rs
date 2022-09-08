@@ -1,10 +1,11 @@
 //! Main camera
 
-use cgmath::prelude::*;
-use cgmath::{AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
+use cgmath::{prelude::*, AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
 
-use crate::util::math::{bounds_from_points, Aabb2, Aabb3, Plane};
-use crate::util::SignificantlyDifferent;
+use crate::util::{
+    math::{bounds_from_points, Aabb2, Aabb3, Plane},
+    SignificantlyDifferent,
+};
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: Matrix4<f64> = Matrix4::new(
@@ -67,7 +68,7 @@ impl ModelViewProjection {
 
 #[derive(Debug, Clone)]
 pub struct Camera {
-    pub position: Point3<f64>,
+    pub position: Point3<f64>, // The z axis never changes, the zoom is used instead
     pub yaw: cgmath::Rad<f64>,
     pub pitch: cgmath::Rad<f64>,
 
@@ -240,6 +241,7 @@ impl Camera {
         &self,
         window: &Vector2<f64>,
         inverted_view_proj: &InvertedViewProjection,
+        bound: bool,
     ) -> Option<Vector3<f64>> {
         let near_world =
             self.window_to_world(&Vector3::new(window.x, window.y, 0.0), inverted_view_proj);
@@ -250,7 +252,7 @@ impl Camera {
         // for z = 0 in world coordinates
         // Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf
         let u = -near_world.z / (far_world.z - near_world.z);
-        if (0.0..=1.0).contains(&u) {
+        if !bound || (0.0..=1.0).contains(&u) {
             Some(near_world + u * (far_world - near_world))
         } else {
             None
@@ -277,7 +279,7 @@ impl Camera {
             Vector2::new(self.width, self.height),
             Vector2::new(0.0, self.height),
         ]
-        .map(|point| self.window_to_world_at_ground(&point, inverted_view_proj));
+        .map(|point| self.window_to_world_at_ground(&point, inverted_view_proj, false));
 
         let (min, max) = bounds_from_points(
             screen_bounding_box
@@ -390,9 +392,8 @@ impl Perspective {
 mod tests {
     use cgmath::{AbsDiffEq, Vector2, Vector3, Vector4};
 
-    use crate::render::camera::{InvertedViewProjection, ViewProjection};
-
     use super::{Camera, Perspective};
+    use crate::render::camera::{InvertedViewProjection, ViewProjection};
 
     #[test]
     fn test() {

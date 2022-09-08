@@ -1,14 +1,13 @@
 //! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
-use crate::render::resource::texture::TextureView;
-use crate::render::settings::RendererSettings;
-use crate::render::util::HasChanged;
-use crate::window::HeadedMapWindow;
-use crate::{MapWindow, WindowSize};
+use std::{mem::size_of, sync::Arc};
 
-use std::mem::size_of;
-use std::sync::Arc;
+use crate::{
+    render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
+    window::HeadedMapWindow,
+    MapWindow, WindowSize,
+};
 
 pub struct BufferDimensions {
     pub width: usize,
@@ -39,6 +38,11 @@ pub struct WindowHead {
 }
 
 impl WindowHead {
+    pub fn resize_and_configure(&mut self, width: u32, height: u32, device: &wgpu::Device) {
+        self.surface_config.height = width;
+        self.surface_config.width = height;
+        self.surface.configure(device, &self.surface_config);
+    }
     pub fn configure(&self, device: &wgpu::Device) {
         self.surface.configure(device, &self.surface_config);
     }
@@ -68,8 +72,7 @@ impl BufferedTextureHead {
         png_output_path: &str,
         // device: &wgpu::Device,
     ) {
-        use std::fs::File;
-        use std::io::Write;
+        use std::{fs::File, io::Write};
         // Note that we're not calling `.await` here.
         let buffer_slice = self.output_buffer.slice(..);
         let buffer_future = buffer_slice.map_async(wgpu::MapMode::Read, |_| ());
@@ -225,20 +228,13 @@ impl Surface {
 
     pub fn resize(&mut self, width: u32, height: u32) {
         self.size = WindowSize::new(width, height).expect("Invalid size for resizing the surface.");
-        match &mut self.head {
-            Head::Headed(window) => {
-                window.surface_config.height = height;
-                window.surface_config.width = width;
-            }
-            Head::Headless(_) => {}
-        }
     }
 
     pub fn reconfigure(&mut self, device: &wgpu::Device) {
         match &mut self.head {
             Head::Headed(window) => {
                 if window.has_changed(&(self.size.width(), self.size.height())) {
-                    window.configure(device);
+                    window.resize_and_configure(self.size.height(), self.size.width(), device);
                 }
             }
             Head::Headless(_) => {}

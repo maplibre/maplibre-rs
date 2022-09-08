@@ -4,7 +4,7 @@
 
 set shell := ["bash", "-c"]
 
-export NIGHTLY_TOOLCHAIN := "nightly-2022-04-04-x86_64-unknown-linux-gnu"
+export NIGHTLY_TOOLCHAIN := "nightly-2022-07-03-x86_64-unknown-linux-gnu"
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
 
@@ -36,14 +36,14 @@ test PROJECT ARCH:
 benchmark:
   cargo bench -p benchmarks
 
-install-rustfmt:
-  rustup component add rustfmt
+install-rustfmt: nightly-toolchain
+  rustup component add rustfmt --toolchain $NIGHTLY_TOOLCHAIN
 
 fmt: install-rustfmt
-  cargo fmt --all --
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo fmt
 
 fmt-check: install-rustfmt
-  cargo fmt --all -- --check
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo fmt -- --check
 
 default-toolchain:
   # Setups the toolchain from rust-toolchain.toml
@@ -61,9 +61,15 @@ nightly-toolchain-android: nightly-toolchain
 web-install PROJECT:
   cd web/{{PROJECT}} && npm install
 
+# Example: just web-lib build
+# Example: just web-lib build-webgl
+# Example: just web-lib watch
+# Example: just web-lib watch-webgl
 web-lib TARGET: nightly-toolchain (web-install "lib")
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{TARGET}}
 
+# Example: just web-demo start
+# Example: just web-demo build
 web-demo TARGET: (web-install "demo")
   cd web/demo && npm run {{TARGET}}
 

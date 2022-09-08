@@ -1,11 +1,15 @@
 //! Utility for declaring pipelines.
 
-use crate::platform::MIN_BUFFER_SIZE;
-use crate::render::resource::{FragmentState, VertexState};
-use crate::render::resource::{RenderPipeline, RenderPipelineDescriptor};
-use crate::render::settings::Msaa;
-use crate::render::shaders::ShaderGlobals;
 use std::cmp;
+
+use crate::{
+    platform::MIN_BUFFER_SIZE,
+    render::{
+        resource::{FragmentState, RenderPipeline, RenderPipelineDescriptor, VertexState},
+        settings::Msaa,
+        shaders::ShaderGlobals,
+    },
+};
 
 pub struct TilePipeline {
     bind_globals: bool,

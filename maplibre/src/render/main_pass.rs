@@ -3,14 +3,17 @@
 //! Right now there is only one render graph. A use case for multiple render passes would be
 //! [shadows](https://www.raywenderlich.com/books/metal-by-tutorials/v2.0/chapters/14-multipass-deferred-rendering).
 
-use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
-use crate::render::render_commands::{DrawMasks, DrawTiles};
-use crate::render::render_phase::RenderCommand;
-use crate::render::resource::TrackedRenderPass;
-
-use crate::render::Eventually::Initialized;
-use crate::render::{draw_graph, RenderState};
 use std::ops::Deref;
+
+use crate::render::{
+    draw_graph,
+    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+    render_commands::{DrawMasks, DrawTiles},
+    render_phase::RenderCommand,
+    resource::TrackedRenderPass,
+    Eventually::Initialized,
+    RenderState,
+};
 
 pub mod graph {
     // Labels for input nodes
@@ -82,7 +85,7 @@ impl Node for MainPassNode {
                 .command_encoder
                 .begin_render_pass(&wgpu::RenderPassDescriptor {
                     label: None,
-                    color_attachments: &[color_attachment],
+                    color_attachments: &[Some(color_attachment)],
                     depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                         view: &depth_texture.view,
                         depth_ops: Some(wgpu::Operations {

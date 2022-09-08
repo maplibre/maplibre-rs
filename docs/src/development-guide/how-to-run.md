@@ -114,6 +114,6 @@ If you want to run maplibre-rs with WebGL which is supported on every major brow
 command.
 
 ```bash
-just web-lib esbuild
+just web-lib build
 just web-demo start
 ```

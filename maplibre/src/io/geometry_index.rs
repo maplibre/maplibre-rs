@@ -2,19 +2,21 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use cgmath::num_traits::Signed;
-use cgmath::Bounded;
+use cgmath::{num_traits::Signed, Bounded};
 use geo::prelude::*;
 use geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
-use geozero::error::GeozeroError;
-use geozero::geo_types::GeoWriter;
-use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
+use geozero::{
+    error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
+    PropertyProcessor,
+};
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
-use crate::coords::{
-    InnerCoords, Quadkey, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT, TILE_SIZE,
+use crate::{
+    coords::{
+        InnerCoords, Quadkey, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT, TILE_SIZE,
+    },
+    util::math::bounds_from_points,
 };
-use crate::util::math::bounds_from_points;
 
 /// A quad tree storing the currently loaded tiles.
 pub struct GeometryIndex {
@@ -281,7 +283,7 @@ impl FeatureProcessor for IndexProcessor {
     }
     /// End of feature geometry processing.
     fn geometry_end(&mut self) -> Result<(), GeozeroError> {
-        let geometry = self.geo_writer.geometry().cloned().unwrap();
+        let geometry = self.geo_writer.take_geometry().unwrap();
 
         match geometry {
             Geometry::Polygon(polygon) => self.geometries.push(

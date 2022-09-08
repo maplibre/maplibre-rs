@@ -1,7 +1,8 @@
 //! Utilities for the window system.
 
+use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
+
 use crate::{HttpClient, InteractiveMapSchedule, ScheduleMethod};
-use raw_window_handle::HasRawWindowHandle;
 
 /// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.
 pub trait MapWindow {
@@ -11,7 +12,7 @@ pub trait MapWindow {
 /// Window which references a physical `RawWindow`. This is only implemented by headed windows and
 /// not by headless windows.
 pub trait HeadedMapWindow: MapWindow {
-    type RawWindow: HasRawWindowHandle;
+    type RawWindow: HasRawWindowHandle + HasRawDisplayHandle;
 
     fn inner(&self) -> &Self::RawWindow;
 }

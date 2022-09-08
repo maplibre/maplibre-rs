@@ -1,10 +1,14 @@
 //! Tile cache.
 
-use crate::coords::{Quadkey, WorldTileCoords};
-use crate::render::ShaderVertex;
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use geozero::mvt::tile;
 use std::collections::{btree_map, BTreeMap, HashSet};
+
+use geozero::mvt::tile;
+
+use crate::{
+    coords::{Quadkey, WorldTileCoords},
+    render::ShaderVertex,
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
+};
 
 /// A layer which is stored for future use.
 pub enum StoredLayer {
@@ -61,6 +65,10 @@ impl TileRepository {
         Self {
             tree: BTreeMap::new(),
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.tree.clear();
     }
 
     /// Inserts a tessellated layer into the quad tree at its world tile coords.

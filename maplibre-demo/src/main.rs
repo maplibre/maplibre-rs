@@ -1,113 +1,62 @@
-use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use maplibre::coords::{WorldTileCoords, ZoomLevel};
-use maplibre::error::Error;
-use maplibre::headless::HeadlessMapWindowConfig;
-use maplibre::io::pipeline::Processable;
-use maplibre::io::pipeline::{PipelineContext, PipelineProcessor};
+use std::io::ErrorKind;
 
-use maplibre::io::source_client::{HttpClient, HttpSourceClient};
-use maplibre::io::tile_pipelines::build_vector_tile_pipeline;
-use maplibre::io::tile_repository::StoredLayer;
-use maplibre::io::{RawLayer, TileRequest};
+use clap::{builder::ValueParser, Parser, Subcommand};
+use maplibre::{coords::LatLon, platform::run_multithreaded};
 
-use maplibre::platform::http_client::ReqwestHttpClient;
-use maplibre::platform::run_multithreaded;
-use maplibre::platform::schedule_method::TokioScheduleMethod;
-use maplibre::render::settings::{RendererSettings, TextureFormat};
-use maplibre::render::ShaderVertex;
-use maplibre::window::{EventLoop, WindowSize};
-use maplibre::MapBuilder;
-use maplibre_winit::winit::WinitMapWindowConfig;
+use crate::{headed::run_headed, headless::run_headless};
 
-use maplibre::headless::utils::HeadlessPipelineProcessor;
-use std::collections::HashSet;
+mod headed;
+mod headless;
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
-    use tracing_subscriber::layer::SubscriberExt;
-    use tracing_subscriber::Registry;
+    use tracing_subscriber::{layer::SubscriberExt, Registry};
 
     let subscriber = Registry::default().with(tracing_tracy::TracyLayer::new());
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 }
 
-fn run_in_window() {
-    run_multithreaded(async {
-        MapBuilder::new()
-            .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
-            .with_http_client(ReqwestHttpClient::new(None))
-            .with_schedule_method(TokioScheduleMethod::new())
-            .build()
-            .initialize()
-            .await
-            .run()
-    })
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+#[clap(propagate_version = true)]
+struct Cli {
+    #[clap(subcommand)]
+    command: Commands,
 }
 
-fn run_headless() {
-    run_multithreaded(async {
-        let mut map = MapBuilder::new()
-            .with_map_window_config(HeadlessMapWindowConfig {
-                size: WindowSize::new(1000, 1000).unwrap(),
-            })
-            .with_http_client(ReqwestHttpClient::new(None))
-            .with_schedule_method(TokioScheduleMethod::new())
-            .with_renderer_settings(RendererSettings {
-                texture_format: TextureFormat::Rgba8UnormSrgb,
-                ..RendererSettings::default()
-            })
-            .build()
-            .initialize_headless()
-            .await;
+fn parse_lat_long(env: &str) -> Result<LatLon, std::io::Error> {
+    let split = env.split(',').collect::<Vec<_>>();
+    if let (Some(latitude), Some(longitude)) = (split.get(0), split.get(1)) {
+        Ok(LatLon::new(
+            latitude.parse::<f64>().unwrap(),
+            longitude.parse::<f64>().unwrap(),
+        ))
+    } else {
+        Err(std::io::Error::new(
+            ErrorKind::InvalidData,
+            "Failed to parse latitude and longitude.",
+        ))
+    }
+}
 
-        let http_source_client: HttpSourceClient<ReqwestHttpClient> =
-            HttpSourceClient::new(ReqwestHttpClient::new(None));
-
-        let coords = WorldTileCoords::from((0, 0, ZoomLevel::default()));
-        let request_id = 0;
-
-        let data = http_source_client
-            .fetch(&coords)
-            .await
-            .unwrap()
-            .into_boxed_slice();
-
-        let processor = HeadlessPipelineProcessor::default();
-        let mut pipeline_context = PipelineContext::new(processor);
-        let pipeline = build_vector_tile_pipeline();
-        pipeline.process(
-            (
-                TileRequest {
-                    coords,
-                    layers: HashSet::from(["boundary".to_owned(), "water".to_owned()]),
-                },
-                request_id,
-                data,
-            ),
-            &mut pipeline_context,
-        );
-
-        let mut processor = pipeline_context
-            .take_processor::<HeadlessPipelineProcessor>()
-            .unwrap();
-
-        while let Some(v) = processor.layers.pop() {
-            map.map_schedule_mut()
-                .map_context
-                .tile_repository
-                .put_tessellated_layer(v);
-        }
-
-        match map.map_schedule_mut().update_and_redraw() {
-            Ok(_) => {}
-            Err(Error::Render(e)) => {
-                eprintln!("{}", e);
-                if e.should_exit() {}
-            }
-            e => eprintln!("{:?}", e),
-        };
-    })
+#[derive(Subcommand)]
+enum Commands {
+    Headed {},
+    Headless {
+        #[clap(default_value_t = 400)]
+        tile_size: u32,
+        #[clap(
+            value_parser = ValueParser::new(parse_lat_long),
+            default_value_t = LatLon::new(48.0345697188, 11.3475219363)
+        )]
+        min: LatLon,
+        #[clap(
+            value_parser = ValueParser::new(parse_lat_long),
+            default_value_t = LatLon::new(48.255861, 11.7917815798)
+        )]
+        max: LatLon,
+    },
 }
 
 fn main() {
@@ -116,6 +65,20 @@ fn main() {
     #[cfg(feature = "trace")]
     enable_tracing();
 
-    run_headless();
-    run_in_window();
+    let cli = Cli::parse();
+
+    // You can check for the existence of subcommands, and if found use their
+    // matches just as you would the top level cmd
+    match &cli.command {
+        Commands::Headed {} => {
+            run_multithreaded(async { run_headed().await });
+        }
+        Commands::Headless {
+            tile_size,
+            min,
+            max,
+        } => {
+            run_multithreaded(async { run_headless(*tile_size, *min, *max).await });
+        }
+    }
 }

@@ -13,11 +13,16 @@ web-webgl = ["maplibre/web-webgl"]
 trace = ["maplibre/trace", "tracing-subscriber", "tracing-tracy", "tracy-client"]
 
 [dependencies]
-env_logger = "0.9"
+env_logger = "0.9.0"
 maplibre = { path = "../maplibre", version = "0.0.2", features = ["headless"]  }
 maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
 
-tracing = { version = "0.1" }
-tracing-subscriber = { version = "0.3", optional = true }
-tracing-tracy = { version = "0.8", optional = true }
-tracy-client = { version = "0.12.7", optional = true }
+tile-grid = "0.3"
+
+tracing = "0.1.35"
+tracing-subscriber = { version = "0.3.14", optional = true }
+
+tracing-tracy = { version = "0.10", optional = true }
+tracy-client = { version = "0.14", optional = true }
+
+clap = { version = "3.2.12", features = ["derive"] }

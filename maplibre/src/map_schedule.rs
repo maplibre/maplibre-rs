@@ -1,20 +1,21 @@
-use crate::context::{MapContext, ViewState};
-use crate::error::Error;
+use std::{marker::PhantomData, mem};
 
-use crate::io::scheduler::Scheduler;
-use crate::io::source_client::{HttpClient, HttpSourceClient};
-use crate::io::tile_repository::TileRepository;
-
-use crate::render::{create_default_render_graph, register_default_render_stages};
-use crate::schedule::{Schedule, Stage};
-use crate::stages::register_stages;
-use crate::style::Style;
 use crate::{
+    context::{MapContext, ViewState},
+    coords::{LatLon, WorldCoords, Zoom, TILE_SIZE},
+    error::Error,
+    io::{
+        scheduler::Scheduler,
+        source_client::{HttpClient, HttpSourceClient},
+        tile_repository::TileRepository,
+    },
+    render::{create_default_render_graph, register_default_render_stages},
+    schedule::{Schedule, Stage},
+    stages::register_stages,
+    style::Style,
     HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod, WgpuSettings,
     WindowSize,
 };
-use std::marker::PhantomData;
-use std::mem;
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
 pub struct InteractiveMapSchedule<MWC, SM, HC>
@@ -51,7 +52,14 @@ where
         wgpu_settings: WgpuSettings,
         renderer_settings: RendererSettings,
     ) -> Self {
-        let view_state = ViewState::new(&window_size);
+        let zoom = style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default();
+        let position = style
+            .center
+            .map(|center| WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), zoom))
+            .unwrap_or_default();
+        let pitch = style.pitch.unwrap_or_default();
+        let view_state = ViewState::new(&window_size, position, zoom, pitch, cgmath::Deg(110.0));
+
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 

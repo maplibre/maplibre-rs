@@ -1,30 +1,27 @@
 //! A ring-buffer like pool of [buffers](wgpu::Buffer).
 
-use crate::coords::{Quadkey, WorldTileCoords};
-use crate::style::layer::StyleLayer;
-use crate::tessellation::OverAlignedVertexBuffer;
+use std::{
+    collections::{btree_map, BTreeMap, HashSet, VecDeque},
+    fmt::Debug,
+    marker::PhantomData,
+    mem::size_of,
+    ops::Range,
+};
+
 use bytemuck::Pod;
-use std::collections::{btree_map, BTreeMap, HashSet, VecDeque};
-use std::fmt::Debug;
-use std::marker::PhantomData;
-use std::mem::size_of;
-use std::ops::Range;
+
+use crate::{
+    coords::{Quadkey, WorldTileCoords},
+    render::resource::Queue,
+    style::layer::StyleLayer,
+    tessellation::OverAlignedVertexBuffer,
+};
 
 pub const VERTEX_SIZE: wgpu::BufferAddress = 1_000_000;
 pub const INDICES_SIZE: wgpu::BufferAddress = 1_000_000;
 
 pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 1024 * 1000;
 pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 1024;
-
-pub trait Queue<B> {
-    fn write_buffer(&self, buffer: &B, offset: wgpu::BufferAddress, data: &[u8]);
-}
-
-impl Queue<wgpu::Buffer> for wgpu::Queue {
-    fn write_buffer(&self, buffer: &wgpu::Buffer, offset: wgpu::BufferAddress, data: &[u8]) {
-        self.write_buffer(buffer, offset, data)
-    }
-}
 
 /// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
@@ -136,6 +133,10 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
             phantom_m: Default::default(),
             phantom_fm: Default::default(),
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.index.clear()
     }
 
     #[cfg(test)]
@@ -489,6 +490,11 @@ impl RingIndex {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.linear_index.clear();
+        self.tree_index.clear();
+    }
+
     pub fn front(&self) -> Option<&IndexEntry> {
         self.linear_index
             .front()
@@ -578,12 +584,15 @@ impl RingIndex {
 
 #[cfg(test)]
 mod tests {
-    use crate::coords::ZoomLevel;
-    use crate::style::layer::StyleLayer;
     use lyon::tessellation::VertexBuffers;
 
-    use crate::render::resource::buffer_pool::BackingBufferType;
-    use crate::render::resource::{BackingBufferDescriptor, BufferPool, Queue};
+    use crate::{
+        coords::ZoomLevel,
+        render::resource::{
+            buffer_pool::BackingBufferType, BackingBufferDescriptor, BufferPool, Queue,
+        },
+        style::layer::StyleLayer,
+    };
 
     #[derive(Debug)]
     struct TestBuffer {

@@ -1,9 +1,12 @@
 #![allow(clippy::identity_op)]
 
-use crate::coords::WorldCoords;
-use crate::render::resource::{FragmentState, VertexBufferLayout, VertexState};
 use bytemuck_derive::{Pod, Zeroable};
 use cgmath::SquareMatrix;
+
+use crate::{
+    coords::WorldCoords,
+    render::resource::{FragmentState, VertexBufferLayout, VertexState},
+};
 
 pub type Vec2f32 = [f32; 2];
 pub type Vec3f32 = [f32; 3];
@@ -65,7 +68,7 @@ impl Shader for TileMaskShader {
         FragmentState {
             source: include_str!("tile_mask.fragment.wgsl"),
             entry_point: "main",
-            targets: vec![wgpu::ColorTargetState {
+            targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
                 blend: None,
                 write_mask: if self.draw_colors {
@@ -73,7 +76,7 @@ impl Shader for TileMaskShader {
                 } else {
                     wgpu::ColorWrites::empty()
                 },
-            }],
+            })],
         }
     }
 }
@@ -175,7 +178,7 @@ impl Shader for TileShader {
         FragmentState {
             source: include_str!("tile.fragment.wgsl"),
             entry_point: "main",
-            targets: vec![wgpu::ColorTargetState {
+            targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
                 /*blend: Some(wgpu::BlendState {
                     color: wgpu::BlendComponent {
@@ -191,7 +194,7 @@ impl Shader for TileShader {
                 }),*/
                 blend: None,
                 write_mask: wgpu::ColorWrites::ALL,
-            }],
+            })],
         }
     }
 }

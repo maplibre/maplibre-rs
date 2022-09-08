@@ -1,11 +1,14 @@
 //! Default vector tile styles configuration.
 
-use crate::style::layer::{LayerPaint, LinePaint, StyleLayer};
-use crate::style::source::Source;
+use std::{collections::HashMap, str::FromStr};
+
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::str::FromStr;
+
+use crate::style::{
+    layer::{LayerPaint, LinePaint, StyleLayer},
+    source::Source,
+};
 
 /// Stores the style for a multi-layered map.
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -15,6 +18,9 @@ pub struct Style {
     pub metadata: HashMap<String, String>,
     pub sources: HashMap<String, Source>,
     pub layers: Vec<StyleLayer>,
+    pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
+    pub zoom: Option<f64>,
+    pub pitch: Option<f64>,
 }
 
 impl Default for Style {
@@ -24,6 +30,9 @@ impl Default for Style {
             name: "Default Style".to_string(),
             metadata: Default::default(),
             sources: Default::default(),
+            center: Some([46.5197, 6.6323]),
+            pitch: Some(0.0),
+            zoom: Some(13.0),
             layers: vec![
                 StyleLayer {
                     index: 0,

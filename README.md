@@ -48,6 +48,8 @@ The Rust ecosystem is suited very well for this project.
 In the future, this project could be adopted and supported by [Maplibre](https://github.com/maplibre) to implement a
 next-gen mapping solution.
 
+📰 We recently released a paper about maplibre-rs called [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
+
 ## Description
 
 maplibre-rs is a portable and performant vector maps renderer. We aim to support web, mobile and desktop applications. This
@@ -66,9 +68,13 @@ graphics are achievable using the current stack.
 
 ## Talk: World in Vectors
 
-https://user-images.githubusercontent.com/905221/163552617-5db04c66-23e3-4915-87c1-25185d96730a.mp4
+[![](https://static.media.ccc.de/media/events/MCH2022/265-6919a16c-0dcf-56af-ae0b-5fe0187bc896_preview.jpg)
+](https://media.ccc.de/v/mch2022-265-world-in-vectors-cross-platform-map-rendering-using-rust)
 
-([YouTube](https://www.youtube.com/watch?v=KFk8bOtJzCM))
+
+([External Link](https://media.ccc.de/v/mch2022-265-world-in-vectors-cross-platform-map-rendering-using-rust))
+
+([Older Talk on YouTube](https://www.youtube.com/watch?v=KFk8bOtJzCM))
 
 ## Current Features
 
@@ -110,8 +116,8 @@ Build and run it on a desktop
 cargo run -p maplibre-demo
 ```
 
-More information about building for different platforms can be
-found [here](https://maplibre.org/maplibre-rs/docs/book/development-guide/building.html).
+More information about running the demos on different platforms can be
+found [here](https://maplibre.org/maplibre-rs/docs/book/development-guide/how-to-run.html).
 
 ## Rust Setup
 
@@ -130,6 +136,23 @@ cargo doc --open
 ```
 
 You can also view the up-to-date documentation [here](https://maplibre.org/maplibre-rs/docs/api/maplibre/).
+
+## Citing
+
+If you wish to cite this project in a scientific publication use the following format:
+
+```bibtex
+@article{maplibre_rs,
+	title        = {maplibre-rs: toward portable map renderers},
+	author       = {Ammann, M. and Drabble, A. and Ingensand, J. and Chapuis, B.},
+	year         = 2022,
+	journal      = {The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
+	volume       = {XLVIII-4/W1-2022},
+	pages        = {35--42},
+	doi          = {10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022},
+	url          = {https://www.int-arch-photogramm-remote-sens-spatial-inf-sci.net/XLVIII-4-W1-2022/35/2022/}
+}
+```
 
 ## Acknowledgements
 
