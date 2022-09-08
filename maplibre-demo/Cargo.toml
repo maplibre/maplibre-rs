@@ -21,7 +21,8 @@ tile-grid = "0.3"
 
 tracing = "0.1.35"
 tracing-subscriber = { version = "0.3.14", optional = true }
-tracing-tracy = { version = "0.8", optional = true }
-tracy-client = { version = "0.12.7", optional = true }
+
+tracing-tracy = { version = "0.10", optional = true }
+tracy-client = { version = "0.14", optional = true }
 
 clap = { version = "3.2.12", features = ["derive"] }
