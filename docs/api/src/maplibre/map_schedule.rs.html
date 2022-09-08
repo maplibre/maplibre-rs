@@ -216,13 +216,11 @@
 <span id="211">211</span>
 <span id="212">212</span>
 <span id="213">213</span>
-<span id="214">214</span>
-<span id="215">215</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">mem</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">context</span>::{<span class="ident">MapContext</span>, <span class="ident">ViewState</span>},
-    <span class="ident">coords</span>::{<span class="ident">LatLon</span>, <span class="ident">Zoom</span>},
+    <span class="ident">coords</span>::{<span class="ident">LatLon</span>, <span class="ident">WorldCoords</span>, <span class="ident">Zoom</span>, <span class="ident">TILE_SIZE</span>},
     <span class="ident">error::Error</span>,
     <span class="ident">io</span>::{
         <span class="ident">scheduler::Scheduler</span>,
@@ -272,16 +270,14 @@
         <span class="ident">wgpu_settings</span>: <span class="ident">WgpuSettings</span>,
         <span class="ident">renderer_settings</span>: <span class="ident">RendererSettings</span>,
     ) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">view_state</span> <span class="op">=</span> <span class="ident">ViewState::new</span>(
-            <span class="kw-2">&amp;</span><span class="ident">window_size</span>,
-            <span class="ident">style</span>.<span class="ident">zoom</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">zoom</span><span class="op">|</span> <span class="ident">Zoom::new</span>(<span class="ident">zoom</span>)).<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">style</span>
-                .<span class="ident">center</span>
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">center</span><span class="op">|</span> <span class="ident">LatLon::new</span>(<span class="ident">center</span>[<span class="number">0</span>], <span class="ident">center</span>[<span class="number">1</span>]))
-                .<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">style</span>.<span class="ident">pitch</span>.<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">cgmath::Deg</span>(<span class="number">110.0</span>),
-        );
+        <span class="kw">let</span> <span class="ident">zoom</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">zoom</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">zoom</span><span class="op">|</span> <span class="ident">Zoom::new</span>(<span class="ident">zoom</span>)).<span class="ident">unwrap_or_default</span>();
+        <span class="kw">let</span> <span class="ident">position</span> <span class="op">=</span> <span class="ident">style</span>
+            .<span class="ident">center</span>
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">center</span><span class="op">|</span> <span class="ident">WorldCoords::from_lat_lon</span>(<span class="ident">LatLon::new</span>(<span class="ident">center</span>[<span class="number">0</span>], <span class="ident">center</span>[<span class="number">1</span>]), <span class="ident">zoom</span>))
+            .<span class="ident">unwrap_or_default</span>();
+        <span class="kw">let</span> <span class="ident">pitch</span> <span class="op">=</span> <span class="ident">style</span>.<span class="ident">pitch</span>.<span class="ident">unwrap_or_default</span>();
+        <span class="kw">let</span> <span class="ident">view_state</span> <span class="op">=</span> <span class="ident">ViewState::new</span>(<span class="kw-2">&amp;</span><span class="ident">window_size</span>, <span class="ident">position</span>, <span class="ident">zoom</span>, <span class="ident">pitch</span>, <span class="ident">cgmath::Deg</span>(<span class="number">110.0</span>));
+
         <span class="kw">let</span> <span class="ident">tile_repository</span> <span class="op">=</span> <span class="ident">TileRepository::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">schedule</span> <span class="op">=</span> <span class="ident">Schedule::default</span>();
 

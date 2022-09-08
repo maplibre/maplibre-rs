@@ -228,7 +228,7 @@
     <span class="kw">pub</span> <span class="ident">metadata</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">sources</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Source</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">layers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StyleLayer</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">center</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">f64</span>; <span class="number">2</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">center</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">f64</span>; <span class="number">2</span>]<span class="op">&gt;</span>, <span class="comment">// TODO: Use LatLon type here</span>
     <span class="kw">pub</span> <span class="ident">zoom</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">pitch</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
 }
