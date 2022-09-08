@@ -25,7 +25,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - name: Build lib
         shell: bash
-        run: just web-lib esbuild-webgl
+        run: just web-lib build-webgl
       - name: Build demo
         shell: bash
         run: just web-demo build
@@ -55,7 +55,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - name: Build lib
         shell: bash
-        run: just web-lib esbuild
+        run: just web-lib build
       - name: Build demo
         shell: bash
         run: just web-demo build

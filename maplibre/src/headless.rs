@@ -13,7 +13,7 @@ use wgpu::{BufferAsyncError, BufferSlice};
 
 use crate::{
     context::{MapContext, ViewState},
-    coords::{LatLon, ViewRegion, WorldTileCoords, Zoom},
+    coords::{LatLon, ViewRegion, WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
     error::Error,
     headless::utils::HeadlessPipelineProcessor,
     io::{
@@ -114,12 +114,9 @@ where
     ) -> Self {
         let view_state = ViewState::new(
             &window_size,
-            style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default(),
-            style
-                .center
-                .map(|center| LatLon::new(center[0], center[1]))
-                .unwrap_or_default(),
-            style.pitch.unwrap_or_default(),
+            WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
+            Zoom::default(),
+            0.0,
             cgmath::Deg(110.0),
         );
         let tile_repository = TileRepository::new();
@@ -209,6 +206,8 @@ where
         if let Eventually::Initialized(pool) = self.map_context.renderer.state.buffer_pool_mut() {
             pool.clear();
         }
+
+        self.map_context.tile_repository.clear();
 
         while let Some(layer) = processor.layers.pop() {
             self.map_context

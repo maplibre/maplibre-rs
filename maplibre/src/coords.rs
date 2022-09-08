@@ -1,6 +1,10 @@
 //! Provides utilities related to coordinates.
 
-use std::{f64::consts::PI, fmt};
+use std::{
+    f64::consts::PI,
+    fmt,
+    fmt::{Display, Formatter},
+};
 
 use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
 
@@ -112,17 +116,32 @@ impl Into<u8> for ZoomLevel {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct LatLon(f64, f64);
+pub struct LatLon {
+    pub latitude: f64,
+    pub longitude: f64,
+}
 
 impl LatLon {
     pub fn new(latitude: f64, longitude: f64) -> Self {
-        LatLon(latitude, longitude)
+        LatLon {
+            latitude,
+            longitude,
+        }
     }
 }
 
 impl Default for LatLon {
     fn default() -> Self {
-        LatLon(0.0, 0.0)
+        LatLon {
+            latitude: 0.0,
+            longitude: 0.0,
+        }
+    }
+}
+
+impl Display for LatLon {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{},{}", self.latitude, self.longitude)
     }
 }
 
@@ -477,10 +496,10 @@ impl WorldCoords {
     pub fn from_lat_lon(lat_lon: LatLon, zoom: Zoom) -> WorldCoords {
         let tile_size = TILE_SIZE * 2.0_f64.powf(zoom.0);
         // Get x value
-        let x = (lat_lon.1 + 180.0) * (tile_size / 360.0);
+        let x = (lat_lon.longitude + 180.0) * (tile_size / 360.0);
 
         // Convert from degrees to radians
-        let lat_rad = (lat_lon.0 * PI) / 180.0;
+        let lat_rad = (lat_lon.latitude * PI) / 180.0;
 
         // get y value
         let merc_n = f64::ln(f64::tan((PI / 4.0) + (lat_rad / 2.0)));
