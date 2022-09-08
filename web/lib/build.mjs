@@ -131,7 +131,6 @@ const wasmPack = () => {
 
     if (child.status !== 0) {
         console.error("Failed to execute wasm-pack")
-        process.exit(1)
     }
 
     // Having package.json within another npm package is not supported. Remove that.
