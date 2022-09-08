@@ -43,7 +43,8 @@ pub fn register_stages<HC: HttpClient, SM: ScheduleMethod>(
     let shared_thread_state = SharedThreadState {
         tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
         message_sender,
-        geometry_index: Arc::new(Mutex::new(GeometryIndex::new())),
+        // TODO: Readd
+        //geometry_index: Arc::new(Mutex::new(GeometryIndex::new())),
     };
 
     schedule.add_stage(
@@ -108,9 +109,10 @@ impl PipelineProcessor for HeadedPipelineProcessor {
         coords: &WorldTileCoords,
         geometries: Vec<IndexedGeometry<f64>>,
     ) {
-        if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
+        // TODO: Readd
+        /*        if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
             geometry_index.index_tile(coords, TileIndex::Linear { list: geometries })
-        }
+        }*/
     }
 }
 
@@ -119,7 +121,8 @@ impl PipelineProcessor for HeadedPipelineProcessor {
 pub struct SharedThreadState {
     pub tile_request_state: Arc<Mutex<TileRequestState>>,
     pub message_sender: mpsc::Sender<TessellateMessage>,
-    pub geometry_index: Arc<Mutex<GeometryIndex>>,
+    // TODO: Readd
+    //pub geometry_index: Arc<Mutex<GeometryIndex>>,
 }
 
 impl SharedThreadState {
@@ -163,7 +166,8 @@ impl SharedThreadState {
         Ok(())
     }
 
-    #[tracing::instrument(skip_all)]
+    // TODO: Readd
+    /*    #[tracing::instrument(skip_all)]
     pub fn query_point(
         &self,
         world_coords: &WorldCoords,
@@ -183,5 +187,5 @@ impl SharedThreadState {
         } else {
             unimplemented!()
         }
-    }
+    }*/
 }
