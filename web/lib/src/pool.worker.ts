@@ -1,4 +1,4 @@
-import init, {child_entry_point} from "./wasm-pack"
+import init, {worker_entry} from "./wasm/maplibre"
 
 onmessage = async message => {
     const initialised = init(message.data[0], message.data[1]).catch(err => {
@@ -13,6 +13,6 @@ onmessage = async message => {
     self.onmessage = async message => {
         // This will queue further commands up until the module is fully initialised:
         await initialised;
-        child_entry_point(message.data);
+        worker_entry(message.data);
     };
 }

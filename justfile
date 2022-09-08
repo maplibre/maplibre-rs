@@ -65,13 +65,13 @@ web-install PROJECT:
 # Example: just web-lib build-webgl
 # Example: just web-lib watch
 # Example: just web-lib watch-webgl
-web-lib TARGET: nightly-toolchain (web-install "lib")
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{TARGET}}
+web-lib TARGET *FLAGS: nightly-toolchain (web-install "lib")
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{TARGET}} -- {{FLAGS}}
 
 # Example: just web-demo start
 # Example: just web-demo build
-web-demo TARGET: (web-install "demo")
-  cd web/demo && npm run {{TARGET}}
+web-demo TARGET *FLAGS: (web-install "demo")
+  cd web/demo && npm run {{TARGET}} -- {{FLAGS}}
 
 web-check FEATURES: nightly-toolchain install-nightly-clippy
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo clippy --no-deps -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown -Z build-std=std,panic_abort

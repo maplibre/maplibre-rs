@@ -9,3 +9,18 @@ rustflags = [
     "-C", "link-args=--shared-memory --import-memory",
 ]
 runner = 'wasm-bindgen-test-runner'
+
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 's'
+debug = true
+debug-assertions = true
+overflow-checks = true
+panic = 'abort'
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = 's'
+lto = true
+panic = 'abort'

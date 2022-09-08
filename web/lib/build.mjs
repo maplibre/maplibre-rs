@@ -4,7 +4,6 @@ import inlineWorker from 'esbuild-plugin-inline-worker';
 import yargs from "yargs";
 import chokidar from "chokidar";
 import {spawnSync} from "child_process"
-import {unlink} from "fs";
 import {dirname} from "path";
 import {fileURLToPath} from "url";
 
@@ -13,6 +12,11 @@ let argv = yargs(process.argv.slice(2))
         alias: 'w',
         type: 'boolean',
         description: 'Enable watching'
+    })
+    .option('release', {
+        alias: 'r',
+        type: 'boolean',
+        description: 'Release mode'
     })
     .option('webgl', {
         alias: 'g',
@@ -39,6 +43,7 @@ let argv = yargs(process.argv.slice(2))
 let esm = argv.esm;
 let iife = argv.iife;
 let cjs = argv.cjs;
+let release = argv.release;
 
 if (!esm && !iife && !cjs) {
     console.warn("Enabling ESM bundling as no other bundle is enabled.")
@@ -111,16 +116,13 @@ const emitTypeScript = () => {
 }
 
 const wasmPack = () => {
-    let outDirectory = `${getLibDirectory()}/src/wasm-pack`;
+    let outDirectory = `${getLibDirectory()}/src/wasm`;
+    let profile = release ? "wasm-release" : "wasm-dev"
 
-    let child = spawnSync('npm', ["exec",
-        "wasm-pack","--",
-        "build",
-        "--out-name", "index",
-        "--out-dir", outDirectory,
-        getWebDirectory(),
-        "--target", "web",
-        "--",
+    let cargo = spawnSync('cargo', ["build",
+        "-p", "web", "--lib",
+        "--target", "wasm32-unknown-unknown",
+        "--profile", profile,
         "--features", `${webgl ? "web-webgl" : ""}`,
         "-Z", "build-std=std,panic_abort"
     ], {
@@ -128,13 +130,43 @@ const wasmPack = () => {
         stdio: 'inherit',
     });
 
-    if (child.status !== 0) {
-        console.error("Failed to execute wasm-pack")
+    if (cargo.status !== 0) {
+        console.error("Failed to execute cargo build")
     }
 
-    // Having package.json within another npm package is not supported. Remove that.
-    unlink(`${getLibDirectory()}/src/wasm-pack/package.json`, (err) => {
-    })
+    let wasmbindgen = spawnSync('wasm-bindgen', [
+        `${getProjectDirectory()}/target/wasm32-unknown-unknown/${profile}/web.wasm`,
+        "--out-name", "maplibre",
+        "--out-dir", outDirectory,
+        "--typescript",
+        "--target", "web",
+        "--debug",
+    ], {
+        cwd: '.',
+        stdio: 'inherit',
+    });
+
+    if (wasmbindgen.status !== 0) {
+        console.error("Failed to execute wasm-bindgen")
+    }
+
+    if (release) {
+        console.log("Running wasm-opt")
+        let wasmOpt = spawnSync('npm', ["exec",
+            "wasm-opt", "--",
+            `${outDirectory}/maplibre_bg.wasm`,
+            "-o", `${outDirectory}/maplibre_bg.wasm`,
+            "-O"
+        ], {
+            cwd: '.',
+            stdio: 'inherit',
+        });
+
+        if (wasmOpt.status !== 0) {
+            console.error("Failed to execute wasm-opt")
+        }
+    }
+
 }
 
 const watchResult = async (result) => {
@@ -183,7 +215,7 @@ const esbuild = async (name, globalName = undefined) => {
 }
 
 const start = async () => {
-    console.log("Running wasm-pack...")
+    console.log("Creating WASM...")
     wasmPack();
 
     if (esm) {

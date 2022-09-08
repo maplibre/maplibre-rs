@@ -4,6 +4,6 @@ libs/maplibre*
 
 dist
 
-src/wasm-pack
+src/wasm
 
 .parcel-cache

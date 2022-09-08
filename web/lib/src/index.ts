@@ -1,6 +1,6 @@
-import init, {create_pool_scheduler, run} from "./wasm-pack"
+import init, {create_pool_scheduler, run} from "./wasm/maplibre"
 import {Spector} from "spectorjs"
-import {WebWorkerMessageType} from "./types"
+import {WebWorkerMessageType} from "./worker-types"
 import {
     bigInt,
     bulkMemory,
@@ -94,33 +94,6 @@ const preventDefaultTouchActions = () => {
         canvas.addEventListener("touchmove", e => e.preventDefault())
     })
 }
-/*
-let WORKER_COUNT = 4
-const createWorker = (id: number, memory: WebAssembly.Memory) => {
-    const worker = new Worker(new URL('./legacy.worker.ts', import.meta.url), {
-        type: "module",
-    })
-    worker.postMessage({type: "init", memory} as WebWorkerMessageType)
-
-    return worker
-}
-
-const setupLegacyWebWorker = (schedulerPtr: number, memory: WebAssembly.Memory) => {
-    let workers: [number, Worker][] = Array.from(
-        new Array(WORKER_COUNT).keys(),
-        (id) => [new_thread_local_state(schedulerPtr), createWorker(id, memory)]
-    )
-
-    window.schedule_tile_request = (url: string, request_id: number) => {
-        const [state, worker] = workers[Math.floor(Math.random() * workers.length)]
-        worker.postMessage({
-            type: "fetch_tile",
-            threadLocalState: state,
-            url,
-            request_id
-        } as WebWorkerMessageType)
-    }
-}*/
 
 export const startMapLibre = async (wasmPath: string | undefined, workerPath: string | undefined) => {
     await checkWasmFeatures()
@@ -137,12 +110,12 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
     await init(wasmPath, memory)
 
     const schedulerPtr = create_pool_scheduler(() => {
-        return workerPath ? new PoolWorker(workerPath, {
+        let worker = workerPath ? new PoolWorker(workerPath, {
             type: 'module'
-        }) : PoolWorker();
-    })
+        }) : PoolWorker({name: "test"});
 
-    // setupLegacyWebWorker(schedulerPtr, memory)
+        return worker;
+    })
 
     await run(schedulerPtr)
 }

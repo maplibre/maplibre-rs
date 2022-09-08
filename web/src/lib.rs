@@ -5,7 +5,7 @@ use maplibre_winit::winit::WinitMapWindowConfig;
 use wasm_bindgen::prelude::*;
 
 use crate::platform::{
-    http_client::WHATWGFetchHttpClient, schedule_method::WebWorkerPoolScheduleMethod,
+    http_client::WHATWGFetchHttpClient, pool_schedule_method::WebWorkerPoolScheduleMethod,
 };
 
 mod error;

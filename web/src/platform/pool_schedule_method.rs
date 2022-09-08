@@ -1,5 +1,3 @@
-use futures::executor::LocalPool;
-use futures::task::{LocalSpawnExt, SpawnExt};
 use log::warn;
 use std::future::Future;
 
@@ -16,7 +14,7 @@ impl WebWorkerPoolScheduleMethod {
     pub fn new(new_worker: js_sys::Function) -> Self {
         Self {
             pool: WorkerPool::new(
-                4,
+                1,
                 Box::new(move || {
                     new_worker
                         .call0(&JsValue::undefined())
@@ -40,15 +38,10 @@ impl ScheduleMethod for WebWorkerPoolScheduleMethod {
     {
         self.pool
             .execute(move || {
-                pool.spawner()
-                    .spawn_local(async move {
-                        future_factory().await;
-                    })
-                    .unwrap();
-
-                warn!("Running tasks");
-                pool.run_until_stalled();
-                warn!("All tasks done");
+                wasm_bindgen_futures::future_to_promise(async move {
+                    future_factory().await;
+                    Ok(JsValue::undefined())
+                })
             })
             .unwrap();
         Ok(())

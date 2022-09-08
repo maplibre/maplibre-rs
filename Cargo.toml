@@ -20,7 +20,6 @@ lto = true
 codegen-units = 1
 opt-level = 's'
 panic = "abort"
-
 strip = "debuginfo"
 
 [profile.bench]
