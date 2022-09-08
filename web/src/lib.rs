@@ -4,9 +4,7 @@ use maplibre::{io::scheduler::Scheduler, MapBuilder};
 use maplibre_winit::winit::WinitMapWindowConfig;
 use wasm_bindgen::prelude::*;
 
-use crate::platform::{
-    http_client::WHATWGFetchHttpClient, pool_schedule_method::WebWorkerPoolScheduleMethod,
-};
+use crate::platform::{http_client::WHATWGFetchHttpClient, NopScheduleMethod};
 
 mod error;
 mod platform;
@@ -39,17 +37,14 @@ pub fn wasm_bindgen_start() {
 }
 
 #[wasm_bindgen]
-pub fn create_pool_scheduler(
-    new_worker: js_sys::Function,
-) -> *mut Scheduler<WebWorkerPoolScheduleMethod> {
-    let scheduler = Scheduler::new(WebWorkerPoolScheduleMethod::new(new_worker));
+pub fn create_pool_scheduler(new_worker: js_sys::Function) -> *mut Scheduler<NopScheduleMethod> {
+    let scheduler = Scheduler::new(NopScheduleMethod);
     Box::into_raw(Box::new(scheduler))
 }
 
 #[wasm_bindgen]
-pub async fn run(scheduler_ptr: *mut Scheduler<WebWorkerPoolScheduleMethod>) {
-    let scheduler: Box<Scheduler<WebWorkerPoolScheduleMethod>> =
-        unsafe { Box::from_raw(scheduler_ptr) };
+pub async fn run(scheduler_ptr: *mut Scheduler<NopScheduleMethod>) {
+    let scheduler = unsafe { Box::from_raw(scheduler_ptr) };
 
     // Either call forget or the main loop to keep worker loop alive
     MapBuilder::new()
