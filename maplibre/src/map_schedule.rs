@@ -2,7 +2,7 @@ use std::{marker::PhantomData, mem};
 
 use crate::{
     context::{MapContext, ViewState},
-    coords::{LatLon, Zoom},
+    coords::{LatLon, WorldCoords, Zoom, TILE_SIZE},
     error::Error,
     io::{
         scheduler::Scheduler,
@@ -52,16 +52,14 @@ where
         wgpu_settings: WgpuSettings,
         renderer_settings: RendererSettings,
     ) -> Self {
-        let view_state = ViewState::new(
-            &window_size,
-            style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default(),
-            style
-                .center
-                .map(|center| LatLon::new(center[0], center[1]))
-                .unwrap_or_default(),
-            style.pitch.unwrap_or_default(),
-            cgmath::Deg(110.0),
-        );
+        let zoom = style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default();
+        let position = style
+            .center
+            .map(|center| WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), zoom))
+            .unwrap_or_default();
+        let pitch = style.pitch.unwrap_or_default();
+        let view_state = ViewState::new(&window_size, position, zoom, pitch, cgmath::Deg(110.0));
+
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
