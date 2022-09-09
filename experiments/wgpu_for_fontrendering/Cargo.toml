@@ -9,10 +9,10 @@ edition = "2021"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dependencies]
-winit = "0.26"
+winit = "0.27.2"
 env_logger = "0.9"
 log = "0.4"
-wgpu = "0.12"
+wgpu = { git = "https://github.com/gfx-rs/wgpu", rev = "94ce763" }
 pollster = "0.2.5"
 bytemuck = { version = "1.4", features = [ "derive" ] }
 cgmath = "0.18"

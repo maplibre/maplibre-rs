@@ -1,17 +1,16 @@
 mod rendering;
 mod text_system;
 
-use cgmath::One;
 use cgmath::Quaternion;
 use rand::Rng;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use text_system::{FontID, SceneTextSystem};
 
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
-    window::{Window, WindowBuilder},
+    window::WindowBuilder,
 };
 
 pub async fn run() {
@@ -28,7 +27,7 @@ pub async fn run() {
         let mut text_system: SceneTextSystem = SceneTextSystem::new(&state).unwrap();
 
         let font_id: FontID = String::from("Aparaj");
-        if let Err(e) = text_system.load_font(&font_id, "tests/fonts/aparaj.ttf") {
+        if let Err(_e) = text_system.load_font(&font_id, "tests/fonts/aparaj.ttf") {
             panic!("Couldn't add font!");
         }
 

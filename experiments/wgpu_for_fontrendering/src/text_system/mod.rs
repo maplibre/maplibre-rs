@@ -258,7 +258,7 @@ impl SceneTextSystem {
 
         let shaders = rendering_state
             .device
-            .create_shader_module(&wgpu::ShaderModuleDescriptor {
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("Text Shaders"),
                 source: wgpu::ShaderSource::Wgsl(include_str!("textsystem_shaders.wgsl").into()),
             });
@@ -288,7 +288,7 @@ impl SceneTextSystem {
                     fragment: Some(wgpu::FragmentState {
                         module: &shaders,
                         entry_point: "prepass_fs",
-                        targets: &[wgpu::ColorTargetState {
+                        targets: &[Some(wgpu::ColorTargetState {
                             format: rendering_state.config.format,
                             blend: Some(wgpu::BlendState {
                                 // Overwrite color without alpha blending applied
@@ -301,7 +301,7 @@ impl SceneTextSystem {
                                 alpha: wgpu::BlendComponent::OVER,
                             }),
                             write_mask: wgpu::ColorWrites::ALL,
-                        }],
+                        })],
                     }),
                     primitive: wgpu::PrimitiveState {
                         topology: wgpu::PrimitiveTopology::TriangleList,
@@ -349,11 +349,11 @@ impl SceneTextSystem {
                     fragment: Some(wgpu::FragmentState {
                         module: &shaders,
                         entry_point: "mainpass_fs",
-                        targets: &[wgpu::ColorTargetState {
+                        targets: &[Some(wgpu::ColorTargetState {
                             format: rendering_state.config.format,
                             blend: Some(wgpu::BlendState::REPLACE),
                             write_mask: wgpu::ColorWrites::ALL,
-                        }],
+                        })],
                     }),
                     primitive: wgpu::PrimitiveState {
                         topology: wgpu::PrimitiveTopology::TriangleList,
@@ -495,7 +495,7 @@ impl SceneTextSystem {
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("TextSystemPrePass"),
-            color_attachments: &[wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &self.prepass_target_texture.view,
                 resolve_target: None,
                 ops: wgpu::Operations {
@@ -507,7 +507,7 @@ impl SceneTextSystem {
                     }),
                     store: true,
                 },
-            }],
+            })],
             depth_stencil_attachment: None,
         });
 
@@ -553,7 +553,7 @@ impl SceneTextSystem {
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("TextSystemMainPass"),
-            color_attachments: &[wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &view,
                 resolve_target: None,
                 ops: wgpu::Operations {
@@ -565,7 +565,7 @@ impl SceneTextSystem {
                     }),
                     store: true,
                 },
-            }],
+            })],
             depth_stencil_attachment: None,
         });
 
