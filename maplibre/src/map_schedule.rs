@@ -13,41 +13,28 @@ use crate::{
     schedule::{Schedule, Stage},
     stages::register_stages,
     style::Style,
-    HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod, WgpuSettings,
-    WindowSize,
+    Environment, HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod,
+    WgpuSettings, WindowSize,
 };
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
-pub struct InteractiveMapSchedule<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    map_window_config: MWC,
+pub struct InteractiveMapSchedule<E: Environment> {
+    map_window_config: E::MapWindowConfig,
 
     map_context: EventuallyMapContext,
 
     schedule: Schedule,
 
-    phantom_sm: PhantomData<SM>,
-    phantom_hc: PhantomData<HC>,
-
     suspended: bool,
 }
 
-impl<MWC, SM, HC> InteractiveMapSchedule<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
+impl<E: Environment> InteractiveMapSchedule<E> {
     pub fn new(
-        map_window_config: MWC,
+        map_window_config: E::MapWindowConfig,
         window_size: WindowSize,
         renderer: Option<Renderer>,
-        scheduler: Scheduler<SM>,
-        http_client: HC,
+        scheduler: Scheduler<E::ScheduleMethod>,
+        http_client: E::HttpClient,
         style: Style,
         wgpu_settings: WgpuSettings,
         renderer_settings: RendererSettings,
@@ -63,7 +50,8 @@ where
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
-        let http_source_client: HttpSourceClient<HC> = HttpSourceClient::new(http_client);
+        let http_source_client: HttpSourceClient<E::HttpClient> =
+            HttpSourceClient::new(http_client);
         register_stages(&mut schedule, http_source_client, Box::new(scheduler));
 
         let graph = create_default_render_graph().unwrap();
@@ -87,8 +75,6 @@ where
                 }),
             },
             schedule,
-            phantom_sm: Default::default(),
-            phantom_hc: Default::default(),
             suspended: false,
         }
     }
@@ -116,23 +102,6 @@ where
         }
     }
 
-    pub fn suspend(&mut self) {
-        self.suspended = true;
-    }
-
-    pub fn resume(&mut self, window: &MWC::MapWindow)
-    where
-        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
-    {
-        if let EventuallyMapContext::Full(map_context) = &mut self.map_context {
-            let renderer = &mut map_context.renderer;
-            renderer
-                .state
-                .recreate_surface::<MWC::MapWindow>(window, &renderer.instance);
-            self.suspended = false;
-        }
-    }
-
     pub fn is_initialized(&self) -> bool {
         match &self.map_context {
             EventuallyMapContext::Full(_) => true,
@@ -140,10 +109,32 @@ where
         }
     }
 
-    pub async fn late_init(&mut self) -> bool
-    where
-        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
-    {
+    pub fn view_state_mut(&mut self) -> &mut ViewState {
+        match &mut self.map_context {
+            EventuallyMapContext::Full(MapContext { view_state, .. }) => view_state,
+            EventuallyMapContext::Premature(PrematureMapContext { view_state, .. }) => view_state,
+            _ => panic!("should not happen"),
+        }
+    }
+}
+
+impl<E: Environment> InteractiveMapSchedule<E>
+where
+    <E::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow,
+{
+    pub fn suspend(&mut self) {
+        self.suspended = true;
+    }
+
+    pub fn resume(&mut self, window: &<E::MapWindowConfig as MapWindowConfig>::MapWindow) {
+        if let EventuallyMapContext::Full(map_context) = &mut self.map_context {
+            let renderer = &mut map_context.renderer;
+            renderer.state.recreate_surface(window, &renderer.instance);
+            self.suspended = false;
+        }
+    }
+
+    pub async fn late_init(&mut self) -> bool {
         match &self.map_context {
             EventuallyMapContext::Full(_) => false,
             EventuallyMapContext::Premature(PrematureMapContext {
@@ -160,14 +151,6 @@ where
                 true
             }
             EventuallyMapContext::_Uninitialized => false,
-        }
-    }
-
-    pub fn view_state_mut(&mut self) -> &mut ViewState {
-        match &mut self.map_context {
-            EventuallyMapContext::Full(MapContext { view_state, .. }) => view_state,
-            EventuallyMapContext::Premature(PrematureMapContext { view_state, .. }) => view_state,
-            _ => panic!("should not happen"),
         }
     }
 }

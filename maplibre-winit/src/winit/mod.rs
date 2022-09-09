@@ -1,10 +1,12 @@
 use instant::Instant;
+use maplibre::environment::Environment;
 use maplibre::{
     error::Error,
     io::{scheduler::ScheduleMethod, source_client::HttpClient},
     map_schedule::InteractiveMapSchedule,
     window::{EventLoop, HeadedMapWindow, MapWindowConfig},
 };
+use std::marker::PhantomData;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
@@ -52,30 +54,35 @@ pub struct WinitMapWindow {
     event_loop: Option<WinitEventLoop>,
 }
 
-pub type WinitWindow = winit::window::Window;
-pub type WinitEventLoop = winit::event_loop::EventLoop<()>;
-
 impl WinitMapWindow {
     pub fn take_event_loop(&mut self) -> Option<WinitEventLoop> {
         self.event_loop.take()
     }
 }
 
+pub type WinitWindow = winit::window::Window;
+pub type WinitEventLoop = winit::event_loop::EventLoop<()>;
+
+pub struct WinitEnvironment<SM: ScheduleMethod, HC: HttpClient> {
+    phantom_sm: PhantomData<SM>,
+    phantom_hc: PhantomData<HC>,
+}
+
+impl<SM: ScheduleMethod, HC: HttpClient> Environment for WinitEnvironment<SM, HC> {
+    type MapWindowConfig = WinitMapWindowConfig;
+    type ScheduleMethod = SM;
+    type HttpClient = HC;
+}
+
 ///Main (platform-specific) main loop which handles:
 ///* Input (Mouse/Keyboard)
 ///* Platform Events like suspend/resume
 ///* Render a new frame
-impl<MWC, SM, HC> EventLoop<MWC, SM, HC> for WinitMapWindow
+impl<E: Environment> EventLoop<E> for WinitMapWindow
 where
-    MWC: MapWindowConfig<MapWindow = WinitMapWindow>,
-    SM: ScheduleMethod,
-    HC: HttpClient,
+    E::MapWindowConfig: MapWindowConfig<MapWindow = WinitMapWindow>,
 {
-    fn run(
-        mut self,
-        mut map_schedule: InteractiveMapSchedule<MWC, SM, HC>,
-        max_frames: Option<u64>,
-    ) {
+    fn run(mut self, mut map_schedule: InteractiveMapSchedule<E>, max_frames: Option<u64>) {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
 

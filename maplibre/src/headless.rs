@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::{
     collections::HashSet,
     fs::File,
@@ -35,7 +36,8 @@ use crate::{
         RenderState,
     },
     schedule::{Schedule, Stage},
-    HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler, Style, WindowSize,
+    Environment, HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler,
+    Style, WindowSize,
 };
 
 pub struct HeadlessMapWindowConfig {
@@ -60,56 +62,47 @@ impl MapWindow for HeadlessMapWindow {
     }
 }
 
-pub struct HeadlessMap<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    pub map_schedule: HeadlessMapSchedule<MWC, SM, HC>,
-    pub window: MWC::MapWindow,
+pub struct HeadlessEnvironment<SM: ScheduleMethod, HC: HttpClient> {
+    phantom_sm: PhantomData<SM>,
+    phantom_hc: PhantomData<HC>,
 }
 
-impl<MWC, SM, HC> HeadlessMap<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    pub fn map_schedule_mut(&mut self) -> &mut HeadlessMapSchedule<MWC, SM, HC> {
+impl<SM: ScheduleMethod, HC: HttpClient> Environment for HeadlessEnvironment<SM, HC> {
+    type MapWindowConfig = HeadlessMapWindowConfig;
+    type ScheduleMethod = SM;
+    type HttpClient = HC;
+}
+
+pub struct HeadlessMap<E: Environment> {
+    pub map_schedule: HeadlessMapSchedule<E>,
+    pub window: <E::MapWindowConfig as MapWindowConfig>::MapWindow,
+}
+
+impl<E: Environment> HeadlessMap<E> {
+    pub fn map_schedule_mut(&mut self) -> &mut HeadlessMapSchedule<E> {
         &mut self.map_schedule
     }
 }
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
-pub struct HeadlessMapSchedule<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    map_window_config: MWC,
+pub struct HeadlessMapSchedule<E: Environment> {
+    map_window_config: E::MapWindowConfig,
 
     pub map_context: MapContext,
 
     schedule: Schedule,
-    scheduler: Scheduler<SM>,
-    http_client: HC,
+    scheduler: Scheduler<E::ScheduleMethod>,
+    http_client: E::HttpClient,
     tile_request_state: TileRequestState,
 }
 
-impl<MWC, SM, HC> HeadlessMapSchedule<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
+impl<E: Environment> HeadlessMapSchedule<E> {
     pub fn new(
-        map_window_config: MWC,
+        map_window_config: E::MapWindowConfig,
         window_size: WindowSize,
         renderer: Renderer,
-        scheduler: Scheduler<SM>,
-        http_client: HC,
+        scheduler: Scheduler<E::ScheduleMethod>,
+        http_client: E::HttpClient,
         style: Style,
     ) -> Self {
         let view_state = ViewState::new(
@@ -160,10 +153,10 @@ where
     pub fn schedule(&self) -> &Schedule {
         &self.schedule
     }
-    pub fn scheduler(&self) -> &Scheduler<SM> {
+    pub fn scheduler(&self) -> &Scheduler<E::ScheduleMethod> {
         &self.scheduler
     }
-    pub fn http_client(&self) -> &HC {
+    pub fn http_client(&self) -> &E::HttpClient {
         &self.http_client
     }
 
@@ -176,7 +169,7 @@ where
             .filter_map(|layer| layer.source_layer.clone())
             .collect();
 
-        let http_source_client: HttpSourceClient<HC> =
+        let http_source_client: HttpSourceClient<E::HttpClient> =
             HttpSourceClient::new(self.http_client.clone());
 
         let data = http_source_client

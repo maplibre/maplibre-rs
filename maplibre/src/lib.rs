@@ -16,6 +16,7 @@
 //! maplibre = "0.0.2"
 //! ```
 
+use crate::environment::Environment;
 use crate::{
     io::{
         scheduler::{ScheduleMethod, Scheduler},
@@ -56,29 +57,21 @@ pub mod benchmarking;
 // Internal modules
 pub(crate) mod tessellation;
 
+pub mod environment;
+
 /// The [`Map`] defines the public interface of the map renderer.
 // DO NOT IMPLEMENT INTERNALS ON THIS STRUCT.
-pub struct Map<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    map_schedule: InteractiveMapSchedule<MWC, SM, HC>,
-    window: MWC::MapWindow,
+pub struct Map<E: Environment> {
+    map_schedule: InteractiveMapSchedule<E>,
+    window: <E::MapWindowConfig as MapWindowConfig>::MapWindow,
 }
 
-impl<MWC, SM, HC> Map<MWC, SM, HC>
+impl<E: Environment> Map<E>
 where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
+    <E::MapWindowConfig as MapWindowConfig>::MapWindow: EventLoop<E>,
 {
     /// Starts the [`crate::map_schedule::MapState`] Runnable with the configured event loop.
-    pub fn run(self)
-    where
-        MWC::MapWindow: EventLoop<MWC, SM, HC>,
-    {
+    pub fn run(self) {
         self.run_with_optionally_max_frames(None);
     }
 
@@ -87,10 +80,7 @@ where
     /// # Arguments
     ///
     /// * `max_frames` - Maximum number of frames per second.
-    pub fn run_with_max_frames(self, max_frames: u64)
-    where
-        MWC::MapWindow: EventLoop<MWC, SM, HC>,
-    {
+    pub fn run_with_max_frames(self, max_frames: u64) {
         self.run_with_optionally_max_frames(Some(max_frames));
     }
 
@@ -99,51 +89,37 @@ where
     /// # Arguments
     ///
     /// * `max_frames` - Optional maximum number of frames per second.
-    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>)
-    where
-        MWC::MapWindow: EventLoop<MWC, SM, HC>,
-    {
+    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
         self.window.run(self.map_schedule, max_frames);
     }
 
-    pub fn map_schedule(&self) -> &InteractiveMapSchedule<MWC, SM, HC> {
+    pub fn map_schedule(&self) -> &InteractiveMapSchedule<E> {
         &self.map_schedule
     }
 
-    pub fn map_schedule_mut(&mut self) -> &mut InteractiveMapSchedule<MWC, SM, HC> {
+    pub fn map_schedule_mut(&mut self) -> &mut InteractiveMapSchedule<E> {
         &mut self.map_schedule
     }
 }
 
 /// Stores the map configuration before the map's state has been fully initialized.
-pub struct UninitializedMap<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    scheduler: Scheduler<SM>,
-    http_client: HC,
+pub struct UninitializedMap<E: Environment> {
+    scheduler: Scheduler<E::ScheduleMethod>,
+    http_client: E::HttpClient,
     style: Style,
 
     wgpu_settings: WgpuSettings,
     renderer_settings: RendererSettings,
-    map_window_config: MWC,
+    map_window_config: E::MapWindowConfig,
 }
 
-impl<MWC, SM, HC> UninitializedMap<MWC, SM, HC>
+impl<E: Environment> UninitializedMap<E>
 where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
+    <E::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow,
 {
     /// Initializes the whole rendering pipeline for the given configuration.
     /// Returns the initialized map, ready to be run.
-    pub async fn initialize(self) -> Map<MWC, SM, HC>
-    where
-        MWC: MapWindowConfig,
-        <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
-    {
+    pub async fn initialize(self) -> Map<E> {
         let window = self.map_window_config.create();
         let window_size = window.size();
 
@@ -171,9 +147,11 @@ where
             window,
         }
     }
+}
 
-    #[cfg(feature = "headless")]
-    pub async fn initialize_headless(self) -> headless::HeadlessMap<MWC, SM, HC> {
+#[cfg(feature = "headless")]
+impl<E: Environment> UninitializedMap<E> {
+    pub async fn initialize_headless(self) -> headless::HeadlessMap<E> {
         let window = self.map_window_config.create();
         let window_size = window.size();
 
@@ -198,26 +176,18 @@ where
     }
 }
 
-pub struct MapBuilder<MWC, SM, HC>
-where
-    SM: ScheduleMethod,
-{
-    schedule_method: Option<SM>,
-    scheduler: Option<Scheduler<SM>>,
-    http_client: Option<HC>,
+pub struct MapBuilder<E: Environment> {
+    schedule_method: Option<E::ScheduleMethod>,
+    scheduler: Option<Scheduler<E::ScheduleMethod>>,
+    http_client: Option<E::HttpClient>,
     style: Option<Style>,
 
-    map_window_config: Option<MWC>,
+    map_window_config: Option<E::MapWindowConfig>,
     wgpu_settings: Option<WgpuSettings>,
     renderer_settings: Option<RendererSettings>,
 }
 
-impl<MWC, SM, HC> MapBuilder<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
+impl<E: Environment> MapBuilder<E> {
     pub fn new() -> Self {
         Self {
             schedule_method: None,
@@ -230,7 +200,7 @@ where
         }
     }
 
-    pub fn with_map_window_config(mut self, map_window_config: MWC) -> Self {
+    pub fn with_map_window_config(mut self, map_window_config: E::MapWindowConfig) -> Self {
         self.map_window_config = Some(map_window_config);
         self
     }
@@ -245,17 +215,17 @@ where
         self
     }
 
-    pub fn with_schedule_method(mut self, schedule_method: SM) -> Self {
+    pub fn with_schedule_method(mut self, schedule_method: E::ScheduleMethod) -> Self {
         self.schedule_method = Some(schedule_method);
         self
     }
 
-    pub fn with_http_client(mut self, http_client: HC) -> Self {
+    pub fn with_http_client(mut self, http_client: E::HttpClient) -> Self {
         self.http_client = Some(http_client);
         self
     }
 
-    pub fn with_existing_scheduler(mut self, scheduler: Scheduler<SM>) -> Self {
+    pub fn with_existing_scheduler(mut self, scheduler: Scheduler<E::ScheduleMethod>) -> Self {
         self.scheduler = Some(scheduler);
         self
     }
@@ -266,7 +236,7 @@ where
     }
 
     /// Builds the UninitializedMap with the given configuration.
-    pub fn build(self) -> UninitializedMap<MWC, SM, HC> {
+    pub fn build(self) -> UninitializedMap<E> {
         let scheduler = self
             .scheduler
             .unwrap_or_else(|| Scheduler::new(self.schedule_method.unwrap()));

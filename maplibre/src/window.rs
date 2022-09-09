@@ -2,7 +2,7 @@
 
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 
-use crate::{HttpClient, InteractiveMapSchedule, ScheduleMethod};
+use crate::{Environment, HttpClient, InteractiveMapSchedule, ScheduleMethod};
 
 /// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.
 pub trait MapWindow {
@@ -27,13 +27,8 @@ pub trait MapWindowConfig: 'static {
 
 /// The event loop is responsible for processing events and propagating them to the map renderer.
 /// Only non-headless windows use an [`EventLoop`].
-pub trait EventLoop<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    fn run(self, map_schedule: InteractiveMapSchedule<MWC, SM, HC>, max_frames: Option<u64>);
+pub trait EventLoop<E: Environment> {
+    fn run(self, map_schedule: InteractiveMapSchedule<E>, max_frames: Option<u64>);
 }
 
 /// Window size with a width and an height in pixels.
