@@ -36,8 +36,7 @@ use crate::{
         RenderState,
     },
     schedule::{Schedule, Stage},
-    Environment, HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler,
-    Style, WindowSize,
+    Environment, HttpClient, MapWindow, MapWindowConfig, Renderer, Scheduler, Style, WindowSize,
 };
 
 pub struct HeadlessMapWindowConfig {
@@ -62,14 +61,14 @@ impl MapWindow for HeadlessMapWindow {
     }
 }
 
-pub struct HeadlessEnvironment<SM: ScheduleMethod, HC: HttpClient> {
-    phantom_sm: PhantomData<SM>,
+pub struct HeadlessEnvironment<S: Scheduler, HC: HttpClient> {
+    phantom_s: PhantomData<S>,
     phantom_hc: PhantomData<HC>,
 }
 
-impl<SM: ScheduleMethod, HC: HttpClient> Environment for HeadlessEnvironment<SM, HC> {
+impl<S: Scheduler, HC: HttpClient> Environment for HeadlessEnvironment<S, HC> {
     type MapWindowConfig = HeadlessMapWindowConfig;
-    type ScheduleMethod = SM;
+    type Scheduler = S;
     type HttpClient = HC;
 }
 
@@ -91,7 +90,7 @@ pub struct HeadlessMapSchedule<E: Environment> {
     pub map_context: MapContext,
 
     schedule: Schedule,
-    scheduler: Scheduler<E::ScheduleMethod>,
+    scheduler: E::Scheduler,
     http_client: E::HttpClient,
     tile_request_state: TileRequestState,
 }
@@ -101,7 +100,7 @@ impl<E: Environment> HeadlessMapSchedule<E> {
         map_window_config: E::MapWindowConfig,
         window_size: WindowSize,
         renderer: Renderer,
-        scheduler: Scheduler<E::ScheduleMethod>,
+        scheduler: E::Scheduler,
         http_client: E::HttpClient,
         style: Style,
     ) -> Self {
@@ -153,7 +152,7 @@ impl<E: Environment> HeadlessMapSchedule<E> {
     pub fn schedule(&self) -> &Schedule {
         &self.schedule
     }
-    pub fn scheduler(&self) -> &Scheduler<E::ScheduleMethod> {
+    pub fn scheduler(&self) -> &E::Scheduler {
         &self.scheduler
     }
     pub fn http_client(&self) -> &E::HttpClient {

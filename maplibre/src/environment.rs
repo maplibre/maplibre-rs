@@ -1,7 +1,7 @@
-use crate::{HttpClient, MapWindowConfig, ScheduleMethod};
+use crate::{HttpClient, MapWindowConfig, Scheduler};
 
 pub trait Environment: 'static {
     type MapWindowConfig: MapWindowConfig;
-    type ScheduleMethod: ScheduleMethod;
+    type Scheduler: Scheduler;
     type HttpClient: HttpClient;
 }

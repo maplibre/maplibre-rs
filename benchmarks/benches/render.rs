@@ -11,9 +11,7 @@ use maplibre::{
         tile_pipelines::build_vector_tile_pipeline,
         TileRequest,
     },
-    platform::{
-        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
-    },
+    platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
     render::settings::{RendererSettings, TextureFormat},
     window::WindowSize,
     MapBuilder,
@@ -27,7 +25,7 @@ fn headless_render(c: &mut Criterion) {
                     size: WindowSize::new(1000, 1000).unwrap(),
                 })
                 .with_http_client(ReqwestHttpClient::new(None))
-                .with_schedule_method(TokioScheduleMethod::new())
+                .with_scheduler(TokioScheduler::new())
                 .with_renderer_settings(RendererSettings {
                     texture_format: TextureFormat::Rgba8UnormSrgb,
                     ..RendererSettings::default()

@@ -13,29 +13,21 @@ use crate::{
     },
     schedule::Stage,
     stages::SharedThreadState,
-    HttpClient, ScheduleMethod, Scheduler, Style,
+    Environment, HttpClient, Scheduler, Style,
 };
 
-pub struct RequestStage<SM, HC>
-where
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
+pub struct RequestStage<E: Environment> {
     shared_thread_state: SharedThreadState,
-    scheduler: Scheduler<SM>,
-    http_source_client: HttpSourceClient<HC>,
+    scheduler: E::Scheduler,
+    http_source_client: HttpSourceClient<E::HttpClient>,
     try_failed: bool,
 }
 
-impl<SM, HC> RequestStage<SM, HC>
-where
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
+impl<E: Environment> RequestStage<E> {
     pub fn new(
         shared_thread_state: SharedThreadState,
-        http_source_client: HttpSourceClient<HC>,
-        scheduler: Scheduler<SM>,
+        http_source_client: HttpSourceClient<E::HttpClient>,
+        scheduler: E::Scheduler,
     ) -> Self {
         Self {
             shared_thread_state,
@@ -46,11 +38,7 @@ where
     }
 }
 
-impl<SM, HC> Stage for RequestStage<SM, HC>
-where
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
+impl<E: Environment> Stage for RequestStage<E> {
     fn run(
         &mut self,
         MapContext {
@@ -75,11 +63,7 @@ where
     }
 }
 
-impl<SM, HC> RequestStage<SM, HC>
-where
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
+impl<E: Environment> RequestStage<E> {
     /// Request tiles which are currently in view.
     #[tracing::instrument(skip_all)]
     fn request_tiles_in_view(
@@ -138,7 +122,6 @@ where
 
                 let state = self.shared_thread_state.clone();
                 self.scheduler
-                    .schedule_method()
                     .schedule(Box::new(move || {
                         Box::pin(async move {
                             match client.fetch(&coords).await {

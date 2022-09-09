@@ -3,7 +3,7 @@ use maplibre::{
     coords::{LatLon, WorldTileCoords},
     error::Error,
     headless::HeadlessMapWindowConfig,
-    platform::{http_client::ReqwestHttpClient, schedule_method::TokioScheduleMethod},
+    platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
     render::settings::{RendererSettings, TextureFormat},
     util::grid::google_mercator,
     window::WindowSize,
@@ -18,7 +18,7 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
             size: WindowSize::new(tile_size, tile_size).unwrap(),
         })
         .with_http_client(ReqwestHttpClient::new(None))
-        .with_schedule_method(TokioScheduleMethod::new())
+        .with_scheduler(TokioScheduler::new())
         .with_renderer_settings(RendererSettings {
             texture_format: TextureFormat::Rgba8UnormSrgb,
             ..RendererSettings::default()

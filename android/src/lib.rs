@@ -3,9 +3,7 @@ use std::ffi::CString;
 use jni::{objects::JClass, JNIEnv};
 use log::Level;
 use maplibre::{
-    platform::{
-        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
-    },
+    platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
     render::settings::{Backends, WgpuSettings},
     MapBuilder,
 };
@@ -22,7 +20,7 @@ pub fn android_main() {
         MapBuilder::new()
             .with_map_window_config(WinitMapWindowConfig::new("maplibre android".to_string()))
             .with_http_client(ReqwestHttpClient::new(None))
-            .with_schedule_method(TokioScheduleMethod::new())
+            .with_scheduler(TokioScheduler::new())
             .with_wgpu_settings(WgpuSettings {
                 backends: Some(Backends::VULKAN),
                 ..WgpuSettings::default()

@@ -13,8 +13,8 @@ use crate::{
     schedule::{Schedule, Stage},
     stages::register_stages,
     style::Style,
-    Environment, HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, ScheduleMethod,
-    WgpuSettings, WindowSize,
+    Environment, HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, WgpuSettings,
+    WindowSize,
 };
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
@@ -33,7 +33,7 @@ impl<E: Environment> InteractiveMapSchedule<E> {
         map_window_config: E::MapWindowConfig,
         window_size: WindowSize,
         renderer: Option<Renderer>,
-        scheduler: Scheduler<E::ScheduleMethod>,
+        scheduler: E::Scheduler,
         http_client: E::HttpClient,
         style: Style,
         wgpu_settings: WgpuSettings,
@@ -52,7 +52,7 @@ impl<E: Environment> InteractiveMapSchedule<E> {
 
         let http_source_client: HttpSourceClient<E::HttpClient> =
             HttpSourceClient::new(http_client);
-        register_stages(&mut schedule, http_source_client, Box::new(scheduler));
+        register_stages::<E>(&mut schedule, http_source_client, Box::new(scheduler));
 
         let graph = create_default_render_graph().unwrap();
         register_default_render_stages(graph, &mut schedule);

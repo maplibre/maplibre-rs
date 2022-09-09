@@ -1,8 +1,9 @@
 use instant::Instant;
 use maplibre::environment::Environment;
+use maplibre::io::scheduler::Scheduler;
 use maplibre::{
     error::Error,
-    io::{scheduler::ScheduleMethod, source_client::HttpClient},
+    io::source_client::HttpClient,
     map_schedule::InteractiveMapSchedule,
     window::{EventLoop, HeadedMapWindow, MapWindowConfig},
 };
@@ -63,14 +64,14 @@ impl WinitMapWindow {
 pub type WinitWindow = winit::window::Window;
 pub type WinitEventLoop = winit::event_loop::EventLoop<()>;
 
-pub struct WinitEnvironment<SM: ScheduleMethod, HC: HttpClient> {
-    phantom_sm: PhantomData<SM>,
+pub struct WinitEnvironment<S: Scheduler, HC: HttpClient> {
+    phantom_s: PhantomData<S>,
     phantom_hc: PhantomData<HC>,
 }
 
-impl<SM: ScheduleMethod, HC: HttpClient> Environment for WinitEnvironment<SM, HC> {
+impl<S: Scheduler, HC: HttpClient> Environment for WinitEnvironment<S, HC> {
     type MapWindowConfig = WinitMapWindowConfig;
-    type ScheduleMethod = SM;
+    type Scheduler = S;
     type HttpClient = HC;
 }
 

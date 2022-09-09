@@ -26,7 +26,7 @@ use crate::{
         populate_tile_store_stage::PopulateTileStore,
     },
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    HttpClient, ScheduleMethod, Scheduler,
+    Environment, HttpClient, Scheduler,
 };
 
 mod message;
@@ -34,10 +34,10 @@ mod populate_tile_store_stage;
 mod request_stage;
 
 /// Register stages required for requesting and preparing new tiles.
-pub fn register_stages<HC: HttpClient, SM: ScheduleMethod>(
+pub fn register_stages<E: Environment>(
     schedule: &mut Schedule,
-    http_source_client: HttpSourceClient<HC>,
-    scheduler: Box<Scheduler<SM>>,
+    http_source_client: HttpSourceClient<E::HttpClient>,
+    scheduler: Box<E::Scheduler>,
 ) {
     let (message_sender, message_receiver): (MessageSender, MessageReceiver) = mpsc::channel();
     let shared_thread_state = SharedThreadState {
@@ -49,7 +49,7 @@ pub fn register_stages<HC: HttpClient, SM: ScheduleMethod>(
 
     schedule.add_stage(
         "request",
-        RequestStage::new(shared_thread_state.clone(), http_source_client, *scheduler),
+        RequestStage::<E>::new(shared_thread_state.clone(), http_source_client, *scheduler),
     );
     schedule.add_stage(
         "populate_tile_store",

@@ -73,7 +73,6 @@ impl UpdateState for QueryHandler {
                 ) {
                     /*state
                     .scheduler()
-                    .schedule_method()
                     .schedule(state.scheduler(), move |thread_local| async move {
                         if let Some(geometries) = thread_local.query_point(
                             &WorldCoords {

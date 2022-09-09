@@ -18,10 +18,7 @@
 
 use crate::environment::Environment;
 use crate::{
-    io::{
-        scheduler::{ScheduleMethod, Scheduler},
-        source_client::HttpClient,
-    },
+    io::{scheduler::Scheduler, source_client::HttpClient},
     map_schedule::InteractiveMapSchedule,
     render::{
         settings::{RendererSettings, WgpuSettings},
@@ -104,7 +101,7 @@ where
 
 /// Stores the map configuration before the map's state has been fully initialized.
 pub struct UninitializedMap<E: Environment> {
-    scheduler: Scheduler<E::ScheduleMethod>,
+    scheduler: E::Scheduler,
     http_client: E::HttpClient,
     style: Style,
 
@@ -177,8 +174,7 @@ impl<E: Environment> UninitializedMap<E> {
 }
 
 pub struct MapBuilder<E: Environment> {
-    schedule_method: Option<E::ScheduleMethod>,
-    scheduler: Option<Scheduler<E::ScheduleMethod>>,
+    scheduler: Option<E::Scheduler>,
     http_client: Option<E::HttpClient>,
     style: Option<Style>,
 
@@ -190,7 +186,6 @@ pub struct MapBuilder<E: Environment> {
 impl<E: Environment> MapBuilder<E> {
     pub fn new() -> Self {
         Self {
-            schedule_method: None,
             scheduler: None,
             http_client: None,
             style: None,
@@ -215,18 +210,13 @@ impl<E: Environment> MapBuilder<E> {
         self
     }
 
-    pub fn with_schedule_method(mut self, schedule_method: E::ScheduleMethod) -> Self {
-        self.schedule_method = Some(schedule_method);
+    pub fn with_scheduler(mut self, scheduler: E::Scheduler) -> Self {
+        self.scheduler = Some(scheduler);
         self
     }
 
     pub fn with_http_client(mut self, http_client: E::HttpClient) -> Self {
         self.http_client = Some(http_client);
-        self
-    }
-
-    pub fn with_existing_scheduler(mut self, scheduler: Scheduler<E::ScheduleMethod>) -> Self {
-        self.scheduler = Some(scheduler);
         self
     }
 
@@ -237,9 +227,7 @@ impl<E: Environment> MapBuilder<E> {
 
     /// Builds the UninitializedMap with the given configuration.
     pub fn build(self) -> UninitializedMap<E> {
-        let scheduler = self
-            .scheduler
-            .unwrap_or_else(|| Scheduler::new(self.schedule_method.unwrap()));
+        let scheduler = self.scheduler.unwrap();
         let style = self.style.unwrap_or_default();
 
         UninitializedMap {
