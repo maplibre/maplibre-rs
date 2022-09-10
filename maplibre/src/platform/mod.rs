@@ -41,6 +41,12 @@ pub mod scheduler {
     pub use super::noweb::scheduler::*;
 }
 
+/// APC for non-web targets.
+pub mod apc {
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use super::noweb::apc::*;
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 pub use noweb::run_multithreaded;
 

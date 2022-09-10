@@ -1,6 +1,8 @@
 use instant::Instant;
-use maplibre::environment::Environment;
+use maplibre::environment::{DefaultTransferables, Environment};
+use maplibre::io::apc::Transferable;
 use maplibre::io::scheduler::Scheduler;
+use maplibre::platform::apc::TokioAsyncProcedureCall;
 use maplibre::{
     error::Error,
     io::source_client::HttpClient,
@@ -71,8 +73,10 @@ pub struct WinitEnvironment<S: Scheduler, HC: HttpClient> {
 
 impl<S: Scheduler, HC: HttpClient> Environment for WinitEnvironment<S, HC> {
     type MapWindowConfig = WinitMapWindowConfig;
+    type AsyncProcedureCall = TokioAsyncProcedureCall<DefaultTransferables>;
     type Scheduler = S;
     type HttpClient = HC;
+    type Transferables = DefaultTransferables;
 }
 
 ///Main (platform-specific) main loop which handles:

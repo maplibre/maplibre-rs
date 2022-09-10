@@ -1,49 +1,52 @@
 //! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].
 
-use super::{MessageReceiver, SharedThreadState, TessellateMessage, TileTessellateMessage};
-use crate::{context::MapContext, io::tile_repository::StoredLayer, schedule::Stage};
+use crate::io::apc::{AsyncProcedureCall, Transferable};
+use crate::io::transferables::{TessellatedLayer, TileTessellated, UnavailableLayer};
+use crate::{context::MapContext, io::tile_repository::StoredLayer, schedule::Stage, Environment};
+use std::rc::Rc;
 
-pub struct PopulateTileStore {
-    shared_thread_state: SharedThreadState,
-    message_receiver: MessageReceiver,
+pub struct PopulateTileStore<E: Environment> {
+    apc: Rc<E::AsyncProcedureCall>,
 }
 
-impl PopulateTileStore {
-    pub fn new(shared_thread_state: SharedThreadState, message_receiver: MessageReceiver) -> Self {
-        Self {
-            shared_thread_state,
-            message_receiver,
-        }
+impl<E: Environment> PopulateTileStore<E> {
+    pub fn new(apc: Rc<E::AsyncProcedureCall>) -> Self {
+        Self { apc }
     }
 }
 
-impl Stage for PopulateTileStore {
+impl<E: Environment> Stage for PopulateTileStore<E> {
     fn run(
         &mut self,
         MapContext {
             tile_repository, ..
         }: &mut MapContext,
     ) {
-        if let Ok(result) = self.message_receiver.try_recv() {
+        if let Some(result) = self.apc.receive() {
             match result {
-                TessellateMessage::Layer(layer_result) => {
-                    let layer: StoredLayer = layer_result.into();
-                    tracing::trace!(
+                Transferable::TileTessellated(tranferred) => {
+                    let coords = tranferred.coords();
+                    tile_repository.success(coords);
+                    tracing::trace!("Tile at {} finished loading", coords);
+                }
+                Transferable::UnavailableLayer(tranferred) => {
+                    let layer: StoredLayer = tranferred.to_stored_layer();
+                    tracing::debug!(
                         "Layer {} at {} reached main thread",
                         layer.layer_name(),
                         layer.get_coords()
                     );
                     tile_repository.put_tessellated_layer(layer);
                 }
-                TessellateMessage::Tile(TileTessellateMessage { request_id, coords }) => loop {
-                    if let Ok(mut tile_request_state) =
-                        self.shared_thread_state.tile_request_state.try_lock()
-                    {
-                        tile_request_state.finish_tile_request(request_id);
-                        tracing::trace!("Tile at {} finished loading", coords);
-                        break;
-                    }
-                },
+                Transferable::TessellatedLayer(data) => {
+                    let layer: StoredLayer = data.to_stored_layer();
+                    tracing::debug!(
+                        "Layer {} at {} reached main thread",
+                        layer.layer_name(),
+                        layer.get_coords()
+                    );
+                    tile_repository.put_tessellated_layer(layer);
+                }
             }
         }
     }

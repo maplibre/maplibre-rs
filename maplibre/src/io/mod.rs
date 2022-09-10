@@ -3,7 +3,9 @@
 use std::{collections::HashSet, fmt};
 
 use crate::coords::WorldTileCoords;
+use serde::Serialize;
 
+pub mod apc;
 pub mod geometry_index;
 pub mod pipeline;
 pub mod scheduler;
@@ -12,12 +14,12 @@ pub mod source_client;
 pub mod static_tile_fetcher;
 pub mod tile_pipelines;
 pub mod tile_repository;
-pub mod tile_request_state;
+pub mod transferables;
 
 pub use geozero::mvt::tile::Layer as RawLayer;
 
 /// A request for a tile at the given coordinates and in the given layers.
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct TileRequest {
     pub coords: WorldTileCoords,
     pub layers: HashSet<String>,
@@ -28,6 +30,3 @@ impl fmt::Debug for TileRequest {
         write!(f, "TileRequest({}, {:?})", &self.coords, &self.layers)
     }
 }
-
-/// The ID format for a tile request.
-pub type TileRequestID = u32;

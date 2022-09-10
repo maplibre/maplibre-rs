@@ -12,6 +12,8 @@ use std::{
 use tokio::{runtime::Handle, task};
 use wgpu::{BufferAsyncError, BufferSlice};
 
+use crate::environment::DefaultTransferables;
+use crate::platform::apc::TokioAsyncProcedureCall;
 use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, ViewRegion, WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
@@ -22,7 +24,6 @@ use crate::{
         source_client::HttpSourceClient,
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::{StoredLayer, TileRepository},
-        tile_request_state::TileRequestState,
         TileRequest,
     },
     render::{
@@ -68,8 +69,10 @@ pub struct HeadlessEnvironment<S: Scheduler, HC: HttpClient> {
 
 impl<S: Scheduler, HC: HttpClient> Environment for HeadlessEnvironment<S, HC> {
     type MapWindowConfig = HeadlessMapWindowConfig;
+    type AsyncProcedureCall = TokioAsyncProcedureCall<DefaultTransferables>;
     type Scheduler = S;
     type HttpClient = HC;
+    type Transferables = DefaultTransferables;
 }
 
 pub struct HeadlessMap<E: Environment> {
@@ -92,7 +95,6 @@ pub struct HeadlessMapSchedule<E: Environment> {
     schedule: Schedule,
     scheduler: E::Scheduler,
     http_client: E::HttpClient,
-    tile_request_state: TileRequestState,
 }
 
 impl<E: Environment> HeadlessMapSchedule<E> {
@@ -139,7 +141,6 @@ impl<E: Environment> HeadlessMapSchedule<E> {
             schedule,
             scheduler,
             http_client,
-            tile_request_state: Default::default(),
         }
     }
 
@@ -185,11 +186,7 @@ impl<E: Environment> HeadlessMapSchedule<E> {
             layers: source_layers,
         };
 
-        let request_id = self
-            .tile_request_state
-            .start_tile_request(request.clone())?;
-        pipeline.process((request, request_id, data), &mut pipeline_context);
-        self.tile_request_state.finish_tile_request(request_id);
+        pipeline.process((request, data), &mut pipeline_context);
 
         let mut processor = pipeline_context
             .take_processor::<HeadlessPipelineProcessor>()

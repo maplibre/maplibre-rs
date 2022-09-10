@@ -1,10 +1,19 @@
 //! [Stages](Stage) for requesting and preparing data
 
+use std::rc::Rc;
 use std::sync::{mpsc, Arc, Mutex};
 
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
+use crate::environment::DefaultTransferables;
+use crate::io::apc::{AsyncProcedureCall, Context, Transferable};
+use crate::io::transferables::Transferables;
+use crate::io::transferables::{
+    DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer, TessellatedLayer,
+    TileTessellated, UnavailableLayer,
+};
+use crate::platform::apc::{TokioAsyncProcedureCall, TokioContext};
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
     error::Error,
@@ -13,23 +22,15 @@ use crate::{
         pipeline::{PipelineContext, PipelineProcessor, Processable},
         source_client::HttpSourceClient,
         tile_pipelines::build_vector_tile_pipeline,
-        tile_request_state::TileRequestState,
-        TileRequest, TileRequestID,
+        TileRequest,
     },
     render::ShaderVertex,
     schedule::Schedule,
-    stages::{
-        message::{
-            LayerTessellateMessage, MessageReceiver, MessageSender, TessellateMessage,
-            TileTessellateMessage,
-        },
-        populate_tile_store_stage::PopulateTileStore,
-    },
+    stages::populate_tile_store_stage::PopulateTileStore,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     Environment, HttpClient, Scheduler,
 };
 
-mod message;
 mod populate_tile_store_stage;
 mod request_stage;
 
@@ -39,49 +40,33 @@ pub fn register_stages<E: Environment>(
     http_source_client: HttpSourceClient<E::HttpClient>,
     scheduler: Box<E::Scheduler>,
 ) {
-    let (message_sender, message_receiver): (MessageSender, MessageReceiver) = mpsc::channel();
-    let shared_thread_state = SharedThreadState {
-        tile_request_state: Arc::new(Mutex::new(TileRequestState::new())),
-        message_sender,
-        // TODO: Readd
-        //geometry_index: Arc::new(Mutex::new(GeometryIndex::new())),
-    };
+    let apc = Rc::new(E::AsyncProcedureCall::new());
 
     schedule.add_stage(
         "request",
-        RequestStage::<E>::new(shared_thread_state.clone(), http_source_client, *scheduler),
+        RequestStage::<E>::new(http_source_client, apc.clone()),
     );
-    schedule.add_stage(
-        "populate_tile_store",
-        PopulateTileStore::new(shared_thread_state, message_receiver),
-    );
+    schedule.add_stage("populate_tile_store", PopulateTileStore::<E>::new(apc));
 }
 
-pub struct HeadedPipelineProcessor {
-    state: SharedThreadState,
+pub struct HeadedPipelineProcessor<E: Environment> {
+    context: <E::AsyncProcedureCall as AsyncProcedureCall<E::Transferables>>::Context,
 }
 
-impl PipelineProcessor for HeadedPipelineProcessor {
-    fn tile_finished(&mut self, request_id: TileRequestID, coords: &WorldTileCoords) {
-        self.state
-            .message_sender
-            .send(TessellateMessage::Tile(TileTessellateMessage {
-                request_id,
-                coords: *coords,
-            }))
-            .unwrap();
+impl<E: Environment> PipelineProcessor for HeadedPipelineProcessor<E> {
+    fn tile_finished(&mut self, coords: &WorldTileCoords) {
+        self.context.send(Transferable::TileTessellated(
+            <E::Transferables as Transferables>::TileTessellated::new(*coords),
+        ))
     }
 
     fn layer_unavailable(&mut self, coords: &WorldTileCoords, layer_name: &str) {
-        self.state
-            .message_sender
-            .send(TessellateMessage::Layer(
-                LayerTessellateMessage::UnavailableLayer {
-                    coords: *coords,
-                    layer_name: layer_name.to_owned(),
-                },
-            ))
-            .unwrap();
+        self.context.send(Transferable::UnavailableLayer(
+            <E::Transferables as Transferables>::UnavailableLayer::new(
+                *coords,
+                layer_name.to_owned(),
+            ),
+        ))
     }
 
     fn layer_tesselation_finished(
@@ -91,17 +76,15 @@ impl PipelineProcessor for HeadedPipelineProcessor {
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
     ) {
-        self.state
-            .message_sender
-            .send(TessellateMessage::Layer(
-                LayerTessellateMessage::TessellatedLayer {
-                    coords: *coords,
-                    buffer,
-                    feature_indices,
-                    layer_data,
-                },
-            ))
-            .unwrap();
+        log::info!("layer_tesselation_finished");
+        self.context.send(Transferable::TessellatedLayer(
+            <E::Transferables as Transferables>::TessellatedLayer::new(
+                *coords,
+                buffer,
+                feature_indices,
+                layer_data,
+            ),
+        ))
     }
 
     fn layer_indexing_finished(
@@ -116,76 +99,76 @@ impl PipelineProcessor for HeadedPipelineProcessor {
     }
 }
 
-/// Stores and provides access to the thread safe data shared between the schedulers.
-#[derive(Clone)]
-pub struct SharedThreadState {
-    pub tile_request_state: Arc<Mutex<TileRequestState>>,
-    pub message_sender: mpsc::Sender<TessellateMessage>,
-    // TODO: Readd
-    //pub geometry_index: Arc<Mutex<GeometryIndex>>,
+///// Stores and provides access to the thread safe data shared between the schedulers.
+//[derive(Clone)]
+//pub struct SharedThreadState {
+/*    pub tile_request_state: Arc<Mutex<TileRequestState>>,
+pub message_sender: mpsc::Sender<TessellateMessage>,*/
+// TODO: Readd
+//pub geometry_index: Arc<Mutex<GeometryIndex>>,
+//}
+
+//impl SharedThreadState {
+/* fn get_tile_request(&self, request_id: TileRequestID) -> Option<TileRequest> {
+    self.tile_request_state
+        .lock()
+        .ok()
+        .and_then(|tile_request_state| tile_request_state.get_tile_request(request_id).cloned())
 }
 
-impl SharedThreadState {
-    fn get_tile_request(&self, request_id: TileRequestID) -> Option<TileRequest> {
-        self.tile_request_state
-            .lock()
-            .ok()
-            .and_then(|tile_request_state| tile_request_state.get_tile_request(request_id).cloned())
+#[tracing::instrument(skip_all)]
+pub fn process_tile(&self, request_id: TileRequestID, data: Box<[u8]>) -> Result<(), Error> {
+    if let Some(tile_request) = self.get_tile_request(request_id) {
+        let mut pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
+            state: self.clone(),
+        });
+        let pipeline = build_vector_tile_pipeline();
+        pipeline.process((tile_request, request_id, data), &mut pipeline_context);
     }
 
-    #[tracing::instrument(skip_all)]
-    pub fn process_tile(&self, request_id: TileRequestID, data: Box<[u8]>) -> Result<(), Error> {
-        if let Some(tile_request) = self.get_tile_request(request_id) {
-            let mut pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
-                state: self.clone(),
-            });
-            let pipeline = build_vector_tile_pipeline();
-            pipeline.process((tile_request, request_id, data), &mut pipeline_context);
-        }
-
-        Ok(())
-    }
-
-    pub fn tile_unavailable(
-        &self,
-        coords: &WorldTileCoords,
-        request_id: TileRequestID,
-    ) -> Result<(), Error> {
-        if let Some(tile_request) = self.get_tile_request(request_id) {
-            for to_load in &tile_request.layers {
-                tracing::warn!("layer {} at {} unavailable", to_load, coords);
-                self.message_sender.send(TessellateMessage::Layer(
-                    LayerTessellateMessage::UnavailableLayer {
-                        coords: tile_request.coords,
-                        layer_name: to_load.to_string(),
-                    },
-                ))?;
-            }
-        }
-
-        Ok(())
-    }
-
-    // TODO: Readd
-    /*    #[tracing::instrument(skip_all)]
-    pub fn query_point(
-        &self,
-        world_coords: &WorldCoords,
-        z: ZoomLevel,
-        zoom: Zoom,
-    ) -> Option<Vec<IndexedGeometry<f64>>> {
-        if let Ok(geometry_index) = self.geometry_index.lock() {
-            geometry_index
-                .query_point(world_coords, z, zoom)
-                .map(|geometries| {
-                    geometries
-                        .iter()
-                        .cloned()
-                        .cloned()
-                        .collect::<Vec<IndexedGeometry<f64>>>()
-                })
-        } else {
-            unimplemented!()
-        }
-    }*/
+    Ok(())
 }
+
+pub fn tile_unavailable(
+    &self,
+    coords: &WorldTileCoords,
+    request_id: TileRequestID,
+) -> Result<(), Error> {
+    if let Some(tile_request) = self.get_tile_request(request_id) {
+        for to_load in &tile_request.layers {
+            tracing::warn!("layer {} at {} unavailable", to_load, coords);
+            self.message_sender.send(TessellateMessage::Layer(
+                LayerTessellateMessage::UnavailableLayer {
+                    coords: tile_request.coords,
+                    layer_name: to_load.to_string(),
+                },
+            ))?;
+        }
+    }
+
+    Ok(())
+}*/
+
+// TODO: Readd
+/*    #[tracing::instrument(skip_all)]
+pub fn query_point(
+    &self,
+    world_coords: &WorldCoords,
+    z: ZoomLevel,
+    zoom: Zoom,
+) -> Option<Vec<IndexedGeometry<f64>>> {
+    if let Ok(geometry_index) = self.geometry_index.lock() {
+        geometry_index
+            .query_point(world_coords, z, zoom)
+            .map(|geometries| {
+                geometries
+                    .iter()
+                    .cloned()
+                    .cloned()
+                    .collect::<Vec<IndexedGeometry<f64>>>()
+            })
+    } else {
+        unimplemented!()
+    }
+}*/
+//}

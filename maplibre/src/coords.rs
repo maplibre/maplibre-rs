@@ -15,6 +15,7 @@ use crate::{
         SignificantlyDifferent,
     },
 };
+use serde::Serialize;
 
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
@@ -67,7 +68,7 @@ impl fmt::Debug for Quadkey {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug, Default)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug, Default, Serialize)]
 pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
@@ -289,7 +290,7 @@ impl From<(u32, u32, ZoomLevel)> for TileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize)]
 pub struct WorldTileCoords {
     pub x: i32,
     pub y: i32,

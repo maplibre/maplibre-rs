@@ -5,14 +5,14 @@ use geozero::mvt::tile;
 
 use crate::{
     coords::WorldTileCoords,
-    io::{geometry_index::IndexedGeometry, TileRequestID},
+    io::geometry_index::IndexedGeometry,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
 /// Processes events which happen during the pipeline execution
 pub trait PipelineProcessor: Downcast {
-    fn tile_finished(&mut self, _request_id: TileRequestID, _coords: &WorldTileCoords) {}
+    fn tile_finished(&mut self, _coords: &WorldTileCoords) {}
     fn layer_unavailable(&mut self, _coords: &WorldTileCoords, _layer_name: &str) {}
     fn layer_tesselation_finished(
         &mut self,
