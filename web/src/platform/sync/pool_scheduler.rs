@@ -2,15 +2,15 @@ use log::warn;
 use std::future::Future;
 
 use super::pool::WorkerPool;
-use maplibre::{error::Error, io::scheduler::ScheduleMethod};
+use maplibre::{error::Error, io::scheduler::Scheduler};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Worker;
 
-pub struct WebWorkerPoolScheduleMethod {
+pub struct WebWorkerPoolScheduler {
     pool: WorkerPool,
 }
 
-impl WebWorkerPoolScheduleMethod {
+impl WebWorkerPoolScheduler {
     pub fn new(new_worker: js_sys::Function) -> Self {
         Self {
             pool: WorkerPool::new(
@@ -28,7 +28,7 @@ impl WebWorkerPoolScheduleMethod {
     }
 }
 
-impl ScheduleMethod for WebWorkerPoolScheduleMethod {
+impl Scheduler for WebWorkerPoolScheduler {
     fn schedule<T>(
         &self,
         future_factory: impl (FnOnce() -> T) + Send + 'static,

@@ -1,17 +1,17 @@
 use maplibre::error::Error;
-use maplibre::io::scheduler::ScheduleMethod;
+use maplibre::io::scheduler::Scheduler;
 use std::future::Future;
 
 pub mod http_client;
 
 #[cfg(target_feature = "atomics")]
-pub mod pool;
-#[cfg(target_feature = "atomics")]
-pub mod pool_schedule_method;
+pub mod sync;
 
-pub struct NopScheduleMethod;
+pub mod unsync;
 
-impl ScheduleMethod for NopScheduleMethod {
+pub struct NopScheduler;
+
+impl Scheduler for NopScheduler {
     fn schedule<T>(&self, future_factory: impl FnOnce() -> T + Send + 'static) -> Result<(), Error>
     where
         T: Future<Output = ()> + 'static,

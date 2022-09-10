@@ -25,7 +25,6 @@ pub struct WorkerPool {
 
 struct PoolState {
     workers: RefCell<Vec<Worker>>,
-    callback: Closure<dyn FnMut(Event)>,
 }
 
 struct Work {
@@ -48,9 +47,6 @@ impl WorkerPool {
             new_worker,
             state: Rc::new(PoolState {
                 workers: RefCell::new(Vec::with_capacity(initial)),
-                callback: Closure::wrap(Box::new(|event: Event| {
-                    log::error!("unhandled event: {}", event.type_());
-                }) as Box<dyn FnMut(Event)>),
             }),
         };
         for _ in 0..initial {

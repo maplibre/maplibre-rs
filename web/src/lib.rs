@@ -1,16 +1,19 @@
 use std::panic;
 
 use maplibre::{io::scheduler::Scheduler, MapBuilder};
-use maplibre_winit::winit::WinitMapWindowConfig;
+use maplibre_winit::winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 
-use crate::platform::{http_client::WHATWGFetchHttpClient, NopScheduleMethod};
+use crate::platform::unsync::UnsyncScheduler;
+use crate::platform::{http_client::WHATWGFetchHttpClient, NopScheduler};
 
 mod error;
 mod platform;
 
 #[cfg(not(target_arch = "wasm32"))]
 compile_error!("web works only on wasm32.");
+
+type CurrentScheduler = UnsyncScheduler;
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
@@ -37,20 +40,20 @@ pub fn wasm_bindgen_start() {
 }
 
 #[wasm_bindgen]
-pub fn create_pool_scheduler(new_worker: js_sys::Function) -> *mut Scheduler<NopScheduleMethod> {
-    let scheduler = Scheduler::new(NopScheduleMethod);
+pub fn create_scheduler(new_worker: js_sys::Function) -> *mut CurrentScheduler {
+    let scheduler = UnsyncScheduler::new(new_worker);
     Box::into_raw(Box::new(scheduler))
 }
 
 #[wasm_bindgen]
-pub async fn run(scheduler_ptr: *mut Scheduler<NopScheduleMethod>) {
+pub async fn run(scheduler_ptr: *mut CurrentScheduler) {
     let scheduler = unsafe { Box::from_raw(scheduler_ptr) };
 
     // Either call forget or the main loop to keep worker loop alive
-    MapBuilder::new()
+    MapBuilder::<WinitEnvironment<_, _>>::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
         .with_http_client(WHATWGFetchHttpClient::new())
-        .with_existing_scheduler(*scheduler)
+        .with_scheduler(*scheduler)
         .build()
         .initialize()
         .await

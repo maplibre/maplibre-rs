@@ -1,4 +1,4 @@
-import init, {create_pool_scheduler, run} from "../wasm/maplibre"
+import init, {create_scheduler, run} from "../wasm/maplibre"
 import {Spector} from "spectorjs"
 import {checkRequirements, checkWasmFeatures} from "../browser";
 import {preventDefaultTouchActions} from "../canvas";
@@ -25,10 +25,27 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
 
     await init(wasmPath);
 
-    const schedulerPtr = create_pool_scheduler(() => {
-        return workerPath ? new Worker(workerPath, {
+    const schedulerPtr = create_scheduler(() => {
+        let worker = workerPath ? new Worker(workerPath, {
             type: 'module'
         }) : PoolWorker();
+
+        let memories =  []
+
+        worker.onmessage = (message) => {
+            console.warn("new message");
+            //let uint8Array = new Uint8Array(message.data[0], message.data[1]);
+
+            memories.push(message.data[0])
+
+
+            console.warn(memories.map(v =>  new Uint8Array(v, message.data[1])[0]));
+            console.warn(memories[0] == memories[1]);
+
+            worker.postMessage("test")
+        }
+
+        return worker;
     })
 
     await run(schedulerPtr)
