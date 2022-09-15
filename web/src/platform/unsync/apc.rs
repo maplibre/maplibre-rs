@@ -36,8 +36,6 @@ pub struct PassingContext {
 
 impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
     fn send(&self, data: Message<UsedTransferables>) {
-        // TODO: send back to main thread via postMessage
-
         let (tag, serialized): (u32, &[u8]) = match &data {
             Message::TileTessellated(data) => (1, bytemuck::bytes_of(data)),
             Message::UnavailableLayer(data) => (2, bytemuck::bytes_of(data)),
@@ -70,7 +68,7 @@ pub struct PassingAsyncProcedureCall {
 }
 
 impl PassingAsyncProcedureCall {
-    pub fn new(new_worker: js_sys::Function) -> Self {
+    pub fn new(new_worker: js_sys::Function, initial_workers: u8) -> Self {
         let create_new_worker = Box::new(move || {
             new_worker
                 .call0(&JsValue::undefined())
@@ -79,15 +77,20 @@ impl PassingAsyncProcedureCall {
                 .unwrap()
         });
 
-        let worker = create_new_worker();
+        let workers = (0..initial_workers)
+            .map(|_| {
+                let worker: Worker = create_new_worker();
 
-        let array = js_sys::Array::new();
-        array.push(&wasm_bindgen::module());
-        worker.post_message(&array).unwrap();
+                let array = js_sys::Array::new();
+                array.push(&wasm_bindgen::module());
+                worker.post_message(&array).unwrap();
+                worker
+            })
+            .collect::<Vec<_>>();
 
         Self {
             new_worker: create_new_worker,
-            workers: vec![worker],
+            workers,
             received: vec![],
         }
     }

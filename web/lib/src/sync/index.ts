@@ -1,7 +1,6 @@
-import {run} from "../wasm/maplibre"
+import init, {create_map, run} from "../wasm/maplibre"
 import {Spector} from "spectorjs"
 import {checkRequirements, checkWasmFeatures} from "../browser";
-import init from "../wasm/maplibre";
 import {preventDefaultTouchActions} from "../canvas";
 // @ts-ignore esbuild plugin is handling this
 import PoolWorker from './multithreaded-pool.worker.js';
@@ -33,9 +32,11 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
 
     await initializeSharedModule(wasmPath);
 
-    await run(() => {
+    let map = await create_map(() => {
         return workerPath ? new Worker(workerPath, {
             type: 'module'
         }) : PoolWorker();
     })
+
+    await run(map)
 }

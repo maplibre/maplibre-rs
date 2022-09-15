@@ -2,7 +2,6 @@
 
 use std::future::Future;
 
-pub mod apc;
 pub mod http_client;
 pub mod scheduler;
 

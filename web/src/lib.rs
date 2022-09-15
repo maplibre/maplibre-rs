@@ -12,9 +12,6 @@ use maplibre_winit::winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 
 use crate::platform::http_client::WHATWGFetchHttpClient;
-use crate::platform::unsync::apc::PassingAsyncProcedureCall;
-use crate::platform::unsync::transferables::LinearTransferables;
-use crate::platform::AsyncProcedureCall;
 
 mod error;
 mod platform;
@@ -46,34 +43,58 @@ pub fn wasm_bindgen_start() {
     enable_tracing();
 }
 
+#[cfg(not(target_feature = "atomics"))]
 pub type MapType = Map<
     WinitEnvironment<
         NopScheduler,
         WHATWGFetchHttpClient,
-        LinearTransferables,
-        PassingAsyncProcedureCall,
+        platform::unsync::transferables::LinearTransferables,
+        platform::unsync::apc::PassingAsyncProcedureCall,
+    >,
+>;
+
+#[cfg(target_feature = "atomics")]
+pub type MapType = Map<
+    WinitEnvironment<
+        platform::sync::pool_scheduler::WebWorkerPoolScheduler,
+        WHATWGFetchHttpClient,
+        maplibre::environment::DefaultTransferables,
+        maplibre::io::apc::SchedulerAsyncProcedureCall<
+            WHATWGFetchHttpClient,
+            platform::sync::pool_scheduler::WebWorkerPoolScheduler,
+        >,
     >,
 >;
 
 #[wasm_bindgen]
 pub async fn create_map(new_worker: js_sys::Function) -> u32 {
+    // Either call forget or the main loop to keep worker loop alive
+    let mut builder = MapBuilder::new()
+        .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
+        .with_http_client(WHATWGFetchHttpClient::new());
+
     #[cfg(target_feature = "atomics")]
-    let scheduler = platform::Scheduler::new(new_worker.clone());
-    #[cfg(target_feature = "atomics")]
-    let apc = AsyncProcedureCall::new(scheduler);
+    {
+        builder = builder
+            .with_apc(maplibre::io::apc::SchedulerAsyncProcedureCall::new(
+                WHATWGFetchHttpClient::new(),
+                platform::sync::pool_scheduler::WebWorkerPoolScheduler::new(new_worker.clone()),
+            ))
+            .with_scheduler(platform::sync::pool_scheduler::WebWorkerPoolScheduler::new(
+                new_worker,
+            ));
+    }
 
     #[cfg(not(target_feature = "atomics"))]
-    let apc = AsyncProcedureCall::new(new_worker);
+    {
+        builder = builder
+            .with_apc(platform::unsync::apc::PassingAsyncProcedureCall::new(
+                new_worker, 4,
+            ))
+            .with_scheduler(NopScheduler);
+    }
 
-    // Either call forget or the main loop to keep worker loop alive
-    let map: MapType = MapBuilder::new()
-        .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
-        .with_http_client(WHATWGFetchHttpClient::new())
-        .with_scheduler(NopScheduler)
-        .with_apc(apc)
-        .build()
-        .initialize()
-        .await;
+    let map: MapType = builder.build().initialize().await;
 
     Rc::into_raw(Rc::new(RefCell::new(map))) as u32
 }

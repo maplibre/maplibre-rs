@@ -15,7 +15,7 @@ use wgpu::{BufferAsyncError, BufferSlice};
 use crate::environment::DefaultTransferables;
 use crate::io::apc::AsyncProcedureCall;
 use crate::io::transferables::Transferables;
-use crate::platform::apc::TokioAsyncProcedureCall;
+use crate::platform::apc::SchedulerAsyncProcedureCall;
 use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, ViewRegion, WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
