@@ -18,10 +18,10 @@ pub enum StoredLayer {
     },
     TessellatedLayer {
         coords: WorldTileCoords,
+        layer_name: String,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         /// Holds for each feature the count of indices.
         feature_indices: Vec<u32>,
-        layer_data: tile::Layer,
     },
 }
 
@@ -36,7 +36,7 @@ impl StoredLayer {
     pub fn layer_name(&self) -> &str {
         match self {
             StoredLayer::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
-            StoredLayer::TessellatedLayer { layer_data, .. } => &layer_data.name,
+            StoredLayer::TessellatedLayer { layer_name, .. } => layer_name.as_str(),
         }
     }
 }

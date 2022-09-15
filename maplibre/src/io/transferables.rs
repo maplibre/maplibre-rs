@@ -64,7 +64,7 @@ pub struct DefaultTessellatedLayer {
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
     pub feature_indices: Vec<u32>,
-    pub layer_data: tile::Layer,
+    pub layer_data: Layer, // FIXME: Introduce a better structure for this
 }
 
 impl TessellatedLayer for DefaultTessellatedLayer {
@@ -85,9 +85,9 @@ impl TessellatedLayer for DefaultTessellatedLayer {
     fn to_stored_layer(self) -> StoredLayer {
         StoredLayer::TessellatedLayer {
             coords: self.coords,
+            layer_name: self.layer_data.name,
             buffer: self.buffer,
             feature_indices: self.feature_indices,
-            layer_data: self.layer_data,
         }
     }
 }

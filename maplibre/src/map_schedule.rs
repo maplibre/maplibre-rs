@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::{marker::PhantomData, mem};
 
 use crate::{
@@ -21,6 +23,9 @@ use crate::{
 pub struct InteractiveMapSchedule<E: Environment> {
     map_window_config: E::MapWindowConfig,
 
+    // FIXME: avoid RefCell, change ownership model
+    pub apc: Rc<RefCell<E::AsyncProcedureCall>>,
+
     map_context: EventuallyMapContext,
 
     schedule: Schedule,
@@ -34,6 +39,7 @@ impl<E: Environment> InteractiveMapSchedule<E> {
         window_size: WindowSize,
         renderer: Option<Renderer>,
         scheduler: E::Scheduler,
+        apc: E::AsyncProcedureCall,
         http_client: E::HttpClient,
         style: Style,
         wgpu_settings: WgpuSettings,
@@ -50,14 +56,17 @@ impl<E: Environment> InteractiveMapSchedule<E> {
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
+        let apc = Rc::new(RefCell::new(apc)); // TODO: remove refcell, rc
+
         let http_source_client: HttpSourceClient<E::HttpClient> =
             HttpSourceClient::new(http_client);
-        register_stages::<E>(&mut schedule, http_source_client, Box::new(scheduler));
+        register_stages::<E>(&mut schedule, http_source_client, apc.clone());
 
         let graph = create_default_render_graph().unwrap();
         register_default_render_stages(graph, &mut schedule);
 
         Self {
+            apc,
             map_window_config,
             map_context: match renderer {
                 None => EventuallyMapContext::Premature(PrematureMapContext {
@@ -115,6 +124,10 @@ impl<E: Environment> InteractiveMapSchedule<E> {
             EventuallyMapContext::Premature(PrematureMapContext { view_state, .. }) => view_state,
             _ => panic!("should not happen"),
         }
+    }
+
+    pub fn apc(&self) -> &Rc<RefCell<E::AsyncProcedureCall>> {
+        &self.apc
     }
 }
 

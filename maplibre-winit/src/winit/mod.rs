@@ -1,15 +1,18 @@
 use instant::Instant;
 use maplibre::environment::{DefaultTransferables, Environment};
-use maplibre::io::apc::Transferable;
+use maplibre::io::apc::{AsyncProcedureCall, Transferable};
 use maplibre::io::scheduler::Scheduler;
-use maplibre::platform::apc::TokioAsyncProcedureCall;
+use maplibre::io::transferables::Transferables;
 use maplibre::{
     error::Error,
     io::source_client::HttpClient,
     map_schedule::InteractiveMapSchedule,
     window::{EventLoop, HeadedMapWindow, MapWindowConfig},
 };
+use std::cell::RefCell;
 use std::marker::PhantomData;
+use std::ops::Deref;
+use std::rc::Rc;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
@@ -66,17 +69,26 @@ impl WinitMapWindow {
 pub type WinitWindow = winit::window::Window;
 pub type WinitEventLoop = winit::event_loop::EventLoop<()>;
 
-pub struct WinitEnvironment<S: Scheduler, HC: HttpClient> {
+pub struct WinitEnvironment<
+    S: Scheduler,
+    HC: HttpClient,
+    T: Transferables,
+    APC: AsyncProcedureCall<T, HC>,
+> {
     phantom_s: PhantomData<S>,
     phantom_hc: PhantomData<HC>,
+    phantom_t: PhantomData<T>,
+    phantom_apc: PhantomData<APC>,
 }
 
-impl<S: Scheduler, HC: HttpClient> Environment for WinitEnvironment<S, HC> {
+impl<S: Scheduler, HC: HttpClient, T: Transferables, APC: AsyncProcedureCall<T, HC>> Environment
+    for WinitEnvironment<S, HC, T, APC>
+{
     type MapWindowConfig = WinitMapWindowConfig;
-    type AsyncProcedureCall = TokioAsyncProcedureCall<DefaultTransferables>;
+    type AsyncProcedureCall = APC;
     type Scheduler = S;
     type HttpClient = HC;
-    type Transferables = DefaultTransferables;
+    type Transferables = T;
 }
 
 ///Main (platform-specific) main loop which handles:
@@ -87,7 +99,11 @@ impl<E: Environment> EventLoop<E> for WinitMapWindow
 where
     E::MapWindowConfig: MapWindowConfig<MapWindow = WinitMapWindow>,
 {
-    fn run(mut self, mut map_schedule: InteractiveMapSchedule<E>, max_frames: Option<u64>) {
+    fn run(
+        mut self,
+        map_schedule: Rc<RefCell<InteractiveMapSchedule<E>>>,
+        max_frames: Option<u64>,
+    ) {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
 
@@ -96,6 +112,8 @@ where
         self.take_event_loop()
             .unwrap()
             .run(move |event, _, control_flow| {
+                let mut map_schedule = map_schedule.deref().borrow_mut();
+
                 #[cfg(target_os = "android")]
                 if !map_schedule.is_initialized() && event == Event::Resumed {
                     use tokio::{runtime::Handle, task};

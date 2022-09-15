@@ -148,7 +148,7 @@ impl PoolState {
 
 /// Entry point invoked by the worker.
 #[wasm_bindgen]
-pub async fn worker_entry(ptr: u32) -> Result<(), JsValue> {
+pub async fn sync_worker_entry(ptr: u32) -> Result<(), JsValue> {
     let ptr = unsafe { Box::from_raw(ptr as *mut Work) };
     JsFuture::from((ptr.func)()).await?;
     Ok(())

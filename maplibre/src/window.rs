@@ -1,6 +1,8 @@
 //! Utilities for the window system.
 
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use crate::{Environment, HttpClient, InteractiveMapSchedule};
 
@@ -28,7 +30,8 @@ pub trait MapWindowConfig: 'static {
 /// The event loop is responsible for processing events and propagating them to the map renderer.
 /// Only non-headless windows use an [`EventLoop`].
 pub trait EventLoop<E: Environment> {
-    fn run(self, map_schedule: InteractiveMapSchedule<E>, max_frames: Option<u64>);
+    // FIXME: Avoid Rc, change ownership model
+    fn run(self, map_schedule: Rc<RefCell<InteractiveMapSchedule<E>>>, max_frames: Option<u64>);
 }
 
 /// Window size with a width and an height in pixels.

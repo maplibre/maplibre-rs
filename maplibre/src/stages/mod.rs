@@ -1,5 +1,6 @@
 //! [Stages](Stage) for requesting and preparing data
 
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{mpsc, Arc, Mutex};
 
@@ -13,7 +14,6 @@ use crate::io::transferables::{
     DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer, TessellatedLayer,
     TileTessellated, UnavailableLayer,
 };
-use crate::platform::apc::{TokioAsyncProcedureCall, TokioContext};
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
     error::Error,
@@ -38,10 +38,8 @@ mod request_stage;
 pub fn register_stages<E: Environment>(
     schedule: &mut Schedule,
     http_source_client: HttpSourceClient<E::HttpClient>,
-    scheduler: Box<E::Scheduler>,
+    apc: Rc<RefCell<E::AsyncProcedureCall>>,
 ) {
-    let apc = Rc::new(E::AsyncProcedureCall::new());
-
     schedule.add_stage(
         "request",
         RequestStage::<E>::new(http_source_client, apc.clone()),
@@ -50,7 +48,7 @@ pub fn register_stages<E: Environment>(
 }
 
 pub struct HeadedPipelineProcessor<E: Environment> {
-    context: <E::AsyncProcedureCall as AsyncProcedureCall<E::Transferables>>::Context,
+    context: Box<dyn Context<E::Transferables, E::HttpClient>>, // TODO: remove box
 }
 
 impl<E: Environment> PipelineProcessor for HeadedPipelineProcessor<E> {
@@ -76,7 +74,6 @@ impl<E: Environment> PipelineProcessor for HeadedPipelineProcessor<E> {
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
     ) {
-        log::info!("layer_tesselation_finished");
         self.context.send(Transferable::TessellatedLayer(
             <E::Transferables as Transferables>::TessellatedLayer::new(
                 *coords,
@@ -99,6 +96,7 @@ impl<E: Environment> PipelineProcessor for HeadedPipelineProcessor<E> {
     }
 }
 
+// FIXME: clean this up
 ///// Stores and provides access to the thread safe data shared between the schedulers.
 //[derive(Clone)]
 //pub struct SharedThreadState {

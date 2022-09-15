@@ -3,7 +3,7 @@
 use std::{collections::HashSet, fmt};
 
 use crate::coords::WorldTileCoords;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub mod apc;
 pub mod geometry_index;
@@ -19,7 +19,7 @@ pub mod transferables;
 pub use geozero::mvt::tile::Layer as RawLayer;
 
 /// A request for a tile at the given coordinates and in the given layers.
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TileRequest {
     pub coords: WorldTileCoords,
     pub layers: HashSet<String>,

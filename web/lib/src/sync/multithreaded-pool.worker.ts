@@ -1,11 +1,7 @@
-import init, {worker_entry} from "../wasm/maplibre"
-
-const initializeExisting = async (module: string, memory?: string) => {
-    await init(module, memory)
-}
+import init, {sync_worker_entry} from "../wasm/maplibre"
 
 onmessage = async message => {
-    const initialised = initializeExisting(message.data[0], message.data[1]).catch(err => {
+    const initialised = init(message.data[0], message.data[1]).catch(err => {
         // Propagate to main `onerror`:
         setTimeout(() => {
             throw err;
@@ -17,6 +13,6 @@ onmessage = async message => {
     self.onmessage = async message => {
         // This will queue further commands up until the module is fully initialised:
         await initialised;
-        await worker_entry(message.data);
+        await sync_worker_entry(message.data);
     };
 }

@@ -187,7 +187,6 @@ impl UploadStage {
                                 StoredLayer::TessellatedLayer {
                                     coords,
                                     feature_indices,
-                                    layer_data,
                                     buffer,
                                     ..
                                 } => {
@@ -197,17 +196,16 @@ impl UploadStage {
                                     );
 
                                     let guard = allocate_feature_metadata.enter();
-                                    let feature_metadata = layer_data
-                                        .features
-                                        .iter()
-                                        .enumerate()
-                                        .flat_map(|(i, _feature)| {
-                                            iter::repeat(ShaderFeatureStyle {
-                                                color: color.unwrap(),
+                                    let feature_metadata =
+                                        (0..feature_indices.len()) // FIXME: Iterate over actual featrues
+                                            .enumerate()
+                                            .flat_map(|(i, _feature)| {
+                                                iter::repeat(ShaderFeatureStyle {
+                                                    color: color.unwrap(),
+                                                })
+                                                .take(feature_indices[i] as usize)
                                             })
-                                            .take(feature_indices[i] as usize)
-                                        })
-                                        .collect::<Vec<_>>();
+                                            .collect::<Vec<_>>();
                                     drop(guard);
 
                                     tracing::trace!("Allocating geometry at {}", &coords);

@@ -1,11 +1,10 @@
 //! Requests tiles which are currently in view
 
 use crate::coords::ZoomLevel;
-use crate::io::apc::AsyncProcedureCall;
+use crate::io::apc::{AsyncProcedureCall, Context, Input};
 use crate::io::pipeline::PipelineContext;
 use crate::io::pipeline::Processable;
 use crate::io::tile_pipelines::build_vector_tile_pipeline;
-use crate::platform::http_client::ReqwestHttpClient;
 use crate::stages::HeadedPipelineProcessor;
 use crate::{
     context::MapContext,
@@ -19,22 +18,25 @@ use crate::{
     schedule::Stage,
     Environment, HttpClient, Scheduler, Style,
 };
+use std::borrow::Borrow;
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
+use std::ops::Deref;
 use std::pin::Pin;
 use std::process::Output;
 use std::rc::Rc;
 use std::str::FromStr;
 
 pub struct RequestStage<E: Environment> {
-    apc: Rc<E::AsyncProcedureCall>,
+    apc: Rc<RefCell<E::AsyncProcedureCall>>,
     http_source_client: HttpSourceClient<E::HttpClient>,
 }
 
 impl<E: Environment> RequestStage<E> {
     pub fn new(
         http_source_client: HttpSourceClient<E::HttpClient>,
-        apc: Rc<E::AsyncProcedureCall>,
+        apc: Rc<RefCell<E::AsyncProcedureCall>>,
     ) -> Self {
         Self {
             apc,
@@ -68,13 +70,19 @@ impl<E: Environment> Stage for RequestStage<E> {
 }
 
 pub fn schedule<E: Environment>(
-    input: TileRequest,
-    context: <E::AsyncProcedureCall as AsyncProcedureCall<E::Transferables>>::Context,
-) -> Pin<Box<(dyn Future<Output = ()> + Send + 'static)>> {
+    input: Input,
+    context: Box<dyn Context<E::Transferables, E::HttpClient>>, // TODO: remove box
+) -> Pin<Box<(dyn Future<Output = ()> + 'static)>> {
+    // FIXME: improve input handling
+    let input = match input {
+        Input::TileRequest(input) => Some(input),
+        _ => None,
+    }
+    .unwrap();
+
     Box::pin(async move {
         let coords = input.coords;
-        let client = SourceClient::Http(HttpSourceClient::new(ReqwestHttpClient::new(None)));
-        let request_id = 0;
+        let client = context.source_client();
 
         match client.fetch(&coords).await {
             Ok(data) => {
@@ -131,12 +139,13 @@ impl<E: Environment> RequestStage<E> {
             tile_repository.create_tile(coords);
 
             tracing::info!("new tile request: {}", &coords);
-            self.apc.schedule(
-                TileRequest {
+            self.apc.deref().borrow().schedule(
+                Input::TileRequest(TileRequest {
                     coords: *coords,
                     layers: layers.clone(),
-                },
+                }),
                 schedule::<E>,
+                self.http_source_client.clone(),
             );
         }
 

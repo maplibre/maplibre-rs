@@ -27,6 +27,9 @@ use crate::{
     style::Style,
     window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
 };
+use std::borrow::{Borrow, BorrowMut};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub mod context;
 pub mod coords;
@@ -56,11 +59,14 @@ pub(crate) mod tessellation;
 
 pub mod environment;
 
+pub use geozero::mvt::tile;
+
 /// The [`Map`] defines the public interface of the map renderer.
 // DO NOT IMPLEMENT INTERNALS ON THIS STRUCT.
 pub struct Map<E: Environment> {
-    map_schedule: InteractiveMapSchedule<E>,
-    window: <E::MapWindowConfig as MapWindowConfig>::MapWindow,
+    // FIXME: Avoid RefCell, change ownership model!
+    map_schedule: Rc<RefCell<InteractiveMapSchedule<E>>>,
+    window: RefCell<Option<<E::MapWindowConfig as MapWindowConfig>::MapWindow>>,
 }
 
 impl<E: Environment> Map<E>
@@ -68,7 +74,7 @@ where
     <E::MapWindowConfig as MapWindowConfig>::MapWindow: EventLoop<E>,
 {
     /// Starts the [`crate::map_schedule::MapState`] Runnable with the configured event loop.
-    pub fn run(self) {
+    pub fn run(&self) {
         self.run_with_optionally_max_frames(None);
     }
 
@@ -77,7 +83,7 @@ where
     /// # Arguments
     ///
     /// * `max_frames` - Maximum number of frames per second.
-    pub fn run_with_max_frames(self, max_frames: u64) {
+    pub fn run_with_max_frames(&self, max_frames: u64) {
         self.run_with_optionally_max_frames(Some(max_frames));
     }
 
@@ -86,22 +92,27 @@ where
     /// # Arguments
     ///
     /// * `max_frames` - Optional maximum number of frames per second.
-    pub fn run_with_optionally_max_frames(self, max_frames: Option<u64>) {
-        self.window.run(self.map_schedule, max_frames);
+    pub fn run_with_optionally_max_frames(&self, max_frames: Option<u64>) {
+        self.window
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .run(self.map_schedule.clone(), max_frames);
     }
 
-    pub fn map_schedule(&self) -> &InteractiveMapSchedule<E> {
-        &self.map_schedule
+    pub fn map_schedule(&self) -> Rc<RefCell<InteractiveMapSchedule<E>>> {
+        self.map_schedule.clone()
     }
 
-    pub fn map_schedule_mut(&mut self) -> &mut InteractiveMapSchedule<E> {
+    /*    pub fn map_schedule_mut(&mut self) -> &mut InteractiveMapSchedule<E> {
         &mut self.map_schedule
-    }
+    }*/
 }
 
 /// Stores the map configuration before the map's state has been fully initialized.
 pub struct UninitializedMap<E: Environment> {
     scheduler: E::Scheduler,
+    apc: E::AsyncProcedureCall,
     http_client: E::HttpClient,
     style: Style,
 
@@ -131,17 +142,18 @@ where
         .await
         .ok();
         Map {
-            map_schedule: InteractiveMapSchedule::new(
+            map_schedule: Rc::new(RefCell::new(InteractiveMapSchedule::new(
                 self.map_window_config,
                 window_size,
                 renderer,
                 self.scheduler,
+                self.apc,
                 self.http_client,
                 self.style,
                 self.wgpu_settings,
                 self.renderer_settings,
-            ),
-            window,
+            ))),
+            window: RefCell::new(Some(window)),
         }
     }
 }
@@ -175,6 +187,7 @@ impl<E: Environment> UninitializedMap<E> {
 
 pub struct MapBuilder<E: Environment> {
     scheduler: Option<E::Scheduler>,
+    apc: Option<E::AsyncProcedureCall>,
     http_client: Option<E::HttpClient>,
     style: Option<Style>,
 
@@ -187,6 +200,7 @@ impl<E: Environment> MapBuilder<E> {
     pub fn new() -> Self {
         Self {
             scheduler: None,
+            apc: None,
             http_client: None,
             style: None,
             map_window_config: None,
@@ -215,6 +229,11 @@ impl<E: Environment> MapBuilder<E> {
         self
     }
 
+    pub fn with_apc(mut self, apc: E::AsyncProcedureCall) -> Self {
+        self.apc = Some(apc);
+        self
+    }
+
     pub fn with_http_client(mut self, http_client: E::HttpClient) -> Self {
         self.http_client = Some(http_client);
         self
@@ -227,13 +246,11 @@ impl<E: Environment> MapBuilder<E> {
 
     /// Builds the UninitializedMap with the given configuration.
     pub fn build(self) -> UninitializedMap<E> {
-        let scheduler = self.scheduler.unwrap();
-        let style = self.style.unwrap_or_default();
-
         UninitializedMap {
-            scheduler,
+            scheduler: self.scheduler.unwrap(),
+            apc: self.apc.unwrap(),
             http_client: self.http_client.unwrap(),
-            style,
+            style: self.style.unwrap_or_default(),
             wgpu_settings: self.wgpu_settings.unwrap_or_default(),
             renderer_settings: self.renderer_settings.unwrap_or_default(),
             map_window_config: self.map_window_config.unwrap(),

@@ -6,6 +6,7 @@ use std::{
     fmt::{Display, Formatter},
 };
 
+use bytemuck_derive::{Pod, Zeroable};
 use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
 
 use crate::{
@@ -15,7 +16,7 @@ use crate::{
         SignificantlyDifferent,
     },
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
@@ -68,7 +69,23 @@ impl fmt::Debug for Quadkey {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug, Default, Serialize)]
+// FIXME: does Pod and Zeroable make sense?
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Hash,
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    Pod,
+    Zeroable,
+)]
+#[repr(C)]
 pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
@@ -290,7 +307,22 @@ impl From<(u32, u32, ZoomLevel)> for TileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize)]
+// FIXME: does Zeroable make sense?
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Default,
+    Serialize,
+    Deserialize,
+    Zeroable,
+)]
+#[repr(C)]
 pub struct WorldTileCoords {
     pub x: i32,
     pub y: i32,

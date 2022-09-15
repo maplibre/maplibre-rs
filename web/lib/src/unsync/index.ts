@@ -1,4 +1,4 @@
-import init, {create_scheduler, run} from "../wasm/maplibre"
+import init, {run, create_map, clone_map, unsync_main_entry} from "../wasm/maplibre"
 import {Spector} from "spectorjs"
 import {checkRequirements, checkWasmFeatures} from "../browser";
 import {preventDefaultTouchActions} from "../canvas";
@@ -22,31 +22,29 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
     }
 
     preventDefaultTouchActions();
+    let MEMORY_PAGES = 16 * 1024
+    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: false})
+    await init(wasmPath, memory);
 
-    await init(wasmPath);
+    let callback = [undefined]
 
-    const schedulerPtr = create_scheduler(() => {
+    let map = await create_map(() => {
         let worker = workerPath ? new Worker(workerPath, {
             type: 'module'
         }) : PoolWorker();
 
-        let memories =  []
-
-        worker.onmessage = (message) => {
-            console.warn("new message");
-            //let uint8Array = new Uint8Array(message.data[0], message.data[1]);
-
-            memories.push(message.data[0])
-
-
-            console.warn(memories.map(v =>  new Uint8Array(v, message.data[1])[0]));
-            console.warn(memories[0] == memories[1]);
-
-            worker.postMessage("test")
+        worker.onmessage =  (message) => {
+            callback[0](message)
         }
 
         return worker;
     })
 
-    await run(schedulerPtr)
+    let clonedMap = clone_map(map)
+
+    callback[0] = (message) => {
+        unsync_main_entry(clonedMap, message.data[0], new Uint8Array(message.data[1]))
+    }
+
+    run(map)
 }

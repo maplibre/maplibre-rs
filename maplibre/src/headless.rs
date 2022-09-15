@@ -13,6 +13,8 @@ use tokio::{runtime::Handle, task};
 use wgpu::{BufferAsyncError, BufferSlice};
 
 use crate::environment::DefaultTransferables;
+use crate::io::apc::AsyncProcedureCall;
+use crate::io::transferables::Transferables;
 use crate::platform::apc::TokioAsyncProcedureCall;
 use crate::{
     context::{MapContext, ViewState},
@@ -62,17 +64,26 @@ impl MapWindow for HeadlessMapWindow {
     }
 }
 
-pub struct HeadlessEnvironment<S: Scheduler, HC: HttpClient> {
+pub struct HeadlessEnvironment<
+    S: Scheduler,
+    HC: HttpClient,
+    T: Transferables,
+    APC: AsyncProcedureCall<T, HC>,
+> {
     phantom_s: PhantomData<S>,
     phantom_hc: PhantomData<HC>,
+    phantom_t: PhantomData<T>,
+    phantom_apc: PhantomData<APC>,
 }
 
-impl<S: Scheduler, HC: HttpClient> Environment for HeadlessEnvironment<S, HC> {
+impl<S: Scheduler, HC: HttpClient, T: Transferables, APC: AsyncProcedureCall<T, HC>> Environment
+    for HeadlessEnvironment<S, HC, T, APC>
+{
     type MapWindowConfig = HeadlessMapWindowConfig;
-    type AsyncProcedureCall = TokioAsyncProcedureCall<DefaultTransferables>;
+    type AsyncProcedureCall = APC;
     type Scheduler = S;
     type HttpClient = HC;
-    type Transferables = DefaultTransferables;
+    type Transferables = T;
 }
 
 pub struct HeadlessMap<E: Environment> {
@@ -329,9 +340,9 @@ pub mod utils {
         ) {
             self.layers.push(StoredLayer::TessellatedLayer {
                 coords: *coords,
+                layer_name: layer_data.name,
                 buffer,
                 feature_indices,
-                layer_data,
             })
         }
     }

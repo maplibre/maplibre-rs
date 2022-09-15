@@ -1,19 +1,26 @@
-use std::panic;
+#![feature(allocator_api, new_uninit)]
 
-use maplibre::{io::scheduler::Scheduler, MapBuilder};
+use std::borrow::BorrowMut;
+use std::cell::RefCell;
+use std::ops::Deref;
+use std::rc::Rc;
+use std::{mem, panic};
+
+use maplibre::io::scheduler::NopScheduler;
+use maplibre::{Map, MapBuilder};
 use maplibre_winit::winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 
-use crate::platform::unsync::UnsyncScheduler;
-use crate::platform::{http_client::WHATWGFetchHttpClient, NopScheduler};
+use crate::platform::http_client::WHATWGFetchHttpClient;
+use crate::platform::unsync::apc::PassingAsyncProcedureCall;
+use crate::platform::unsync::transferables::LinearTransferables;
+use crate::platform::AsyncProcedureCall;
 
 mod error;
 mod platform;
 
 #[cfg(not(target_arch = "wasm32"))]
 compile_error!("web works only on wasm32.");
-
-type CurrentScheduler = UnsyncScheduler;
 
 #[cfg(feature = "trace")]
 fn enable_tracing() {
@@ -39,27 +46,52 @@ pub fn wasm_bindgen_start() {
     enable_tracing();
 }
 
+pub type MapType = Map<
+    WinitEnvironment<
+        NopScheduler,
+        WHATWGFetchHttpClient,
+        LinearTransferables,
+        PassingAsyncProcedureCall,
+    >,
+>;
+
 #[wasm_bindgen]
-pub fn create_scheduler(new_worker: js_sys::Function) -> *mut CurrentScheduler {
-    let scheduler = UnsyncScheduler::new(new_worker);
-    Box::into_raw(Box::new(scheduler))
+pub async fn create_map(new_worker: js_sys::Function) -> u32 {
+    #[cfg(target_feature = "atomics")]
+    let scheduler = platform::Scheduler::new(new_worker.clone());
+    #[cfg(target_feature = "atomics")]
+    let apc = AsyncProcedureCall::new(scheduler);
+
+    #[cfg(not(target_feature = "atomics"))]
+    let apc = AsyncProcedureCall::new(new_worker);
+
+    // Either call forget or the main loop to keep worker loop alive
+    let map: MapType = MapBuilder::new()
+        .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
+        .with_http_client(WHATWGFetchHttpClient::new())
+        .with_scheduler(NopScheduler)
+        .with_apc(apc)
+        .build()
+        .initialize()
+        .await;
+
+    Rc::into_raw(Rc::new(RefCell::new(map))) as u32
 }
 
 #[wasm_bindgen]
-pub async fn run(scheduler_ptr: *mut CurrentScheduler) {
-    let scheduler = unsafe { Box::from_raw(scheduler_ptr) };
+pub fn clone_map(map_ptr: *const RefCell<MapType>) -> *const RefCell<MapType> {
+    let mut map = unsafe { Rc::from_raw(map_ptr) };
+    let rc = map.clone();
+    let cloned = Rc::into_raw(rc);
+    mem::forget(map);
+    cloned
+}
 
-    // Either call forget or the main loop to keep worker loop alive
-    MapBuilder::<WinitEnvironment<_, _>>::new()
-        .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
-        .with_http_client(WHATWGFetchHttpClient::new())
-        .with_scheduler(*scheduler)
-        .build()
-        .initialize()
-        .await
-        .run();
+#[wasm_bindgen]
+pub fn run(map_ptr: *const RefCell<MapType>) {
+    let mut map = unsafe { Rc::from_raw(map_ptr) };
 
-    // std::mem::forget(scheduler);
+    map.deref().borrow().run();
 }
 
 #[cfg(test)]
