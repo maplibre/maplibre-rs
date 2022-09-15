@@ -1,6 +1,6 @@
 //! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].
 
-use crate::io::apc::{AsyncProcedureCall, Transferable};
+use crate::io::apc::{AsyncProcedureCall, Message};
 use crate::io::transferables::{TessellatedLayer, TileTessellated, UnavailableLayer};
 use crate::{context::MapContext, io::tile_repository::StoredLayer, schedule::Stage, Environment};
 use std::borrow::BorrowMut;
@@ -27,15 +27,15 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
     ) {
         if let Ok(mut apc) = self.apc.deref().try_borrow_mut() {
             if let Some(result) = apc.receive() {
-                match *result {
-                    Transferable::TileTessellated(tranferred) => {
+                match result {
+                    Message::TileTessellated(tranferred) => {
                         let coords = tranferred.coords();
                         tile_repository.success(coords);
                         tracing::trace!("Tile at {} finished loading", coords);
                         log::warn!("Tile at {} finished loading", coords);
                     }
                     // FIXME: deduplicate
-                    Transferable::UnavailableLayer(tranferred) => {
+                    Message::UnavailableLayer(tranferred) => {
                         let layer: StoredLayer = tranferred.to_stored_layer();
                         tracing::debug!(
                             "Layer {} at {} reached main thread",
@@ -44,7 +44,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                         );
                         tile_repository.put_tessellated_layer(layer);
                     }
-                    Transferable::TessellatedLayer(data) => {
+                    Message::TessellatedLayer(data) => {
                         let layer: StoredLayer = data.to_stored_layer();
                         tracing::debug!(
                             "Layer {} at {} reached main thread",

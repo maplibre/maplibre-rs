@@ -17,14 +17,14 @@ unsafe impl TransparentWrapper<WorldTileCoords> for WrapperWorldTileCoords {}
 unsafe impl bytemuck::Zeroable for WrapperWorldTileCoords {}
 unsafe impl bytemuck::Pod for WrapperWorldTileCoords {}
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct LongVertexShader([ShaderVertex; 15000]);
 unsafe impl TransparentWrapper<[ShaderVertex; 15000]> for LongVertexShader {}
 unsafe impl bytemuck::Zeroable for LongVertexShader {}
 unsafe impl bytemuck::Pod for LongVertexShader {}
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct LongIndices([IndexDataType; 40000]);
 unsafe impl TransparentWrapper<[IndexDataType; 40000]> for LongIndices {}
@@ -74,7 +74,7 @@ impl UnavailableLayer for LinearUnavailableLayer {
     }
 }
 
-#[derive(Copy, Clone, Pod, Zeroable, Debug)]
+#[derive(Copy, Clone, Pod, Zeroable)]
 #[repr(C)]
 pub struct InnerData {
     pub coords: WrapperWorldTileCoords,

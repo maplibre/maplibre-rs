@@ -1,6 +1,7 @@
 //! [Stages](Stage) for requesting and preparing data
 
 use std::cell::RefCell;
+use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::{mpsc, Arc, Mutex};
 
@@ -8,7 +9,7 @@ use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
 use crate::environment::DefaultTransferables;
-use crate::io::apc::{AsyncProcedureCall, Context, Transferable};
+use crate::io::apc::{AsyncProcedureCall, Context, Message};
 use crate::io::transferables::Transferables;
 use crate::io::transferables::{
     DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer, TessellatedLayer,
@@ -47,24 +48,26 @@ pub fn register_stages<E: Environment>(
     schedule.add_stage("populate_tile_store", PopulateTileStore::<E>::new(apc));
 }
 
-pub struct HeadedPipelineProcessor<E: Environment> {
-    context: Box<dyn Context<E::Transferables, E::HttpClient>>, // TODO: remove box
+pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<T, HC>> {
+    context: C,
+    phantom_t: PhantomData<T>,
+    phantom_hc: PhantomData<HC>,
 }
 
-impl<E: Environment> PipelineProcessor for HeadedPipelineProcessor<E> {
+impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
+    for HeadedPipelineProcessor<T, HC, C>
+{
     fn tile_finished(&mut self, coords: &WorldTileCoords) {
-        self.context.send(Transferable::TileTessellated(
-            <E::Transferables as Transferables>::TileTessellated::new(*coords),
-        ))
+        self.context
+            .send(Message::TileTessellated(T::TileTessellated::new(*coords)))
     }
 
     fn layer_unavailable(&mut self, coords: &WorldTileCoords, layer_name: &str) {
-        self.context.send(Transferable::UnavailableLayer(
-            <E::Transferables as Transferables>::UnavailableLayer::new(
+        self.context
+            .send(Message::UnavailableLayer(T::UnavailableLayer::new(
                 *coords,
                 layer_name.to_owned(),
-            ),
-        ))
+            )))
     }
 
     fn layer_tesselation_finished(
@@ -74,14 +77,13 @@ impl<E: Environment> PipelineProcessor for HeadedPipelineProcessor<E> {
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
     ) {
-        self.context.send(Transferable::TessellatedLayer(
-            <E::Transferables as Transferables>::TessellatedLayer::new(
+        self.context
+            .send(Message::TessellatedLayer(T::TessellatedLayer::new(
                 *coords,
                 buffer,
                 feature_indices,
                 layer_data,
-            ),
-        ))
+            )))
     }
 
     fn layer_indexing_finished(

@@ -12,7 +12,7 @@ use std::pin::Pin;
 /// `TessellatedLayer` contains the result of the tessellation for a specific layer, otherwise
 /// `UnavailableLayer` if the layer doesn't exist.
 #[derive(Clone)]
-pub enum Transferable<T: Transferables> {
+pub enum Message<T: Transferables> {
     TileTessellated(T::TileTessellated),
     UnavailableLayer(T::UnavailableLayer),
     TessellatedLayer(T::TessellatedLayer),
@@ -23,24 +23,18 @@ pub enum Input {
     TileRequest(TileRequest),
 }
 
-pub trait Context<T: Transferables, HC: HttpClient> {
-    fn send(&self, data: Transferable<T>);
+pub trait Context<T: Transferables, HC: HttpClient>: 'static {
+    fn send(&self, data: Message<T>);
 
     fn source_client(&self) -> &SourceClient<HC>;
 }
 
-pub type AsyncProcedure<T, HC> =
-    fn(input: Input, context: Box<dyn Context<T, HC>>) -> Pin<Box<dyn Future<Output = ()>>>;
+pub type AsyncProcedure<C> = fn(input: Input, context: C) -> Pin<Box<dyn Future<Output = ()>>>;
 
 pub trait AsyncProcedureCall<T: Transferables, HC: HttpClient>: 'static {
     type Context: Context<T, HC> + Send;
 
-    fn receive(&mut self) -> Option<Box<Transferable<T>>>; // FIXME remove box
+    fn receive(&mut self) -> Option<Message<T>>;
 
-    fn schedule(
-        &self,
-        input: Input,
-        procedure: AsyncProcedure<T, HC>,
-        http_client: HttpSourceClient<HC>,
-    );
+    fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>);
 }

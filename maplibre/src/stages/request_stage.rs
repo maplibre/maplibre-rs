@@ -69,9 +69,9 @@ impl<E: Environment> Stage for RequestStage<E> {
     }
 }
 
-pub fn schedule<E: Environment>(
+pub fn schedule<E: Environment, C: Context<E::Transferables, E::HttpClient>>(
     input: Input,
-    context: Box<dyn Context<E::Transferables, E::HttpClient>>, // TODO: remove box
+    context: C,
 ) -> Pin<Box<(dyn Future<Output = ()> + 'static)>> {
     // FIXME: improve input handling
     let input = match input {
@@ -88,8 +88,11 @@ pub fn schedule<E: Environment>(
             Ok(data) => {
                 let data = data.into_boxed_slice();
 
-                let mut pipeline_context =
-                    PipelineContext::new(HeadedPipelineProcessor::<E> { context });
+                let mut pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
+                    context,
+                    phantom_t: Default::default(),
+                    phantom_hc: Default::default(),
+                });
                 let pipeline = build_vector_tile_pipeline();
                 pipeline.process((input, data), &mut pipeline_context);
             }
@@ -144,8 +147,13 @@ impl<E: Environment> RequestStage<E> {
                     coords: *coords,
                     layers: layers.clone(),
                 }),
-                schedule::<E>,
-                self.http_source_client.clone(),
+                schedule::<
+                    E,
+                    <E::AsyncProcedureCall as AsyncProcedureCall<
+                        E::Transferables,
+                        E::HttpClient,
+                    >>::Context,
+                >,
             );
         }
 

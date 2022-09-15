@@ -14,12 +14,13 @@ use maplibre_winit::winit::WinitEnvironment;
 use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
-    let mut map = MapBuilder::<HeadlessEnvironment<_, _, _, TokioAsyncProcedureCall>>::new()
+    let client = ReqwestHttpClient::new(None);
+    let mut map = MapBuilder::<HeadlessEnvironment<_, _, _, TokioAsyncProcedureCall<_>>>::new()
         .with_map_window_config(HeadlessMapWindowConfig {
             size: WindowSize::new(tile_size, tile_size).unwrap(),
         })
-        .with_http_client(ReqwestHttpClient::new(None))
-        .with_apc(TokioAsyncProcedureCall::new())
+        .with_http_client(client.clone())
+        .with_apc(TokioAsyncProcedureCall::new(client)) // TODO: avoid passing client here
         .with_scheduler(TokioScheduler::new())
         .with_renderer_settings(RendererSettings {
             texture_format: TextureFormat::Rgba8UnormSrgb,

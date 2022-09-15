@@ -8,10 +8,11 @@ use maplibre::{
 use maplibre_winit::winit::{WinitEnvironment, WinitMapWindowConfig};
 
 pub async fn run_headed() {
-    MapBuilder::<WinitEnvironment<_, _, _, TokioAsyncProcedureCall>>::new()
+    let client = ReqwestHttpClient::new(None);
+    MapBuilder::<WinitEnvironment<_, _, _, TokioAsyncProcedureCall<_>>>::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
-        .with_http_client(ReqwestHttpClient::new(None))
-        .with_apc(TokioAsyncProcedureCall::new())
+        .with_http_client(client.clone())
+        .with_apc(TokioAsyncProcedureCall::new(client))
         .with_scheduler(TokioScheduler::new())
         .build()
         .initialize()

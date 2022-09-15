@@ -4,7 +4,7 @@ use crate::platform::unsync::transferables::{
 use crate::{MapType, WHATWGFetchHttpClient};
 use js_sys::Uint8Array;
 use maplibre::environment::Environment;
-use maplibre::io::apc::{AsyncProcedure, AsyncProcedureCall, Context, Input, Transferable};
+use maplibre::io::apc::{AsyncProcedure, AsyncProcedureCall, Context, Input, Message};
 use maplibre::io::scheduler::Scheduler;
 use maplibre::io::source_client::{HttpClient, HttpSourceClient, SourceClient};
 use maplibre::io::transferables::Transferables;
@@ -25,19 +25,23 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
+type UsedTransferables = LinearTransferables;
+type UsedHttpClient = WHATWGFetchHttpClient;
+type UsedContext = PassingContext;
+
 #[derive(Clone)]
-pub struct PassingContext<HC: HttpClient> {
-    source_client: SourceClient<HC>,
+pub struct PassingContext {
+    source_client: SourceClient<UsedHttpClient>,
 }
 
-impl<HC: HttpClient> Context<LinearTransferables, HC> for PassingContext<HC> {
-    fn send(&self, data: Transferable<LinearTransferables>) {
+impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
+    fn send(&self, data: Message<UsedTransferables>) {
         // TODO: send back to main thread via postMessage
 
         let (tag, serialized): (u32, &[u8]) = match &data {
-            Transferable::TileTessellated(data) => (1, bytemuck::bytes_of(data)),
-            Transferable::UnavailableLayer(data) => (2, bytemuck::bytes_of(data)),
-            Transferable::TessellatedLayer(data) => (3, bytemuck::bytes_of(data.data.as_ref())),
+            Message::TileTessellated(data) => (1, bytemuck::bytes_of(data)),
+            Message::UnavailableLayer(data) => (2, bytemuck::bytes_of(data)),
+            Message::TessellatedLayer(data) => (3, bytemuck::bytes_of(data.data.as_ref())),
         };
 
         let serialized_array_buffer = js_sys::ArrayBuffer::new(serialized.len() as u32);
@@ -53,7 +57,7 @@ impl<HC: HttpClient> Context<LinearTransferables, HC> for PassingContext<HC> {
         global.post_message(&array).unwrap();
     }
 
-    fn source_client(&self) -> &SourceClient<HC> {
+    fn source_client(&self) -> &SourceClient<UsedHttpClient> {
         &self.source_client
     }
 }
@@ -62,7 +66,7 @@ pub struct PassingAsyncProcedureCall {
     new_worker: Box<dyn Fn() -> Worker>,
     workers: Vec<Worker>,
 
-    received: Vec<Box<Transferable<LinearTransferables>>>,
+    received: Vec<Message<UsedTransferables>>,
 }
 
 impl PassingAsyncProcedureCall {
@@ -89,21 +93,15 @@ impl PassingAsyncProcedureCall {
     }
 }
 
-impl<HC: HttpClient> AsyncProcedureCall<LinearTransferables, HC> for PassingAsyncProcedureCall {
-    type Context = PassingContext<HC>;
+impl AsyncProcedureCall<UsedTransferables, UsedHttpClient> for PassingAsyncProcedureCall {
+    type Context = UsedContext;
 
-    fn receive(&mut self) -> Option<Box<Transferable<LinearTransferables>>> {
+    fn receive(&mut self) -> Option<Message<UsedTransferables>> {
         self.received.pop()
     }
 
-    fn schedule(
-        &self,
-        input: Input,
-        procedure: AsyncProcedure<LinearTransferables, HC>,
-        http_client: HttpSourceClient<HC>, // FIXME
-    ) {
-        let procedure_ptr =
-            procedure as *mut AsyncProcedure<LinearTransferables, WHATWGFetchHttpClient> as u32; // TODO: is u32 fine?
+    fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
+        let procedure_ptr = procedure as *mut AsyncProcedure<Self::Context> as u32; // TODO: is u32 fine?
         let input = serde_json::to_string(&input).unwrap();
 
         let array = js_sys::Array::new();
@@ -119,8 +117,7 @@ impl<HC: HttpClient> AsyncProcedureCall<LinearTransferables, HC> for PassingAsyn
 pub async fn unsync_worker_entry(procedure_ptr: u32, input: String) -> Result<(), JsValue> {
     log::info!("worker_entry unsync");
 
-    let procedure: AsyncProcedure<LinearTransferables, WHATWGFetchHttpClient> =
-        unsafe { std::mem::transmute(procedure_ptr) };
+    let procedure: AsyncProcedure<UsedContext> = unsafe { std::mem::transmute(procedure_ptr) };
 
     let input = serde_json::from_str::<Input>(&input).unwrap();
 
@@ -128,7 +125,7 @@ pub async fn unsync_worker_entry(procedure_ptr: u32, input: String) -> Result<()
         source_client: SourceClient::Http(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
     };
 
-    (procedure)(input, Box::new(context)).await;
+    (procedure)(input, context).await;
 
     Ok(())
 }
@@ -143,7 +140,7 @@ pub fn unsync_main_entry(
     let mut map = unsafe { Rc::from_raw(map_ptr) };
 
     let transferred = match tag {
-        3 => Some(Transferable::<LinearTransferables>::TessellatedLayer(
+        3 => Some(Message::<UsedTransferables>::TessellatedLayer(
             LinearTessellatedLayer {
                 data: unsafe {
                     let mut uninit = Box::<InnerData>::new_zeroed();
@@ -154,13 +151,13 @@ pub fn unsync_main_entry(
                 },
             },
         )),
-        1 => Some(Transferable::<LinearTransferables>::TileTessellated(
-            *bytemuck::from_bytes::<<LinearTransferables as Transferables>::TileTessellated>(
+        1 => Some(Message::<UsedTransferables>::TileTessellated(
+            *bytemuck::from_bytes::<<UsedTransferables as Transferables>::TileTessellated>(
                 &data.to_vec(),
             ),
         )),
-        2 => Some(Transferable::<LinearTransferables>::UnavailableLayer(
-            *bytemuck::from_bytes::<<LinearTransferables as Transferables>::UnavailableLayer>(
+        2 => Some(Message::<UsedTransferables>::UnavailableLayer(
+            *bytemuck::from_bytes::<<UsedTransferables as Transferables>::UnavailableLayer>(
                 &data.to_vec(),
             ),
         )),
@@ -178,7 +175,7 @@ pub fn unsync_main_entry(
         .deref()
         .borrow_mut()
         .received
-        .push(Box::new(transferred)); // FIXME: remove box
+        .push(transferred);
 
     mem::forget(map);
 

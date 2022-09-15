@@ -1,6 +1,6 @@
 use instant::Instant;
 use maplibre::environment::{DefaultTransferables, Environment};
-use maplibre::io::apc::{AsyncProcedureCall, Transferable};
+use maplibre::io::apc::{AsyncProcedureCall, Message};
 use maplibre::io::scheduler::Scheduler;
 use maplibre::io::transferables::Transferables;
 use maplibre::{

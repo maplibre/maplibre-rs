@@ -30,8 +30,6 @@ pub trait PipelineProcessor: Downcast {
     }
 }
 
-impl_downcast!(PipelineProcessor);
-
 /// Context which is available to each step within a [`DataPipeline`]
 pub struct PipelineContext {
     processor: Box<dyn PipelineProcessor>,
