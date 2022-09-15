@@ -1,9 +1,9 @@
 import init, {unsync_worker_entry} from "../wasm/maplibre"
 
 onmessage = async message => {
-    let MEMORY_PAGES = 16 * 1024
-    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: false})
-    const initialised = init(message.data[0], memory).catch(err => {
+    const memory = new WebAssembly.Memory({initial: 1024, shared: false})
+    let module = message.data[0];
+    const initialised = init(module, memory).catch(err => {
         // Propagate to main `onerror`:
         setTimeout(() => {
             throw err;
