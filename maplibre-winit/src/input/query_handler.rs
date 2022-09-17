@@ -71,6 +71,7 @@ impl UpdateState for QueryHandler {
                     &inverted_view_proj,
                     false,
                 ) {
+                    // TODO reenable
                     /*state
                     .scheduler()
                     .schedule(state.scheduler(), move |thread_local| async move {

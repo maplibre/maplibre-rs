@@ -250,7 +250,7 @@ impl Schedule {
         for label in &self.stage_order {
             #[cfg(feature = "trace")]
             let _stage_span = tracing::info_span!("stage", name = ?label).entered();
-            let stage = self.stages.get_mut(label).unwrap();
+            let stage = self.stages.get_mut(label).unwrap(); // TODO: Remove unwrap
             stage.run(context);
         }
     }

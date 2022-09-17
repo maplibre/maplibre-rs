@@ -19,12 +19,12 @@ impl WebWorkerPoolScheduler {
                 Box::new(move || {
                     new_worker
                         .call0(&JsValue::undefined())
-                        .unwrap()
+                        .unwrap() // FIXME (wasm-executor): Remove unwrap
                         .dyn_into::<Worker>()
-                        .unwrap()
+                        .unwrap() // FIXME (wasm-executor): remove unwrap
                 }),
             )
-            .unwrap(),
+            .unwrap(), // FIXME (wasm-executor): Remove unwrap
         }
     }
 }
@@ -44,7 +44,7 @@ impl Scheduler for WebWorkerPoolScheduler {
                     Ok(JsValue::undefined())
                 })
             })
-            .unwrap();
+            .unwrap(); // FIXME (wasm-executor): remove unwrap
         Ok(())
     }
 }

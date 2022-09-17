@@ -1,8 +1,9 @@
 use std::{cell::RefCell, marker::PhantomData, ops::Deref, rc::Rc};
 
 use instant::Instant;
+use maplibre::io::transferables::DefaultTransferables;
 use maplibre::{
-    environment::{DefaultTransferables, Environment},
+    environment::Environment,
     error::Error,
     io::{
         apc::{AsyncProcedureCall, Message},

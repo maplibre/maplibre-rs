@@ -84,7 +84,7 @@ impl BufferedTextureHead {
         let padded_buffer = buffer_slice.get_mapped_range();
 
         let mut png_encoder = png::Encoder::new(
-            File::create(png_output_path).unwrap(),
+            File::create(png_output_path).unwrap(), // TODO: Remove unwrap
             self.buffer_dimensions.width as u32,
             self.buffer_dimensions.height as u32,
         );
@@ -92,17 +92,17 @@ impl BufferedTextureHead {
         png_encoder.set_color(png::ColorType::Rgba);
         let mut png_writer = png_encoder
             .write_header()
-            .unwrap()
+            .unwrap() // TODO: Remove unwrap
             .into_stream_writer_with_size(self.buffer_dimensions.unpadded_bytes_per_row)
-            .unwrap();
+            .unwrap(); // TODO: Remove unwrap
 
         // from the padded_buffer we write just the unpadded bytes into the image
         for chunk in padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row) {
             png_writer
                 .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row])
-                .unwrap();
+                .unwrap(); // TODO: Remove unwrap
         }
-        png_writer.finish().unwrap();
+        png_writer.finish().unwrap(); // TODO: Remove unwrap
 
         // With the current interface, we have to make sure all mapped views are
         // dropped before we unmap the buffer.

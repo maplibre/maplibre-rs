@@ -12,6 +12,8 @@ use std::{
     str::FromStr,
 };
 
+use crate::io::apc::Message;
+use crate::io::transferables::{Transferables, UnavailableLayer};
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords, ZoomLevel},
@@ -79,7 +81,7 @@ pub fn schedule<E: Environment, C: Context<E::Transferables, E::HttpClient>>(
         Input::TileRequest(input) => Some(input),
         _ => None,
     }
-    .unwrap();
+    .unwrap(); // FIXME (wasm-executor): Remove unwrap
 
     Box::pin(async move {
         let coords = input.coords;
@@ -99,7 +101,15 @@ pub fn schedule<E: Environment, C: Context<E::Transferables, E::HttpClient>>(
             }
             Err(e) => {
                 log::error!("{:?}", &e);
-                //state.tile_unavailable(&coords, request_id).unwrap()
+                for to_load in &input.layers {
+                    tracing::warn!("layer {} at {} unavailable", to_load, coords);
+                    context.send(Message::UnavailableLayer(
+                        <E::Transferables as Transferables>::UnavailableLayer::new(
+                            input.coords,
+                            to_load.to_string(),
+                        ),
+                    ));
+                }
             }
         }
     })
@@ -124,7 +134,7 @@ impl<E: Environment> RequestStage<E> {
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
                 self.request_tile(tile_repository, &coords, &source_layers)
-                    .unwrap();
+                    .unwrap(); // TODO: Remove unwrap
             }
         }
     }

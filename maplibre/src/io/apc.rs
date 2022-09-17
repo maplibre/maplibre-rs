@@ -10,9 +10,9 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+use crate::io::transferables::DefaultTransferables;
 use crate::{
     coords::WorldTileCoords,
-    environment::DefaultTransferables,
     io::{
         source_client::{HttpSourceClient, SourceClient},
         transferables::Transferables,
@@ -57,16 +57,15 @@ pub trait AsyncProcedureCall<T: Transferables, HC: HttpClient>: 'static {
     fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>);
 }
 
-// FIXME: Make this generic using the Schedule
 #[derive(Clone)]
-pub struct TokioContext<T: Transferables, HC: HttpClient> {
+pub struct SchedulerContext<T: Transferables, HC: HttpClient> {
     sender: Sender<Message<T>>,
     source_client: SourceClient<HC>,
 }
 
-impl<T: Transferables, HC: HttpClient> Context<T, HC> for TokioContext<T, HC> {
+impl<T: Transferables, HC: HttpClient> Context<T, HC> for SchedulerContext<T, HC> {
     fn send(&self, data: Message<T>) {
-        self.sender.send(data).unwrap();
+        self.sender.send(data).unwrap(); // FIXME (wasm-executor): Remove unwrap
     }
 
     fn source_client(&self) -> &SourceClient<HC> {
@@ -96,7 +95,7 @@ impl<HC: HttpClient, S: Scheduler> SchedulerAsyncProcedureCall<HC, S> {
 impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<DefaultTransferables, HC>
     for SchedulerAsyncProcedureCall<HC, S>
 {
-    type Context = TokioContext<DefaultTransferables, HC>;
+    type Context = SchedulerContext<DefaultTransferables, HC>;
 
     fn receive(&mut self) -> Option<Message<DefaultTransferables>> {
         let transferred = self.channel.1.try_recv().ok()?;
@@ -105,13 +104,13 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<DefaultTransferables, HC>
 
     fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
         let sender = self.channel.0.clone();
-        let client = self.http_client.clone(); // FIXME: do not clone each time
+        let client = self.http_client.clone(); // FIXME (wasm-executor): do not clone each time
 
         self.scheduler
             .schedule(move || async move {
                 (procedure)(
                     input,
-                    TokioContext {
+                    SchedulerContext {
                         sender,
                         source_client: SourceClient::Http(HttpSourceClient::new(client)),
                     },

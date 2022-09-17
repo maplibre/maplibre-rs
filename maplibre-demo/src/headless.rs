@@ -23,7 +23,7 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
             .with_apc(SchedulerAsyncProcedureCall::new(
                 client,
                 TokioScheduler::new(),
-            )) // TODO: avoid passing client and scheduler here
+            )) // FIXME (wasm-executor): avoid passing client and scheduler here
             .with_scheduler(TokioScheduler::new())
             .with_renderer_settings(RendererSettings {
                 texture_format: TextureFormat::Rgba8UnormSrgb,

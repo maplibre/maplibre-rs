@@ -62,7 +62,7 @@ impl<V, I> OverAlignedVertexBuffer<V, I> {
         V: Copy,
         I: Copy,
     {
-        // FIXME, make this fn not needed
+        // FIXME (wasm-executor), make this fn not needed
         let mut buffers = VertexBuffers::with_capacity(0, 0);
         buffers.vertices = Vec::from(vertices);
         buffers.indices = Vec::from(indices);

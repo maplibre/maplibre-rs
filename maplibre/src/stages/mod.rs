@@ -10,9 +10,9 @@ use std::{
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
+use crate::io::transferables::DefaultTransferables;
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
-    environment::DefaultTransferables,
     error::Error,
     io::{
         apc::{AsyncProcedureCall, Context, Message},
@@ -92,67 +92,15 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         coords: &WorldTileCoords,
         geometries: Vec<IndexedGeometry<f64>>,
     ) {
-        // TODO: Readd
+        // FIXME (wasm-executor): Readd
         /*        if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
             geometry_index.index_tile(coords, TileIndex::Linear { list: geometries })
         }*/
     }
 }
 
-// FIXME: clean this up
-///// Stores and provides access to the thread safe data shared between the schedulers.
-//[derive(Clone)]
-//pub struct SharedThreadState {
-/*    pub tile_request_state: Arc<Mutex<TileRequestState>>,
-pub message_sender: mpsc::Sender<TessellateMessage>,*/
-// TODO: Readd
-//pub geometry_index: Arc<Mutex<GeometryIndex>>,
-//}
-
-//impl SharedThreadState {
-/* fn get_tile_request(&self, request_id: TileRequestID) -> Option<TileRequest> {
-    self.tile_request_state
-        .lock()
-        .ok()
-        .and_then(|tile_request_state| tile_request_state.get_tile_request(request_id).cloned())
-}
-
-#[tracing::instrument(skip_all)]
-pub fn process_tile(&self, request_id: TileRequestID, data: Box<[u8]>) -> Result<(), Error> {
-    if let Some(tile_request) = self.get_tile_request(request_id) {
-        let mut pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
-            state: self.clone(),
-        });
-        let pipeline = build_vector_tile_pipeline();
-        pipeline.process((tile_request, request_id, data), &mut pipeline_context);
-    }
-
-    Ok(())
-}
-
-pub fn tile_unavailable(
-    &self,
-    coords: &WorldTileCoords,
-    request_id: TileRequestID,
-) -> Result<(), Error> {
-    if let Some(tile_request) = self.get_tile_request(request_id) {
-        for to_load in &tile_request.layers {
-            tracing::warn!("layer {} at {} unavailable", to_load, coords);
-            self.message_sender.send(TessellateMessage::Layer(
-                LayerTessellateMessage::UnavailableLayer {
-                    coords: tile_request.coords,
-                    layer_name: to_load.to_string(),
-                },
-            ))?;
-        }
-    }
-
-    Ok(())
-}*/
-
-// TODO: Readd
-/*    #[tracing::instrument(skip_all)]
-pub fn query_point(
+// FIXME (wasm-executor): Readd
+/*pub fn query_point(
     &self,
     world_coords: &WorldCoords,
     z: ZoomLevel,

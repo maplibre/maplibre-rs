@@ -53,7 +53,7 @@ pub type MapType = Map<
     WinitEnvironment<
         platform::sync::pool_scheduler::WebWorkerPoolScheduler,
         WHATWGFetchHttpClient,
-        maplibre::environment::DefaultTransferables,
+        maplibre::io::transferables::DefaultTransferables,
         maplibre::io::apc::SchedulerAsyncProcedureCall<
             WHATWGFetchHttpClient,
             platform::sync::pool_scheduler::WebWorkerPoolScheduler,

@@ -67,7 +67,7 @@ pub use geozero::mvt::tile;
 /// The [`Map`] defines the public interface of the map renderer.
 // DO NOT IMPLEMENT INTERNALS ON THIS STRUCT.
 pub struct Map<E: Environment> {
-    // FIXME: Avoid RefCell, change ownership model!
+    // FIXME (wasm-executor): Avoid RefCell, change ownership model!
     map_schedule: Rc<RefCell<InteractiveMapSchedule<E>>>,
     window: RefCell<Option<<E::MapWindowConfig as MapWindowConfig>::MapWindow>>,
 }
@@ -99,7 +99,7 @@ where
         self.window
             .borrow_mut()
             .take()
-            .unwrap()
+            .unwrap() // FIXME (wasm-executor): Remove unwrap
             .run(self.map_schedule.clone(), max_frames);
     }
 
@@ -250,13 +250,13 @@ impl<E: Environment> MapBuilder<E> {
     /// Builds the UninitializedMap with the given configuration.
     pub fn build(self) -> UninitializedMap<E> {
         UninitializedMap {
-            scheduler: self.scheduler.unwrap(),
-            apc: self.apc.unwrap(),
-            http_client: self.http_client.unwrap(),
+            scheduler: self.scheduler.unwrap(),     // TODO: Remove unwrap
+            apc: self.apc.unwrap(),                 // TODO: Remove unwrap
+            http_client: self.http_client.unwrap(), // TODO: Remove unwrap
             style: self.style.unwrap_or_default(),
             wgpu_settings: self.wgpu_settings.unwrap_or_default(),
             renderer_settings: self.renderer_settings.unwrap_or_default(),
-            map_window_config: self.map_window_config.unwrap(),
+            map_window_config: self.map_window_config.unwrap(), // TODO: Remove unwrap
         }
     }
 }

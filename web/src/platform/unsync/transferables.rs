@@ -11,7 +11,7 @@ use maplibre::{
     tile::Layer,
 };
 
-// FIXME: properly do this!, fix this whole file
+// FIXME (wasm-executor): properly do this!, fix this whole file
 #[derive(Copy, Clone, Debug)]
 #[repr(transparent)]
 pub struct WrapperWorldTileCoords(WorldTileCoords);
@@ -71,7 +71,7 @@ impl UnavailableLayer for LinearUnavailableLayer {
     fn to_stored_layer(self) -> StoredLayer {
         StoredLayer::UnavailableLayer {
             coords: WrapperWorldTileCoords::peel(self.coords),
-            layer_name: String::from_utf8(Vec::from(self.layer_name)).unwrap(),
+            layer_name: String::from_utf8(Vec::from(self.layer_name)).unwrap(), // FIXME (wasm-executor): Remove unwrap
         }
     }
 }
@@ -136,7 +136,7 @@ impl TessellatedLayer for LinearTessellatedLayer {
             layer_name: String::from_utf8(Vec::from(
                 &self.data.layer_name[..self.data.layer_name_len],
             ))
-            .unwrap(),
+            .unwrap(), // FIXME (wasm-executor): Remove unwrap
             buffer: OverAlignedVertexBuffer::from_slices(
                 &self.data.vertices.0[..self.data.vertices_len],
                 &self.data.indices.0[..self.data.indices_len],

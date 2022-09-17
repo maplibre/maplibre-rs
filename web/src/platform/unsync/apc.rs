@@ -24,7 +24,6 @@ use maplibre::{
         transferables::Transferables,
     },
 };
-use serde::Serialize;
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
@@ -56,11 +55,11 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
             serialized_array.set(&Uint8Array::view(serialized), 0);
         }
 
-        let global = js_sys::global().unchecked_into::<DedicatedWorkerGlobalScope>();
+        let global = js_sys::global().unchecked_into::<DedicatedWorkerGlobalScope>(); // FIXME (wasm-executor): Remove unchecked
         let array = js_sys::Array::new();
         array.push(&JsValue::from(tag));
         array.push(&serialized_array_buffer);
-        global.post_message(&array).unwrap();
+        global.post_message(&array).unwrap(); // FIXME (wasm-executor) Remove unwrap
     }
 
     fn source_client(&self) -> &SourceClient<UsedHttpClient> {
@@ -80,9 +79,9 @@ impl PassingAsyncProcedureCall {
         let create_new_worker = Box::new(move || {
             new_worker
                 .call0(&JsValue::undefined())
-                .unwrap()
+                .unwrap() // FIXME (wasm-executor): Remove unwrap
                 .dyn_into::<Worker>()
-                .unwrap()
+                .unwrap() // FIXME (wasm-executor): Remove unwrap
         });
 
         let workers = (0..initial_workers)
@@ -91,7 +90,7 @@ impl PassingAsyncProcedureCall {
 
                 let array = js_sys::Array::new();
                 array.push(&wasm_bindgen::module());
-                worker.post_message(&array).unwrap();
+                worker.post_message(&array).unwrap(); // FIXME (wasm-executor): Remove unwrap
                 worker
             })
             .collect::<Vec<_>>();
@@ -112,14 +111,14 @@ impl AsyncProcedureCall<UsedTransferables, UsedHttpClient> for PassingAsyncProce
     }
 
     fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
-        let procedure_ptr = procedure as *mut AsyncProcedure<Self::Context> as u32; // TODO: is u32 fine?
-        let input = serde_json::to_string(&input).unwrap();
+        let procedure_ptr = procedure as *mut AsyncProcedure<Self::Context> as u32; // FIXME (wasm-executor): is u32 fine, define an overflow safe function?
+        let input = serde_json::to_string(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
 
         let array = js_sys::Array::new();
         array.push(&JsValue::from(procedure_ptr));
         array.push(&JsValue::from(input));
 
-        self.workers[0].post_message(&array).unwrap();
+        self.workers[0].post_message(&array).unwrap(); // FIXME (wasm-executor): Remove unwrap
     }
 }
 
@@ -130,7 +129,7 @@ pub async fn unsync_worker_entry(procedure_ptr: u32, input: String) -> Result<()
 
     let procedure: AsyncProcedure<UsedContext> = unsafe { std::mem::transmute(procedure_ptr) };
 
-    let input = serde_json::from_str::<Input>(&input).unwrap();
+    let input = serde_json::from_str::<Input>(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
 
     let context = PassingContext {
         source_client: SourceClient::Http(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
@@ -148,8 +147,10 @@ pub fn unsync_main_entry(
     tag: u32,
     data: Uint8Array,
 ) -> Result<(), JsValue> {
+    // FIXME (wasm-executor): Can we make this call safe? check if it was cloned before?
     let mut map = unsafe { Rc::from_raw(map_ptr) };
 
+    // FIXME (wasm-executor): remove tag somehow
     let transferred = match tag {
         3 => Some(Message::<UsedTransferables>::TessellatedLayer(
             LinearTessellatedLayer {
@@ -174,9 +175,8 @@ pub fn unsync_main_entry(
         )),
         _ => None,
     }
-    .unwrap();
+    .unwrap(); // FIXME (wasm-executor): Remove unwrap
 
-    // FIXME: avoid this borrow mess
     map.deref()
         .borrow()
         .map_schedule()
@@ -188,7 +188,7 @@ pub fn unsync_main_entry(
         .received
         .push(transferred);
 
-    mem::forget(map);
+    mem::forget(map); // FIXME (wasm-executor): Enforce this somehow
 
     Ok(())
 }

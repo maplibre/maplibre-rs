@@ -66,7 +66,7 @@ pub struct DefaultTessellatedLayer {
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
     pub feature_indices: Vec<u32>,
-    pub layer_data: Layer, // FIXME: Introduce a better structure for this
+    pub layer_data: Layer, // FIXME (wasm-executor): Introduce a better structure for this
 }
 
 impl TessellatedLayer for DefaultTessellatedLayer {
@@ -98,4 +98,13 @@ pub trait Transferables: 'static {
     type TileTessellated: TileTessellated;
     type UnavailableLayer: UnavailableLayer;
     type TessellatedLayer: TessellatedLayer;
+}
+
+#[derive(Copy, Clone)]
+pub struct DefaultTransferables;
+
+impl Transferables for DefaultTransferables {
+    type TileTessellated = DefaultTileTessellated;
+    type UnavailableLayer = DefaultUnavailableLayer;
+    type TessellatedLayer = DefaultTessellatedLayer;
 }

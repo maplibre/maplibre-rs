@@ -44,7 +44,7 @@ impl Stage for UploadStage {
                         .position
                         .to_homogeneous()
                         .cast::<f32>()
-                        .unwrap()
+                        .unwrap() // TODO: Remove unwrap
                         .into(),
                 ))]),
             );
@@ -168,7 +168,7 @@ impl UploadStage {
                     })
                 {
                     for style_layer in &style.layers {
-                        let source_layer = style_layer.source_layer.as_ref().unwrap();
+                        let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
 
                         if let Some(message) = available_layers
                             .iter()

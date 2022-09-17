@@ -21,7 +21,7 @@ use crate::{
 pub struct InteractiveMapSchedule<E: Environment> {
     map_window_config: E::MapWindowConfig,
 
-    // FIXME: avoid RefCell, change ownership model
+    // FIXME (wasm-executor): avoid RefCell, change ownership model
     pub apc: Rc<RefCell<E::AsyncProcedureCall>>,
 
     map_context: EventuallyMapContext,
@@ -54,13 +54,13 @@ impl<E: Environment> InteractiveMapSchedule<E> {
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
-        let apc = Rc::new(RefCell::new(apc)); // TODO: remove refcell, rc
+        let apc = Rc::new(RefCell::new(apc));
 
         let http_source_client: HttpSourceClient<E::HttpClient> =
             HttpSourceClient::new(http_client);
         register_stages::<E>(&mut schedule, http_source_client, apc.clone());
 
-        let graph = create_default_render_graph().unwrap();
+        let graph = create_default_render_graph().unwrap(); // TODO: Remove unwrap
         register_default_render_stages(graph, &mut schedule);
 
         Self {
@@ -157,7 +157,7 @@ where
                 let renderer =
                     Renderer::initialize(&window, wgpu_settings.clone(), renderer_settings.clone())
                         .await
-                        .unwrap();
+                        .unwrap(); // TODO: Remove unwrap
                 self.map_context.make_full(renderer);
                 true
             }

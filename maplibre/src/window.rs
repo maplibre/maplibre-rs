@@ -30,7 +30,7 @@ pub trait MapWindowConfig: 'static {
 /// The event loop is responsible for processing events and propagating them to the map renderer.
 /// Only non-headless windows use an [`EventLoop`].
 pub trait EventLoop<E: Environment> {
-    // FIXME: Avoid Rc, change ownership model
+    // FIXME (wasm-executor): Avoid Rc, change ownership model
     fn run(self, map_schedule: Rc<RefCell<InteractiveMapSchedule<E>>>, max_frames: Option<u64>);
 }
 

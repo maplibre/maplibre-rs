@@ -12,10 +12,10 @@ use std::{
 use tokio::{runtime::Handle, task};
 use wgpu::{BufferAsyncError, BufferSlice};
 
+use crate::io::transferables::DefaultTransferables;
 use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, ViewRegion, WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
-    environment::DefaultTransferables,
     error::Error,
     headless::utils::HeadlessPipelineProcessor,
     io::{
@@ -126,12 +126,12 @@ impl<E: Environment> HeadlessMapSchedule<E> {
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
-        let mut graph = create_default_render_graph().unwrap();
-        let draw_graph = graph.get_sub_graph_mut(draw_graph::NAME).unwrap();
+        let mut graph = create_default_render_graph().unwrap(); // TODO: remove unwrap
+        let draw_graph = graph.get_sub_graph_mut(draw_graph::NAME).unwrap(); // TODO: remove unwrap
         draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
         draw_graph
             .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)
-            .unwrap();
+            .unwrap(); // TODO: remove unwrap
 
         register_default_render_stages(graph, &mut schedule);
 
@@ -185,7 +185,7 @@ impl<E: Environment> HeadlessMapSchedule<E> {
         let data = http_source_client
             .fetch(&coords)
             .await
-            .unwrap()
+            .unwrap() // TODO: remove unwrap
             .into_boxed_slice();
 
         let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
@@ -200,7 +200,7 @@ impl<E: Environment> HeadlessMapSchedule<E> {
 
         let mut processor = pipeline_context
             .take_processor::<HeadlessPipelineProcessor>()
-            .unwrap();
+            .unwrap(); // TODO: remove unwrap
 
         if let Eventually::Initialized(pool) = self.map_context.renderer.state.buffer_pool_mut() {
             pool.clear();
@@ -260,7 +260,7 @@ impl Node for CopySurfaceBufferNode {
                                 std::num::NonZeroU32::new(
                                     buffered_texture.buffer_dimensions.padded_bytes_per_row as u32,
                                 )
-                                .unwrap(),
+                                .unwrap(), // TODO: remove unwrap
                             ),
                             rows_per_image: None,
                         },
