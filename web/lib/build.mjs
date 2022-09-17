@@ -146,7 +146,7 @@ const wasmPack = () => {
         "--target", "wasm32-unknown-unknown",
         "--profile", profile,
         "--features", `${webgl ? "web-webgl," : ""}`,
-        "-Z", "build-std=std,panic_abort"
+        ...(multithreaded ? ["-Z", "build-std=std,panic_abort"] : []),
     ], {
         cwd: '.',
         stdio: 'inherit',
