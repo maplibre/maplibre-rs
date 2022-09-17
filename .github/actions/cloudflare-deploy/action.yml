@@ -1,5 +1,5 @@
 name: deploy
-description: Deploy on maxammann.org
+description: Deploy on cloudflare
 
 inputs:
   project:
