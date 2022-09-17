@@ -1,8 +1,8 @@
 //! Utilities for the window system.
 
+use std::{cell::RefCell, rc::Rc};
+
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
-use std::cell::RefCell;
-use std::rc::Rc;
 
 use crate::{Environment, HttpClient, InteractiveMapSchedule};
 

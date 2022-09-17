@@ -1,7 +1,6 @@
-use maplibre::environment::DefaultTransferables;
-
-use maplibre::io::apc::SchedulerAsyncProcedureCall;
 use maplibre::{
+    environment::DefaultTransferables,
+    io::apc::SchedulerAsyncProcedureCall,
     platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
     MapBuilder,
 };

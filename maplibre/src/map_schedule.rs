@@ -1,6 +1,4 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::{marker::PhantomData, mem};
+use std::{cell::RefCell, marker::PhantomData, mem, rc::Rc};
 
 use crate::{
     context::{MapContext, ViewState},

@@ -1,32 +1,33 @@
 //! Requests tiles which are currently in view
 
-use crate::coords::ZoomLevel;
-use crate::io::apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input};
-use crate::io::pipeline::PipelineContext;
-use crate::io::pipeline::Processable;
-use crate::io::tile_pipelines::build_vector_tile_pipeline;
-use crate::stages::HeadedPipelineProcessor;
+use std::{
+    borrow::Borrow,
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    future::Future,
+    ops::Deref,
+    pin::Pin,
+    process::Output,
+    rc::Rc,
+    str::FromStr,
+};
+
 use crate::{
     context::MapContext,
-    coords::{ViewRegion, WorldTileCoords},
+    coords::{ViewRegion, WorldTileCoords, ZoomLevel},
     error::Error,
     io::{
+        apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input},
+        pipeline::{PipelineContext, Processable},
         source_client::{HttpSourceClient, SourceClient},
+        tile_pipelines::build_vector_tile_pipeline,
         tile_repository::TileRepository,
         TileRequest,
     },
     schedule::Stage,
+    stages::HeadedPipelineProcessor,
     Environment, HttpClient, Scheduler, Style,
 };
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
-use std::future::Future;
-use std::ops::Deref;
-use std::pin::Pin;
-use std::process::Output;
-use std::rc::Rc;
-use std::str::FromStr;
 
 pub struct RequestStage<E: Environment> {
     apc: Rc<RefCell<E::AsyncProcedureCall>>,

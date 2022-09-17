@@ -1,10 +1,10 @@
-use std::marker::PhantomData;
 use std::{
     collections::HashSet,
     fs::File,
     future::Future,
     io::Write,
     iter,
+    marker::PhantomData,
     ops::{Deref, Range},
     sync::Arc,
 };
@@ -12,20 +12,19 @@ use std::{
 use tokio::{runtime::Handle, task};
 use wgpu::{BufferAsyncError, BufferSlice};
 
-use crate::environment::DefaultTransferables;
-use crate::io::apc::AsyncProcedureCall;
-use crate::io::apc::SchedulerAsyncProcedureCall;
-use crate::io::transferables::Transferables;
 use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, ViewRegion, WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
+    environment::DefaultTransferables,
     error::Error,
     headless::utils::HeadlessPipelineProcessor,
     io::{
+        apc::{AsyncProcedureCall, SchedulerAsyncProcedureCall},
         pipeline::{PipelineContext, Processable},
         source_client::HttpSourceClient,
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::{StoredLayer, TileRepository},
+        transferables::Transferables,
         TileRequest,
     },
     render::{

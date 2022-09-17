@@ -1,13 +1,15 @@
 use bytemuck::{TransparentWrapper, Zeroable};
 use bytemuck_derive::{Pod, Zeroable};
-use maplibre::benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use maplibre::coords::WorldTileCoords;
-use maplibre::io::tile_repository::StoredLayer;
-use maplibre::io::transferables::{
-    TessellatedLayer, TileTessellated, Transferables, UnavailableLayer,
+use maplibre::{
+    benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    coords::WorldTileCoords,
+    io::{
+        tile_repository::StoredLayer,
+        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
+    },
+    render::ShaderVertex,
+    tile::Layer,
 };
-use maplibre::render::ShaderVertex;
-use maplibre::tile::Layer;
 
 // FIXME: properly do this!, fix this whole file
 #[derive(Copy, Clone, Debug)]

@@ -1,28 +1,29 @@
 //! [Stages](Stage) for requesting and preparing data
 
-use std::cell::RefCell;
-use std::marker::PhantomData;
-use std::rc::Rc;
-use std::sync::{mpsc, Arc, Mutex};
+use std::{
+    cell::RefCell,
+    marker::PhantomData,
+    rc::Rc,
+    sync::{mpsc, Arc, Mutex},
+};
 
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
-use crate::environment::DefaultTransferables;
-use crate::io::apc::{AsyncProcedureCall, Context, Message};
-use crate::io::transferables::Transferables;
-use crate::io::transferables::{
-    DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer, TessellatedLayer,
-    TileTessellated, UnavailableLayer,
-};
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
+    environment::DefaultTransferables,
     error::Error,
     io::{
+        apc::{AsyncProcedureCall, Context, Message},
         geometry_index::{GeometryIndex, IndexedGeometry, TileIndex},
         pipeline::{PipelineContext, PipelineProcessor, Processable},
         source_client::HttpSourceClient,
         tile_pipelines::build_vector_tile_pipeline,
+        transferables::{
+            DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer,
+            TessellatedLayer, TileTessellated, Transferables, UnavailableLayer,
+        },
         TileRequest,
     },
     render::ShaderVertex,

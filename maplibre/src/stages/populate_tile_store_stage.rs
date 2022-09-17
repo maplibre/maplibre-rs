@@ -1,12 +1,17 @@
 //! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].
 
-use crate::io::apc::{AsyncProcedureCall, Message};
-use crate::io::transferables::{TessellatedLayer, TileTessellated, UnavailableLayer};
-use crate::{context::MapContext, io::tile_repository::StoredLayer, schedule::Stage, Environment};
-use std::borrow::BorrowMut;
-use std::cell::RefCell;
-use std::ops::Deref;
-use std::rc::Rc;
+use std::{borrow::BorrowMut, cell::RefCell, ops::Deref, rc::Rc};
+
+use crate::{
+    context::MapContext,
+    io::{
+        apc::{AsyncProcedureCall, Message},
+        tile_repository::StoredLayer,
+        transferables::{TessellatedLayer, TileTessellated, UnavailableLayer},
+    },
+    schedule::Stage,
+    Environment,
+};
 
 pub struct PopulateTileStore<E: Environment> {
     apc: Rc<RefCell<E::AsyncProcedureCall>>,

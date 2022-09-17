@@ -16,8 +16,14 @@
 //! maplibre = "0.0.2"
 //! ```
 
-use crate::environment::Environment;
+use std::{
+    borrow::{Borrow, BorrowMut},
+    cell::RefCell,
+    rc::Rc,
+};
+
 use crate::{
+    environment::Environment,
     io::{scheduler::Scheduler, source_client::HttpClient},
     map_schedule::InteractiveMapSchedule,
     render::{
@@ -27,9 +33,6 @@ use crate::{
     style::Style,
     window::{EventLoop, HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
 };
-use std::borrow::{Borrow, BorrowMut};
-use std::cell::RefCell;
-use std::rc::Rc;
 
 pub mod context;
 pub mod coords;

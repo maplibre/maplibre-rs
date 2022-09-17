@@ -1,29 +1,37 @@
-use crate::platform::unsync::transferables::{
-    InnerData, LinearTessellatedLayer, LinearTransferables,
+use std::{
+    borrow::Borrow,
+    cell::RefCell,
+    collections::HashMap,
+    marker::PhantomData,
+    mem,
+    mem::{size_of, MaybeUninit},
+    ops::Deref,
+    pin::Pin,
+    rc::Rc,
+    sync::{
+        mpsc,
+        mpsc::{Receiver, Sender},
+    },
 };
-use crate::{MapType, WHATWGFetchHttpClient};
+
 use js_sys::Uint8Array;
-use maplibre::environment::Environment;
-use maplibre::io::apc::{AsyncProcedure, AsyncProcedureCall, Context, Input, Message};
-use maplibre::io::scheduler::Scheduler;
-use maplibre::io::source_client::{HttpClient, HttpSourceClient, SourceClient};
-use maplibre::io::transferables::Transferables;
+use maplibre::{
+    environment::Environment,
+    io::{
+        apc::{AsyncProcedure, AsyncProcedureCall, Context, Input, Message},
+        scheduler::Scheduler,
+        source_client::{HttpClient, HttpSourceClient, SourceClient},
+        transferables::Transferables,
+    },
+};
 use serde::Serialize;
-use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::marker::PhantomData;
-use std::mem;
-use std::mem::{size_of, MaybeUninit};
-use std::ops::Deref;
-use std::pin::Pin;
-use std::rc::Rc;
-use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use wasm_bindgen::JsValue;
+use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
+
+use crate::{
+    platform::unsync::transferables::{InnerData, LinearTessellatedLayer, LinearTransferables},
+    MapType, WHATWGFetchHttpClient,
+};
 
 type UsedTransferables = LinearTransferables;
 type UsedHttpClient = WHATWGFetchHttpClient;

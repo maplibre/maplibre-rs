@@ -2,9 +2,7 @@
 //! web workers which can be used to execute work.
 //! Adopted from [wasm-bindgen example](https://github.com/rustwasm/wasm-bindgen/blob/0eba2efe45801b71f8873bc368c58a8ed8e894ff/examples/raytrace-parallel/src/pool.rs)
 
-use std::borrow::BorrowMut;
-use std::future::Future;
-use std::{cell::RefCell, rc::Rc};
+use std::{borrow::BorrowMut, cell::RefCell, future::Future, rc::Rc};
 
 use js_sys::Promise;
 use rand::prelude::*;

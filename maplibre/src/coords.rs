@@ -8,6 +8,7 @@ use std::{
 
 use bytemuck_derive::{Pod, Zeroable};
 use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     style::source::TileAddressingScheme,
@@ -16,7 +17,6 @@ use crate::{
         SignificantlyDifferent,
     },
 };
-use serde::{Deserialize, Serialize};
 
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;

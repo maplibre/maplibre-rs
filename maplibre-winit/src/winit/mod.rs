@@ -1,18 +1,18 @@
+use std::{cell::RefCell, marker::PhantomData, ops::Deref, rc::Rc};
+
 use instant::Instant;
-use maplibre::environment::{DefaultTransferables, Environment};
-use maplibre::io::apc::{AsyncProcedureCall, Message};
-use maplibre::io::scheduler::Scheduler;
-use maplibre::io::transferables::Transferables;
 use maplibre::{
+    environment::{DefaultTransferables, Environment},
     error::Error,
-    io::source_client::HttpClient,
+    io::{
+        apc::{AsyncProcedureCall, Message},
+        scheduler::Scheduler,
+        source_client::HttpClient,
+        transferables::Transferables,
+    },
     map_schedule::InteractiveMapSchedule,
     window::{EventLoop, HeadedMapWindow, MapWindowConfig},
 };
-use std::cell::RefCell;
-use std::marker::PhantomData;
-use std::ops::Deref;
-use std::rc::Rc;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,

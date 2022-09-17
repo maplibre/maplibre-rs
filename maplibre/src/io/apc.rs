@@ -1,16 +1,25 @@
-use crate::coords::WorldTileCoords;
-use crate::environment::DefaultTransferables;
-use crate::io::source_client::{HttpSourceClient, SourceClient};
-use crate::io::transferables::Transferables;
-use crate::io::TileRequest;
-use crate::Scheduler;
-use crate::{Environment, HttpClient};
+use std::{
+    collections::HashMap,
+    future::Future,
+    pin::Pin,
+    sync::{
+        mpsc,
+        mpsc::{Receiver, Sender},
+    },
+};
+
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
+
+use crate::{
+    coords::WorldTileCoords,
+    environment::DefaultTransferables,
+    io::{
+        source_client::{HttpSourceClient, SourceClient},
+        transferables::Transferables,
+        TileRequest,
+    },
+    Environment, HttpClient, Scheduler,
+};
 
 /// The result of the tessellation of a tile.
 /// `TessellatedLayer` contains the result of the tessellation for a specific layer, otherwise

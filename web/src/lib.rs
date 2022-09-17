@@ -1,13 +1,8 @@
 #![feature(allocator_api, new_uninit)]
 
-use std::borrow::BorrowMut;
-use std::cell::RefCell;
-use std::ops::Deref;
-use std::rc::Rc;
-use std::{mem, panic};
+use std::{borrow::BorrowMut, cell::RefCell, mem, ops::Deref, panic, rc::Rc};
 
-use maplibre::io::scheduler::NopScheduler;
-use maplibre::{Map, MapBuilder};
+use maplibre::{io::scheduler::NopScheduler, Map, MapBuilder};
 use maplibre_winit::winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 

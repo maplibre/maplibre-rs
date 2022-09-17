@@ -1,9 +1,11 @@
-use crate::coords::WorldTileCoords;
-use crate::io::tile_repository::StoredLayer;
-use crate::render::ShaderVertex;
-use crate::tessellation::{IndexDataType, OverAlignedVertexBuffer};
-use geozero::mvt::tile;
-use geozero::mvt::tile::Layer;
+use geozero::mvt::{tile, tile::Layer};
+
+use crate::{
+    coords::WorldTileCoords,
+    io::tile_repository::StoredLayer,
+    render::ShaderVertex,
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
+};
 
 pub trait TileTessellated: Send {
     fn new(coords: WorldTileCoords) -> Self;

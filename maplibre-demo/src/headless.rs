@@ -1,9 +1,8 @@
-use maplibre::headless::HeadlessEnvironment;
-use maplibre::io::apc::SchedulerAsyncProcedureCall;
 use maplibre::{
     coords::{LatLon, WorldTileCoords},
     error::Error,
-    headless::HeadlessMapWindowConfig,
+    headless::{HeadlessEnvironment, HeadlessMapWindowConfig},
+    io::apc::SchedulerAsyncProcedureCall,
     platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
     render::settings::{RendererSettings, TextureFormat},
     util::grid::google_mercator,

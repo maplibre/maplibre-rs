@@ -2,8 +2,9 @@
 
 use std::{collections::HashSet, fmt};
 
-use crate::coords::WorldTileCoords;
 use serde::{Deserialize, Serialize};
+
+use crate::coords::WorldTileCoords;
 
 pub mod apc;
 pub mod geometry_index;

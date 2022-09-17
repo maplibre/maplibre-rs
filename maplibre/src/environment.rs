@@ -1,9 +1,12 @@
-use crate::io::apc::AsyncProcedureCall;
-use crate::io::transferables::Transferables;
-use crate::io::transferables::{
-    DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer,
+use crate::{
+    io::{
+        apc::AsyncProcedureCall,
+        transferables::{
+            DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer, Transferables,
+        },
+    },
+    HttpClient, MapWindowConfig, Scheduler,
 };
-use crate::{HttpClient, MapWindowConfig, Scheduler};
 
 pub trait Environment: 'static {
     type MapWindowConfig: MapWindowConfig;
