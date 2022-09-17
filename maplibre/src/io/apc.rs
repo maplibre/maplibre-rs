@@ -27,13 +27,18 @@ pub enum Input {
     TileRequest(TileRequest),
 }
 
-pub trait Context<T: Transferables, HC: HttpClient>: 'static {
+pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
     fn send(&self, data: Message<T>);
 
     fn source_client(&self) -> &SourceClient<HC>;
 }
 
-pub type AsyncProcedure<C> = fn(input: Input, context: C) -> Pin<Box<dyn Future<Output = ()>>>;
+#[cfg(not(feature = "no-thread-safe-futures"))]
+pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + Send + 'static)>>;
+#[cfg(feature = "no-thread-safe-futures")]
+pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + 'static)>>;
+
+pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFuture;
 
 pub trait AsyncProcedureCall<T: Transferables, HC: HttpClient>: 'static {
     type Context: Context<T, HC> + Send;

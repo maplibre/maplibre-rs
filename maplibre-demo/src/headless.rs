@@ -1,5 +1,5 @@
 use maplibre::headless::HeadlessEnvironment;
-use maplibre::platform::apc::SchedulerAsyncProcedureCall;
+use maplibre::io::apc::SchedulerAsyncProcedureCall;
 use maplibre::{
     coords::{LatLon, WorldTileCoords},
     error::Error,

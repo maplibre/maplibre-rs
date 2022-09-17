@@ -1,7 +1,7 @@
 //! Requests tiles which are currently in view
 
 use crate::coords::ZoomLevel;
-use crate::io::apc::{AsyncProcedureCall, Context, Input};
+use crate::io::apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input};
 use crate::io::pipeline::PipelineContext;
 use crate::io::pipeline::Processable;
 use crate::io::tile_pipelines::build_vector_tile_pipeline;
@@ -72,7 +72,7 @@ impl<E: Environment> Stage for RequestStage<E> {
 pub fn schedule<E: Environment, C: Context<E::Transferables, E::HttpClient>>(
     input: Input,
     context: C,
-) -> Pin<Box<(dyn Future<Output = ()> + 'static)>> {
+) -> AsyncProcedureFuture {
     // FIXME: improve input handling
     let input = match input {
         Input::TileRequest(input) => Some(input),

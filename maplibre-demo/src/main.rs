@@ -8,15 +8,6 @@ use crate::{headed::run_headed, headless::run_headless};
 mod headed;
 mod headless;
 
-#[cfg(feature = "trace")]
-fn enable_tracing() {
-    use tracing_subscriber::{layer::SubscriberExt, Registry};
-
-    let subscriber = Registry::default().with(tracing_tracy::TracyLayer::new());
-
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-}
-
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 #[clap(propagate_version = true)]
@@ -63,7 +54,7 @@ fn main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
     #[cfg(feature = "trace")]
-    enable_tracing();
+    maplibre::platform::trace::enable_tracing();
 
     let cli = Cli::parse();
 

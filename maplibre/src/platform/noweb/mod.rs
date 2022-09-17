@@ -4,6 +4,7 @@ use std::future::Future;
 
 pub mod http_client;
 pub mod scheduler;
+pub mod trace;
 
 pub fn run_multithreaded<F: Future>(future: F) -> F::Output {
     tokio::runtime::Builder::new_multi_thread()
