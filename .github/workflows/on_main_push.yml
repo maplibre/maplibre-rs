@@ -27,6 +27,9 @@ jobs:
   library-web:
     uses: ./.github/workflows/library-web.yml
     with:
+      name: maplibre-rs-demo-webgl
+      webgl: true
+      multithreading: false
       deploy: true
     secrets: inherit
   library-apple:
