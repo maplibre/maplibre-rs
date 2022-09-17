@@ -12,7 +12,6 @@ use std::{
 use tokio::{runtime::Handle, task};
 use wgpu::{BufferAsyncError, BufferSlice};
 
-use crate::io::transferables::DefaultTransferables;
 use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, ViewRegion, WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
@@ -24,7 +23,7 @@ use crate::{
         source_client::HttpSourceClient,
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::{StoredLayer, TileRepository},
-        transferables::Transferables,
+        transferables::{DefaultTransferables, Transferables},
         TileRequest,
     },
     render::{

@@ -10,12 +10,11 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::io::transferables::DefaultTransferables;
 use crate::{
     coords::WorldTileCoords,
     io::{
         source_client::{HttpSourceClient, SourceClient},
-        transferables::Transferables,
+        transferables::{DefaultTransferables, Transferables},
         TileRequest,
     },
     Environment, HttpClient, Scheduler,

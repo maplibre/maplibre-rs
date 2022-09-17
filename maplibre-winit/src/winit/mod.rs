@@ -1,7 +1,6 @@
 use std::{cell::RefCell, marker::PhantomData, ops::Deref, rc::Rc};
 
 use instant::Instant;
-use maplibre::io::transferables::DefaultTransferables;
 use maplibre::{
     environment::Environment,
     error::Error,
@@ -9,7 +8,7 @@ use maplibre::{
         apc::{AsyncProcedureCall, Message},
         scheduler::Scheduler,
         source_client::HttpClient,
-        transferables::Transferables,
+        transferables::{DefaultTransferables, Transferables},
     },
     map_schedule::InteractiveMapSchedule,
     window::{EventLoop, HeadedMapWindow, MapWindowConfig},

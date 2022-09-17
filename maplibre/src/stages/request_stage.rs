@@ -12,18 +12,17 @@ use std::{
     str::FromStr,
 };
 
-use crate::io::apc::Message;
-use crate::io::transferables::{Transferables, UnavailableLayer};
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords, ZoomLevel},
     error::Error,
     io::{
-        apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input},
+        apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message},
         pipeline::{PipelineContext, Processable},
         source_client::{HttpSourceClient, SourceClient},
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::TileRepository,
+        transferables::{Transferables, UnavailableLayer},
         TileRequest,
     },
     schedule::Stage,

@@ -10,7 +10,6 @@ use std::{
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
-use crate::io::transferables::DefaultTransferables;
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
     error::Error,
@@ -21,8 +20,9 @@ use crate::{
         source_client::HttpSourceClient,
         tile_pipelines::build_vector_tile_pipeline,
         transferables::{
-            DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer,
-            TessellatedLayer, TileTessellated, Transferables, UnavailableLayer,
+            DefaultTessellatedLayer, DefaultTileTessellated, DefaultTransferables,
+            DefaultUnavailableLayer, TessellatedLayer, TileTessellated, Transferables,
+            UnavailableLayer,
         },
         TileRequest,
     },
