@@ -12,7 +12,9 @@ jobs:
       - uses: extractions/setup-just@v1
       - name: Install toolchain
         shell: bash
-        run: just default-toolchain
+        run: |
+          just stable-toolchain
+          just stable-targets x86_64-unknown-linux-gnu
       - uses: Swatinem/rust-cache@v1
       - name: Install GPU Drivers
         uses: ./.github/actions/install-driver

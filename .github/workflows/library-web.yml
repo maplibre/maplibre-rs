@@ -30,7 +30,10 @@ jobs:
       - uses: extractions/setup-just@v1
       - name: Install nightly toolchain
         shell: bash
-        run: just nightly-toolchain
+        run: |
+          just nightly-toolchain
+          just nightly-targets wasm32-unknown-unknown
+          just nightly-install-src
       - uses: Swatinem/rust-cache@v1
       - name: Build lib
         shell: bash

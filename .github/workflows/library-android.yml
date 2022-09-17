@@ -12,7 +12,9 @@ jobs:
       - uses: extractions/setup-just@v1
       - name: Install nightly toolchain
         shell: bash
-        run: just nightly-toolchain-android
+        run: |
+          just nightly-toolchain
+          just nightly-targets x86_64-linux-android aarch64-linux-android i686-linux-android
       - uses: Swatinem/rust-cache@v1
       - name: Set NDK Version
         shell: bash

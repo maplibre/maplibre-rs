@@ -17,7 +17,7 @@ jobs:
       - uses: extractions/setup-just@v1
       - name: Install toolchain
         shell: bash
-        run: just default-toolchain
+        run: just stable-toolchain
       - uses: Swatinem/rust-cache@v1
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1

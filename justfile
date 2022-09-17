@@ -5,14 +5,37 @@
 set shell := ["bash", "-c"]
 
 export NIGHTLY_TOOLCHAIN := "nightly-2022-07-03"
+export STABLE_TOOLCHAIN := "1.62"
+
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
 
-install-clippy:
-  rustup component add clippy
 
-install-nightly-clippy:
+stable-toolchain:
+  rustup toolchain install $STABLE_TOOLCHAIN
+
+stable-targets *FLAGS:
+  rustup toolchain install $STABLE_TOOLCHAIN --target {{FLAGS}}
+
+stable-install-clippy:
+  rustup component add clippy --toolchain $STABLE_TOOLCHAIN
+
+
+nightly-toolchain:
+  rustup toolchain install $NIGHTLY_TOOLCHAIN
+
+nightly-targets *FLAGS:
+  rustup toolchain install $NIGHTLY_TOOLCHAIN --target {{FLAGS}}
+
+nightly-install-rustfmt: nightly-toolchain
+  rustup component add rustfmt --toolchain $NIGHTLY_TOOLCHAIN
+
+nightly-install-src: nightly-toolchain
+  rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
+
+nightly-install-clippy:
   rustup component add clippy --toolchain $NIGHTLY_TOOLCHAIN
+
 
 fixup:
   cargo clippy --no-deps -p maplibre --fix
@@ -27,7 +50,7 @@ fixup:
   cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
   cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
 
-check PROJECT ARCH: install-clippy
+check PROJECT ARCH: stable-install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
 
 test PROJECT ARCH:
@@ -36,27 +59,13 @@ test PROJECT ARCH:
 benchmark:
   cargo bench -p benchmarks
 
-install-rustfmt: nightly-toolchain
-  rustup component add rustfmt --toolchain $NIGHTLY_TOOLCHAIN
-
-fmt: install-rustfmt
+fmt: nightly-install-rustfmt
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo fmt
 
-fmt-check: install-rustfmt
+fmt-check: nightly-install-rustfmt
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo fmt -- --check
 
-default-toolchain:
-  # Setups the toolchain from rust-toolchain.toml
-  cargo --version > /dev/null
 
-nightly-toolchain:
-  rustup install $NIGHTLY_TOOLCHAIN
-  rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
-
-nightly-toolchain-android: nightly-toolchain
-  rustup target add --toolchain $NIGHTLY_TOOLCHAIN x86_64-linux-android
-  rustup target add --toolchain $NIGHTLY_TOOLCHAIN aarch64-linux-android
-  rustup target add --toolchain $NIGHTLY_TOOLCHAIN i686-linux-android
 
 web-install PROJECT:
   cd web/{{PROJECT}} && npm install
@@ -73,7 +82,7 @@ web-lib TARGET *FLAGS: nightly-toolchain (web-install "lib")
 web-demo TARGET *FLAGS: (web-install "demo")
   cd web/demo && npm run {{TARGET}} -- {{FLAGS}}
 
-web-check FEATURES: nightly-toolchain install-nightly-clippy
+web-check FEATURES: nightly-toolchain nightly-install-clippy
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo clippy --no-deps -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown -Z build-std=std,panic_abort
 
 web-test FEATURES: nightly-toolchain
