@@ -33,7 +33,16 @@ jobs:
         run: |
           just nightly-toolchain
           just nightly-targets wasm32-unknown-unknown
+      - name: Install rust sources (build-std)
+        if: inputs.multithreading
+        shell: bash
+        run: |
           just nightly-install-src
+      - name: Install wasm-bindgen
+        shell: bash
+        run: |
+          # Install wasm-bindgen with test runner
+          cargo install wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
       - uses: Swatinem/rust-cache@v1
       - name: Build lib
         shell: bash
@@ -46,10 +55,7 @@ jobs:
         run: just web-check ${{ inputs.webgl && 'web-webgl' || '' }}
       - name: Test
         shell: bash
-        run: |
-          # Install test runner
-          cargo install wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
-          just web-test "web-webgl"
+        run: just web-test "web-webgl"
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ inputs.name }}
