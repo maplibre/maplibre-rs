@@ -104,7 +104,7 @@ pub unsafe fn clone_map(map_ptr: *const RefCell<MapType>) -> *const RefCell<MapT
 }
 
 #[wasm_bindgen]
-pub fn run(map_ptr: *const RefCell<MapType>) {
+pub unsafe fn run(map_ptr: *const RefCell<MapType>) {
     let mut map = Rc::from_raw(map_ptr);
 
     map.deref().borrow().run();
