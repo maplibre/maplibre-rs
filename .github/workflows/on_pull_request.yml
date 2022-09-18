@@ -24,14 +24,14 @@ jobs:
     with:
       name: maplibre-rs-demo-webgl
       webgl: true
-      multithreading: false
+      multithreaded: false
       deploy: true
   library-web-webgpu:
     uses: ./.github/workflows/library-web.yml
     with:
       name: maplibre-rs-demo-webgpu
       webgl: false
-      multithreading: false
+      multithreaded: false
       deploy: true
   library-apple:
     uses: ./.github/workflows/library-apple.yml

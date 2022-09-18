@@ -136,7 +136,8 @@ const wasmPack = () => {
         "-C", "target-feature=+atomics,+bulk-memory,+mutable-globals",
         # Enables the possibility to import memory into wasm.
         # Without --shared-memory it is not possible to use shared WebAssembly.Memory.
-        "-C", "link-args=--shared-memory --import-memory",
+        # Set maximum memory to 200MB
+        "-C", "link-args=--shared-memory --import-memory --max-memory=209715200"
     ]`
 
     let cargo = spawnSync('cargo', [

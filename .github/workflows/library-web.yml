@@ -17,7 +17,7 @@ on:
       webgl:
         required: true
         type: boolean
-      multithreading:
+      multithreaded:
         required: true
         type: boolean
 
@@ -34,7 +34,7 @@ jobs:
           just nightly-toolchain
           just nightly-targets wasm32-unknown-unknown
       - name: Install rust sources (build-std)
-        if: inputs.multithreading
+        if: inputs.multithreaded
         shell: bash
         run: |
           just nightly-install-src
@@ -46,7 +46,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - name: Build lib
         shell: bash
-        run: just web-lib build --release ${{ inputs.webgl && '--webgl' || '' }} ${{ inputs.multithreading && '--multithreading' || '' }}
+        run: just web-lib build --release ${{ inputs.webgl && '--webgl' || '' }} ${{ inputs.multithreaded && '--multithreaded' || '' }}
       - name: Build demo
         shell: bash
         run: just web-demo build
@@ -73,7 +73,7 @@ jobs:
           name: ${{ inputs.name }}
           path: demo
       - name: Set HTTP Headers for Cloudflare
-        if: inputs.multithreading
+        if: inputs.multithreaded
         shell: bash
         run: |
           echo "/*

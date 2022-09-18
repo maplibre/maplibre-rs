@@ -43,20 +43,20 @@ pub type MapType = Map<
     WinitEnvironment<
         NopScheduler,
         WHATWGFetchHttpClient,
-        platform::unsync::transferables::LinearTransferables,
-        platform::unsync::apc::PassingAsyncProcedureCall,
+        platform::singlethreaded::transferables::LinearTransferables,
+        platform::singlethreaded::apc::PassingAsyncProcedureCall,
     >,
 >;
 
 #[cfg(target_feature = "atomics")]
 pub type MapType = Map<
     WinitEnvironment<
-        platform::sync::pool_scheduler::WebWorkerPoolScheduler,
+        platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
         WHATWGFetchHttpClient,
         maplibre::io::transferables::DefaultTransferables,
         maplibre::io::apc::SchedulerAsyncProcedureCall<
             WHATWGFetchHttpClient,
-            platform::sync::pool_scheduler::WebWorkerPoolScheduler,
+            platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
         >,
     >,
 >;
@@ -73,19 +73,19 @@ pub async fn create_map(new_worker: js_sys::Function) -> u32 {
         builder = builder
             .with_apc(maplibre::io::apc::SchedulerAsyncProcedureCall::new(
                 WHATWGFetchHttpClient::new(),
-                platform::sync::pool_scheduler::WebWorkerPoolScheduler::new(new_worker.clone()),
+                platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(
+                    new_worker.clone(),
+                ),
             ))
-            .with_scheduler(platform::sync::pool_scheduler::WebWorkerPoolScheduler::new(
-                new_worker,
-            ));
+            .with_scheduler(
+                platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(new_worker),
+            );
     }
 
     #[cfg(not(target_feature = "atomics"))]
     {
         builder = builder
-            .with_apc(platform::unsync::apc::PassingAsyncProcedureCall::new(
-                new_worker, 4,
-            ))
+            .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4))
             .with_scheduler(NopScheduler);
     }
 

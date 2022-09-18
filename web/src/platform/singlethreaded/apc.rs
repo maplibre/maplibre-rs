@@ -28,7 +28,9 @@ use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
 use crate::{
-    platform::unsync::transferables::{InnerData, LinearTessellatedLayer, LinearTransferables},
+    platform::singlethreaded::transferables::{
+        InnerData, LinearTessellatedLayer, LinearTransferables,
+    },
     MapType, WHATWGFetchHttpClient,
 };
 
@@ -124,9 +126,7 @@ impl AsyncProcedureCall<UsedTransferables, UsedHttpClient> for PassingAsyncProce
 
 /// Entry point invoked by the worker.
 #[wasm_bindgen]
-pub async fn unsync_worker_entry(procedure_ptr: u32, input: String) -> Result<(), JsValue> {
-    log::info!("worker_entry unsync");
-
+pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> Result<(), JsValue> {
     let procedure: AsyncProcedure<UsedContext> = unsafe { std::mem::transmute(procedure_ptr) };
 
     let input = serde_json::from_str::<Input>(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
@@ -142,7 +142,7 @@ pub async fn unsync_worker_entry(procedure_ptr: u32, input: String) -> Result<()
 
 /// Entry point invoked by the main thread.
 #[wasm_bindgen]
-pub fn unsync_main_entry(
+pub fn singlethreaded_main_entry(
     map_ptr: *const RefCell<MapType>,
     tag: u32,
     data: Uint8Array,

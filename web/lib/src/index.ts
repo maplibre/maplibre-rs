@@ -3,9 +3,9 @@ import {Spector} from "spectorjs"
 import {checkRequirements, checkWasmFeatures} from "./browser";
 import {preventDefaultTouchActions} from "./canvas";
 // @ts-ignore esbuild plugin is handling this
-import MultithreadedPoolWorker from './sync/multithreaded-pool.worker.js';
+import MultithreadedPoolWorker from './multithreaded/multithreaded-pool.worker.js';
 // @ts-ignore esbuild plugin is handling this
-import PoolWorker from './unsync/pool.worker.js';
+import PoolWorker from './singlethreaded/pool.worker.js';
 
 export const startMapLibre = async (wasmPath: string | undefined, workerPath: string | undefined) => {
     await checkWasmFeatures()
@@ -58,7 +58,7 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
 
         callback[0] = (message) => {
             // @ts-ignore TODO unsync_main_entry may not be defined
-            maplibre.unsync_main_entry(clonedMap, message.data[0], new Uint8Array(message.data[1]))
+            maplibre.singlethreaded_main_entry(clonedMap, message.data[0], new Uint8Array(message.data[1]))
         }
 
         await maplibre.run(map)
