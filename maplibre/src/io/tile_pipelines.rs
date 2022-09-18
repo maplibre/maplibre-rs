@@ -157,7 +157,6 @@ mod tests {
                     coords: (0, 0, ZoomLevel::default()).into(),
                     layers: Default::default(),
                 },
-                0,
                 Box::new([0]),
             ),
             &mut context,
