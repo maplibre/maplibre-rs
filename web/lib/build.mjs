@@ -126,6 +126,7 @@ const emitTypeScript = () => {
     }
 }
 
+// TODO: Do not continue if one step fails
 const wasmPack = () => {
     let outDirectory = `${getLibDirectory()}/src/wasm`;
     let profile = release ? "wasm-release" : "wasm-dev"
