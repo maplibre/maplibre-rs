@@ -31,7 +31,7 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
         const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY / PAGES, shared: true})
         await maplibre.default(wasmPath, memory)
 
-        await maplibre.run(await maplibre.create_map(() => {
+        maplibre.run(await maplibre.create_map(() => {
             return workerPath ? new Worker(workerPath, {
                 type: 'module'
             }) : MultithreadedPoolWorker();
@@ -61,6 +61,6 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
             maplibre.singlethreaded_main_entry(clonedMap, message.data[0], new Uint8Array(message.data[1]))
         }
 
-        await maplibre.run(map)
+        maplibre.run(map)
     }
 }

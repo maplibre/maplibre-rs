@@ -95,8 +95,8 @@ pub async fn create_map(new_worker: js_sys::Function) -> u32 {
 }
 
 #[wasm_bindgen]
-pub fn clone_map(map_ptr: *const RefCell<MapType>) -> *const RefCell<MapType> {
-    let mut map = unsafe { Rc::from_raw(map_ptr) };
+pub unsafe fn clone_map(map_ptr: *const RefCell<MapType>) -> *const RefCell<MapType> {
+    let mut map = Rc::from_raw(map_ptr);
     let rc = map.clone();
     let cloned = Rc::into_raw(rc);
     mem::forget(map);
@@ -105,7 +105,7 @@ pub fn clone_map(map_ptr: *const RefCell<MapType>) -> *const RefCell<MapType> {
 
 #[wasm_bindgen]
 pub fn run(map_ptr: *const RefCell<MapType>) {
-    let mut map = unsafe { Rc::from_raw(map_ptr) };
+    let mut map = Rc::from_raw(map_ptr);
 
     map.deref().borrow().run();
 }

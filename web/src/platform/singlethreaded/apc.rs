@@ -142,13 +142,13 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
 
 /// Entry point invoked by the main thread.
 #[wasm_bindgen]
-pub fn singlethreaded_main_entry(
+pub unsafe fn singlethreaded_main_entry(
     map_ptr: *const RefCell<MapType>,
     tag: u32,
     data: Uint8Array,
 ) -> Result<(), JsValue> {
     // FIXME (wasm-executor): Can we make this call safe? check if it was cloned before?
-    let mut map = unsafe { Rc::from_raw(map_ptr) };
+    let mut map = Rc::from_raw(map_ptr);
 
     // FIXME (wasm-executor): remove tag somehow
     let transferred = match tag {
