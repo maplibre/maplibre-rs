@@ -26,6 +26,13 @@ jobs:
       webgl: true
       multithreaded: false
       deploy: true
+  library-web-webgl-multithreaded:
+    uses: ./.github/workflows/library-web.yml
+    with:
+      name: maplibre-rs-demo-webgl-multithreaded
+      webgl: true
+      multithreaded: true
+      deploy: true
   library-web-webgpu:
     uses: ./.github/workflows/library-web.yml
     with:
