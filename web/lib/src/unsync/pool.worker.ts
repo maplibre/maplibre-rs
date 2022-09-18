@@ -1,9 +1,9 @@
-import init, {unsync_worker_entry} from "../wasm/maplibre"
+import * as maplibre from "../wasm/maplibre"
 
 onmessage = async message => {
     const memory = new WebAssembly.Memory({initial: 1024, shared: false})
     let module = message.data[0];
-    const initialised = init(module, memory).catch(err => {
+    const initialised = maplibre.default(module, memory).catch(err => {
         // Propagate to main `onerror`:
         setTimeout(() => {
             throw err;
@@ -17,6 +17,7 @@ onmessage = async message => {
         await initialised;
         let procedure_ptr = message.data[0];
         let input = message.data[1];
-        await unsync_worker_entry(procedure_ptr, input);
+        // @ts-ignore TODO
+        await maplibre.unsync_worker_entry(procedure_ptr, input);
     };
 }

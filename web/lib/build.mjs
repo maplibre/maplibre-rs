@@ -72,7 +72,7 @@ let baseConfig = {
 
 let config = {
     ...baseConfig,
-    entryPoints: multithreaded ? ['src/sync/index.ts'] : ['src/unsync/index.ts'],
+    entryPoints:['src/index.ts'],
     incremental: argv.watch,
     plugins: [
         inlineWorker({
