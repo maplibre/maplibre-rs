@@ -4,6 +4,7 @@ rustflags = [
     "--cfg=web_sys_unstable_apis",
     "-C", "link-args=--import-memory",
 ]
+runner = 'wasm-bindgen-test-runner'
 
 [profile.wasm-dev]
 inherits = "dev"
