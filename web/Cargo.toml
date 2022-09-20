@@ -11,8 +11,21 @@ web-webgl = ["maplibre/web-webgl"]
 trace = ["maplibre/trace", "tracing-wasm"]
 default = []
 
+[package.metadata.wasm-pack.profile.binary-size]
+wasm-opt = ["-g"]
+
+[package.metadata.wasm-pack.profile.binary-size.wasm-bindgen]
+debug-js-glue = false
+demangle-name-section = true
+dwarf-debug-info = true
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = true
+
+[package.metadata.wasm-pack.profile.release.wasm-bindgen]
+debug-js-glue = false
+demangle-name-section = true
+dwarf-debug-info = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
