@@ -38,7 +38,7 @@ fn parse_tile(c: &mut Criterion) {
                 .unwrap()
                 .into_boxed_slice();
             ParseTile::default().process(
-                (request, 0, data),
+                (request, data),
                 &mut PipelineContext::new(DummyPipelineProcessor),
             );
         })
@@ -58,7 +58,7 @@ fn tessellate_tile(c: &mut Criterion) {
         .unwrap()
         .into_boxed_slice();
     let parsed = ParseTile::default().process(
-        (request, 0, data),
+        (request, data),
         &mut PipelineContext::new(DummyPipelineProcessor),
     );
 
