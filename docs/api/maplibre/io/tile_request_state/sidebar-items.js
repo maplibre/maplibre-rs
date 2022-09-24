@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["TileRequestState","Stores a map of pending requests, coords and the current tile being requested."]]});

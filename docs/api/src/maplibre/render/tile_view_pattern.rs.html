@@ -356,8 +356,8 @@
 
         <span class="kw">let</span> <span class="ident">raw_buffer</span> <span class="op">=</span> <span class="ident">bytemuck::cast_slice</span>(<span class="ident">buffer</span>.<span class="ident">as_slice</span>());
         <span class="kw">if</span> <span class="ident">raw_buffer</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">inner_size</span> {
-            <span class="comment">/* FIXME: We need to avoid this case by either choosing a proper size
-            (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */</span>
+            <span class="comment">/* TODO: We need to avoid this case by either choosing a proper size
+            TODO: (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */</span>
             <span class="macro">panic!</span>(<span class="string">&quot;Buffer is too small to store the tile pattern!&quot;</span>);
         }
         <span class="ident">queue</span>.<span class="ident">write_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">inner</span>, <span class="number">0</span>, <span class="ident">raw_buffer</span>);

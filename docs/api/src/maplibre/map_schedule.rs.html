@@ -210,13 +210,7 @@
 <span id="205">205</span>
 <span id="206">206</span>
 <span id="207">207</span>
-<span id="208">208</span>
-<span id="209">209</span>
-<span id="210">210</span>
-<span id="211">211</span>
-<span id="212">212</span>
-<span id="213">213</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">mem</span>};
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cell::RefCell</span>, <span class="ident">marker::PhantomData</span>, <span class="ident">mem</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">context</span>::{<span class="ident">MapContext</span>, <span class="ident">ViewState</span>},
@@ -231,41 +225,32 @@
     <span class="ident">schedule</span>::{<span class="ident">Schedule</span>, <span class="ident">Stage</span>},
     <span class="ident">stages::register_stages</span>,
     <span class="ident">style::Style</span>,
-    <span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">Renderer</span>, <span class="ident">RendererSettings</span>, <span class="ident">ScheduleMethod</span>, <span class="ident">WgpuSettings</span>,
+    <span class="ident">Environment</span>, <span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">Renderer</span>, <span class="ident">RendererSettings</span>, <span class="ident">WgpuSettings</span>,
     <span class="ident">WindowSize</span>,
 };
 
 <span class="doccomment">/// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InteractiveMapSchedule</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">MWC</span>: <span class="ident">MapWindowConfig</span>,
-    <span class="ident">SM</span>: <span class="ident">ScheduleMethod</span>,
-    <span class="ident">HC</span>: <span class="ident">HttpClient</span>,
-{
-    <span class="ident">map_window_config</span>: <span class="ident">MWC</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InteractiveMapSchedule</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Environment</span><span class="op">&gt;</span> {
+    <span class="ident">map_window_config</span>: <span class="ident">E::MapWindowConfig</span>,
+
+    <span class="comment">// FIXME (wasm-executor): avoid RefCell, change ownership model</span>
+    <span class="kw">pub</span> <span class="ident">apc</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">E::AsyncProcedureCall</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 
     <span class="ident">map_context</span>: <span class="ident">EventuallyMapContext</span>,
 
     <span class="ident">schedule</span>: <span class="ident">Schedule</span>,
 
-    <span class="ident">phantom_sm</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">SM</span><span class="op">&gt;</span>,
-    <span class="ident">phantom_hc</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">HC</span><span class="op">&gt;</span>,
-
     <span class="ident">suspended</span>: <span class="ident">bool</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span> <span class="ident">InteractiveMapSchedule</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">MWC</span>: <span class="ident">MapWindowConfig</span>,
-    <span class="ident">SM</span>: <span class="ident">ScheduleMethod</span>,
-    <span class="ident">HC</span>: <span class="ident">HttpClient</span>,
-{
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Environment</span><span class="op">&gt;</span> <span class="ident">InteractiveMapSchedule</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">map_window_config</span>: <span class="ident">MWC</span>,
+        <span class="ident">map_window_config</span>: <span class="ident">E::MapWindowConfig</span>,
         <span class="ident">window_size</span>: <span class="ident">WindowSize</span>,
         <span class="ident">renderer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Renderer</span><span class="op">&gt;</span>,
-        <span class="ident">scheduler</span>: <span class="ident">Scheduler</span><span class="op">&lt;</span><span class="ident">SM</span><span class="op">&gt;</span>,
-        <span class="ident">http_client</span>: <span class="ident">HC</span>,
+        <span class="ident">scheduler</span>: <span class="ident">E::Scheduler</span>, <span class="comment">// TODO: unused</span>
+        <span class="ident">apc</span>: <span class="ident">E::AsyncProcedureCall</span>,
+        <span class="ident">http_client</span>: <span class="ident">E::HttpClient</span>,
         <span class="ident">style</span>: <span class="ident">Style</span>,
         <span class="ident">wgpu_settings</span>: <span class="ident">WgpuSettings</span>,
         <span class="ident">renderer_settings</span>: <span class="ident">RendererSettings</span>,
@@ -281,13 +266,17 @@
         <span class="kw">let</span> <span class="ident">tile_repository</span> <span class="op">=</span> <span class="ident">TileRepository::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">schedule</span> <span class="op">=</span> <span class="ident">Schedule::default</span>();
 
-        <span class="kw">let</span> <span class="ident">http_source_client</span>: <span class="ident">HttpSourceClient</span><span class="op">&lt;</span><span class="ident">HC</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HttpSourceClient::new</span>(<span class="ident">http_client</span>);
-        <span class="ident">register_stages</span>(<span class="kw-2">&amp;mut</span> <span class="ident">schedule</span>, <span class="ident">http_source_client</span>, <span class="ident">Box::new</span>(<span class="ident">scheduler</span>));
+        <span class="kw">let</span> <span class="ident">apc</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="ident">RefCell::new</span>(<span class="ident">apc</span>));
 
-        <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">create_default_render_graph</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">http_source_client</span>: <span class="ident">HttpSourceClient</span><span class="op">&lt;</span><span class="ident">E::HttpClient</span><span class="op">&gt;</span> <span class="op">=</span>
+            <span class="ident">HttpSourceClient::new</span>(<span class="ident">http_client</span>);
+        <span class="ident">register_stages</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">schedule</span>, <span class="ident">http_source_client</span>, <span class="ident">apc</span>.<span class="ident">clone</span>());
+
+        <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">create_default_render_graph</span>().<span class="ident">unwrap</span>(); <span class="comment">// TODO: Remove unwrap</span>
         <span class="ident">register_default_render_stages</span>(<span class="ident">graph</span>, <span class="kw-2">&amp;mut</span> <span class="ident">schedule</span>);
 
         <span class="self">Self</span> {
+            <span class="ident">apc</span>,
             <span class="ident">map_window_config</span>,
             <span class="ident">map_context</span>: <span class="kw">match</span> <span class="ident">renderer</span> {
                 <span class="prelude-val">None</span> =&gt; <span class="ident">EventuallyMapContext::Premature</span>(<span class="ident">PrematureMapContext</span> {
@@ -305,8 +294,6 @@
                 }),
             },
             <span class="ident">schedule</span>,
-            <span class="ident">phantom_sm</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">phantom_hc</span>: <span class="ident">Default::default</span>(),
             <span class="ident">suspended</span>: <span class="bool-val">false</span>,
         }
     }
@@ -334,23 +321,6 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">suspend</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">suspended</span> <span class="op">=</span> <span class="bool-val">true</span>;
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">MWC::MapWindow</span>)
-    <span class="kw">where</span>
-        <span class="op">&lt;</span><span class="ident">MWC</span> <span class="kw">as</span> <span class="ident">MapWindowConfig</span><span class="op">&gt;</span><span class="ident">::MapWindow</span>: <span class="ident">HeadedMapWindow</span>,
-    {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">EventuallyMapContext::Full</span>(<span class="ident">map_context</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map_context</span> {
-            <span class="kw">let</span> <span class="ident">renderer</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">map_context</span>.<span class="ident">renderer</span>;
-            <span class="ident">renderer</span>
-                .<span class="ident">state</span>
-                .<span class="ident">recreate_surface</span>::<span class="op">&lt;</span><span class="ident">MWC::MapWindow</span><span class="op">&gt;</span>(<span class="ident">window</span>, <span class="kw-2">&amp;</span><span class="ident">renderer</span>.<span class="ident">instance</span>);
-            <span class="self">self</span>.<span class="ident">suspended</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        }
-    }
-
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_initialized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">map_context</span> {
             <span class="ident">EventuallyMapContext::Full</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
@@ -358,10 +328,36 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">late_init</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">bool</span>
-    <span class="kw">where</span>
-        <span class="op">&lt;</span><span class="ident">MWC</span> <span class="kw">as</span> <span class="ident">MapWindowConfig</span><span class="op">&gt;</span><span class="ident">::MapWindow</span>: <span class="ident">HeadedMapWindow</span>,
-    {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">view_state_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ViewState</span> {
+        <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map_context</span> {
+            <span class="ident">EventuallyMapContext::Full</span>(<span class="ident">MapContext</span> { <span class="ident">view_state</span>, .. }) =&gt; <span class="ident">view_state</span>,
+            <span class="ident">EventuallyMapContext::Premature</span>(<span class="ident">PrematureMapContext</span> { <span class="ident">view_state</span>, .. }) =&gt; <span class="ident">view_state</span>,
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;should not happen&quot;</span>),
+        }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">apc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">E::AsyncProcedureCall</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">apc</span>
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Environment</span><span class="op">&gt;</span> <span class="ident">InteractiveMapSchedule</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="op">&lt;</span><span class="ident">E::MapWindowConfig</span> <span class="kw">as</span> <span class="ident">MapWindowConfig</span><span class="op">&gt;</span><span class="ident">::MapWindow</span>: <span class="ident">HeadedMapWindow</span>,
+{
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">suspend</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">suspended</span> <span class="op">=</span> <span class="bool-val">true</span>;
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resume</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="op">&lt;</span><span class="ident">E::MapWindowConfig</span> <span class="kw">as</span> <span class="ident">MapWindowConfig</span><span class="op">&gt;</span><span class="ident">::MapWindow</span>) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">EventuallyMapContext::Full</span>(<span class="ident">map_context</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map_context</span> {
+            <span class="kw">let</span> <span class="ident">renderer</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">map_context</span>.<span class="ident">renderer</span>;
+            <span class="ident">renderer</span>.<span class="ident">state</span>.<span class="ident">recreate_surface</span>(<span class="ident">window</span>, <span class="kw-2">&amp;</span><span class="ident">renderer</span>.<span class="ident">instance</span>);
+            <span class="self">self</span>.<span class="ident">suspended</span> <span class="op">=</span> <span class="bool-val">false</span>;
+        }
+    }
+
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">late_init</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">map_context</span> {
             <span class="ident">EventuallyMapContext::Full</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
             <span class="ident">EventuallyMapContext::Premature</span>(<span class="ident">PrematureMapContext</span> {
@@ -373,19 +369,11 @@
                 <span class="kw">let</span> <span class="ident">renderer</span> <span class="op">=</span>
                     <span class="ident">Renderer::initialize</span>(<span class="kw-2">&amp;</span><span class="ident">window</span>, <span class="ident">wgpu_settings</span>.<span class="ident">clone</span>(), <span class="ident">renderer_settings</span>.<span class="ident">clone</span>())
                         .<span class="kw">await</span>
-                        .<span class="ident">unwrap</span>();
+                        .<span class="ident">unwrap</span>(); <span class="comment">// TODO: Remove unwrap</span>
                 <span class="self">self</span>.<span class="ident">map_context</span>.<span class="ident">make_full</span>(<span class="ident">renderer</span>);
                 <span class="bool-val">true</span>
             }
             <span class="ident">EventuallyMapContext::_Uninitialized</span> =&gt; <span class="bool-val">false</span>,
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">view_state_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ViewState</span> {
-        <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map_context</span> {
-            <span class="ident">EventuallyMapContext::Full</span>(<span class="ident">MapContext</span> { <span class="ident">view_state</span>, .. }) =&gt; <span class="ident">view_state</span>,
-            <span class="ident">EventuallyMapContext::Premature</span>(<span class="ident">PrematureMapContext</span> { <span class="ident">view_state</span>, .. }) =&gt; <span class="ident">view_state</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;should not happen&quot;</span>),
         }
     }
 }

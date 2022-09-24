@@ -23,12 +23,14 @@
 <span id="18">18</span>
 <span id="19">19</span>
 <span id="20">20</span>
+<span id="21">21</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module which is used target platform is not web related.</span>
 
 <span class="kw">use</span> <span class="ident">std::future::Future</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">http_client</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">schedule_method</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">scheduler</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">trace</span>;
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_multithreaded</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Future</span><span class="op">&gt;</span>(<span class="ident">future</span>: <span class="ident">F</span>) -&gt; <span class="ident">F::Output</span> {
     <span class="ident">tokio::runtime::Builder::new_multi_thread</span>()

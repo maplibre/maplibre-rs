@@ -242,8 +242,6 @@
 <span id="237">237</span>
 <span id="238">238</span>
 <span id="239">239</span>
-<span id="240">240</span>
-<span id="241">241</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 
 <span class="kw">use</span> <span class="ident">downcast_rs</span>::{<span class="ident">impl_downcast</span>, <span class="ident">Downcast</span>};
@@ -251,14 +249,14 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">coords::WorldTileCoords</span>,
-    <span class="ident">io</span>::{<span class="ident">geometry_index::IndexedGeometry</span>, <span class="ident">TileRequestID</span>},
+    <span class="ident">io::geometry_index::IndexedGeometry</span>,
     <span class="ident">render::ShaderVertex</span>,
     <span class="ident">tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>},
 };
 
 <span class="doccomment">/// Processes events which happen during the pipeline execution</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PipelineProcessor</span>: <span class="ident">Downcast</span> {
-    <span class="kw">fn</span> <span class="ident">tile_finished</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_request_id</span>: <span class="ident">TileRequestID</span>, <span class="ident">_coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) {}
+    <span class="kw">fn</span> <span class="ident">tile_finished</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) {}
     <span class="kw">fn</span> <span class="ident">layer_unavailable</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>, <span class="ident">_layer_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {}
     <span class="kw">fn</span> <span class="ident">layer_tesselation_finished</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
@@ -275,8 +273,6 @@
     ) {
     }
 }
-
-<span class="macro">impl_downcast!</span>(<span class="ident">PipelineProcessor</span>);
 
 <span class="doccomment">/// Context which is available to each step within a [`DataPipeline`]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PipelineContext</span> {

@@ -918,7 +918,7 @@
         <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">get_layers</span>(<span class="ident">coords</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">layers</span><span class="op">|</span> {
             <span class="ident">layers</span>
                 .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">style_layer</span>.<span class="ident">source_layer</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">as_str</span>())
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">style_layer</span>.<span class="ident">source_layer</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">as_str</span>()) <span class="comment">// TODO: Remove unwrap</span>
                 .<span class="ident">collect</span>()
         })
     }

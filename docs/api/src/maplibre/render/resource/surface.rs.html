@@ -362,7 +362,7 @@
         <span class="kw">let</span> <span class="ident">padded_buffer</span> <span class="op">=</span> <span class="ident">buffer_slice</span>.<span class="ident">get_mapped_range</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">png_encoder</span> <span class="op">=</span> <span class="ident">png::Encoder::new</span>(
-            <span class="ident">File::create</span>(<span class="ident">png_output_path</span>).<span class="ident">unwrap</span>(),
+            <span class="ident">File::create</span>(<span class="ident">png_output_path</span>).<span class="ident">unwrap</span>(), <span class="comment">// TODO: Remove unwrap</span>
             <span class="self">self</span>.<span class="ident">buffer_dimensions</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="self">self</span>.<span class="ident">buffer_dimensions</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>,
         );
@@ -370,17 +370,17 @@
         <span class="ident">png_encoder</span>.<span class="ident">set_color</span>(<span class="ident">png::ColorType::Rgba</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">png_writer</span> <span class="op">=</span> <span class="ident">png_encoder</span>
             .<span class="ident">write_header</span>()
-            .<span class="ident">unwrap</span>()
+            .<span class="ident">unwrap</span>() <span class="comment">// TODO: Remove unwrap</span>
             .<span class="ident">into_stream_writer_with_size</span>(<span class="self">self</span>.<span class="ident">buffer_dimensions</span>.<span class="ident">unpadded_bytes_per_row</span>)
-            .<span class="ident">unwrap</span>();
+            .<span class="ident">unwrap</span>(); <span class="comment">// TODO: Remove unwrap</span>
 
         <span class="comment">// from the padded_buffer we write just the unpadded bytes into the image</span>
         <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="ident">padded_buffer</span>.<span class="ident">chunks</span>(<span class="self">self</span>.<span class="ident">buffer_dimensions</span>.<span class="ident">padded_bytes_per_row</span>) {
             <span class="ident">png_writer</span>
                 .<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">chunk</span>[..<span class="self">self</span>.<span class="ident">buffer_dimensions</span>.<span class="ident">unpadded_bytes_per_row</span>])
-                .<span class="ident">unwrap</span>();
+                .<span class="ident">unwrap</span>(); <span class="comment">// TODO: Remove unwrap</span>
         }
-        <span class="ident">png_writer</span>.<span class="ident">finish</span>().<span class="ident">unwrap</span>();
+        <span class="ident">png_writer</span>.<span class="ident">finish</span>().<span class="ident">unwrap</span>(); <span class="comment">// TODO: Remove unwrap</span>
 
         <span class="comment">// With the current interface, we have to make sure all mapped views are</span>
         <span class="comment">// dropped before we unmap the buffer.</span>

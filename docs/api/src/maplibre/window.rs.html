@@ -62,13 +62,13 @@
 <span id="57">57</span>
 <span id="58">58</span>
 <span id="59">59</span>
-<span id="60">60</span>
-<span id="61">61</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for the window system.</span>
+
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cell::RefCell</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="ident">raw_window_handle</span>::{<span class="ident">HasRawDisplayHandle</span>, <span class="ident">HasRawWindowHandle</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">HttpClient</span>, <span class="ident">InteractiveMapSchedule</span>, <span class="ident">ScheduleMethod</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Environment</span>, <span class="ident">HttpClient</span>, <span class="ident">InteractiveMapSchedule</span>};
 
 <span class="doccomment">/// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MapWindow</span> {
@@ -93,13 +93,9 @@
 
 <span class="doccomment">/// The event loop is responsible for processing events and propagating them to the map renderer.</span>
 <span class="doccomment">/// Only non-headless windows use an [`EventLoop`].</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EventLoop</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">MWC</span>: <span class="ident">MapWindowConfig</span>,
-    <span class="ident">SM</span>: <span class="ident">ScheduleMethod</span>,
-    <span class="ident">HC</span>: <span class="ident">HttpClient</span>,
-{
-    <span class="kw">fn</span> <span class="ident">run</span>(<span class="self">self</span>, <span class="ident">map_schedule</span>: <span class="ident">InteractiveMapSchedule</span><span class="op">&lt;</span><span class="ident">MWC</span>, <span class="ident">SM</span>, <span class="ident">HC</span><span class="op">&gt;</span>, <span class="ident">max_frames</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>);
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EventLoop</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Environment</span><span class="op">&gt;</span> {
+    <span class="comment">// FIXME (wasm-executor): Avoid Rc, change ownership model</span>
+    <span class="kw">fn</span> <span class="ident">run</span>(<span class="self">self</span>, <span class="ident">map_schedule</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">InteractiveMapSchedule</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">max_frames</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>);
 }
 
 <span class="doccomment">/// Window size with a width and an height in pixels.</span>

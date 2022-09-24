@@ -272,15 +272,24 @@ click on run. This will start the MacOS application. </p>
 If you are using a lower version of OSX, you will not be able to run the application on your computer.</p>
 </blockquote>
 <h2 id="web-webgl-webgpu"><a class="header" href="#web-webgl-webgpu">Web (WebGL, WebGPU)</a></h2>
-<p>If you have a browser which already supports a recent version of the WebGPU specification then you can start a
-development server using the following commands.</p>
-<pre><code class="language-bash">cd web
-npm run start
+<p>You need to first build the library for WebGL or WebGPU. Optionally, you can also enabled multi-threading support,
+which requires that the library is used in a secure environment: 
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/isSecureContext">isSecureContext</a>
+and <a href="https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated">crossOriginIsolated</a>. 
+The demo runs this such an environment.</p>
+<p>If you have a browser which already supports a recent version of the WebGPU specification then you can build the library
+with WebGPU:</p>
+<pre><code class="language-bash">just web-lib build # WebGPU
 </code></pre>
-<p>If you want to run maplibre-rs with WebGL which is supported on every major browser, then you have to use the following
-command.</p>
-<pre><code class="language-bash">just web-lib build
-just web-demo start
+<p>If not, then you must enable WebGL support:</p>
+<pre><code class="language-bash">just web-lib build --webgl # WebGL
+just web-lib build --webgl --multithreaded # WebGL + multithreaded
+</code></pre>
+<p>Instead of building it is also possible to watch for changes. The same flags like with <code>web-lib build</code> are supported:</p>
+<pre><code class="language-bash">just web-lib watch --webgl
+</code></pre>
+<p>After building the library you can run the demo server:</p>
+<pre><code class="language-bash">just web-demo start
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="building-libraries"><a class="header" href="#building-libraries">Building Libraries</a></h1>
 <p>TODO</p>
@@ -4031,7 +4040,7 @@ This native activity is referenced in the ´AndroidManifest.xml` by defining the
 <p>The ESM module format is the standard nowadays which should be followed. If a JS bundler encounters an ESM
 module it can resolve WebAssembly files or WebWorkers dynamically.
 The following syntax is used to resolve referenced WebWorkers:</p>
-<pre><code class="language-ts">new Worker(new URL(&quot;./pool.worker.ts&quot;, import.meta.url), {
+<pre><code class="language-ts">new Worker(new URL(&quot;./multithreaded-pool.worker.ts&quot;, import.meta.url), {
     type: 'module'
 });
 </code></pre>
@@ -4113,7 +4122,7 @@ new URL(&quot;./assets/index_bg.wasm?emit=file&quot;, __currentScriptUrl__);
 <p>See config in <code>web/lib/build.mjs</code> for an example usage.</p>
 <h3 id="babel--typescript"><a class="header" href="#babel--typescript">Babel &amp; TypeScript</a></h3>
 <p>Babel and TypeScript both can produce ESM modules, but they <strong>fail with transforming references within the source code</strong>
-like <code>new URL(&quot;./pool.worker.ts&quot;, import.meta.url)</code>. There exist some Babel plugins, but none of them is stable.
+like <code>new URL(&quot;./multithreaded-pool.worker.ts&quot;, import.meta.url)</code>. There exist some Babel plugins, but none of them is stable.
 Therefore, we actually need a proper bundler which supports outputting ESM modules.
 The only stable solution to this is Parcel. Parcel also has good documentation around the bundling of WebWorkers.</p>
 <h3 id="webpack"><a class="header" href="#webpack">WebPack</a></h3>

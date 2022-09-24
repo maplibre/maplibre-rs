@@ -742,6 +742,39 @@
 <span id="737">737</span>
 <span id="738">738</span>
 <span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Provides utilities related to coordinates.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -750,7 +783,9 @@
     <span class="ident">fmt</span>::{<span class="ident">Display</span>, <span class="ident">Formatter</span>},
 };
 
+<span class="kw">use</span> <span class="ident">bytemuck_derive</span>::{<span class="ident">Pod</span>, <span class="ident">Zeroable</span>};
 <span class="kw">use</span> <span class="ident">cgmath</span>::{<span class="ident">num_traits::Pow</span>, <span class="ident">AbsDiffEq</span>, <span class="ident">Matrix4</span>, <span class="ident">Point3</span>, <span class="ident">Vector3</span>};
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">style::source::TileAddressingScheme</span>,
@@ -811,7 +846,23 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Ord</span>, <span class="ident">PartialOrd</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Hash</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
+<span class="comment">// FIXME: does Pod and Zeroable make sense?</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Ord</span>,
+    <span class="ident">PartialOrd</span>,
+    <span class="ident">Eq</span>,
+    <span class="ident">PartialEq</span>,
+    <span class="ident">Hash</span>,
+    <span class="ident">Copy</span>,
+    <span class="ident">Clone</span>,
+    <span class="ident">Debug</span>,
+    <span class="ident">Default</span>,
+    <span class="ident">Serialize</span>,
+    <span class="ident">Deserialize</span>,
+    <span class="ident">Pod</span>,
+    <span class="ident">Zeroable</span>,
+)]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ZoomLevel</span>(<span class="ident">u8</span>);
 
 <span class="kw">impl</span> <span class="ident">ZoomLevel</span> {
@@ -827,7 +878,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">ZoomLevel</span>;
 
     <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u8</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw">let</span> <span class="ident">zoom_level</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">checked_add</span>(<span class="ident">rhs</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">zoom_level</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">checked_add</span>(<span class="ident">rhs</span>).<span class="ident">expect</span>(<span class="string">&quot;zoom level overflowed&quot;</span>);
         <span class="ident">ZoomLevel</span>(<span class="ident">zoom_level</span>)
     }
 }
@@ -836,7 +887,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">ZoomLevel</span>;
 
     <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u8</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw">let</span> <span class="ident">zoom_level</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">checked_sub</span>(<span class="ident">rhs</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">zoom_level</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">checked_sub</span>(<span class="ident">rhs</span>).<span class="ident">expect</span>(<span class="string">&quot;zoom level underflowed&quot;</span>);
         <span class="ident">ZoomLevel</span>(<span class="ident">zoom_level</span>)
     }
 }
@@ -1033,7 +1084,22 @@
 <span class="doccomment">/// # Coordinate System Origin</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// The origin of the coordinate system is in the upper-left corner.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>, <span class="ident">Default</span>)]</span>
+<span class="comment">// FIXME: does Zeroable make sense?</span>
+<span class="attribute">#[<span class="ident">derive</span>(
+    <span class="ident">Clone</span>,
+    <span class="ident">Copy</span>,
+    <span class="ident">Debug</span>,
+    <span class="ident">PartialEq</span>,
+    <span class="ident">Eq</span>,
+    <span class="ident">PartialOrd</span>,
+    <span class="ident">Ord</span>,
+    <span class="ident">Hash</span>,
+    <span class="ident">Default</span>,
+    <span class="ident">Serialize</span>,
+    <span class="ident">Deserialize</span>,
+    <span class="ident">Zeroable</span>,
+)]</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WorldTileCoords</span> {
     <span class="kw">pub</span> <span class="ident">x</span>: <span class="ident">i32</span>,
     <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">i32</span>,

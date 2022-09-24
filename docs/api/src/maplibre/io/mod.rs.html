@@ -40,8 +40,11 @@
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">fmt</span>};
 
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::WorldTileCoords</span>;
 
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">apc</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">geometry_index</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pipeline</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">scheduler</span>;
@@ -50,12 +53,12 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">static_tile_fetcher</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tile_pipelines</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tile_repository</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tile_request_state</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">transferables</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">geozero::mvt::tile::Layer</span> <span class="kw">as</span> <span class="ident">RawLayer</span>;
 
 <span class="doccomment">/// A request for a tile at the given coordinates and in the given layers.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TileRequest</span> {
     <span class="kw">pub</span> <span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>,
     <span class="kw">pub</span> <span class="ident">layers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
@@ -66,9 +69,6 @@
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;TileRequest({}, {:?})&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">coords</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">layers</span>)
     }
 }
-
-<span class="doccomment">/// The ID format for a tile request.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TileRequestID</span> <span class="op">=</span> <span class="ident">u32</span>;
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.1 (e092d0b6b 2022-07-16)" ></div>
 </body></html>

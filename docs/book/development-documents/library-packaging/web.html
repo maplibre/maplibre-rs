@@ -142,7 +142,7 @@
 <p>The ESM module format is the standard nowadays which should be followed. If a JS bundler encounters an ESM
 module it can resolve WebAssembly files or WebWorkers dynamically.
 The following syntax is used to resolve referenced WebWorkers:</p>
-<pre><code class="language-ts">new Worker(new URL(&quot;./pool.worker.ts&quot;, import.meta.url), {
+<pre><code class="language-ts">new Worker(new URL(&quot;./multithreaded-pool.worker.ts&quot;, import.meta.url), {
     type: 'module'
 });
 </code></pre>
@@ -224,7 +224,7 @@ new URL(&quot;./assets/index_bg.wasm?emit=file&quot;, __currentScriptUrl__);
 <p>See config in <code>web/lib/build.mjs</code> for an example usage.</p>
 <h3 id="babel--typescript"><a class="header" href="#babel--typescript">Babel &amp; TypeScript</a></h3>
 <p>Babel and TypeScript both can produce ESM modules, but they <strong>fail with transforming references within the source code</strong>
-like <code>new URL(&quot;./pool.worker.ts&quot;, import.meta.url)</code>. There exist some Babel plugins, but none of them is stable.
+like <code>new URL(&quot;./multithreaded-pool.worker.ts&quot;, import.meta.url)</code>. There exist some Babel plugins, but none of them is stable.
 Therefore, we actually need a proper bundler which supports outputting ESM modules.
 The only stable solution to this is Parcel. Parcel also has good documentation around the bundling of WebWorkers.</p>
 <h3 id="webpack"><a class="header" href="#webpack">WebPack</a></h3>
