@@ -2,10 +2,10 @@ use std::io::ErrorKind;
 
 use clap::{builder::ValueParser, Parser, Subcommand};
 use maplibre::{coords::LatLon, platform::run_multithreaded};
+use maplibre_winit::winit::run_headed_map;
 
-use crate::{headed::run_headed, headless::run_headless};
+use crate::headless::run_headless;
 
-mod headed;
 mod headless;
 
 #[derive(Parser)]
@@ -61,9 +61,7 @@ fn main() {
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match &cli.command {
-        Commands::Headed {} => {
-            run_multithreaded(async { run_headed().await });
-        }
+        Commands::Headed {} => run_headed_map(None),
         Commands::Headless {
             tile_size,
             min,

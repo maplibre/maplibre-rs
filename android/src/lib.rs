@@ -7,7 +7,7 @@ use maplibre::{
     render::settings::{Backends, WgpuSettings},
     MapBuilder,
 };
-use maplibre_winit::winit::WinitMapWindowConfig;
+use maplibre_winit::winit::{run_headed_map, WinitMapWindowConfig};
 
 #[cfg(not(target_os = "android"))]
 compile_error!("android works only on android.");
@@ -16,20 +16,8 @@ compile_error!("android works only on android.");
 pub fn android_main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
-    run_multithreaded(async {
-        MapBuilder::new()
-            .with_map_window_config(WinitMapWindowConfig::new("maplibre android".to_string()))
-            .with_http_client(ReqwestHttpClient::new(None))
-            .with_scheduler(TokioScheduler::new())
-            .with_wgpu_settings(WgpuSettings {
-                backends: Some(Backends::VULKAN),
-                ..WgpuSettings::default()
-            })
-            .build()
-            .initialize()
-            .await
-            .run()
-    })
+    // TODO: Maybe requires: Some(Backends::VULKAN)
+    run_headed_map(None);
 }
 
 #[no_mangle]

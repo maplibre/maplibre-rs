@@ -36,7 +36,7 @@ impl<E: Environment> InteractiveMapSchedule<E> {
         map_window_config: E::MapWindowConfig,
         window_size: WindowSize,
         renderer: Option<Renderer>,
-        scheduler: E::Scheduler,
+        scheduler: E::Scheduler, // TODO: unused
         apc: E::AsyncProcedureCall,
         http_client: E::HttpClient,
         style: Style,
