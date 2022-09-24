@@ -112,7 +112,6 @@ const emitTypeScript = () => {
         "tsc",
         "--",
         "-m", "es2022",
-        "--project", multithreaded ? `${getLibDirectory()}/tsconfig.sync.json` : `${getLibDirectory()}/tsconfig.unsync.json`,
         "-outDir", outDirectory,
         "--declaration",
         "--emitDeclarationOnly"
