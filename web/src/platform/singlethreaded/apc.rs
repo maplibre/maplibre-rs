@@ -63,15 +63,15 @@ impl SerializedMessageTag {
 }
 
 trait SerializableMessage {
-    fn serialize(self) -> &[u8];
+    fn serialize(&self) -> &[u8];
 
-    fn deserialize(tag: SerializedMessageTag, data: &[u8]) -> Message<UsedTransferables>;
+    fn deserialize(tag: SerializedMessageTag, data: Uint8Array) -> Message<UsedTransferables>;
 
-    fn tag(&self) -> u32;
+    fn tag(&self) -> SerializedMessageTag;
 }
 
-impl<T: Transferables> SerializableMessage for Message<T> {
-    fn serialize(self) -> &[u8] {
+impl SerializableMessage for Message<LinearTransferables> {
+    fn serialize(&self) -> &[u8] {
         match self {
             Message::TileTessellated(data) => bytemuck::bytes_of(data),
             Message::UnavailableLayer(data) => bytemuck::bytes_of(data),
@@ -79,7 +79,7 @@ impl<T: Transferables> SerializableMessage for Message<T> {
         }
     }
 
-    fn deserialize(tag: SerializedMessageTag, data: &[u8]) -> Message<UsedTransferables> {
+    fn deserialize(tag: SerializedMessageTag, data: Uint8Array) -> Message<UsedTransferables> {
         match tag {
             SerializedMessageTag::TileTessellated => {
                 Message::<UsedTransferables>::TileTessellated(*bytemuck::from_bytes::<
@@ -121,6 +121,9 @@ pub struct PassingContext {
 
 impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
     fn send(&self, data: Message<UsedTransferables>) {
+        let tag = data.tag();
+        let serialized = data.serialize();
+
         let serialized_array_buffer = js_sys::ArrayBuffer::new(serialized.len() as u32);
         let serialized_array = js_sys::Uint8Array::new(&serialized_array_buffer);
         unsafe {
@@ -129,8 +132,8 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
 
         let global = js_sys::global().unchecked_into::<DedicatedWorkerGlobalScope>(); // FIXME (wasm-executor): Remove unchecked
         let array = js_sys::Array::new();
-        array.push(&JsValue::from(data.tag() as u32));
-        array.push(&data.serialize());
+        array.push(&JsValue::from(tag as u32));
+        array.push(&serialized_array_buffer);
         global.post_message(&array).unwrap(); // FIXME (wasm-executor) Remove unwrap
     }
 

@@ -102,18 +102,35 @@ click on run. This will start the MacOS application.
 
 ## Web (WebGL, WebGPU)
 
-If you have a browser which already supports a recent version of the WebGPU specification then you can start a
-development server using the following commands.
+You need to first build the library for WebGL or WebGPU. Optionally, you can also enabled multi-threading support,
+which requires that the library is used in a secure environment: 
+[isSecureContext](https://developer.mozilla.org/en-US/docs/Web/API/isSecureContext)
+and [crossOriginIsolated](https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated). 
+The demo runs this such an environment.
+
+If you have a browser which already supports a recent version of the WebGPU specification then you can build the library
+with WebGPU:
 
 ```bash
-cd web
-npm run start
+just web-lib build # WebGPU
 ```
 
-If you want to run maplibre-rs with WebGL which is supported on every major browser, then you have to use the following
-command.
+If not, then you must enable WebGL support:
+
 
 ```bash
-just web-lib build
+just web-lib build --webgl # WebGL
+just web-lib build --webgl --multithreaded # WebGL + multithreaded
+```
+
+Instead of building it is also possible to watch for changes. The same flags like with `web-lib build` are supported:
+
+```bash
+just web-lib watch --webgl
+```
+
+After building the library you can run the demo server:
+
+```bash
 just web-demo start
 ```
