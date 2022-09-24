@@ -40,15 +40,15 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
         const memory = new WebAssembly.Memory({initial: 1024, shared: false})
         await maplibre.default(wasmPath, memory);
 
-        let callback = [undefined]
+        let callbacks: {worker_callback?: (message: MessageEvent) => void} = {}
 
         let map = await maplibre.create_map(() => {
-            let worker = workerPath ? new Worker(workerPath, {
+            let worker: Worker = workerPath ? new Worker(workerPath, {
                 type: 'module'
             }) : PoolWorker();
 
-            worker.onmessage = (message) => {
-                callback[0](message)
+            worker.onmessage = (message: MessageEvent) => {
+                callbacks.worker_callback(message)
             }
 
             return worker;
@@ -56,9 +56,12 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
 
         let clonedMap = maplibre.clone_map(map)
 
-        callback[0] = (message) => {
+        callbacks.worker_callback = (message) => {
+            let tag = message.data[0];
+            let data = new Uint8Array(message.data[1]);
+
             // @ts-ignore TODO unsync_main_entry may not be defined
-            maplibre.singlethreaded_main_entry(clonedMap, message.data[0], new Uint8Array(message.data[1]))
+            maplibre.singlethreaded_main_entry(clonedMap, tag, data)
         }
 
         maplibre.run(map)

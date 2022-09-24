@@ -1,3 +1,4 @@
+use std::any::TypeId;
 use std::{
     borrow::Borrow,
     cell::RefCell,
@@ -38,6 +39,81 @@ type UsedTransferables = LinearTransferables;
 type UsedHttpClient = WHATWGFetchHttpClient;
 type UsedContext = PassingContext;
 
+enum SerializedMessageTag {
+    TileTessellated = 1,
+    UnavailableLayer = 2,
+    TessellatedLayer = 3,
+}
+
+impl SerializedMessageTag {
+    fn from_u32(tag: u32) -> Option<Self> {
+        match tag {
+            x if x == SerializedMessageTag::UnavailableLayer as u32 => {
+                Some(SerializedMessageTag::UnavailableLayer)
+            }
+            x if x == SerializedMessageTag::TessellatedLayer as u32 => {
+                Some(SerializedMessageTag::TessellatedLayer)
+            }
+            x if x == SerializedMessageTag::TileTessellated as u32 => {
+                Some(SerializedMessageTag::TileTessellated)
+            }
+            _ => None,
+        }
+    }
+}
+
+trait SerializableMessage {
+    fn serialize(self) -> &[u8];
+
+    fn deserialize(tag: SerializedMessageTag, data: &[u8]) -> Message<UsedTransferables>;
+
+    fn tag(&self) -> u32;
+}
+
+impl<T: Transferables> SerializableMessage for Message<T> {
+    fn serialize(self) -> &[u8] {
+        match self {
+            Message::TileTessellated(data) => bytemuck::bytes_of(data),
+            Message::UnavailableLayer(data) => bytemuck::bytes_of(data),
+            Message::TessellatedLayer(data) => bytemuck::bytes_of(data.data.as_ref()),
+        }
+    }
+
+    fn deserialize(tag: SerializedMessageTag, data: &[u8]) -> Message<UsedTransferables> {
+        match tag {
+            SerializedMessageTag::TileTessellated => {
+                Message::<UsedTransferables>::TileTessellated(*bytemuck::from_bytes::<
+                    <UsedTransferables as Transferables>::TileTessellated,
+                >(&data.to_vec()))
+            }
+            SerializedMessageTag::UnavailableLayer => {
+                Message::<UsedTransferables>::UnavailableLayer(*bytemuck::from_bytes::<
+                    <UsedTransferables as Transferables>::UnavailableLayer,
+                >(&data.to_vec()))
+            }
+            SerializedMessageTag::TessellatedLayer => {
+                Message::<UsedTransferables>::TessellatedLayer(LinearTessellatedLayer {
+                    data: unsafe {
+                        let mut uninit = Box::<InnerData>::new_zeroed();
+                        data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
+                        let x = uninit.assume_init();
+
+                        x
+                    },
+                })
+            }
+        }
+    }
+
+    fn tag(&self) -> SerializedMessageTag {
+        match self {
+            Message::TileTessellated(_) => SerializedMessageTag::TileTessellated,
+            Message::UnavailableLayer(_) => SerializedMessageTag::UnavailableLayer,
+            Message::TessellatedLayer(_) => SerializedMessageTag::TessellatedLayer,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct PassingContext {
     source_client: SourceClient<UsedHttpClient>,
@@ -45,12 +121,6 @@ pub struct PassingContext {
 
 impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
     fn send(&self, data: Message<UsedTransferables>) {
-        let (tag, serialized): (u32, &[u8]) = match &data {
-            Message::TileTessellated(data) => (1, bytemuck::bytes_of(data)),
-            Message::UnavailableLayer(data) => (2, bytemuck::bytes_of(data)),
-            Message::TessellatedLayer(data) => (3, bytemuck::bytes_of(data.data.as_ref())),
-        };
-
         let serialized_array_buffer = js_sys::ArrayBuffer::new(serialized.len() as u32);
         let serialized_array = js_sys::Uint8Array::new(&serialized_array_buffer);
         unsafe {
@@ -59,8 +129,8 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
 
         let global = js_sys::global().unchecked_into::<DedicatedWorkerGlobalScope>(); // FIXME (wasm-executor): Remove unchecked
         let array = js_sys::Array::new();
-        array.push(&JsValue::from(tag));
-        array.push(&serialized_array_buffer);
+        array.push(&JsValue::from(data.tag() as u32));
+        array.push(&data.serialize());
         global.post_message(&array).unwrap(); // FIXME (wasm-executor) Remove unwrap
     }
 
@@ -144,38 +214,16 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
 #[wasm_bindgen]
 pub unsafe fn singlethreaded_main_entry(
     map_ptr: *const RefCell<MapType>,
-    tag: u32,
+    type_id: u32,
     data: Uint8Array,
 ) -> Result<(), JsValue> {
     // FIXME (wasm-executor): Can we make this call safe? check if it was cloned before?
     let mut map = Rc::from_raw(map_ptr);
 
-    // FIXME (wasm-executor): remove tag somehow
-    let transferred = match tag {
-        3 => Some(Message::<UsedTransferables>::TessellatedLayer(
-            LinearTessellatedLayer {
-                data: unsafe {
-                    let mut uninit = Box::<InnerData>::new_zeroed();
-                    data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
-                    let x = uninit.assume_init();
-
-                    x
-                },
-            },
-        )),
-        1 => Some(Message::<UsedTransferables>::TileTessellated(
-            *bytemuck::from_bytes::<<UsedTransferables as Transferables>::TileTessellated>(
-                &data.to_vec(),
-            ),
-        )),
-        2 => Some(Message::<UsedTransferables>::UnavailableLayer(
-            *bytemuck::from_bytes::<<UsedTransferables as Transferables>::UnavailableLayer>(
-                &data.to_vec(),
-            ),
-        )),
-        _ => None,
-    }
-    .unwrap(); // FIXME (wasm-executor): Remove unwrap
+    let message = Message::<UsedTransferables>::deserialize(
+        SerializedMessageTag::from_u32(type_id).unwrap(),
+        data,
+    );
 
     map.deref()
         .borrow()
@@ -186,7 +234,7 @@ pub unsafe fn singlethreaded_main_entry(
         .deref()
         .borrow_mut()
         .received
-        .push(transferred);
+        .push(message);
 
     mem::forget(map); // FIXME (wasm-executor): Enforce this somehow
 
