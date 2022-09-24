@@ -32,13 +32,13 @@ jobs:
         run: |
           env "AR_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" \
           env "CC_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang" \
-          just check maplibre-android x86_64-linux-android
+          just nightly-check maplibre-android x86_64-linux-android ""
       - name: Check aarch64
         shell: bash
         run: |
           env "AR_aarch64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" \
           env "CC_aarch64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang" \
-          just check maplibre-android aarch64-linux-android
+          just nightly-check maplibre-android aarch64-linux-android ""
     # FIXME: Requires cross-compilation
     #- name: Test
     #  shell: bash

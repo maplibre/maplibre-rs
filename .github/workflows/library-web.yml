@@ -52,7 +52,7 @@ jobs:
         run: just web-demo build
       - name: Check
         shell: bash
-        run: just web-check ${{ inputs.webgl && 'web-webgl' || '""' }}
+        run: just nightly-check web wasm32-unknown-unknown ${{ inputs.webgl && 'web-webgl' || '""' }}
       - name: Test
         shell: bash
         run: just web-test "web-webgl"

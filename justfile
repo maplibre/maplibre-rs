@@ -53,6 +53,9 @@ fixup:
 check PROJECT ARCH: stable-install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
 
+nightly-check PROJECT ARCH FEATURES: nightly-toolchain nightly-install-clippy
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo clippy --no-deps -p {{PROJECT}} --features "{{FEATURES}}" --target {{ARCH}}
+
 test PROJECT ARCH:
   cargo test -p {{PROJECT}} --target {{ARCH}}
 
@@ -81,9 +84,6 @@ web-lib TARGET *FLAGS: nightly-toolchain (web-install "lib")
 # Example: just web-demo build
 web-demo TARGET *FLAGS: (web-install "demo")
   cd web/demo && npm run {{TARGET}} -- {{FLAGS}}
-
-web-check FEATURES: nightly-toolchain nightly-install-clippy
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo clippy --no-deps -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown
 
 web-test FEATURES: nightly-toolchain
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown
