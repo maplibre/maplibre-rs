@@ -1,5 +1,5 @@
-use maplibre::io::apc::SchedulerAsyncProcedureCall;
 use maplibre::{
+    io::apc::SchedulerAsyncProcedureCall,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
     MapBuilder,
 };

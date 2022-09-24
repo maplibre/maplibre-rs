@@ -1,5 +1,5 @@
-use std::any::TypeId;
 use std::{
+    any::TypeId,
     borrow::Borrow,
     cell::RefCell,
     collections::HashMap,

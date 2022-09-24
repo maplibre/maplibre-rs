@@ -3,16 +3,16 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
-use crate::winit::WinitEnvironment;
-use maplibre::io::apc::SchedulerAsyncProcedureCall;
-use maplibre::platform::http_client::ReqwestHttpClient;
-use maplibre::platform::run_multithreaded;
-use maplibre::platform::scheduler::TokioScheduler;
-use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
-use maplibre::MapBuilder;
+use maplibre::{
+    io::apc::SchedulerAsyncProcedureCall,
+    platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
+    window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
+    MapBuilder,
+};
 use winit::window::WindowBuilder;
 
 use super::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
+use crate::winit::WinitEnvironment;
 
 impl MapWindow for WinitMapWindow {
     fn size(&self) -> WindowSize {

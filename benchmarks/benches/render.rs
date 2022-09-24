@@ -1,12 +1,12 @@
 use std::collections::HashSet;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use maplibre::io::apc::SchedulerAsyncProcedureCall;
 use maplibre::{
     coords::{WorldTileCoords, ZoomLevel},
     error::Error,
     headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
     io::{
+        apc::SchedulerAsyncProcedureCall,
         pipeline::{PipelineContext, Processable},
         source_client::HttpSourceClient,
         tile_pipelines::build_vector_tile_pipeline,
