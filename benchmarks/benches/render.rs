@@ -4,7 +4,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
     coords::{WorldTileCoords, ZoomLevel},
     error::Error,
-    headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
+    headless::{utils::HeadlessPipelineProcessor, HeadlessEnvironment, HeadlessMapWindowConfig},
     io::{
         apc::SchedulerAsyncProcedureCall,
         pipeline::{PipelineContext, Processable},
@@ -23,24 +23,25 @@ fn headless_render(c: &mut Criterion) {
         let mut map = run_multithreaded(async {
             let client = ReqwestHttpClient::new(None);
 
-            let mut map =
-                MapBuilder::<WinitEnvironment<_, _, _, SchedulerAsyncProcedureCall<_, _>>>::new()
-                    .with_map_window_config(HeadlessMapWindowConfig {
-                        size: WindowSize::new(1000, 1000).unwrap(),
-                    })
-                    .with_http_client(client.clone())
-                    .with_apc(SchedulerAsyncProcedureCall::new(
-                        client,
-                        TokioScheduler::new(),
-                    ))
-                    .with_scheduler(TokioScheduler::new())
-                    .with_renderer_settings(RendererSettings {
-                        texture_format: TextureFormat::Rgba8UnormSrgb,
-                        ..RendererSettings::default()
-                    })
-                    .build()
-                    .initialize_headless()
-                    .await;
+            let mut map = MapBuilder::<
+                HeadlessEnvironment<_, _, _, SchedulerAsyncProcedureCall<_, _>>,
+            >::new()
+            .with_map_window_config(HeadlessMapWindowConfig {
+                size: WindowSize::new(1000, 1000).unwrap(),
+            })
+            .with_http_client(client.clone())
+            .with_apc(SchedulerAsyncProcedureCall::new(
+                client,
+                TokioScheduler::new(),
+            ))
+            .with_scheduler(TokioScheduler::new())
+            .with_renderer_settings(RendererSettings {
+                texture_format: TextureFormat::Rgba8UnormSrgb,
+                ..RendererSettings::default()
+            })
+            .build()
+            .initialize_headless()
+            .await;
 
             map.map_schedule
                 .fetch_process(&WorldTileCoords::from((0, 0, ZoomLevel::default())))
