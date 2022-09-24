@@ -2,20 +2,11 @@ use std::io::ErrorKind;
 
 use clap::{builder::ValueParser, Parser, Subcommand};
 use maplibre::{coords::LatLon, platform::run_multithreaded};
+use maplibre_winit::winit::run_headed_map;
 
-use crate::{headed::run_headed, headless::run_headless};
+use crate::headless::run_headless;
 
-mod headed;
 mod headless;
-
-#[cfg(feature = "trace")]
-fn enable_tracing() {
-    use tracing_subscriber::{layer::SubscriberExt, Registry};
-
-    let subscriber = Registry::default().with(tracing_tracy::TracyLayer::new());
-
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-}
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -63,16 +54,14 @@ fn main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
     #[cfg(feature = "trace")]
-    enable_tracing();
+    maplibre::platform::trace::enable_tracing();
 
     let cli = Cli::parse();
 
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match &cli.command {
-        Commands::Headed {} => {
-            run_multithreaded(async { run_headed().await });
-        }
+        Commands::Headed {} => run_headed_map(None),
         Commands::Headless {
             tile_size,
             min,

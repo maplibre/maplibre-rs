@@ -36,9 +36,14 @@ pub mod http_client {
 }
 
 /// Scheduler for non-web targets.
-pub mod schedule_method {
+pub mod scheduler {
     #[cfg(not(target_arch = "wasm32"))]
-    pub use super::noweb::schedule_method::*;
+    pub use super::noweb::scheduler::*;
+}
+
+pub mod trace {
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use super::noweb::trace::*;
 }
 
 #[cfg(not(target_arch = "wasm32"))]

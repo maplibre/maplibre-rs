@@ -1,29 +1,37 @@
 use maplibre::{
     coords::{LatLon, WorldTileCoords},
     error::Error,
-    headless::HeadlessMapWindowConfig,
-    platform::{http_client::ReqwestHttpClient, schedule_method::TokioScheduleMethod},
+    headless::{HeadlessEnvironment, HeadlessMapWindowConfig},
+    io::apc::SchedulerAsyncProcedureCall,
+    platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
     render::settings::{RendererSettings, TextureFormat},
     util::grid::google_mercator,
     window::WindowSize,
     MapBuilder,
 };
+use maplibre_winit::winit::WinitEnvironment;
 use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
-    let mut map = MapBuilder::new()
-        .with_map_window_config(HeadlessMapWindowConfig {
-            size: WindowSize::new(tile_size, tile_size).unwrap(),
-        })
-        .with_http_client(ReqwestHttpClient::new(None))
-        .with_schedule_method(TokioScheduleMethod::new())
-        .with_renderer_settings(RendererSettings {
-            texture_format: TextureFormat::Rgba8UnormSrgb,
-            ..RendererSettings::default()
-        })
-        .build()
-        .initialize_headless()
-        .await;
+    let client = ReqwestHttpClient::new(None);
+    let mut map =
+        MapBuilder::<HeadlessEnvironment<_, _, _, SchedulerAsyncProcedureCall<_, _>>>::new()
+            .with_map_window_config(HeadlessMapWindowConfig {
+                size: WindowSize::new(tile_size, tile_size).unwrap(),
+            })
+            .with_http_client(client.clone())
+            .with_apc(SchedulerAsyncProcedureCall::new(
+                client,
+                TokioScheduler::new(),
+            )) // FIXME (wasm-executor): avoid passing client and scheduler here
+            .with_scheduler(TokioScheduler::new())
+            .with_renderer_settings(RendererSettings {
+                texture_format: TextureFormat::Rgba8UnormSrgb,
+                ..RendererSettings::default()
+            })
+            .build()
+            .initialize_headless()
+            .await;
 
     let tile_limits = google_mercator().tile_limits(
         extent_wgs84_to_merc(&Extent {

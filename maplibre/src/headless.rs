@@ -4,6 +4,7 @@ use std::{
     future::Future,
     io::Write,
     iter,
+    marker::PhantomData,
     ops::{Deref, Range},
     sync::Arc,
 };
@@ -17,11 +18,12 @@ use crate::{
     error::Error,
     headless::utils::HeadlessPipelineProcessor,
     io::{
+        apc::{AsyncProcedureCall, SchedulerAsyncProcedureCall},
         pipeline::{PipelineContext, Processable},
         source_client::HttpSourceClient,
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::{StoredLayer, TileRepository},
-        tile_request_state::TileRequestState,
+        transferables::{DefaultTransferables, Transferables},
         TileRequest,
     },
     render::{
@@ -35,7 +37,7 @@ use crate::{
         RenderState,
     },
     schedule::{Schedule, Stage},
-    HttpClient, MapWindow, MapWindowConfig, Renderer, ScheduleMethod, Scheduler, Style, WindowSize,
+    Environment, HttpClient, MapWindow, MapWindowConfig, Renderer, Scheduler, Style, WindowSize,
 };
 
 pub struct HeadlessMapWindowConfig {
@@ -60,56 +62,57 @@ impl MapWindow for HeadlessMapWindow {
     }
 }
 
-pub struct HeadlessMap<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
+pub struct HeadlessEnvironment<
+    S: Scheduler,
     HC: HttpClient,
-{
-    pub map_schedule: HeadlessMapSchedule<MWC, SM, HC>,
-    pub window: MWC::MapWindow,
+    T: Transferables,
+    APC: AsyncProcedureCall<T, HC>,
+> {
+    phantom_s: PhantomData<S>,
+    phantom_hc: PhantomData<HC>,
+    phantom_t: PhantomData<T>,
+    phantom_apc: PhantomData<APC>,
 }
 
-impl<MWC, SM, HC> HeadlessMap<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
+impl<S: Scheduler, HC: HttpClient, T: Transferables, APC: AsyncProcedureCall<T, HC>> Environment
+    for HeadlessEnvironment<S, HC, T, APC>
 {
-    pub fn map_schedule_mut(&mut self) -> &mut HeadlessMapSchedule<MWC, SM, HC> {
+    type MapWindowConfig = HeadlessMapWindowConfig;
+    type AsyncProcedureCall = APC;
+    type Scheduler = S;
+    type HttpClient = HC;
+    type Transferables = T;
+}
+
+pub struct HeadlessMap<E: Environment> {
+    pub map_schedule: HeadlessMapSchedule<E>,
+    pub window: <E::MapWindowConfig as MapWindowConfig>::MapWindow,
+}
+
+impl<E: Environment> HeadlessMap<E> {
+    pub fn map_schedule_mut(&mut self) -> &mut HeadlessMapSchedule<E> {
         &mut self.map_schedule
     }
 }
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
-pub struct HeadlessMapSchedule<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
-    map_window_config: MWC,
+pub struct HeadlessMapSchedule<E: Environment> {
+    map_window_config: E::MapWindowConfig,
 
     pub map_context: MapContext,
 
     schedule: Schedule,
-    scheduler: Scheduler<SM>,
-    http_client: HC,
-    tile_request_state: TileRequestState,
+    scheduler: E::Scheduler,
+    http_client: E::HttpClient,
 }
 
-impl<MWC, SM, HC> HeadlessMapSchedule<MWC, SM, HC>
-where
-    MWC: MapWindowConfig,
-    SM: ScheduleMethod,
-    HC: HttpClient,
-{
+impl<E: Environment> HeadlessMapSchedule<E> {
     pub fn new(
-        map_window_config: MWC,
+        map_window_config: E::MapWindowConfig,
         window_size: WindowSize,
         renderer: Renderer,
-        scheduler: Scheduler<SM>,
-        http_client: HC,
+        scheduler: E::Scheduler,
+        http_client: E::HttpClient,
         style: Style,
     ) -> Self {
         let view_state = ViewState::new(
@@ -122,12 +125,12 @@ where
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
-        let mut graph = create_default_render_graph().unwrap();
-        let draw_graph = graph.get_sub_graph_mut(draw_graph::NAME).unwrap();
+        let mut graph = create_default_render_graph().unwrap(); // TODO: remove unwrap
+        let draw_graph = graph.get_sub_graph_mut(draw_graph::NAME).unwrap(); // TODO: remove unwrap
         draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
         draw_graph
             .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)
-            .unwrap();
+            .unwrap(); // TODO: remove unwrap
 
         register_default_render_stages(graph, &mut schedule);
 
@@ -147,7 +150,6 @@ where
             schedule,
             scheduler,
             http_client,
-            tile_request_state: Default::default(),
         }
     }
 
@@ -160,10 +162,10 @@ where
     pub fn schedule(&self) -> &Schedule {
         &self.schedule
     }
-    pub fn scheduler(&self) -> &Scheduler<SM> {
+    pub fn scheduler(&self) -> &E::Scheduler {
         &self.scheduler
     }
-    pub fn http_client(&self) -> &HC {
+    pub fn http_client(&self) -> &E::HttpClient {
         &self.http_client
     }
 
@@ -176,13 +178,13 @@ where
             .filter_map(|layer| layer.source_layer.clone())
             .collect();
 
-        let http_source_client: HttpSourceClient<HC> =
+        let http_source_client: HttpSourceClient<E::HttpClient> =
             HttpSourceClient::new(self.http_client.clone());
 
         let data = http_source_client
             .fetch(&coords)
             .await
-            .unwrap()
+            .unwrap() // TODO: remove unwrap
             .into_boxed_slice();
 
         let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
@@ -193,15 +195,11 @@ where
             layers: source_layers,
         };
 
-        let request_id = self
-            .tile_request_state
-            .start_tile_request(request.clone())?;
-        pipeline.process((request, request_id, data), &mut pipeline_context);
-        self.tile_request_state.finish_tile_request(request_id);
+        pipeline.process((request, data), &mut pipeline_context);
 
         let mut processor = pipeline_context
             .take_processor::<HeadlessPipelineProcessor>()
-            .unwrap();
+            .unwrap(); // TODO: remove unwrap
 
         if let Eventually::Initialized(pool) = self.map_context.renderer.state.buffer_pool_mut() {
             pool.clear();
@@ -210,6 +208,9 @@ where
         self.map_context.tile_repository.clear();
 
         while let Some(layer) = processor.layers.pop() {
+            self.map_context
+                .tile_repository
+                .create_tile(&layer.get_coords());
             self.map_context
                 .tile_repository
                 .put_tessellated_layer(layer);
@@ -261,7 +262,7 @@ impl Node for CopySurfaceBufferNode {
                                 std::num::NonZeroU32::new(
                                     buffered_texture.buffer_dimensions.padded_bytes_per_row as u32,
                                 )
-                                .unwrap(),
+                                .unwrap(), // TODO: remove unwrap
                             ),
                             rows_per_image: None,
                         },
@@ -340,9 +341,9 @@ pub mod utils {
         ) {
             self.layers.push(StoredLayer::TessellatedLayer {
                 coords: *coords,
+                layer_name: layer_data.name,
                 buffer,
                 feature_indices,
-                layer_data,
             })
         }
     }

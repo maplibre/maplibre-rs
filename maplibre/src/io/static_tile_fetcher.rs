@@ -46,7 +46,7 @@ impl StaticTileFetcher {
             .ok_or_else(|| {
                 Error::Network("Failed to load tile from within the binary".to_string())
             })?;
-        Ok(Vec::from(tile.contents())) // TODO: Unnecessary copy
+        Ok(Vec::from(tile.contents()))
     }
 }
 

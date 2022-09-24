@@ -23,12 +23,12 @@ impl WHATWGFetchHttpClient {
         // Get the global scope
         let global = js_sys::global();
         assert!(global.is_instance_of::<WorkerGlobalScope>());
-        let scope = global.dyn_into::<WorkerGlobalScope>().unwrap();
+        let scope = global.dyn_into::<WorkerGlobalScope>().unwrap(); // TODO: remove unwrap
 
         // Call fetch on global scope
         let maybe_response = JsFuture::from(scope.fetch_with_request(&request)).await?;
         assert!(maybe_response.is_instance_of::<Response>());
-        let response: Response = maybe_response.dyn_into().unwrap();
+        let response: Response = maybe_response.dyn_into().unwrap(); // TODO: remove unwrap
 
         // Get ArrayBuffer
         let maybe_array_buffer = JsFuture::from(response.array_buffer()?).await?;
@@ -39,7 +39,7 @@ impl WHATWGFetchHttpClient {
         let maybe_array_buffer = Self::fetch_array_buffer(url).await?;
 
         assert!(maybe_array_buffer.is_instance_of::<ArrayBuffer>());
-        let array_buffer: ArrayBuffer = maybe_array_buffer.dyn_into().unwrap();
+        let array_buffer: ArrayBuffer = maybe_array_buffer.dyn_into().unwrap(); // TODO: remove unwrap
 
         // Copy data to Vec<u8>
         let buffer: Uint8Array = Uint8Array::new(&array_buffer);

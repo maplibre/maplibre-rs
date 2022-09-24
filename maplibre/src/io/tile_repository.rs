@@ -18,10 +18,10 @@ pub enum StoredLayer {
     },
     TessellatedLayer {
         coords: WorldTileCoords,
+        layer_name: String,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         /// Holds for each feature the count of indices.
         feature_indices: Vec<u32>,
-        layer_data: tile::Layer,
     },
 }
 
@@ -36,20 +36,29 @@ impl StoredLayer {
     pub fn layer_name(&self) -> &str {
         match self {
             StoredLayer::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
-            StoredLayer::TessellatedLayer { layer_data, .. } => &layer_data.name,
+            StoredLayer::TessellatedLayer { layer_name, .. } => layer_name.as_str(),
         }
     }
+}
+
+#[derive(Eq, PartialEq)]
+pub enum TileStatus {
+    Pending,
+    Failed,
+    Success,
 }
 
 /// Stores multiple [StoredLayers](StoredLayer).
 pub struct StoredTile {
     layers: Vec<StoredLayer>,
+    status: TileStatus,
 }
 
 impl StoredTile {
-    pub fn new(first_layer: StoredLayer) -> Self {
+    pub fn new() -> Self {
         Self {
-            layers: vec![first_layer],
+            layers: vec![],
+            status: TileStatus::Pending,
         }
     }
 }
@@ -84,7 +93,7 @@ impl TileRepository {
         {
             match entry {
                 btree_map::Entry::Vacant(entry) => {
-                    entry.insert(StoredTile::new(layer));
+                    panic!("Can not add a tessellated layer if no request has been started before.")
                 }
                 btree_map::Entry::Occupied(mut entry) => {
                     entry.get_mut().layers.push(layer);
@@ -103,6 +112,46 @@ impl TileRepository {
             .build_quad_key()
             .and_then(|key| self.tree.get(&key))
             .map(|results| results.layers.iter())
+    }
+
+    /// Create a new tile.
+    pub fn create_tile(&mut self, coords: &WorldTileCoords) -> bool {
+        if let Some(entry) = coords.build_quad_key().map(|key| self.tree.entry(key)) {
+            match entry {
+                btree_map::Entry::Vacant(entry) => {
+                    entry.insert(StoredTile::new());
+                }
+                _ => {}
+            }
+        }
+        true
+    }
+
+    /// Checks if a layer has been fetched.
+    pub fn needs_fetching(&self, coords: &WorldTileCoords) -> bool {
+        if let Some(_) = coords.build_quad_key().and_then(|key| self.tree.get(&key)) {
+            return false;
+        }
+        true
+    }
+
+    pub fn success(&mut self, coords: &WorldTileCoords) {
+        if let Some(cached_tile) = coords
+            .build_quad_key()
+            .and_then(|key| self.tree.get_mut(&key))
+        {
+            cached_tile.status = TileStatus::Success;
+        }
+    }
+
+    /// Checks if a layer has been fetched.
+    pub fn fail(&mut self, coords: &WorldTileCoords) {
+        if let Some(cached_tile) = coords
+            .build_quad_key()
+            .and_then(|key| self.tree.get_mut(&key))
+        {
+            cached_tile.status = TileStatus::Failed;
+        }
     }
 
     /// Removes all the cached tessellate layers that are not contained within the given

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run headed demo (debug+enable-tracing)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+  <configuration default="false" name="Run demo (debug+enable-tracing)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
     <option name="command" value="run -p maplibre-demo --features trace -- headed" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />

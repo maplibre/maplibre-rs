@@ -15,7 +15,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install toolchain
         shell: bash
-        run: just default-toolchain
+        run: |
+          just stable-toolchain
+          just stable-targets x86_64-apple-darwin aarch64-apple-darwin x86_64-apple-ios aarch64-apple-ios aarch64-apple-ios-sim
       - uses: Swatinem/rust-cache@v1
       - name: Build
         shell: bash

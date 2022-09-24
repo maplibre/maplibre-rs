@@ -7,7 +7,7 @@ use crate::{
     io::{
         geometry_index::IndexProcessor,
         pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable},
-        TileRequest, TileRequestID,
+        TileRequest,
     },
     tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
 };
@@ -16,17 +16,17 @@ use crate::{
 pub struct ParseTile;
 
 impl Processable for ParseTile {
-    type Input = (TileRequest, TileRequestID, Box<[u8]>);
-    type Output = (TileRequest, TileRequestID, geozero::mvt::Tile);
+    type Input = (TileRequest, Box<[u8]>);
+    type Output = (TileRequest, geozero::mvt::Tile);
 
     // TODO (perf): Maybe force inline
     fn process(
         &self,
-        (tile_request, request_id, data): Self::Input,
+        (tile_request, data): Self::Input,
         _context: &mut PipelineContext,
     ) -> Self::Output {
         let tile = geozero::mvt::Tile::decode(data.as_ref()).expect("failed to load tile");
-        (tile_request, request_id, tile)
+        (tile_request, tile)
     }
 }
 
@@ -34,13 +34,13 @@ impl Processable for ParseTile {
 pub struct IndexLayer;
 
 impl Processable for IndexLayer {
-    type Input = (TileRequest, TileRequestID, geozero::mvt::Tile);
-    type Output = (TileRequest, TileRequestID, geozero::mvt::Tile);
+    type Input = (TileRequest, geozero::mvt::Tile);
+    type Output = (TileRequest, geozero::mvt::Tile);
 
     // TODO (perf): Maybe force inline
     fn process(
         &self,
-        (tile_request, request_id, tile): Self::Input,
+        (tile_request, tile): Self::Input,
         context: &mut PipelineContext,
     ) -> Self::Output {
         let index = IndexProcessor::new();
@@ -48,7 +48,7 @@ impl Processable for IndexLayer {
         context
             .processor_mut()
             .layer_indexing_finished(&tile_request.coords, index.get_geometries());
-        (tile_request, request_id, tile)
+        (tile_request, tile)
     }
 }
 
@@ -56,13 +56,13 @@ impl Processable for IndexLayer {
 pub struct TessellateLayer;
 
 impl Processable for TessellateLayer {
-    type Input = (TileRequest, TileRequestID, geozero::mvt::Tile);
-    type Output = (TileRequest, TileRequestID, geozero::mvt::Tile);
+    type Input = (TileRequest, geozero::mvt::Tile);
+    type Output = (TileRequest, geozero::mvt::Tile);
 
     // TODO (perf): Maybe force inline
     fn process(
         &self,
-        (tile_request, request_id, mut tile): Self::Input,
+        (tile_request, mut tile): Self::Input,
         context: &mut PipelineContext,
     ) -> Self::Output {
         let coords = &tile_request.coords;
@@ -118,11 +118,9 @@ impl Processable for TessellateLayer {
 
         tracing::info!("tile tessellated at {} finished", &tile_request.coords);
 
-        context
-            .processor_mut()
-            .tile_finished(request_id, &tile_request.coords);
+        context.processor_mut().tile_finished(&tile_request.coords);
 
-        (tile_request, request_id, tile)
+        (tile_request, tile)
     }
 }
 
@@ -159,7 +157,6 @@ mod tests {
                     coords: (0, 0, ZoomLevel::default()).into(),
                     layers: Default::default(),
                 },
-                0,
                 Box::new([0]),
             ),
             &mut context,

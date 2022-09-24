@@ -6,5 +6,10 @@
     "target": "es5",
     "allowJs": true,
     "moduleResolution": "node"
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
   }
 }

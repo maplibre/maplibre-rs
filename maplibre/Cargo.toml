@@ -19,6 +19,7 @@ headless = ["png"]
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
 tokio = { version = "1.20.1", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+tokio-util = { version = "0.7.1", features = ["rt"] }
 env_logger = "0.9.0"
 reqwest = { version = "0.11.11", default-features = false, features = ["rustls-tls", "gzip"] }
 reqwest-middleware-cache = "0.1.1" # FIXME: Untrusted dependency
@@ -32,7 +33,7 @@ reqwest = { version = "0.11.11", default-features = false, features = ["rustls-t
 
 [dependencies]
 async-trait = "0.1.57"
-instant = { version = "0.1.12", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
+instant = { version = "0.1.12", features = ["wasm-bindgen"] } # TODO: Untrusted dependency
 
 # Tracing
 tracing = "0.1.36"

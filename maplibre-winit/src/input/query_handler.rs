@@ -71,9 +71,9 @@ impl UpdateState for QueryHandler {
                     &inverted_view_proj,
                     false,
                 ) {
+                    // TODO reenable
                     /*state
                     .scheduler()
-                    .schedule_method()
                     .schedule(state.scheduler(), move |thread_local| async move {
                         if let Some(geometries) = thread_local.query_point(
                             &WorldCoords {

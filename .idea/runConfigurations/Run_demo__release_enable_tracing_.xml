@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build WASM" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="build -p web --features web-webgl --lib --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort" />
+  <configuration default="false" name="Run demo (release+enable-tracing)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="command" value="run -p maplibre-demo --release --features trace -- headed" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />
@@ -9,9 +9,7 @@
     <option name="withSudo" value="false" />
     <option name="buildTarget" value="REMOTE" />
     <option name="backtrace" value="SHORT" />
-    <envs>
-      <env name="RUSTUP_TOOLCHAIN" value="nightly-2022-07-03-x86_64-unknown-linux-gnu" />
-    </envs>
+    <envs />
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />
     <method v="2">

@@ -166,8 +166,8 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
 
         let raw_buffer = bytemuck::cast_slice(buffer.as_slice());
         if raw_buffer.len() as wgpu::BufferAddress > self.buffer.inner_size {
-            /* FIXME: We need to avoid this case by either choosing a proper size
-            (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */
+            /* TODO: We need to avoid this case by either choosing a proper size
+            TODO: (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */
             panic!("Buffer is too small to store the tile pattern!");
         }
         queue.write_buffer(&self.buffer.inner, 0, raw_buffer);

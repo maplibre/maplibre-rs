@@ -2,35 +2,38 @@ import {build} from 'esbuild';
 import metaUrlPlugin from '@chialab/esbuild-plugin-meta-url';
 import inlineWorker from 'esbuild-plugin-inline-worker';
 import yargs from "yargs";
+import process from "process";
 import chokidar from "chokidar";
 import {spawnSync} from "child_process"
-import {unlink} from "fs";
 import {dirname} from "path";
 import {fileURLToPath} from "url";
 
 let argv = yargs(process.argv.slice(2))
     .option('watch', {
-        alias: 'w',
         type: 'boolean',
         description: 'Enable watching'
     })
+    .option('release', {
+        type: 'boolean',
+        description: 'Release mode'
+    })
     .option('webgl', {
-        alias: 'g',
         type: 'boolean',
         description: 'Enable webgl'
     })
+    .option('multithreaded', {
+        type: 'boolean',
+        description: 'Enable multithreaded support'
+    })
     .option('esm', {
-        alias: 'e',
         type: 'boolean',
         description: 'Enable esm'
     })
     .option('cjs', {
-        alias: 'c',
         type: 'boolean',
         description: 'Enable cjs'
     })
     .option('iife', {
-        alias: 'i',
         type: 'boolean',
         description: 'Enable iife'
     })
@@ -39,6 +42,8 @@ let argv = yargs(process.argv.slice(2))
 let esm = argv.esm;
 let iife = argv.iife;
 let cjs = argv.cjs;
+let release = argv.release;
+let multithreaded = argv.multithreaded;
 
 if (!esm && !iife && !cjs) {
     console.warn("Enabling ESM bundling as no other bundle is enabled.")
@@ -51,19 +56,29 @@ if (webgl) {
     console.log("WebGL support enabled.")
 }
 
-let baseSettings = {
-    entryPoints: ['src/index.ts'],
-    bundle: true,
+if (multithreaded) {
+    console.log("multithreaded support enabled.")
+}
+
+let baseConfig = {
     platform: "browser",
+    bundle: true,
     assetNames: "assets/[name]",
-    define: {"WEBGL": `${webgl}`},
+    define: {
+        WEBGL: `${webgl}`,
+        MULTITHREADED: `${multithreaded}`
+    },
+}
+
+let config = {
+    ...baseConfig,
+    entryPoints:['src/index.ts'],
     incremental: argv.watch,
     plugins: [
         inlineWorker({
-            format: "cjs", platform: "browser",
+            ...baseConfig,
+            format: "cjs",
             target: 'es2022',
-            bundle: true,
-            assetNames: "assets/[name]",
         }),
         metaUrlPlugin()
     ],
@@ -98,8 +113,8 @@ const emitTypeScript = () => {
         "--",
         "-m", "es2022",
         "-outDir", outDirectory,
+        "--declaration",
         "--emitDeclarationOnly"
-
     ], {
         cwd: '.',
         stdio: 'inherit',
@@ -107,36 +122,74 @@ const emitTypeScript = () => {
 
     if (child.status !== 0) {
         console.error("Failed to execute tsc")
-        process.exit(1)
     }
 }
 
+// TODO: Do not continue if one step fails
 const wasmPack = () => {
-    let outDirectory = `${getLibDirectory()}/src/wasm-pack`;
+    let outDirectory = `${getLibDirectory()}/src/wasm`;
+    let profile = release ? "wasm-release" : "wasm-dev"
 
-    let child = spawnSync('npm', ["exec",
-        "wasm-pack","--",
+    // language=toml
+    let multithreaded_config = `target.wasm32-unknown-unknown.rustflags = [
+        # Enables features which are required for shared-memory
+        "-C", "target-feature=+atomics,+bulk-memory,+mutable-globals",
+        # Enables the possibility to import memory into wasm.
+        # Without --shared-memory it is not possible to use shared WebAssembly.Memory.
+        # Set maximum memory to 200MB
+        "-C", "link-args=--shared-memory --import-memory --max-memory=209715200"
+    ]`
+
+    let cargo = spawnSync('cargo', [
+        ...(multithreaded ? ["--config", multithreaded_config] : []),
         "build",
-        "--out-name", "index",
-        "--out-dir", outDirectory,
-        getWebDirectory(),
-        "--target", "web",
-        "--",
-        "--features", `${webgl ? "web-webgl" : ""}`,
-        "-Z", "build-std=std,panic_abort"
+        "-p", "web", "--lib",
+        "--target", "wasm32-unknown-unknown",
+        "--profile", profile,
+        "--features", `${webgl ? "web-webgl," : ""}`,
+        ...(multithreaded ? ["-Z", "build-std=std,panic_abort"] : []),
     ], {
         cwd: '.',
         stdio: 'inherit',
     });
 
-    if (child.status !== 0) {
-        console.error("Failed to execute wasm-pack")
+    if (cargo.status !== 0) {
+        console.error("Failed to execute cargo build")
     }
 
-    // Having package.json within another npm package is not supported. Remove that.
-    unlink(`${getLibDirectory()}/src/wasm-pack/package.json`, (err) => {
-        if (err) throw err;
-    })
+    let wasmbindgen = spawnSync('wasm-bindgen', [
+        `${getProjectDirectory()}/target/wasm32-unknown-unknown/${profile}/web.wasm`,
+        "--out-name", "maplibre",
+        "--out-dir", outDirectory,
+        "--typescript",
+        "--target", "web",
+        "--debug",
+    ], {
+        cwd: '.',
+        stdio: 'inherit',
+    });
+
+    if (wasmbindgen.status !== 0) {
+        console.error("Failed to execute wasm-bindgen")
+    }
+
+    if (release) {
+        console.log("Running wasm-opt")
+        let wasmOpt = spawnSync('npm', ["exec",
+            "wasm-opt", "--",
+            `${outDirectory}/maplibre_bg.wasm`,
+            "-o", `${outDirectory}/maplibre_bg.wasm`,
+            "-O"
+        ], {
+            cwd: '.',
+            stdio: 'inherit',
+        });
+
+        if (wasmOpt.status !== 0) {
+            console.error("Failed to execute wasm-opt")
+        }
+    }
+
 }
 
 const watchResult = async (result) => {
@@ -149,17 +202,22 @@ const watchResult = async (result) => {
     });
 
     const update = async (path) => {
-        console.log(`Updating: ${path}`)
-        if (path.endsWith(".rs")) {
-            console.log("Rebuilding Rust...")
-            wasmPack();
+        try {
+            console.log(`Updating: ${path}`)
+            if (path.endsWith(".rs")) {
+                console.log("Rebuilding Rust...")
+                wasmPack();
+            }
+
+            console.log("Rebuilding...")
+            await result.rebuild();
+
+            console.log("Emitting TypeScript types...")
+            emitTypeScript();
+        } catch (e) {
+            console.error("Error while updating:")
+            console.error(e)
         }
-
-        console.log("Rebuilding...")
-        await result.rebuild();
-
-        console.log("Emitting TypeScript types...")
-        emitTypeScript();
     }
 
     console.log("Watching...")
@@ -171,7 +229,7 @@ const watchResult = async (result) => {
 }
 
 const esbuild = async (name, globalName = undefined) => {
-    let result = await build({...baseSettings, format: name, globalName, outfile: `dist/esbuild-${name}/module.js`,});
+    let result = await build({...config, format: name, globalName, outfile: `dist/esbuild-${name}/module.js`,});
 
     if (argv.watch) {
         console.log("Watching is enabled.")
@@ -180,7 +238,7 @@ const esbuild = async (name, globalName = undefined) => {
 }
 
 const start = async () => {
-    console.log("Running wasm-pack...")
+    console.log("Creating WASM...")
     wasmPack();
 
     if (esm) {

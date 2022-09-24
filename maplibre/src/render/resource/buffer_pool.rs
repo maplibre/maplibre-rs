@@ -191,7 +191,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         self.index.get_layers(coords).map(|layers| {
             layers
                 .iter()
-                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str())
+                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str()) // TODO: Remove unwrap
                 .collect()
         })
     }

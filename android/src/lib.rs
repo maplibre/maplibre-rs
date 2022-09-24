@@ -3,13 +3,11 @@ use std::ffi::CString;
 use jni::{objects::JClass, JNIEnv};
 use log::Level;
 use maplibre::{
-    platform::{
-        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
-    },
+    platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
     render::settings::{Backends, WgpuSettings},
     MapBuilder,
 };
-use maplibre_winit::winit::WinitMapWindowConfig;
+use maplibre_winit::winit::{run_headed_map, WinitMapWindowConfig};
 
 #[cfg(not(target_os = "android"))]
 compile_error!("android works only on android.");
@@ -18,20 +16,8 @@ compile_error!("android works only on android.");
 pub fn android_main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
-    run_multithreaded(async {
-        MapBuilder::new()
-            .with_map_window_config(WinitMapWindowConfig::new("maplibre android".to_string()))
-            .with_http_client(ReqwestHttpClient::new(None))
-            .with_schedule_method(TokioScheduleMethod::new())
-            .with_wgpu_settings(WgpuSettings {
-                backends: Some(Backends::VULKAN),
-                ..WgpuSettings::default()
-            })
-            .build()
-            .initialize()
-            .await
-            .run()
-    })
+    // TODO: Maybe requires: Some(Backends::VULKAN)
+    run_headed_map(None);
 }
 
 #[no_mangle]

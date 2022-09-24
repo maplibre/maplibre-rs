@@ -16,16 +16,16 @@
   "main": "dist/esbuild-cjs/main.js",
   "types": "dist/ts/index.d.ts",
   "dependencies": {
+    "binaryen": "^110.0.0",
     "spectorjs": "^0.9.27",
     "wasm-feature-detect": "^1.2.11"
   },
   "devDependencies": {
-    "chokidar": "^3.5.3",
     "@chialab/esbuild-plugin-meta-url": "^0.15.28",
+    "chokidar": "^3.5.3",
     "esbuild": "^0.14.38",
     "esbuild-plugin-inline-worker": "^0.1.1",
     "typescript": "^4.5.4",
-    "wasm-pack": "^0.10.2",
     "yargs": "^17.5.1"
   },
   "repository": {

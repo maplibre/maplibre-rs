@@ -6,7 +6,9 @@ use std::{
     fmt::{Display, Formatter},
 };
 
+use bytemuck_derive::{Pod, Zeroable};
 use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     style::source::TileAddressingScheme,
@@ -67,7 +69,23 @@ impl fmt::Debug for Quadkey {
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug, Default)]
+// FIXME: does Pod and Zeroable make sense?
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Hash,
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    Pod,
+    Zeroable,
+)]
+#[repr(C)]
 pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
@@ -83,7 +101,7 @@ impl std::ops::Add<u8> for ZoomLevel {
     type Output = ZoomLevel;
 
     fn add(self, rhs: u8) -> Self::Output {
-        let zoom_level = self.0.checked_add(rhs).unwrap();
+        let zoom_level = self.0.checked_add(rhs).expect("zoom level overflowed");
         ZoomLevel(zoom_level)
     }
 }
@@ -92,7 +110,7 @@ impl std::ops::Sub<u8> for ZoomLevel {
     type Output = ZoomLevel;
 
     fn sub(self, rhs: u8) -> Self::Output {
-        let zoom_level = self.0.checked_sub(rhs).unwrap();
+        let zoom_level = self.0.checked_sub(rhs).expect("zoom level underflowed");
         ZoomLevel(zoom_level)
     }
 }
@@ -289,7 +307,22 @@ impl From<(u32, u32, ZoomLevel)> for TileCoords {
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+// FIXME: does Zeroable make sense?
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Default,
+    Serialize,
+    Deserialize,
+    Zeroable,
+)]
+#[repr(C)]
 pub struct WorldTileCoords {
     pub x: i32,
     pub y: i32,

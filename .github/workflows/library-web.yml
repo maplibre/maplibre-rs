@@ -11,70 +11,58 @@ on:
       deploy:
         required: true
         type: boolean
+      name:
+        required: true
+        type: string
+      webgl:
+        required: true
+        type: boolean
+      multithreaded:
+        required: true
+        type: boolean
 
 jobs:
-  library-webgl:
-    name: Build WebGL
+  build:
+    name: Build
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: extractions/setup-just@v1
       - name: Install nightly toolchain
         shell: bash
-        run: just nightly-toolchain
+        run: |
+          just nightly-toolchain
+          just nightly-targets wasm32-unknown-unknown
+      - name: Install rust sources (build-std)
+        if: inputs.multithreaded
+        shell: bash
+        run: |
+          just nightly-install-src
+      - name: Install wasm-bindgen
+        shell: bash
+        run: |
+          # Install wasm-bindgen with test runner
+          cargo install wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
       - uses: Swatinem/rust-cache@v1
       - name: Build lib
         shell: bash
-        run: just web-lib build-webgl
+        run: just web-lib build --release ${{ inputs.webgl && '--webgl' || '' }} ${{ inputs.multithreaded && '--multithreaded' || '' }}
       - name: Build demo
         shell: bash
         run: just web-demo build
       - name: Check
         shell: bash
-        run: just web-check "web-webgl"
+        run: just nightly-check web wasm32-unknown-unknown ${{ inputs.webgl && 'web-webgl' || '""' }}
       - name: Test
         shell: bash
-        run: |
-          # Install test runner
-          cargo install wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
-          just web-test "web-webgl"
+        run: just web-test "web-webgl"
       - uses: actions/upload-artifact@v2
         with:
-          name: webgl-demo
-          path: web/demo/dist/
-
-  library-webgpu:
-    name: Build WebGPU
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
-      - name: Install nightly toolchain
-        shell: bash
-        run: just nightly-toolchain
-      - uses: Swatinem/rust-cache@v1
-      - name: Build lib
-        shell: bash
-        run: just web-lib build
-      - name: Build demo
-        shell: bash
-        run: just web-demo build
-      - name: Check
-        shell: bash
-        run: just web-check ""
-      - name: Test
-        shell: bash
-        run: |
-          # Install test runner
-          cargo install wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
-          just web-test ""
-      - uses: actions/upload-artifact@v2
-        with:
-          name: webgpu-demo
+          name: ${{ inputs.name }}
           path: web/demo/dist/
 
   deploy:
-    needs: [library-webgl, library-webgpu]
+    needs: [build]
     if: inputs.deploy
     name: Deploy
     runs-on: ubuntu-20.04
@@ -82,13 +70,10 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: webgl-demo
-          path: demo/webgl
-      - uses: actions/download-artifact@v2
-        with:
-          name: webgpu-demo
-          path: demo/webgpu
+          name: ${{ inputs.name }}
+          path: demo
       - name: Set HTTP Headers for Cloudflare
+        if: inputs.multithreaded
         shell: bash
         run: |
           echo "/*
@@ -97,7 +82,7 @@ jobs:
       - name: Deploy
         uses: ./.github/actions/cloudflare-deploy
         with:
-          project: maplibre-rs-demos
+          project: ${{ inputs.name }}
           source: demo
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}

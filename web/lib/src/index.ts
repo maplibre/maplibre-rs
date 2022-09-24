@@ -1,148 +1,69 @@
-import init, {create_pool_scheduler, run} from "./wasm-pack"
+import * as maplibre from "./wasm/maplibre"
 import {Spector} from "spectorjs"
-import {WebWorkerMessageType} from "./types"
-import {
-    bigInt,
-    bulkMemory,
-    exceptions,
-    multiValue,
-    mutableGlobals,
-    referenceTypes,
-    saturatedFloatToInt,
-    signExtensions,
-    simd,
-    tailCall,
-    threads
-} from "wasm-feature-detect"
-
-// @ts-ignore
-import PoolWorker from './pool.worker.js';
-
-const isWebGLSupported = () => {
-    try {
-        const canvas = document.createElement('canvas')
-        canvas.getContext("webgl")
-        return true
-    } catch (x) {
-        return false
-    }
-}
-
-const checkWasmFeatures = async () => {
-    const checkFeature = async function (featureName: string, feature: () => Promise<boolean>) {
-        let result = await feature();
-        let msg = `The feature ${featureName} returned: ${result}`;
-        if (result) {
-            console.log(msg);
-        } else {
-            console.warn(msg);
-        }
-    }
-
-    await checkFeature("bulkMemory", bulkMemory);
-    await checkFeature("exceptions", exceptions);
-    await checkFeature("multiValue", multiValue);
-    await checkFeature("mutableGlobals", mutableGlobals);
-    await checkFeature("referenceTypes", referenceTypes);
-    await checkFeature("saturatedFloatToInt", saturatedFloatToInt);
-    await checkFeature("signExtensions", signExtensions);
-    await checkFeature("simd", simd);
-    await checkFeature("tailCall", tailCall);
-    await checkFeature("threads", threads);
-    await checkFeature("bigInt", bigInt);
-}
-
-const alertUser = (message: string) => {
-    console.error(message)
-    alert(message)
-}
-
-const checkRequirements = () => {
-    if (!isSecureContext) {
-        alertUser("isSecureContext is false!")
-        return false
-    }
-
-    if (!crossOriginIsolated) {
-        alertUser("crossOriginIsolated is false! " +
-            "The Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy HTTP headers are required.")
-        return false
-    }
-
-    if (WEBGL) {
-        if (!isWebGLSupported()) {
-            alertUser("WebGL is not supported in this Browser!")
-            return false
-        }
-
-        let spector = new Spector()
-        spector.displayUI()
-    } else {
-        if (!("gpu" in navigator)) {
-            let message = "WebGPU is not supported in this Browser!"
-            alertUser(message)
-            return false
-        }
-    }
-
-    return true
-}
-
-const preventDefaultTouchActions = () => {
-    document.body.querySelectorAll("canvas").forEach(canvas => {
-        canvas.addEventListener("touchstart", e => e.preventDefault())
-        canvas.addEventListener("touchmove", e => e.preventDefault())
-    })
-}
-/*
-let WORKER_COUNT = 4
-const createWorker = (id: number, memory: WebAssembly.Memory) => {
-    const worker = new Worker(new URL('./legacy.worker.ts', import.meta.url), {
-        type: "module",
-    })
-    worker.postMessage({type: "init", memory} as WebWorkerMessageType)
-
-    return worker
-}
-
-const setupLegacyWebWorker = (schedulerPtr: number, memory: WebAssembly.Memory) => {
-    let workers: [number, Worker][] = Array.from(
-        new Array(WORKER_COUNT).keys(),
-        (id) => [new_thread_local_state(schedulerPtr), createWorker(id, memory)]
-    )
-
-    window.schedule_tile_request = (url: string, request_id: number) => {
-        const [state, worker] = workers[Math.floor(Math.random() * workers.length)]
-        worker.postMessage({
-            type: "fetch_tile",
-            threadLocalState: state,
-            url,
-            request_id
-        } as WebWorkerMessageType)
-    }
-}*/
+import {checkRequirements, checkWasmFeatures} from "./browser";
+import {preventDefaultTouchActions} from "./canvas";
+// @ts-ignore esbuild plugin is handling this
+import MultithreadedPoolWorker from './multithreaded/multithreaded-pool.worker.js';
+// @ts-ignore esbuild plugin is handling this
+import PoolWorker from './singlethreaded/pool.worker.js';
 
 export const startMapLibre = async (wasmPath: string | undefined, workerPath: string | undefined) => {
     await checkWasmFeatures()
 
-    if (!checkRequirements()) {
+    let message = checkRequirements();
+    if (message) {
+        console.error(message)
+        alert(message)
         return
+    }
+
+    if (WEBGL) {
+        let spector = new Spector()
+        spector.displayUI()
     }
 
     preventDefaultTouchActions();
 
-    let MEMORY_PAGES = 16 * 1024
+    if (MULTITHREADED) {
+        const MEMORY = 209715200; // 200MB
+        const PAGES = 64 * 1024;
 
-    const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY_PAGES, shared: true})
-    await init(wasmPath, memory)
+        const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY / PAGES, shared: true})
+        await maplibre.default(wasmPath, memory)
 
-    const schedulerPtr = create_pool_scheduler(() => {
-        return workerPath ? new PoolWorker(workerPath, {
-            type: 'module'
-        }) : PoolWorker();
-    })
+        maplibre.run(await maplibre.create_map(() => {
+            return workerPath ? new Worker(workerPath, {
+                type: 'module'
+            }) : MultithreadedPoolWorker();
+        }))
+    } else {
+        const memory = new WebAssembly.Memory({initial: 1024, shared: false})
+        await maplibre.default(wasmPath, memory);
 
-    // setupLegacyWebWorker(schedulerPtr, memory)
+        let callbacks: {worker_callback?: (message: MessageEvent) => void} = {}
 
-    await run(schedulerPtr)
+        let map = await maplibre.create_map(() => {
+            let worker: Worker = workerPath ? new Worker(workerPath, {
+                type: 'module'
+            }) : PoolWorker();
+
+            worker.onmessage = (message: MessageEvent) => {
+                callbacks.worker_callback(message)
+            }
+
+            return worker;
+        })
+
+        let clonedMap = maplibre.clone_map(map)
+
+        callbacks.worker_callback = (message) => {
+            let tag = message.data[0];
+            let data = new Uint8Array(message.data[1]);
+
+            // @ts-ignore TODO unsync_main_entry may not be defined
+            maplibre.singlethreaded_main_entry(clonedMap, tag, data)
+        }
+
+        maplibre.run(map)
+    }
 }

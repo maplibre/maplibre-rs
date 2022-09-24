@@ -1,34 +1,35 @@
 use std::future::Future;
 
-use maplibre::{error::Error, io::scheduler::ScheduleMethod};
+use log::warn;
+use maplibre::{error::Error, io::scheduler::Scheduler};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Worker;
 
 use super::pool::WorkerPool;
 
-pub struct WebWorkerPoolScheduleMethod {
+pub struct WebWorkerPoolScheduler {
     pool: WorkerPool,
 }
 
-impl WebWorkerPoolScheduleMethod {
+impl WebWorkerPoolScheduler {
     pub fn new(new_worker: js_sys::Function) -> Self {
         Self {
             pool: WorkerPool::new(
-                4,
+                1,
                 Box::new(move || {
                     new_worker
                         .call0(&JsValue::undefined())
-                        .unwrap()
+                        .unwrap() // FIXME (wasm-executor): Remove unwrap
                         .dyn_into::<Worker>()
-                        .unwrap()
+                        .unwrap() // FIXME (wasm-executor): remove unwrap
                 }),
             )
-            .unwrap(),
+            .unwrap(), // FIXME (wasm-executor): Remove unwrap
         }
     }
 }
 
-impl ScheduleMethod for WebWorkerPoolScheduleMethod {
+impl Scheduler for WebWorkerPoolScheduler {
     fn schedule<T>(
         &self,
         future_factory: impl (FnOnce() -> T) + Send + 'static,
@@ -43,7 +44,7 @@ impl ScheduleMethod for WebWorkerPoolScheduleMethod {
                     Ok(JsValue::undefined())
                 })
             })
-            .unwrap();
+            .unwrap(); // FIXME (wasm-executor): remove unwrap
         Ok(())
     }
 }

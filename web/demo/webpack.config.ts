@@ -1,17 +1,17 @@
-const path = require("path");
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-//const CopyPlugin = require("copy-webpack-plugin");
-const webpack = require("webpack");
+import * as path from 'path';
+import * as webpack from 'webpack';
+import * as HtmlWebpackPlugin from 'html-webpack-plugin';
 
 let dist = path.join(__dirname, 'dist/');
-module.exports = (env) => ({
+const config: (env: any) => webpack.Configuration = (env) => ({
     mode: "development",
     entry: {
         main: "./index.ts",
     },
     experiments: {
-        asyncWebAssembly: env.cjs ? false : true
+        asyncWebAssembly: !env.cjs
     },
+    stats: 'minimal',
     performance: {
         maxEntrypointSize: 400000,
         maxAssetSize: 400000000,
@@ -66,3 +66,5 @@ module.exports = (env) => ({
         }),
     ]
 });
+
+export default config;

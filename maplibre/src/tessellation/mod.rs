@@ -56,6 +56,21 @@ impl<V, I> OverAlignedVertexBuffer<V, I> {
             usable_indices: 0,
         }
     }
+
+    pub fn from_slices(vertices: &[V], indices: &[I], usable_indices: u32) -> Self
+    where
+        V: Copy,
+        I: Copy,
+    {
+        // FIXME (wasm-executor), make this fn not needed
+        let mut buffers = VertexBuffers::with_capacity(0, 0);
+        buffers.vertices = Vec::from(vertices);
+        buffers.indices = Vec::from(indices);
+        Self {
+            buffer: buffers,
+            usable_indices,
+        }
+    }
 }
 
 impl<V: Pod, I: Pod> From<VertexBuffers<V, I>> for OverAlignedVertexBuffer<V, I> {

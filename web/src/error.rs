@@ -9,7 +9,7 @@ pub struct WebError(pub String);
 impl From<JsValue> for WebError {
     fn from(maybe_error: JsValue) -> Self {
         assert!(maybe_error.is_instance_of::<JSError>());
-        let error: JSError = maybe_error.dyn_into().unwrap();
-        WebError(error.message().as_string().unwrap())
+        let error: JSError = maybe_error.dyn_into().unwrap(); // TODO: Remove unwrap
+        WebError(error.message().as_string().unwrap()) // TODO: remove unwrap
     }
 }

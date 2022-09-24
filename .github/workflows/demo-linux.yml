@@ -12,14 +12,16 @@ jobs:
       - uses: extractions/setup-just@v1
       - name: Install toolchain
         shell: bash
-        run: just default-toolchain
+        run: |
+          just stable-toolchain
+          just stable-targets x86_64-unknown-linux-gnu
       - uses: Swatinem/rust-cache@v1
       - name: Install Dependencies
         shell: bash
         run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
       - name: Build
         shell: bash
-        run: cargo build -p maplibre-demo
+        run: cargo build -p maplibre-demo --release --target x86_64-unknown-linux-gnu
       - name: Check
         shell: bash
         run: just check maplibre-demo x86_64-unknown-linux-gnu
@@ -29,4 +31,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: maplibre-rs
-          path: target/x86_64-unknown-linux-gnu/debug/maplibre-demo
+          path: target/x86_64-unknown-linux-gnu/release/maplibre-demo
