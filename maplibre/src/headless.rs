@@ -210,6 +210,9 @@ impl<E: Environment> HeadlessMapSchedule<E> {
         while let Some(layer) = processor.layers.pop() {
             self.map_context
                 .tile_repository
+                .create_tile(&layer.get_coords());
+            self.map_context
+                .tile_repository
                 .put_tessellated_layer(layer);
         }
 
