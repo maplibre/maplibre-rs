@@ -50,7 +50,7 @@ impl WindowHead {
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        self.surface = unsafe { instance.create_surface(window.inner()) };
+        self.surface = unsafe { instance.create_surface(window.raw()) };
     }
     pub fn surface(&self) -> &wgpu::Surface {
         &self.surface
@@ -140,7 +140,7 @@ impl Surface {
             present_mode: wgpu::PresentMode::Fifo, // VSync
         };
 
-        let surface = unsafe { instance.create_surface(window.inner()) };
+        let surface = unsafe { instance.create_surface(window.raw()) };
 
         Self {
             size,

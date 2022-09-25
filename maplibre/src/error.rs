@@ -15,6 +15,15 @@ pub enum Error {
     Render(RenderError),
 }
 
+impl<E> From<E> for Error
+where
+    E: Into<RenderError>,
+{
+    fn from(e: E) -> Self {
+        Error::Render(e.into())
+    }
+}
+
 impl From<TessellationError> for Error {
     fn from(e: TessellationError) -> Self {
         Error::Tesselation(e)

@@ -16,14 +16,15 @@
 //! maplibre = "0.0.2"
 //! ```
 
+// Internal modules
+pub(crate) mod tessellation;
+
 pub mod context;
 pub mod coords;
 pub mod error;
 #[cfg(feature = "headless")]
 pub mod headless;
 pub mod io;
-// Exposed because of input handlers in maplibre-winit
-pub mod map_schedule;
 pub mod platform;
 // TODO: Exposed because of camera
 pub mod render;
@@ -41,9 +42,8 @@ pub mod environment;
 // Used for benchmarking
 pub mod benchmarking;
 
-// Internal modules
-pub(crate) mod tessellation;
-mod world;
+pub mod map;
+pub mod world;
 
 // Export tile format
 pub use geozero::mvt::tile;

@@ -1,47 +1,50 @@
-/// The [`Map`] defines the public interface of the map renderer.
-// DO NOT IMPLEMENT INTERNALS ON THIS STRUCT.
+use crate::context::MapContext;
+use crate::coords::{LatLon, WorldCoords, Zoom, TILE_SIZE};
+use crate::environment::{Environment, Kernel};
+use crate::error::Error;
+use crate::headless::environment::HeadlessEnvironment;
+use crate::render::{create_default_render_graph, register_default_render_stages, Renderer};
+use crate::schedule::{Schedule, Stage};
+use crate::style::Style;
+use crate::world::World;
+
 pub struct Map<E: Environment> {
-    // FIXME (wasm-executor): Avoid RefCell, change ownership model!
-    map_schedule: Rc<RefCell<InteractiveMapSchedule<E>>>,
-    window: RefCell<Option<<E::MapWindowConfig as MapWindowConfig>::MapWindow>>,
+    kernel: Kernel<E>,
+    schedule: Schedule,
+    map_context: MapContext,
 }
 
-impl<E: Environment> Map<E>
-where
-    <E::MapWindowConfig as MapWindowConfig>::MapWindow: EventLoop<E>,
-{
-    /// Starts the [`crate::map_schedule::MapState`] Runnable with the configured event loop.
-    pub fn run(&self) {
-        self.run_with_optionally_max_frames(None);
+impl<E: Environment> Map<E> {
+    pub fn new(style: Style, kernel: Kernel<E>, renderer: Renderer) -> Result<Self, Error> {
+        let window_size = renderer.state().surface().size();
+
+        let center = style.center.unwrap_or_default();
+        let world = World::new_at(
+            window_size,
+            LatLon::new(center[0], center[1]),
+            style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default(),
+            cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
+        );
+
+        let mut schedule = Schedule::default();
+
+        let graph = create_default_render_graph().unwrap(); // TODO: Remove unwrap
+        register_default_render_stages(graph, &mut schedule);
+
+        Ok(Self {
+            kernel,
+            map_context: MapContext {
+                style,
+                world,
+                renderer,
+            },
+            schedule,
+        })
     }
 
-    /// Starts the [`crate::map_schedule::MapState`] Runnable with the configured event loop.
-    ///
-    /// # Arguments
-    ///
-    /// * `max_frames` - Maximum number of frames per second.
-    pub fn run_with_max_frames(&self, max_frames: u64) {
-        self.run_with_optionally_max_frames(Some(max_frames));
+    #[tracing::instrument(name = "update_and_redraw", skip_all)]
+    pub fn run_schedule(&mut self) -> Result<(), Error> {
+        self.schedule.run(&mut self.map_context);
+        Ok(())
     }
-
-    /// Starts the MapState Runnable with the configured event loop.
-    ///
-    /// # Arguments
-    ///
-    /// * `max_frames` - Optional maximum number of frames per second.
-    pub fn run_with_optionally_max_frames(&self, max_frames: Option<u64>) {
-        self.window
-            .borrow_mut()
-            .take()
-            .unwrap() // FIXME (wasm-executor): Remove unwrap
-            .run(self.map_schedule.clone(), max_frames);
-    }
-
-    pub fn map_schedule(&self) -> Rc<RefCell<InteractiveMapSchedule<E>>> {
-        self.map_schedule.clone()
-    }
-
-    /*    pub fn map_schedule_mut(&mut self) -> &mut InteractiveMapSchedule<E> {
-        &mut self.map_schedule
-    }*/
 }

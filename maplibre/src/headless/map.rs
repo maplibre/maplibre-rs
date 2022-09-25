@@ -1,4 +1,5 @@
 use crate::io::pipeline::Processable;
+use crate::render::builder::UninitializedRenderer;
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
@@ -28,19 +29,19 @@ use crate::{
 use std::collections::HashSet;
 
 pub struct HeadlessMap {
-    window_size: WindowSize,
     kernel: Kernel<HeadlessEnvironment>,
-    map_context: MapContext,
     schedule: Schedule,
+    map_context: MapContext,
 }
 
 impl HeadlessMap {
     pub fn new(
         style: Style,
-        window_size: WindowSize,
         renderer: Renderer,
         kernel: Kernel<HeadlessEnvironment>,
     ) -> Result<Self, Error> {
+        let window_size = renderer.state().surface().size();
+
         let world = World::new(
             window_size,
             WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
@@ -67,7 +68,6 @@ impl HeadlessMap {
         );
 
         Ok(Self {
-            window_size,
             kernel,
             map_context: MapContext {
                 style,
@@ -94,7 +94,7 @@ impl HeadlessMap {
     pub async fn fetch_tile(
         &self,
         coords: WorldTileCoords,
-        source_layers: HashSet<String>,
+        source_layers: &[&str],
     ) -> Result<StoredTile, Error> {
         let source_client = &self.kernel.source_client;
 
@@ -107,7 +107,10 @@ impl HeadlessMap {
             (
                 TileRequest {
                     coords: WorldTileCoords::default(),
-                    layers: source_layers,
+                    layers: source_layers
+                        .iter()
+                        .map(|layer| layer.to_string())
+                        .collect::<HashSet<String>>(),
                 },
                 data,
             ),

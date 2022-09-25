@@ -99,6 +99,11 @@ impl ViewState {
         }
     }
 
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.perspective.resize(width, height);
+        self.camera.resize(width, height);
+    }
+
     pub fn create_view_region(&self) -> Option<ViewRegion> {
         self.camera
             .view_region_bounding_box(&self.view_projection().invert())

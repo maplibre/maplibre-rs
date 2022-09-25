@@ -1,7 +1,13 @@
 use crate::window::{MapWindow, MapWindowConfig, WindowSize};
 
 pub struct HeadlessMapWindowConfig {
-    pub size: WindowSize,
+    size: WindowSize,
+}
+
+impl HeadlessMapWindowConfig {
+    pub fn new(size: WindowSize) -> Self {
+        Self { size }
+    }
 }
 
 impl MapWindowConfig for HeadlessMapWindowConfig {

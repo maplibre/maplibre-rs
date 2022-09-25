@@ -1,6 +1,6 @@
-mod environment;
 mod graph_node;
 mod stage;
-mod window;
 
+pub mod environment;
 pub mod map;
+pub mod window;

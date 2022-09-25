@@ -6,3 +6,10 @@ pub struct MapContext {
     pub world: World,
     pub renderer: Renderer,
 }
+
+impl MapContext {
+    pub fn resize(&mut self, width: u32, height: u32) {
+        self.world.view_state.resize(width, height);
+        self.renderer.resize(width, height)
+    }
+}
