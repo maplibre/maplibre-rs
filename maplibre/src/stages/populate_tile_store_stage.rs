@@ -2,6 +2,7 @@
 
 use std::{borrow::BorrowMut, cell::RefCell, ops::Deref, rc::Rc};
 
+use crate::environment::Environment;
 use crate::{
     context::MapContext,
     io::{
@@ -10,7 +11,6 @@ use crate::{
         transferables::{TessellatedLayer, TileTessellated, UnavailableLayer},
     },
     schedule::Stage,
-    Environment,
 };
 
 pub struct PopulateTileStore<E: Environment> {

@@ -1,5 +1,9 @@
 use std::{cell::RefCell, marker::PhantomData, mem, rc::Rc};
 
+use crate::environment::Environment;
+use crate::render::settings::{RendererSettings, WgpuSettings};
+use crate::render::Renderer;
+use crate::window::{HeadedMapWindow, MapWindowConfig, WindowSize};
 use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, WorldCoords, Zoom, TILE_SIZE},
@@ -13,8 +17,6 @@ use crate::{
     schedule::{Schedule, Stage},
     stages::register_stages,
     style::Style,
-    Environment, HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, WgpuSettings,
-    WindowSize,
 };
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.

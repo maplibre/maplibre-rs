@@ -3,7 +3,8 @@ use reqwest::{Client, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use reqwest_middleware_cache::{managers::CACacheManager, Cache, CacheMode};
 
-use crate::{error::Error, HttpClient};
+use crate::error::Error;
+use crate::io::source_client::HttpClient;
 
 #[derive(Clone)]
 pub struct ReqwestHttpClient {

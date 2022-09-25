@@ -12,6 +12,8 @@ use std::{
     str::FromStr,
 };
 
+use crate::environment::Environment;
+use crate::style::Style;
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords, ZoomLevel},
@@ -27,7 +29,6 @@ use crate::{
     },
     schedule::Stage,
     stages::HeadedPipelineProcessor,
-    Environment, HttpClient, Scheduler, Style,
 };
 
 pub struct RequestStage<E: Environment> {

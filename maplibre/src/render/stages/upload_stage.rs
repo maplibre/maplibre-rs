@@ -2,6 +2,8 @@
 
 use std::iter;
 
+use crate::render::{RenderState, Renderer};
+use crate::style::Style;
 use crate::{
     context::MapContext,
     coords::ViewRegion,
@@ -12,7 +14,6 @@ use crate::{
         shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
     },
     schedule::Stage,
-    RenderState, Renderer, Style,
 };
 
 #[derive(Default)]

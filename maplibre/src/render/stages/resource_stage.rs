@@ -2,6 +2,7 @@
 
 use std::mem::size_of;
 
+use crate::render::Renderer;
 use crate::{
     context::MapContext,
     render::{
@@ -12,7 +13,6 @@ use crate::{
         tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE},
     },
     schedule::Stage,
-    Renderer,
 };
 
 #[derive(Default)]

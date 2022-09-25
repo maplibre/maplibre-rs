@@ -12,9 +12,9 @@ pub type HTTPClientFactory<HC> = dyn Fn() -> HC;
 /// [https://github.com/dtolnay/async-trait/blob/b70720c4c1cc0d810b7446efda44f81310ee7bf2/README.md#non-threadsafe-futures](https://github.com/dtolnay/async-trait/blob/b70720c4c1cc0d810b7446efda44f81310ee7bf2/README.md#non-threadsafe-futures)
 ///
 /// Users of this library can decide whether futures from the HTTPClient are thread-safe or not via
-/// the future "no-thread-safe-futures". Tokio futures are thread-safe.
-#[cfg_attr(feature = "no-thread-safe-futures", async_trait(?Send))]
-#[cfg_attr(not(feature = "no-thread-safe-futures"), async_trait)]
+/// the future "thread-safe-futures". Tokio futures are thread-safe.
+#[cfg_attr(not(feature = "thread-safe-futures"), async_trait(?Send))]
+#[cfg_attr(feature = "thread-safe-futures", async_trait)]
 pub trait HttpClient: Clone + Sync + Send + 'static {
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error>;
 }

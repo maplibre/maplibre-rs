@@ -10,6 +10,8 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+use crate::io::scheduler::Scheduler;
+use crate::io::source_client::HttpClient;
 use crate::{
     coords::WorldTileCoords,
     io::{
@@ -17,7 +19,6 @@ use crate::{
         transferables::{DefaultTransferables, Transferables},
         TileRequest,
     },
-    Environment, HttpClient, Scheduler,
 };
 
 /// The result of the tessellation of a tile.
@@ -41,9 +42,9 @@ pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
     fn source_client(&self) -> &SourceClient<HC>;
 }
 
-#[cfg(not(feature = "no-thread-safe-futures"))]
+#[cfg(feature = "thread-safe-futures")]
 pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + Send + 'static)>>;
-#[cfg(feature = "no-thread-safe-futures")]
+#[cfg(not(feature = "thread-safe-futures"))]
 pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + 'static)>>;
 
 pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFuture;

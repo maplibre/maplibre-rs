@@ -10,6 +10,8 @@ use std::{
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
+use crate::environment::Environment;
+use crate::io::source_client::HttpClient;
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
     error::Error,
@@ -30,7 +32,6 @@ use crate::{
     schedule::Schedule,
     stages::populate_tile_store_stage::PopulateTileStore,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    Environment, HttpClient, Scheduler,
 };
 
 mod populate_tile_store_stage;

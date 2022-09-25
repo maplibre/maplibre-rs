@@ -32,7 +32,6 @@ use crate::{
         tile_view_pattern::{TileInView, TileShape, TileViewPattern},
     },
     tessellation::IndexDataType,
-    HeadedMapWindow, MapWindow,
 };
 
 pub mod graph;
@@ -49,6 +48,7 @@ mod tile_pipeline;
 mod tile_view_pattern;
 
 // Public API
+pub mod builder;
 pub mod camera;
 pub mod eventually;
 pub mod settings;
@@ -60,8 +60,9 @@ use crate::render::{
     graph::{EmptyNode, RenderGraph, RenderGraphError},
     main_pass::{MainPassDriverNode, MainPassNode},
 };
+use crate::window::{HeadedMapWindow, MapWindow};
 
-pub const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
+const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
 pub struct RenderState {
     render_target: Eventually<TextureView>,
@@ -408,6 +409,9 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
+    use crate::render::settings::RendererSettings;
+    use crate::render::RenderState;
+    use crate::window::{MapWindow, MapWindowConfig, WindowSize};
     use crate::{MapWindow, MapWindowConfig, WindowSize};
 
     pub struct HeadlessMapWindowConfig {

@@ -1,8 +1,9 @@
 //! Extracts data from the current state.
 
+use crate::render::{RenderState, Renderer};
 use crate::{
     context::MapContext, coords::ViewRegion, render::eventually::Eventually::Initialized,
-    schedule::Stage, RenderState, Renderer,
+    schedule::Stage,
 };
 
 #[derive(Default)]

@@ -2,9 +2,9 @@
 
 use std::{cell::RefCell, rc::Rc};
 
+use crate::environment::Environment;
+use crate::map_schedule::InteractiveMapSchedule;
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
-
-use crate::{Environment, HttpClient, InteractiveMapSchedule};
 
 /// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.
 pub trait MapWindow {

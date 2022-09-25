@@ -12,6 +12,12 @@ use std::{
 use tokio::{runtime::Handle, task};
 use wgpu::{BufferAsyncError, BufferSlice};
 
+use crate::environment::Environment;
+use crate::io::scheduler::Scheduler;
+use crate::io::source_client::HttpClient;
+use crate::render::Renderer;
+use crate::style::Style;
+use crate::window::{MapWindow, MapWindowConfig, WindowSize};
 use crate::{
     context::{MapContext, ViewState},
     coords::{LatLon, ViewRegion, WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
@@ -37,7 +43,6 @@ use crate::{
         RenderState,
     },
     schedule::{Schedule, Stage},
-    Environment, HttpClient, MapWindow, MapWindowConfig, Renderer, Scheduler, Style, WindowSize,
 };
 
 pub struct HeadlessMapWindowConfig {
