@@ -46,10 +46,8 @@ impl HeadlessMap {
             window_size,
             WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
             Zoom::default(),
-            cgmath::Deg(110.0),
+            cgmath::Deg(0.0),
         );
-
-        let mut schedule = Schedule::default();
 
         let mut graph = create_default_render_graph()?;
         let draw_graph = graph
@@ -60,8 +58,8 @@ impl HeadlessMap {
             .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)
             .unwrap(); // TODO: remove unwrap
 
+        let mut schedule = Schedule::default();
         register_default_render_stages(graph, &mut schedule);
-
         schedule.add_stage(
             RenderStageLabel::Cleanup,
             WriteSurfaceBufferStage::default(),
@@ -78,12 +76,16 @@ impl HeadlessMap {
         })
     }
 
-    pub async fn render_tile(&mut self, tile: StoredTile) -> Result<(), Error> {
+    pub fn render_tile(&mut self, tile: StoredTile) -> Result<(), Error> {
         let context = &mut self.map_context;
 
         if let Eventually::Initialized(pool) = context.renderer.state.buffer_pool_mut() {
             pool.clear();
+        } else {
+            // TODO return error
         }
+
+        context.world.tile_repository.clear();
 
         context.world.tile_repository.put_tile(tile);
 
@@ -103,10 +105,11 @@ impl HeadlessMap {
         let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
         let pipeline = build_vector_tile_pipeline();
 
+        let target_coords = WorldTileCoords::default(); // load to 0,0,0
         pipeline.process(
             (
                 TileRequest {
-                    coords: WorldTileCoords::default(),
+                    coords: target_coords,
                     layers: source_layers
                         .iter()
                         .map(|layer| layer.to_string())
@@ -121,7 +124,7 @@ impl HeadlessMap {
             .take_processor::<HeadlessPipelineProcessor>()
             .expect("Unable to get processor");
 
-        Ok(StoredTile::success(coords, processor.layers))
+        Ok(StoredTile::success(target_coords, processor.layers))
     }
 }
 

@@ -35,7 +35,15 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
         .await
         .expect("Failed to initialize renderer");
 
-    let mut map = HeadlessMap::new(Style::default(), renderer, kernel).unwrap();
+    let style = Style::default();
+
+    let requested_layers = style
+        .layers
+        .iter()
+        .map(|layer| layer.source_layer.as_ref().unwrap().clone())
+        .collect::<Vec<_>>();
+
+    let mut map = HeadlessMap::new(style, renderer, kernel).unwrap();
 
     let tile_limits = google_mercator().tile_limits(
         extent_wgs84_to_merc(&Extent {
@@ -51,10 +59,16 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
         let coords = WorldTileCoords::from((x as i32, y as i32, z.into()));
         println!("Rendering {}", &coords);
         let tile = map
-            .fetch_tile(coords, &["water"])
+            .fetch_tile(
+                coords,
+                &requested_layers
+                    .iter()
+                    .map(|layer| layer.as_str())
+                    .collect::<Vec<_>>(),
+            )
             .await
-            .expect("Failed to fetch and process!");
+            .expect("Failed to fetch and process");
 
-        map.render_tile(tile);
+        map.render_tile(tile).expect("Rendering failed");
     }
 }
