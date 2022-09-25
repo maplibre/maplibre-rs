@@ -50,17 +50,20 @@ mod tile_view_pattern;
 // Public API
 pub mod builder;
 pub mod camera;
+pub mod error;
 pub mod eventually;
 pub mod settings;
 
 pub use shaders::ShaderVertex;
 pub use stages::register_default_render_stages;
 
-use crate::render::{
-    graph::{EmptyNode, RenderGraph, RenderGraphError},
-    main_pass::{MainPassDriverNode, MainPassNode},
+use crate::{
+    render::{
+        graph::{EmptyNode, RenderGraph, RenderGraphError},
+        main_pass::{MainPassDriverNode, MainPassNode},
+    },
+    window::{HeadedMapWindow, MapWindow},
 };
-use crate::window::{HeadedMapWindow, MapWindow};
 
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
@@ -409,10 +412,11 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-    use crate::render::settings::RendererSettings;
-    use crate::render::RenderState;
-    use crate::window::{MapWindow, MapWindowConfig, WindowSize};
-    use crate::{MapWindow, MapWindowConfig, WindowSize};
+    use crate::{
+        render::{settings::RendererSettings, RenderState},
+        window::{MapWindow, MapWindowConfig, WindowSize},
+        MapWindow, MapWindowConfig, WindowSize,
+    };
 
     pub struct HeadlessMapWindowConfig {
         size: WindowSize,

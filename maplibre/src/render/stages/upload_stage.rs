@@ -2,8 +2,6 @@
 
 use std::iter;
 
-use crate::render::{RenderState, Renderer};
-use crate::style::Style;
 use crate::{
     context::MapContext,
     coords::ViewRegion,
@@ -12,8 +10,11 @@ use crate::{
         camera::ViewProjection,
         eventually::Eventually::Initialized,
         shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
+        RenderState, Renderer,
     },
     schedule::Stage,
+    style::Style,
+    world::World,
 };
 
 #[derive(Default)]
@@ -24,9 +25,12 @@ impl Stage for UploadStage {
     fn run(
         &mut self,
         MapContext {
-            view_state,
+            world:
+                World {
+                    tile_repository,
+                    view_state,
+                },
             style,
-            tile_repository,
             renderer: Renderer { queue, state, .. },
             ..
         }: &mut MapContext,
@@ -41,8 +45,7 @@ impl Stage for UploadStage {
                 bytemuck::cast_slice(&[ShaderGlobals::new(ShaderCamera::new(
                     view_proj.downcast().into(),
                     view_state
-                        .camera
-                        .position
+                        .camera_position()
                         .to_homogeneous()
                         .cast::<f32>()
                         .unwrap() // TODO: Remove unwrap

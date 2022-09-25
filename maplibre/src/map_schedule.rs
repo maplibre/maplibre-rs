@@ -1,22 +1,25 @@
 use std::{cell::RefCell, marker::PhantomData, mem, rc::Rc};
 
-use crate::environment::Environment;
-use crate::render::settings::{RendererSettings, WgpuSettings};
-use crate::render::Renderer;
-use crate::window::{HeadedMapWindow, MapWindowConfig, WindowSize};
 use crate::{
-    context::{MapContext, ViewState},
+    context::MapContext,
     coords::{LatLon, WorldCoords, Zoom, TILE_SIZE},
+    environment::Environment,
     error::Error,
     io::{
         scheduler::Scheduler,
         source_client::{HttpClient, HttpSourceClient},
         tile_repository::TileRepository,
     },
-    render::{create_default_render_graph, register_default_render_stages},
+    render::{
+        create_default_render_graph, register_default_render_stages,
+        settings::{RendererSettings, WgpuSettings},
+        Renderer,
+    },
     schedule::{Schedule, Stage},
     stages::register_stages,
     style::Style,
+    window::{HeadedMapWindow, MapWindowConfig, WindowSize},
+    world::{ViewState, World},
 };
 
 /// Stores the state of the map, dispatches tile fetching and caching, tessellation and drawing.
@@ -34,26 +37,15 @@ pub struct InteractiveMapSchedule<E: Environment> {
 }
 
 impl<E: Environment> InteractiveMapSchedule<E> {
-    pub fn new(
-        map_window_config: E::MapWindowConfig,
-        window_size: WindowSize,
-        renderer: Option<Renderer>,
-        scheduler: E::Scheduler, // TODO: unused
-        apc: E::AsyncProcedureCall,
-        http_client: E::HttpClient,
-        style: Style,
-        wgpu_settings: WgpuSettings,
-        renderer_settings: RendererSettings,
-    ) -> Self {
-        let zoom = style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default();
-        let position = style
-            .center
-            .map(|center| WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), zoom))
-            .unwrap_or_default();
-        let pitch = style.pitch.unwrap_or_default();
-        let view_state = ViewState::new(&window_size, position, zoom, pitch, cgmath::Deg(110.0));
+    pub fn new(window_size: WindowSize, renderer: Option<Renderer>, style: Style) -> Self {
+        let center = style.center.unwrap_or_default();
+        let world = World::new_at(
+            window_size,
+            LatLon::new(center[0], center[1]),
+            style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default(),
+            cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
+        );
 
-        let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
 
         let apc = Rc::new(RefCell::new(apc));
@@ -70,16 +62,14 @@ impl<E: Environment> InteractiveMapSchedule<E> {
             map_window_config,
             map_context: match renderer {
                 None => EventuallyMapContext::Premature(PrematureMapContext {
-                    view_state,
+                    world,
                     style,
-                    tile_repository,
                     wgpu_settings,
                     renderer_settings,
                 }),
                 Some(renderer) => EventuallyMapContext::Full(MapContext {
-                    view_state,
+                    world,
                     style,
-                    tile_repository,
                     renderer,
                 }),
             },
@@ -169,10 +159,9 @@ where
 }
 
 pub struct PrematureMapContext {
-    view_state: ViewState,
-    style: Style,
+    world: World,
 
-    tile_repository: TileRepository,
+    style: Style,
 
     wgpu_settings: WgpuSettings,
     renderer_settings: RendererSettings,

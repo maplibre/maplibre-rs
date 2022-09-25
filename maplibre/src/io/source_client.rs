@@ -32,25 +32,23 @@ where
 /// Defines the different types of HTTP clients such as basic HTTP and Mbtiles.
 /// More types might be coming such as S3 and other cloud http clients.
 #[derive(Clone)]
-pub enum SourceClient<HC>
+pub struct SourceClient<HC>
 where
     HC: HttpClient,
 {
-    Http(HttpSourceClient<HC>),
-    Mbtiles {
-        // TODO
-    },
+    http: HttpSourceClient<HC>, // TODO: mbtiles: Mbtiles
 }
 
 impl<HC> SourceClient<HC>
 where
     HC: HttpClient,
 {
+    pub fn new(http: HttpSourceClient<HC>) -> Self {
+        Self { http }
+    }
+
     pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
-        match self {
-            SourceClient::Http(client) => client.fetch(coords).await,
-            SourceClient::Mbtiles { .. } => unimplemented!(),
-        }
+        self.http.fetch(coords).await
     }
 }
 

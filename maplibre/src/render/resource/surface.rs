@@ -3,10 +3,9 @@
 
 use std::{mem::size_of, sync::Arc};
 
-use crate::window::{MapWindow, WindowSize};
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
-    window::HeadedMapWindow,
+    window::{HeadedMapWindow, MapWindow, WindowSize},
 };
 
 pub struct BufferDimensions {

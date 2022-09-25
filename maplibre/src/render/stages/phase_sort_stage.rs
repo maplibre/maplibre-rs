@@ -1,7 +1,10 @@
 //! Sorts items of the [RenderPhases](RenderPhase).
 
-use crate::render::Renderer;
-use crate::{context::MapContext, render::render_phase::RenderPhase, schedule::Stage};
+use crate::{
+    context::MapContext,
+    render::{render_phase::RenderPhase, Renderer},
+    schedule::Stage,
+};
 
 #[derive(Default)]
 pub struct PhaseSortStage;

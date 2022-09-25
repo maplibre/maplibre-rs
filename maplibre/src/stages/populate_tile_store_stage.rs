@@ -2,15 +2,16 @@
 
 use std::{borrow::BorrowMut, cell::RefCell, ops::Deref, rc::Rc};
 
-use crate::environment::Environment;
 use crate::{
     context::MapContext,
+    environment::Environment,
     io::{
         apc::{AsyncProcedureCall, Message},
         tile_repository::StoredLayer,
         transferables::{TessellatedLayer, TileTessellated, UnavailableLayer},
     },
     schedule::Stage,
+    world::World,
 };
 
 pub struct PopulateTileStore<E: Environment> {
@@ -27,7 +28,10 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
     fn run(
         &mut self,
         MapContext {
-            tile_repository, ..
+            world: World {
+                tile_repository, ..
+            },
+            ..
         }: &mut MapContext,
     ) {
         if let Ok(mut apc) = self.apc.deref().try_borrow_mut() {

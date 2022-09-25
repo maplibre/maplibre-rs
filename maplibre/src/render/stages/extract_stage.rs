@@ -1,9 +1,11 @@
 //! Extracts data from the current state.
 
-use crate::render::{RenderState, Renderer};
 use crate::{
-    context::MapContext, coords::ViewRegion, render::eventually::Eventually::Initialized,
+    context::MapContext,
+    coords::ViewRegion,
+    render::{eventually::Eventually::Initialized, RenderState, Renderer},
     schedule::Stage,
+    world::World,
 };
 
 #[derive(Default)]
@@ -13,7 +15,7 @@ impl Stage for ExtractStage {
     fn run(
         &mut self,
         MapContext {
-            view_state,
+            world: World { view_state, .. },
             renderer:
                 Renderer {
                     state:

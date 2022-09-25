@@ -43,6 +43,7 @@ pub mod benchmarking;
 
 // Internal modules
 pub(crate) mod tessellation;
+mod world;
 
 // Export tile format
 pub use geozero::mvt::tile;

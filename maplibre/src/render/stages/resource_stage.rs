@@ -2,7 +2,6 @@
 
 use std::mem::size_of;
 
-use crate::render::Renderer;
 use crate::{
     context::MapContext,
     render::{
@@ -11,6 +10,7 @@ use crate::{
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
         tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE},
+        Renderer,
     },
     schedule::Stage,
 };

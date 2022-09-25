@@ -12,11 +12,10 @@ use std::{
     str::FromStr,
 };
 
-use crate::environment::Environment;
-use crate::style::Style;
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords, ZoomLevel},
+    environment::Environment,
     error::Error,
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message},
@@ -29,6 +28,8 @@ use crate::{
     },
     schedule::Stage,
     stages::HeadedPipelineProcessor,
+    style::Style,
+    world::World,
 };
 
 pub struct RequestStage<E: Environment> {
@@ -52,23 +53,25 @@ impl<E: Environment> Stage for RequestStage<E> {
     fn run(
         &mut self,
         MapContext {
-            view_state,
+            world:
+                World {
+                    tile_repository,
+                    view_state,
+                },
             style,
-            tile_repository,
             ..
         }: &mut MapContext,
     ) {
         let view_region = view_state.create_view_region();
 
-        if view_state.camera.did_change(0.05) || view_state.zoom.did_change(0.05) {
+        if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
                 // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
                 self.request_tiles_in_view(tile_repository, style, view_region);
             }
         }
 
-        view_state.camera.update_reference();
-        view_state.zoom.update_reference();
+        view_state.update_references();
     }
 }
 
@@ -133,7 +136,7 @@ impl<E: Environment> RequestStage<E> {
         for coords in view_region.iter() {
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
-                self.request_tile(tile_repository, &coords, &source_layers)
+                self.request_tile(tile_repository, coords, &source_layers)
                     .unwrap(); // TODO: Remove unwrap
             }
         }
@@ -142,7 +145,7 @@ impl<E: Environment> RequestStage<E> {
     fn request_tile(
         &self,
         tile_repository: &mut TileRepository,
-        coords: &WorldTileCoords,
+        coords: WorldTileCoords,
         layers: &HashSet<String>,
     ) -> Result<(), Error> {
         /*        if !tile_repository.is_layers_missing(coords, layers) {
@@ -155,7 +158,7 @@ impl<E: Environment> RequestStage<E> {
             tracing::info!("new tile request: {}", &coords);
             self.apc.deref().borrow().schedule(
                 Input::TileRequest(TileRequest {
-                    coords: *coords,
+                    coords,
                     layers: layers.clone(),
                 }),
                 schedule::<

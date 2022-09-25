@@ -1,10 +1,10 @@
 //! Queues [PhaseItems](crate::render::render_phase::PhaseItem) for rendering.
 
-use crate::render::{RenderState, Renderer};
 use crate::{
     context::MapContext,
     render::{
         eventually::Eventually::Initialized, resource::IndexEntry, tile_view_pattern::TileInView,
+        RenderState, Renderer,
     },
     schedule::Stage,
 };
@@ -17,7 +17,6 @@ impl Stage for QueueStage {
     fn run(
         &mut self,
         MapContext {
-            view_state: _,
             renderer:
                 Renderer {
                     state:

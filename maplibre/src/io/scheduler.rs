@@ -31,6 +31,6 @@ impl Scheduler for NopScheduler {
     where
         T: Future<Output = ()> + 'static,
     {
-        Err(Error::Schedule)
+        Err(Error::Scheduler)
     }
 }

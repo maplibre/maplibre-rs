@@ -1,5 +1,4 @@
-use crate::render::resource::TrackedRenderPass;
-use crate::render::RenderState;
+use crate::render::{resource::TrackedRenderPass, RenderState};
 
 /// A draw function which is used to draw a specific [`PhaseItem`].
 ///

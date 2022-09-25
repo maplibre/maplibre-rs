@@ -1,7 +1,6 @@
 use std::future::Future;
 
-use crate::error::Error;
-use crate::io::scheduler::Scheduler;
+use crate::{error::Error, io::scheduler::Scheduler};
 
 /// Multi-threading with Tokio.
 pub struct TokioScheduler;

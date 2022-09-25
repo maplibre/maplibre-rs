@@ -50,15 +50,25 @@ pub enum TileStatus {
 
 /// Stores multiple [StoredLayers](StoredLayer).
 pub struct StoredTile {
+    coords: WorldTileCoords,
     layers: Vec<StoredLayer>,
     status: TileStatus,
 }
 
 impl StoredTile {
-    pub fn new() -> Self {
+    pub fn new(coords: WorldTileCoords) -> Self {
         Self {
+            coords,
             layers: vec![],
             status: TileStatus::Pending,
+        }
+    }
+
+    pub fn success(coords: WorldTileCoords, layers: Vec<StoredLayer>) -> Self {
+        Self {
+            coords,
+            layers,
+            status: TileStatus::Success,
         }
     }
 }
@@ -102,6 +112,12 @@ impl TileRepository {
         }
     }
 
+    pub fn put_tile(&mut self, tile: StoredTile) {
+        if let Some(key) = tile.coords.build_quad_key() {
+            self.tree.insert(key, tile);
+        }
+    }
+
     /// Returns the list of tessellated layers at the given world tile coords. None if tile is
     /// missing from the cache.
     pub fn iter_tessellated_layers_at(
@@ -115,11 +131,11 @@ impl TileRepository {
     }
 
     /// Create a new tile.
-    pub fn create_tile(&mut self, coords: &WorldTileCoords) -> bool {
+    pub fn create_tile(&mut self, coords: WorldTileCoords) -> bool {
         if let Some(entry) = coords.build_quad_key().map(|key| self.tree.entry(key)) {
             match entry {
                 btree_map::Entry::Vacant(entry) => {
-                    entry.insert(StoredTile::new());
+                    entry.insert(StoredTile::new(coords));
                 }
                 _ => {}
             }

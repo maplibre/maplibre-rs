@@ -1,12 +1,14 @@
-use crate::io::scheduler::Scheduler;
-use crate::io::source_client::HttpClient;
-use crate::io::{
-    apc::AsyncProcedureCall,
-    transferables::{
-        DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer, Transferables,
+use crate::{
+    io::{
+        apc::AsyncProcedureCall,
+        scheduler::Scheduler,
+        source_client::{HttpClient, HttpSourceClient, SourceClient},
+        transferables::{
+            DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer, Transferables,
+        },
     },
+    window::MapWindowConfig,
 };
-use crate::window::MapWindowConfig;
 
 pub trait Environment: 'static {
     type MapWindowConfig: MapWindowConfig;
@@ -19,10 +21,10 @@ pub trait Environment: 'static {
 }
 
 pub struct Kernel<E: Environment> {
-    map_window_config: E::MapWindowConfig,
-    apc: E::AsyncProcedureCall,
-    scheduler: E::Scheduler,
-    http_client: E::HttpClient,
+    pub map_window_config: E::MapWindowConfig,
+    pub apc: E::AsyncProcedureCall,
+    pub scheduler: E::Scheduler,
+    pub source_client: SourceClient<E::HttpClient>,
 }
 
 pub struct KernelBuilder<E: Environment> {
@@ -64,9 +66,9 @@ impl<E: Environment> KernelBuilder<E> {
 
     pub fn build(self) -> Kernel<E> {
         Kernel {
-            scheduler: self.scheduler.unwrap(),     // TODO: Remove unwrap
-            apc: self.apc.unwrap(),                 // TODO: Remove unwrap
-            http_client: self.http_client.unwrap(), // TODO: Remove unwrap
+            scheduler: self.scheduler.unwrap(), // TODO: Remove unwrap
+            apc: self.apc.unwrap(),             // TODO: Remove unwrap
+            source_client: SourceClient::new(HttpSourceClient::new(self.http_client.unwrap())), // TODO: Remove unwrap
             map_window_config: self.map_window_config.unwrap(), // TODO: Remove unwrap
         }
     }

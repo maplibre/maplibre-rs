@@ -1,8 +1,12 @@
-use crate::environment::Environment;
-use crate::render::settings::{RendererSettings, WgpuSettings};
-use crate::render::Renderer;
-use crate::style::Style;
-use crate::window::{HeadedMapWindow, MapWindow, MapWindowConfig};
+use crate::{
+    environment::Environment,
+    render::{
+        settings::{RendererSettings, WgpuSettings},
+        Renderer,
+    },
+    style::Style,
+    window::{HeadedMapWindow, MapWindow, MapWindowConfig},
+};
 
 pub struct RenderBuilder {
     wgpu_settings: Option<WgpuSettings>,

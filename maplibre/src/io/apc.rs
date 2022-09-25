@@ -10,12 +10,11 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::io::scheduler::Scheduler;
-use crate::io::source_client::HttpClient;
 use crate::{
     coords::WorldTileCoords,
     io::{
-        source_client::{HttpSourceClient, SourceClient},
+        scheduler::Scheduler,
+        source_client::{HttpClient, HttpSourceClient, SourceClient},
         transferables::{DefaultTransferables, Transferables},
         TileRequest,
     },
@@ -112,7 +111,7 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<DefaultTransferables, HC>
                     input,
                     SchedulerContext {
                         sender,
-                        source_client: SourceClient::Http(HttpSourceClient::new(client)),
+                        source_client: SourceClient::new(HttpSourceClient::new(client)),
                     },
                 )
                 .await;

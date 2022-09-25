@@ -2,11 +2,11 @@
 
 use log::error;
 
-use crate::render::Renderer;
 use crate::{
     context::MapContext,
     render::{
         eventually::Eventually::Initialized, graph::RenderGraph, graph_runner::RenderGraphRunner,
+        Renderer,
     },
     schedule::Stage,
 };

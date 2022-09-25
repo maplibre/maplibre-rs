@@ -10,16 +10,15 @@ use std::{
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
-use crate::environment::Environment;
-use crate::io::source_client::HttpClient;
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
+    environment::Environment,
     error::Error,
     io::{
         apc::{AsyncProcedureCall, Context, Message},
         geometry_index::{GeometryIndex, IndexedGeometry, TileIndex},
         pipeline::{PipelineContext, PipelineProcessor, Processable},
-        source_client::HttpSourceClient,
+        source_client::{HttpClient, HttpSourceClient},
         tile_pipelines::build_vector_tile_pipeline,
         transferables::{
             DefaultTessellatedLayer, DefaultTileTessellated, DefaultTransferables,
