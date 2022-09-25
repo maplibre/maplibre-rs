@@ -2,6 +2,7 @@
 
 use std::{borrow::BorrowMut, cell::RefCell, ops::Deref, rc::Rc};
 
+use crate::kernel::Kernel;
 use crate::{
     context::MapContext,
     environment::Environment,
@@ -15,12 +16,12 @@ use crate::{
 };
 
 pub struct PopulateTileStore<E: Environment> {
-    apc: Rc<RefCell<E::AsyncProcedureCall>>,
+    kernel: Rc<Kernel<E>>,
 }
 
 impl<E: Environment> PopulateTileStore<E> {
-    pub fn new(apc: Rc<RefCell<E::AsyncProcedureCall>>) -> Self {
-        Self { apc }
+    pub fn new(kernel: Rc<Kernel<E>>) -> Self {
+        Self { kernel }
     }
 }
 
@@ -34,39 +35,37 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
             ..
         }: &mut MapContext,
     ) {
-        if let Ok(mut apc) = self.apc.deref().try_borrow_mut() {
-            if let Some(result) = apc.receive() {
-                match result {
-                    Message::TileTessellated(tranferred) => {
-                        let coords = tranferred.coords();
-                        tile_repository.success(coords);
-                        tracing::trace!("Tile at {} finished loading", coords);
-                        log::warn!("Tile at {} finished loading", coords);
-                    }
-                    // FIXME: deduplicate
-                    Message::UnavailableLayer(tranferred) => {
-                        let layer: StoredLayer = tranferred.to_stored_layer();
-                        tracing::debug!(
-                            "Layer {} at {} reached main thread",
-                            layer.layer_name(),
-                            layer.get_coords()
-                        );
-                        tile_repository.put_tessellated_layer(layer);
-                    }
-                    Message::TessellatedLayer(data) => {
-                        let layer: StoredLayer = data.to_stored_layer();
-                        tracing::debug!(
-                            "Layer {} at {} reached main thread",
-                            layer.layer_name(),
-                            layer.get_coords()
-                        );
-                        log::warn!(
-                            "Layer {} at {} reached main thread",
-                            layer.layer_name(),
-                            layer.get_coords()
-                        );
-                        tile_repository.put_tessellated_layer(layer);
-                    }
+        if let Some(result) = self.kernel.apc.receive() {
+            match result {
+                Message::TileTessellated(tranferred) => {
+                    let coords = tranferred.coords();
+                    tile_repository.success(coords);
+                    tracing::trace!("Tile at {} finished loading", coords);
+                    log::warn!("Tile at {} finished loading", coords);
+                }
+                // FIXME: deduplicate
+                Message::UnavailableLayer(tranferred) => {
+                    let layer: StoredLayer = tranferred.to_stored_layer();
+                    tracing::debug!(
+                        "Layer {} at {} reached main thread",
+                        layer.layer_name(),
+                        layer.get_coords()
+                    );
+                    tile_repository.put_tessellated_layer(layer);
+                }
+                Message::TessellatedLayer(data) => {
+                    let layer: StoredLayer = data.to_stored_layer();
+                    tracing::debug!(
+                        "Layer {} at {} reached main thread",
+                        layer.layer_name(),
+                        layer.get_coords()
+                    );
+                    log::warn!(
+                        "Layer {} at {} reached main thread",
+                        layer.layer_name(),
+                        layer.get_coords()
+                    );
+                    tile_repository.put_tessellated_layer(layer);
                 }
             }
         }

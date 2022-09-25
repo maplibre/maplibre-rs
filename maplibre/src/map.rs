@@ -1,15 +1,18 @@
 use crate::context::MapContext;
 use crate::coords::{LatLon, WorldCoords, Zoom, TILE_SIZE};
-use crate::environment::{Environment, Kernel};
+use crate::environment::Environment;
 use crate::error::Error;
 use crate::headless::environment::HeadlessEnvironment;
+use crate::kernel::Kernel;
 use crate::render::{create_default_render_graph, register_default_render_stages, Renderer};
 use crate::schedule::{Schedule, Stage};
+use crate::stages::register_stages;
 use crate::style::Style;
 use crate::world::World;
+use std::rc::Rc;
 
 pub struct Map<E: Environment> {
-    kernel: Kernel<E>,
+    kernel: Rc<Kernel<E>>,
     schedule: Schedule,
     map_context: MapContext,
 }
@@ -30,6 +33,10 @@ impl<E: Environment> Map<E> {
 
         let graph = create_default_render_graph().unwrap(); // TODO: Remove unwrap
         register_default_render_stages(graph, &mut schedule);
+
+        let kernel = Rc::new(kernel);
+
+        register_stages::<E>(&mut schedule, kernel.clone());
 
         Ok(Self {
             kernel,

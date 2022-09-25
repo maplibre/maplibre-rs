@@ -1,6 +1,7 @@
-use std::{cell::RefCell, marker::PhantomData, ops::Deref, rc::Rc};
-
+use crate::input::{InputController, UpdateState};
 use instant::Instant;
+use maplibre::event_loop::{EventLoop, EventLoopProxy};
+use maplibre::map::Map;
 use maplibre::{
     environment::Environment,
     error::Error,
@@ -10,15 +11,17 @@ use maplibre::{
         source_client::HttpClient,
         transferables::{DefaultTransferables, Transferables},
     },
-    map_schedule::InteractiveMapSchedule,
-    window::{EventLoop, HeadedMapWindow, MapWindowConfig},
+    window::{HeadedMapWindow, MapWindowConfig},
 };
+use std::{cell::RefCell, marker::PhantomData, ops::Deref, rc::Rc};
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
 };
 
-use crate::input::{InputController, UpdateState};
+pub type RawWinitWindow = winit::window::Window;
+pub type RawWinitEventLoop<ET> = winit::event_loop::EventLoop<ET>;
+pub type RawEventLoopProxy<ET> = winit::event_loop::EventLoopProxy<ET>;
 
 #[cfg(target_arch = "wasm32")]
 mod web;
@@ -32,14 +35,19 @@ pub use noweb::*;
 pub use web::*;
 
 #[cfg(not(target_arch = "wasm32"))]
-pub struct WinitMapWindowConfig {
+pub struct WinitMapWindowConfig<ET> {
     title: String,
+
+    phantom_et: PhantomData<ET>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl WinitMapWindowConfig {
+impl<ET> WinitMapWindowConfig<ET> {
     pub fn new(title: String) -> Self {
-        Self { title }
+        Self {
+            title,
+            phantom_et: Default::default(),
+        }
     }
 }
 
@@ -55,151 +63,157 @@ impl WinitMapWindowConfig {
     }
 }
 
-pub struct WinitMapWindow {
-    window: WinitWindow,
-    event_loop: Option<WinitEventLoop>,
+pub struct WinitMapWindow<ET: 'static> {
+    window: RawWinitWindow,
+    event_loop: Option<WinitEventLoop<ET>>,
 }
 
-impl WinitMapWindow {
-    pub fn take_event_loop(&mut self) -> Option<WinitEventLoop> {
+impl<ET> WinitMapWindow<ET> {
+    pub fn take_event_loop(&mut self) -> Option<WinitEventLoop<ET>> {
         self.event_loop.take()
     }
 }
 
-pub type WinitWindow = winit::window::Window;
-pub type WinitEventLoop = winit::event_loop::EventLoop<()>;
-
-pub struct WinitEnvironment<
-    S: Scheduler,
-    HC: HttpClient,
-    T: Transferables,
-    APC: AsyncProcedureCall<T, HC>,
-> {
-    phantom_s: PhantomData<S>,
-    phantom_hc: PhantomData<HC>,
-    phantom_t: PhantomData<T>,
-    phantom_apc: PhantomData<APC>,
+pub struct WinitEventLoop<ET: 'static> {
+    event_loop: RawWinitEventLoop<ET>,
 }
 
-impl<S: Scheduler, HC: HttpClient, T: Transferables, APC: AsyncProcedureCall<T, HC>> Environment
-    for WinitEnvironment<S, HC, T, APC>
-{
-    type MapWindowConfig = WinitMapWindowConfig;
-    type AsyncProcedureCall = APC;
-    type Scheduler = S;
-    type HttpClient = HC;
-    type Transferables = T;
-}
+impl<ET: 'static> EventLoop<ET> for WinitEventLoop<ET> {
+    type EventLoopProxy = WinitEventLoopProxy<ET>;
 
-///Main (platform-specific) main loop which handles:
-///* Input (Mouse/Keyboard)
-///* Platform Events like suspend/resume
-///* Render a new frame
-impl<E: Environment> EventLoop<E> for WinitMapWindow
-where
-    E::MapWindowConfig: MapWindowConfig<MapWindow = WinitMapWindow>,
-{
-    fn run(
+    fn run<E>(
         mut self,
-        map_schedule: Rc<RefCell<InteractiveMapSchedule<E>>>,
+        mut window: <E::MapWindowConfig as MapWindowConfig>::MapWindow,
+        mut map: Map<E>,
         max_frames: Option<u64>,
-    ) {
+    ) where
+        E: Environment,
+        <E::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow,
+    {
         let mut last_render_time = Instant::now();
         let mut current_frame: u64 = 0;
 
         let mut input_controller = InputController::new(0.2, 100.0, 0.1);
 
-        self.take_event_loop()
-            .unwrap()
-            .run(move |event, _, control_flow| {
-                let mut map_schedule = map_schedule.deref().borrow_mut();
-
+        self.event_loop
+            .run(move |event, window_target, control_flow| {
                 #[cfg(target_os = "android")]
-                if !map_schedule.is_initialized() && event == Event::Resumed {
+                if !map.is_initialized() && event == Event::Resumed {
                     use tokio::{runtime::Handle, task};
 
                     task::block_in_place(|| {
                         Handle::current().block_on(async {
-                            map_schedule.late_init().await;
+                            map.late_init().await;
                         })
                     });
                     return;
                 }
 
                 match event {
-                Event::DeviceEvent {
-                    ref event,
-                    .. // We're not using device_id currently
-                } => {
-                    input_controller.device_input(event);
-                }
+                    Event::DeviceEvent {
+                        ref event,
+                        .. // We're not using device_id currently
+                    } => {
+                        input_controller.device_input(event);
+                    }
 
-                Event::WindowEvent {
-                    ref event,
-                    window_id,
-                } if window_id == self.inner().id() => {
-                    if !input_controller.window_input(event) {
-                        match event {
-                            WindowEvent::CloseRequested
-                            | WindowEvent::KeyboardInput {
-                                input:
-                                KeyboardInput {
-                                    state: ElementState::Pressed,
-                                    virtual_keycode: Some(VirtualKeyCode::Escape),
+                    Event::WindowEvent {
+                        ref event,
+                        window_id,
+                    } if window_id == window.id().into() => {
+                        if !input_controller.window_input(event) {
+                            match event {
+                                WindowEvent::CloseRequested
+                                | WindowEvent::KeyboardInput {
+                                    input:
+                                    KeyboardInput {
+                                        state: ElementState::Pressed,
+                                        virtual_keycode: Some(VirtualKeyCode::Escape),
+                                        ..
+                                    },
                                     ..
-                                },
-                                ..
-                            } => *control_flow = ControlFlow::Exit,
-                            WindowEvent::Resized(physical_size) => {
-                                map_schedule.resize(physical_size.width, physical_size.height);
+                                } => *control_flow = ControlFlow::Exit,
+                                WindowEvent::Resized(physical_size) => {
+                                    // FIXME map.resize(physical_size.width, physical_size.height);
+                                }
+                                WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                                    // FIXME map.resize(new_inner_size.width, new_inner_size.height);
+                                }
+                                _ => {}
                             }
-                            WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                                map_schedule.resize(new_inner_size.width, new_inner_size.height);
-                            }
-                            _ => {}
                         }
                     }
-                }
-                Event::RedrawRequested(_) => {
-                    let now = Instant::now();
-                    let dt = now - last_render_time;
-                    last_render_time = now;
+                    Event::RedrawRequested(_) => {
+                        let now = Instant::now();
+                        let dt = now - last_render_time;
+                        last_render_time = now;
 
-                    input_controller.update_state(map_schedule.view_state_mut(), dt);
+                        // FIXME input_controller.update_state(map.view_state_mut(), dt);
 
-                    match map_schedule.update_and_redraw() {
-                        Ok(_) => {}
-                        Err(Error::Render(e)) => {
-                            eprintln!("{}", e);
-                            if e.should_exit() {
+                        match map.run_schedule() {
+                            Ok(_) => {}
+                            Err(Error::Render(e)) => {
+                                eprintln!("{}", e);
+                                if e.should_exit() {
+                                    *control_flow = ControlFlow::Exit;
+                                }
+                            }
+                            e => eprintln!("{:?}", e)
+                        };
+
+                        if let Some(max_frames) = max_frames {
+                            if current_frame >= max_frames {
+                                log::info!("Exiting because maximum frames reached.");
                                 *control_flow = ControlFlow::Exit;
                             }
-                        }
-                        e => eprintln!("{:?}", e)
-                    };
 
-                    if let Some(max_frames) = max_frames {
-                        if current_frame >= max_frames {
-                            log::info!("Exiting because maximum frames reached.");
-                            *control_flow = ControlFlow::Exit;
+                            current_frame += 1;
                         }
-
-                        current_frame += 1;
                     }
+                    Event::Suspended => {
+                        // FIXME unimplemented!()
+                    }
+                    Event::Resumed => {
+                        // FIXME unimplemented!()
+                    }
+                    Event::MainEventsCleared => {
+                        // RedrawRequested will only trigger once, unless we manually
+                        // request it.
+                        window.request_redraw();
+                    }
+                    _ => {}
                 }
-                Event::Suspended => {
-                    map_schedule.suspend();
-                }
-                Event::Resumed => {
-                    map_schedule.resume(&self);
-                }
-                Event::MainEventsCleared => {
-                    // RedrawRequested will only trigger once, unless we manually
-                    // request it.
-                    self.inner().request_redraw();
-                }
-                _ => {}
-            }
             });
     }
+
+    fn create_proxy(&self) -> Self::EventLoopProxy {
+        WinitEventLoopProxy {
+            proxy: self.event_loop.create_proxy(),
+        }
+    }
+}
+pub struct WinitEventLoopProxy<ET: 'static> {
+    proxy: RawEventLoopProxy<ET>,
+}
+
+impl<ET: 'static> EventLoopProxy<ET> for WinitEventLoopProxy<ET> {
+    fn send_event(&self, event: ET) {
+        self.proxy.send_event(event); // FIXME: Handle unwrap
+    }
+}
+
+pub struct WinitEnvironment<S: Scheduler, HC: HttpClient, APC: AsyncProcedureCall<HC>, ET> {
+    phantom_s: PhantomData<S>,
+    phantom_hc: PhantomData<HC>,
+    phantom_apc: PhantomData<APC>,
+    phantom_et: PhantomData<ET>,
+}
+
+impl<S: Scheduler, HC: HttpClient, APC: AsyncProcedureCall<HC>, ET: 'static> Environment
+    for WinitEnvironment<S, HC, APC, ET>
+{
+    type MapWindowConfig = WinitMapWindowConfig<ET>;
+    type AsyncProcedureCall = APC;
+    type Scheduler = S;
+    type HttpClient = HC;
 }

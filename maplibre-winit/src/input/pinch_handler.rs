@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use maplibre::context::ViewState;
+use maplibre::world::ViewState;
 
 use super::UpdateState;
 

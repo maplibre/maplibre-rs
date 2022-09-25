@@ -1,9 +1,9 @@
 use crate::io::pipeline::Processable;
+use crate::kernel::Kernel;
 use crate::render::builder::UninitializedRenderer;
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
-    environment::Kernel,
     error::Error,
     headless::{
         environment::HeadlessEnvironment, graph_node::CopySurfaceBufferNode,

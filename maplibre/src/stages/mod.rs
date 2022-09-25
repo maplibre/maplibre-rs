@@ -10,6 +10,7 @@ use std::{
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
+use crate::kernel::Kernel;
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
     environment::Environment,
@@ -37,16 +38,9 @@ mod populate_tile_store_stage;
 mod request_stage;
 
 /// Register stages required for requesting and preparing new tiles.
-pub fn register_stages<E: Environment>(
-    schedule: &mut Schedule,
-    http_source_client: HttpSourceClient<E::HttpClient>,
-    apc: Rc<RefCell<E::AsyncProcedureCall>>,
-) {
-    schedule.add_stage(
-        "request",
-        RequestStage::<E>::new(http_source_client, apc.clone()),
-    );
-    schedule.add_stage("populate_tile_store", PopulateTileStore::<E>::new(apc));
+pub fn register_stages<E: Environment>(schedule: &mut Schedule, kernel: Rc<Kernel<E>>) {
+    schedule.add_stage("request", RequestStage::<E>::new(kernel.clone()));
+    schedule.add_stage("populate_tile_store", PopulateTileStore::<E>::new(kernel));
 }
 
 pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<T, HC>> {

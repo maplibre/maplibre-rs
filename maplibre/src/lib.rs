@@ -42,6 +42,8 @@ pub mod environment;
 // Used for benchmarking
 pub mod benchmarking;
 
+pub mod event_loop;
+pub mod kernel;
 pub mod map;
 pub mod world;
 

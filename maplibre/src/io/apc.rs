@@ -48,10 +48,11 @@ pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + 'static)>>;
 
 pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFuture;
 
-pub trait AsyncProcedureCall<T: Transferables, HC: HttpClient>: 'static {
-    type Context: Context<T, HC> + Send;
+pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
+    type Context: Context<Self::Transferables, HC> + Send;
+    type Transferables: Transferables;
 
-    fn receive(&mut self) -> Option<Message<T>>;
+    fn receive(&self) -> Option<Message<Self::Transferables>>;
 
     fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>);
 }
@@ -91,12 +92,11 @@ impl<HC: HttpClient, S: Scheduler> SchedulerAsyncProcedureCall<HC, S> {
     }
 }
 
-impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<DefaultTransferables, HC>
-    for SchedulerAsyncProcedureCall<HC, S>
-{
-    type Context = SchedulerContext<DefaultTransferables, HC>;
+impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProcedureCall<HC, S> {
+    type Context = SchedulerContext<Self::Transferables, HC>;
+    type Transferables = DefaultTransferables;
 
-    fn receive(&mut self) -> Option<Message<DefaultTransferables>> {
+    fn receive(&self) -> Option<Message<DefaultTransferables>> {
         let transferred = self.channel.1.try_recv().ok()?;
         Some(transferred)
     }

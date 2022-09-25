@@ -3,18 +3,23 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
+use maplibre::event_loop::EventLoop;
+use maplibre::headless::map::HeadlessMap;
+use maplibre::kernel::{Kernel, KernelBuilder};
+use maplibre::map::Map;
+use maplibre::render::builder::RenderBuilder;
+use maplibre::style::Style;
 use maplibre::{
     io::apc::SchedulerAsyncProcedureCall,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
     window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
-    MapBuilder,
 };
 use winit::window::WindowBuilder;
 
-use super::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
-use crate::winit::WinitEnvironment;
+use super::{RawWinitEventLoop, RawWinitWindow, WinitMapWindow, WinitMapWindowConfig};
+use crate::winit::{WinitEnvironment, WinitEventLoop};
 
-impl MapWindow for WinitMapWindow {
+impl<T> MapWindow for WinitMapWindow<T> {
     fn size(&self) -> WindowSize {
         let size = self.window.inner_size();
         #[cfg(target_os = "android")]
@@ -29,27 +34,37 @@ impl MapWindow for WinitMapWindow {
         window_size
     }
 }
-impl HeadedMapWindow for WinitMapWindow {
-    type RawWindow = WinitWindow;
+impl<T> HeadedMapWindow for WinitMapWindow<T> {
+    type RawWindow = RawWinitWindow;
 
-    fn inner(&self) -> &Self::RawWindow {
+    fn raw(&self) -> &Self::RawWindow {
         &self.window
+    }
+
+    fn request_redraw(&self) {
+        self.window.request_redraw()
+    }
+
+    fn id(&self) -> u64 {
+        self.window.id().into()
     }
 }
 
-impl MapWindowConfig for WinitMapWindowConfig {
-    type MapWindow = WinitMapWindow;
+impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
+    type MapWindow = WinitMapWindow<ET>;
 
     fn create(&self) -> Self::MapWindow {
-        let event_loop = WinitEventLoop::new();
+        let raw_event_loop = winit::event_loop::EventLoopBuilder::<ET>::with_user_event().build();
         let window = WindowBuilder::new()
             .with_title(&self.title)
-            .build(&event_loop)
+            .build(&raw_event_loop)
             .unwrap();
 
         Self::MapWindow {
             window,
-            event_loop: Some(event_loop),
+            event_loop: Some(WinitEventLoop {
+                event_loop: raw_event_loop,
+            }),
         }
     }
 }
@@ -57,7 +72,7 @@ impl MapWindowConfig for WinitMapWindowConfig {
 pub fn run_headed_map(cache_path: Option<String>) {
     run_multithreaded(async {
         let client = ReqwestHttpClient::new(cache_path);
-        MapBuilder::<WinitEnvironment<_, _, _, SchedulerAsyncProcedureCall<_, _>>>::new()
+        let kernel: Kernel<WinitEnvironment<_, _, _, ()>> = KernelBuilder::new()
             .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
             .with_http_client(client.clone())
             .with_apc(SchedulerAsyncProcedureCall::new(
@@ -65,9 +80,21 @@ pub fn run_headed_map(cache_path: Option<String>) {
                 TokioScheduler::new(),
             ))
             .with_scheduler(TokioScheduler::new())
+            .build();
+
+        let uninitialized = RenderBuilder::new()
             .build()
-            .initialize()
+            .initialize_with(&kernel)
             .await
-            .run()
+            .expect("Failed to initialize renderer");
+        let result = uninitialized.unwarp();
+
+        let mut window = result.window;
+        let renderer = result.renderer;
+        window.event_loop.take().unwrap().run(
+            window,
+            Map::new(Style::default(), kernel, renderer).unwrap(),
+            None,
+        )
     })
 }

@@ -1,13 +1,13 @@
 use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
 use winit::{platform::web::WindowBuilderExtWebSys, window::WindowBuilder};
 
-use super::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
+use super::{RawWinitEventLoop, RawWinitWindow, WinitMapWindow, WinitMapWindowConfig};
 
 impl MapWindowConfig for WinitMapWindowConfig {
     type MapWindow = WinitMapWindow;
 
     fn create(&self) -> Self::MapWindow {
-        let event_loop = WinitEventLoop::new();
+        let event_loop = RawWinitEventLoop::new();
 
         let window: winit::window::Window = WindowBuilder::new()
             .with_canvas(Some(get_canvas(&self.canvas_id)))
@@ -31,9 +31,9 @@ impl MapWindow for WinitMapWindow {
     }
 }
 impl HeadedMapWindow for WinitMapWindow {
-    type RawWindow = WinitWindow;
+    type RawWindow = RawWinitWindow;
 
-    fn inner(&self) -> &Self::RawWindow {
+    fn raw(&self) -> &Self::RawWindow {
         &self.window
     }
 }

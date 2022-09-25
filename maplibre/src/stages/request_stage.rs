@@ -12,6 +12,7 @@ use std::{
     str::FromStr,
 };
 
+use crate::kernel::Kernel;
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords, ZoomLevel},
@@ -33,19 +34,12 @@ use crate::{
 };
 
 pub struct RequestStage<E: Environment> {
-    apc: Rc<RefCell<E::AsyncProcedureCall>>,
-    http_source_client: HttpSourceClient<E::HttpClient>,
+    kernel: Rc<Kernel<E>>,
 }
 
 impl<E: Environment> RequestStage<E> {
-    pub fn new(
-        http_source_client: HttpSourceClient<E::HttpClient>,
-        apc: Rc<RefCell<E::AsyncProcedureCall>>,
-    ) -> Self {
-        Self {
-            apc,
-            http_source_client,
-        }
+    pub fn new(kernel: Rc<Kernel<E>>) -> Self {
+        Self { kernel }
     }
 }
 
@@ -75,7 +69,13 @@ impl<E: Environment> Stage for RequestStage<E> {
     }
 }
 
-pub fn schedule<E: Environment, C: Context<E::Transferables, E::HttpClient>>(
+pub fn schedule<
+    E: Environment,
+    C: Context<
+        <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Transferables,
+        E::HttpClient,
+    >,
+>(
     input: Input,
     context: C,
 ) -> AsyncProcedureFuture {
@@ -106,12 +106,14 @@ pub fn schedule<E: Environment, C: Context<E::Transferables, E::HttpClient>>(
                 log::error!("{:?}", &e);
                 for to_load in &input.layers {
                     tracing::warn!("layer {} at {} unavailable", to_load, coords);
-                    context.send(Message::UnavailableLayer(
-                        <E::Transferables as Transferables>::UnavailableLayer::new(
+                    context.send(
+                        Message::UnavailableLayer(<<E::AsyncProcedureCall as AsyncProcedureCall<
+                            E::HttpClient,
+                        >>::Transferables as Transferables>::UnavailableLayer::new(
                             input.coords,
                             to_load.to_string(),
-                        ),
-                    ));
+                        )),
+                    );
                 }
             }
         }
@@ -156,7 +158,7 @@ impl<E: Environment> RequestStage<E> {
             tile_repository.create_tile(coords);
 
             tracing::info!("new tile request: {}", &coords);
-            self.apc.deref().borrow().schedule(
+            self.kernel.apc.schedule(
                 Input::TileRequest(TileRequest {
                     coords,
                     layers: layers.clone(),
@@ -164,7 +166,6 @@ impl<E: Environment> RequestStage<E> {
                 schedule::<
                     E,
                     <E::AsyncProcedureCall as AsyncProcedureCall<
-                        E::Transferables,
                         E::HttpClient,
                     >>::Context,
                 >,

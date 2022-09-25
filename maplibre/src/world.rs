@@ -1,4 +1,5 @@
 use cgmath::{Angle, Point3};
+use std::ops::{Deref, DerefMut};
 
 use crate::{
     coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
@@ -124,12 +125,21 @@ impl ViewState {
         *self.zoom
     }
 
-    pub fn camera_position(&self) -> Point3<f64> {
-        self.camera.position
-    }
-
     pub fn did_zoom_change(&self) -> bool {
         self.zoom.did_change(0.05)
+    }
+
+    pub fn update_zoom(&mut self, new_zoom: Zoom) {
+        *self.zoom = new_zoom;
+        log::info!("zoom: {}", new_zoom);
+    }
+
+    pub fn camera(&self) -> &Camera {
+        self.camera.deref()
+    }
+
+    pub fn camera_mut(&mut self) -> &mut Camera {
+        self.camera.deref_mut()
     }
 
     pub fn did_camera_change(&self) -> bool {
@@ -139,10 +149,5 @@ impl ViewState {
     pub fn update_references(&mut self) {
         self.camera.update_reference();
         self.zoom.update_reference();
-    }
-
-    pub fn update_zoom(&mut self, new_zoom: Zoom) {
-        *self.zoom = new_zoom;
-        log::info!("zoom: {}", new_zoom);
     }
 }

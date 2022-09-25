@@ -1,5 +1,5 @@
-use crate::environment::Kernel;
 use crate::error::Error;
+use crate::kernel::Kernel;
 use crate::{
     environment::Environment,
     render::{
@@ -9,17 +9,20 @@ use crate::{
     style::Style,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
+use std::marker::PhantomData;
 
-pub struct RenderBuilder {
+pub struct RenderBuilder<MWC: MapWindowConfig> {
     wgpu_settings: Option<WgpuSettings>,
     renderer_settings: Option<RendererSettings>,
+    phatom_mwc: PhantomData<MWC>,
 }
 
-impl RenderBuilder {
+impl<MWC: MapWindowConfig> RenderBuilder<MWC> {
     pub fn new() -> Self {
         Self {
             wgpu_settings: None,
             renderer_settings: None,
+            phatom_mwc: Default::default(),
         }
     }
 
@@ -33,21 +36,22 @@ impl RenderBuilder {
         self
     }
 
-    pub fn build(self) -> UninitializedRenderer {
+    pub fn build(self) -> UninitializedRenderer<MWC> {
         UninitializedRenderer {
+            window: None,
             wgpu_settings: self.wgpu_settings.unwrap_or_default(),
             renderer_settings: self.renderer_settings.unwrap_or_default(),
         }
     }
 }
 
-pub enum InitializationResult {
-    Initialized(Renderer),
-    Uninizalized(UninitializedRenderer),
+pub enum InitializationResult<MWC: MapWindowConfig> {
+    Initialized(InitializedRenderer<MWC>),
+    Uninizalized(UninitializedRenderer<MWC>),
 }
 
-impl InitializationResult {
-    pub fn unwarp(self) -> Renderer {
+impl<MWC: MapWindowConfig> InitializationResult<MWC> {
+    pub fn unwarp(self) -> InitializedRenderer<MWC> {
         match self {
             InitializationResult::Initialized(renderer) => renderer,
             InitializationResult::Uninizalized(_) => panic!("Renderer is not initialized"),
@@ -55,55 +59,55 @@ impl InitializationResult {
     }
 }
 
-pub struct UninitializedRenderer {
+pub struct UninitializedRenderer<MWC: MapWindowConfig> {
+    window: Option<MWC::MapWindow>,
     wgpu_settings: WgpuSettings,
     renderer_settings: RendererSettings,
 }
 
-impl UninitializedRenderer {
+impl<MWC: MapWindowConfig> UninitializedRenderer<MWC>
+where
+    MWC::MapWindow: MapWindow + HeadedMapWindow,
+{
     /// Initializes the whole rendering pipeline for the given configuration.
     /// Returns the initialized map, ready to be run.
-    async fn initialize<MWC: MapWindowConfig>(
-        self,
-        map_window_config: &MWC,
-    ) -> Result<InitializationResult, Error>
-    where
-        MWC::MapWindow: MapWindow + HeadedMapWindow,
-    {
+    async fn initialize(self, map_window_config: &MWC) -> Result<InitializationResult<MWC>, Error> {
         let window = map_window_config.create();
 
         #[cfg(target_os = "android")]
-        let renderer = Ok(InitializationResult::Uninizalized(self));
+        {
+            Ok(InitializationResult::Uninizalized(self))
+        }
+
         #[cfg(not(target_os = "android"))]
-        let renderer = Ok(InitializationResult::Initialized(
-            Renderer::initialize(
+        {
+            let renderer = Renderer::initialize(
                 &window,
                 self.wgpu_settings.clone(),
                 self.renderer_settings.clone(),
             )
-            .await?,
-        ));
-
-        renderer
+            .await?;
+            Ok(InitializationResult::Initialized(InitializedRenderer {
+                window,
+                renderer,
+            }))
+        }
     }
 
-    pub async fn initialize_with<E: Environment>(
+    pub async fn initialize_with<E>(
         self,
         kernel: &Kernel<E>,
-    ) -> Result<InitializationResult, Error>
+    ) -> Result<InitializationResult<MWC>, Error>
     where
-        <E::MapWindowConfig as MapWindowConfig>::MapWindow: MapWindow + HeadedMapWindow,
+        E: Environment<MapWindowConfig = MWC>,
     {
         self.initialize(&kernel.map_window_config).await
     }
 }
 
 #[cfg(feature = "headless")]
-impl UninitializedRenderer {
-    async fn initialize_headless<MWC: MapWindowConfig>(
-        self,
-        map_window_config: MWC,
-    ) -> Result<Renderer, Error> {
+impl<MWC: MapWindowConfig> UninitializedRenderer<MWC> {
+    async fn initialize_headless(self, map_window_config: &MWC) -> Result<Renderer, Error> {
         let window = map_window_config.create();
 
         Ok(Renderer::initialize_headless(
@@ -114,13 +118,15 @@ impl UninitializedRenderer {
         .await?)
     }
 
-    pub async fn initialize_headless_with<E: Environment>(
-        self,
-        kernel: &Kernel<E>,
-    ) -> Result<InitializationResult, Error>
+    pub async fn initialize_headless_with<E>(self, kernel: &Kernel<E>) -> Result<Renderer, Error>
     where
-        <E::MapWindowConfig as MapWindowConfig>::MapWindow: MapWindow + HeadedMapWindow,
+        E: Environment<MapWindowConfig = MWC>,
     {
-        self.initialize(&kernel.map_window_config).await
+        self.initialize_headless(&kernel.map_window_config).await
     }
+}
+
+pub struct InitializedRenderer<MWC: MapWindowConfig> {
+    pub window: MWC::MapWindow,
+    pub renderer: Renderer,
 }

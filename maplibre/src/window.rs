@@ -17,6 +17,11 @@ pub trait HeadedMapWindow: MapWindow {
     type RawWindow: HasRawWindowHandle + HasRawDisplayHandle;
 
     fn raw(&self) -> &Self::RawWindow;
+
+    // TODO: Can we avoid this?
+    fn request_redraw(&self);
+
+    fn id(&self) -> u64;
 }
 
 /// A configuration for a window which determines the corresponding implementation of a

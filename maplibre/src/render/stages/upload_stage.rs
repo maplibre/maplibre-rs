@@ -45,7 +45,8 @@ impl Stage for UploadStage {
                 bytemuck::cast_slice(&[ShaderGlobals::new(ShaderCamera::new(
                     view_proj.downcast().into(),
                     view_state
-                        .camera_position()
+                        .camera()
+                        .position()
                         .to_homogeneous()
                         .cast::<f32>()
                         .unwrap() // TODO: Remove unwrap
