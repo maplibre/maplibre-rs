@@ -209,9 +209,9 @@ impl std::ops::Sub for Zoom {
 }
 
 impl Zoom {
-    pub fn clamp(self, min: f64, max: f64) -> Self {
-               if self.0 > max {Zoom::new(max)} 
-        else { if self.0 < min {Zoom::new(min)}
+    pub fn clamp(self, max:u8, min:u8) -> Self {
+               if self.0 > max as f64 {Zoom::new(max as f64)} 
+        else { if self.0 < min as f64 {Zoom::new(min as f64)}
         else                                   {self}}
     }
 }

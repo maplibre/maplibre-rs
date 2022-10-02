@@ -43,13 +43,17 @@ impl<E: Environment> InteractiveMapSchedule<E> {
         wgpu_settings: WgpuSettings,
         renderer_settings: RendererSettings,
     ) -> Self {
+        let maxzoom = style.maxzoom.unwrap_or_default();
+        let minzoom = style.minzoom.unwrap_or_default();
+        // if maxzoom < zoom { error("mapstype error: maxzoom must be > zoom"); }
+        // if minzoom > zoom { error("mapstype error: minzoom must be < zoom"); }
         let zoom = style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default();
         let position = style
             .center
             .map(|center| WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), zoom))
             .unwrap_or_default();
         let pitch = style.pitch.unwrap_or_default();
-        let view_state = ViewState::new(&window_size, position, zoom, pitch, cgmath::Deg(110.0));
+        let view_state = ViewState::new(&window_size, position, zoom, maxzoom, minzoom, pitch, cgmath::Deg(110.0));
 
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();

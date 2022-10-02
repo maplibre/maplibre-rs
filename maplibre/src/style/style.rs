@@ -20,6 +20,8 @@ pub struct Style {
     pub layers: Vec<StyleLayer>,
     pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
     pub zoom: Option<f64>,
+    pub minzoom: Option<u8>,
+    pub maxzoom: Option<u8>,
     pub pitch: Option<f64>,
 }
 
@@ -33,6 +35,8 @@ impl Default for Style {
             center: Some([46.5197, 6.6323]),
             pitch: Some(0.0),
             zoom: Some(13.0),
+            maxzoom: Some(20),
+            minzoom: Some( 0), // karlos: ok??? Detault values in extra file?
             layers: vec![
                 StyleLayer {
                     index: 0,
