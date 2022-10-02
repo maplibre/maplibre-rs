@@ -209,6 +209,14 @@ impl std::ops::Sub for Zoom {
 }
 
 impl Zoom {
+    pub fn clamp(self, min: f64, max: f64) -> Self {
+               if self.0 > max {Zoom::new(max)} 
+        else { if self.0 < min {Zoom::new(min)}
+        else                                   {self}}
+    }
+}
+
+impl Zoom {
     pub fn scale_to_tile(&self, coords: &WorldTileCoords) -> f64 {
         2.0_f64.powf(coords.z.0 as f64 - self.0)
     }
