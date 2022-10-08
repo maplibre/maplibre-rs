@@ -83,10 +83,14 @@ impl ViewState {
         *self.zoom
     }
 
-    pub fn update_zoom(&mut self, new_zoom: Zoom) {
-        let new_zoom = new_zoom.clamp( self.maxzoom, self.minzoom );
-        *self.zoom = new_zoom;
-        log::info!("zoom: {}", new_zoom);
+    pub fn update_zoom(&mut self, new_zoom: Zoom) -> Zoom {
+        let mut clamped_new_zoom = new_zoom;
+        clamped_new_zoom.clamp(self.minzoom as f64, self.maxzoom as f64);
+
+        *self.zoom = clamped_new_zoom;
+        log::info!("zoom: {}", clamped_new_zoom);
+
+        clamped_new_zoom
     }
 }
 
