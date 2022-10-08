@@ -2,6 +2,7 @@
 //! a handle to a window. A headless surface renders to a texture.
 
 use std::{mem::size_of, sync::Arc};
+use wgpu::CompositeAlphaMode;
 
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
@@ -133,6 +134,7 @@ impl Surface {
     {
         let size = window.size();
         let surface_config = wgpu::SurfaceConfiguration {
+            alpha_mode: CompositeAlphaMode::Auto,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: settings.texture_format,
             width: size.width(),
