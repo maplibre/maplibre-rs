@@ -2,6 +2,8 @@
 
 use std::{collections::HashMap, str::FromStr};
 
+use thiserror::Error;
+
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +22,8 @@ pub struct Style {
     pub layers: Vec<StyleLayer>,
     pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
     pub zoom: Option<f64>,
-    pub minzoom: Option<u8>,
-    pub maxzoom: Option<u8>,
+    pub minzoom: Option<f64>,
+    pub maxzoom: Option<f64>,
     pub pitch: Option<f64>,
 }
 
@@ -35,8 +37,8 @@ impl Default for Style {
             center: Some([46.5197, 6.6323]),
             pitch: Some(0.0),
             zoom: Some(13.0),
-            maxzoom: Some(20),
-            minzoom: Some( 0), // karlos: ok??? Detault values in extra file?
+            maxzoom: Some(20.),
+            minzoom: Some( 0.), // karlos: ok??? Detault values in extra file?
             layers: vec![
                 StyleLayer {
                     index: 0,
@@ -137,13 +139,37 @@ impl Default for Style {
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(Color::from_str("black").unwrap()),
+                        line_color: Some(Color::from_str("brown").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("boundary".to_string()),
                 },
             ],
         }
+    }
+}
+
+
+#[non_exhaustive]
+#[derive(Debug, Error)]
+pub enum StyleError{
+    #[error("style error: maxzoom must be abowe zoom")]
+    maxzoom,
+    #[error("style error: minzoom must be below zoom")]
+    minzoom,
+}
+
+impl Style {
+    pub fn validate(&self) -> Result<(), StyleError> {
+        if let Some(zoom) = self.zoom {
+            if let Some(maxzoom) = self.maxzoom {
+                if (maxzoom as f64) < zoom {
+                    return Err(StyleError::maxzoom);
+                }
+            }
+        }
+        // todo min
+        Ok(())
     }
 }
 

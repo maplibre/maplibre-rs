@@ -119,8 +119,8 @@ impl<E: Environment> HeadlessMapSchedule<E> {
             &window_size,
             WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
             Zoom::default(),
-            0,
-            20,
+            0.,
+            20.,
             0.0,
             cgmath::Deg(110.0),
         );

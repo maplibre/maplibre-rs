@@ -12,7 +12,7 @@ use crate::{
     render::{create_default_render_graph, register_default_render_stages},
     schedule::{Schedule, Stage},
     stages::register_stages,
-    style::Style,
+    style::{Style, StyleError},
     Environment, HeadedMapWindow, MapWindowConfig, Renderer, RendererSettings, WgpuSettings,
     WindowSize,
 };
@@ -43,10 +43,12 @@ impl<E: Environment> InteractiveMapSchedule<E> {
         wgpu_settings: WgpuSettings,
         renderer_settings: RendererSettings,
     ) -> Self {
+
+        let e = style.validate();
+        println!("Style Error?: {:#?}",e); // Don't Panic!  Wrong place   Bad solution
+
         let maxzoom = style.maxzoom.unwrap_or_default();
         let minzoom = style.minzoom.unwrap_or_default();
-        // if maxzoom < zoom { error("mapstype error: maxzoom must be > zoom"); }
-        // if minzoom > zoom { error("mapstype error: minzoom must be < zoom"); }
         let zoom = style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default();
         let position = style
             .center

@@ -13,8 +13,8 @@ use crate::{
 /// Stores the camera configuration.
 pub struct ViewState {
     pub zoom: ChangeObserver<Zoom>,
-    pub maxZoom: u8,
-    pub minzoom: u8,
+    pub max_zoom: f64,
+    pub min_zoom: f64,
     pub camera: ChangeObserver<Camera>,
     pub perspective: Perspective,
 }
@@ -24,8 +24,8 @@ impl ViewState {
         window_size: &WindowSize,
         position: WorldCoords,
         zoom: Zoom,
-        maxzoom: u8,
-        minzoom: u8,
+        max_zoom: f64,
+        min_zoom: f64,
         pitch: f64,
         fovy: P,
     ) -> Self {
@@ -56,8 +56,8 @@ impl ViewState {
 
         Self {
             zoom: ChangeObserver::new(zoom),
-            maxzoom,
-            minzoom,
+            max_zoom,
+            min_zoom,
             camera: ChangeObserver::new(camera),
             perspective,
         }
@@ -84,7 +84,7 @@ impl ViewState {
     }
 
     pub fn update_zoom(&mut self, new_zoom: Zoom) {
-        let new_zoom = new_zoom.clamp( self.maxzoom, self.minzoom );
+        let new_zoom = new_zoom.clamp( self.max_zoom, self.min_zoom );
         *self.zoom = new_zoom;
         log::info!("zoom: {}", new_zoom);
     }
