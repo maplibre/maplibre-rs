@@ -13,7 +13,7 @@ use crate::{
 /// Stores the camera configuration.
 pub struct ViewState {
     pub zoom: ChangeObserver<Zoom>,
-    pub maxzoom: u8,
+    pub maxZoom: u8,
     pub minzoom: u8,
     pub camera: ChangeObserver<Camera>,
     pub perspective: Perspective,
