@@ -4,8 +4,8 @@ use maplibre::{
     MapBuilder,
 };
 use maplibre_winit::winit::{
-    run_headed_map, WinitEnvironment, WinitEventLoop, WinitMapWindow, WinitMapWindowConfig,
-    WinitWindow,
+    run_headed_map, RawWinitEventLoop, RawWinitWindow, WinitEnvironment, WinitMapWindow,
+    WinitMapWindowConfig,
 };
 
 #[cfg(not(any(target_os = "macos", target_os = "ios")))]

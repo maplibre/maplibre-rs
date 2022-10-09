@@ -2,10 +2,9 @@
 
 use std::{collections::HashMap, str::FromStr};
 
-use thiserror::Error;
-
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 use crate::style::{
     layer::{LayerPaint, LinePaint, StyleLayer},
@@ -37,8 +36,8 @@ impl Default for Style {
             center: Some([46.5197, 6.6323]),
             pitch: Some(0.0),
             zoom: Some(13.0),
-            maxzoom: Some(20.),
-            minzoom: Some( 0.), // karlos: ok??? Detault values in extra file?
+            maxzoom: Some(13.),
+            minzoom: Some(0.), // karlos: ok??? Detault values in extra file?
             layers: vec![
                 StyleLayer {
                     index: 0,
@@ -149,10 +148,9 @@ impl Default for Style {
     }
 }
 
-
 #[non_exhaustive]
 #[derive(Debug, Error)]
-pub enum StyleError{
+pub enum StyleError {
     #[error("style error: maxzoom must be abowe zoom")]
     maxzoom,
     #[error("style error: minzoom must be below zoom")]

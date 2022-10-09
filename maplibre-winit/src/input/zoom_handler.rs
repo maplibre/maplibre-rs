@@ -18,8 +18,13 @@ impl UpdateState for ZoomHandler {
                 let current_zoom = state.zoom();
                 let next_zoom = current_zoom + zoom_delta;
 
-                state.update_zoom(next_zoom);
+                let actual_next_zoom = state.update_zoom(next_zoom);
+                let zoom_changed = actual_next_zoom != current_zoom;
                 self.zoom_delta = None;
+
+                if !zoom_changed {
+                    return;
+                }
 
                 let view_proj = state.view_projection();
                 let inverted_view_proj = view_proj.invert();
@@ -29,7 +34,7 @@ impl UpdateState for ZoomHandler {
                     &inverted_view_proj,
                     false,
                 ) {
-                    let scale = current_zoom.scale_delta(&next_zoom);
+                    let scale = current_zoom.scale_delta(&actual_next_zoom);  // &
 
                     let delta = Vector3::new(
                         cursor_position.x * scale,

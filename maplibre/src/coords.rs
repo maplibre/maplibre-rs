@@ -165,7 +165,7 @@ impl Display for LatLon {
 
 /// `Zoom` is an exponential scale that defines the zoom of the camera on the map.
 /// We can derive the `ZoomLevel` from `Zoom` by using the `[crate::coords::ZOOM_BOUNDS]`.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Zoom(f64);
 
 impl Zoom {
@@ -209,10 +209,13 @@ impl std::ops::Sub for Zoom {
 }
 
 impl Zoom {
-    pub fn clamp(self, max:f64, min:f64) -> Self {
-             if self.0 > max {Zoom::new(max)} 
-        else if self.0 < min {Zoom::new(min)}
-        else                                {self}
+    pub fn clamp(&mut self, min: f64, max: f64) {
+        // Avoids panic of f64::clamp
+        if min > max {
+            return;
+        }
+
+        self.0 = self.0.clamp(min, max);
     }
 }
 

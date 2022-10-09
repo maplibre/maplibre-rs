@@ -45,7 +45,7 @@ impl<E: Environment> InteractiveMapSchedule<E> {
     ) -> Self {
 
         let e = style.validate();
-        println!("Style Error?: {:#?}",e); // Don't Panic!  Wrong place   Bad solution
+        println!("Style Error?: {:#?}", e); // Don't Panic!  Wrong place   Bad solution
 
         let maxzoom = style.maxzoom.unwrap_or_default();
         let minzoom = style.minzoom.unwrap_or_default();
@@ -55,7 +55,15 @@ impl<E: Environment> InteractiveMapSchedule<E> {
             .map(|center| WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), zoom))
             .unwrap_or_default();
         let pitch = style.pitch.unwrap_or_default();
-        let view_state = ViewState::new(&window_size, position, zoom, maxzoom, minzoom, pitch, cgmath::Deg(110.0));
+        let view_state = ViewState::new(
+            &window_size,
+            position,
+            zoom,
+            maxzoom,
+            minzoom,
+            pitch,
+            cgmath::Deg(110.0),
+        );
 
         let tile_repository = TileRepository::new();
         let mut schedule = Schedule::default();
