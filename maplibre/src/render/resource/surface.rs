@@ -2,6 +2,7 @@
 //! a handle to a window. A headless surface renders to a texture.
 
 use std::{mem::size_of, sync::Arc};
+
 use wgpu::CompositeAlphaMode;
 
 use crate::{
