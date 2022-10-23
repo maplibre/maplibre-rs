@@ -8,14 +8,19 @@ jobs:
     name: Build
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
+      - uses: actions/checkout@v3
+      - name: Setup binstall
+        uses: ./.github/actions/setup-binstall
+      - name: Install just
+        uses: ./.github/actions/cargo-install
+        with:
+          name: just
       - name: Install toolchain
         shell: bash
         run: |
           just stable-toolchain
           just stable-targets x86_64-unknown-linux-gnu
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
       - name: Install Dependencies
         shell: bash
         run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
@@ -28,7 +33,7 @@ jobs:
       - name: Test x86_64 linux
         shell: bash
         run: just test maplibre-demo x86_64-unknown-linux-gnu
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: maplibre-rs
           path: target/x86_64-unknown-linux-gnu/release/maplibre-demo
