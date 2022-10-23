@@ -44,10 +44,11 @@ jobs:
         run: |
           just nightly-install-src
       - name: Install wasm-bindgen
-        shell: bash
-        run: |
-          # Install wasm-bindgen with test runner
-          cargo binstall wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
+        uses: ./.github/actions/cargo-install
+        # Install wasm-bindgen with test runner
+        # We want the latest version, as Cargo uses the latest version of wasm-bindgen
+        with:
+          name: wasm-bindgen-cli
       - uses: Swatinem/rust-cache@v2
       - name: Build lib
         shell: bash

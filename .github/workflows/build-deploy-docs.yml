@@ -25,8 +25,9 @@ jobs:
         run: just stable-toolchain
       - uses: Swatinem/rust-cache@v2
       - name: Install mdbook
-        shell: bash
-        run: cargo binstall mdbook
+        uses: ./.github/actions/cargo-install
+        with:
+          name: mdbook
       - name: Install Dependencies
         shell: bash
         run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
