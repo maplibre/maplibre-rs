@@ -103,7 +103,7 @@ impl RenderPipeline for TilePipeline {
                 unclipped_depth: false,
             },
             depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth24PlusStencil8,
+                format: wgpu::TextureFormat::Depth32FloatStencil8,
                 depth_write_enabled: !self.update_stencil,
                 depth_compare: wgpu::CompareFunction::Greater,
                 stencil: wgpu::StencilState {

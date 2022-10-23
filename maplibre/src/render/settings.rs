@@ -58,7 +58,7 @@ impl Default for WgpuSettings {
             device_label: Default::default(),
             backends,
             power_preference: PowerPreference::HighPerformance,
-            features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
+            features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES | Features::DEPTH32FLOAT_STENCIL8,
             disabled_features: None,
             limits,
             constrained_limits: None,

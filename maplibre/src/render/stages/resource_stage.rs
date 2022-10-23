@@ -48,7 +48,7 @@ impl Stage for ResourceStage {
                 Texture::new(
                     Some("depth texture"),
                     device,
-                    wgpu::TextureFormat::Depth24PlusStencil8,
+                    wgpu::TextureFormat::Depth32FloatStencil8,
                     size.width(),
                     size.height(),
                     settings.msaa,
