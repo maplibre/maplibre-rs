@@ -36,7 +36,7 @@ fn headless_render(c: &mut Criterion) {
             ))
             .with_scheduler(TokioScheduler::new())
             .with_renderer_settings(RendererSettings {
-                texture_format: TextureFormat::Depth32FloatStencil8,
+                texture_format: TextureFormat::Rgba8UnormSrgb,
                 ..RendererSettings::default()
             })
             .build()
