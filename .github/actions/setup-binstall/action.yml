@@ -1,5 +1,5 @@
-name: install-driver
-description: Install drivers
+name: setup-binstall
+description: Setup binstall
 
 runs:
   using: "composite"

@@ -13,8 +13,9 @@ jobs:
       - name: Setup binstall
         uses: ./.github/actions/setup-binstall
       - name: Install just
-        shell: bash
-        run: cargo binstall just
+        uses: ./.github/actions/cargo-install
+        with:
+          name: just
       - name: Install toolchain
         shell: bash
         run: |
