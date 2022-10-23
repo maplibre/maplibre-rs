@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["GraphRunnerStage","Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame."]]});
+window.SIDEBAR_ITEMS = {"struct":[["GraphRunnerStage","Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame."]]};

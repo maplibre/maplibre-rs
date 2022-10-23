@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ResourceStage",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["ResourceStage",""]]};

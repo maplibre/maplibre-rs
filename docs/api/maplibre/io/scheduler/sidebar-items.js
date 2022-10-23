@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["NopScheduler",""]],"trait":[["Scheduler","Async/await scheduler. Can schedule a task from a future factory and a shared state."]]});
+window.SIDEBAR_ITEMS = {"struct":[["NopScheduler",""]],"trait":[["Scheduler","Async/await scheduler. Can schedule a task from a future factory and a shared state."]]};

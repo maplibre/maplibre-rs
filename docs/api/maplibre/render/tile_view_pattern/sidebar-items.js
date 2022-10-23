@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["DEFAULT_TILE_VIEW_SIZE",""]],"struct":[["BackingBuffer",""],["TileInView",""],["TileShape",""],["TileViewPattern","The tile mask pattern assigns each tile a value which can be used for stencil testing."]]});
+window.SIDEBAR_ITEMS = {"constant":[["DEFAULT_TILE_VIEW_SIZE",""]],"struct":[["BackingBuffer",""],["TileInView",""],["TileShape",""],["TileViewPattern","The tile mask pattern assigns each tile a value which can be used for stencil testing."]]};

@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["MultiStage",""],["NopStage",""],["Schedule","A container of [`Stage`]s set to be run in a linear order."]],"trait":[["Stage",""],["StageLabel","Defines a set of strongly-typed labels for a class of objects"]],"type":[["BoxedStageLabel",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["MultiStage",""],["NopStage",""],["Schedule","A container of [`Stage`]s set to be run in a linear order."]],"trait":[["Stage",""],["StageLabel","Defines a set of strongly-typed labels for a class of objects"]],"type":[["BoxedStageLabel",""]]};

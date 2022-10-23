@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["DrawMask",""],["DrawTile",""],["SetMaskPipeline",""],["SetTilePipeline",""],["SetViewBindGroup",""]],"type":[["DrawMasks",""],["DrawTiles",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["DrawMask",""],["DrawTile",""],["SetMaskPipeline",""],["SetTilePipeline",""],["SetViewBindGroup",""]],"type":[["DrawMasks",""],["DrawTiles",""]]};

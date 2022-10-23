@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["TilePipeline",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["TilePipeline",""]]};

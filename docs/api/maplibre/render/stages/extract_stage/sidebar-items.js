@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ExtractStage",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["ExtractStage",""]]};

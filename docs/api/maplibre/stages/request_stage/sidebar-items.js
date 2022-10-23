@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["schedule",""]],"struct":[["RequestStage",""]]});
+window.SIDEBAR_ITEMS = {"fn":[["schedule",""]],"struct":[["RequestStage",""]]};

@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["PopulateTileStore",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["PopulateTileStore",""]]};

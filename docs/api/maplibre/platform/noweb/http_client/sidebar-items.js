@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ReqwestHttpClient",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["ReqwestHttpClient",""]]};

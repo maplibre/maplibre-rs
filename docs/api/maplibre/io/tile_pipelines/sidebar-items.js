@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["build_vector_tile_pipeline",""]],"struct":[["IndexLayer",""],["ParseTile",""],["TessellateLayer",""]]});
+window.SIDEBAR_ITEMS = {"fn":[["build_vector_tile_pipeline",""]],"struct":[["IndexLayer",""],["ParseTile",""],["TessellateLayer",""]]};

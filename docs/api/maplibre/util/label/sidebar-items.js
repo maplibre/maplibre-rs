@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["DynEq",""],["DynHash",""]]});
+window.SIDEBAR_ITEMS = {"trait":[["DynEq",""],["DynHash",""]]};

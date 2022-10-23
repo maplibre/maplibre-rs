@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["PhaseSortStage",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["PhaseSortStage",""]]};

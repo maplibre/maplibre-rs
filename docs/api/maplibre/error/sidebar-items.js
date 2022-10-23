@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Error","Enumeration of errors which can happen during the operation of the library."],["RenderError",""]]});
+window.SIDEBAR_ITEMS = {"enum":[["Error","Enumeration of errors which can happen during the operation of the library."],["RenderError",""]]};

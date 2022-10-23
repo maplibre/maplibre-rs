@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["UploadStage",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["UploadStage",""]]};

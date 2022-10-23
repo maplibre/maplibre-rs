@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["QueueStage",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["QueueStage",""]]};

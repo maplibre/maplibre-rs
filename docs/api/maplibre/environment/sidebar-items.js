@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["Environment",""]]});
+window.SIDEBAR_ITEMS = {"trait":[["Environment",""]]};
