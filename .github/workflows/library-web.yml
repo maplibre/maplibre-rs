@@ -27,7 +27,11 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - uses: extractions/setup-just@v1
+      - name: Setup binstall
+        uses: ./.github/actions/setup-binstall
+      - name: Install just
+        shell: bash
+        run: cargo binstall just
       - name: Install nightly toolchain
         shell: bash
         run: |
@@ -42,7 +46,7 @@ jobs:
         shell: bash
         run: |
           # Install wasm-bindgen with test runner
-          cargo install wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
+          cargo binstall wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
       - uses: Swatinem/rust-cache@v2
       - name: Build lib
         shell: bash

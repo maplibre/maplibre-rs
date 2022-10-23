@@ -14,13 +14,18 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - uses: extractions/setup-just@v1
+      - name: Setup binstall
+        uses: ./.github/actions/setup-binstall
+      - name: Install just
+        shell: bash
+        run: cargo binstall just
       - name: Install toolchain
         shell: bash
         run: just stable-toolchain
       - uses: Swatinem/rust-cache@v2
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v1
+      - name: Install mdbook
+        shell: bash
+        run: cargo binstall mdbook
       - name: Install Dependencies
         shell: bash
         run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit

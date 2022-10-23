@@ -9,7 +9,11 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v3
-      - uses: extractions/setup-just@v1
+      - name: Setup binstall
+        uses: ./.github/actions/setup-binstall
+      - name: Install just
+        shell: bash
+        run: cargo binstall just
       - name: Install toolchain
         shell: bash
         run: |

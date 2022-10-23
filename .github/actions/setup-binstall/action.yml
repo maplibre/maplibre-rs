@@ -1,0 +1,11 @@
+name: install-driver
+description: Install drivers
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install binstall
+      shell: bash
+      run: |
+        # Install with debug profile -> faster compilation
+        cargo install --debug cargo-binstall
