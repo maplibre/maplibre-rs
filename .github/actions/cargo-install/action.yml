@@ -9,9 +9,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup default toolchain
-      shell: bash
-      run: rustup show # Installs toolchain specified in rust-toolchain.toml
     - name: Install ${{ inputs.name }}
       shell: bash
       run: cargo binstall --no-confirm --force ${{ inputs.name }}

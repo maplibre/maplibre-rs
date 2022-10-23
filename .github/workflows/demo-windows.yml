@@ -22,15 +22,18 @@ jobs:
           just stable-targets x86_64-pc-windows-msvc
       - uses: Swatinem/rust-cache@v2
       - uses: ilammy/msvc-dev-cmd@v1 # Provide access to lib.exe
+      - name: Show PATH
+        shell: bash
+        run: echo $PATH
       - name: Build
         shell: bash
         run: cargo build -p maplibre-demo --release --target x86_64-pc-windows-msvc
       - name: Check x86_64 windows
         shell: bash
-        run: just.exe check maplibre-demo x86_64-pc-windows-msvc
+        run: just check maplibre-demo x86_64-pc-windows-msvc
       - name: Test x86_64 windows
         shell: bash
-        run: just.exe test maplibre-demo x86_64-pc-windows-msvc
+        run: just test maplibre-demo x86_64-pc-windows-msvc
       - uses: actions/upload-artifact@v3
         with:
           name: maplibre-x86_64-windows-demo

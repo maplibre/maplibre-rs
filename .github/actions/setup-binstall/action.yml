@@ -4,6 +4,9 @@ description: Setup binstall
 runs:
   using: "composite"
   steps:
+    - name: Setup default toolchain
+      shell: bash
+      run: rustup show # Installs toolchain specified in rust-toolchain.toml
     - name: Install binstall
       shell: bash
       run: |
