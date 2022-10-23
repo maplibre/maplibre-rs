@@ -4,7 +4,7 @@
 
 set shell := ["bash", "-c"]
 
-export NIGHTLY_TOOLCHAIN := "nightly-2022-07-03"
+export NIGHTLY_TOOLCHAIN := "nightly-2022-10-23"
 export STABLE_TOOLCHAIN := "1.62"
 
 export CARGO_TERM_COLOR := "always"
