@@ -10,17 +10,17 @@ jobs:
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
+      - name: Install toolchain
+        shell: bash
+        run: |
+          just stable-toolchain
+          just stable-targets x86_64-apple-darwin aarch64-apple-darwin x86_64-apple-ios aarch64-apple-ios aarch64-apple-ios-sim
       - name: Setup binstall
         uses: ./.github/actions/setup-binstall
       - name: Install just
         uses: ./.github/actions/cargo-install
         with:
           name: just
-      - name: Install toolchain
-        shell: bash
-        run: |
-          just stable-toolchain
-          just stable-targets x86_64-apple-darwin aarch64-apple-darwin x86_64-apple-ios aarch64-apple-ios aarch64-apple-ios-sim
       - uses: Swatinem/rust-cache@v2
       - name: Build
         shell: bash
