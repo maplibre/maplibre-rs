@@ -1,0 +1,11 @@
+name: setup-binstall
+description: Setup binstall
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install binstall
+      shell: bash
+      run: |
+        # Install with debug profile -> faster compilation
+        cargo install --debug cargo-binstall

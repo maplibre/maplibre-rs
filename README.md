@@ -24,7 +24,7 @@
 
 <div align="center">
   <h3>
-    <a href="https://maplibre-rs-demos.pages.dev/webgl">
+    <a href="https://webgl.demo.maplibre-rs.maplibre.org">
       WebGL Demo
     </a>
     <span> | </span>
@@ -75,6 +75,12 @@ graphics are achievable using the current stack.
 ([External Link](https://media.ccc.de/v/mch2022-265-world-in-vectors-cross-platform-map-rendering-using-rust))
 
 ([Older Talk on YouTube](https://www.youtube.com/watch?v=KFk8bOtJzCM))
+
+## Demos
+
+- [WebGL](https://webgl.demo.maplibre-rs.maplibre.org)
+- [WebGL with multithreading](https://webgl-multithreaded.demo.maplibre-rs.maplibre.org) - Does not work on Safari right now
+- [WebGPU](https://webgpu.demo.maplibre-rs.maplibre.org) - Only works with development versions of Firefox and Chrome
 
 ## Current Features
 
