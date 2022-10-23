@@ -22,6 +22,12 @@ jobs:
           just stable-toolchain
           just stable-targets x86_64-apple-darwin aarch64-apple-darwin x86_64-apple-ios aarch64-apple-ios aarch64-apple-ios-sim
       - uses: Swatinem/rust-cache@v2
+      - name: Swift Version
+        shell: bash
+        run: swift --version
+      - name: XCode Version
+        shell: bash
+        run: xcodebuild -version
       - name: Build
         shell: bash
         run: just xcodebuild-xcframework
@@ -39,9 +45,6 @@ jobs:
       - name: Build Example
         shell: bash
         run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
-      - name: Swift Version
-        shell: bash
-        run: swift --version
       - name: Build Swift Package (arm64)
         shell: bash
         run: cd apple/MapLibreRs && rm -rf .build && swift build -v --arch=arm64
