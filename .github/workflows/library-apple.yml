@@ -39,10 +39,13 @@ jobs:
       - name: Build Example
         shell: bash
         run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
+      - name: Swift Version
+        shell: bash
+        run: swift --version
       - name: Build Swift Package (arm64)
         shell: bash
-        run: cd apple/MapLibreRs && rm -rf .build && swift build --arch=arm64
+        run: cd apple/MapLibreRs && rm -rf .build && swift build -v --arch=arm64
       - name: Build Swift Package (x86_64)
         shell: bash
-        run: cd apple/MapLibreRs && rm -rf .build && swift build --arch=x86_64
+        run: cd apple/MapLibreRs && rm -rf .build && swift build -v --arch=x86_64
 
