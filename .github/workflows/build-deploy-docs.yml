@@ -14,15 +14,15 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: Install toolchain
-        shell: bash
-        run: just stable-toolchain
       - name: Setup binstall
         uses: ./.github/actions/setup-binstall
       - name: Install just
         uses: ./.github/actions/cargo-install
         with:
           name: just
+      - name: Install toolchain
+        shell: bash
+        run: just stable-toolchain
       - uses: Swatinem/rust-cache@v2
       - name: Install mdbook
         uses: ./.github/actions/cargo-install
