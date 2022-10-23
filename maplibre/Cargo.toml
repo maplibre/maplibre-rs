@@ -19,12 +19,13 @@ headless = ["png"]
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
 tokio = { version = "1.20.1", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
+tokio-util = { version = "0.7.1", features = ["rt"] }
 env_logger = "0.9.0"
 reqwest = { version = "0.11.11", default-features = false, features = ["rustls-tls", "gzip"] }
-reqwest-middleware-cache = "0.1.1"
-reqwest-middleware = "0.1.6"
-tracing-tracy = { version = "0.10.0", optional = true }
-tracy-client = { version = "0.14.0", optional = true }
+reqwest-middleware-cache = "0.1.1" # FIXME: Untrusted dependency
+reqwest-middleware = "0.1.6" # FIXME: Untrusted dependency
+tracing-tracy = { version = "0.10", optional = true }
+tracy-client = { version = "0.14", optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 # Use rusttls on android because cross compiling is difficult
@@ -32,7 +33,7 @@ reqwest = { version = "0.11.11", default-features = false, features = ["rustls-t
 
 [dependencies]
 async-trait = "0.1.57"
-instant = { version = "0.1.12", features = ["wasm-bindgen"] } # FIXME: Untrusted dependency
+instant = { version = "0.1.12", features = ["wasm-bindgen"] } # TODO: Untrusted dependency
 
 # Tracing
 tracing = "0.1.36"
@@ -50,7 +51,7 @@ geozero = { version = "0.9.5", default-features = false, features = ["with-mvt",
 tile-grid = "0.3.0"
 
 # Rendering
-wgpu = { git = "https://github.com/gfx-rs/wgpu", rev = "94ce763" }
+wgpu = "0.14.0"
 lyon = { version = "1.0.0", features = [] }
 raw-window-handle = "0.5.0"
 

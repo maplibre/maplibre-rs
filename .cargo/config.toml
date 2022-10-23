@@ -2,10 +2,20 @@
 rustflags = [
     # Enabled unstable APIs from web_sys
     "--cfg=web_sys_unstable_apis",
-    # Enables features which are required for shared-memory
-    "-C", "target-feature=+atomics,+bulk-memory,+mutable-globals",
-    # Enables the possibility to import memory into wasm.
-    # Without --shared-memory it is not possible to use shared WebAssembly.Memory.
-    "-C", "link-args=--shared-memory --import-memory",
+    "-C", "link-args=--import-memory",
 ]
 runner = 'wasm-bindgen-test-runner'
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 's'
+debug = true
+debug-assertions = true
+overflow-checks = true
+panic = 'abort'
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = 's'
+lto = true
+panic = 'abort'

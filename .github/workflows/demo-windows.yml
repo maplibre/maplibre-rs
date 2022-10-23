@@ -8,12 +8,19 @@ jobs:
     name: Build
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
+      - uses: actions/checkout@v3
+      - name: Setup binstall
+        uses: ./.github/actions/setup-binstall
+      - name: Install just
+        uses: ./.github/actions/cargo-install
+        with:
+          name: just
       - name: Install toolchain
         shell: bash
-        run: just default-toolchain
-      - uses: Swatinem/rust-cache@v1
+        run: |
+          just stable-toolchain
+          just stable-targets x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@v2
       - uses: ilammy/msvc-dev-cmd@v1 # Provide access to lib.exe
       - name: Build
         shell: bash

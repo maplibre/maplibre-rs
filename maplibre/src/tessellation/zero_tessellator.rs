@@ -64,7 +64,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> ZeroTesse
                 &StrokeOptions::tolerance(DEFAULT_TOLERANCE),
                 &mut BuffersBuilder::new(&mut self.buffer, VertexConstructor {}),
             )
-            .unwrap();
+            .unwrap(); // TODO: Remove unwrap
     }
 
     fn end(&mut self, close: bool) {
@@ -83,7 +83,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> ZeroTesse
                 &FillOptions::tolerance(DEFAULT_TOLERANCE).with_fill_rule(FillRule::NonZero),
                 &mut BuffersBuilder::new(&mut self.buffer, VertexConstructor {}),
             )
-            .unwrap();
+            .unwrap(); // TODO: Remove unwrap
     }
 }
 

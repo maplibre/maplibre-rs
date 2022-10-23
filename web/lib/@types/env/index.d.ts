@@ -1,1 +1,2 @@
-declare const process: { env: { WEBGL: string } }
+declare const WEBGL: boolean
+declare const MULTITHREADED: boolean

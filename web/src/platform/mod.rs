@@ -1,4 +1,10 @@
+use std::future::Future;
+
+use maplibre::error::Error;
 pub mod http_client;
-pub mod legacy_webworker_fetcher;
-pub mod pool;
-pub mod schedule_method;
+
+#[cfg(target_feature = "atomics")]
+pub mod multithreaded;
+
+#[cfg(not(target_feature = "atomics"))]
+pub mod singlethreaded;

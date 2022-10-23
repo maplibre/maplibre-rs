@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build WASM" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="build -p web --features web-webgl --lib --release --target wasm32-unknown-unknown -Z build-std=std,panic_abort" />
+  <configuration default="false" name="Build WASM (single-threaded)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="command" value="build -p web --features web-webgl --lib --profile wasm-dev --target wasm32-unknown-unknown" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

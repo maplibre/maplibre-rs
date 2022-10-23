@@ -1,0 +1,17 @@
+name: cargo-install
+description: Install a dependency from cargo
+
+inputs:
+  name:
+    required: true
+    description: Name of the dependency
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup default toolchain
+      shell: bash
+      run: rustup show # Installs toolchain specified in rust-toolchain.toml
+    - name: Install ${{ inputs.name }}
+      shell: bash
+      run: cargo binstall --no-confirm ${{ inputs.name }}

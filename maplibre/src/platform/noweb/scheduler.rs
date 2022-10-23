@@ -1,17 +1,17 @@
 use std::future::Future;
 
-use crate::{error::Error, ScheduleMethod};
+use crate::{error::Error, Scheduler};
 
 /// Multi-threading with Tokio.
-pub struct TokioScheduleMethod;
+pub struct TokioScheduler;
 
-impl TokioScheduleMethod {
+impl TokioScheduler {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl ScheduleMethod for TokioScheduleMethod {
+impl Scheduler for TokioScheduler {
     fn schedule<T>(&self, future_factory: impl FnOnce() -> T + Send + 'static) -> Result<(), Error>
     where
         T: Future<Output = ()> + Send + 'static,
