@@ -8,14 +8,19 @@ jobs:
     name: Build
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
+      - uses: actions/checkout@v3
+      - name: Setup binstall
+        uses: ./.github/actions/setup-binstall
+      - name: Install just
+        uses: ./.github/actions/cargo-install
+        with:
+          name: just
       - name: Install nightly toolchain
         shell: bash
         run: |
           just nightly-toolchain
           just nightly-targets x86_64-linux-android aarch64-linux-android i686-linux-android
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
       - name: Set NDK Version
         shell: bash
         run: |

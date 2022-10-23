@@ -9,16 +9,25 @@ jobs:
     name: Build
     runs-on: macos-12
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+      - name: Setup binstall
+        uses: ./.github/actions/setup-binstall
+      - name: Install just
+        uses: ./.github/actions/cargo-install
+        with:
+          name: just
       - name: Install toolchain
         shell: bash
         run: |
           just stable-toolchain
           just stable-targets x86_64-apple-darwin aarch64-apple-darwin x86_64-apple-ios aarch64-apple-ios aarch64-apple-ios-sim
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
+      - name: Swift Version
+        shell: bash
+        run: swift --version
+      - name: XCode Version
+        shell: bash
+        run: xcodebuild -version
       - name: Build
         shell: bash
         run: just xcodebuild-xcframework
@@ -38,8 +47,8 @@ jobs:
         run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
       - name: Build Swift Package (arm64)
         shell: bash
-        run: cd apple/MapLibreRs && swift build --arch=arm64
+        run: cd apple/MapLibreRs && swift build -v --arch=arm64 --scratch-path .build-arm64
       - name: Build Swift Package (x86_64)
         shell: bash
-        run: cd apple/MapLibreRs && swift build --arch=x86_64
+        run: cd apple/MapLibreRs && swift build -v --arch=x86_64 --scratch-path .build-x86_64
 

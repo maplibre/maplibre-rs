@@ -8,14 +8,19 @@ jobs:
     name: Benchmark
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
+      - uses: actions/checkout@v3
+      - name: Setup binstall
+        uses: ./.github/actions/setup-binstall
+      - name: Install just
+        uses: ./.github/actions/cargo-install
+        with:
+          name: just
       - name: Install toolchain
         shell: bash
         run: |
           just stable-toolchain
           just stable-targets x86_64-unknown-linux-gnu
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
       - name: Install GPU Drivers
         uses: ./.github/actions/install-driver
       - name: Download test data

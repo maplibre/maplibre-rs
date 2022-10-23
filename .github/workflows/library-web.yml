@@ -26,8 +26,13 @@ jobs:
     name: Build
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
+      - uses: actions/checkout@v3
+      - name: Setup binstall
+        uses: ./.github/actions/setup-binstall
+      - name: Install just
+        uses: ./.github/actions/cargo-install
+        with:
+          name: just
       - name: Install nightly toolchain
         shell: bash
         run: |
@@ -39,11 +44,12 @@ jobs:
         run: |
           just nightly-install-src
       - name: Install wasm-bindgen
-        shell: bash
-        run: |
-          # Install wasm-bindgen with test runner
-          cargo install wasm-bindgen-cli # We want the latest version, as Cargo uses the latest version of wasm-bindgen
-      - uses: Swatinem/rust-cache@v1
+        uses: ./.github/actions/cargo-install
+        # Install wasm-bindgen with test runner
+        # We want the latest version, as Cargo uses the latest version of wasm-bindgen
+        with:
+          name: wasm-bindgen-cli
+      - uses: Swatinem/rust-cache@v2
       - name: Build lib
         shell: bash
         run: just web-lib build --release ${{ inputs.webgl && '--webgl' || '' }} ${{ inputs.multithreaded && '--multithreaded' || '' }}
@@ -56,7 +62,7 @@ jobs:
       - name: Test
         shell: bash
         run: just web-test "web-webgl"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.name }}
           path: web/demo/dist/
@@ -67,8 +73,8 @@ jobs:
     name: Deploy
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
         with:
           name: ${{ inputs.name }}
           path: demo
