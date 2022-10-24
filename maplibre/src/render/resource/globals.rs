@@ -2,7 +2,7 @@
 
 use std::{cmp, mem::size_of};
 
-use crate::{platform::MIN_BUFFER_SIZE, render::shaders::ShaderGlobals};
+use crate::{platform::MIN_WEBGL_BUFFER_SIZE, render::shaders::ShaderGlobals};
 
 pub struct Globals {
     pub uniform_buffer: wgpu::Buffer,
@@ -11,7 +11,8 @@ pub struct Globals {
 
 impl Globals {
     pub fn from_device(device: &wgpu::Device, group: &wgpu::BindGroupLayout) -> Self {
-        let globals_buffer_byte_size = cmp::max(MIN_BUFFER_SIZE, size_of::<ShaderGlobals>() as u64);
+        let globals_buffer_byte_size =
+            cmp::max(MIN_WEBGL_BUFFER_SIZE, size_of::<ShaderGlobals>() as u64);
 
         let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Globals ubo"),
