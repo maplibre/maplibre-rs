@@ -122,17 +122,21 @@
 <span id="122">122</span>
 <span id="123">123</span>
 <span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility for declaring pipelines.</span>
 
 <span class="kw">use</span> <span class="ident">std::cmp</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">platform::MIN_BUFFER_SIZE</span>,
+    <span class="ident">platform::MIN_WEBGL_BUFFER_SIZE</span>,
     <span class="ident">render</span>::{
         <span class="ident">resource</span>::{<span class="ident">FragmentState</span>, <span class="ident">RenderPipeline</span>, <span class="ident">RenderPipelineDescriptor</span>, <span class="ident">VertexState</span>},
         <span class="ident">settings::Msaa</span>,
         <span class="ident">shaders::ShaderGlobals</span>,
     },
+    <span class="ident">RendererSettings</span>,
 };
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TilePipeline</span> {
@@ -140,7 +144,7 @@
     <span class="ident">update_stencil</span>: <span class="ident">bool</span>,
     <span class="ident">debug_stencil</span>: <span class="ident">bool</span>,
     <span class="ident">wireframe</span>: <span class="ident">bool</span>,
-    <span class="ident">msaa</span>: <span class="ident">Msaa</span>,
+    <span class="ident">settings</span>: <span class="ident">RendererSettings</span>,
 
     <span class="ident">vertex_state</span>: <span class="ident">VertexState</span>,
     <span class="ident">fragment_state</span>: <span class="ident">FragmentState</span>,
@@ -148,7 +152,7 @@
 
 <span class="kw">impl</span> <span class="ident">TilePipeline</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">msaa</span>: <span class="ident">Msaa</span>,
+        <span class="ident">settings</span>: <span class="ident">RendererSettings</span>,
         <span class="ident">vertex_state</span>: <span class="ident">VertexState</span>,
         <span class="ident">fragment_state</span>: <span class="ident">FragmentState</span>,
         <span class="ident">bind_globals</span>: <span class="ident">bool</span>,
@@ -161,7 +165,7 @@
             <span class="ident">update_stencil</span>,
             <span class="ident">debug_stencil</span>,
             <span class="ident">wireframe</span>,
-            <span class="ident">msaa</span>,
+            <span class="ident">settings</span>,
             <span class="ident">vertex_state</span>,
             <span class="ident">fragment_state</span>,
         }
@@ -190,8 +194,10 @@
             }
         };
 
-        <span class="kw">let</span> <span class="ident">globals_buffer_byte_size</span> <span class="op">=</span>
-            <span class="ident">cmp::max</span>(<span class="ident">MIN_BUFFER_SIZE</span>, <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderGlobals</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="kw">let</span> <span class="ident">globals_buffer_byte_size</span> <span class="op">=</span> <span class="ident">cmp::max</span>(
+            <span class="ident">MIN_WEBGL_BUFFER_SIZE</span>,
+            <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderGlobals</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>,
+        );
 
         <span class="ident">RenderPipelineDescriptor</span> {
             <span class="ident">label</span>: <span class="prelude-val">None</span>,
@@ -227,7 +233,7 @@
                 <span class="ident">unclipped_depth</span>: <span class="bool-val">false</span>,
             },
             <span class="ident">depth_stencil</span>: <span class="prelude-val">Some</span>(<span class="ident">wgpu::DepthStencilState</span> {
-                <span class="ident">format</span>: <span class="ident">wgpu::TextureFormat::Depth24PlusStencil8</span>,
+                <span class="ident">format</span>: <span class="self">self</span>.<span class="ident">settings</span>.<span class="ident">depth_texture_format</span>,
                 <span class="ident">depth_write_enabled</span>: <span class="op">!</span><span class="self">self</span>.<span class="ident">update_stencil</span>,
                 <span class="ident">depth_compare</span>: <span class="ident">wgpu::CompareFunction::Greater</span>,
                 <span class="ident">stencil</span>: <span class="ident">wgpu::StencilState</span> {
@@ -239,7 +245,7 @@
                 <span class="ident">bias</span>: <span class="ident">wgpu::DepthBiasState::default</span>(),
             }),
             <span class="ident">multisample</span>: <span class="ident">wgpu::MultisampleState</span> {
-                <span class="ident">count</span>: <span class="self">self</span>.<span class="ident">msaa</span>.<span class="ident">samples</span>,
+                <span class="ident">count</span>: <span class="self">self</span>.<span class="ident">settings</span>.<span class="ident">msaa</span>.<span class="ident">samples</span>,
                 <span class="ident">mask</span>: <span class="op">!</span><span class="number">0</span>,
                 <span class="ident">alpha_to_coverage_enabled</span>: <span class="bool-val">false</span>,
             },

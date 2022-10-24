@@ -188,7 +188,7 @@
                 <span class="ident">Texture::new</span>(
                     <span class="prelude-val">Some</span>(<span class="string">&quot;depth texture&quot;</span>),
                     <span class="ident">device</span>,
-                    <span class="ident">wgpu::TextureFormat::Depth24PlusStencil8</span>,
+                    <span class="ident">settings</span>.<span class="ident">depth_texture_format</span>,
                     <span class="ident">size</span>.<span class="ident">width</span>(),
                     <span class="ident">size</span>.<span class="ident">height</span>(),
                     <span class="ident">settings</span>.<span class="ident">msaa</span>,
@@ -240,7 +240,7 @@
             };
 
             <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">TilePipeline::new</span>(
-                <span class="ident">settings</span>.<span class="ident">msaa</span>,
+                <span class="kw-2">*</span><span class="ident">settings</span>,
                 <span class="ident">tile_shader</span>.<span class="ident">describe_vertex</span>(),
                 <span class="ident">tile_shader</span>.<span class="ident">describe_fragment</span>(),
                 <span class="bool-val">true</span>,
@@ -265,7 +265,7 @@
             };
 
             <span class="ident">TilePipeline::new</span>(
-                <span class="ident">settings</span>.<span class="ident">msaa</span>,
+                <span class="kw-2">*</span><span class="ident">settings</span>,
                 <span class="ident">mask_shader</span>.<span class="ident">describe_vertex</span>(),
                 <span class="ident">mask_shader</span>.<span class="ident">describe_fragment</span>(),
                 <span class="bool-val">false</span>,
