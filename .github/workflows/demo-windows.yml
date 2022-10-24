@@ -8,6 +8,9 @@ jobs:
     name: Build
     runs-on: windows-2022
     steps:
+      - name: Switch shell to msys2
+        run: echo "C:\msys64\usr\bin" >> $GITHUB_PATH
+        shell: bash
       - uses: actions/checkout@v3
       - name: Setup binstall
         uses: ./.github/actions/setup-binstall
