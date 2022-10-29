@@ -3,12 +3,13 @@
 use std::cmp;
 
 use crate::{
-    platform::MIN_BUFFER_SIZE,
+    platform::MIN_WEBGL_BUFFER_SIZE,
     render::{
         resource::{FragmentState, RenderPipeline, RenderPipelineDescriptor, VertexState},
         settings::Msaa,
         shaders::ShaderGlobals,
     },
+    RendererSettings,
 };
 
 pub struct TilePipeline {
@@ -16,7 +17,7 @@ pub struct TilePipeline {
     update_stencil: bool,
     debug_stencil: bool,
     wireframe: bool,
-    msaa: Msaa,
+    settings: RendererSettings,
 
     vertex_state: VertexState,
     fragment_state: FragmentState,
@@ -24,7 +25,7 @@ pub struct TilePipeline {
 
 impl TilePipeline {
     pub(crate) fn new(
-        msaa: Msaa,
+        settings: RendererSettings,
         vertex_state: VertexState,
         fragment_state: FragmentState,
         bind_globals: bool,
@@ -37,7 +38,7 @@ impl TilePipeline {
             update_stencil,
             debug_stencil,
             wireframe,
-            msaa,
+            settings,
             vertex_state,
             fragment_state,
         }
@@ -66,8 +67,10 @@ impl RenderPipeline for TilePipeline {
             }
         };
 
-        let globals_buffer_byte_size =
-            cmp::max(MIN_BUFFER_SIZE, std::mem::size_of::<ShaderGlobals>() as u64);
+        let globals_buffer_byte_size = cmp::max(
+            MIN_WEBGL_BUFFER_SIZE,
+            std::mem::size_of::<ShaderGlobals>() as u64,
+        );
 
         RenderPipelineDescriptor {
             label: None,
@@ -103,7 +106,7 @@ impl RenderPipeline for TilePipeline {
                 unclipped_depth: false,
             },
             depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth24PlusStencil8,
+                format: self.settings.depth_texture_format,
                 depth_write_enabled: !self.update_stencil,
                 depth_compare: wgpu::CompareFunction::Greater,
                 stencil: wgpu::StencilState {
@@ -115,7 +118,7 @@ impl RenderPipeline for TilePipeline {
                 bias: wgpu::DepthBiasState::default(),
             }),
             multisample: wgpu::MultisampleState {
-                count: self.msaa.samples,
+                count: self.settings.msaa.samples,
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },

@@ -48,7 +48,7 @@ impl Stage for ResourceStage {
                 Texture::new(
                     Some("depth texture"),
                     device,
-                    wgpu::TextureFormat::Depth24PlusStencil8,
+                    settings.depth_texture_format,
                     size.width(),
                     size.height(),
                     settings.msaa,
@@ -100,7 +100,7 @@ impl Stage for ResourceStage {
             };
 
             let pipeline = TilePipeline::new(
-                settings.msaa,
+                *settings,
                 tile_shader.describe_vertex(),
                 tile_shader.describe_fragment(),
                 true,
@@ -125,7 +125,7 @@ impl Stage for ResourceStage {
             };
 
             TilePipeline::new(
-                settings.msaa,
+                *settings,
                 mask_shader.describe_vertex(),
                 mask_shader.describe_fragment(),
                 false,
