@@ -25,6 +25,16 @@ runs:
       if: ${{ inputs.nightly }}
       shell: bash
       run: just nightly-toolchain
+    # We are now setting the toolchains using override. That way e.g. Swatinem/rust-cache will pick up the right rustc
+    # version
+    - name: Set stable toolchain
+      if: ${{ !inputs.nightly }}
+      shell: bash
+      run: just stable-override-toolchain
+    - name: Set nightly toolchain
+      if: ${{ inputs.nightly }}
+      shell: bash
+      run: just nightly-override-toolchain
     - name: Install targets
       if: ${{ inputs.targets }}
       shell: bash
