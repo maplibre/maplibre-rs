@@ -3,13 +3,40 @@ use crate::{
     io::source_client::{HttpSourceClient, SourceClient},
 };
 
+/// Holds references to core constructs of maplibre. Based on the compile-time initialization
+/// different implementations for handling windows, asynchronous work, or data sources are provided
+/// through a [`Kernel`].
+///
+/// An [`Environment`] defines the types which are used.
+///
+/// A Kernel lives as long as a [Map](crate::map::Map) usually. It is shared through out various
+/// components of the maplibre library.
 pub struct Kernel<E: Environment> {
-    pub map_window_config: E::MapWindowConfig,
-    pub apc: E::AsyncProcedureCall,
-    pub scheduler: E::Scheduler,
-    pub source_client: SourceClient<E::HttpClient>,
+    map_window_config: E::MapWindowConfig,
+    apc: E::AsyncProcedureCall,
+    scheduler: E::Scheduler,
+    source_client: SourceClient<E::HttpClient>,
 }
 
+impl<E: Environment> Kernel<E> {
+    pub fn map_window_config(&self) -> &E::MapWindowConfig {
+        &self.map_window_config
+    }
+
+    pub fn apc(&self) -> &E::AsyncProcedureCall {
+        &self.apc
+    }
+
+    pub fn scheduler(&self) -> &E::Scheduler {
+        &self.scheduler
+    }
+
+    pub fn source_client(&self) -> &SourceClient<E::HttpClient> {
+        &self.source_client
+    }
+}
+
+/// A convenient builder for [Kernels](Kernel).
 pub struct KernelBuilder<E: Environment> {
     map_window_config: Option<E::MapWindowConfig>,
     apc: Option<E::AsyncProcedureCall>,

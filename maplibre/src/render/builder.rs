@@ -102,7 +102,7 @@ where
     where
         E: Environment<MapWindowConfig = MWC>,
     {
-        self.initialize(&kernel.map_window_config).await
+        self.initialize(kernel.map_window_config()).await
     }
 }
 
@@ -123,7 +123,7 @@ impl<MWC: MapWindowConfig> UninitializedRenderer<MWC> {
     where
         E: Environment<MapWindowConfig = MWC>,
     {
-        self.initialize_headless(&kernel.map_window_config).await
+        self.initialize_headless(kernel.map_window_config()).await
     }
 }
 

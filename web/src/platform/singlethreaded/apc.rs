@@ -185,7 +185,7 @@ impl AsyncProcedureCall<UsedTransferables, UsedHttpClient> for PassingAsyncProce
         self.received.pop()
     }
 
-    fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
+    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
         let procedure_ptr = procedure as *mut AsyncProcedure<Self::Context> as u32; // FIXME (wasm-executor): is u32 fine, define an overflow safe function?
         let input = serde_json::to_string(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
 

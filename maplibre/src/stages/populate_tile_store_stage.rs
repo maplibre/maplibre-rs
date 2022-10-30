@@ -35,7 +35,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
             ..
         }: &mut MapContext,
     ) {
-        if let Some(result) = self.kernel.apc.receive() {
+        if let Some(result) = self.kernel.apc().receive() {
             match result {
                 Message::TileTessellated(tranferred) => {
                     let coords = tranferred.coords();

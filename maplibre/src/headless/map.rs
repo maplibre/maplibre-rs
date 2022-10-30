@@ -97,7 +97,7 @@ impl HeadlessMap {
         coords: WorldTileCoords,
         source_layers: &[&str],
     ) -> Result<StoredTile, Error> {
-        let source_client = &self.kernel.source_client;
+        let source_client = self.kernel.source_client();
 
         let data = source_client.fetch(&coords).await?.into_boxed_slice();
 

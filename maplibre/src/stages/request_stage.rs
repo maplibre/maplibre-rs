@@ -150,7 +150,8 @@ impl<E: Environment> RequestStage<E> {
         coords: WorldTileCoords,
         layers: &HashSet<String>,
     ) -> Result<(), Error> {
-        /*        if !tile_repository.is_layers_missing(coords, layers) {
+        /* TODO: is this still required?
+        if !tile_repository.is_layers_missing(coords, layers) {
             return Ok(false);
         }*/
 
@@ -158,7 +159,7 @@ impl<E: Environment> RequestStage<E> {
             tile_repository.create_tile(coords);
 
             tracing::info!("new tile request: {}", &coords);
-            self.kernel.apc.schedule(
+            self.kernel.apc().call(
                 Input::TileRequest(TileRequest {
                     coords,
                     layers: layers.clone(),
