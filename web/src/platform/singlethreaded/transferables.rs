@@ -131,7 +131,8 @@ impl TessellatedLayer for LinearTessellatedLayer {
     }
 
     fn to_stored_layer(self) -> StoredLayer {
-        let layer = StoredLayer::TessellatedLayer {
+        // TODO: Avoid copies here
+        StoredLayer::TessellatedLayer {
             coords: WrapperWorldTileCoords::peel(self.data.coords),
             layer_name: String::from_utf8(Vec::from(
                 &self.data.layer_name[..self.data.layer_name_len],
@@ -143,9 +144,7 @@ impl TessellatedLayer for LinearTessellatedLayer {
                 self.data.usable_indices,
             ),
             feature_indices: Vec::from(&self.data.feature_indices[..self.data.feature_indices_len]),
-        };
-
-        layer
+        }
     }
 }
 

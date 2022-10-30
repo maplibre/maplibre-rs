@@ -18,6 +18,7 @@ use std::{
 use js_sys::Uint8Array;
 use maplibre::{
     environment::Environment,
+    error::Error,
     io::{
         apc::{AsyncProcedure, AsyncProcedureCall, Context, Input, Message},
         scheduler::Scheduler,
@@ -120,7 +121,7 @@ pub struct PassingContext {
 }
 
 impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
-    fn send(&self, data: Message<UsedTransferables>) {
+    fn send(&self, data: Message<UsedTransferables>) -> Result<(), Error> {
         let tag = data.tag();
         let serialized = data.serialize();
 
@@ -130,11 +131,13 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
             serialized_array.set(&Uint8Array::view(serialized), 0);
         }
 
-        let global = js_sys::global().unchecked_into::<DedicatedWorkerGlobalScope>(); // FIXME (wasm-executor): Remove unchecked
+        let global = js_sys::global()
+            .try_into::<DedicatedWorkerGlobalScope>()
+            .map_err(|e| Error::APC);
         let array = js_sys::Array::new();
         array.push(&JsValue::from(tag as u32));
         array.push(&serialized_array_buffer);
-        global.post_message(&array).unwrap(); // FIXME (wasm-executor) Remove unwrap
+        global.post_message(&array).map_err(|e| Error::APC)
     }
 
     fn source_client(&self) -> &SourceClient<UsedHttpClient> {

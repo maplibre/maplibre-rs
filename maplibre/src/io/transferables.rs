@@ -66,7 +66,7 @@ pub struct DefaultTessellatedLayer {
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
     pub feature_indices: Vec<u32>,
-    pub layer_data: Layer, // FIXME (wasm-executor): Introduce a better structure for this
+    pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
 }
 
 impl TessellatedLayer for DefaultTessellatedLayer {

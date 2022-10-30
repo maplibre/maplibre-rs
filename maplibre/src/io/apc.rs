@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     coords::WorldTileCoords,
+    error::Error,
     io::{
         scheduler::Scheduler,
         source_client::{HttpClient, HttpSourceClient, SourceClient},
@@ -42,7 +43,8 @@ pub enum Input {
 /// Allows sending messages from workers to back to the caller.
 pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
     /// Send a message back to the caller.
-    fn send(&self, data: Message<T>);
+    // FIXME (wasm-executor): handle results send() calls
+    fn send(&self, data: Message<T>) -> Result<(), Error>;
 
     fn source_client(&self) -> &SourceClient<HC>;
 }
@@ -117,8 +119,8 @@ pub struct SchedulerContext<T: Transferables, HC: HttpClient> {
 }
 
 impl<T: Transferables, HC: HttpClient> Context<T, HC> for SchedulerContext<T, HC> {
-    fn send(&self, data: Message<T>) {
-        self.sender.send(data).unwrap(); // FIXME (wasm-executor): Remove unwrap
+    fn send(&self, data: Message<T>) -> Result<(), Error> {
+        self.sender.send(data).map_err(|e| Error::APC)
     }
 
     fn source_client(&self) -> &SourceClient<HC> {
@@ -156,7 +158,7 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
 
     fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
         let sender = self.channel.0.clone();
-        let client = self.http_client.clone(); // FIXME (wasm-executor): do not clone each time
+        let client = self.http_client.clone(); // TODO (perf): do not clone each time
 
         self.scheduler
             .schedule(move || async move {

@@ -9,6 +9,7 @@ use crate::render::{error::RenderError, graph::RenderGraphError};
 /// Enumeration of errors which can happen during the operation of the library.
 #[derive(Debug)]
 pub enum Error {
+    APC,
     Scheduler,
     Network(String),
     Tesselation(TessellationError),
