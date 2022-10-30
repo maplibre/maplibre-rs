@@ -36,9 +36,13 @@ runs:
       shell: bash
       run: just nightly-override-toolchain
     - name: Install targets
-      if: ${{ inputs.targets }}
+      if: ${{ inputs.targets && !inputs.nightly  }}
       shell: bash
       run: just stable-targets ${{ inputs.targets }}
+    - name: Install targets
+      if: ${{ inputs.targets && inputs.nightly  }}
+      shell: bash
+      run: just nightly-targets ${{ inputs.targets }}
     - uses: Swatinem/rust-cache@v2
     - name: Install just
       uses: ./.github/actions/cargo-install
