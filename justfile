@@ -14,6 +14,9 @@ export RUST_BACKTRACE := "1"
 stable-toolchain:
   rustup toolchain install $STABLE_TOOLCHAIN
 
+stable-override-toolchain:
+  rustup override set $STABLE_TOOLCHAIN
+
 stable-targets *FLAGS:
   rustup toolchain install $STABLE_TOOLCHAIN --target {{FLAGS}}
 
@@ -23,6 +26,9 @@ stable-install-clippy:
 
 nightly-toolchain:
   rustup toolchain install $NIGHTLY_TOOLCHAIN
+
+nightly-override-toolchain:
+  rustup override set $NIGHTLY_TOOLCHAIN
 
 nightly-targets *FLAGS:
   rustup toolchain install $NIGHTLY_TOOLCHAIN --target {{FLAGS}}
