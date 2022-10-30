@@ -10,18 +10,10 @@ jobs:
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
-      - name: Setup binstall
-        uses: ./.github/actions/setup-binstall
-      - name: Install just
-        uses: ./.github/actions/cargo-install
+      - name: Setup
+        uses: ./.github/actions/setup
         with:
-          name: just
-      - name: Install toolchain
-        shell: bash
-        run: |
-          just stable-toolchain
-          just stable-targets x86_64-apple-darwin aarch64-apple-darwin x86_64-apple-ios aarch64-apple-ios aarch64-apple-ios-sim
-      - uses: Swatinem/rust-cache@v2
+          targets: x86_64-apple-darwin aarch64-apple-darwin x86_64-apple-ios aarch64-apple-ios aarch64-apple-ios-sim
       - name: Swift Version
         shell: bash
         run: swift --version
@@ -34,10 +26,10 @@ jobs:
       - name: Check x86_64 darwin
         shell: bash
         run: just check apple x86_64-apple-darwin
-      - name: Check x86_64 darwin
+      - name: Check aarch64 darwin
         shell: bash
         # TODO: Additional clippy checks for different targets (iOS)
-        run: just check apple x86_64-apple-darwin
+        run: just check apple aarch64-apple-darwin
       - name: Test x86_64 darwin
         shell: bash
         # TODO: Additional test runs for different targets (Different targets might require emulation)

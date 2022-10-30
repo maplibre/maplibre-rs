@@ -9,18 +9,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: Setup binstall
-        uses: ./.github/actions/setup-binstall
-      - name: Install just
-        uses: ./.github/actions/cargo-install
+      - name: Setup
+        uses: ./.github/actions/setup
         with:
-          name: just
-      - name: Install toolchain
-        shell: bash
-        run: |
-          just stable-toolchain
-          just stable-targets x86_64-unknown-linux-gnu
-      - uses: Swatinem/rust-cache@v2
+          targets: x86_64-unknown-linux-gnu
       - name: Install GPU Drivers
         uses: ./.github/actions/install-driver
       - name: Test Vulkan

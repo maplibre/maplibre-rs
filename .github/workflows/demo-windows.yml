@@ -8,22 +8,17 @@ jobs:
     name: Build
     runs-on: windows-2022
     steps:
-      - name: Switch shell to msys2
+      - name: Switch to msys2
         run: echo "C:\msys64\usr\bin" >> $GITHUB_PATH
         shell: bash
-      - uses: actions/checkout@v3
-      - name: Setup binstall
-        uses: ./.github/actions/setup-binstall
-      - name: Install just
-        uses: ./.github/actions/cargo-install
-        with:
-          name: just
-      - name: Install toolchain
+      - name: Install mysys2 dependencies
+        run: pacman -S --noconfirm unzip
         shell: bash
-        run: |
-          just stable-toolchain
-          just stable-targets x86_64-pc-windows-msvc
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          targets: x86_64-pc-windows-msvc
       - uses: ilammy/msvc-dev-cmd@v1 # Provide access to lib.exe
       - name: Show PATH
         shell: bash
