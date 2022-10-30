@@ -5,7 +5,6 @@ use crate::{
     coords::{LatLon, WorldCoords, Zoom, TILE_SIZE},
     environment::Environment,
     error::Error,
-    headless::environment::HeadlessEnvironment,
     kernel::Kernel,
     render::{create_default_render_graph, register_default_render_stages, Renderer},
     schedule::{Schedule, Stage},
