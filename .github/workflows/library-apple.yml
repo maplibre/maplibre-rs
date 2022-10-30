@@ -26,10 +26,10 @@ jobs:
       - name: Check x86_64 darwin
         shell: bash
         run: just check apple x86_64-apple-darwin
-      - name: Check x86_64 darwin
+      - name: Check aarch64 darwin
         shell: bash
         # TODO: Additional clippy checks for different targets (iOS)
-        run: just check apple x86_64-apple-darwin
+        run: just check apple aarch64-apple-darwin
       - name: Test x86_64 darwin
         shell: bash
         # TODO: Additional test runs for different targets (Different targets might require emulation)
