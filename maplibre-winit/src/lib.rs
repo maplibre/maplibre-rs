@@ -138,10 +138,10 @@ impl<ET: 'static> EventLoop<ET> for WinitEventLoop<ET> {
                                     ..
                                 } => *control_flow = ControlFlow::Exit,
                                 WindowEvent::Resized(physical_size) => {
-                                    // FIXME map.resize(physical_size.width, physical_size.height);
+                                    map.context_mut().resize(physical_size.width, physical_size.height);
                                 }
                                 WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                                    // FIXME map.resize(new_inner_size.width, new_inner_size.height);
+                                    map.context_mut().resize(new_inner_size.width, new_inner_size.height);
                                 }
                                 _ => {}
                             }
@@ -152,7 +152,7 @@ impl<ET: 'static> EventLoop<ET> for WinitEventLoop<ET> {
                         let dt = now - last_render_time;
                         last_render_time = now;
 
-                        // FIXME input_controller.update_state(map.view_state_mut(), dt);
+                        input_controller.update_state(map.context_mut().world.view_state_mut(), dt);
 
                         match map.run_schedule() {
                             Ok(_) => {}

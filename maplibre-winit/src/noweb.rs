@@ -17,7 +17,7 @@ use maplibre::{
 use winit::window::WindowBuilder;
 
 use super::{RawWinitEventLoop, RawWinitWindow, WinitMapWindow, WinitMapWindowConfig};
-use crate::winit::{WinitEnvironment, WinitEventLoop};
+use crate::{WinitEnvironment, WinitEventLoop};
 
 impl<T> MapWindow for WinitMapWindow<T> {
     fn size(&self) -> WindowSize {

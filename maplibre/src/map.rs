@@ -57,4 +57,12 @@ impl<E: Environment> Map<E> {
         self.schedule.run(&mut self.map_context);
         Ok(())
     }
+
+    pub fn context(&self) -> &MapContext {
+        &self.map_context
+    }
+
+    pub fn context_mut(&mut self) -> &mut MapContext {
+        &mut self.map_context
+    }
 }

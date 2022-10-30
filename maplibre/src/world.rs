@@ -3,6 +3,7 @@ use std::ops::{Deref, DerefMut};
 use cgmath::{Angle, Point3};
 
 use crate::{
+    context::MapContext,
     coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
     io::tile_repository::TileRepository,
     render::camera::{Camera, Perspective, ViewProjection},
@@ -51,6 +52,14 @@ impl World {
             view_state,
             tile_repository,
         }
+    }
+
+    pub fn view_state(&self) -> &ViewState {
+        &self.view_state
+    }
+
+    pub fn view_state_mut(&mut self) -> &mut ViewState {
+        &mut self.view_state
     }
 }
 
