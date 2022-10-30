@@ -10,7 +10,7 @@ use maplibre::{
     kernel::{Kernel, KernelBuilder},
     map::Map,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
-    render::builder::RenderBuilder,
+    render::builder::{InitializedRenderer, RenderBuilder},
     style::Style,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
 };
@@ -82,19 +82,23 @@ pub fn run_headed_map(cache_path: Option<String>) {
             .with_scheduler(TokioScheduler::new())
             .build();
 
-        let uninitialized = RenderBuilder::new()
+        let InitializedRenderer {
+            mut window,
+            renderer,
+        } = RenderBuilder::new()
             .build()
             .initialize_with(&kernel)
             .await
-            .expect("Failed to initialize renderer");
-        let result = uninitialized.unwarp();
+            .expect("Failed to initialize renderer")
+            .unwarp();
 
-        let mut window = result.window;
-        let renderer = result.renderer;
-        window.event_loop.take().unwrap().run(
-            window,
-            Map::new(Style::default(), kernel, renderer).unwrap(),
-            None,
-        )
+        window
+            .take_event_loop()
+            .expect("Event loop is not available")
+            .run(
+                window,
+                Map::new(Style::default(), kernel, renderer).unwrap(),
+                None,
+            )
     })
 }

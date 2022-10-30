@@ -139,12 +139,13 @@ impl PipelineProcessor for HeadlessPipelineProcessor {
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
         layer_data: RawLayer,
-    ) {
+    ) -> Result<(), Error> {
         self.layers.push(StoredLayer::TessellatedLayer {
             coords: *coords,
             layer_name: layer_data.name,
             buffer,
             feature_indices,
-        })
+        });
+        Ok(())
     }
 }

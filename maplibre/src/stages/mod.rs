@@ -89,11 +89,12 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         &mut self,
         coords: &WorldTileCoords,
         geometries: Vec<IndexedGeometry<f64>>,
-    ) {
+    ) -> Result<(), Error> {
         // FIXME (wasm-executor): Readd
         /*        if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
             geometry_index.index_tile(coords, TileIndex::Linear { list: geometries })
         }*/
+        Ok(())
     }
 }
 

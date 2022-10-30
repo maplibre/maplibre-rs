@@ -63,7 +63,6 @@ pub type MapType = Map<
 
 #[wasm_bindgen]
 pub async fn create_map(new_worker: js_sys::Function) -> u32 {
-    // Either call forget or the main loop to keep worker loop alive
     let mut builder = MapBuilder::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
         .with_http_client(WHATWGFetchHttpClient::new());
@@ -97,9 +96,8 @@ pub async fn create_map(new_worker: js_sys::Function) -> u32 {
 #[wasm_bindgen]
 pub unsafe fn clone_map(map_ptr: *const RefCell<MapType>) -> *const RefCell<MapType> {
     let mut map = Rc::from_raw(map_ptr);
-    let rc = map.clone();
-    let cloned = Rc::into_raw(rc);
-    mem::forget(map);
+    let cloned = Rc::into_raw(map.clone());
+    mem::forget(map); // TODO: Enforce forget, else the map gets dropped after calling such a function
     cloned
 }
 

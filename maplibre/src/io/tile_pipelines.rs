@@ -97,7 +97,7 @@ impl Processable for TessellateLayer {
                     tessellator.buffer.into(),
                     tessellator.feature_indices,
                     cloned_layer,
-                )
+                );
             }
         }
 
