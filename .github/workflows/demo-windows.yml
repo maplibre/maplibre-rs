@@ -8,8 +8,11 @@ jobs:
     name: Build
     runs-on: windows-2022
     steps:
-      - name: Switch shell to msys2
+      - name: Switch to msys2
         run: echo "C:\msys64\usr\bin" >> $GITHUB_PATH
+        shell: bash
+      - name: Install mysys2 dependencies
+        run: pacman -S --noconfirm unzip
         shell: bash
       - uses: actions/checkout@v3
       - name: Setup

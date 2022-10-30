@@ -15,6 +15,9 @@ runs:
   steps:
     # The Rust version from rust-toolchain.toml is used for the first steps. Later the Rust version is changed
     # by setting another version in "Set XYZ toolchain".
+    - name: Setup default toolchain
+      shell: bash
+      run: rustup show # Installs toolchain specified in rust-toolchain.toml
     - name: Install just
       uses: ./.github/actions/cargo-install
       with:
