@@ -20,7 +20,8 @@
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/docs/book" />
       <excludeFolder url="file://$MODULE_DIR$/web/lib/.parcel-cache" />
-      <excludeFolder url="file://$MODULE_DIR$/web/lib/src/wasm-pack" />
+      <excludeFolder url="file://$MODULE_DIR$/web/lib/src/wasm" />
+      <excludeFolder url="file://$MODULE_DIR$/web/lib/dist" />
       <excludeFolder url="file://$MODULE_DIR$/maplibre-cache" />
     </content>
     <orderEntry type="inheritedJdk" />
