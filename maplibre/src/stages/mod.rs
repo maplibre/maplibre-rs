@@ -10,7 +10,6 @@ use std::{
 use geozero::{mvt::tile, GeozeroDatasource};
 use request_stage::RequestStage;
 
-use crate::kernel::Kernel;
 use crate::{
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
     environment::Environment,
@@ -28,6 +27,7 @@ use crate::{
         },
         TileRequest,
     },
+    kernel::Kernel,
     render::ShaderVertex,
     schedule::Schedule,
     stages::populate_tile_store_stage::PopulateTileStore,

@@ -1,7 +1,9 @@
-use crate::error::Error;
-use crate::kernel::Kernel;
+use std::marker::PhantomData;
+
 use crate::{
     environment::Environment,
+    error::Error,
+    kernel::Kernel,
     render::{
         settings::{RendererSettings, WgpuSettings},
         Renderer,
@@ -9,7 +11,6 @@ use crate::{
     style::Style,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
-use std::marker::PhantomData;
 
 pub struct RenderBuilder<MWC: MapWindowConfig> {
     wgpu_settings: Option<WgpuSettings>,

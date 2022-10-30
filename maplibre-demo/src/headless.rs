@@ -1,14 +1,15 @@
-use maplibre::headless::map::HeadlessMap;
-use maplibre::headless::window::HeadlessMapWindowConfig;
-use maplibre::kernel::KernelBuilder;
-use maplibre::render::builder::RenderBuilder;
-use maplibre::style::Style;
 use maplibre::{
     coords::{LatLon, WorldTileCoords},
     error::Error,
+    headless::{map::HeadlessMap, window::HeadlessMapWindowConfig},
     io::apc::SchedulerAsyncProcedureCall,
+    kernel::KernelBuilder,
     platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
-    render::settings::{RendererSettings, TextureFormat},
+    render::{
+        builder::RenderBuilder,
+        settings::{RendererSettings, TextureFormat},
+    },
+    style::Style,
     util::grid::google_mercator,
     window::WindowSize,
 };

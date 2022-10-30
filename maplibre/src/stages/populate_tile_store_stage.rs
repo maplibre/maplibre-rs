@@ -2,7 +2,6 @@
 
 use std::{borrow::BorrowMut, cell::RefCell, ops::Deref, rc::Rc};
 
-use crate::kernel::Kernel;
 use crate::{
     context::MapContext,
     environment::Environment,
@@ -11,6 +10,7 @@ use crate::{
         tile_repository::StoredLayer,
         transferables::{TessellatedLayer, TileTessellated, UnavailableLayer},
     },
+    kernel::Kernel,
     schedule::Stage,
     world::World,
 };

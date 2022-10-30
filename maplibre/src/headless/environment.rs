@@ -1,8 +1,9 @@
-use crate::environment::Environment;
-use crate::headless::window::HeadlessMapWindowConfig;
-use crate::io::apc::SchedulerAsyncProcedureCall;
-use crate::platform::http_client::ReqwestHttpClient;
-use crate::platform::scheduler::TokioScheduler;
+use crate::{
+    environment::Environment,
+    headless::window::HeadlessMapWindowConfig,
+    io::apc::SchedulerAsyncProcedureCall,
+    platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
+};
 
 pub struct HeadlessEnvironment;
 

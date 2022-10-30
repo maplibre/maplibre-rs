@@ -1,6 +1,5 @@
-use crate::io::pipeline::Processable;
-use crate::kernel::Kernel;
-use crate::render::builder::UninitializedRenderer;
+use std::collections::HashSet;
+
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
@@ -10,15 +9,16 @@ use crate::{
         stage::WriteSurfaceBufferStage,
     },
     io::{
-        pipeline::{PipelineContext, PipelineProcessor},
+        pipeline::{PipelineContext, PipelineProcessor, Processable},
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::{StoredLayer, StoredTile, TileStatus},
         RawLayer, TileRequest,
     },
+    kernel::Kernel,
     render::{
-        create_default_render_graph, draw_graph, error::RenderError, eventually::Eventually,
-        register_default_render_stages, resource::Head, stages::RenderStageLabel, Renderer,
-        ShaderVertex,
+        builder::UninitializedRenderer, create_default_render_graph, draw_graph,
+        error::RenderError, eventually::Eventually, register_default_render_stages, resource::Head,
+        stages::RenderStageLabel, Renderer, ShaderVertex,
     },
     schedule::{Schedule, Stage},
     style::Style,
@@ -26,7 +26,6 @@ use crate::{
     window::WindowSize,
     world::World,
 };
-use std::collections::HashSet;
 
 pub struct HeadlessMap {
     kernel: Kernel<HeadlessEnvironment>,

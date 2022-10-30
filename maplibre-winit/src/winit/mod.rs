@@ -1,23 +1,25 @@
-use crate::input::{InputController, UpdateState};
+use std::{cell::RefCell, marker::PhantomData, ops::Deref, rc::Rc};
+
 use instant::Instant;
-use maplibre::event_loop::{EventLoop, EventLoopProxy};
-use maplibre::map::Map;
 use maplibre::{
     environment::Environment,
     error::Error,
+    event_loop::{EventLoop, EventLoopProxy},
     io::{
         apc::{AsyncProcedureCall, Message},
         scheduler::Scheduler,
         source_client::HttpClient,
         transferables::{DefaultTransferables, Transferables},
     },
+    map::Map,
     window::{HeadedMapWindow, MapWindowConfig},
 };
-use std::{cell::RefCell, marker::PhantomData, ops::Deref, rc::Rc};
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::ControlFlow,
 };
+
+use crate::input::{InputController, UpdateState};
 
 pub type RawWinitWindow = winit::window::Window;
 pub type RawWinitEventLoop<ET> = winit::event_loop::EventLoop<ET>;

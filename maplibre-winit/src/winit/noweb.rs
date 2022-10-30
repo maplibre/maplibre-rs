@@ -3,15 +3,15 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
-use maplibre::event_loop::EventLoop;
-use maplibre::headless::map::HeadlessMap;
-use maplibre::kernel::{Kernel, KernelBuilder};
-use maplibre::map::Map;
-use maplibre::render::builder::RenderBuilder;
-use maplibre::style::Style;
 use maplibre::{
+    event_loop::EventLoop,
+    headless::map::HeadlessMap,
     io::apc::SchedulerAsyncProcedureCall,
+    kernel::{Kernel, KernelBuilder},
+    map::Map,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
+    render::builder::RenderBuilder,
+    style::Style,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
 };
 use winit::window::WindowBuilder;

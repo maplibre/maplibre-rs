@@ -1,6 +1,5 @@
-use crate::event_loop::EventLoopConfig;
-use crate::kernel::Kernel;
 use crate::{
+    event_loop::EventLoopConfig,
     io::{
         apc::AsyncProcedureCall,
         scheduler::Scheduler,
@@ -9,6 +8,7 @@ use crate::{
             DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer, Transferables,
         },
     },
+    kernel::Kernel,
     window::MapWindowConfig,
 };
 
@@ -16,6 +16,8 @@ pub trait Environment: 'static {
     type MapWindowConfig: MapWindowConfig;
 
     type AsyncProcedureCall: AsyncProcedureCall<Self::HttpClient>;
+
     type Scheduler: Scheduler;
+
     type HttpClient: HttpClient;
 }

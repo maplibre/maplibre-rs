@@ -1,5 +1,6 @@
-use cgmath::{Angle, Point3};
 use std::ops::{Deref, DerefMut};
+
+use cgmath::{Angle, Point3};
 
 use crate::{
     coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},

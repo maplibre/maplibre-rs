@@ -1,5 +1,7 @@
-use crate::environment::Environment;
-use crate::io::source_client::{HttpSourceClient, SourceClient};
+use crate::{
+    environment::Environment,
+    io::source_client::{HttpSourceClient, SourceClient},
+};
 
 pub struct Kernel<E: Environment> {
     pub map_window_config: E::MapWindowConfig,

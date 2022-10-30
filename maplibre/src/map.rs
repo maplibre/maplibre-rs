@@ -1,15 +1,18 @@
-use crate::context::MapContext;
-use crate::coords::{LatLon, WorldCoords, Zoom, TILE_SIZE};
-use crate::environment::Environment;
-use crate::error::Error;
-use crate::headless::environment::HeadlessEnvironment;
-use crate::kernel::Kernel;
-use crate::render::{create_default_render_graph, register_default_render_stages, Renderer};
-use crate::schedule::{Schedule, Stage};
-use crate::stages::register_stages;
-use crate::style::Style;
-use crate::world::World;
 use std::rc::Rc;
+
+use crate::{
+    context::MapContext,
+    coords::{LatLon, WorldCoords, Zoom, TILE_SIZE},
+    environment::Environment,
+    error::Error,
+    headless::environment::HeadlessEnvironment,
+    kernel::Kernel,
+    render::{create_default_render_graph, register_default_render_stages, Renderer},
+    schedule::{Schedule, Stage},
+    stages::register_stages,
+    style::Style,
+    world::World,
+};
 
 pub struct Map<E: Environment> {
     kernel: Rc<Kernel<E>>,

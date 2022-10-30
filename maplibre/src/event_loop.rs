@@ -1,6 +1,8 @@
-use crate::environment::Environment;
-use crate::map::Map;
-use crate::window::{HeadedMapWindow, MapWindowConfig};
+use crate::{
+    environment::Environment,
+    map::Map,
+    window::{HeadedMapWindow, MapWindowConfig},
+};
 
 pub trait EventLoopConfig {
     type EventType: 'static;

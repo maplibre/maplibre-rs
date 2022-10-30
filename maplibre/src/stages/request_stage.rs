@@ -12,7 +12,6 @@ use std::{
     str::FromStr,
 };
 
-use crate::kernel::Kernel;
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords, ZoomLevel},
@@ -27,6 +26,7 @@ use crate::{
         transferables::{Transferables, UnavailableLayer},
         TileRequest,
     },
+    kernel::Kernel,
     schedule::Stage,
     stages::HeadedPipelineProcessor,
     style::Style,

@@ -1,6 +1,8 @@
-use crate::render::graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo};
-use crate::render::resource::Head;
-use crate::render::RenderState;
+use crate::render::{
+    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+    resource::Head,
+    RenderState,
+};
 
 /// Node which copies the contents of the GPU-side texture in [`BufferedTextureHead`] to an
 /// unmapped GPU-side buffer. This buffer will be mapped in
