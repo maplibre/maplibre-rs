@@ -4,8 +4,6 @@ use std::borrow::Cow;
 
 pub use wgpu::{Backends, Features, Limits, PowerPreference, TextureFormat};
 
-use crate::platform::COLOR_TEXTURE_FORMAT;
-
 /// Provides configuration for renderer initialization. Use [`Device::features`](crate::renderer::Device::features),
 /// [`Device::limits`](crate::renderer::Device::limits), and the [`WgpuAdapterInfo`](crate::render_resource::WgpuAdapterInfo)
 /// resource to get runtime information about the actual adapter, backend, features, and limits.
@@ -30,7 +28,7 @@ pub struct WgpuSettings {
 
 impl Default for WgpuSettings {
     fn default() -> Self {
-        let backends = Some(wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all()));
+        let backends = Some(wgpu::util::backend_bits_from_env().unwrap_or(Backends::all()));
 
         let limits = if cfg!(feature = "web-webgl") {
             Limits {
@@ -54,11 +52,15 @@ impl Default for WgpuSettings {
             }
         };
 
+        let mut features = Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
+
+        features |= Features::DEPTH32FLOAT_STENCIL8;
+
         Self {
             device_label: Default::default(),
             backends,
             power_preference: PowerPreference::HighPerformance,
-            features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
+            features,
             disabled_features: None,
             limits,
             constrained_limits: None,
@@ -99,17 +101,39 @@ impl Default for Msaa {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct RendererSettings {
     pub msaa: Msaa,
     pub texture_format: TextureFormat,
+    pub depth_texture_format: TextureFormat,
 }
 
 impl Default for RendererSettings {
     fn default() -> Self {
         Self {
             msaa: Msaa::default(),
-            texture_format: COLOR_TEXTURE_FORMAT,
+            // WebGPU
+            #[cfg(all(target_arch = "wasm32", not(feature = "web-webgl")))]
+            texture_format: wgpu::TextureFormat::Bgra8Unorm,
+            // WebGL
+            #[cfg(all(target_arch = "wasm32", feature = "web-webgl"))]
+            texture_format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            // Vulkan Android
+            #[cfg(target_os = "android")]
+            texture_format: wgpu::TextureFormat::Rgba8Unorm,
+            /// MacOS and iOS (Metal).
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
+            texture_format: wgpu::TextureFormat::Bgra8UnormSrgb,
+            /// For Vulkan/OpenGL
+            #[cfg(not(any(
+                target_os = "android",
+                target_os = "macos",
+                any(target_os = "macos", target_os = "ios"),
+                target_arch = "wasm32"
+            )))]
+            texture_format: TextureFormat::Bgra8UnormSrgb,
+
+            depth_texture_format: TextureFormat::Depth32FloatStencil8,
         }
     }
 }

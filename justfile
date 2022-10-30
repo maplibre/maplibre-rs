@@ -14,6 +14,9 @@ export RUST_BACKTRACE := "1"
 stable-toolchain:
   rustup toolchain install $STABLE_TOOLCHAIN
 
+stable-override-toolchain:
+  rustup override set $STABLE_TOOLCHAIN
+
 stable-targets *FLAGS:
   rustup toolchain install $STABLE_TOOLCHAIN --target {{FLAGS}}
 
@@ -23,6 +26,9 @@ stable-install-clippy:
 
 nightly-toolchain:
   rustup toolchain install $NIGHTLY_TOOLCHAIN
+
+nightly-override-toolchain:
+  rustup override set $NIGHTLY_TOOLCHAIN
 
 nightly-targets *FLAGS:
   rustup toolchain install $NIGHTLY_TOOLCHAIN --target {{FLAGS}}
@@ -125,6 +131,7 @@ xcodebuild-archive-fat EXISTING_ARCH EXISTING_PLATFORM ARCH: (xcodebuild-archive
   archive="{{BUILD_DIR}}/{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
   existing_archive="{{BUILD_DIR}}/{{EXISTING_ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
   fat_archive="{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
+
   cp -R "$existing_archive" "$fat_archive"
   inner="$archive/{{INNER_FRAMEWORK_PATH}}"
   existing_inner="$existing_archive/{{INNER_FRAMEWORK_PATH}}"
@@ -152,8 +159,8 @@ xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (xc
     "arm64-x86_64,macOS"
   )
   framework_args=$(for i in "${tuples[@]}"; do IFS=","; set -- $i; echo -n "-framework \"{{BUILD_DIR}}/$1-apple-$2.xcarchive/{{INNER_FRAMEWORK_PATH}}\" "; done)
-  echo "$framework_args"
-  echo  "$XC_FRAMEWORK_PATH"
+  echo "framework_args: $framework_args"
+  echo "XC_FRAMEWORK_PATH: $XC_FRAMEWORK_PATH"
   echo "$framework_args" | xargs xcodebuild -create-xcframework -output "$XC_FRAMEWORK_PATH"
   cat "$XC_FRAMEWORK_PATH/Info.plist"
 

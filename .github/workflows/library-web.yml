@@ -27,17 +27,11 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: Setup binstall
-        uses: ./.github/actions/setup-binstall
-      - name: Install just
-        uses: ./.github/actions/cargo-install
+      - name: Setup
+        uses: ./.github/actions/setup
         with:
-          name: just
-      - name: Install nightly toolchain
-        shell: bash
-        run: |
-          just nightly-toolchain
-          just nightly-targets wasm32-unknown-unknown
+          nightly: true
+          targets: wasm32-unknown-unknown
       - name: Install rust sources (build-std)
         if: inputs.multithreaded
         shell: bash
@@ -49,7 +43,6 @@ jobs:
         # We want the latest version, as Cargo uses the latest version of wasm-bindgen
         with:
           name: wasm-bindgen-cli
-      - uses: Swatinem/rust-cache@v2
       - name: Build lib
         shell: bash
         run: just web-lib build --release ${{ inputs.webgl && '--webgl' || '' }} ${{ inputs.multithreaded && '--multithreaded' || '' }}
