@@ -3,7 +3,7 @@
 use std::{borrow::BorrowMut, cell::RefCell, mem, ops::Deref, panic, rc::Rc};
 
 use maplibre::{io::scheduler::NopScheduler, Map, MapBuilder};
-use maplibre_winit::winit::{WinitEnvironment, WinitMapWindowConfig};
+use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 
 use crate::platform::http_client::WHATWGFetchHttpClient;

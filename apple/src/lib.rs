@@ -3,7 +3,7 @@ use maplibre::{
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
     MapBuilder,
 };
-use maplibre_winit::winit::{
+use maplibre_winit::{
     run_headed_map, WinitEnvironment, WinitEventLoop, WinitMapWindow, WinitMapWindowConfig,
     WinitWindow,
 };

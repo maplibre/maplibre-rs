@@ -7,7 +7,7 @@ use maplibre::{
     render::settings::{Backends, WgpuSettings},
     MapBuilder,
 };
-use maplibre_winit::winit::{run_headed_map, WinitMapWindowConfig};
+use maplibre_winit::{run_headed_map, WinitMapWindowConfig};
 
 #[cfg(not(target_os = "android"))]
 compile_error!("android works only on android.");

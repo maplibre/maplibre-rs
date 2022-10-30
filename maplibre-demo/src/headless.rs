@@ -13,7 +13,7 @@ use maplibre::{
     util::grid::google_mercator,
     window::WindowSize,
 };
-use maplibre_winit::winit::WinitEnvironment;
+use maplibre_winit::WinitEnvironment;
 use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
