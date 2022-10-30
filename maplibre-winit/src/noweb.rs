@@ -3,6 +3,8 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
+use std::marker::PhantomData;
+
 use maplibre::{
     event_loop::EventLoop,
     headless::map::HeadlessMap,
@@ -16,10 +18,25 @@ use maplibre::{
 };
 use winit::window::WindowBuilder;
 
-use super::{RawWinitEventLoop, RawWinitWindow, WinitMapWindow, WinitMapWindowConfig};
+use super::{RawWinitEventLoop, RawWinitWindow, WinitMapWindow};
 use crate::{WinitEnvironment, WinitEventLoop};
 
-impl<T> MapWindow for WinitMapWindow<T> {
+pub struct WinitMapWindowConfig<ET> {
+    title: String,
+
+    phantom_et: PhantomData<ET>,
+}
+
+impl<ET> WinitMapWindowConfig<ET> {
+    pub fn new(title: String) -> Self {
+        Self {
+            title,
+            phantom_et: Default::default(),
+        }
+    }
+}
+
+impl<ET> MapWindow for WinitMapWindow<ET> {
     fn size(&self) -> WindowSize {
         let size = self.window.inner_size();
         #[cfg(target_os = "android")]
@@ -32,21 +49,6 @@ impl<T> MapWindow for WinitMapWindow<T> {
         let window_size =
             WindowSize::new(size.width, size.height).expect("failed to get window dimensions.");
         window_size
-    }
-}
-impl<T> HeadedMapWindow for WinitMapWindow<T> {
-    type RawWindow = RawWinitWindow;
-
-    fn raw(&self) -> &Self::RawWindow {
-        &self.window
-    }
-
-    fn request_redraw(&self) {
-        self.window.request_redraw()
-    }
-
-    fn id(&self) -> u64 {
-        self.window.id().into()
     }
 }
 

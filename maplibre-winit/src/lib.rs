@@ -38,35 +38,6 @@ pub use noweb::*;
 #[cfg(target_arch = "wasm32")]
 pub use web::*;
 
-#[cfg(not(target_arch = "wasm32"))]
-pub struct WinitMapWindowConfig<ET> {
-    title: String,
-
-    phantom_et: PhantomData<ET>,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl<ET> WinitMapWindowConfig<ET> {
-    pub fn new(title: String) -> Self {
-        Self {
-            title,
-            phantom_et: Default::default(),
-        }
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-pub struct WinitMapWindowConfig {
-    canvas_id: String,
-}
-
-#[cfg(target_arch = "wasm32")]
-impl WinitMapWindowConfig {
-    pub fn new(canvas_id: String) -> Self {
-        Self { canvas_id }
-    }
-}
-
 pub struct WinitMapWindow<ET: 'static> {
     window: RawWinitWindow,
     event_loop: Option<WinitEventLoop<ET>>,
@@ -75,6 +46,22 @@ pub struct WinitMapWindow<ET: 'static> {
 impl<ET> WinitMapWindow<ET> {
     pub fn take_event_loop(&mut self) -> Option<WinitEventLoop<ET>> {
         self.event_loop.take()
+    }
+}
+
+impl<ET> HeadedMapWindow for WinitMapWindow<ET> {
+    type RawWindow = RawWinitWindow;
+
+    fn raw(&self) -> &Self::RawWindow {
+        &self.window
+    }
+
+    fn request_redraw(&self) {
+        self.window.request_redraw()
+    }
+
+    fn id(&self) -> u64 {
+        self.window.id().into()
     }
 }
 

@@ -64,4 +64,8 @@ impl<E: Environment> Map<E> {
     pub fn context_mut(&mut self) -> &mut MapContext {
         &mut self.map_context
     }
+
+    pub fn kernel(&self) -> &Rc<Kernel<E>> {
+        &self.kernel
+    }
 }

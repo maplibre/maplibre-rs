@@ -1,7 +1,7 @@
 use maplibre::{
     coords::{LatLon, WorldTileCoords},
     error::Error,
-    headless::{map::HeadlessMap, window::HeadlessMapWindowConfig},
+    headless::{create_headless_renderer, map::HeadlessMap, window::HeadlessMapWindowConfig},
     io::apc::SchedulerAsyncProcedureCall,
     kernel::KernelBuilder,
     platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
@@ -17,24 +17,7 @@ use maplibre_winit::WinitEnvironment;
 use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
-    let client = ReqwestHttpClient::new(None);
-    let kernel = KernelBuilder::new()
-        .with_map_window_config(HeadlessMapWindowConfig::new(
-            WindowSize::new(tile_size, tile_size).unwrap(),
-        ))
-        .with_http_client(client.clone())
-        .with_apc(SchedulerAsyncProcedureCall::new(
-            client,
-            TokioScheduler::new(),
-        ))
-        .with_scheduler(TokioScheduler::new())
-        .build();
-
-    let renderer = RenderBuilder::new()
-        .build()
-        .initialize_headless_with(&kernel)
-        .await
-        .expect("Failed to initialize renderer");
+    let (kernel, renderer) = create_headless_renderer(tile_size, None).await;
 
     let style = Style::default();
 

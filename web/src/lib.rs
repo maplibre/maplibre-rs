@@ -1,8 +1,15 @@
 #![feature(allocator_api, new_uninit)]
 
-use std::{borrow::BorrowMut, cell::RefCell, mem, ops::Deref, panic, rc::Rc};
+use std::{borrow::BorrowMut, cell::RefCell, mem, ops::Deref, rc::Rc};
 
-use maplibre::{io::scheduler::NopScheduler, Map, MapBuilder};
+use maplibre::{
+    event_loop::EventLoop,
+    io::{apc::SchedulerAsyncProcedureCall, scheduler::NopScheduler},
+    kernel::{Kernel, KernelBuilder},
+    map::Map,
+    render::builder::{InitializedRenderer, RenderBuilder},
+    style::Style,
+};
 use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 
@@ -32,44 +39,47 @@ pub fn wasm_bindgen_start() {
     if console_log::init_with_level(log::Level::Info).is_err() {
         // Failed to initialize logging. No need to log a message.
     }
-    panic::set_hook(Box::new(console_error_panic_hook::hook));
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
     #[cfg(any(feature = "trace"))]
     enable_tracing();
 }
 
 #[cfg(not(target_feature = "atomics"))]
-pub type MapType = Map<
-    WinitEnvironment<
-        NopScheduler,
-        WHATWGFetchHttpClient,
-        platform::singlethreaded::transferables::LinearTransferables,
-        platform::singlethreaded::apc::PassingAsyncProcedureCall,
-    >,
+type CurrentEnvironment = WinitEnvironment<
+    NopScheduler,
+    WHATWGFetchHttpClient,
+    platform::singlethreaded::apc::PassingAsyncProcedureCall,
+    (),
 >;
 
 #[cfg(target_feature = "atomics")]
-pub type MapType = Map<
-    WinitEnvironment<
-        platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
+type CurrentEnvironment = WinitEnvironment<
+    platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
+    WHATWGFetchHttpClient,
+    maplibre::io::apc::SchedulerAsyncProcedureCall<
         WHATWGFetchHttpClient,
-        maplibre::io::transferables::DefaultTransferables,
-        maplibre::io::apc::SchedulerAsyncProcedureCall<
-            WHATWGFetchHttpClient,
-            platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
-        >,
+        platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
     >,
+    (),
 >;
 
+pub type MapType = Map<CurrentEnvironment>;
+
+pub struct InitResult {
+    initialized: InitializedRenderer<WinitMapWindowConfig<()>>,
+    kernel: Kernel<CurrentEnvironment>,
+}
+
 #[wasm_bindgen]
-pub async fn create_map(new_worker: js_sys::Function) -> u32 {
-    let mut builder = MapBuilder::new()
+pub async fn init_maplibre(new_worker: js_sys::Function) -> u32 {
+    let mut kernel_builder = KernelBuilder::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
         .with_http_client(WHATWGFetchHttpClient::new());
 
     #[cfg(target_feature = "atomics")]
     {
-        builder = builder
+        kernel_builder = kernel_builder
             .with_apc(maplibre::io::apc::SchedulerAsyncProcedureCall::new(
                 WHATWGFetchHttpClient::new(),
                 platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(
@@ -83,29 +93,38 @@ pub async fn create_map(new_worker: js_sys::Function) -> u32 {
 
     #[cfg(not(target_feature = "atomics"))]
     {
-        builder = builder
+        kernel_builder = kernel_builder
             .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4))
             .with_scheduler(NopScheduler);
     }
 
-    let map: MapType = builder.build().initialize().await;
+    let kernel: Kernel<WinitEnvironment<_, _, _, ()>> = kernel_builder.build();
 
-    Rc::into_raw(Rc::new(RefCell::new(map))) as u32
+    Box::into_raw(Box::new(InitResult {
+        initialized: RenderBuilder::new()
+            .build()
+            .initialize_with(&kernel)
+            .await
+            .expect("Failed to initialize renderer")
+            .unwarp(),
+        kernel,
+    })) as u32
 }
 
 #[wasm_bindgen]
-pub unsafe fn clone_map(map_ptr: *const RefCell<MapType>) -> *const RefCell<MapType> {
-    let mut map = Rc::from_raw(map_ptr);
-    let cloned = Rc::into_raw(map.clone());
-    mem::forget(map); // TODO: Enforce forget, else the map gets dropped after calling such a function
-    cloned
-}
+pub unsafe fn run(init_ptr: *mut InitResult) {
+    let mut init_result = Box::from_raw(init_ptr);
 
-#[wasm_bindgen]
-pub unsafe fn run(map_ptr: *const RefCell<MapType>) {
-    let mut map = Rc::from_raw(map_ptr);
+    let InitializedRenderer {
+        mut window,
+        renderer,
+    } = init_result.initialized;
+    let map: MapType = Map::new(Style::default(), init_result.kernel, renderer).unwrap();
 
-    map.deref().borrow().run();
+    window
+        .take_event_loop()
+        .expect("Event loop is not available")
+        .run(window, map, None)
 }
 
 #[cfg(test)]

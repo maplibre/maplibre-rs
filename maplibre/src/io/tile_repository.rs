@@ -11,6 +11,7 @@ use crate::{
 };
 
 /// A layer which is stored for future use.
+#[derive(Clone)]
 pub enum StoredLayer {
     UnavailableLayer {
         coords: WorldTileCoords,
@@ -41,7 +42,7 @@ impl StoredLayer {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub enum TileStatus {
     Pending,
     Failed,
@@ -49,6 +50,7 @@ pub enum TileStatus {
 }
 
 /// Stores multiple [StoredLayers](StoredLayer).
+#[derive(Clone)]
 pub struct StoredTile {
     coords: WorldTileCoords,
     layers: Vec<StoredLayer>,

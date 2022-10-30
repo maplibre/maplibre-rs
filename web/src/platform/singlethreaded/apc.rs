@@ -131,9 +131,8 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
             serialized_array.set(&Uint8Array::view(serialized), 0);
         }
 
-        let global = js_sys::global()
-            .try_into::<DedicatedWorkerGlobalScope>()
-            .map_err(|e| Error::APC);
+        let global: DedicatedWorkerGlobalScope =
+            js_sys::global().dyn_into().map_err(|e| Error::APC)?;
         let array = js_sys::Array::new();
         array.push(&JsValue::from(tag as u32));
         array.push(&serialized_array_buffer);
@@ -149,7 +148,7 @@ pub struct PassingAsyncProcedureCall {
     new_worker: Box<dyn Fn() -> Worker>,
     workers: Vec<Worker>,
 
-    received: Vec<Message<UsedTransferables>>,
+    received: RefCell<Vec<Message<UsedTransferables>>>, // FIXME (wasm-executor): Is RefCell fine?
 }
 
 impl PassingAsyncProcedureCall {
@@ -176,16 +175,17 @@ impl PassingAsyncProcedureCall {
         Self {
             new_worker: create_new_worker,
             workers,
-            received: vec![],
+            received: RefCell::new(vec![]),
         }
     }
 }
 
-impl AsyncProcedureCall<UsedTransferables, UsedHttpClient> for PassingAsyncProcedureCall {
+impl AsyncProcedureCall<UsedHttpClient> for PassingAsyncProcedureCall {
     type Context = UsedContext;
+    type Transferables = UsedTransferables;
 
-    fn receive(&mut self) -> Option<Message<UsedTransferables>> {
-        self.received.pop()
+    fn receive(&self) -> Option<Message<UsedTransferables>> {
+        self.received.borrow_mut().pop()
     }
 
     fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
@@ -208,7 +208,7 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
     let input = serde_json::from_str::<Input>(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
 
     let context = PassingContext {
-        source_client: SourceClient::Http(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
+        source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
     };
 
     (procedure)(input, context).await;
@@ -231,16 +231,11 @@ pub unsafe fn singlethreaded_main_entry(
         data,
     );
 
-    map.deref()
-        .borrow()
-        .map_schedule()
-        .deref()
-        .borrow()
-        .apc
-        .deref()
-        .borrow_mut()
-        .received
-        .push(message);
+    let map = map.deref().borrow();
+    let kernel = map.kernel();
+
+    // MAJOR FIXME: Fix mutability
+    // kernel.apc().received.push(message);
 
     mem::forget(map); // FIXME (wasm-executor): Enforce this somehow
 

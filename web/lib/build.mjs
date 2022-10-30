@@ -237,6 +237,7 @@ const esbuild = async (name, globalName = undefined) => {
 }
 
 const start = async () => {
+    try {
     console.log("Creating WASM...")
     wasmPack();
 
@@ -257,10 +258,9 @@ const start = async () => {
 
     console.log("Emitting TypeScript types...")
     emitTypeScript();
+    } catch (e) {
+        console.error("Failed to start building: " + e.message)
+    }
 }
 
-try {
-    const _ = start()
-} catch (e) {
-    console.log("Failed to start building: " + e.message)
-}
+const _ = start()
