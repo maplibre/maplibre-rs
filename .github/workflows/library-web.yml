@@ -37,12 +37,12 @@ jobs:
         shell: bash
         run: |
           just nightly-install-src
+      - name: Install wasm-bindgen
         uses: ./.github/actions/cargo-install
         # Install wasm-bindgen with test runner
         # We want the latest version, as Cargo uses the latest version of wasm-bindgen
         with:
           name: wasm-bindgen-cli
-      - uses: Swatinem/rust-cache@v2
       - name: Build lib
         shell: bash
         run: just web-lib build --release ${{ inputs.webgl && '--webgl' || '' }} ${{ inputs.multithreaded && '--multithreaded' || '' }}
