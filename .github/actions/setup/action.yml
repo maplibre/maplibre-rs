@@ -13,6 +13,8 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # The Rust version from rust-toolchain.toml is used for the first steps. Later the Rust version is changed
+    # by setting another version in "Set XYZ toolchain".
     - name: Install just
       uses: ./.github/actions/cargo-install
       with:
@@ -44,6 +46,7 @@ runs:
       shell: bash
       run: just nightly-targets ${{ inputs.targets }}
     - uses: Swatinem/rust-cache@v2
+    # Install just again because Swatinem/rust-cache might removed it while restoring the cache
     - name: Install just
       uses: ./.github/actions/cargo-install
       with:
