@@ -6,6 +6,7 @@ use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Worker;
 
 use super::pool::WorkerPool;
+use crate::CurrentEnvironment;
 
 pub struct WebWorkerPoolScheduler {
     pool: WorkerPool,

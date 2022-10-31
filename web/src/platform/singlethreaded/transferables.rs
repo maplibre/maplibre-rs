@@ -1,5 +1,6 @@
 use bytemuck::{TransparentWrapper, Zeroable};
 use bytemuck_derive::{Pod, Zeroable};
+use log::warn;
 use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::WorldTileCoords,
@@ -121,6 +122,75 @@ impl TessellatedLayer for LinearTessellatedLayer {
             feature_indices: [0u32; 2048],
             feature_indices_len: feature_indices.len(),
         });
+
+        if buffer.buffer.vertices.len() > 15000 {
+            warn!("vertices too large");
+            return Self {
+                data: Box::new(InnerData {
+                    coords: WrapperWorldTileCoords::wrap(coords),
+
+                    layer_name: [0; 32],
+                    layer_name_len: 0,
+
+                    vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
+                    vertices_len: 0,
+
+                    indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
+                    indices_len: 0,
+
+                    usable_indices: 0,
+
+                    feature_indices: [0u32; 2048],
+                    feature_indices_len: 0,
+                }),
+            };
+        }
+
+        if buffer.buffer.indices.len() > 40000 {
+            warn!("indices too large");
+            return Self {
+                data: Box::new(InnerData {
+                    coords: WrapperWorldTileCoords::wrap(coords),
+
+                    layer_name: [0; 32],
+                    layer_name_len: 0,
+
+                    vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
+                    vertices_len: 0,
+
+                    indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
+                    indices_len: 0,
+
+                    usable_indices: 0,
+
+                    feature_indices: [0u32; 2048],
+                    feature_indices_len: 0,
+                }),
+            };
+        }
+
+        if feature_indices.len() > 2048 {
+            warn!("feature_indices too large");
+            return Self {
+                data: Box::new(InnerData {
+                    coords: WrapperWorldTileCoords::wrap(coords),
+
+                    layer_name: [0; 32],
+                    layer_name_len: 0,
+
+                    vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
+                    vertices_len: 0,
+
+                    indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
+                    indices_len: 0,
+
+                    usable_indices: 0,
+
+                    feature_indices: [0u32; 2048],
+                    feature_indices_len: 0,
+                }),
+            };
+        }
 
         data.vertices.0[0..buffer.buffer.vertices.len()].clone_from_slice(&buffer.buffer.vertices);
         data.indices.0[0..buffer.buffer.indices.len()].clone_from_slice(&buffer.buffer.indices);
