@@ -193,6 +193,7 @@ impl<E: Environment> HeadlessMapSchedule<E> {
         let request = TileRequest {
             coords: WorldTileCoords::default(),
             layers: source_layers,
+            style: Style::default()
         };
 
         pipeline.process((request, data), &mut pipeline_context);

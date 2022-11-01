@@ -9,7 +9,7 @@ use crate::{
     render::{
         camera::ViewProjection,
         eventually::Eventually::Initialized,
-        shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
+        shaders::{ShaderCamera, ShaderLight, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
     },
     schedule::Stage,
     RenderState, Renderer, Style,
@@ -46,7 +46,7 @@ impl Stage for UploadStage {
                         .cast::<f32>()
                         .unwrap() // TODO: Remove unwrap
                         .into(),
-                ))]),
+                ), ShaderLight::default())]),
             );
         }
 

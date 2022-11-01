@@ -132,7 +132,7 @@ impl<E: Environment> RequestStage<E> {
         for coords in view_region.iter() {
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
-                self.request_tile(tile_repository, &coords, &source_layers)
+                self.request_tile(tile_repository, &coords, &source_layers, style)
                     .unwrap(); // TODO: Remove unwrap
             }
         }
@@ -143,6 +143,7 @@ impl<E: Environment> RequestStage<E> {
         tile_repository: &mut TileRepository,
         coords: &WorldTileCoords,
         layers: &HashSet<String>,
+        style: &Style
     ) -> Result<(), Error> {
         /*        if !tile_repository.is_layers_missing(coords, layers) {
             return Ok(false);
@@ -156,6 +157,7 @@ impl<E: Environment> RequestStage<E> {
                 Input::TileRequest(TileRequest {
                     coords: *coords,
                     layers: layers.clone(),
+                    style: style.clone()
                 }),
                 schedule::<
                     E,
