@@ -7,7 +7,6 @@ use std::marker::PhantomData;
 
 use maplibre::{
     event_loop::EventLoop,
-    headless::map::HeadlessMap,
     io::apc::SchedulerAsyncProcedureCall,
     kernel::{Kernel, KernelBuilder},
     map::Map,
