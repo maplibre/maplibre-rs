@@ -1,9 +1,9 @@
-use std::{collections::HashSet, io::Cursor};
+use std::collections::HashSet;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
-    benchmarking::{io::static_tile_fetcher::StaticTileFetcher, tessellation::Tessellated},
-    coords::{TileCoords, WorldTileCoords, ZoomLevel},
+    benchmarking::io::static_tile_fetcher::StaticTileFetcher,
+    coords::{TileCoords, ZoomLevel},
     io::{
         pipeline::{PipelineContext, PipelineProcessor, Processable},
         tile_pipelines::{ParseTile, TessellateLayer},

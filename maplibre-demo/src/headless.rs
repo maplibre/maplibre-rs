@@ -1,19 +1,9 @@
 use maplibre::{
     coords::{LatLon, WorldTileCoords},
-    error::Error,
-    headless::{create_headless_renderer, map::HeadlessMap, window::HeadlessMapWindowConfig},
-    io::apc::SchedulerAsyncProcedureCall,
-    kernel::KernelBuilder,
-    platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
-    render::{
-        builder::RendererBuilder,
-        settings::{RendererSettings, TextureFormat},
-    },
+    headless::{create_headless_renderer, map::HeadlessMap},
     style::Style,
     util::grid::google_mercator,
-    window::WindowSize,
 };
-use maplibre_winit::WinitEnvironment;
 use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
 pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {

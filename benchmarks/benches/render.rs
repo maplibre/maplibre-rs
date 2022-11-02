@@ -1,28 +1,10 @@
-use std::collections::HashSet;
-
 use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
     coords::{WorldTileCoords, ZoomLevel},
     error::Error,
-    headless::{
-        create_headless_renderer, environment::HeadlessEnvironment, map::HeadlessMap,
-        window::HeadlessMapWindowConfig,
-    },
-    io::{
-        apc::SchedulerAsyncProcedureCall,
-        pipeline::{PipelineContext, Processable},
-        source_client::HttpSourceClient,
-        tile_pipelines::build_vector_tile_pipeline,
-        TileRequest,
-    },
-    kernel::{Kernel, KernelBuilder},
-    platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
-    render::{
-        builder::{InitializedRenderer, RendererBuilder},
-        settings::{RendererSettings, TextureFormat},
-    },
+    headless::{create_headless_renderer, map::HeadlessMap},
+    platform::run_multithreaded,
     style::Style,
-    window::WindowSize,
 };
 
 fn headless_render(c: &mut Criterion) {
@@ -30,7 +12,7 @@ fn headless_render(c: &mut Criterion) {
         let (mut map, tile) = run_multithreaded(async {
             let (kernel, renderer) = create_headless_renderer(1000, None).await;
             let style = Style::default();
-            let mut map = HeadlessMap::new(style, renderer, kernel).unwrap();
+            let map = HeadlessMap::new(style, renderer, kernel).unwrap();
 
             let tile = map
                 .fetch_tile(
