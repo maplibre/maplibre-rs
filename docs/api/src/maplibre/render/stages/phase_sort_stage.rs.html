@@ -19,9 +19,17 @@
 <span id="19">19</span>
 <span id="20">20</span>
 <span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Sorts items of the [RenderPhases](RenderPhase).</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">context::MapContext</span>, <span class="ident">render::render_phase::RenderPhase</span>, <span class="ident">schedule::Stage</span>, <span class="ident">Renderer</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">context::MapContext</span>,
+    <span class="ident">render</span>::{<span class="ident">render_phase::RenderPhase</span>, <span class="ident">Renderer</span>},
+    <span class="ident">schedule::Stage</span>,
+};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PhaseSortStage</span>;

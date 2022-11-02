@@ -119,6 +119,61 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
     <span class="ident">future::Future</span>,
@@ -133,17 +188,21 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">coords::WorldTileCoords</span>,
+    <span class="ident">error::Error</span>,
     <span class="ident">io</span>::{
-        <span class="ident">source_client</span>::{<span class="ident">HttpSourceClient</span>, <span class="ident">SourceClient</span>},
+        <span class="ident">scheduler::Scheduler</span>,
+        <span class="ident">source_client</span>::{<span class="ident">HttpClient</span>, <span class="ident">HttpSourceClient</span>, <span class="ident">SourceClient</span>},
         <span class="ident">transferables</span>::{<span class="ident">DefaultTransferables</span>, <span class="ident">Transferables</span>},
         <span class="ident">TileRequest</span>,
     },
-    <span class="ident">Environment</span>, <span class="ident">HttpClient</span>, <span class="ident">Scheduler</span>,
 };
 
-<span class="doccomment">/// The result of the tessellation of a tile.</span>
-<span class="doccomment">/// `TessellatedLayer` contains the result of the tessellation for a specific layer, otherwise</span>
-<span class="doccomment">/// `UnavailableLayer` if the layer doesn&#39;t exist.</span>
+<span class="doccomment">/// The result of the tessellation of a tile. This is sent as a message from a worker to the caller</span>
+<span class="doccomment">/// of an [`AsyncProcedure`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * `TessellatedLayer` contains the result of the tessellation for a specific layer.</span>
+<span class="doccomment">/// * `UnavailableLayer` is sent if a requested layer is not found.</span>
+<span class="doccomment">/// * `TileTessellated` is sent if processing of a tile finished.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Transferables</span><span class="op">&gt;</span> {
     <span class="ident">TileTessellated</span>(<span class="ident">T::TileTessellated</span>),
@@ -151,30 +210,82 @@
     <span class="ident">TessellatedLayer</span>(<span class="ident">T::TessellatedLayer</span>),
 }
 
+<span class="doccomment">/// Inputs for an [`AsyncProcedure`]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Input</span> {
     <span class="ident">TileRequest</span>(<span class="ident">TileRequest</span>),
 }
 
+<span class="doccomment">/// Allows sending messages from workers to back to the caller.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Transferables</span>, <span class="ident">HC</span>: <span class="ident">HttpClient</span><span class="op">&gt;</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span> {
-    <span class="kw">fn</span> <span class="ident">send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">data</span>: <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
+    <span class="doccomment">/// Send a message back to the caller.</span>
+    <span class="comment">// FIXME (wasm-executor): handle results send() calls</span>
+    <span class="kw">fn</span> <span class="ident">send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">data</span>: <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">source_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">SourceClient</span><span class="op">&lt;</span><span class="ident">HC</span><span class="op">&gt;</span>;
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;no-thread-safe-futures&quot;</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;thread-safe-futures&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AsyncProcedureFuture</span> <span class="op">=</span> <span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span>(<span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span><span class="op">&gt;</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;no-thread-safe-futures&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;thread-safe-futures&quot;</span>))]</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AsyncProcedureFuture</span> <span class="op">=</span> <span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span>(<span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span><span class="op">&gt;</span>;
 
+<span class="doccomment">/// Type definitions for asynchronous procedure calls. These functions can be called in an</span>
+<span class="doccomment">/// [`AsyncProcedureCall`]. Functions of this type are required to be statically available at</span>
+<span class="doccomment">/// compile time. It is explicitly not possible to use closures, as they would require special</span>
+<span class="doccomment">/// serialization which is currently not supported.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AsyncProcedure</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">fn</span>(<span class="ident">input</span>: <span class="ident">Input</span>, <span class="ident">context</span>: <span class="ident">C</span>) -&gt; <span class="ident">AsyncProcedureFuture</span>;
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">AsyncProcedureCall</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Transferables</span>, <span class="ident">HC</span>: <span class="ident">HttpClient</span><span class="op">&gt;</span>: <span class="lifetime">&#39;static</span> {
-    <span class="kw">type</span> <span class="ident">Context</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">HC</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
+<span class="doccomment">/// APCs define an interface for performing work asynchronously.</span>
+<span class="doccomment">/// This work can be implemented through procedures which can be called asynchronously, hence the</span>
+<span class="doccomment">/// name AsyncProcedureCall or APC for short.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// APCs serve as an abstraction for doing work on a separate thread, and then getting responses</span>
+<span class="doccomment">/// back. An asynchronous procedure call can for example be performed by using message passing. In</span>
+<span class="doccomment">/// fact this could theoretically work over a network socket.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// It is possible to schedule work on a  remote host by calling [`AsyncProcedureCall::call()`]</span>
+<span class="doccomment">/// and getting the results back by calling the non-blocking function</span>
+<span class="doccomment">/// [`AsyncProcedureCall::receive()`]. The [`AsyncProcedureCall::receive()`] function returns a</span>
+<span class="doccomment">/// struct which implements [`Transferables`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ## Transferables</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Based on whether the current platform supports shared-memory or not, the implementation of APCs</span>
+<span class="doccomment">/// might want to send the whole data from the worker to the caller back or just pointers to that</span>
+<span class="doccomment">/// data. The [`Transferables`] trait allows developers to define that and use different data</span>
+<span class="doccomment">/// layouts for different platforms.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ## Message Passing vs APC</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// One might wonder why this is called [`AsyncProcedureCall`] instead of `MessagePassingInterface`.</span>
+<span class="doccomment">/// The reason for this is quite simple. We are actually referencing and calling procedures which</span>
+<span class="doccomment">/// are defined in different threads, processes or hosts. That means, that an [`AsyncProcedureCall`]</span>
+<span class="doccomment">/// is actually distinct from a `MessagePassingInterface`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ## Current Implementations</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// We currently have two implementation for APCs. One uses the Tokio async runtime on native</span>
+<span class="doccomment">/// targets in [`SchedulerAsyncProcedureCall`].</span>
+<span class="doccomment">/// For the web we implemented an alternative way to call APCs which is called</span>
+<span class="doccomment">/// [`PassingAsyncProcedureCall`]. This implementation does not depend on shared-memory compared to</span>
+<span class="doccomment">/// [`SchedulerAsyncProcedureCall`]. In fact, on the web we are currently not depending on</span>
+<span class="doccomment">/// shared-memory because that feature is hidden behind feature flags in browsers</span>
+<span class="doccomment">/// (see [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer).</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///</span>
+<span class="comment">// TODO: Rename to AsyncProcedureCaller?</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">AsyncProcedureCall</span><span class="op">&lt;</span><span class="ident">HC</span>: <span class="ident">HttpClient</span><span class="op">&gt;</span>: <span class="lifetime">&#39;static</span> {
+    <span class="kw">type</span> <span class="ident">Context</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Transferables</span>, <span class="ident">HC</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
+    <span class="kw">type</span> <span class="ident">Transferables</span>: <span class="ident">Transferables</span>;
 
-    <span class="kw">fn</span> <span class="ident">receive</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Try to receive a message non-blocking.</span>
+    <span class="kw">fn</span> <span class="ident">receive</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Transferables</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">schedule</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="ident">Input</span>, <span class="ident">procedure</span>: <span class="ident">AsyncProcedure</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span>);
+    <span class="doccomment">/// Call an [`AsyncProcedure`] using some [`Input`]. This function is non-blocking and</span>
+    <span class="doccomment">/// returns immediately.</span>
+    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="ident">Input</span>, <span class="ident">procedure</span>: <span class="ident">AsyncProcedure</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span>);
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
@@ -184,8 +295,8 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Transferables</span>, <span class="ident">HC</span>: <span class="ident">HttpClient</span><span class="op">&gt;</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">HC</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SchedulerContext</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">HC</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">data</span>: <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">data</span>).<span class="ident">unwrap</span>(); <span class="comment">// FIXME (wasm-executor): Remove unwrap</span>
+    <span class="kw">fn</span> <span class="ident">send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">data</span>: <span class="ident">Message</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">data</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">Error::APC</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">source_client</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">SourceClient</span><span class="op">&lt;</span><span class="ident">HC</span><span class="op">&gt;</span> {
@@ -212,19 +323,18 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">HC</span>: <span class="ident">HttpClient</span>, <span class="ident">S</span>: <span class="ident">Scheduler</span><span class="op">&gt;</span> <span class="ident">AsyncProcedureCall</span><span class="op">&lt;</span><span class="ident">DefaultTransferables</span>, <span class="ident">HC</span><span class="op">&gt;</span>
-    <span class="kw">for</span> <span class="ident">SchedulerAsyncProcedureCall</span><span class="op">&lt;</span><span class="ident">HC</span>, <span class="ident">S</span><span class="op">&gt;</span>
-{
-    <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">SchedulerContext</span><span class="op">&lt;</span><span class="ident">DefaultTransferables</span>, <span class="ident">HC</span><span class="op">&gt;</span>;
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">HC</span>: <span class="ident">HttpClient</span>, <span class="ident">S</span>: <span class="ident">Scheduler</span><span class="op">&gt;</span> <span class="ident">AsyncProcedureCall</span><span class="op">&lt;</span><span class="ident">HC</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SchedulerAsyncProcedureCall</span><span class="op">&lt;</span><span class="ident">HC</span>, <span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">type</span> <span class="ident">Context</span> <span class="op">=</span> <span class="ident">SchedulerContext</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Transferables</span>, <span class="ident">HC</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Transferables</span> <span class="op">=</span> <span class="ident">DefaultTransferables</span>;
 
-    <span class="kw">fn</span> <span class="ident">receive</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&lt;</span><span class="ident">DefaultTransferables</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">receive</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&lt;</span><span class="ident">DefaultTransferables</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">transferred</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">channel</span>.<span class="number">1</span>.<span class="ident">try_recv</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
         <span class="prelude-val">Some</span>(<span class="ident">transferred</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">schedule</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="ident">Input</span>, <span class="ident">procedure</span>: <span class="ident">AsyncProcedure</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">call</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">input</span>: <span class="ident">Input</span>, <span class="ident">procedure</span>: <span class="ident">AsyncProcedure</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Context</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">sender</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">channel</span>.<span class="number">0</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">http_client</span>.<span class="ident">clone</span>(); <span class="comment">// FIXME (wasm-executor): do not clone each time</span>
+        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">http_client</span>.<span class="ident">clone</span>(); <span class="comment">// TODO (perf): do not clone each time</span>
 
         <span class="self">self</span>.<span class="ident">scheduler</span>
             .<span class="ident">schedule</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
@@ -232,7 +342,7 @@
                     <span class="ident">input</span>,
                     <span class="ident">SchedulerContext</span> {
                         <span class="ident">sender</span>,
-                        <span class="ident">source_client</span>: <span class="ident">SourceClient::Http</span>(<span class="ident">HttpSourceClient::new</span>(<span class="ident">client</span>)),
+                        <span class="ident">source_client</span>: <span class="ident">SourceClient::new</span>(<span class="ident">HttpSourceClient::new</span>(<span class="ident">client</span>)),
                     },
                 )
                 .<span class="kw">await</span>;

@@ -527,6 +527,12 @@
 <span id="527">527</span>
 <span id="528">528</span>
 <span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole</span>
 <span class="doccomment">//! communication with the GPU.</span>
 <span class="doccomment">//!</span>
@@ -561,7 +567,6 @@
         <span class="ident">tile_view_pattern</span>::{<span class="ident">TileInView</span>, <span class="ident">TileShape</span>, <span class="ident">TileViewPattern</span>},
     },
     <span class="ident">tessellation::IndexDataType</span>,
-    <span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>,
 };
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">graph</span>;
@@ -578,19 +583,24 @@
 <span class="kw">mod</span> <span class="ident">tile_view_pattern</span>;
 
 <span class="comment">// Public API</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">builder</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">camera</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">error</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">eventually</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">settings</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">shaders::ShaderVertex</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">stages::register_default_render_stages</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
-    <span class="ident">graph</span>::{<span class="ident">EmptyNode</span>, <span class="ident">RenderGraph</span>, <span class="ident">RenderGraphError</span>},
-    <span class="ident">main_pass</span>::{<span class="ident">MainPassDriverNode</span>, <span class="ident">MainPassNode</span>},
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">render</span>::{
+        <span class="ident">graph</span>::{<span class="ident">EmptyNode</span>, <span class="ident">RenderGraph</span>, <span class="ident">RenderGraphError</span>},
+        <span class="ident">main_pass</span>::{<span class="ident">MainPassDriverNode</span>, <span class="ident">MainPassNode</span>},
+    },
+    <span class="ident">window</span>::{<span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>},
 };
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">INDEX_FORMAT</span>: <span class="ident">wgpu::IndexFormat</span> <span class="op">=</span> <span class="ident">wgpu::IndexFormat::Uint32</span>; <span class="comment">// Must match IndexDataType</span>
+<span class="kw">const</span> <span class="ident">INDEX_FORMAT</span>: <span class="ident">wgpu::IndexFormat</span> <span class="op">=</span> <span class="ident">wgpu::IndexFormat::Uint32</span>; <span class="comment">// Must match IndexDataType</span>
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderState</span> {
     <span class="ident">render_target</span>: <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">TextureView</span><span class="op">&gt;</span>,
@@ -940,7 +950,10 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">WindowSize</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::{
+        <span class="ident">render</span>::{<span class="ident">settings::RendererSettings</span>, <span class="ident">RenderState</span>},
+        <span class="ident">window</span>::{<span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">WindowSize</span>},
+    };
 
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HeadlessMapWindowConfig</span> {
         <span class="ident">size</span>: <span class="ident">WindowSize</span>,
@@ -969,9 +982,8 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_render</span>() {
         <span class="kw">use</span> <span class="ident">log::LevelFilter</span>;
 
-        <span class="kw">use</span> <span class="kw">crate</span>::{
-            <span class="ident">render</span>::{<span class="ident">graph::RenderGraph</span>, <span class="ident">graph_runner::RenderGraphRunner</span>, <span class="ident">resource::Surface</span>},
-            <span class="ident">RenderState</span>, <span class="ident">RendererSettings</span>,
+        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
+            <span class="ident">graph::RenderGraph</span>, <span class="ident">graph_runner::RenderGraphRunner</span>, <span class="ident">resource::Surface</span>,
         };
 
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">env_logger::builder</span>()

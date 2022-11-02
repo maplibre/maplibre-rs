@@ -176,7 +176,7 @@
     <span class="kw">pub</span> <span class="ident">buffer</span>: <span class="ident">OverAlignedVertexBuffer</span><span class="op">&lt;</span><span class="ident">ShaderVertex</span>, <span class="ident">IndexDataType</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Holds for each feature the count of indices.</span>
     <span class="kw">pub</span> <span class="ident">feature_indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">layer_data</span>: <span class="ident">Layer</span>, <span class="comment">// FIXME (wasm-executor): Introduce a better structure for this</span>
+    <span class="kw">pub</span> <span class="ident">layer_data</span>: <span class="ident">Layer</span>, <span class="comment">// FIXME (perf): Introduce a better structure for this</span>
 }
 
 <span class="kw">impl</span> <span class="ident">TessellatedLayer</span> <span class="kw">for</span> <span class="ident">DefaultTessellatedLayer</span> {

@@ -153,21 +153,15 @@
 <span id="153">153</span>
 <span id="154">154</span>
 <span id="155">155</span>
-<span id="156">156</span>
-<span id="157">157</span>
-<span id="158">158</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Specifies the instructions which are going to be sent to the GPU. Render commands can be concatenated</span>
 <span class="doccomment">//! into a new render command which executes multiple instruction sets.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">render</span>::{
-        <span class="ident">eventually::Eventually::Initialized</span>,
-        <span class="ident">render_phase</span>::{<span class="ident">PhaseItem</span>, <span class="ident">RenderCommand</span>, <span class="ident">RenderCommandResult</span>},
-        <span class="ident">resource</span>::{<span class="ident">Globals</span>, <span class="ident">IndexEntry</span>, <span class="ident">TrackedRenderPass</span>},
-        <span class="ident">tile_view_pattern</span>::{<span class="ident">TileInView</span>, <span class="ident">TileShape</span>},
-        <span class="ident">INDEX_FORMAT</span>,
-    },
-    <span class="ident">RenderState</span>,
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
+    <span class="ident">eventually::Eventually::Initialized</span>,
+    <span class="ident">render_phase</span>::{<span class="ident">PhaseItem</span>, <span class="ident">RenderCommand</span>, <span class="ident">RenderCommandResult</span>},
+    <span class="ident">resource</span>::{<span class="ident">Globals</span>, <span class="ident">IndexEntry</span>, <span class="ident">TrackedRenderPass</span>},
+    <span class="ident">tile_view_pattern</span>::{<span class="ident">TileInView</span>, <span class="ident">TileShape</span>},
+    <span class="ident">RenderState</span>, <span class="ident">INDEX_FORMAT</span>,
 };
 
 <span class="kw">impl</span> <span class="ident">PhaseItem</span> <span class="kw">for</span> <span class="ident">TileInView</span> {

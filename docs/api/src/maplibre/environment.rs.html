@@ -17,24 +17,48 @@
 <span id="17">17</span>
 <span id="18">18</span>
 <span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">event_loop::EventLoopConfig</span>,
     <span class="ident">io</span>::{
         <span class="ident">apc::AsyncProcedureCall</span>,
+        <span class="ident">scheduler::Scheduler</span>,
+        <span class="ident">source_client</span>::{<span class="ident">HttpClient</span>, <span class="ident">HttpSourceClient</span>, <span class="ident">SourceClient</span>},
         <span class="ident">transferables</span>::{
             <span class="ident">DefaultTessellatedLayer</span>, <span class="ident">DefaultTileTessellated</span>, <span class="ident">DefaultUnavailableLayer</span>, <span class="ident">Transferables</span>,
         },
     },
-    <span class="ident">HttpClient</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">Scheduler</span>,
+    <span class="ident">kernel::Kernel</span>,
+    <span class="ident">window::MapWindowConfig</span>,
 };
 
+<span class="doccomment">/// The environment defines which types must be injected into maplibre at compile time.</span>
+<span class="doccomment">/// Essentially, this trait implements the</span>
+<span class="doccomment">/// [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) design pattern.</span>
+<span class="doccomment">/// By instantiating this trait at compile time with concrete types, it is possible to create</span>
+<span class="doccomment">/// different compile-time instances of maplibre.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// For example it is possible to change the way tasks are scheduled. It is also possible to change</span>
+<span class="doccomment">/// the HTTP implementation for fetching tiles over the network.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Environment</span>: <span class="lifetime">&#39;static</span> {
     <span class="kw">type</span> <span class="ident">MapWindowConfig</span>: <span class="ident">MapWindowConfig</span>;
 
-    <span class="kw">type</span> <span class="ident">AsyncProcedureCall</span>: <span class="ident">AsyncProcedureCall</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Transferables</span>, <span class="ident"><span class="self">Self</span>::HttpClient</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Scheduler</span>: <span class="ident">Scheduler</span>;
-    <span class="kw">type</span> <span class="ident">HttpClient</span>: <span class="ident">HttpClient</span>;
+    <span class="kw">type</span> <span class="ident">AsyncProcedureCall</span>: <span class="ident">AsyncProcedureCall</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::HttpClient</span><span class="op">&gt;</span>;
 
-    <span class="kw">type</span> <span class="ident">Transferables</span>: <span class="ident">Transferables</span>;
+    <span class="kw">type</span> <span class="ident">Scheduler</span>: <span class="ident">Scheduler</span>;
+
+    <span class="kw">type</span> <span class="ident">HttpClient</span>: <span class="ident">HttpClient</span>;
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>

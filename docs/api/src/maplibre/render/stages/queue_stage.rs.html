@@ -65,16 +65,15 @@
 <span id="65">65</span>
 <span id="66">66</span>
 <span id="67">67</span>
-<span id="68">68</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Queues [PhaseItems](crate::render::render_phase::PhaseItem) for rendering.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">context::MapContext</span>,
     <span class="ident">render</span>::{
         <span class="ident">eventually::Eventually::Initialized</span>, <span class="ident">resource::IndexEntry</span>, <span class="ident">tile_view_pattern::TileInView</span>,
+        <span class="ident">RenderState</span>, <span class="ident">Renderer</span>,
     },
     <span class="ident">schedule::Stage</span>,
-    <span class="ident">RenderState</span>, <span class="ident">Renderer</span>,
 };
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
@@ -85,7 +84,6 @@
     <span class="kw">fn</span> <span class="ident">run</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">MapContext</span> {
-            <span class="ident">view_state</span>: <span class="kw">_</span>,
             <span class="ident">renderer</span>:
                 <span class="ident">Renderer</span> {
                     <span class="ident">state</span>:

@@ -56,12 +56,13 @@
 <span id="56">56</span>
 <span id="57">57</span>
 <span id="58">58</span>
+<span id="59">59</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
 <span class="kw">use</span> <span class="ident">reqwest</span>::{<span class="ident">Client</span>, <span class="ident">StatusCode</span>};
 <span class="kw">use</span> <span class="ident">reqwest_middleware::ClientWithMiddleware</span>;
 <span class="kw">use</span> <span class="ident">reqwest_middleware_cache</span>::{<span class="ident">managers::CACacheManager</span>, <span class="ident">Cache</span>, <span class="ident">CacheMode</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">error::Error</span>, <span class="ident">HttpClient</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">error::Error</span>, <span class="ident">io::source_client::HttpClient</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ReqwestHttpClient</span> {
@@ -81,6 +82,7 @@
 
 <span class="kw">impl</span> <span class="ident">ReqwestHttpClient</span> {
     <span class="doccomment">/// cache_path: Under which path should we cache requests.</span>
+    <span class="comment">// TODO: Use Into&lt;Path&gt; instead of String</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">cache_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">reqwest_middleware::ClientBuilder::new</span>(<span class="ident">Client::new</span>());
 
