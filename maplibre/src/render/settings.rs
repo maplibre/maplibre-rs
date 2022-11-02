@@ -52,7 +52,7 @@ impl Default for WgpuSettings {
             }
         };
 
-        let mut features = Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
+        let features = Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
 
         Self {
             device_label: Default::default(),

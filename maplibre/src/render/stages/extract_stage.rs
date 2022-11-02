@@ -2,7 +2,6 @@
 
 use crate::{
     context::MapContext,
-    coords::ViewRegion,
     render::{eventually::Eventually::Initialized, RenderState, Renderer},
     schedule::Stage,
     world::World,

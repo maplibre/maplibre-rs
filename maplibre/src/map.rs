@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::{
     context::MapContext,
-    coords::{LatLon, WorldCoords, Zoom, TILE_SIZE},
+    coords::{LatLon, Zoom},
     environment::Environment,
     error::Error,
     kernel::Kernel,
@@ -11,13 +11,11 @@ use crate::{
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
         },
         create_default_render_graph, register_default_render_stages,
-        settings::{RendererSettings, WgpuSettings},
-        Renderer,
     },
     schedule::{Schedule, Stage},
     stages::register_stages,
     style::Style,
-    window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
+    window::{HeadedMapWindow, MapWindow, MapWindowConfig},
     world::World,
 };
 
@@ -47,7 +45,7 @@ where
 
         register_stages::<E>(&mut schedule, kernel.clone());
 
-        let mut window = kernel.map_window_config().create();
+        let window = kernel.map_window_config().create();
 
         let map = Self {
             kernel,
@@ -78,13 +76,13 @@ where
                 let world = World::new_at(
                     window_size,
                     LatLon::new(center[0], center[1]),
-                    style.zoom.map(|zoom| Zoom::new(zoom)).unwrap_or_default(),
+                    style.zoom.map(Zoom::new).unwrap_or_default(),
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
                 );
 
                 match result {
                     InitializationResult::Initialized(InitializedRenderer { renderer, .. }) => {
-                        *&mut self.map_context = MapContextState::Ready(MapContext {
+                        self.map_context = MapContextState::Ready(MapContext {
                             world,
                             style: std::mem::take(style),
                             renderer,

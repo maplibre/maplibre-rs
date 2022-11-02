@@ -1,14 +1,5 @@
 use crate::{
-    event_loop::EventLoopConfig,
-    io::{
-        apc::AsyncProcedureCall,
-        scheduler::Scheduler,
-        source_client::{HttpClient, HttpSourceClient, SourceClient},
-        transferables::{
-            DefaultTessellatedLayer, DefaultTileTessellated, DefaultUnavailableLayer, Transferables,
-        },
-    },
-    kernel::Kernel,
+    io::{apc::AsyncProcedureCall, scheduler::Scheduler, source_client::HttpClient},
     window::MapWindowConfig,
 };
 

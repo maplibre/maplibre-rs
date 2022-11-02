@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use downcast_rs::{impl_downcast, Downcast};
+use downcast_rs::Downcast;
 use geozero::mvt::tile;
 
 use crate::{

@@ -1,8 +1,6 @@
 //! Tile cache.
 
-use std::collections::{btree_map, BTreeMap, HashSet};
-
-use geozero::mvt::tile;
+use std::collections::{btree_map, BTreeMap};
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
@@ -112,7 +110,7 @@ impl TileRepository {
             .map(|key| self.tree.entry(key))
         {
             match entry {
-                btree_map::Entry::Vacant(entry) => {
+                btree_map::Entry::Vacant(_entry) => {
                     panic!("Can not add a tessellated layer if no request has been started before.")
                 }
                 btree_map::Entry::Occupied(mut entry) => {
@@ -155,7 +153,11 @@ impl TileRepository {
 
     /// Checks if a layer has been fetched.
     pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
-        if let Some(_) = coords.build_quad_key().and_then(|key| self.tree.get(&key)) {
+        if coords
+            .build_quad_key()
+            .and_then(|key| self.tree.get(&key))
+            .is_some()
+        {
             return false;
         }
         true

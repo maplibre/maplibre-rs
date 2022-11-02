@@ -1,26 +1,15 @@
 //! Requests tiles which are currently in view
 
-use std::{
-    borrow::Borrow,
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    future::Future,
-    ops::Deref,
-    pin::Pin,
-    process::Output,
-    rc::Rc,
-    str::FromStr,
-};
+use std::{collections::HashSet, rc::Rc};
 
 use crate::{
     context::MapContext,
-    coords::{ViewRegion, WorldTileCoords, ZoomLevel},
+    coords::{ViewRegion, WorldTileCoords},
     environment::Environment,
     error::Error,
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message},
         pipeline::{PipelineContext, Processable},
-        source_client::{HttpSourceClient, SourceClient},
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::TileRepository,
         transferables::{Transferables, UnavailableLayer},

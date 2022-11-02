@@ -1,24 +1,14 @@
 pub mod input;
 
-use std::{cell::RefCell, fmt::Debug, marker::PhantomData, ops::Deref, rc::Rc};
+use std::{fmt::Debug, marker::PhantomData};
 
 use instant::Instant;
-use log::info;
 use maplibre::{
     environment::Environment,
     error::Error,
     event_loop::{EventLoop, EventLoopProxy},
-    io::{
-        apc::{AsyncProcedureCall, Message},
-        scheduler::Scheduler,
-        source_client::HttpClient,
-        transferables::{DefaultTransferables, Transferables},
-    },
+    io::{apc::AsyncProcedureCall, scheduler::Scheduler, source_client::HttpClient},
     map::Map,
-    render::{
-        builder::RendererBuilder,
-        settings::{Backends, WgpuSettings},
-    },
     window::{HeadedMapWindow, MapWindowConfig},
 };
 use winit::{
@@ -77,7 +67,7 @@ pub struct WinitEventLoop<ET: 'static> {
 impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
     type EventLoopProxy = WinitEventLoopProxy<ET>;
 
-    fn run<E>(mut self, mut map: Map<E>, max_frames: Option<u64>)
+    fn run<E>(self, mut map: Map<E>, max_frames: Option<u64>)
     where
         E: Environment,
         <E::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow,
@@ -88,7 +78,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         let mut input_controller = InputController::new(0.2, 100.0, 0.1);
 
         self.event_loop
-            .run(move |event, window_target, control_flow| {
+            .run(move |event, _window_target, control_flow| {
                 #[cfg(target_os = "android")]
                 if !map.has_renderer() && event == Event::Resumed {
                     use tokio::{runtime::Handle, task};

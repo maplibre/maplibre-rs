@@ -1,31 +1,20 @@
 //! [Stages](Stage) for requesting and preparing data
 
-use std::{
-    cell::RefCell,
-    marker::PhantomData,
-    rc::Rc,
-    sync::{mpsc, Arc, Mutex},
-};
+use std::{marker::PhantomData, rc::Rc};
 
-use geozero::{mvt::tile, GeozeroDatasource};
+use geozero::mvt::tile;
 use request_stage::RequestStage;
 
 use crate::{
-    coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel},
+    coords::WorldTileCoords,
     environment::Environment,
     error::Error,
     io::{
-        apc::{AsyncProcedureCall, Context, Message},
-        geometry_index::{GeometryIndex, IndexedGeometry, TileIndex},
-        pipeline::{PipelineContext, PipelineProcessor, Processable},
-        source_client::{HttpClient, HttpSourceClient},
-        tile_pipelines::build_vector_tile_pipeline,
-        transferables::{
-            DefaultTessellatedLayer, DefaultTileTessellated, DefaultTransferables,
-            DefaultUnavailableLayer, TessellatedLayer, TileTessellated, Transferables,
-            UnavailableLayer,
-        },
-        TileRequest,
+        apc::{Context, Message},
+        geometry_index::IndexedGeometry,
+        pipeline::PipelineProcessor,
+        source_client::HttpClient,
+        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
     },
     kernel::Kernel,
     render::ShaderVertex,
@@ -87,8 +76,8 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
 
     fn layer_indexing_finished(
         &mut self,
-        coords: &WorldTileCoords,
-        geometries: Vec<IndexedGeometry<f64>>,
+        _coords: &WorldTileCoords,
+        _geometries: Vec<IndexedGeometry<f64>>,
     ) -> Result<(), Error> {
         // FIXME (wasm-executor): Readd
         /*        if let Ok(mut geometry_index) = self.state.geometry_index.lock() {

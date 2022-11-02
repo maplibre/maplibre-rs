@@ -12,15 +12,15 @@ use maplibre::{
     map::Map,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
     render::{
-        builder::{InitializationResult, InitializedRenderer, RendererBuilder},
-        settings::{Backends, RendererSettings, WgpuSettings},
+        builder::RendererBuilder,
+        settings::{Backends, WgpuSettings},
     },
     style::Style,
-    window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
+    window::{MapWindow, MapWindowConfig, WindowSize},
 };
 use winit::window::WindowBuilder;
 
-use super::{RawWinitEventLoop, RawWinitWindow, WinitMapWindow};
+use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
 
 pub struct WinitMapWindowConfig<ET> {
