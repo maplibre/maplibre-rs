@@ -54,8 +54,6 @@ impl Default for WgpuSettings {
 
         let mut features = Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
 
-        features |= Features::DEPTH32FLOAT_STENCIL8;
-
         Self {
             device_label: Default::default(),
             backends,
@@ -133,7 +131,7 @@ impl Default for RendererSettings {
             )))]
             texture_format: TextureFormat::Bgra8UnormSrgb,
 
-            depth_texture_format: TextureFormat::Depth32FloatStencil8,
+            depth_texture_format: TextureFormat::Depth24PlusStencil8,
         }
     }
 }

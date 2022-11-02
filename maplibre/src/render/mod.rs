@@ -304,6 +304,9 @@ impl Renderer {
                 max_bind_groups: limits
                     .max_bind_groups
                     .min(constrained_limits.max_bind_groups),
+                max_bindings_per_bind_group: limits
+                    .max_bindings_per_bind_group
+                    .min(constrained_limits.max_bindings_per_bind_group),
                 max_dynamic_uniform_buffers_per_pipeline_layout: limits
                     .max_dynamic_uniform_buffers_per_pipeline_layout
                     .min(constrained_limits.max_dynamic_uniform_buffers_per_pipeline_layout),
