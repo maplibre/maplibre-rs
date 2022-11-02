@@ -59,7 +59,7 @@ jobs:
         shell: bash
         run: just check apple ${{ matrix.target }}
       - name: Test
-        if: ${{ matrix.arch == "x86_64" }} # TODO: We can only test on x86_64, this is current limitation
+        if: ${{ matrix.arch == 'x86_64' }} # TODO: We can only test on x86_64, this is current limitation
         shell: bash
         run: just test apple ${{ matrix.target }}
       - name: Check fat
@@ -67,7 +67,7 @@ jobs:
         shell: bash
         run: just check apple ${{ matrix.fat-target }}
       - name: Test fat
-        if: ${{ matrix.fat-target && matrix.fat-arch == "x86_64" }} # TODO: We can only test on x86_64, this is current limitation
+        if: ${{ matrix.fat-target && matrix.fat-arch == 'x86_64' }} # TODO: We can only test on x86_64, this is current limitation
         shell: bash
         run: just check apple ${{ matrix.fat-target }}
 
