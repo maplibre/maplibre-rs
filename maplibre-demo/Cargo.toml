@@ -14,7 +14,7 @@ trace = ["maplibre/trace"]
 
 [dependencies]
 env_logger = "0.9.0"
-maplibre = { path = "../maplibre", version = "0.0.2", features = ["headless"]  }
+maplibre = { path = "../maplibre", version = "0.0.2", features = ["headless", "thread-safe-futures"]  }
 maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
 
 tile-grid = "0.3"

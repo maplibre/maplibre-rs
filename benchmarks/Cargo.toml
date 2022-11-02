@@ -6,7 +6,7 @@ categories = []
 edition = "2021"
 
 [dependencies]
-maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles"] }
+maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles", "thread-safe-futures"] }
 
 [dev-dependencies]
 criterion = { version = "0.3.6", features = ["async_tokio"] }
