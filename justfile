@@ -53,8 +53,8 @@ fixup:
   cargo clippy --allow-dirty --no-deps -p maplibre --target wasm32-unknown-unknown --fix
   cargo clippy --allow-dirty --no-deps -p maplibre-winit --target wasm32-unknown-unknown --fix
   # Android
-  cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
-  cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
 
 check PROJECT ARCH: stable-install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
