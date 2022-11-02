@@ -156,7 +156,7 @@ impl<E: Environment> RequestStage<E> {
             return Ok(false);
         }*/
 
-        if tile_repository.needs_fetching(&coords) {
+        if tile_repository.has_tile(&coords) {
             tile_repository.create_tile(coords);
 
             tracing::info!("new tile request: {}", &coords);

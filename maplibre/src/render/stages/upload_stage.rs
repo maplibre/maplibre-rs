@@ -164,9 +164,8 @@ impl UploadStage {
                 let loaded_layers = buffer_pool
                     .get_loaded_layers_at(&world_coords)
                     .unwrap_or_default();
-                if let Some(available_layers) = tile_repository
-                    .iter_tessellated_layers_at(&world_coords)
-                    .map(|layers| {
+                if let Some(available_layers) =
+                    tile_repository.iter_layers_at(&world_coords).map(|layers| {
                         layers
                             .filter(|result| !loaded_layers.contains(&result.layer_name()))
                             .collect::<Vec<_>>()

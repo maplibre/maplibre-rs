@@ -39,7 +39,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
             match result {
                 Message::TileTessellated(tranferred) => {
                     let coords = tranferred.coords();
-                    tile_repository.success(coords);
+                    tile_repository.mark_tile_succeeded(coords);
                     tracing::trace!("Tile at {} finished loading", coords);
                     log::warn!("Tile at {} finished loading", coords);
                 }
@@ -51,7 +51,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                         layer.layer_name(),
                         layer.get_coords()
                     );
-                    tile_repository.put_tessellated_layer(layer);
+                    tile_repository.put_layer(layer);
                 }
                 Message::TessellatedLayer(data) => {
                     let layer: StoredLayer = data.to_stored_layer();
@@ -65,7 +65,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                         layer.layer_name(),
                         layer.get_coords()
                     );
-                    tile_repository.put_tessellated_layer(layer);
+                    tile_repository.put_layer(layer);
                 }
             }
         }
