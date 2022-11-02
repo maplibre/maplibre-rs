@@ -7,7 +7,7 @@ on:
 
 
 jobs:
-  library-apple:
+  library-apple-build:
     runs-on: macos-12
     strategy:
       matrix:
@@ -85,7 +85,7 @@ jobs:
     name: Bundle
     runs-on: macos-12
     needs:
-      - library-apple
+      - library-apple-build
     steps:
       - uses: actions/checkout@v3
       - name: Setup
