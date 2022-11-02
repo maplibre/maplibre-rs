@@ -12,17 +12,21 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     coords::WorldTileCoords,
+    error::Error,
     io::{
-        source_client::{HttpSourceClient, SourceClient},
+        scheduler::Scheduler,
+        source_client::{HttpClient, HttpSourceClient, SourceClient},
         transferables::{DefaultTransferables, Transferables},
         TileRequest,
     },
-    Environment, HttpClient, Scheduler,
 };
 
-/// The result of the tessellation of a tile.
-/// `TessellatedLayer` contains the result of the tessellation for a specific layer, otherwise
-/// `UnavailableLayer` if the layer doesn't exist.
+/// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
+/// of an [`AsyncProcedure`].
+///
+/// * `TessellatedLayer` contains the result of the tessellation for a specific layer.
+/// * `UnavailableLayer` is sent if a requested layer is not found.
+/// * `TileTessellated` is sent if processing of a tile finished.
 #[derive(Clone)]
 pub enum Message<T: Transferables> {
     TileTessellated(T::TileTessellated),
@@ -30,30 +34,82 @@ pub enum Message<T: Transferables> {
     TessellatedLayer(T::TessellatedLayer),
 }
 
+/// Inputs for an [`AsyncProcedure`]
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Input {
     TileRequest(TileRequest),
 }
 
+/// Allows sending messages from workers to back to the caller.
 pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
-    fn send(&self, data: Message<T>);
+    /// Send a message back to the caller.
+    // FIXME (wasm-executor): handle results send() calls
+    fn send(&self, data: Message<T>) -> Result<(), Error>;
 
     fn source_client(&self) -> &SourceClient<HC>;
 }
 
-#[cfg(not(feature = "no-thread-safe-futures"))]
+#[cfg(feature = "thread-safe-futures")]
 pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + Send + 'static)>>;
-#[cfg(feature = "no-thread-safe-futures")]
+#[cfg(not(feature = "thread-safe-futures"))]
 pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + 'static)>>;
 
+/// Type definitions for asynchronous procedure calls. These functions can be called in an
+/// [`AsyncProcedureCall`]. Functions of this type are required to be statically available at
+/// compile time. It is explicitly not possible to use closures, as they would require special
+/// serialization which is currently not supported.
 pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFuture;
 
-pub trait AsyncProcedureCall<T: Transferables, HC: HttpClient>: 'static {
-    type Context: Context<T, HC> + Send;
+/// APCs define an interface for performing work asynchronously.
+/// This work can be implemented through procedures which can be called asynchronously, hence the
+/// name AsyncProcedureCall or APC for short.
+///
+/// APCs serve as an abstraction for doing work on a separate thread, and then getting responses
+/// back. An asynchronous procedure call can for example be performed by using message passing. In
+/// fact this could theoretically work over a network socket.
+///
+/// It is possible to schedule work on a  remote host by calling [`AsyncProcedureCall::call()`]
+/// and getting the results back by calling the non-blocking function
+/// [`AsyncProcedureCall::receive()`]. The [`AsyncProcedureCall::receive()`] function returns a
+/// struct which implements [`Transferables`].
+///
+/// ## Transferables
+///
+/// Based on whether the current platform supports shared-memory or not, the implementation of APCs
+/// might want to send the whole data from the worker to the caller back or just pointers to that
+/// data. The [`Transferables`] trait allows developers to define that and use different data
+/// layouts for different platforms.
+///
+/// ## Message Passing vs APC
+///
+/// One might wonder why this is called [`AsyncProcedureCall`] instead of `MessagePassingInterface`.
+/// The reason for this is quite simple. We are actually referencing and calling procedures which
+/// are defined in different threads, processes or hosts. That means, that an [`AsyncProcedureCall`]
+/// is actually distinct from a `MessagePassingInterface`.
+///
+///
+/// ## Current Implementations
+///
+/// We currently have two implementation for APCs. One uses the Tokio async runtime on native
+/// targets in [`SchedulerAsyncProcedureCall`].
+/// For the web we implemented an alternative way to call APCs which is called
+/// [`PassingAsyncProcedureCall`]. This implementation does not depend on shared-memory compared to
+/// [`SchedulerAsyncProcedureCall`]. In fact, on the web we are currently not depending on
+/// shared-memory because that feature is hidden behind feature flags in browsers
+/// (see [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer).
+///
+///
+// TODO: Rename to AsyncProcedureCaller?
+pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
+    type Context: Context<Self::Transferables, HC> + Send;
+    type Transferables: Transferables;
 
-    fn receive(&mut self) -> Option<Message<T>>;
+    /// Try to receive a message non-blocking.
+    fn receive(&self) -> Option<Message<Self::Transferables>>;
 
-    fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>);
+    /// Call an [`AsyncProcedure`] using some [`Input`]. This function is non-blocking and
+    /// returns immediately.
+    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>);
 }
 
 #[derive(Clone)]
@@ -63,8 +119,8 @@ pub struct SchedulerContext<T: Transferables, HC: HttpClient> {
 }
 
 impl<T: Transferables, HC: HttpClient> Context<T, HC> for SchedulerContext<T, HC> {
-    fn send(&self, data: Message<T>) {
-        self.sender.send(data).unwrap(); // FIXME (wasm-executor): Remove unwrap
+    fn send(&self, data: Message<T>) -> Result<(), Error> {
+        self.sender.send(data).map_err(|e| Error::APC)
     }
 
     fn source_client(&self) -> &SourceClient<HC> {
@@ -91,19 +147,18 @@ impl<HC: HttpClient, S: Scheduler> SchedulerAsyncProcedureCall<HC, S> {
     }
 }
 
-impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<DefaultTransferables, HC>
-    for SchedulerAsyncProcedureCall<HC, S>
-{
-    type Context = SchedulerContext<DefaultTransferables, HC>;
+impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProcedureCall<HC, S> {
+    type Context = SchedulerContext<Self::Transferables, HC>;
+    type Transferables = DefaultTransferables;
 
-    fn receive(&mut self) -> Option<Message<DefaultTransferables>> {
+    fn receive(&self) -> Option<Message<DefaultTransferables>> {
         let transferred = self.channel.1.try_recv().ok()?;
         Some(transferred)
     }
 
-    fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
+    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
         let sender = self.channel.0.clone();
-        let client = self.http_client.clone(); // FIXME (wasm-executor): do not clone each time
+        let client = self.http_client.clone(); // TODO (perf): do not clone each time
 
         self.scheduler
             .schedule(move || async move {
@@ -111,7 +166,7 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<DefaultTransferables, HC>
                     input,
                     SchedulerContext {
                         sender,
-                        source_client: SourceClient::Http(HttpSourceClient::new(client)),
+                        source_client: SourceClient::new(HttpSourceClient::new(client)),
                     },
                 )
                 .await;

@@ -6,9 +6,9 @@ use crate::{
     context::MapContext,
     render::{
         eventually::Eventually::Initialized, graph::RenderGraph, graph_runner::RenderGraphRunner,
+        Renderer,
     },
     schedule::Stage,
-    Renderer,
 };
 
 /// Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame.

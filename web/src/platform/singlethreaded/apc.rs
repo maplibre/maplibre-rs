@@ -16,29 +16,33 @@ use std::{
 };
 
 use js_sys::Uint8Array;
+use log::info;
 use maplibre::{
     environment::Environment,
+    error::Error,
     io::{
         apc::{AsyncProcedure, AsyncProcedureCall, Context, Input, Message},
         scheduler::Scheduler,
         source_client::{HttpClient, HttpSourceClient, SourceClient},
         transferables::Transferables,
     },
+    kernel::Kernel,
 };
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
-use web_sys::{DedicatedWorkerGlobalScope, Worker};
+use web_sys::{console::info, DedicatedWorkerGlobalScope, Worker};
 
 use crate::{
     platform::singlethreaded::transferables::{
         InnerData, LinearTessellatedLayer, LinearTransferables,
     },
-    MapType, WHATWGFetchHttpClient,
+    CurrentEnvironment, MapType, WHATWGFetchHttpClient,
 };
 
 type UsedTransferables = LinearTransferables;
 type UsedHttpClient = WHATWGFetchHttpClient;
 type UsedContext = PassingContext;
 
+#[derive(Debug)]
 enum SerializedMessageTag {
     TileTessellated = 1,
     UnavailableLayer = 2,
@@ -120,7 +124,7 @@ pub struct PassingContext {
 }
 
 impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
-    fn send(&self, data: Message<UsedTransferables>) {
+    fn send(&self, data: Message<UsedTransferables>) -> Result<(), Error> {
         let tag = data.tag();
         let serialized = data.serialize();
 
@@ -130,11 +134,12 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
             serialized_array.set(&Uint8Array::view(serialized), 0);
         }
 
-        let global = js_sys::global().unchecked_into::<DedicatedWorkerGlobalScope>(); // FIXME (wasm-executor): Remove unchecked
+        let global: DedicatedWorkerGlobalScope =
+            js_sys::global().dyn_into().map_err(|e| Error::APC)?;
         let array = js_sys::Array::new();
         array.push(&JsValue::from(tag as u32));
         array.push(&serialized_array_buffer);
-        global.post_message(&array).unwrap(); // FIXME (wasm-executor) Remove unwrap
+        global.post_message(&array).map_err(|e| Error::APC)
     }
 
     fn source_client(&self) -> &SourceClient<UsedHttpClient> {
@@ -142,18 +147,26 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
     }
 }
 
+type ReceivedType = RefCell<Vec<Message<UsedTransferables>>>;
+
 pub struct PassingAsyncProcedureCall {
     new_worker: Box<dyn Fn() -> Worker>,
     workers: Vec<Worker>,
 
-    received: Vec<Message<UsedTransferables>>,
+    received: Rc<ReceivedType>, // FIXME (wasm-executor): Is RefCell fine?
 }
 
 impl PassingAsyncProcedureCall {
     pub fn new(new_worker: js_sys::Function, initial_workers: u8) -> Self {
+        let received = Rc::new(RefCell::new(vec![]));
+        let received_ref = received.clone();
+
         let create_new_worker = Box::new(move || {
             new_worker
-                .call0(&JsValue::undefined())
+                .call1(
+                    &JsValue::undefined(),
+                    &JsValue::from(Rc::into_raw(received_ref.clone()) as u32),
+                )
                 .unwrap() // FIXME (wasm-executor): Remove unwrap
                 .dyn_into::<Worker>()
                 .unwrap() // FIXME (wasm-executor): Remove unwrap
@@ -173,19 +186,20 @@ impl PassingAsyncProcedureCall {
         Self {
             new_worker: create_new_worker,
             workers,
-            received: vec![],
+            received,
         }
     }
 }
 
-impl AsyncProcedureCall<UsedTransferables, UsedHttpClient> for PassingAsyncProcedureCall {
+impl AsyncProcedureCall<UsedHttpClient> for PassingAsyncProcedureCall {
     type Context = UsedContext;
+    type Transferables = UsedTransferables;
 
-    fn receive(&mut self) -> Option<Message<UsedTransferables>> {
-        self.received.pop()
+    fn receive(&self) -> Option<Message<UsedTransferables>> {
+        self.received.borrow_mut().pop()
     }
 
-    fn schedule(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
+    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
         let procedure_ptr = procedure as *mut AsyncProcedure<Self::Context> as u32; // FIXME (wasm-executor): is u32 fine, define an overflow safe function?
         let input = serde_json::to_string(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
 
@@ -205,7 +219,7 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
     let input = serde_json::from_str::<Input>(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
 
     let context = PassingContext {
-        source_client: SourceClient::Http(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
+        source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
     };
 
     (procedure)(input, context).await;
@@ -216,30 +230,24 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
 /// Entry point invoked by the main thread.
 #[wasm_bindgen]
 pub unsafe fn singlethreaded_main_entry(
-    map_ptr: *const RefCell<MapType>,
+    received_ptr: *const ReceivedType,
     type_id: u32,
     data: Uint8Array,
 ) -> Result<(), JsValue> {
     // FIXME (wasm-executor): Can we make this call safe? check if it was cloned before?
-    let mut map = Rc::from_raw(map_ptr);
+    let mut received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
 
     let message = Message::<UsedTransferables>::deserialize(
         SerializedMessageTag::from_u32(type_id).unwrap(),
         data,
     );
 
-    map.deref()
-        .borrow()
-        .map_schedule()
-        .deref()
-        .borrow()
-        .apc
-        .deref()
-        .borrow_mut()
-        .received
-        .push(message);
+    info!("singlethreaded_main_entry {:?}", message.tag());
 
-    mem::forget(map); // FIXME (wasm-executor): Enforce this somehow
+    // MAJOR FIXME: Fix mutability
+    received.borrow_mut().push(message);
+
+    mem::forget(received); // FIXME (wasm-executor): Enforce this somehow
 
     Ok(())
 }

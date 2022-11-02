@@ -3,7 +3,7 @@ use reqwest::{Client, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use reqwest_middleware_cache::{managers::CACacheManager, Cache, CacheMode};
 
-use crate::{error::Error, HttpClient};
+use crate::{error::Error, io::source_client::HttpClient};
 
 #[derive(Clone)]
 pub struct ReqwestHttpClient {
@@ -23,6 +23,7 @@ impl From<reqwest_middleware::Error> for Error {
 
 impl ReqwestHttpClient {
     /// cache_path: Under which path should we cache requests.
+    // TODO: Use Into<Path> instead of String
     pub fn new(cache_path: Option<String>) -> Self {
         let mut builder = reqwest_middleware::ClientBuilder::new(Client::new());
 

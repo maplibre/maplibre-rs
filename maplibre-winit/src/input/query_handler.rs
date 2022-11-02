@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
-use maplibre::context::ViewState;
+use maplibre::world::ViewState;
 use winit::event::{ElementState, MouseButton};
 
 use crate::input::UpdateState;
@@ -66,7 +66,7 @@ impl UpdateState for QueryHandler {
                 let _z = state.visible_level(); // FIXME: can be wrong, if tiles of different z are visible
                 let _zoom = state.zoom();
 
-                if let Some(_coordinates) = state.camera.window_to_world_at_ground(
+                if let Some(_coordinates) = state.camera().window_to_world_at_ground(
                     &window_position,
                     &inverted_view_proj,
                     false,

@@ -574,8 +574,8 @@ mod tests {
         Edge, Node, NodeId, NodeRunError, RenderGraph, RenderGraphContext, RenderGraphError,
         SlotInfo,
     };
-    use crate::{
-        render::graph::{RenderContext, SlotType},
+    use crate::render::{
+        graph::{RenderContext, SlotType},
         RenderState,
     };
 

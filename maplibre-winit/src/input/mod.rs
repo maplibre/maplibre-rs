@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
-use maplibre::context::ViewState;
+use maplibre::world::ViewState;
 use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
 use crate::input::{

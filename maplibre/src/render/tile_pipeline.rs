@@ -6,10 +6,9 @@ use crate::{
     platform::MIN_WEBGL_BUFFER_SIZE,
     render::{
         resource::{FragmentState, RenderPipeline, RenderPipelineDescriptor, VertexState},
-        settings::Msaa,
+        settings::{Msaa, RendererSettings},
         shaders::ShaderGlobals,
     },
-    RendererSettings,
 };
 
 pub struct TilePipeline {

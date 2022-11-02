@@ -10,9 +10,9 @@ use crate::{
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
         tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE},
+        Renderer,
     },
     schedule::Stage,
-    Renderer,
 };
 
 #[derive(Default)]

@@ -5,28 +5,40 @@ use geozero::mvt::tile;
 
 use crate::{
     coords::WorldTileCoords,
+    error::Error,
     io::geometry_index::IndexedGeometry,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
 /// Processes events which happen during the pipeline execution
+// FIXME (wasm-executor): handle results for messages below
 pub trait PipelineProcessor: Downcast {
-    fn tile_finished(&mut self, _coords: &WorldTileCoords) {}
-    fn layer_unavailable(&mut self, _coords: &WorldTileCoords, _layer_name: &str) {}
+    fn tile_finished(&mut self, _coords: &WorldTileCoords) -> Result<(), Error> {
+        Ok(())
+    }
+    fn layer_unavailable(
+        &mut self,
+        _coords: &WorldTileCoords,
+        _layer_name: &str,
+    ) -> Result<(), Error> {
+        Ok(())
+    }
     fn layer_tesselation_finished(
         &mut self,
         _coords: &WorldTileCoords,
         _buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         _feature_indices: Vec<u32>,
         _layer_data: tile::Layer,
-    ) {
+    ) -> Result<(), Error> {
+        Ok(())
     }
     fn layer_indexing_finished(
         &mut self,
         _coords: &WorldTileCoords,
         _geometries: Vec<IndexedGeometry<f64>>,
-    ) {
+    ) -> Result<(), Error> {
+        Ok(())
     }
 }
 

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
-use maplibre::{context::ViewState, render::camera::Camera};
+use maplibre::{render::camera::Camera, world::ViewState};
 use winit::event::{ElementState, MouseButton};
 
 use super::UpdateState;
@@ -45,17 +45,17 @@ impl UpdateState for PanHandler {
                 };
 
                 if self.start_camera_position.is_none() {
-                    self.start_camera_position = Some(state.camera.position.to_vec());
+                    self.start_camera_position = Some(state.camera().position().to_vec());
                 }
 
                 if let Some(start_camera_position) = self.start_camera_position {
-                    state.camera.position = Point3::from_vec(
+                    state.camera_mut().move_to(Point3::from_vec(
                         start_camera_position + Vector3::new(delta.x, delta.y, 0.0),
-                    );
+                    ));
                 }
             }
         } else {
-            self.reference_camera = Some(state.camera.clone());
+            self.reference_camera = Some(state.camera().clone());
         }
     }
 }

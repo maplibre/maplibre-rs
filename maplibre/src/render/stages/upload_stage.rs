@@ -10,9 +10,11 @@ use crate::{
         camera::ViewProjection,
         eventually::Eventually::Initialized,
         shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
+        RenderState, Renderer,
     },
     schedule::Stage,
-    RenderState, Renderer, Style,
+    style::Style,
+    world::World,
 };
 
 #[derive(Default)]
@@ -23,9 +25,12 @@ impl Stage for UploadStage {
     fn run(
         &mut self,
         MapContext {
-            view_state,
+            world:
+                World {
+                    tile_repository,
+                    view_state,
+                },
             style,
-            tile_repository,
             renderer: Renderer { queue, state, .. },
             ..
         }: &mut MapContext,
@@ -40,8 +45,8 @@ impl Stage for UploadStage {
                 bytemuck::cast_slice(&[ShaderGlobals::new(ShaderCamera::new(
                     view_proj.downcast().into(),
                     view_state
-                        .camera
-                        .position
+                        .camera()
+                        .position()
                         .to_homogeneous()
                         .cast::<f32>()
                         .unwrap() // TODO: Remove unwrap
@@ -159,9 +164,8 @@ impl UploadStage {
                 let loaded_layers = buffer_pool
                     .get_loaded_layers_at(&world_coords)
                     .unwrap_or_default();
-                if let Some(available_layers) = tile_repository
-                    .iter_tessellated_layers_at(&world_coords)
-                    .map(|layers| {
+                if let Some(available_layers) =
+                    tile_repository.iter_layers_at(&world_coords).map(|layers| {
                         layers
                             .filter(|result| !loaded_layers.contains(&result.layer_name()))
                             .collect::<Vec<_>>()

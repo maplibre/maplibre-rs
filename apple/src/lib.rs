@@ -1,11 +1,9 @@
 use maplibre::{
     io::apc::SchedulerAsyncProcedureCall,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
-    MapBuilder,
 };
-use maplibre_winit::winit::{
+use maplibre_winit::{
     run_headed_map, WinitEnvironment, WinitEventLoop, WinitMapWindow, WinitMapWindowConfig,
-    WinitWindow,
 };
 
 #[cfg(not(any(target_os = "macos", target_os = "ios")))]
