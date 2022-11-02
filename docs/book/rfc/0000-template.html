@@ -1,0 +1,255 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>0000-template - MapLibre Rust Documentation</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../diff.css">
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="../supported-platforms.html">Supported Platforms</a></li><li class="chapter-item expanded affix "><a href="../developer-log.html">Developer Log</a></li><li class="chapter-item expanded "><a href="../user-guide/index.html"><strong aria-hidden="true">1.</strong> User Guide</a></li><li class="chapter-item expanded "><a href="../development-guide/index.html"><strong aria-hidden="true">2.</strong> Development Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-guide/how-to-run.html"><strong aria-hidden="true">2.1.</strong> How to Run Demos</a></li><li class="chapter-item expanded "><a href="../development-guide/building-libraries.html"><strong aria-hidden="true">2.2.</strong> Building Libraries</a></li><li class="chapter-item expanded "><a href="../development-guide/debugging.html"><strong aria-hidden="true">2.3.</strong> Debugging</a></li></ol></li><li class="chapter-item expanded "><a href="../development-documents/index.html"><strong aria-hidden="true">3.</strong> Development Documents</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-documents/architecture.html"><strong aria-hidden="true">3.1.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="../development-documents/design.html"><strong aria-hidden="true">3.2.</strong> Design</a></li><li class="chapter-item expanded "><a href="../development-documents/caching.html"><strong aria-hidden="true">3.3.</strong> Caching</a></li><li class="chapter-item expanded "><a href="../development-documents/stencil-masking.html"><strong aria-hidden="true">3.4.</strong> Stencil Masking</a></li><li class="chapter-item expanded "><a href="../development-documents/font-rendering.html"><strong aria-hidden="true">3.5.</strong> Font Rendering</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging.html"><strong aria-hidden="true">3.6.</strong> Library Packaging</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-documents/library-packaging/apple.html"><strong aria-hidden="true">3.6.1.</strong> Apple</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging/android.html"><strong aria-hidden="true">3.6.2.</strong> Android</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging/web.html"><strong aria-hidden="true">3.6.3.</strong> Web</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../appendix/index.html"><strong aria-hidden="true">4.</strong> Appendix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../appendix/link-collection.html"><strong aria-hidden="true">4.1.</strong> Link Collection</a></li></ol></li><li class="chapter-item expanded "><a href="../rfc/0001-rfc-process.html"><strong aria-hidden="true">5.</strong> RFCs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../rfc/0000-template.html" class="active"><strong aria-hidden="true">5.1.</strong> 0000-template</a></li><li class="chapter-item expanded "><a href="../rfc/0001-rfc-process.html"><strong aria-hidden="true">5.2.</strong> 0001-rfc-process</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MapLibre Rust Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <ul>
+<li>Feature Name: (fill me in with a unique ident, <code>my_awesome_feature</code>)</li>
+<li>Start Date: (fill me in with today's date, YYYY-MM-DD)</li>
+<li>RFC PR: <a href="https://github.com/maplibre/maplibre-rs/pull/0000">maplibre/maplibre-rs#0000</a></li>
+<li>maplibre-rs Issue: <a href="https://github.com/maplibre/maplibre-rs/issues/0000">maplibre/maplibre-rs#0000</a></li>
+</ul>
+<h1 id="summary"><a class="header" href="#summary">Summary</a></h1>
+<p>One paragraph explanation of the feature.</p>
+<h1 id="motivation"><a class="header" href="#motivation">Motivation</a></h1>
+<p>Why are we doing this? What use cases does it support? What is the expected outcome?</p>
+<h1 id="guide-level-explanation"><a class="header" href="#guide-level-explanation">Guide-level explanation</a></h1>
+<p>Explain the proposal as if it was already included in the project and you were teaching it to another maplibre-rs user.
+That generally means:</p>
+<ul>
+<li>Introducing new named concepts.</li>
+<li>Explaining the feature largely in terms of examples.</li>
+<li>Explaining how maplibre-rs users should <em>think</em> about the feature, and how it should impact the way they use
+maplibre-rs. It should explain the impact as concretely as possible.</li>
+<li>If applicable, provide sample error messages, deprecation warnings, or migration guidance.</li>
+<li>If applicable, describe the differences between teaching this to existing maplibre-rs users and new maplibre-rs users.</li>
+</ul>
+<p>For implementation-oriented RFCs (e.g. for internals), this section should focus on how maplibre-rs contributors should
+think about the change, and give examples of its concrete impact. For policy RFCs, this section should provide an
+example-driven introduction to the policy, and explain its impact in concrete terms.</p>
+<h1 id="reference-level-explanation"><a class="header" href="#reference-level-explanation">Reference-level explanation</a></h1>
+<p>This is the technical portion of the RFC. Explain the design in sufficient detail that:</p>
+<ul>
+<li>Its interaction with other features is clear.</li>
+<li>It is reasonably clear how the feature would be implemented.</li>
+<li>Corner cases are dissected by example.</li>
+</ul>
+<p>The section should return to the examples given in the previous section, and explain more fully how the detailed
+proposal makes those examples work.</p>
+<h1 id="drawbacks"><a class="header" href="#drawbacks">Drawbacks</a></h1>
+<p>Why should we <em>not</em> do this?</p>
+<h1 id="rationale-and-alternatives"><a class="header" href="#rationale-and-alternatives">Rationale and alternatives</a></h1>
+<ul>
+<li>Why is this design the best in the space of possible designs?</li>
+<li>What other designs have been considered and what is the rationale for not choosing them?</li>
+<li>What is the impact of not doing this?</li>
+</ul>
+<h1 id="prior-art"><a class="header" href="#prior-art">Prior art</a></h1>
+<p>Discuss prior art, both the good and the bad, in relation to this proposal.
+A few examples of what this can include are:</p>
+<ul>
+<li>Does this feature exist in other map renderers and what experience have their community had?</li>
+<li>For community proposals: Is this done by some other community and what were their experiences with it?</li>
+<li>For other teams: What lessons can we learn from what other communities have done here?</li>
+<li>Papers: Are there any published papers or great posts that discuss this? If you have some relevant papers to refer to,
+this can serve as a more detailed theoretical background.</li>
+</ul>
+<p>This section is intended to encourage you as an author to think about the lessons from other renderers, provide readers
+of your RFC with a fuller picture.
+If there is no prior art, that is fine - your ideas are interesting to us whether they are brand new or if it is an
+adaptation from other map renderers.</p>
+<p>Note that while precedent set by other map renderers is some motivation, it does not on its own motivate an RFC.</p>
+<h1 id="unresolved-questions"><a class="header" href="#unresolved-questions">Unresolved questions</a></h1>
+<ul>
+<li>What parts of the design do you expect to resolve through the RFC process before this gets merged?</li>
+<li>What parts of the design do you expect to resolve through the implementation of this feature before stabilization?</li>
+<li>What related issues do you consider out of scope for this RFC that could be addressed in the future independently of
+the solution that comes out of this RFC?</li>
+</ul>
+<h1 id="future-possibilities"><a class="header" href="#future-possibilities">Future possibilities</a></h1>
+<p>Think about what the natural extension and evolution of your proposal would
+be and how it would affect the renderer and project as a whole in a holistic
+way. Try to use this section as a tool to more fully consider all possible
+interactions with the project and renderer in your proposal.
+Also consider how this all fits into the roadmap for the project
+and of the relevant sub-team.</p>
+<p>This is also a good place to &quot;dump ideas&quot;, if they are out of scope for the
+RFC you are writing but otherwise related.</p>
+<p>If you have tried and cannot think of any future possibilities,
+you may simply state that you cannot think of anything.</p>
+<p>Note that having something written down in the future-possibilities section
+is not a reason to accept the current or a future RFC; such notes should be
+in the section on motivation or rationale in this or subsequent RFCs.
+The section merely provides additional information.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../rfc/0001-rfc-process.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../rfc/0001-rfc-process.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../rfc/0001-rfc-process.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../rfc/0001-rfc-process.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>

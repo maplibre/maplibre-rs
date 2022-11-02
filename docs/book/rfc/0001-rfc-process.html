@@ -1,0 +1,281 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>0001-rfc-process - MapLibre Rust Documentation</title>
+        <!-- Custom HTML head -->
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../diff.css">
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="../supported-platforms.html">Supported Platforms</a></li><li class="chapter-item expanded affix "><a href="../developer-log.html">Developer Log</a></li><li class="chapter-item expanded "><a href="../user-guide/index.html"><strong aria-hidden="true">1.</strong> User Guide</a></li><li class="chapter-item expanded "><a href="../development-guide/index.html"><strong aria-hidden="true">2.</strong> Development Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-guide/how-to-run.html"><strong aria-hidden="true">2.1.</strong> How to Run Demos</a></li><li class="chapter-item expanded "><a href="../development-guide/building-libraries.html"><strong aria-hidden="true">2.2.</strong> Building Libraries</a></li><li class="chapter-item expanded "><a href="../development-guide/debugging.html"><strong aria-hidden="true">2.3.</strong> Debugging</a></li></ol></li><li class="chapter-item expanded "><a href="../development-documents/index.html"><strong aria-hidden="true">3.</strong> Development Documents</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-documents/architecture.html"><strong aria-hidden="true">3.1.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="../development-documents/design.html"><strong aria-hidden="true">3.2.</strong> Design</a></li><li class="chapter-item expanded "><a href="../development-documents/caching.html"><strong aria-hidden="true">3.3.</strong> Caching</a></li><li class="chapter-item expanded "><a href="../development-documents/stencil-masking.html"><strong aria-hidden="true">3.4.</strong> Stencil Masking</a></li><li class="chapter-item expanded "><a href="../development-documents/font-rendering.html"><strong aria-hidden="true">3.5.</strong> Font Rendering</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging.html"><strong aria-hidden="true">3.6.</strong> Library Packaging</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-documents/library-packaging/apple.html"><strong aria-hidden="true">3.6.1.</strong> Apple</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging/android.html"><strong aria-hidden="true">3.6.2.</strong> Android</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging/web.html"><strong aria-hidden="true">3.6.3.</strong> Web</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../appendix/index.html"><strong aria-hidden="true">4.</strong> Appendix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../appendix/link-collection.html"><strong aria-hidden="true">4.1.</strong> Link Collection</a></li></ol></li><li class="chapter-item expanded "><a href="../rfc/0001-rfc-process.html" class="active"><strong aria-hidden="true">5.</strong> RFCs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../rfc/0000-template.html"><strong aria-hidden="true">5.1.</strong> 0000-template</a></li><li class="chapter-item expanded "><a href="../rfc/0001-rfc-process.html" class="active"><strong aria-hidden="true">5.2.</strong> 0001-rfc-process</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MapLibre Rust Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <ul>
+<li>Start Date: 2022-10-29</li>
+<li>RFC PR: <a href="https://github.com/maplibre/maplibre-rs/pull/??">maplibre/maplibre-rs#??</a></li>
+<li>maplibre-rs Issue: N/A</li>
+</ul>
+<h1 id="summary"><a class="header" href="#summary">Summary</a></h1>
+<p>The &quot;RFC&quot; (request for comments) process is intended to provide a
+consistent and controlled path for new features to enter the map renderer
+and standard libraries, so that all stakeholders can be confident about
+the direction the map renderer is evolving in.</p>
+<p>This RFC is copied from <a href="https://github.com/rust-lang/rfcs">rust-lang/rfcs</a>.
+Thanks to everyone who contributed to the Rust RFC process RFC! Thanks for the
+great inspiration!</p>
+<h1 id="motivation"><a class="header" href="#motivation">Motivation</a></h1>
+<p>The freewheeling way that we add new features to maplibre-rs has been good for
+early development, but for maplibre-rs to become a mature platform we need to
+develop some more self-discipline when it comes to changing the system.
+This is a proposal for a more principled RFC process to make it
+a more integral part of the overall development process, and one that is
+followed consistently to introduce features to maplibre-rs.</p>
+<h1 id="detailed-design"><a class="header" href="#detailed-design">Detailed design</a></h1>
+<p>Many changes, including bug fixes and documentation improvements can be
+implemented and reviewed via the normal GitHub pull request workflow.</p>
+<p>Some changes though are &quot;substantial&quot;, and we ask that these be put
+through a bit of a design process and produce a consensus among the maplibre-rs
+community.</p>
+<h2 id="when-you-need-to-follow-this-process"><a class="header" href="#when-you-need-to-follow-this-process">When you need to follow this process</a></h2>
+<p>You need to follow this process if you intend to make &quot;substantial&quot;
+changes to the maplibre-rs distribution. What constitutes a &quot;substantial&quot;
+change is evolving based on community norms, but may include the following.</p>
+<ul>
+<li>Any semantic or syntactic change to the map renderer that is not a bugfix.</li>
+<li>Removing map renderer features, including those that are feature-gated.</li>
+</ul>
+<p>Some changes do not require an RFC:</p>
+<ul>
+<li>Rephrasing, reorganizing, refactoring, or otherwise &quot;changing shape
+does not change meaning&quot;.</li>
+<li>Additions that strictly improve objective, numerical quality
+criteria (warning removal, speedup, better platform coverage, more
+parallelism, trap more errors, etc.)</li>
+<li>Additions only likely to be <em>noticed by</em> other developers-of-maplibre-rs,
+invisible to users-of-maplibre-rs.</li>
+</ul>
+<p>If you submit a pull request to implement a new feature without going
+through the RFC process, it may be closed with a polite request to
+submit an RFC first.</p>
+<h2 id="what-the-process-is"><a class="header" href="#what-the-process-is">What the process is</a></h2>
+<p>In short, to get a major feature added to maplibre-rs, one must first get the
+RFC merged into the RFC repo as a markdown file. At that point the RFC
+is 'active' and may be implemented with the goal of eventual inclusion
+into maplibre-rs.</p>
+<ul>
+<li>Fork the repo https://github.com/maplibre/maplibre-rs</li>
+<li>Copy <code>rfc/0000-template.md</code> to <code>rfc/0000-my-feature.md</code> (where
+'my-feature' is descriptive. don't assign an RFC number yet).</li>
+<li>Fill in the RFC</li>
+<li>Submit a pull request. The pull request is the time to get review of
+the design from the larger community.</li>
+<li>Build consensus and integrate feedback. RFCs that have broad support
+are much more likely to make progress than those that don't receive any
+comments.</li>
+</ul>
+<p>Eventually, somebody on the maplibre-rs team will either accept the RFC by
+merging the pull request, at which point the RFC is 'active', or
+reject it by closing the pull request.</p>
+<p>Who ever merges the RFC should do the following:</p>
+<ul>
+<li>Assign an id, using the PR number of the RFC pull request. (If the RFC
+has multiple pull requests associated with it, choose one PR number,
+preferably the minimal one.)</li>
+<li>Add the file in the <code>docs/src/rfc/</code> directory.</li>
+<li>Create a corresponding issue on <a href="https://github.com/maplibre/maplibre-rs">maplibre-rs repo</a></li>
+<li>Fill in the remaining metadata in the RFC header, including links for
+the original pull request(s) and the newly created maplibre-rs issue.</li>
+<li>Communicate that given RFC is now considered 'active' on the chat platform of maplibre-rs.</li>
+<li>Commit everything.</li>
+</ul>
+<p>Once an RFC becomes active then authors may implement it and submit the
+feature as a pull request to the maplibre-rs repo. An 'active' is not a rubber
+stamp, and in particular still does not mean the feature will ultimately
+be merged; it does mean that in principle all the major stakeholders
+have agreed to the feature and are amenable to merging it.</p>
+<p>Modifications to active RFC's can be done in followup PR's. An RFC that
+makes it through the entire process to implementation is considered
+'complete'; an RFC that fails after becoming active is 'inactive'.</p>
+<h1 id="alternatives"><a class="header" href="#alternatives">Alternatives</a></h1>
+<p>Retain the current informal RFC process. The newly proposed RFC process is
+designed to improve over the informal process in the following ways:</p>
+<ul>
+<li>Discourage unactionable or vague RFCs</li>
+<li>Ensure that all serious RFCs are considered equally</li>
+<li>Give confidence to those with a stake in maplibre-rs's development that they
+understand why new features are being merged</li>
+</ul>
+<p>As an alternative, we could adopt an even stricter RFC process than the one proposed here. 
+If desired, we should likely look to Python's <a href="http://legacy.python.org/dev/peps/pep-0001/">PEP</a> process for inspiration.</p>
+<h1 id="unresolved-questions"><a class="header" href="#unresolved-questions">Unresolved questions</a></h1>
+<ol>
+<li>Does this RFC strike a favorable balance between formality and agility?</li>
+<li>Does this RFC successfully address the aforementioned issues with the current
+informal RFC process?</li>
+<li>Should we retain rejected RFCs in the archive?</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../appendix/link-collection.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                            <a rel="next" href="../rfc/0000-template.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../appendix/link-collection.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                    <a rel="next" href="../rfc/0000-template.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+    </body>
+</html>
