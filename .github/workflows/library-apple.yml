@@ -84,7 +84,10 @@ jobs:
   library-apple-bundle:
     name: Bundle
     runs-on: macos-12
-    needs: library-apple
+    needs:
+      - library-apple-fat-aarch64-x86_64-apple-darwin
+      - library-apple-aarch64-apple-ios
+      - library-apple-aarch64-apple-ios-sim
     steps:
       - uses: actions/checkout@v3
       - name: Setup
