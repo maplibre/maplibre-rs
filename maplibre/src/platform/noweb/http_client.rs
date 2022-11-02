@@ -40,7 +40,8 @@ impl ReqwestHttpClient {
     }
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "thread-safe-futures"), async_trait(?Send))]
+#[cfg_attr(feature = "thread-safe-futures", async_trait)]
 impl HttpClient for ReqwestHttpClient {
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
         let response = self.client.get(url).send().await?;

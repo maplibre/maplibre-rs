@@ -2,11 +2,7 @@ use std::ffi::CString;
 
 use jni::{objects::JClass, JNIEnv};
 use log::Level;
-use maplibre::{
-    platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
-    render::settings::{Backends, WgpuSettings},
-};
-use maplibre_winit::{run_headed_map, WinitMapWindowConfig};
+use maplibre_winit::run_headed_map;
 
 #[cfg(not(target_os = "android"))]
 compile_error!("android works only on android.");

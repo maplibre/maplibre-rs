@@ -32,7 +32,7 @@ const fn create_zoom_bounds<const DIM: usize>() -> [u32; DIM] {
     let mut result: [u32; DIM] = [0; DIM];
     let mut i = 0;
     while i < DIM {
-        result[i as usize] = 2u32.pow(i as u32);
+        result[i] = 2u32.pow(i as u32);
         i += 1;
     }
     result

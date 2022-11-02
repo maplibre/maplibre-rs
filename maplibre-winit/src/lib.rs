@@ -82,12 +82,14 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                 #[cfg(target_os = "android")]
                 if !map.has_renderer() && event == Event::Resumed {
                     use tokio::{runtime::Handle, task};
+                    use maplibre::render::settings::WgpuSettings;
+                    use maplibre::render::builder::RendererBuilder;
 
                     task::block_in_place(|| {
                         Handle::current().block_on(async {
                             map.initialize_renderer(RendererBuilder::new()
                                 .with_wgpu_settings(WgpuSettings {
-                                    backends: Some(Backends::VULKAN),
+                                    backends: Some(maplibre::render::settings::Backends::VULKAN),
                                     ..WgpuSettings::default()
                                 })).await.unwrap();
                         })

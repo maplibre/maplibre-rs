@@ -11,10 +11,6 @@ use maplibre::{
     kernel::{Kernel, KernelBuilder},
     map::Map,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
-    render::{
-        builder::RendererBuilder,
-        settings::{Backends, WgpuSettings},
-    },
     style::Style,
     window::{MapWindow, MapWindowConfig, WindowSize},
 };

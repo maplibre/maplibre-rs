@@ -247,7 +247,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
             style_layer,
             buffer_vertices: self.vertices.make_room(vertices_bytes, &mut self.index),
             buffer_indices: self.indices.make_room(indices_bytes, &mut self.index),
-            usable_indices: geometry.usable_indices as u32,
+            usable_indices: geometry.usable_indices,
             buffer_layer_metadata: self
                 .layer_metadata
                 .make_room(layer_metadata_bytes, &mut self.index),

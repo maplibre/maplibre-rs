@@ -1,15 +1,12 @@
 #![feature(allocator_api, new_uninit)]
 
-use std::{borrow::BorrowMut, cell::RefCell, mem, ops::Deref, rc::Rc};
-
 use maplibre::{
     event_loop::EventLoop,
-    io::{apc::SchedulerAsyncProcedureCall, scheduler::NopScheduler},
+    io::scheduler::NopScheduler,
     kernel::{Kernel, KernelBuilder},
     map::Map,
-    render::builder::{InitializedRenderer, RendererBuilder},
+    render::builder::RendererBuilder,
     style::Style,
-    window::MapWindowConfig,
 };
 use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
