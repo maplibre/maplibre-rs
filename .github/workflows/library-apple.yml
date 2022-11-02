@@ -10,7 +10,6 @@ jobs:
   library-apple:
     runs-on: macos-12
     strategy:
-      fail-fast: false
       matrix:
         name:
           - fat-aarch64-x86_64-apple-darwin
@@ -86,9 +85,7 @@ jobs:
     name: Bundle
     runs-on: macos-12
     needs:
-      - "library-apple / Build fat-aarch64-x86_64-apple-darwin"
-      - "library-apple / Build apple-aarch64-apple-ios"
-      - "library-apple / Build apple-aarch64-apple-ios-sim"
+      - library-apple
     steps:
       - uses: actions/checkout@v3
       - name: Setup
