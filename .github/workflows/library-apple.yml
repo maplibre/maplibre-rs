@@ -50,7 +50,7 @@ jobs:
       - name: Build fat
         if: ${{ matrix.arch-fat }}
         shell: bash
-        run: just xcodebuild-archive-fat ${{ matrix.arch }} ${{ matrix.platform }} ${{ matrix.arch-fat }}
+        run: just xcodebuild-archive-fat ${{ matrix.arch }} "${{ matrix.platform }}" ${{ matrix.arch-fat }}
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }}
