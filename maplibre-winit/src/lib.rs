@@ -1,4 +1,4 @@
-pub mod input;
+#![deny(unused_imports)]
 
 use std::{fmt::Debug, marker::PhantomData};
 
@@ -17,6 +17,8 @@ use winit::{
 };
 
 use crate::input::{InputController, UpdateState};
+
+pub mod input;
 
 pub type RawWinitWindow = winit::window::Window;
 pub type RawWinitEventLoop<ET> = winit::event_loop::EventLoop<ET>;

@@ -16,6 +16,8 @@
 //! maplibre = "0.0.2"
 //! ```
 
+#![deny(unused_imports)]
+
 // Internal modules
 pub(crate) mod tessellation;
 

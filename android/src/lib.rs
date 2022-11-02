@@ -1,3 +1,5 @@
+#![deny(unused_imports)]
+
 use std::ffi::CString;
 
 use jni::{objects::JClass, JNIEnv};

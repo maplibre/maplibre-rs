@@ -11,19 +11,17 @@ use crate::{
     io::{
         pipeline::{PipelineContext, PipelineProcessor, Processable},
         tile_pipelines::build_vector_tile_pipeline,
-        tile_repository::{StoredLayer, StoredTile, TileStatus},
+        tile_repository::{StoredLayer, StoredTile},
         RawLayer, TileRequest,
     },
     kernel::Kernel,
     render::{
-        builder::UninitializedRenderer, create_default_render_graph, draw_graph,
-        error::RenderError, eventually::Eventually, register_default_render_stages, resource::Head,
-        stages::RenderStageLabel, Renderer, ShaderVertex,
+        create_default_render_graph, draw_graph, eventually::Eventually,
+        register_default_render_stages, stages::RenderStageLabel, Renderer, ShaderVertex,
     },
     schedule::{Schedule, Stage},
     style::Style,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    window::WindowSize,
     world::World,
 };
 

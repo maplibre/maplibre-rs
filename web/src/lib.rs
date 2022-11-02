@@ -1,3 +1,4 @@
+#![deny(unused_imports)]
 #![feature(allocator_api, new_uninit)]
 
 use maplibre::{

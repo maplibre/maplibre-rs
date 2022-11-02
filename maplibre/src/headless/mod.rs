@@ -6,10 +6,7 @@ use crate::{
     io::apc::SchedulerAsyncProcedureCall,
     kernel::{Kernel, KernelBuilder},
     platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
-    render::{
-        builder::{InitializedRenderer, RendererBuilder},
-        Renderer,
-    },
+    render::{builder::RendererBuilder, Renderer},
     window::{MapWindowConfig, WindowSize},
 };
 

@@ -1,3 +1,5 @@
+#![deny(unused_imports)]
+
 use std::io::ErrorKind;
 
 use clap::{builder::ValueParser, Parser, Subcommand};
