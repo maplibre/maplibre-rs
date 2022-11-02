@@ -9,6 +9,10 @@ consistent and controlled path for new features to enter the map renderer
 and standard libraries, so that all stakeholders can be confident about
 the direction the map renderer is evolving in.
 
+This RFC is copied from [rust-lang/rfcs](https://github.com/rust-lang/rfcs).
+Thanks to everyone who contributed to the Rust RFC process RFC! Thanks for the
+great inspiration!
+
 # Motivation
 
 The freewheeling way that we add new features to maplibre-rs has been good for
@@ -58,7 +62,7 @@ is 'active' and may be implemented with the goal of eventual inclusion
 into maplibre-rs.
 
 * Fork the repo https://github.com/maplibre/maplibre-rs
-* Copy `0000-template.md` to `0000-my-feature.md` (where
+* Copy `rfc/0000-template.md` to `rfc/0000-my-feature.md` (where
   'my-feature' is descriptive. don't assign an RFC number yet).
 * Fill in the RFC
 * Submit a pull request. The pull request is the time to get review of
@@ -71,7 +75,7 @@ Eventually, somebody on the maplibre-rs team will either accept the RFC by
 merging the pull request, at which point the RFC is 'active', or
 reject it by closing the pull request.
 
-Whomever merges the RFC should do the following:
+Who ever merges the RFC should do the following:
 
 * Assign an id, using the PR number of the RFC pull request. (If the RFC
   has multiple pull requests associated with it, choose one PR number,
@@ -80,7 +84,7 @@ Whomever merges the RFC should do the following:
 * Create a corresponding issue on [maplibre-rs repo](https://github.com/maplibre/maplibre-rs)
 * Fill in the remaining metadata in the RFC header, including links for
   the original pull request(s) and the newly created maplibre-rs issue.
-* Add an entry in the [Active RFC List] of the root `README.md`.
+* Communicate that given RFC is now considered 'active' on the chat platform of maplibre-rs.
 * Commit everything.
 
 Once an RFC becomes active then authors may implement it and submit the
@@ -91,10 +95,7 @@ have agreed to the feature and are amenable to merging it.
 
 Modifications to active RFC's can be done in followup PR's. An RFC that
 makes it through the entire process to implementation is considered
-'complete' and is removed from the [Active RFC List]; an RFC that fails
-after becoming active is 'inactive' and moves to the 'inactive' folder.
-
-[Active RFC List]: ../README.md#active-rfc-list
+'complete'; an RFC that fails after becoming active is 'inactive'.
 
 # Alternatives
 
@@ -106,7 +107,8 @@ designed to improve over the informal process in the following ways:
 * Give confidence to those with a stake in maplibre-rs's development that they
   understand why new features are being merged
 
-As an alternative, we could adopt an even stricter RFC process than the one proposed here. If desired, we should likely look to Python's [PEP] process for inspiration.
+As an alternative, we could adopt an even stricter RFC process than the one proposed here. 
+If desired, we should likely look to Python's [PEP] process for inspiration.
 
 # Unresolved questions
 
