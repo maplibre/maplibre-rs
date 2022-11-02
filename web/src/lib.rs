@@ -7,8 +7,9 @@ use maplibre::{
     io::{apc::SchedulerAsyncProcedureCall, scheduler::NopScheduler},
     kernel::{Kernel, KernelBuilder},
     map::Map,
-    render::builder::{InitializedRenderer, RenderBuilder},
+    render::builder::{InitializedRenderer, RendererBuilder},
     style::Style,
+    window::MapWindowConfig,
 };
 use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
@@ -66,13 +67,8 @@ type CurrentEnvironment = WinitEnvironment<
 
 pub type MapType = Map<CurrentEnvironment>;
 
-pub struct InitResult {
-    initialized: InitializedRenderer<WinitMapWindowConfig<()>>,
-    kernel: Kernel<CurrentEnvironment>,
-}
-
 #[wasm_bindgen]
-pub async fn init_maplibre(new_worker: js_sys::Function) -> u32 {
+pub async fn run_maplibre(new_worker: js_sys::Function) {
     let mut kernel_builder = KernelBuilder::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
         .with_http_client(WHATWGFetchHttpClient::new());
@@ -100,31 +96,15 @@ pub async fn init_maplibre(new_worker: js_sys::Function) -> u32 {
 
     let kernel: Kernel<WinitEnvironment<_, _, _, ()>> = kernel_builder.build();
 
-    Box::into_raw(Box::new(InitResult {
-        initialized: RenderBuilder::new()
-            .build()
-            .initialize_with(&kernel)
-            .await
-            .expect("Failed to initialize renderer")
-            .unwarp(),
-        kernel,
-    })) as u32
-}
+    let mut map: MapType = Map::new(Style::default(), kernel).unwrap();
+    map.initialize_renderer(RendererBuilder::new())
+        .await
+        .unwrap();
 
-#[wasm_bindgen]
-pub unsafe fn run(init_ptr: *mut InitResult) {
-    let mut init_result = Box::from_raw(init_ptr);
-
-    let InitializedRenderer {
-        mut window,
-        renderer,
-    } = init_result.initialized;
-    let map: MapType = Map::new(Style::default(), init_result.kernel, renderer).unwrap();
-
-    window
+    map.window_mut()
         .take_event_loop()
         .expect("Event loop is not available")
-        .run(window, map, None)
+        .run(map, None)
 }
 
 #[cfg(test)]

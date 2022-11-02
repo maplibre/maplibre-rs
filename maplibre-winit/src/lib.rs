@@ -1,8 +1,9 @@
 pub mod input;
 
-use std::{cell::RefCell, marker::PhantomData, ops::Deref, rc::Rc};
+use std::{cell::RefCell, fmt::Debug, marker::PhantomData, ops::Deref, rc::Rc};
 
 use instant::Instant;
+use log::info;
 use maplibre::{
     environment::Environment,
     error::Error,
@@ -14,6 +15,10 @@ use maplibre::{
         transferables::{DefaultTransferables, Transferables},
     },
     map::Map,
+    render::{
+        builder::RendererBuilder,
+        settings::{Backends, WgpuSettings},
+    },
     window::{HeadedMapWindow, MapWindowConfig},
 };
 use winit::{
@@ -69,15 +74,11 @@ pub struct WinitEventLoop<ET: 'static> {
     event_loop: RawWinitEventLoop<ET>,
 }
 
-impl<ET: 'static> EventLoop<ET> for WinitEventLoop<ET> {
+impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
     type EventLoopProxy = WinitEventLoopProxy<ET>;
 
-    fn run<E>(
-        mut self,
-        mut window: <E::MapWindowConfig as MapWindowConfig>::MapWindow,
-        mut map: Map<E>,
-        max_frames: Option<u64>,
-    ) where
+    fn run<E>(mut self, mut map: Map<E>, max_frames: Option<u64>)
+    where
         E: Environment,
         <E::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow,
     {
@@ -89,12 +90,16 @@ impl<ET: 'static> EventLoop<ET> for WinitEventLoop<ET> {
         self.event_loop
             .run(move |event, window_target, control_flow| {
                 #[cfg(target_os = "android")]
-                if !map.is_initialized() && event == Event::Resumed {
+                if !map.has_renderer() && event == Event::Resumed {
                     use tokio::{runtime::Handle, task};
 
                     task::block_in_place(|| {
                         Handle::current().block_on(async {
-                            map.late_init().await;
+                            map.initialize_renderer(RendererBuilder::new()
+                                .with_wgpu_settings(WgpuSettings {
+                                    backends: Some(Backends::VULKAN),
+                                    ..WgpuSettings::default()
+                                })).await.unwrap();
                         })
                     });
                     return;
@@ -111,7 +116,7 @@ impl<ET: 'static> EventLoop<ET> for WinitEventLoop<ET> {
                     Event::WindowEvent {
                         ref event,
                         window_id,
-                    } if window_id == window.id().into() => {
+                    } if window_id == map.window().id().into() => {
                         if !input_controller.window_input(event) {
                             match event {
                                 WindowEvent::CloseRequested
@@ -125,10 +130,14 @@ impl<ET: 'static> EventLoop<ET> for WinitEventLoop<ET> {
                                     ..
                                 } => *control_flow = ControlFlow::Exit,
                                 WindowEvent::Resized(physical_size) => {
-                                    map.context_mut().resize(physical_size.width, physical_size.height);
+                                    if let Ok(map_context) =  map.context_mut() {
+                                        map_context.resize(physical_size.width, physical_size.height);
+                                    }
                                 }
                                 WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                                    map.context_mut().resize(new_inner_size.width, new_inner_size.height);
+                                    if let Ok(map_context) =  map.context_mut() {
+                                        map_context.resize(new_inner_size.width, new_inner_size.height);
+                                    }
                                 }
                                 _ => {}
                             }
@@ -139,7 +148,9 @@ impl<ET: 'static> EventLoop<ET> for WinitEventLoop<ET> {
                         let dt = now - last_render_time;
                         last_render_time = now;
 
-                        input_controller.update_state(map.context_mut().world.view_state_mut(), dt);
+                        if let Ok(map_context) =  map.context_mut() {
+                            input_controller.update_state(map_context.world.view_state_mut(), dt);
+                        }
 
                         match map.run_schedule() {
                             Ok(_) => {}
@@ -170,7 +181,7 @@ impl<ET: 'static> EventLoop<ET> for WinitEventLoop<ET> {
                     Event::MainEventsCleared => {
                         // RedrawRequested will only trigger once, unless we manually
                         // request it.
-                        window.request_redraw();
+                        map.window().request_redraw();
                     }
                     _ => {}
                 }

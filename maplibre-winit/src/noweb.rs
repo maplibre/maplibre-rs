@@ -11,7 +11,10 @@ use maplibre::{
     kernel::{Kernel, KernelBuilder},
     map::Map,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
-    render::builder::{InitializedRenderer, RenderBuilder},
+    render::{
+        builder::{InitializationResult, InitializedRenderer, RendererBuilder},
+        settings::{Backends, RendererSettings, WgpuSettings},
+    },
     style::Style,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
 };
@@ -83,23 +86,21 @@ pub fn run_headed_map(cache_path: Option<String>) {
             .with_scheduler(TokioScheduler::new())
             .build();
 
-        let InitializedRenderer {
-            mut window,
-            renderer,
-        } = RenderBuilder::new()
-            .build()
-            .initialize_with(&kernel)
-            .await
-            .expect("Failed to initialize renderer")
-            .unwarp();
+        let mut map = Map::new(Style::default(), kernel).unwrap();
 
-        window
+        #[cfg(not(target_os = "android"))]
+        {
+            map.initialize_renderer(RendererBuilder::new().with_wgpu_settings(WgpuSettings {
+                backends: Some(Backends::VULKAN),
+                ..WgpuSettings::default()
+            }))
+            .await
+            .unwrap();
+        }
+
+        map.window_mut()
             .take_event_loop()
             .expect("Event loop is not available")
-            .run(
-                window,
-                Map::new(Style::default(), kernel, renderer).unwrap(),
-                None,
-            )
+            .run(map, None)
     })
 }

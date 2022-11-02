@@ -18,7 +18,7 @@ use maplibre::{
     kernel::{Kernel, KernelBuilder},
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
     render::{
-        builder::{InitializedRenderer, RenderBuilder},
+        builder::{InitializedRenderer, RendererBuilder},
         settings::{RendererSettings, TextureFormat},
     },
     style::Style,

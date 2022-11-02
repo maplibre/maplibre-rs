@@ -15,15 +15,11 @@ pub trait EventLoopProxy<T: 'static> {
     fn send_event(&self, event: T);
 }
 
-pub trait EventLoop<T: 'static> {
-    type EventLoopProxy: EventLoopProxy<T>;
+pub trait EventLoop<ET: 'static + PartialEq> {
+    type EventLoopProxy: EventLoopProxy<ET>;
 
-    fn run<E>(
-        self,
-        window: <E::MapWindowConfig as MapWindowConfig>::MapWindow,
-        map: Map<E>,
-        max_frames: Option<u64>,
-    ) where
+    fn run<E>(self, map: Map<E>, max_frames: Option<u64>)
+    where
         E: Environment,
         <E::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow;
 

@@ -1,6 +1,6 @@
 //! Errors which can happen in various parts of the library.
 
-use std::{fmt, fmt::Formatter, sync::mpsc::SendError};
+use std::{borrow::Cow, fmt, fmt::Formatter, sync::mpsc::SendError};
 
 use lyon::tessellation::TessellationError;
 
@@ -14,6 +14,7 @@ pub enum Error {
     Network(String),
     Tesselation(TessellationError),
     Render(RenderError),
+    Generic(Cow<'static, str>),
 }
 
 impl<E> From<E> for Error

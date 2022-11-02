@@ -6,7 +6,7 @@ use maplibre::{
     kernel::KernelBuilder,
     platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
     render::{
-        builder::RenderBuilder,
+        builder::RendererBuilder,
         settings::{RendererSettings, TextureFormat},
     },
     style::Style,

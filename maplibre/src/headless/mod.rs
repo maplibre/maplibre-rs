@@ -1,10 +1,16 @@
 use crate::{
-    headless::{environment::HeadlessEnvironment, window::HeadlessMapWindowConfig},
+    headless::{
+        environment::HeadlessEnvironment,
+        window::{HeadlessMapWindow, HeadlessMapWindowConfig},
+    },
     io::apc::SchedulerAsyncProcedureCall,
     kernel::{Kernel, KernelBuilder},
     platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
-    render::{builder::RenderBuilder, Renderer},
-    window::WindowSize,
+    render::{
+        builder::{InitializedRenderer, RendererBuilder},
+        Renderer,
+    },
+    window::{MapWindowConfig, WindowSize},
 };
 
 mod graph_node;
@@ -31,9 +37,12 @@ pub async fn create_headless_renderer(
         .with_scheduler(TokioScheduler::new())
         .build();
 
-    let renderer = RenderBuilder::new()
+    let mwc: &HeadlessMapWindowConfig = kernel.map_window_config();
+    let window: HeadlessMapWindow = mwc.create();
+
+    let renderer = RendererBuilder::new()
         .build()
-        .initialize_headless_with(&kernel)
+        .initialize_headless::<HeadlessMapWindowConfig>(&window)
         .await
         .expect("Failed to initialize renderer");
 
