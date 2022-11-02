@@ -524,6 +524,9 @@
 <span id="524">524</span>
 <span id="525">525</span>
 <span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole</span>
 <span class="doccomment">//! communication with the GPU.</span>
 <span class="doccomment">//!</span>
@@ -830,6 +833,9 @@
                 <span class="ident">max_bind_groups</span>: <span class="ident">limits</span>
                     .<span class="ident">max_bind_groups</span>
                     .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_bind_groups</span>),
+                <span class="ident">max_bindings_per_bind_group</span>: <span class="ident">limits</span>
+                    .<span class="ident">max_bindings_per_bind_group</span>
+                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_bindings_per_bind_group</span>),
                 <span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>: <span class="ident">limits</span>
                     .<span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>
                     .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>),

@@ -135,8 +135,6 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Settings for the renderer</span>
 
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
@@ -192,8 +190,6 @@
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>;
-
-        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features::DEPTH32FLOAT_STENCIL8</span>;
 
         <span class="self">Self</span> {
             <span class="ident">device_label</span>: <span class="ident">Default::default</span>(),
@@ -272,7 +268,7 @@
             )))]</span>
             <span class="ident">texture_format</span>: <span class="ident">TextureFormat::Bgra8UnormSrgb</span>,
 
-            <span class="ident">depth_texture_format</span>: <span class="ident">TextureFormat::Depth32FloatStencil8</span>,
+            <span class="ident">depth_texture_format</span>: <span class="ident">TextureFormat::Depth24PlusStencil8</span>,
         }
     }
 }
