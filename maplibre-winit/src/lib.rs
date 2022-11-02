@@ -97,7 +97,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         Handle::current().block_on(async {
                             map.initialize_renderer(RendererBuilder::new()
                                 .with_wgpu_settings(WgpuSettings {
-                                    backends: Some(Backends::VULKAN),
+                                    backends: Some(Backends::VULKAN), // FIXME: Change
                                     ..WgpuSettings::default()
                                 })).await.unwrap();
                         })
