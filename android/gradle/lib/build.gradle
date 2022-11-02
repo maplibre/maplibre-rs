@@ -35,6 +35,8 @@ cargo {
     libname = "maplibre_android"
     targetDirectory = "${module}/../target"
     profile = "debug"
+    rustupChannel = "nightly-2022-10-23"
+    
 
     features {
         defaultAnd "foo", "bar"
