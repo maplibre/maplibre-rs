@@ -5,7 +5,6 @@ use log::Level;
 use maplibre::{
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
     render::settings::{Backends, WgpuSettings},
-    MapBuilder,
 };
 use maplibre_winit::{run_headed_map, WinitMapWindowConfig};
 
