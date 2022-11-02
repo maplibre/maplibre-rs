@@ -31,17 +31,16 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
         const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY / PAGES, shared: true})
         await maplibre.default(wasmPath, memory)
 
-        let init_result = await maplibre.init_maplibre(() => {
+        await maplibre.run_maplibre(() => {
             return workerPath ? new Worker(workerPath, {
                 type: 'module'
             }) : MultithreadedPoolWorker();
         });
-        maplibre.run(init_result)
     } else {
         const memory = new WebAssembly.Memory({initial: 1024, shared: false})
         await maplibre.default(wasmPath, memory);
 
-        let init_result = await maplibre.init_maplibre((ptr) => {
+        await maplibre.run_maplibre((ptr) => {
             let worker: Worker = workerPath ? new Worker(workerPath, {
                 type: 'module'
             }) : PoolWorker();
@@ -55,8 +54,6 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
             }
 
             return worker;
-        })
-
-        maplibre.run(init_result)
+        });
     }
 }
