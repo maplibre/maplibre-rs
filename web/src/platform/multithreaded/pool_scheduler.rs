@@ -1,12 +1,10 @@
 use std::future::Future;
 
-use log::warn;
 use maplibre::{error::Error, io::scheduler::Scheduler};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Worker;
 
 use super::pool::WorkerPool;
-use crate::CurrentEnvironment;
 
 pub struct WebWorkerPoolScheduler {
     pool: WorkerPool,

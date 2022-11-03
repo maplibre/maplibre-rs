@@ -3,7 +3,6 @@
 
 use maplibre::{
     event_loop::EventLoop,
-    io::scheduler::NopScheduler,
     kernel::{Kernel, KernelBuilder},
     map::Map,
     render::builder::RendererBuilder,
@@ -46,7 +45,7 @@ pub fn wasm_bindgen_start() {
 
 #[cfg(not(target_feature = "atomics"))]
 type CurrentEnvironment = WinitEnvironment<
-    NopScheduler,
+    maplibre::io::scheduler::NopScheduler,
     WHATWGFetchHttpClient,
     platform::singlethreaded::apc::PassingAsyncProcedureCall,
     (),
