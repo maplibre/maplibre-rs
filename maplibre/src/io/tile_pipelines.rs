@@ -45,6 +45,7 @@ impl Processable for IndexLayer {
     ) -> Self::Output {
         let index = IndexProcessor::new();
 
+        // FIXME: Handle result
         context
             .processor_mut()
             .layer_indexing_finished(&tile_request.coords, index.get_geometries());
@@ -78,6 +79,7 @@ impl Processable for TessellateLayer {
 
             let mut tessellator = ZeroTessellator::<IndexDataType>::default();
             if let Err(e) = layer.process(&mut tessellator) {
+                // FIXME: Handle result
                 context
                     .processor_mut()
                     .layer_unavailable(coords, layer_name);
@@ -89,12 +91,13 @@ impl Processable for TessellateLayer {
                     e
                 );
             } else {
+                // FIXME: Handle result
                 context.processor_mut().layer_tesselation_finished(
                     coords,
                     tessellator.buffer.into(),
                     tessellator.feature_indices,
                     cloned_layer,
-                )
+                );
             }
         }
 
@@ -105,6 +108,7 @@ impl Processable for TessellateLayer {
             .collect::<HashSet<_>>();
 
         for missing_layer in tile_request.layers.difference(&available_layers) {
+            // FIXME: Handle result
             context
                 .processor_mut()
                 .layer_unavailable(coords, missing_layer);
@@ -118,6 +122,7 @@ impl Processable for TessellateLayer {
 
         tracing::info!("tile tessellated at {} finished", &tile_request.coords);
 
+        // FIXME: Handle result
         context.processor_mut().tile_finished(&tile_request.coords);
 
         (tile_request, tile)

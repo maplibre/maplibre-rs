@@ -1,45 +1,28 @@
 //! Errors which can happen in various parts of the library.
 
-use std::{fmt, fmt::Formatter, sync::mpsc::SendError};
+use std::{borrow::Cow, fmt, fmt::Formatter, sync::mpsc::SendError};
 
 use lyon::tessellation::TessellationError;
 
-#[derive(Debug)]
-pub enum RenderError {
-    Surface(wgpu::SurfaceError),
-}
-
-impl fmt::Display for RenderError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            RenderError::Surface(e) => write!(f, "{}", e),
-        }
-    }
-}
-
-impl RenderError {
-    pub fn should_exit(&self) -> bool {
-        match self {
-            RenderError::Surface(e) => match e {
-                wgpu::SurfaceError::OutOfMemory => true,
-                _ => false,
-            },
-        }
-    }
-}
+use crate::render::{error::RenderError, graph::RenderGraphError};
 
 /// Enumeration of errors which can happen during the operation of the library.
 #[derive(Debug)]
 pub enum Error {
-    Schedule,
+    APC,
+    Scheduler,
     Network(String),
     Tesselation(TessellationError),
     Render(RenderError),
+    Generic(Cow<'static, str>),
 }
 
-impl From<wgpu::SurfaceError> for Error {
-    fn from(e: wgpu::SurfaceError) -> Self {
-        Error::Render(RenderError::Surface(e))
+impl<E> From<E> for Error
+where
+    E: Into<RenderError>,
+{
+    fn from(e: E) -> Self {
+        Error::Render(e.into())
     }
 }
 
@@ -51,6 +34,6 @@ impl From<TessellationError> for Error {
 
 impl<T> From<SendError<T>> for Error {
     fn from(_e: SendError<T>) -> Self {
-        Error::Schedule
+        Error::Scheduler
     }
 }

@@ -1,7 +1,7 @@
 plugins {
     id 'org.mozilla.rust-android-gradle.rust-android' version '0.9.3' apply true
-    id 'com.android.library' version '7.0.4' apply true
-    id 'org.jetbrains.kotlin.android' version '1.6.21' apply true
+    id 'com.android.library' version '7.2.0' apply true
+    id 'org.jetbrains.kotlin.android' version '1.7.20' apply true
 }
 
 apply plugin: 'kotlin-android'
@@ -14,9 +14,7 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 31
-        
-        versionCode 1
-        versionName "1.0"
+
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -27,6 +25,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    namespace 'org.maplibre_rs'
 }
 
 cargo {
@@ -35,6 +34,8 @@ cargo {
     libname = "maplibre_android"
     targetDirectory = "${module}/../target"
     profile = "debug"
+    rustupChannel = "nightly-2022-10-23"
+    
 
     features {
         defaultAnd "foo", "bar"

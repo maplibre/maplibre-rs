@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{Vector3, Zero};
-use maplibre::context::ViewState;
+use maplibre::world::ViewState;
 
 use super::UpdateState;
 
@@ -17,7 +17,7 @@ impl UpdateState for ShiftHandler {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.camera_translate * dt;
-        state.camera.position += delta;
+        state.camera_mut().move_relative(delta);
         self.camera_translate -= delta;
     }
 }

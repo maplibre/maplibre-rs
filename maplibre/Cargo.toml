@@ -9,10 +9,11 @@ description = "Native Maps for Web, Mobile and Desktop"
 readme = "../README.md"
 
 [features]
+default = ["thread-safe-futures"]
 web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web
 trace = ["tracing-subscriber", "tracing-tracy", "tracy-client"]
-no-thread-safe-futures = []
+thread-safe-futures = []
 embed-static-tiles = ["maplibre-build-tools/sqlite"]
 headless = ["png"]
 

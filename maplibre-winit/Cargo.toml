@@ -18,7 +18,7 @@ wasm-bindgen = "0.2.81"
 wasm-bindgen-futures = "0.4.31"
 
 [dependencies]
-maplibre = { path = "../maplibre", version = "0.0.2" }
+maplibre = { path = "../maplibre", version = "0.0.2", default-features = false }
 winit = { version = "0.27.2", default-features = false }
 cgmath = "0.18.0"
 instant = { version = "0.1.12", features = ["wasm-bindgen"] } # TODO: Untrusted dependency

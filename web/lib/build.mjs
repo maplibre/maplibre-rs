@@ -121,7 +121,7 @@ const emitTypeScript = () => {
     });
 
     if (child.status !== 0) {
-        console.error("Failed to execute tsc")
+        throw new Error("Failed to execute tsc")
     }
 }
 
@@ -154,7 +154,7 @@ const wasmPack = () => {
     });
 
     if (cargo.status !== 0) {
-        console.error("Failed to execute cargo build")
+        throw new Error("Failed to execute cargo build")
     }
 
     let wasmbindgen = spawnSync('wasm-bindgen', [
@@ -170,7 +170,7 @@ const wasmPack = () => {
     });
 
     if (wasmbindgen.status !== 0) {
-        console.error("Failed to execute wasm-bindgen")
+        throw new Error("Failed to execute wasm-bindgen")
     }
 
     if (release) {
@@ -186,10 +186,9 @@ const wasmPack = () => {
         });
 
         if (wasmOpt.status !== 0) {
-            console.error("Failed to execute wasm-opt")
+            throw new Error("Failed to execute wasm-opt")
         }
     }
-
 }
 
 const watchResult = async (result) => {
@@ -238,6 +237,7 @@ const esbuild = async (name, globalName = undefined) => {
 }
 
 const start = async () => {
+    try {
     console.log("Creating WASM...")
     wasmPack();
 
@@ -258,6 +258,9 @@ const start = async () => {
 
     console.log("Emitting TypeScript types...")
     emitTypeScript();
+    } catch (e) {
+        console.error("Failed to start building: " + e.message)
+    }
 }
 
 const _ = start()

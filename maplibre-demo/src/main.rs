@@ -2,7 +2,7 @@ use std::io::ErrorKind;
 
 use clap::{builder::ValueParser, Parser, Subcommand};
 use maplibre::{coords::LatLon, platform::run_multithreaded};
-use maplibre_winit::winit::run_headed_map;
+use maplibre_winit::run_headed_map;
 
 use crate::headless::run_headless;
 

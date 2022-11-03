@@ -1,40 +1,52 @@
+use std::marker::PhantomData;
+
 use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
 use winit::{platform::web::WindowBuilderExtWebSys, window::WindowBuilder};
 
-use super::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
+use super::{RawWinitEventLoop, RawWinitWindow, WinitMapWindow};
+use crate::WinitEventLoop;
 
-impl MapWindowConfig for WinitMapWindowConfig {
-    type MapWindow = WinitMapWindow;
+pub struct WinitMapWindowConfig<ET> {
+    canvas_id: String,
+    phantom_et: PhantomData<ET>,
+}
+
+impl<ET: 'static> WinitMapWindowConfig<ET> {
+    pub fn new(canvas_id: String) -> Self {
+        Self {
+            canvas_id,
+            phantom_et: Default::default(),
+        }
+    }
+}
+
+impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
+    type MapWindow = WinitMapWindow<ET>;
 
     fn create(&self) -> Self::MapWindow {
-        let event_loop = WinitEventLoop::new();
+        let raw_event_loop = winit::event_loop::EventLoopBuilder::<ET>::with_user_event().build();
 
         let window: winit::window::Window = WindowBuilder::new()
             .with_canvas(Some(get_canvas(&self.canvas_id)))
-            .build(&event_loop)
+            .build(&raw_event_loop)
             .unwrap();
 
         let size = get_body_size().unwrap();
         window.set_inner_size(size);
         Self::MapWindow {
             window,
-            event_loop: Some(event_loop),
+            event_loop: Some(WinitEventLoop {
+                event_loop: raw_event_loop,
+            }),
         }
     }
 }
 
-impl MapWindow for WinitMapWindow {
+impl<ET: 'static> MapWindow for WinitMapWindow<ET> {
     fn size(&self) -> WindowSize {
         let size = self.window.inner_size();
 
         WindowSize::new(size.width, size.height).expect("failed to get window dimensions.")
-    }
-}
-impl HeadedMapWindow for WinitMapWindow {
-    type RawWindow = WinitWindow;
-
-    fn inner(&self) -> &Self::RawWindow {
-        &self.window
     }
 }
 
