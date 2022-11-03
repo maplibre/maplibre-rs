@@ -88,7 +88,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) {
     {
         kernel_builder = kernel_builder
             .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4))
-            .with_scheduler(NopScheduler);
+            .with_scheduler(maplibre::io::scheduler::NopScheduler);
     }
 
     let kernel: Kernel<WinitEnvironment<_, _, _, ()>> = kernel_builder.build();
