@@ -145,12 +145,12 @@ You can also view the up-to-date documentation [here](https://maplibre.org/mapli
 
 ## Book
 
-The maplibre-rs book features a high-level overview over the project from a user and development perspective.
+The maplibre-rs [book](https://maplibre.org/maplibre-rs/docs/book/) features a high-level overview over the project from a user and development perspective.
 
 ## RFCs
 
 We established an RFC process which must be used to describe major changes to maplibre-rs.
-Current RFCs can be browsed in the [book](https://maplibre.org/maplibre-rs/book/rfc/0001-rfc-process.html).
+Current RFCs can be browsed in the [book](https://maplibre.org/maplibre-rs/docs/book/rfc/0001-rfc-process.html).
 
 
 ## Citing
