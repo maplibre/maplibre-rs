@@ -7,7 +7,7 @@ on:
 jobs:
   library-apple:
     name: Build
-    runs-on: macos-12
+    runs-on: maplibre-ci-runner-m1-mac-2
     steps:
       - uses: actions/checkout@v3
       - name: Setup
