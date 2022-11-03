@@ -50,11 +50,14 @@ fixup:
   cargo clippy --allow-dirty --no-deps -p benchmarks --fix
   # Web
   RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p web --target wasm32-unknown-unknown --fix
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals --cfg=web_sys_unstable_apis' cargo clippy --allow-dirty --no-deps -p web --target wasm32-unknown-unknown --fix -Z build-std=std,panic_abort
   RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre --target wasm32-unknown-unknown --fix
   RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-winit --target wasm32-unknown-unknown --fix
   # Android
   RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
   RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
+  #iOS
+  cargo clippy --allow-dirty --no-deps -p apple --target x86_64-apple-darwin --fix
 
 check PROJECT ARCH: stable-install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
