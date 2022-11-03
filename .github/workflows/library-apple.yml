@@ -7,7 +7,7 @@ on:
 
 
 jobs:
-  library-apple-build:
+  library-apple:
     runs-on: macos-12
     strategy:
       matrix:
@@ -71,7 +71,7 @@ jobs:
         run: just check apple ${{ matrix.fat-target }}
 
   library-apple-test-xcode-project:
-    name: Bundle
+    name: Test XCode project
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v3
@@ -85,7 +85,7 @@ jobs:
     name: Bundle
     runs-on: macos-12
     needs:
-      - library-apple-build
+      - library-apple
     steps:
       - uses: actions/checkout@v3
       - name: Setup
