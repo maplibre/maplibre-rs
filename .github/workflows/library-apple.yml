@@ -4,16 +4,39 @@ on:
   workflow_call:
 
 
+
+
 jobs:
   library-apple:
-    name: Build
     runs-on: macos-12
+    strategy:
+      matrix:
+        name:
+          - fat-aarch64-x86_64-apple-darwin
+          - aarch64-apple-ios
+          - aarch64-apple-ios-sim
+        include:
+          - name: fat-aarch64-x86_64-apple-darwin # (xcodebuild-archive  "arm64" "macOS") (xcodebuild-archive-fat "arm64" "macOS" "x86_64")
+            target: aarch64-apple-darwin
+            arch: arm64
+            platform: macOS
+            fat-target: x86_64-apple-darwin
+            fat-arch: x86_64
+          - name: aarch64-apple-ios # xcodebuild-clean (xcodebuild-archive  "arm64" "iOS")
+            target: aarch64-apple-ios
+            arch: arm64
+            platform: iOS
+          - name: aarch64-apple-ios-sim # (xcodebuild-archive  "arm64" "iOS Simulator")
+            target: aarch64-apple-ios-sim
+            arch: arm64
+            platform: iOS Simulator
+    name: Build ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v3
       - name: Setup
         uses: ./.github/actions/setup
         with:
-          targets: x86_64-apple-darwin aarch64-apple-darwin x86_64-apple-ios aarch64-apple-ios aarch64-apple-ios-sim
+          targets: ${{ matrix.target }} ${{ matrix.fat-target }}
       - name: Swift Version
         shell: bash
         run: swift --version
@@ -22,21 +45,71 @@ jobs:
         run: xcodebuild -version
       - name: Build
         shell: bash
-        run: just xcodebuild-xcframework
-      - name: Check x86_64 darwin
+        run: just xcodebuild-archive ${{ matrix.arch }} "${{ matrix.platform }}"
+      - name: Build fat
+        if: ${{ matrix.fat-arch }}
         shell: bash
-        run: just check apple x86_64-apple-darwin
-      - name: Check aarch64 darwin
+        run: just xcodebuild-archive-fat ${{ matrix.arch }} "${{ matrix.platform }}" ${{ matrix.fat-arch }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.name }}
+          path: apple/build/*.xcarchive
+      - name: Check
         shell: bash
-        # TODO: Additional clippy checks for different targets (iOS)
-        run: just check apple aarch64-apple-darwin
-      - name: Test x86_64 darwin
+        run: just check apple ${{ matrix.target }}
+      - name: Test
+        if: ${{ matrix.arch == 'x86_64' }} # TODO: We can only test on x86_64, this is current limitation
         shell: bash
-        # TODO: Additional test runs for different targets (Different targets might require emulation)
-        run: just test apple x86_64-apple-darwin
-      - name: Build Example
+        run: just test apple ${{ matrix.target }}
+      - name: Check fat
+        if: ${{ matrix.fat-target }}
+        shell: bash
+        run: just check apple ${{ matrix.fat-target }}
+      - name: Test fat
+        if: ${{ matrix.fat-target && matrix.fat-arch == 'x86_64' }} # TODO: We can only test on x86_64, this is current limitation
+        shell: bash
+        run: just check apple ${{ matrix.fat-target }}
+
+  library-apple-test-xcode-project:
+    name: Test XCode project
+    runs-on: macos-12
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          targets: aarch64-apple-ios
+      - name: Build Example (iOS)
         shell: bash
         run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO
+
+  library-apple-bundle:
+    name: Bundle
+    runs-on: macos-12
+    needs:
+      - library-apple
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Download fat-aarch64-x86_64-apple-darwin
+        uses: actions/download-artifact@v3
+        with:
+          name: fat-aarch64-x86_64-apple-darwin
+          path: apple/build/
+      - name: Download aarch64-apple-ios
+        uses: actions/download-artifact@v3
+        with:
+          name: aarch64-apple-ios
+          path: apple/build/
+      - name: Download aarch64-apple-ios-sim
+        uses: actions/download-artifact@v3
+        with:
+          name: aarch64-apple-ios-sim
+          path: apple/build/
+      - name: Bundle
+        shell: bash
+        run: just xcodebuild-xcframework
       - name: Build Swift Package (arm64)
         shell: bash
         run: cd apple/MapLibreRs && swift build -v --arch=arm64 --scratch-path .build-arm64

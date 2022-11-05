@@ -89,7 +89,7 @@ pub fn run_headed_map(cache_path: Option<String>) {
             use maplibre::render::{builder::RendererBuilder, settings::WgpuSettings};
 
             map.initialize_renderer(RendererBuilder::new().with_wgpu_settings(WgpuSettings {
-                backends: Some(maplibre::render::settings::Backends::VULKAN),
+                backends: Some(maplibre::render::settings::Backends::VULKAN), // FIXME: Change
                 ..WgpuSettings::default()
             }))
             .await

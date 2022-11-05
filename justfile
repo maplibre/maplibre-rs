@@ -161,7 +161,7 @@ xcodebuild-clean:
   rm -rf {{XC_FRAMEWORK_DIRECTORY}}/*.xcframework
 
 # language=bash
-xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (xcodebuild-archive  "arm64" "macOS") (xcodebuild-archive  "arm64" "iOS Simulator") (xcodebuild-archive-fat "arm64" "macOS" "x86_64")
+xcodebuild-xcframework:
   #!/usr/bin/env bash
   set -euxo pipefail
   tuples=(
