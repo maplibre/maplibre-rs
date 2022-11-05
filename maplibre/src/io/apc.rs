@@ -30,6 +30,8 @@ pub enum Message<T: Transferables> {
     TileTessellated(T::TileTessellated),
     UnavailableLayer(T::UnavailableLayer),
     TessellatedLayer(T::TessellatedLayer),
+
+    LayerIndexed(T::IndexedLayer),
 }
 
 /// Inputs for an [`AsyncProcedure`]

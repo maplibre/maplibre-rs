@@ -40,6 +40,7 @@ impl<E: Environment> Stage for RequestStage<E> {
                 World {
                     tile_repository,
                     view_state,
+                    ..
                 },
             style,
             ..

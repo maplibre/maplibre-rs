@@ -40,10 +40,14 @@ impl Processable for IndexLayer {
     // TODO (perf): Maybe force inline
     fn process(
         &self,
-        (tile_request, tile): Self::Input,
+        (tile_request, mut tile): Self::Input,
         context: &mut PipelineContext,
     ) -> Self::Output {
-        let index = IndexProcessor::new();
+        let mut index = IndexProcessor::new();
+
+        for layer in &mut tile.layers {
+            layer.process(&mut index).unwrap();
+        }
 
         // FIXME: Handle result
         context
@@ -132,7 +136,10 @@ impl Processable for TessellateLayer {
 pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Processable>::Input> {
     DataPipeline::new(
         ParseTile,
-        DataPipeline::new(TessellateLayer, PipelineEnd::default()),
+        DataPipeline::new(
+            TessellateLayer,
+            DataPipeline::new(IndexLayer, PipelineEnd::default()),
+        ),
     )
 }
 

@@ -143,7 +143,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         last_render_time = now;
 
                         if let Ok(map_context) =  map.context_mut() {
-                            input_controller.update_state(map_context.world.view_state_mut(), dt);
+                            input_controller.update_state(map_context, dt);
                         }
 
                         match map.run_schedule() {
