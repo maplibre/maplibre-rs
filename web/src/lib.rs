@@ -16,7 +16,7 @@ use crate::platform::http_client::WHATWGFetchHttpClient;
 mod error;
 mod platform;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(no_pendantic_os_check, target_os = "wasm32")))]
 compile_error!("web works only on wasm32.");
 
 #[cfg(feature = "trace")]

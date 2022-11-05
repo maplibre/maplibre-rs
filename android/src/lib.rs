@@ -6,7 +6,7 @@ use jni::{objects::JClass, JNIEnv};
 use log::Level;
 use maplibre_winit::run_headed_map;
 
-#[cfg(not(target_os = "android"))]
+#[cfg(not(any(no_pendantic_os_check, target_os = "android")))]
 compile_error!("android works only on android.");
 
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
