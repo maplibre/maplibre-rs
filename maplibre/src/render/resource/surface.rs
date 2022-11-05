@@ -139,8 +139,7 @@ impl Surface {
             format: settings.texture_format,
             width: size.width(),
             height: size.height(),
-            //present_mode: wgpu::PresentMode::Immediate,
-            present_mode: wgpu::PresentMode::Fifo, // VSync
+            present_mode: settings.present_mode,
         };
 
         let surface = unsafe { instance.create_surface(window.raw()) };
