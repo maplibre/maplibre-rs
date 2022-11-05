@@ -54,12 +54,12 @@ impl TileTessellated for DefaultTileTessellated {
     }
 }
 
-pub struct DefaultUnavailableLayer {
+pub struct DefaultLayerUnavailable {
     pub coords: WorldTileCoords,
     pub layer_name: String,
 }
 
-impl UnavailableLayer for DefaultUnavailableLayer {
+impl UnavailableLayer for DefaultLayerUnavailable {
     fn new(coords: WorldTileCoords, layer_name: String) -> Self {
         Self { coords, layer_name }
     }
@@ -76,7 +76,7 @@ impl UnavailableLayer for DefaultUnavailableLayer {
     }
 }
 
-pub struct DefaultTessellatedLayer {
+pub struct DefaultLayerTesselated {
     pub coords: WorldTileCoords,
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
@@ -84,7 +84,7 @@ pub struct DefaultTessellatedLayer {
     pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
 }
 
-impl TessellatedLayer for DefaultTessellatedLayer {
+impl TessellatedLayer for DefaultLayerTesselated {
     fn new(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -113,18 +113,18 @@ impl TessellatedLayer for DefaultTessellatedLayer {
     }
 }
 
-pub struct DefaultIndexedLayer {
+pub struct DefaultLayerIndexed {
     coords: WorldTileCoords,
     index: TileIndex,
 }
 
-impl From<(WorldTileCoords, TileIndex)> for DefaultIndexedLayer {
+impl From<(WorldTileCoords, TileIndex)> for DefaultLayerIndexed {
     fn from((coords, index): (WorldTileCoords, TileIndex)) -> Self {
         Self { coords, index }
     }
 }
 
-impl IndexedLayer for DefaultIndexedLayer {
+impl IndexedLayer for DefaultLayerIndexed {
     fn coords(&self) -> &WorldTileCoords {
         &self.coords
     }
@@ -136,9 +136,9 @@ impl IndexedLayer for DefaultIndexedLayer {
 
 pub trait Transferables: 'static {
     type TileTessellated: TileTessellated;
-    type UnavailableLayer: UnavailableLayer;
-    type TessellatedLayer: TessellatedLayer;
-    type IndexedLayer: IndexedLayer;
+    type LayerUnavailable: UnavailableLayer;
+    type LayerTessellated: TessellatedLayer;
+    type LayerIndexed: IndexedLayer;
 }
 
 #[derive(Copy, Clone)]
@@ -146,7 +146,7 @@ pub struct DefaultTransferables;
 
 impl Transferables for DefaultTransferables {
     type TileTessellated = DefaultTileTessellated;
-    type UnavailableLayer = DefaultUnavailableLayer;
-    type TessellatedLayer = DefaultTessellatedLayer;
-    type IndexedLayer = DefaultIndexedLayer;
+    type LayerUnavailable = DefaultLayerUnavailable;
+    type LayerTessellated = DefaultLayerTesselated;
+    type LayerIndexed = DefaultLayerIndexed;
 }

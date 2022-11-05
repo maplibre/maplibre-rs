@@ -28,10 +28,10 @@ use crate::{
 #[derive(Clone)]
 pub enum Message<T: Transferables> {
     TileTessellated(T::TileTessellated),
-    LayerUnavailable(T::UnavailableLayer),
-    LayerTessellated(T::TessellatedLayer),
+    LayerUnavailable(T::LayerUnavailable),
+    LayerTessellated(T::LayerTessellated),
 
-    LayerIndexed(T::IndexedLayer),
+    LayerIndexed(T::LayerIndexed),
 }
 
 /// Inputs for an [`AsyncProcedure`]

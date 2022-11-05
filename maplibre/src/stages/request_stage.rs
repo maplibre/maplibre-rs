@@ -100,7 +100,7 @@ pub fn schedule<
                     context.send(
                         Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
                             E::HttpClient,
-                        >>::Transferables as Transferables>::UnavailableLayer::new(
+                        >>::Transferables as Transferables>::LayerUnavailable::new(
                             input.coords,
                             to_load.to_string(),
                         )),
