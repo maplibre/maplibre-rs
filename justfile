@@ -54,10 +54,12 @@ fixup:
   RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre --target wasm32-unknown-unknown --fix
   RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-winit --target wasm32-unknown-unknown --fix
   # Android
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre --target x86_64-linux-android --fix
   RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
   RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
-  #iOS
-  cargo clippy --allow-dirty --no-deps -p apple --target x86_64-apple-darwin --fix
+  # macOS/iOS
+  RUSTFLAGS="--cfg no_pendantic_os_check" cargo clippy --allow-dirty --no-deps -p apple --fix
+  # TODO check maplibre and maplibre-winit for apple targets
 
 check PROJECT ARCH: stable-install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
