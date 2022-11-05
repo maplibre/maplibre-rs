@@ -166,40 +166,18 @@
 <span id="166">166</span>
 <span id="167">167</span>
 <span id="168">168</span>
-<span id="169">169</span>
-<span id="170">170</span>
-<span id="171">171</span>
-<span id="172">172</span>
-<span id="173">173</span>
-<span id="174">174</span>
-<span id="175">175</span>
-<span id="176">176</span>
-<span id="177">177</span>
-<span id="178">178</span>
-<span id="179">179</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">borrow::Borrow</span>,
-    <span class="ident">cell::RefCell</span>,
-    <span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>},
-    <span class="ident">future::Future</span>,
-    <span class="ident">ops::Deref</span>,
-    <span class="ident">pin::Pin</span>,
-    <span class="ident">process::Output</span>,
-    <span class="ident">rc::Rc</span>,
-    <span class="ident">str::FromStr</span>,
-};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">rc::Rc</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">context::MapContext</span>,
-    <span class="ident">coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">ZoomLevel</span>},
+    <span class="ident">coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">WorldTileCoords</span>},
     <span class="ident">environment::Environment</span>,
     <span class="ident">error::Error</span>,
     <span class="ident">io</span>::{
         <span class="ident">apc</span>::{<span class="ident">AsyncProcedureCall</span>, <span class="ident">AsyncProcedureFuture</span>, <span class="ident">Context</span>, <span class="ident">Input</span>, <span class="ident">Message</span>},
         <span class="ident">pipeline</span>::{<span class="ident">PipelineContext</span>, <span class="ident">Processable</span>},
-        <span class="ident">source_client</span>::{<span class="ident">HttpSourceClient</span>, <span class="ident">SourceClient</span>},
         <span class="ident">tile_pipelines::build_vector_tile_pipeline</span>,
         <span class="ident">tile_repository::TileRepository</span>,
         <span class="ident">transferables</span>::{<span class="ident">Transferables</span>, <span class="ident">UnavailableLayer</span>},

@@ -658,8 +658,8 @@
         <span class="kw">let</span> <span class="ident">oz</span> <span class="op">=</span> <span class="ident">min_depth</span>;
         <span class="kw">let</span> <span class="ident">pz</span> <span class="op">=</span> <span class="ident">max_depth</span> <span class="op">-</span> <span class="ident">min_depth</span>;
         <span class="ident">Matrix4::from_cols</span>(
-            <span class="ident">Vector4::new</span>(<span class="self">self</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="number">2.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
-            <span class="ident">Vector4::new</span>(<span class="number">0.0</span>, <span class="op">-</span><span class="self">self</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="number">2.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
+            <span class="ident">Vector4::new</span>(<span class="self">self</span>.<span class="ident">width</span> <span class="op">/</span> <span class="number">2.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
+            <span class="ident">Vector4::new</span>(<span class="number">0.0</span>, <span class="op">-</span><span class="self">self</span>.<span class="ident">height</span> <span class="op">/</span> <span class="number">2.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
             <span class="ident">Vector4::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="ident">pz</span>, <span class="number">0.0</span>),
             <span class="ident">Vector4::new</span>(<span class="ident">ox</span>, <span class="ident">oy</span>, <span class="ident">oz</span>, <span class="number">1.0</span>),
         )
@@ -698,11 +698,11 @@
 
         <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="number">0.0</span>;
         <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="number">0.0</span>;
-        <span class="kw">let</span> <span class="ident">ox</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="number">2.0</span>;
-        <span class="kw">let</span> <span class="ident">oy</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="number">2.0</span>;
+        <span class="kw">let</span> <span class="ident">ox</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">width</span> <span class="op">/</span> <span class="number">2.0</span>;
+        <span class="kw">let</span> <span class="ident">oy</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">height</span> <span class="op">/</span> <span class="number">2.0</span>;
         <span class="kw">let</span> <span class="ident">oz</span> <span class="op">=</span> <span class="ident">min_depth</span>;
-        <span class="kw">let</span> <span class="ident">px</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f64</span>;
-        <span class="kw">let</span> <span class="ident">py</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f64</span>;
+        <span class="kw">let</span> <span class="ident">px</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>;
+        <span class="kw">let</span> <span class="ident">py</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">height</span>;
         <span class="kw">let</span> <span class="ident">pz</span> <span class="op">=</span> <span class="ident">max_depth</span> <span class="op">-</span> <span class="ident">min_depth</span>;
         <span class="kw">let</span> <span class="ident">xd</span> <span class="op">=</span> <span class="ident">ndc</span>.<span class="ident">x</span>;
         <span class="kw">let</span> <span class="ident">yd</span> <span class="op">=</span> <span class="ident">ndc</span>.<span class="ident">y</span>;

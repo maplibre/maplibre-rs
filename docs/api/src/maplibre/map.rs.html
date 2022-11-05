@@ -145,13 +145,11 @@
 <span id="145">145</span>
 <span id="146">146</span>
 <span id="147">147</span>
-<span id="148">148</span>
-<span id="149">149</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">context::MapContext</span>,
-    <span class="ident">coords</span>::{<span class="ident">LatLon</span>, <span class="ident">WorldCoords</span>, <span class="ident">Zoom</span>, <span class="ident">TILE_SIZE</span>},
+    <span class="ident">coords</span>::{<span class="ident">LatLon</span>, <span class="ident">Zoom</span>},
     <span class="ident">environment::Environment</span>,
     <span class="ident">error::Error</span>,
     <span class="ident">kernel::Kernel</span>,
@@ -160,13 +158,11 @@
             <span class="ident">InitializationResult</span>, <span class="ident">InitializedRenderer</span>, <span class="ident">RendererBuilder</span>, <span class="ident">UninitializedRenderer</span>,
         },
         <span class="ident">create_default_render_graph</span>, <span class="ident">register_default_render_stages</span>,
-        <span class="ident">settings</span>::{<span class="ident">RendererSettings</span>, <span class="ident">WgpuSettings</span>},
-        <span class="ident">Renderer</span>,
     },
     <span class="ident">schedule</span>::{<span class="ident">Schedule</span>, <span class="ident">Stage</span>},
     <span class="ident">stages::register_stages</span>,
     <span class="ident">style::Style</span>,
-    <span class="ident">window</span>::{<span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">WindowSize</span>},
+    <span class="ident">window</span>::{<span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>},
     <span class="ident">world::World</span>,
 };
 
@@ -196,7 +192,7 @@
 
         <span class="ident">register_stages</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">schedule</span>, <span class="ident">kernel</span>.<span class="ident">clone</span>());
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">kernel</span>.<span class="ident">map_window_config</span>().<span class="ident">create</span>();
+        <span class="kw">let</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">kernel</span>.<span class="ident">map_window_config</span>().<span class="ident">create</span>();
 
         <span class="kw">let</span> <span class="ident">map</span> <span class="op">=</span> <span class="self">Self</span> {
             <span class="ident">kernel</span>,
@@ -227,13 +223,13 @@
                 <span class="kw">let</span> <span class="ident">world</span> <span class="op">=</span> <span class="ident">World::new_at</span>(
                     <span class="ident">window_size</span>,
                     <span class="ident">LatLon::new</span>(<span class="ident">center</span>[<span class="number">0</span>], <span class="ident">center</span>[<span class="number">1</span>]),
-                    <span class="ident">style</span>.<span class="ident">zoom</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">zoom</span><span class="op">|</span> <span class="ident">Zoom::new</span>(<span class="ident">zoom</span>)).<span class="ident">unwrap_or_default</span>(),
+                    <span class="ident">style</span>.<span class="ident">zoom</span>.<span class="ident">map</span>(<span class="ident">Zoom::new</span>).<span class="ident">unwrap_or_default</span>(),
                     <span class="ident">cgmath::Deg</span>::<span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>(<span class="ident">style</span>.<span class="ident">pitch</span>.<span class="ident">unwrap_or_default</span>()),
                 );
 
                 <span class="kw">match</span> <span class="ident">result</span> {
                     <span class="ident">InitializationResult::Initialized</span>(<span class="ident">InitializedRenderer</span> { <span class="ident">renderer</span>, .. }) =&gt; {
-                        <span class="kw-2">*</span><span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map_context</span> <span class="op">=</span> <span class="ident">MapContextState::Ready</span>(<span class="ident">MapContext</span> {
+                        <span class="self">self</span>.<span class="ident">map_context</span> <span class="op">=</span> <span class="ident">MapContextState::Ready</span>(<span class="ident">MapContext</span> {
                             <span class="ident">world</span>,
                             <span class="ident">style</span>: <span class="ident">std::mem::take</span>(<span class="ident">style</span>),
                             <span class="ident">renderer</span>,

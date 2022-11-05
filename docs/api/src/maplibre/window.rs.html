@@ -51,17 +51,9 @@
 <span id="51">51</span>
 <span id="52">52</span>
 <span id="53">53</span>
-<span id="54">54</span>
-<span id="55">55</span>
-<span id="56">56</span>
-<span id="57">57</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for the window system.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cell::RefCell</span>, <span class="ident">rc::Rc</span>};
-
 <span class="kw">use</span> <span class="ident">raw_window_handle</span>::{<span class="ident">HasRawDisplayHandle</span>, <span class="ident">HasRawWindowHandle</span>};
-
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::environment::Environment</span>;
 
 <span class="doccomment">/// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">MapWindow</span> {

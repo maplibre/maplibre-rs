@@ -73,7 +73,7 @@
 <span id="73">73</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::BorrowMut</span>, <span class="ident">cell::RefCell</span>, <span class="ident">ops::Deref</span>, <span class="ident">rc::Rc</span>};
+<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">context::MapContext</span>,

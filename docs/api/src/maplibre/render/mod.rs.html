@@ -528,8 +528,6 @@
 <span id="528">528</span>
 <span id="529">529</span>
 <span id="530">530</span>
-<span id="531">531</span>
-<span id="532">532</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole</span>
 <span class="doccomment">//! communication with the GPU.</span>
 <span class="doccomment">//!</span>
@@ -944,10 +942,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">render</span>::{<span class="ident">settings::RendererSettings</span>, <span class="ident">RenderState</span>},
-        <span class="ident">window</span>::{<span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">WindowSize</span>},
-    };
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::window</span>::{<span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">WindowSize</span>};
 
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HeadlessMapWindowConfig</span> {
         <span class="ident">size</span>: <span class="ident">WindowSize</span>,
@@ -977,7 +972,8 @@
         <span class="kw">use</span> <span class="ident">log::LevelFilter</span>;
 
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
-            <span class="ident">graph::RenderGraph</span>, <span class="ident">graph_runner::RenderGraphRunner</span>, <span class="ident">resource::Surface</span>,
+            <span class="ident">graph::RenderGraph</span>, <span class="ident">graph_runner::RenderGraphRunner</span>, <span class="ident">resource::Surface</span>, <span class="ident">RenderState</span>,
+            <span class="ident">RendererSettings</span>,
         };
 
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">env_logger::builder</span>()

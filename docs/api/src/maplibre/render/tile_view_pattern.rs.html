@@ -226,7 +226,7 @@
             <span class="ident">coords</span>,
             <span class="ident">zoom_factor</span>: <span class="ident">zoom</span>.<span class="ident">scale_to_tile</span>(<span class="kw-2">&amp;</span><span class="ident">coords</span>),
             <span class="ident">transform</span>: <span class="ident">coords</span>.<span class="ident">transform_for_zoom</span>(<span class="ident">zoom</span>),
-            <span class="ident">buffer_range</span>: <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">STRIDE</span>..(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">STRIDE</span>,
+            <span class="ident">buffer_range</span>: <span class="ident">index</span> <span class="op">*</span> <span class="ident">STRIDE</span>..(<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">STRIDE</span>,
         }
     }
 }

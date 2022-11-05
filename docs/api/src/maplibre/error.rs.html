@@ -39,11 +39,11 @@
 <span id="39">39</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Errors which can happen in various parts of the library.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">fmt</span>, <span class="ident">fmt::Formatter</span>, <span class="ident">sync::mpsc::SendError</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">sync::mpsc::SendError</span>};
 
 <span class="kw">use</span> <span class="ident">lyon::tessellation::TessellationError</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{<span class="ident">error::RenderError</span>, <span class="ident">graph::RenderGraphError</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::error::RenderError</span>;
 
 <span class="doccomment">/// Enumeration of errors which can happen during the operation of the library.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>

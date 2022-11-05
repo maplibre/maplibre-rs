@@ -119,23 +119,13 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
-<span id="122">122</span>
-<span id="123">123</span>
-<span id="124">124</span>
-<span id="125">125</span>
-<span id="126">126</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">environment::Environment</span>,
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">error::Error</span>,
-    <span class="ident">kernel::Kernel</span>,
     <span class="ident">render</span>::{
         <span class="ident">settings</span>::{<span class="ident">RendererSettings</span>, <span class="ident">WgpuSettings</span>},
         <span class="ident">Renderer</span>,
     },
-    <span class="ident">style::Style</span>,
-    <span class="ident">window</span>::{<span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>},
+    <span class="ident">window</span>::{<span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindowConfig</span>},
 };
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RendererBuilder</span> {
@@ -220,7 +210,7 @@
         <span class="kw">let</span> <span class="ident">renderer</span> <span class="op">=</span> <span class="ident">Renderer::initialize</span>(
             <span class="ident">existing_window</span>,
             <span class="self">self</span>.<span class="ident">wgpu_settings</span>.<span class="ident">clone</span>(),
-            <span class="self">self</span>.<span class="ident">renderer_settings</span>.<span class="ident">clone</span>(),
+            <span class="self">self</span>.<span class="ident">renderer_settings</span>,
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">InitializationResult::Initialized</span>(<span class="ident">InitializedRenderer</span> {

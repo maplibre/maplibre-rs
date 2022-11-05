@@ -804,7 +804,7 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span>: [<span class="ident">u32</span>; <span class="ident">DIM</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="ident">DIM</span>];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
     <span class="kw">while</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">DIM</span> {
-        <span class="ident">result</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="number">2u32</span>.<span class="ident">pow</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">result</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="number">2u32</span>.<span class="ident">pow</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>);
         <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
     }
     <span class="ident">result</span>

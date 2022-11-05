@@ -160,13 +160,11 @@
 <span id="160">160</span>
 <span id="161">161</span>
 <span id="162">162</span>
-<span id="163">163</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
 
-<span class="kw">use</span> <span class="ident">cgmath</span>::{<span class="ident">Angle</span>, <span class="ident">Point3</span>};
+<span class="kw">use</span> <span class="ident">cgmath::Angle</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">context::MapContext</span>,
     <span class="ident">coords</span>::{<span class="ident">LatLon</span>, <span class="ident">ViewRegion</span>, <span class="ident">WorldCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">TILE_SIZE</span>},
     <span class="ident">io::tile_repository::TileRepository</span>,
     <span class="ident">render::camera</span>::{<span class="ident">Camera</span>, <span class="ident">Perspective</span>, <span class="ident">ViewProjection</span>},
