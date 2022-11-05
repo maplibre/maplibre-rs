@@ -141,8 +141,8 @@ impl Camera {
         let oz = min_depth;
         let pz = max_depth - min_depth;
         Matrix4::from_cols(
-            Vector4::new(self.width as f64 / 2.0, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, -self.height as f64 / 2.0, 0.0, 0.0),
+            Vector4::new(self.width / 2.0, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, -self.height / 2.0, 0.0, 0.0),
             Vector4::new(0.0, 0.0, pz, 0.0),
             Vector4::new(ox, oy, oz, 1.0),
         )
@@ -181,11 +181,11 @@ impl Camera {
 
         let x = 0.0;
         let y = 0.0;
-        let ox = x + self.width as f64 / 2.0;
-        let oy = y + self.height as f64 / 2.0;
+        let ox = x + self.width / 2.0;
+        let oy = y + self.height / 2.0;
         let oz = min_depth;
-        let px = self.width as f64;
-        let py = self.height as f64;
+        let px = self.width;
+        let py = self.height;
         let pz = max_depth - min_depth;
         let xd = ndc.x;
         let yd = ndc.y;

@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     future::Future,
     pin::Pin,
     sync::{
@@ -11,7 +10,6 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    coords::WorldTileCoords,
     error::Error,
     io::{
         scheduler::Scheduler,
@@ -120,7 +118,7 @@ pub struct SchedulerContext<T: Transferables, HC: HttpClient> {
 
 impl<T: Transferables, HC: HttpClient> Context<T, HC> for SchedulerContext<T, HC> {
     fn send(&self, data: Message<T>) -> Result<(), Error> {
-        self.sender.send(data).map_err(|e| Error::APC)
+        self.sender.send(data).map_err(|_e| Error::APC)
     }
 
     fn source_client(&self) -> &SourceClient<HC> {

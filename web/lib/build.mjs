@@ -260,6 +260,7 @@ const start = async () => {
     emitTypeScript();
     } catch (e) {
         console.error("Failed to start building: " + e.message)
+        process.exit(1)
     }
 }
 

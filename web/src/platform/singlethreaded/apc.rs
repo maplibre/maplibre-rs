@@ -1,41 +1,23 @@
-use std::{
-    any::TypeId,
-    borrow::Borrow,
-    cell::RefCell,
-    collections::HashMap,
-    marker::PhantomData,
-    mem,
-    mem::{size_of, MaybeUninit},
-    ops::Deref,
-    pin::Pin,
-    rc::Rc,
-    sync::{
-        mpsc,
-        mpsc::{Receiver, Sender},
-    },
-};
+use std::{cell::RefCell, mem, rc::Rc};
 
 use js_sys::Uint8Array;
 use log::info;
 use maplibre::{
-    environment::Environment,
     error::Error,
     io::{
         apc::{AsyncProcedure, AsyncProcedureCall, Context, Input, Message},
-        scheduler::Scheduler,
-        source_client::{HttpClient, HttpSourceClient, SourceClient},
+        source_client::{HttpSourceClient, SourceClient},
         transferables::Transferables,
     },
-    kernel::Kernel,
 };
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
-use web_sys::{console::info, DedicatedWorkerGlobalScope, Worker};
+use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
 use crate::{
     platform::singlethreaded::transferables::{
         InnerData, LinearTessellatedLayer, LinearTransferables,
     },
-    CurrentEnvironment, MapType, WHATWGFetchHttpClient,
+    WHATWGFetchHttpClient,
 };
 
 type UsedTransferables = LinearTransferables;
@@ -100,9 +82,8 @@ impl SerializableMessage for Message<LinearTransferables> {
                     data: unsafe {
                         let mut uninit = Box::<InnerData>::new_zeroed();
                         data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
-                        let x = uninit.assume_init();
 
-                        x
+                        uninit.assume_init()
                     },
                 })
             }
@@ -135,11 +116,11 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
         }
 
         let global: DedicatedWorkerGlobalScope =
-            js_sys::global().dyn_into().map_err(|e| Error::APC)?;
+            js_sys::global().dyn_into().map_err(|_e| Error::APC)?;
         let array = js_sys::Array::new();
         array.push(&JsValue::from(tag as u32));
         array.push(&serialized_array_buffer);
-        global.post_message(&array).map_err(|e| Error::APC)
+        global.post_message(&array).map_err(|_e| Error::APC)
     }
 
     fn source_client(&self) -> &SourceClient<UsedHttpClient> {
@@ -235,7 +216,7 @@ pub unsafe fn singlethreaded_main_entry(
     data: Uint8Array,
 ) -> Result<(), JsValue> {
     // FIXME (wasm-executor): Can we make this call safe? check if it was cloned before?
-    let mut received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
+    let received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
 
     let message = Message::<UsedTransferables>::deserialize(
         SerializedMessageTag::from_u32(type_id).unwrap(),

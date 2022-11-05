@@ -11,16 +11,12 @@ use maplibre::{
     kernel::{Kernel, KernelBuilder},
     map::Map,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
-    render::{
-        builder::{InitializationResult, InitializedRenderer, RendererBuilder},
-        settings::{Backends, RendererSettings, WgpuSettings},
-    },
     style::Style,
-    window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
+    window::{MapWindow, MapWindowConfig, WindowSize},
 };
 use winit::window::WindowBuilder;
 
-use super::{RawWinitEventLoop, RawWinitWindow, WinitMapWindow};
+use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
 
 pub struct WinitMapWindowConfig<ET> {
@@ -90,8 +86,10 @@ pub fn run_headed_map(cache_path: Option<String>) {
 
         #[cfg(not(target_os = "android"))]
         {
+            use maplibre::render::{builder::RendererBuilder, settings::WgpuSettings};
+
             map.initialize_renderer(RendererBuilder::new().with_wgpu_settings(WgpuSettings {
-                backends: Some(Backends::VULKAN), // FIXME: Change
+                backends: Some(maplibre::render::settings::Backends::VULKAN), // FIXME: Change
                 ..WgpuSettings::default()
             }))
             .await

@@ -27,7 +27,7 @@ pub trait Scheduler: 'static {
 pub struct NopScheduler;
 
 impl Scheduler for NopScheduler {
-    fn schedule<T>(&self, future_factory: impl FnOnce() -> T + Send + 'static) -> Result<(), Error>
+    fn schedule<T>(&self, _future_factory: impl FnOnce() -> T + Send + 'static) -> Result<(), Error>
     where
         T: Future<Output = ()> + 'static,
     {

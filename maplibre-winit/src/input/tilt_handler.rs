@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use cgmath::{Deg, Rad, Zero};
+use cgmath::{Deg, Zero};
 use maplibre::world::ViewState;
 
 use super::UpdateState;

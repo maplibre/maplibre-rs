@@ -44,17 +44,22 @@ nightly-install-clippy:
 
 
 fixup:
-  cargo clippy --no-deps -p maplibre --fix
+  cargo clippy --allow-dirty --no-deps -p maplibre --fix
   cargo clippy --allow-dirty --no-deps -p maplibre-winit --fix
   cargo clippy --allow-dirty --no-deps -p maplibre-demo --fix
   cargo clippy --allow-dirty --no-deps -p benchmarks --fix
   # Web
-  cargo clippy --allow-dirty --no-deps -p web --target wasm32-unknown-unknown --fix
-  cargo clippy --allow-dirty --no-deps -p maplibre --target wasm32-unknown-unknown --fix
-  cargo clippy --allow-dirty --no-deps -p maplibre-winit --target wasm32-unknown-unknown --fix
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p web --target wasm32-unknown-unknown --fix
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals --cfg=web_sys_unstable_apis' cargo clippy --allow-dirty --no-deps -p web --target wasm32-unknown-unknown --fix -Z build-std=std,panic_abort
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre --target wasm32-unknown-unknown --fix
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-winit --target wasm32-unknown-unknown --fix
   # Android
-  cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
-  cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
+  env "AR_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" "CC_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang" RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre --target x86_64-linux-android --fix
+  env "AR_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" "CC_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang" RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
+  env "AR_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" "CC_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang" RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
+  # macOS/iOS
+  RUSTFLAGS="--cfg no_pendantic_os_check" cargo clippy --allow-dirty --no-deps -p apple --fix
+  # TODO check maplibre and maplibre-winit for apple targets
 
 check PROJECT ARCH: stable-install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}

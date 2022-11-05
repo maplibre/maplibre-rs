@@ -19,7 +19,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 async-trait = "0.1.56"
-maplibre = { path = "../maplibre", default-features = false, features = [] }
+maplibre = { path = "../maplibre" }
 maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
 
 log = "0.4.17"

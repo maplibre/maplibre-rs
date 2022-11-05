@@ -6,7 +6,7 @@ use crate::{
     platform::MIN_WEBGL_BUFFER_SIZE,
     render::{
         resource::{FragmentState, RenderPipeline, RenderPipelineDescriptor, VertexState},
-        settings::{Msaa, RendererSettings},
+        settings::RendererSettings,
         shaders::ShaderGlobals,
     },
 };

@@ -1,15 +1,10 @@
-use std::marker::PhantomData;
-
 use crate::{
-    environment::Environment,
     error::Error,
-    kernel::Kernel,
     render::{
         settings::{RendererSettings, WgpuSettings},
         Renderer,
     },
-    style::Style,
-    window::{HeadedMapWindow, MapWindow, MapWindowConfig},
+    window::{HeadedMapWindow, MapWindowConfig},
 };
 
 pub struct RendererBuilder {
@@ -94,7 +89,7 @@ impl UninitializedRenderer {
         let renderer = Renderer::initialize(
             existing_window,
             self.wgpu_settings.clone(),
-            self.renderer_settings.clone(),
+            self.renderer_settings,
         )
         .await?;
         Ok(InitializationResult::Initialized(InitializedRenderer {

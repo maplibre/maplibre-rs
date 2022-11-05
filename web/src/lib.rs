@@ -1,15 +1,12 @@
+#![deny(unused_imports)]
 #![feature(allocator_api, new_uninit)]
-
-use std::{borrow::BorrowMut, cell::RefCell, mem, ops::Deref, rc::Rc};
 
 use maplibre::{
     event_loop::EventLoop,
-    io::{apc::SchedulerAsyncProcedureCall, scheduler::NopScheduler},
     kernel::{Kernel, KernelBuilder},
     map::Map,
-    render::builder::{InitializedRenderer, RendererBuilder},
+    render::builder::RendererBuilder,
     style::Style,
-    window::MapWindowConfig,
 };
 use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
@@ -19,7 +16,7 @@ use crate::platform::http_client::WHATWGFetchHttpClient;
 mod error;
 mod platform;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(no_pendantic_os_check, target_arch = "wasm32")))]
 compile_error!("web works only on wasm32.");
 
 #[cfg(feature = "trace")]
@@ -48,7 +45,7 @@ pub fn wasm_bindgen_start() {
 
 #[cfg(not(target_feature = "atomics"))]
 type CurrentEnvironment = WinitEnvironment<
-    NopScheduler,
+    maplibre::io::scheduler::NopScheduler,
     WHATWGFetchHttpClient,
     platform::singlethreaded::apc::PassingAsyncProcedureCall,
     (),
@@ -91,7 +88,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) {
     {
         kernel_builder = kernel_builder
             .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4))
-            .with_scheduler(NopScheduler);
+            .with_scheduler(maplibre::io::scheduler::NopScheduler);
     }
 
     let kernel: Kernel<WinitEnvironment<_, _, _, ()>> = kernel_builder.build();

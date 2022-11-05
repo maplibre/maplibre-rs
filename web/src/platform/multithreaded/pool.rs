@@ -2,13 +2,13 @@
 //! web workers which can be used to execute work.
 //! Adopted from [wasm-bindgen example](https://github.com/rustwasm/wasm-bindgen/blob/0eba2efe45801b71f8873bc368c58a8ed8e894ff/examples/raytrace-parallel/src/pool.rs)
 
-use std::{borrow::BorrowMut, cell::RefCell, future::Future, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use js_sys::Promise;
 use rand::prelude::*;
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{DedicatedWorkerGlobalScope, ErrorEvent, Event, MessageEvent, Worker};
+use web_sys::Worker;
 
 #[wasm_bindgen()]
 extern "C" {
@@ -91,10 +91,7 @@ impl WorkerPool {
     /// message is sent to it.
     fn worker(&self) -> Result<Worker, JsValue> {
         let workers = self.state.workers.borrow();
-        let result = match workers.choose(&mut thread_rng()) {
-            Some(worker) => Some(worker),
-            None => None,
-        };
+        let result = workers.choose(&mut thread_rng());
 
         if result.is_none() {
             self.spawn()?;

@@ -1,6 +1,6 @@
 //! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].
 
-use std::{borrow::BorrowMut, cell::RefCell, ops::Deref, rc::Rc};
+use std::rc::Rc;
 
 use crate::{
     context::MapContext,

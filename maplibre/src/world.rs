@@ -1,9 +1,8 @@
 use std::ops::{Deref, DerefMut};
 
-use cgmath::{Angle, Point3};
+use cgmath::Angle;
 
 use crate::{
-    context::MapContext,
     coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
     io::tile_repository::TileRepository,
     render::camera::{Camera, Perspective, ViewProjection},

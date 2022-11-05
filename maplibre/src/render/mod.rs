@@ -412,10 +412,7 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        render::{settings::RendererSettings, RenderState},
-        window::{MapWindow, MapWindowConfig, WindowSize},
-    };
+    use crate::window::{MapWindow, MapWindowConfig, WindowSize};
 
     pub struct HeadlessMapWindowConfig {
         size: WindowSize,
@@ -445,7 +442,8 @@ mod tests {
         use log::LevelFilter;
 
         use crate::render::{
-            graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface,
+            graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface, RenderState,
+            RendererSettings,
         };
 
         let _ = env_logger::builder()

@@ -1,10 +1,10 @@
 //! Errors which can happen in various parts of the library.
 
-use std::{borrow::Cow, fmt, fmt::Formatter, sync::mpsc::SendError};
+use std::{borrow::Cow, sync::mpsc::SendError};
 
 use lyon::tessellation::TessellationError;
 
-use crate::render::{error::RenderError, graph::RenderGraphError};
+use crate::render::error::RenderError;
 
 /// Enumeration of errors which can happen during the operation of the library.
 #[derive(Debug)]

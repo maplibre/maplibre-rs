@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use maplibre::window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize};
+use maplibre::window::{MapWindow, MapWindowConfig, WindowSize};
 use winit::{platform::web::WindowBuilderExtWebSys, window::WindowBuilder};
 
-use super::{RawWinitEventLoop, RawWinitWindow, WinitMapWindow};
+use super::WinitMapWindow;
 use crate::WinitEventLoop;
 
 pub struct WinitMapWindowConfig<ET> {
