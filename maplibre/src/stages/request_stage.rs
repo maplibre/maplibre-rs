@@ -98,7 +98,7 @@ pub fn schedule<
                     tracing::warn!("layer {} at {} unavailable", to_load, coords);
                     // FIXME: Handle result
                     context.send(
-                        Message::UnavailableLayer(<<E::AsyncProcedureCall as AsyncProcedureCall<
+                        Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
                             E::HttpClient,
                         >>::Transferables as Transferables>::UnavailableLayer::new(
                             input.coords,

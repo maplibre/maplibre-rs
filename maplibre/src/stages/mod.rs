@@ -52,7 +52,7 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         layer_name: &str,
     ) -> Result<(), Error> {
         self.context
-            .send(Message::UnavailableLayer(T::UnavailableLayer::new(
+            .send(Message::LayerUnavailable(T::UnavailableLayer::new(
                 *coords,
                 layer_name.to_owned(),
             )))
@@ -66,7 +66,7 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         layer_data: tile::Layer,
     ) -> Result<(), Error> {
         self.context
-            .send(Message::TessellatedLayer(T::TessellatedLayer::new(
+            .send(Message::LayerTessellated(T::TessellatedLayer::new(
                 *coords,
                 buffer,
                 feature_indices,

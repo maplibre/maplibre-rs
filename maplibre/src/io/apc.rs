@@ -28,8 +28,8 @@ use crate::{
 #[derive(Clone)]
 pub enum Message<T: Transferables> {
     TileTessellated(T::TileTessellated),
-    UnavailableLayer(T::UnavailableLayer),
-    TessellatedLayer(T::TessellatedLayer),
+    LayerUnavailable(T::UnavailableLayer),
+    LayerTessellated(T::TessellatedLayer),
 
     LayerIndexed(T::IndexedLayer),
 }

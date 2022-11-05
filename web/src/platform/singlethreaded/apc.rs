@@ -27,21 +27,25 @@ type UsedContext = PassingContext;
 #[derive(Debug)]
 enum SerializedMessageTag {
     TileTessellated = 1,
-    UnavailableLayer = 2,
-    TessellatedLayer = 3,
+    LayerUnavailable = 2,
+    LayerTessellated = 3,
+    LayerIndexed = 4,
 }
 
 impl SerializedMessageTag {
     fn from_u32(tag: u32) -> Option<Self> {
         match tag {
-            x if x == SerializedMessageTag::UnavailableLayer as u32 => {
-                Some(SerializedMessageTag::UnavailableLayer)
+            x if x == SerializedMessageTag::LayerUnavailable as u32 => {
+                Some(SerializedMessageTag::LayerUnavailable)
             }
-            x if x == SerializedMessageTag::TessellatedLayer as u32 => {
-                Some(SerializedMessageTag::TessellatedLayer)
+            x if x == SerializedMessageTag::LayerTessellated as u32 => {
+                Some(SerializedMessageTag::LayerTessellated)
             }
             x if x == SerializedMessageTag::TileTessellated as u32 => {
                 Some(SerializedMessageTag::TileTessellated)
+            }
+            x if x == SerializedMessageTag::LayerIndexed as u32 => {
+                Some(SerializedMessageTag::LayerIndexed)
             }
             _ => None,
         }
@@ -59,9 +63,10 @@ trait SerializableMessage {
 impl SerializableMessage for Message<LinearTransferables> {
     fn serialize(&self) -> &[u8] {
         match self {
-            Message::TileTessellated(data) => bytemuck::bytes_of(data),
-            Message::UnavailableLayer(data) => bytemuck::bytes_of(data),
-            Message::TessellatedLayer(data) => bytemuck::bytes_of(data.data.as_ref()),
+            Message::TileTessellated(message) => bytemuck::bytes_of(message),
+            Message::LayerUnavailable(message) => bytemuck::bytes_of(message),
+            Message::LayerTessellated(message) => bytemuck::bytes_of(message.data.as_ref()),
+            Message::LayerIndexed(message) => bytemuck::bytes_of(message),
         }
     }
 
@@ -72,13 +77,13 @@ impl SerializableMessage for Message<LinearTransferables> {
                     <UsedTransferables as Transferables>::TileTessellated,
                 >(&data.to_vec()))
             }
-            SerializedMessageTag::UnavailableLayer => {
-                Message::<UsedTransferables>::UnavailableLayer(*bytemuck::from_bytes::<
+            SerializedMessageTag::LayerUnavailable => {
+                Message::<UsedTransferables>::LayerUnavailable(*bytemuck::from_bytes::<
                     <UsedTransferables as Transferables>::UnavailableLayer,
                 >(&data.to_vec()))
             }
-            SerializedMessageTag::TessellatedLayer => {
-                Message::<UsedTransferables>::TessellatedLayer(LinearTessellatedLayer {
+            SerializedMessageTag::LayerTessellated => {
+                Message::<UsedTransferables>::LayerTessellated(LinearTessellatedLayer {
                     data: unsafe {
                         let mut uninit = Box::<InnerData>::new_zeroed();
                         data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
@@ -87,14 +92,20 @@ impl SerializableMessage for Message<LinearTransferables> {
                     },
                 })
             }
+            SerializedMessageTag::LayerIndexed => {
+                Message::<UsedTransferables>::LayerIndexed(*bytemuck::from_bytes::<
+                    <UsedTransferables as Transferables>::IndexedLayer,
+                >(&data.to_vec()))
+            }
         }
     }
 
     fn tag(&self) -> SerializedMessageTag {
         match self {
             Message::TileTessellated(_) => SerializedMessageTag::TileTessellated,
-            Message::UnavailableLayer(_) => SerializedMessageTag::UnavailableLayer,
-            Message::TessellatedLayer(_) => SerializedMessageTag::TessellatedLayer,
+            Message::LayerUnavailable(_) => SerializedMessageTag::LayerUnavailable,
+            Message::LayerTessellated(_) => SerializedMessageTag::LayerTessellated,
+            Message::LayerIndexed(_) => SerializedMessageTag::LayerIndexed,
         }
     }
 }

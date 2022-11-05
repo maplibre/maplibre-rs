@@ -49,7 +49,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                     tile_repository.mark_tile_succeeded(coords);
                 }
                 // FIXME: deduplicate
-                Message::UnavailableLayer(message) => {
+                Message::LayerUnavailable(message) => {
                     let layer: StoredLayer = message.to_stored_layer();
 
                     tracing::debug!(
@@ -60,7 +60,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
 
                     tile_repository.put_layer(layer);
                 }
-                Message::TessellatedLayer(message) => {
+                Message::LayerTessellated(message) => {
                     let layer: StoredLayer = message.to_stored_layer();
 
                     tracing::debug!(

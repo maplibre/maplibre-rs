@@ -5,8 +5,11 @@ use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::WorldTileCoords,
     io::{
+        geometry_index::TileIndex,
         tile_repository::StoredLayer,
-        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
+        transferables::{
+            IndexedLayer, TessellatedLayer, TileTessellated, Transferables, UnavailableLayer,
+        },
     },
     render::ShaderVertex,
     tile::Layer,
@@ -67,6 +70,10 @@ impl UnavailableLayer for LinearUnavailableLayer {
             coords: WrapperWorldTileCoords::wrap(coords),
             layer_name: new_layer_name,
         }
+    }
+
+    fn coords(&self) -> &WorldTileCoords {
+        &self.coords.0
     }
 
     fn to_stored_layer(self) -> StoredLayer {
@@ -200,6 +207,10 @@ impl TessellatedLayer for LinearTessellatedLayer {
         Self { data }
     }
 
+    fn coords(&self) -> &WorldTileCoords {
+        &self.data.coords.0
+    }
+
     fn to_stored_layer(self) -> StoredLayer {
         // TODO: Avoid copies here
         StoredLayer::TessellatedLayer {
@@ -218,10 +229,34 @@ impl TessellatedLayer for LinearTessellatedLayer {
     }
 }
 
+#[derive(Copy, Clone, Pod, Zeroable)]
+#[repr(C)]
+pub struct LinearIndexedLayer {
+    pub coords: WrapperWorldTileCoords,
+}
+
+impl From<(WorldTileCoords, TileIndex)> for LinearIndexedLayer {
+    fn from(_: (WorldTileCoords, TileIndex)) -> Self {
+        todo!()
+    }
+}
+
+impl IndexedLayer for LinearIndexedLayer {
+    fn coords(&self) -> &WorldTileCoords {
+        &self.coords.0
+    }
+
+    fn to_tile_index(self) -> TileIndex {
+        // FIXME replace this stub implementation
+        TileIndex::Linear { list: vec![] }
+    }
+}
+
 pub struct LinearTransferables;
 
 impl Transferables for LinearTransferables {
     type TileTessellated = LinearTileTessellated;
     type UnavailableLayer = LinearUnavailableLayer;
     type TessellatedLayer = LinearTessellatedLayer;
+    type IndexedLayer = LinearIndexedLayer;
 }
