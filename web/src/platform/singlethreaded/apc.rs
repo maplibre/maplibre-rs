@@ -1,4 +1,4 @@
-use std::{cell::RefCell, mem, rc::Rc};
+use std::{cell::RefCell, mem, mem::size_of, rc::Rc, slice};
 
 use js_sys::Uint8Array;
 use log::info;
@@ -15,7 +15,8 @@ use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
 use crate::{
     platform::singlethreaded::transferables::{
-        InnerData, LinearTessellatedLayer, LinearTransferables,
+        InnerData, LinearLayerIndexed, LinearLayerTesselated, LinearLayerUnavailable,
+        LinearTileTessellated, LinearTransferables,
     },
     WHATWGFetchHttpClient,
 };
@@ -62,40 +63,61 @@ trait SerializableMessage {
 
 impl SerializableMessage for Message<LinearTransferables> {
     fn serialize(&self) -> &[u8] {
-        match self {
-            Message::TileTessellated(message) => bytemuck::bytes_of(message),
-            Message::LayerUnavailable(message) => bytemuck::bytes_of(message),
-            Message::LayerTessellated(message) => bytemuck::bytes_of(message.data.as_ref()),
-            Message::LayerIndexed(message) => bytemuck::bytes_of(message),
+        unsafe {
+            match self {
+                // TODO https://github.com/Lokathor/bytemuck/blob/518baf9c0b73c92b4ea4406fe15e005c6d71535a/src/internal.rs#L333
+                Message::TileTessellated(message) => slice::from_raw_parts(
+                    message as *const LinearTileTessellated as *mut u8,
+                    size_of::<LinearTileTessellated>(),
+                ),
+                Message::LayerUnavailable(message) => slice::from_raw_parts(
+                    message as *const LinearLayerUnavailable as *mut u8,
+                    size_of::<LinearLayerUnavailable>(),
+                ),
+                Message::LayerTessellated(message) => slice::from_raw_parts(
+                    message.data.as_ref() as *const InnerData as *mut u8,
+                    size_of::<InnerData>(),
+                ),
+                Message::LayerIndexed(message) => slice::from_raw_parts(
+                    message as *const LinearLayerIndexed as *mut u8,
+                    size_of::<LinearLayerIndexed>(),
+                ),
+            }
         }
     }
 
     fn deserialize(tag: SerializedMessageTag, data: Uint8Array) -> Message<UsedTransferables> {
-        match tag {
-            SerializedMessageTag::TileTessellated => {
-                Message::<UsedTransferables>::TileTessellated(*bytemuck::from_bytes::<
-                    <UsedTransferables as Transferables>::TileTessellated,
-                >(&data.to_vec()))
-            }
-            SerializedMessageTag::LayerUnavailable => {
-                Message::<UsedTransferables>::LayerUnavailable(*bytemuck::from_bytes::<
-                    <UsedTransferables as Transferables>::UnavailableLayer,
-                >(&data.to_vec()))
-            }
-            SerializedMessageTag::LayerTessellated => {
-                Message::<UsedTransferables>::LayerTessellated(LinearTessellatedLayer {
-                    data: unsafe {
-                        let mut uninit = Box::<InnerData>::new_zeroed();
-                        data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
+        type TileTessellated = <UsedTransferables as Transferables>::TileTessellated;
+        type UnavailableLayer = <UsedTransferables as Transferables>::LayerUnavailable;
+        type IndexedLayer = <UsedTransferables as Transferables>::LayerIndexed;
+        unsafe {
+            // TODO: https://github.com/Lokathor/bytemuck/blob/518baf9c0b73c92b4ea4406fe15e005c6d71535a/src/internal.rs#L159
+            match tag {
+                SerializedMessageTag::TileTessellated => {
+                    Message::<UsedTransferables>::TileTessellated(
+                        (&*(data.to_vec().as_slice() as *const [u8] as *const TileTessellated))
+                            .clone(),
+                    )
+                }
+                SerializedMessageTag::LayerUnavailable => {
+                    Message::<UsedTransferables>::LayerUnavailable(
+                        (&*(data.to_vec().as_slice() as *const [u8] as *const UnavailableLayer))
+                            .clone(),
+                    )
+                }
+                SerializedMessageTag::LayerTessellated => {
+                    Message::<UsedTransferables>::LayerTessellated(LinearLayerTesselated {
+                        data: unsafe {
+                            let mut uninit = Box::<InnerData>::new_zeroed();
+                            data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
 
-                        uninit.assume_init()
-                    },
-                })
-            }
-            SerializedMessageTag::LayerIndexed => {
-                Message::<UsedTransferables>::LayerIndexed(*bytemuck::from_bytes::<
-                    <UsedTransferables as Transferables>::IndexedLayer,
-                >(&data.to_vec()))
+                            uninit.assume_init()
+                        },
+                    })
+                }
+                SerializedMessageTag::LayerIndexed => Message::<UsedTransferables>::LayerIndexed(
+                    (&*(data.to_vec().as_slice() as *const [u8] as *const IndexedLayer)).clone(),
+                ),
             }
         }
     }
