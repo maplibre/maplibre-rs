@@ -10,13 +10,13 @@ use crate::{
 pub trait TileTessellated: Send {
     fn new(coords: WorldTileCoords) -> Self;
 
-    fn coords(&self) -> &WorldTileCoords;
+    fn coords(&self) -> WorldTileCoords;
 }
 
 pub trait UnavailableLayer: Send {
     fn new(coords: WorldTileCoords, layer_name: String) -> Self;
 
-    fn coords(&self) -> &WorldTileCoords;
+    fn coords(&self) -> WorldTileCoords;
 
     fn to_stored_layer(self) -> StoredLayer;
 }
@@ -29,13 +29,13 @@ pub trait TessellatedLayer: Send {
         layer_data: Layer,
     ) -> Self;
 
-    fn coords(&self) -> &WorldTileCoords;
+    fn coords(&self) -> WorldTileCoords;
 
     fn to_stored_layer(self) -> StoredLayer;
 }
 
 pub trait IndexedLayer: Send + From<(WorldTileCoords, TileIndex)> {
-    fn coords(&self) -> &WorldTileCoords;
+    fn coords(&self) -> WorldTileCoords;
 
     fn to_tile_index(self) -> TileIndex;
 }
@@ -49,8 +49,8 @@ impl TileTessellated for DefaultTileTessellated {
         Self { coords }
     }
 
-    fn coords(&self) -> &WorldTileCoords {
-        &self.coords
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
     }
 }
 
@@ -64,8 +64,8 @@ impl UnavailableLayer for DefaultLayerUnavailable {
         Self { coords, layer_name }
     }
 
-    fn coords(&self) -> &WorldTileCoords {
-        &self.coords
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
     }
 
     fn to_stored_layer(self) -> StoredLayer {
@@ -99,8 +99,8 @@ impl TessellatedLayer for DefaultLayerTesselated {
         }
     }
 
-    fn coords(&self) -> &WorldTileCoords {
-        &self.coords
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
     }
 
     fn to_stored_layer(self) -> StoredLayer {
@@ -125,8 +125,8 @@ impl From<(WorldTileCoords, TileIndex)> for DefaultLayerIndexed {
 }
 
 impl IndexedLayer for DefaultLayerIndexed {
-    fn coords(&self) -> &WorldTileCoords {
-        &self.coords
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
     }
 
     fn to_tile_index(self) -> TileIndex {

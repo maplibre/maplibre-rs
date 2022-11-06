@@ -17,6 +17,8 @@
       <sourceFolder url="file://$MODULE_DIR$/maplibre-demo/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-winit/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/web/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/web/transferable-memory-derive/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/web/transferable-memory/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/docs/book" />
       <excludeFolder url="file://$MODULE_DIR$/web/lib/.parcel-cache" />

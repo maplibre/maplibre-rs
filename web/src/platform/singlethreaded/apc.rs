@@ -1,4 +1,4 @@
-use std::{cell::RefCell, mem, mem::size_of, rc::Rc, slice};
+use std::{cell::RefCell, mem, rc::Rc};
 
 use js_sys::Uint8Array;
 use log::info;
@@ -15,8 +15,7 @@ use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
 use crate::{
     platform::singlethreaded::transferables::{
-        InnerData, LinearLayerIndexed, LinearLayerTesselated, LinearLayerUnavailable,
-        LinearTileTessellated, LinearTransferables,
+        InnerData, LinearLayerTesselated, LinearTransferables,
     },
     WHATWGFetchHttpClient,
 };
@@ -66,22 +65,12 @@ impl SerializableMessage for Message<LinearTransferables> {
         unsafe {
             match self {
                 // TODO https://github.com/Lokathor/bytemuck/blob/518baf9c0b73c92b4ea4406fe15e005c6d71535a/src/internal.rs#L333
-                Message::TileTessellated(message) => slice::from_raw_parts(
-                    message as *const LinearTileTessellated as *mut u8,
-                    size_of::<LinearTileTessellated>(),
-                ),
-                Message::LayerUnavailable(message) => slice::from_raw_parts(
-                    message as *const LinearLayerUnavailable as *mut u8,
-                    size_of::<LinearLayerUnavailable>(),
-                ),
-                Message::LayerTessellated(message) => slice::from_raw_parts(
-                    message.data.as_ref() as *const InnerData as *mut u8,
-                    size_of::<InnerData>(),
-                ),
-                Message::LayerIndexed(message) => slice::from_raw_parts(
-                    message as *const LinearLayerIndexed as *mut u8,
-                    size_of::<LinearLayerIndexed>(),
-                ),
+                Message::TileTessellated(message) => transferable_memory::bytes_of(message),
+                Message::LayerUnavailable(message) => transferable_memory::bytes_of(message),
+                Message::LayerTessellated(message) => {
+                    transferable_memory::bytes_of(message.data.as_ref())
+                }
+                Message::LayerIndexed(message) => transferable_memory::bytes_of(message),
             }
         }
     }
@@ -94,15 +83,13 @@ impl SerializableMessage for Message<LinearTransferables> {
             // TODO: https://github.com/Lokathor/bytemuck/blob/518baf9c0b73c92b4ea4406fe15e005c6d71535a/src/internal.rs#L159
             match tag {
                 SerializedMessageTag::TileTessellated => {
-                    Message::<UsedTransferables>::TileTessellated(
-                        (&*(data.to_vec().as_slice() as *const [u8] as *const TileTessellated))
-                            .clone(),
-                    )
+                    Message::<UsedTransferables>::TileTessellated(*transferable_memory::from_bytes(
+                        &data.to_vec(),
+                    ))
                 }
                 SerializedMessageTag::LayerUnavailable => {
                     Message::<UsedTransferables>::LayerUnavailable(
-                        (&*(data.to_vec().as_slice() as *const [u8] as *const UnavailableLayer))
-                            .clone(),
+                        *transferable_memory::from_bytes(&data.to_vec()),
                     )
                 }
                 SerializedMessageTag::LayerTessellated => {
@@ -116,7 +103,7 @@ impl SerializableMessage for Message<LinearTransferables> {
                     })
                 }
                 SerializedMessageTag::LayerIndexed => Message::<UsedTransferables>::LayerIndexed(
-                    (&*(data.to_vec().as_slice() as *const [u8] as *const IndexedLayer)).clone(),
+                    *transferable_memory::from_bytes(&data.to_vec()),
                 ),
             }
         }
