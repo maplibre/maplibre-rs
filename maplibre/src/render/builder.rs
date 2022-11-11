@@ -110,7 +110,7 @@ impl UninitializedRenderer {
         Ok(Renderer::initialize_headless(
             existing_window,
             self.wgpu_settings.clone(),
-            self.renderer_settings.clone(),
+            self.renderer_settings,
         )
         .await?)
     }
