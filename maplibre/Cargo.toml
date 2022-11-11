@@ -85,6 +85,7 @@ smallvec = "1.9.0"
 
 # Headless
 png = { version = "0.17.5", optional = true }
+image = { version = "0.24", default-features = false, features = ["jpeg", "webp"] }
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }

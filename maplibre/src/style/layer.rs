@@ -6,6 +6,8 @@ use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 
+use crate::style::raster::RasterLayer;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {
     #[serde(rename = "background-color")]
@@ -40,6 +42,8 @@ pub enum LayerPaint {
     Line(LinePaint),
     #[serde(rename = "fill")]
     Fill(FillPaint),
+    #[serde(rename = "raster")]
+    Raster(RasterLayer),
 }
 
 impl LayerPaint {
@@ -51,6 +55,7 @@ impl LayerPaint {
                 .map(|color| color.clone().into()),
             LayerPaint::Line(paint) => paint.line_color.as_ref().map(|color| color.clone().into()),
             LayerPaint::Fill(paint) => paint.fill_color.as_ref().map(|color| color.clone().into()),
+            LayerPaint::Raster(_) => None,
         }
     }
 }

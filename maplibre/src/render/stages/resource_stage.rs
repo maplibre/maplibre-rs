@@ -2,10 +2,13 @@
 
 use std::mem::size_of;
 
+use crate::render::settings::Msaa;
 use crate::{
     context::MapContext,
     render::{
-        resource::{BackingBufferDescriptor, BufferPool, Globals, RenderPipeline, Texture},
+        resource::{
+            BackingBufferDescriptor, BufferPool, Globals, RasterResources, RenderPipeline, Texture,
+        },
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
@@ -52,6 +55,7 @@ impl Stage for ResourceStage {
                     size.width(),
                     size.height(),
                     settings.msaa,
+                    wgpu::TextureUsages::RENDER_ATTACHMENT,
                 )
             },
             &(size.width(), size.height()),
@@ -67,6 +71,7 @@ impl Stage for ResourceStage {
                         size.width(),
                         size.height(),
                         settings.msaa,
+                        wgpu::TextureUsages::RENDER_ATTACHMENT,
                     ))
                 } else {
                     None
@@ -94,8 +99,8 @@ impl Stage for ResourceStage {
             ))
         });
 
-        state.tile_pipeline.initialize(|| {
-            let tile_shader = shaders::TileShader {
+        state.vector_tile_pipeline.initialize(|| {
+            let tile_shader = shaders::VectorTileShader {
                 format: settings.texture_format,
             };
 
@@ -104,6 +109,7 @@ impl Stage for ResourceStage {
                 tile_shader.describe_vertex(),
                 tile_shader.describe_fragment(),
                 true,
+                false,
                 false,
                 false,
                 false,
@@ -118,6 +124,19 @@ impl Stage for ResourceStage {
             pipeline
         });
 
+        state.raster_resources.initialize(|| {
+            let shader = shaders::RasterTileShader {
+                format: settings.texture_format,
+            };
+
+            let mut raster_resources = RasterResources::default();
+            raster_resources.set_msaa(Msaa { samples: 1 });
+            raster_resources.set_sampler(device);
+            raster_resources.set_raster_pipeline(device, &settings, &shader);
+
+            raster_resources
+        });
+
         state.mask_pipeline.initialize(|| {
             let mask_shader = shaders::TileMaskShader {
                 format: settings.texture_format,
@@ -130,6 +149,7 @@ impl Stage for ResourceStage {
                 mask_shader.describe_fragment(),
                 false,
                 true,
+                false,
                 false,
                 false,
             )

@@ -2,7 +2,8 @@
 
 use async_trait::async_trait;
 
-use crate::{coords::WorldTileCoords, error::Error, style::source::TileAddressingScheme};
+use crate::io::source_type::SourceType;
+use crate::{coords::WorldTileCoords, error::Error};
 
 /// A closure that returns a HTTP client.
 pub type HTTPClientFactory<HC> = dyn Fn() -> HC;
@@ -47,8 +48,12 @@ where
         Self { http }
     }
 
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
-        self.http.fetch(coords).await
+    pub async fn fetch(
+        &self,
+        coords: &WorldTileCoords,
+        source_type: &SourceType,
+    ) -> Result<Vec<u8>, Error> {
+        self.http.fetch(coords, source_type).await
     }
 }
 
@@ -62,18 +67,24 @@ where
         }
     }
 
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
-        let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
+    pub async fn fetch(
+        &self,
+        coords: &WorldTileCoords,
+        source_type: &SourceType,
+    ) -> Result<Vec<u8>, Error> {
+        // let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
         self.inner_client
-            .fetch(
-                format!(
-                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
-                    x = tile_coords.x,
-                    y = tile_coords.y,
-                    z = tile_coords.z
-                )
-                .as_str(),
-            )
+            .fetch(&source_type.format(&coords).as_str())
             .await
+        /*.fetch(
+            format!(
+                "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
+                x = tile_coords.x,
+                y = tile_coords.y,
+                z = tile_coords.z
+            )
+            .as_str(),
+        )
+        .await*/
     }
 }

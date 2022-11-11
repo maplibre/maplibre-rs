@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::style::{
     layer::{LayerPaint, LinePaint, StyleLayer},
+    raster::RasterLayer,
     source::Source,
 };
 
@@ -32,7 +33,7 @@ impl Default for Style {
             sources: Default::default(),
             center: Some([46.5197, 6.6323]),
             pitch: Some(0.0),
-            zoom: Some(13.0),
+            zoom: Some(1.0),
             layers: vec![
                 StyleLayer {
                     index: 0,
@@ -137,6 +138,17 @@ impl Default for Style {
                     })),
                     source: None,
                     source_layer: Some("boundary".to_string()),
+                },
+                StyleLayer {
+                    index: 8,
+                    id: "raster".to_string(),
+                    typ: "raster".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Raster(RasterLayer::default())),
+                    source: None,
+                    source_layer: Some("raster".to_string()),
                 },
             ],
         }

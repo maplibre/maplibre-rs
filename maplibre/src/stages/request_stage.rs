@@ -2,6 +2,7 @@
 
 use std::{collections::HashSet, rc::Rc};
 
+use crate::io::source_type::{RasterSource, SourceType /*, TessellateSource*/};
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
@@ -10,7 +11,7 @@ use crate::{
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message},
         pipeline::{PipelineContext, Processable},
-        tile_pipelines::build_vector_tile_pipeline,
+        tile_pipelines::build_raster_tile_pipeline,
         tile_repository::TileRepository,
         transferables::{Transferables, UnavailableLayer},
         TileRequest,
@@ -77,7 +78,10 @@ pub fn schedule<
         let coords = input.coords;
         let client = context.source_client();
 
-        match client.fetch(&coords).await {
+        match client
+            .fetch(&coords, &SourceType::Raster(RasterSource::default()))
+            .await
+        {
             Ok(data) => {
                 let data = data.into_boxed_slice();
 
@@ -86,8 +90,9 @@ pub fn schedule<
                     phantom_t: Default::default(),
                     phantom_hc: Default::default(),
                 });
-                let pipeline = build_vector_tile_pipeline();
-                pipeline.process((input, data), &mut pipeline_context)?;
+
+                let pipeline = build_raster_tile_pipeline();
+                pipeline.process((input, data), &mut pipeline_context);
             }
             Err(e) => {
                 log::error!("{:?}", &e);

@@ -16,6 +16,7 @@ pub struct TilePipeline {
     update_stencil: bool,
     debug_stencil: bool,
     wireframe: bool,
+    raster: bool,
     settings: RendererSettings,
 
     vertex_state: VertexState,
@@ -31,12 +32,14 @@ impl TilePipeline {
         update_stencil: bool,
         debug_stencil: bool,
         wireframe: bool,
+        raster: bool,
     ) -> Self {
         TilePipeline {
             bind_globals,
             update_stencil,
             debug_stencil,
             wireframe,
+            raster,
             settings,
             vertex_state,
             fragment_state,
@@ -84,6 +87,25 @@ impl RenderPipeline for TilePipeline {
                     },
                     count: None,
                 }]])
+            } else if self.raster {
+                Some(vec![vec![
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ]])
             } else {
                 None
             },

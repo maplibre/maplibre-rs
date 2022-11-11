@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use crate::io::source_type::{SourceType, TessellateSource};
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
@@ -97,7 +98,13 @@ impl HeadlessMap {
     ) -> Result<StoredTile, Error> {
         let source_client = self.kernel.source_client();
 
-        let data = source_client.fetch(&coords).await?.into_boxed_slice();
+        let data = source_client
+            .fetch(
+                &coords,
+                &SourceType::Tessellate(TessellateSource::default()),
+            )
+            .await?
+            .into_boxed_slice();
 
         let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
         let pipeline = build_vector_tile_pipeline();

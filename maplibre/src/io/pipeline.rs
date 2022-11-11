@@ -32,6 +32,14 @@ pub trait PipelineProcessor: Downcast {
     ) -> Result<(), Error> {
         Ok(())
     }
+    fn layer_raster_finished(
+        &mut self,
+        _coords: &WorldTileCoords,
+        _layer_name: String,
+        _layer_data: Vec<u8>,
+    ) -> Result<(), Error> {
+        Ok(())
+    }
     fn layer_indexing_finished(
         &mut self,
         _coords: &WorldTileCoords,

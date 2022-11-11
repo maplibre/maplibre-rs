@@ -5,6 +5,7 @@ use std::{marker::PhantomData, rc::Rc};
 use geozero::mvt::tile;
 use request_stage::RequestStage;
 
+use crate::io::transferables::RasterLayer;
 use crate::{
     coords::WorldTileCoords,
     environment::Environment,
@@ -72,6 +73,17 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
                 feature_indices,
                 layer_data,
             )))
+    }
+
+    fn layer_raster_finished(
+        &mut self,
+        coords: &WorldTileCoords,
+        layer_name: String,
+        layer_data: Vec<u8>,
+    ) -> Result<(), Error> {
+        self.context.send(Message::LayerRaster(T::LayerRaster::new(
+            *coords, layer_name, layer_data,
+        )))
     }
 
     fn layer_indexing_finished(

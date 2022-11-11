@@ -11,6 +11,7 @@ pub mod geometry_index;
 pub mod pipeline;
 pub mod scheduler;
 pub mod source_client;
+pub mod source_type;
 #[cfg(feature = "embed-static-tiles")]
 pub mod static_tile_fetcher;
 pub mod tile_pipelines;

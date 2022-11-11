@@ -65,7 +65,7 @@ impl Deref for TextureView {
 }
 
 pub struct Texture {
-    pub size: (u32, u32),
+    pub size: wgpu::Extent3d,
     pub texture: wgpu::Texture,
     pub view: TextureView,
 }
@@ -78,23 +78,26 @@ impl Texture {
         width: u32,
         height: u32,
         msaa: Msaa,
+        usage: wgpu::TextureUsages,
     ) -> Texture {
+        let size = wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        };
+
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label,
-            size: wgpu::Extent3d {
-                width,
-                height,
-                depth_or_array_layers: 1,
-            },
+            size,
             mip_level_count: 1,
             sample_count: msaa.samples,
             dimension: wgpu::TextureDimension::D2,
             format,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            usage,
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         Self {
-            size: (width, height),
+            size,
             texture,
             view: TextureView::TextureView(view),
         }
@@ -105,6 +108,7 @@ impl HasChanged for Texture {
     type Criteria = (u32, u32);
 
     fn has_changed(&self, criteria: &Self::Criteria) -> bool {
-        !self.size.eq(criteria)
+        let size = (self.size.width, self.size.height);
+        !size.eq(criteria)
     }
 }
