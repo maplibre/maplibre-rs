@@ -38,6 +38,12 @@ impl RendererBuilder {
     }
 }
 
+impl Default for RendererBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub enum InitializationResult {
     Initialized(InitializedRenderer),
     Uninizalized(UninitializedRenderer),
