@@ -3,7 +3,18 @@ use std::{
     mem::{align_of, size_of},
 };
 
-pub unsafe trait MemoryTransferable {}
+pub unsafe trait MemoryTransferable {
+    fn to_array_buffer(&self) {
+        unsafe {
+            let serialized_array_buffer = js_sys::ArrayBuffer::new(data.len() as u32);
+            let serialized_array = js_sys::Uint8Array::new(&serialized_array_buffer);
+            unsafe {
+                serialized_array.set(&Uint8Array::view(data), 0);
+            }
+            serialized_array_buffer
+        }
+    }
+}
 
 unsafe impl<T, const N: usize> MemoryTransferable for [T; N] where T: MemoryTransferable {}
 
@@ -47,13 +58,6 @@ pub enum MemoryTransferableError {
     /// elements. When casting an individual `T`, `&T`, or `&mut T` value the
     /// source size and destination size must be an exact match.
     SizeMismatch,
-    /// For this type of cast the alignments must be exactly the same and they
-    /// were not so now you're sad.
-    ///
-    /// This error is generated **only** by operations that cast allocated types
-    /// (such as `Box` and `Vec`), because in that case the alignment must stay
-    /// exact.
-    AlignmentMismatch,
 }
 
 impl core::fmt::Display for MemoryTransferableError {
@@ -97,7 +101,7 @@ pub(crate) unsafe fn try_from_bytes<T: Copy>(s: &[u8]) -> Result<&T, MemoryTrans
 /// Any ZST becomes an empty slice, and in that case the pointer value of that
 /// empty slice might not match the pointer value of the input reference.
 #[inline(always)]
-pub unsafe fn bytes_of<T: Copy>(t: &T) -> &[u8] {
+pub(crate) unsafe fn bytes_of<T: Copy>(t: &T) -> &[u8] {
     if size_of::<T>() == 0 {
         &[]
     } else {

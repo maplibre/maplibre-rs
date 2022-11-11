@@ -61,10 +61,9 @@ trait SerializableMessage {
 }
 
 impl SerializableMessage for Message<LinearTransferables> {
-    fn serialize(&self) -> &[u8] {
-        unsafe {
+    fn serialize(&self) -> js_sys::ArrayBuffer {
+        let data = unsafe {
             match self {
-                // TODO https://github.com/Lokathor/bytemuck/blob/518baf9c0b73c92b4ea4406fe15e005c6d71535a/src/internal.rs#L333
                 Message::TileTessellated(message) => transferable_memory::bytes_of(message),
                 Message::LayerUnavailable(message) => transferable_memory::bytes_of(message),
                 Message::LayerTessellated(message) => {
@@ -72,7 +71,14 @@ impl SerializableMessage for Message<LinearTransferables> {
                 }
                 Message::LayerIndexed(message) => transferable_memory::bytes_of(message),
             }
+        };
+
+        let serialized_array_buffer = js_sys::ArrayBuffer::new(data.len() as u32);
+        let serialized_array = js_sys::Uint8Array::new(&serialized_array_buffer);
+        unsafe {
+            serialized_array.set(&Uint8Array::view(data), 0);
         }
+        serialized_array_buffer
     }
 
     fn deserialize(tag: SerializedMessageTag, data: Uint8Array) -> Message<UsedTransferables> {
@@ -80,7 +86,6 @@ impl SerializableMessage for Message<LinearTransferables> {
         type UnavailableLayer = <UsedTransferables as Transferables>::LayerUnavailable;
         type IndexedLayer = <UsedTransferables as Transferables>::LayerIndexed;
         unsafe {
-            // TODO: https://github.com/Lokathor/bytemuck/blob/518baf9c0b73c92b4ea4406fe15e005c6d71535a/src/internal.rs#L159
             match tag {
                 SerializedMessageTag::TileTessellated => {
                     Message::<UsedTransferables>::TileTessellated(*transferable_memory::from_bytes(
@@ -127,20 +132,21 @@ pub struct PassingContext {
 impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
     fn send(&self, data: Message<UsedTransferables>) -> Result<(), Error> {
         let tag = data.tag();
-        let serialized = data.serialize();
-
-        let serialized_array_buffer = js_sys::ArrayBuffer::new(serialized.len() as u32);
-        let serialized_array = js_sys::Uint8Array::new(&serialized_array_buffer);
-        unsafe {
-            serialized_array.set(&Uint8Array::view(serialized), 0);
-        }
+        let serialized_array_buffer = data.serialize();
 
         let global: DedicatedWorkerGlobalScope =
             js_sys::global().dyn_into().map_err(|_e| Error::APC)?;
         let array = js_sys::Array::new();
         array.push(&JsValue::from(tag as u32));
         array.push(&serialized_array_buffer);
-        global.post_message(&array).map_err(|_e| Error::APC)
+
+        let transfer = js_sys::Array::new();
+        array.push(&serialized_array_buffer);
+
+        // TODO: Verify transfer
+        global
+            .post_message_with_transfer(&array, &transfer)
+            .map_err(|_e| Error::APC)
     }
 
     fn source_client(&self) -> &SourceClient<UsedHttpClient> {
@@ -215,7 +221,7 @@ impl AsyncProcedureCall<UsedHttpClient> for PassingAsyncProcedureCall {
 /// Entry point invoked by the worker.
 #[wasm_bindgen]
 pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> Result<(), JsValue> {
-    let procedure: AsyncProcedure<UsedContext> = unsafe { std::mem::transmute(procedure_ptr) };
+    let procedure: AsyncProcedure<UsedContext> = unsafe { mem::transmute(procedure_ptr) };
 
     let input = serde_json::from_str::<Input>(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
 
