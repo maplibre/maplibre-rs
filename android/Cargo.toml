@@ -1,9 +1,9 @@
 [package]
 name = "maplibre-android" # Naming this "android" is not possible. Compilation fails.
 version = "0.1.0"
-description = ""
 publish = false
 
+description.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true

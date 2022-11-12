@@ -1,9 +1,9 @@
 [package]
 name = "maplibre-build-tools"
+version = "0.1.0"
 description = "A library with build tools for maplibre-rs"
 readme = "../README.md"
 
-version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true

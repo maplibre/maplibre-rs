@@ -1,9 +1,9 @@
 [package]
 name = "maplibre"
+version = "0.1.0"
 build = "build.rs"
 readme = "../README.md"
 
-version.workspace = true
 description.workspace = true
 edition.workspace = true
 rust-version.workspace = true

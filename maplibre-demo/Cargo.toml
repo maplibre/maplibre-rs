@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Demo of maplibre-re"
 readme = "../README.md"
 
-version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
