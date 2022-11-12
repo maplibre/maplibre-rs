@@ -37,6 +37,12 @@
 <span id="37">37</span>
 <span id="38">38</span>
 <span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>instant::Instant;
@@ -74,6 +80,12 @@
             <span class="self">self</span>.frame_count = <span class="number">0</span>;
             <span class="self">self</span>.next_report = now + Duration::from_secs(<span class="number">1</span>);
         }
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>FPSMeter {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
     }
 }
 </code></pre></div>

@@ -299,6 +299,18 @@
 <span id="299">299</span>
 <span id="300">300</span>
 <span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Geometry index.
 
 </span><span class="kw">use </span>std::collections::{BTreeMap, HashMap};
@@ -360,6 +372,12 @@
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>}
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>GeometryIndex {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
     }
 }
 
@@ -496,6 +514,12 @@
 
     <span class="kw">pub fn </span>get_geometries(<span class="self">self</span>) -&gt; Vec&lt;IndexedGeometry&lt;f64&gt;&gt; {
         <span class="self">self</span>.geometries
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>IndexProcessor {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
     }
 }
 

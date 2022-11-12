@@ -119,6 +119,12 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     error::Error,
     render::{
@@ -156,6 +162,12 @@
             wgpu_settings: <span class="self">self</span>.wgpu_settings.unwrap_or_default(),
             renderer_settings: <span class="self">self</span>.renderer_settings.unwrap_or_default(),
         }
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>RendererBuilder {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
     }
 }
 
@@ -231,7 +243,7 @@
         <span class="prelude-val">Ok</span>(Renderer::initialize_headless(
             existing_window,
             <span class="self">self</span>.wgpu_settings.clone(),
-            <span class="self">self</span>.renderer_settings.clone(),
+            <span class="self">self</span>.renderer_settings,
         )
         .<span class="kw">await</span><span class="question-mark">?</span>)
     }

@@ -30,6 +30,12 @@
 <span id="30">30</span>
 <span id="31">31</span>
 <span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::future::Future;
 
 <span class="kw">use crate</span>::{error::Error, io::scheduler::Scheduler};
@@ -60,6 +66,12 @@
         </span>T: Future&lt;Output = ()&gt; + <span class="lifetime">&#39;static</span>,
     {
         <span class="prelude-val">Ok</span>(())
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>TokioScheduler {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
     }
 }
 </code></pre></div>

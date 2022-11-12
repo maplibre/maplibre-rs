@@ -525,9 +525,6 @@
 <span id="525">525</span>
 <span id="526">526</span>
 <span id="527">527</span>
-<span id="528">528</span>
-<span id="529">529</span>
-<span id="530">530</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -794,11 +791,8 @@
         <span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
         </span><span class="kw">let </span>trace_path = <span class="prelude-val">None</span>;
 
-        <span class="comment">// Maybe get features and limits based on what is supported by the adapter/backend
-        </span><span class="kw">let </span><span class="kw-2">mut </span>features = wgpu::Features::empty();
-        <span class="kw">let </span><span class="kw-2">mut </span>limits = settings.limits.clone();
-
-        features = adapter.features() | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
+        <span class="kw">let </span><span class="kw-2">mut </span>features =
+            adapter.features() | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
         <span class="kw">if </span>adapter_info.device_type == wgpu::DeviceType::DiscreteGpu {
             <span class="comment">// `MAPPABLE_PRIMARY_BUFFERS` can have a significant, negative performance impact for
             // discrete GPUs due to having to transfer data across the PCI-E bus and so it
@@ -806,7 +800,7 @@
             // integrated GPUs.
             </span>features -= wgpu::Features::MAPPABLE_PRIMARY_BUFFERS;
         }
-        limits = adapter.limits();
+        <span class="kw">let </span><span class="kw-2">mut </span>limits = adapter.limits();
 
         <span class="comment">// Enforce the disabled features
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(disabled_features) = settings.disabled_features {
