@@ -1,6 +1,13 @@
 [package]
 name = "maplibre-winit"
-version = "0.0.1"
+
+version.workspace = true
+description.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
 tokio = { version = "1.19.2", features = ["rt"] }

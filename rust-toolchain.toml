@@ -2,4 +2,4 @@
 # The CI will not use the rust-toolchain.toml file to build this project.
 # The CI might use it though to build other Rust binaries, required for building maplibre-rs.
 # This file is here to give IDEs a hint about which Rust version to use.
-channel = "stable"
+channel = "1.64"

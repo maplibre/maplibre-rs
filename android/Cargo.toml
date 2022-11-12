@@ -4,6 +4,12 @@ version = "0.1.0"
 description = ""
 publish = false
 
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
+
 [dependencies]
 maplibre = { path = "../maplibre", features = ["thread-safe-futures"] }
 maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
