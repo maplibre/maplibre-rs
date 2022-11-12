@@ -140,13 +140,10 @@ impl TileRepository {
 
     /// Create a new tile.
     pub fn create_tile(&mut self, coords: WorldTileCoords) -> bool {
-        if let Some(entry) = coords.build_quad_key().map(|key| self.tree.entry(key)) {
-            match entry {
-                btree_map::Entry::Vacant(entry) => {
-                    entry.insert(StoredTile::pending(coords));
-                }
-                _ => {}
-            }
+        if let Some(btree_map::Entry::Vacant(entry)) =
+            coords.build_quad_key().map(|key| self.tree.entry(key))
+        {
+            entry.insert(StoredTile::pending(coords));
         }
         true
     }
