@@ -582,6 +582,12 @@ impl RingIndex {
     }
 }
 
+impl Default for RingIndex {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use lyon::tessellation::VertexBuffers;

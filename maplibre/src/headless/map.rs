@@ -117,7 +117,7 @@ impl HeadlessMap {
             &mut pipeline_context,
         );
 
-        let mut processor = pipeline_context
+        let processor = pipeline_context
             .take_processor::<HeadlessPipelineProcessor>()
             .expect("Unable to get processor");
 

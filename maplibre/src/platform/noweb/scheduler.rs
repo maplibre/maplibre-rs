@@ -30,3 +30,9 @@ impl Scheduler for TokioScheduler {
         Ok(())
     }
 }
+
+impl Default for TokioScheduler {
+    fn default() -> Self {
+        Self::new()
+    }
+}

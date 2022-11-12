@@ -1,12 +1,14 @@
 [package]
 name = "maplibre-demo"
 version = "0.1.0"
-categories = []
-edition = "2021"
-authors = ["Maximilian Ammann <max@maxammann.org>"]
-license = "MIT OR Apache-2.0"
-description = "Demo of maplibre"
+description = "Demo of maplibre-re"
 readme = "../README.md"
+
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
 
 [features]
 web-webgl = ["maplibre/web-webgl"]
@@ -14,8 +16,8 @@ trace = ["maplibre/trace"]
 
 [dependencies]
 env_logger = "0.9.0"
-maplibre = { path = "../maplibre", version = "0.0.2", features = ["headless", "thread-safe-futures"]  }
-maplibre-winit = { path = "../maplibre-winit", version = "0.0.1"  }
+maplibre = { path = "../maplibre", version = "0.1.0", features = ["headless", "thread-safe-futures"]  }
+maplibre-winit = { path = "../maplibre-winit", version = "0.1.0"  }
 
 tile-grid = "0.3"
 
