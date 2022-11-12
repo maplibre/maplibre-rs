@@ -26,6 +26,8 @@ stable-install-clippy:
 
 nightly-toolchain:
   rustup toolchain install $NIGHTLY_TOOLCHAIN
+  # Without this, build could fail with rust not finding the 'core' crate
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN rustup target add wasm32-unknown-unknown
 
 nightly-override-toolchain:
   rustup override set $NIGHTLY_TOOLCHAIN
