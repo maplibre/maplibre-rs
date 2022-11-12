@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/stages/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/stages/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -109,97 +109,97 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
-</pre><pre class="rust"><code><span class="doccomment">//! [Stages](Stage) for requesting and preparing data</span>
+</pre><pre class="rust"><code><span class="doccomment">//! [Stages](Stage) for requesting and preparing data
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">rc::Rc</span>};
+</span><span class="kw">use </span>std::{marker::PhantomData, rc::Rc};
 
-<span class="kw">use</span> <span class="ident">geozero::mvt::tile</span>;
-<span class="kw">use</span> <span class="ident">request_stage::RequestStage</span>;
+<span class="kw">use </span>geozero::mvt::tile;
+<span class="kw">use </span>request_stage::RequestStage;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">coords::WorldTileCoords</span>,
-    <span class="ident">environment::Environment</span>,
-    <span class="ident">error::Error</span>,
-    <span class="ident">io</span>::{
-        <span class="ident">apc</span>::{<span class="ident">Context</span>, <span class="ident">Message</span>},
-        <span class="ident">geometry_index::IndexedGeometry</span>,
-        <span class="ident">pipeline::PipelineProcessor</span>,
-        <span class="ident">source_client::HttpClient</span>,
-        <span class="ident">transferables</span>::{<span class="ident">TessellatedLayer</span>, <span class="ident">TileTessellated</span>, <span class="ident">Transferables</span>, <span class="ident">UnavailableLayer</span>},
+<span class="kw">use crate</span>::{
+    coords::WorldTileCoords,
+    environment::Environment,
+    error::Error,
+    io::{
+        apc::{Context, Message},
+        geometry_index::IndexedGeometry,
+        pipeline::PipelineProcessor,
+        source_client::HttpClient,
+        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
     },
-    <span class="ident">kernel::Kernel</span>,
-    <span class="ident">render::ShaderVertex</span>,
-    <span class="ident">schedule::Schedule</span>,
-    <span class="ident">stages::populate_tile_store_stage::PopulateTileStore</span>,
-    <span class="ident">tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>},
+    kernel::Kernel,
+    render::ShaderVertex,
+    schedule::Schedule,
+    stages::populate_tile_store_stage::PopulateTileStore,
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
-<span class="kw">mod</span> <span class="ident">populate_tile_store_stage</span>;
-<span class="kw">mod</span> <span class="ident">request_stage</span>;
+<span class="kw">mod </span>populate_tile_store_stage;
+<span class="kw">mod </span>request_stage;
 
-<span class="doccomment">/// Register stages required for requesting and preparing new tiles.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register_stages</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Environment</span><span class="op">&gt;</span>(<span class="ident">schedule</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Schedule</span>, <span class="ident">kernel</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Kernel</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-    <span class="ident">schedule</span>.<span class="ident">add_stage</span>(<span class="string">&quot;request&quot;</span>, <span class="ident">RequestStage</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">kernel</span>.<span class="ident">clone</span>()));
-    <span class="ident">schedule</span>.<span class="ident">add_stage</span>(<span class="string">&quot;populate_tile_store&quot;</span>, <span class="ident">PopulateTileStore</span>::<span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">kernel</span>));
+<span class="doccomment">/// Register stages required for requesting and preparing new tiles.
+</span><span class="kw">pub fn </span>register_stages&lt;E: Environment&gt;(schedule: <span class="kw-2">&amp;mut </span>Schedule, kernel: Rc&lt;Kernel&lt;E&gt;&gt;) {
+    schedule.add_stage(<span class="string">&quot;request&quot;</span>, RequestStage::&lt;E&gt;::new(kernel.clone()));
+    schedule.add_stage(<span class="string">&quot;populate_tile_store&quot;</span>, PopulateTileStore::&lt;E&gt;::new(kernel));
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HeadedPipelineProcessor</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Transferables</span>, <span class="ident">HC</span>: <span class="ident">HttpClient</span>, <span class="ident">C</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">HC</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="ident">context</span>: <span class="ident">C</span>,
-    <span class="ident">phantom_t</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="ident">phantom_hc</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">HC</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>HeadedPipelineProcessor&lt;T: Transferables, HC: HttpClient, C: Context&lt;T, HC&gt;&gt; {
+    context: C,
+    phantom_t: PhantomData&lt;T&gt;,
+    phantom_hc: PhantomData&lt;HC&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span>, <span class="ident">T</span>: <span class="ident">Transferables</span>, <span class="ident">HC</span>: <span class="ident">HttpClient</span>, <span class="ident">C</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">HC</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">PipelineProcessor</span>
-    <span class="kw">for</span> <span class="ident">HeadedPipelineProcessor</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">HC</span>, <span class="ident">C</span><span class="op">&gt;</span>
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;c</span>, T: Transferables, HC: HttpClient, C: Context&lt;T, HC&gt;&gt; PipelineProcessor
+    <span class="kw">for </span>HeadedPipelineProcessor&lt;T, HC, C&gt;
 {
-    <span class="kw">fn</span> <span class="ident">tile_finished</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">context</span>
-            .<span class="ident">send</span>(<span class="ident">Message::TileTessellated</span>(<span class="ident">T::TileTessellated::new</span>(<span class="kw-2">*</span><span class="ident">coords</span>)))
+    <span class="kw">fn </span>tile_finished(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="self">self</span>.context
+            .send(Message::TileTessellated(T::TileTessellated::new(<span class="kw-2">*</span>coords)))
     }
 
-    <span class="kw">fn</span> <span class="ident">layer_unavailable</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>,
-        <span class="ident">layer_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">context</span>
-            .<span class="ident">send</span>(<span class="ident">Message::UnavailableLayer</span>(<span class="ident">T::UnavailableLayer::new</span>(
-                <span class="kw-2">*</span><span class="ident">coords</span>,
-                <span class="ident">layer_name</span>.<span class="ident">to_owned</span>(),
+    <span class="kw">fn </span>layer_unavailable(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        coords: <span class="kw-2">&amp;</span>WorldTileCoords,
+        layer_name: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="self">self</span>.context
+            .send(Message::UnavailableLayer(T::UnavailableLayer::new(
+                <span class="kw-2">*</span>coords,
+                layer_name.to_owned(),
             )))
     }
 
-    <span class="kw">fn</span> <span class="ident">layer_tesselation_finished</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>,
-        <span class="ident">buffer</span>: <span class="ident">OverAlignedVertexBuffer</span><span class="op">&lt;</span><span class="ident">ShaderVertex</span>, <span class="ident">IndexDataType</span><span class="op">&gt;</span>,
-        <span class="ident">feature_indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-        <span class="ident">layer_data</span>: <span class="ident">tile::Layer</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">context</span>
-            .<span class="ident">send</span>(<span class="ident">Message::TessellatedLayer</span>(<span class="ident">T::TessellatedLayer::new</span>(
-                <span class="kw-2">*</span><span class="ident">coords</span>,
-                <span class="ident">buffer</span>,
-                <span class="ident">feature_indices</span>,
-                <span class="ident">layer_data</span>,
+    <span class="kw">fn </span>layer_tesselation_finished(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        coords: <span class="kw-2">&amp;</span>WorldTileCoords,
+        buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
+        feature_indices: Vec&lt;u32&gt;,
+        layer_data: tile::Layer,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="self">self</span>.context
+            .send(Message::TessellatedLayer(T::TessellatedLayer::new(
+                <span class="kw-2">*</span>coords,
+                buffer,
+                feature_indices,
+                layer_data,
             )))
     }
 
-    <span class="kw">fn</span> <span class="ident">layer_indexing_finished</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>,
-        <span class="ident">_geometries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="comment">// FIXME (wasm-executor): Readd</span>
-        <span class="comment">/*        if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
+    <span class="kw">fn </span>layer_indexing_finished(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _coords: <span class="kw-2">&amp;</span>WorldTileCoords,
+        _geometries: Vec&lt;IndexedGeometry&lt;f64&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+        <span class="comment">// FIXME (wasm-executor): Readd
+        /*        if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
             geometry_index.index_tile(coords, TileIndex::Linear { list: geometries })
-        }*/</span>
-        <span class="prelude-val">Ok</span>(())
+        }*/
+        </span><span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="comment">// FIXME (wasm-executor): Readd</span>
-<span class="comment">/*pub fn query_point(
+<span class="comment">// FIXME (wasm-executor): Readd
+/*pub fn query_point(
     &amp;self,
     world_coords: &amp;WorldCoords,
     z: ZoomLevel,
@@ -218,7 +218,7 @@
     } else {
         unimplemented!()
     }
-}*/</span>
-<span class="comment">//}</span>
-</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+}*/
+//}
+</span></code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

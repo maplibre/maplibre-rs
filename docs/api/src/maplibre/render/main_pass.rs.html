@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/main_pass.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>main_pass.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/main_pass.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>main_pass.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -126,133 +126,133 @@
 <span id="126">126</span>
 <span id="127">127</span>
 <span id="128">128</span>
-</pre><pre class="rust"><code><span class="doccomment">//! The main render pass for this application.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Right now there is only one render graph. A use case for multiple render passes would be</span>
-<span class="doccomment">//! [shadows](https://www.raywenderlich.com/books/metal-by-tutorials/v2.0/chapters/14-multipass-deferred-rendering).</span>
+</pre><pre class="rust"><code><span class="doccomment">//! The main render pass for this application.
+//!
+//! Right now there is only one render graph. A use case for multiple render passes would be
+//! [shadows](https://www.raywenderlich.com/books/metal-by-tutorials/v2.0/chapters/14-multipass-deferred-rendering).
 
-<span class="kw">use</span> <span class="ident">std::ops::Deref</span>;
+</span><span class="kw">use </span>std::ops::Deref;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
-    <span class="ident">draw_graph</span>,
-    <span class="ident">graph</span>::{<span class="ident">Node</span>, <span class="ident">NodeRunError</span>, <span class="ident">RenderContext</span>, <span class="ident">RenderGraphContext</span>, <span class="ident">SlotInfo</span>},
-    <span class="ident">render_commands</span>::{<span class="ident">DrawMasks</span>, <span class="ident">DrawTiles</span>},
-    <span class="ident">render_phase::RenderCommand</span>,
-    <span class="ident">resource::TrackedRenderPass</span>,
-    <span class="ident">Eventually::Initialized</span>,
-    <span class="ident">RenderState</span>,
+<span class="kw">use </span><span class="kw">crate</span>::render::{
+    draw_graph,
+    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+    render_commands::{DrawMasks, DrawTiles},
+    render_phase::RenderCommand,
+    resource::TrackedRenderPass,
+    Eventually::Initialized,
+    RenderState,
 };
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">graph</span> {
-    <span class="comment">// Labels for input nodes</span>
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">input</span> {}
-    <span class="comment">// Labels for non-input nodes</span>
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">node</span> {
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAIN_PASS_DEPENDENCIES</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;main_pass_dependencies&quot;</span>;
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAIN_PASS_DRIVER</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;main_pass_driver&quot;</span>;
+<span class="kw">pub mod </span>graph {
+    <span class="comment">// Labels for input nodes
+    </span><span class="kw">pub mod </span>input {}
+    <span class="comment">// Labels for non-input nodes
+    </span><span class="kw">pub mod </span>node {
+        <span class="kw">pub const </span>MAIN_PASS_DEPENDENCIES: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass_dependencies&quot;</span>;
+        <span class="kw">pub const </span>MAIN_PASS_DRIVER: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass_driver&quot;</span>;
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MainPassNode</span> {}
+<span class="kw">pub struct </span>MainPassNode {}
 
-<span class="kw">impl</span> <span class="ident">MainPassNode</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {}
+<span class="kw">impl </span>MainPassNode {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{}
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Node</span> <span class="kw">for</span> <span class="ident">MainPassNode</span> {
-    <span class="kw">fn</span> <span class="ident">input</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SlotInfo</span><span class="op">&gt;</span> {
+<span class="kw">impl </span>Node <span class="kw">for </span>MainPassNode {
+    <span class="kw">fn </span>input(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;SlotInfo&gt; {
         <span class="macro">vec!</span>[]
     }
 
-    <span class="kw">fn</span> <span class="ident">update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RenderState</span>) {}
+    <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>RenderState) {}
 
-    <span class="kw">fn</span> <span class="ident">run</span>(
+    <span class="kw">fn </span>run(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_graph</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RenderGraphContext</span>,
-        <span class="ident">render_context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RenderContext</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">RenderState</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">NodeRunError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">render_target</span>, <span class="ident">multisampling_texture</span>, <span class="ident">depth_texture</span>) <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> (
-            <span class="ident">Initialized</span>(<span class="ident">render_target</span>),
-            <span class="ident">Initialized</span>(<span class="ident">multisampling_texture</span>),
-            <span class="ident">Initialized</span>(<span class="ident">depth_texture</span>),
-        ) <span class="op">=</span> (
-            <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">render_target</span>,
-            <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">multisampling_texture</span>,
-            <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">depth_texture</span>,
+        _graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
+        render_context: <span class="kw-2">&amp;mut </span>RenderContext,
+        state: <span class="kw-2">&amp;</span>RenderState,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
+        <span class="kw">let </span>(render_target, multisampling_texture, depth_texture) = <span class="kw">if let </span>(
+            Initialized(render_target),
+            Initialized(multisampling_texture),
+            Initialized(depth_texture),
+        ) = (
+            <span class="kw-2">&amp;</span>state.render_target,
+            <span class="kw-2">&amp;</span>state.multisampling_texture,
+            <span class="kw-2">&amp;</span>state.depth_texture,
         ) {
-            (<span class="ident">render_target</span>, <span class="ident">multisampling_texture</span>, <span class="ident">depth_texture</span>)
-        } <span class="kw">else</span> {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+            (render_target, multisampling_texture, depth_texture)
+        } <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         };
 
-        <span class="kw">let</span> <span class="ident">color_attachment</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">texture</span>) <span class="op">=</span> <span class="ident">multisampling_texture</span> {
-            <span class="ident">wgpu::RenderPassColorAttachment</span> {
-                <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">texture</span>.<span class="ident">view</span>,
-                <span class="ident">ops</span>: <span class="ident">wgpu::Operations</span> {
-                    <span class="ident">load</span>: <span class="ident">wgpu::LoadOp::Clear</span>(<span class="ident">wgpu::Color::WHITE</span>),
-                    <span class="ident">store</span>: <span class="bool-val">true</span>,
+        <span class="kw">let </span>color_attachment = <span class="kw">if let </span><span class="prelude-val">Some</span>(texture) = multisampling_texture {
+            wgpu::RenderPassColorAttachment {
+                view: <span class="kw-2">&amp;</span>texture.view,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                    store: <span class="bool-val">true</span>,
                 },
-                <span class="ident">resolve_target</span>: <span class="prelude-val">Some</span>(<span class="ident">render_target</span>.<span class="ident">deref</span>()),
+                resolve_target: <span class="prelude-val">Some</span>(render_target.deref()),
             }
-        } <span class="kw">else</span> {
-            <span class="ident">wgpu::RenderPassColorAttachment</span> {
-                <span class="ident">view</span>: <span class="ident">render_target</span>.<span class="ident">deref</span>(),
-                <span class="ident">ops</span>: <span class="ident">wgpu::Operations</span> {
-                    <span class="ident">load</span>: <span class="ident">wgpu::LoadOp::Clear</span>(<span class="ident">wgpu::Color::WHITE</span>),
-                    <span class="ident">store</span>: <span class="bool-val">true</span>,
+        } <span class="kw">else </span>{
+            wgpu::RenderPassColorAttachment {
+                view: render_target.deref(),
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                    store: <span class="bool-val">true</span>,
                 },
-                <span class="ident">resolve_target</span>: <span class="prelude-val">None</span>,
+                resolve_target: <span class="prelude-val">None</span>,
             }
         };
 
-        <span class="kw">let</span> <span class="ident">render_pass</span> <span class="op">=</span>
-            <span class="ident">render_context</span>
-                .<span class="ident">command_encoder</span>
-                .<span class="ident">begin_render_pass</span>(<span class="kw-2">&amp;</span><span class="ident">wgpu::RenderPassDescriptor</span> {
-                    <span class="ident">label</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">color_attachments</span>: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(<span class="ident">color_attachment</span>)],
-                    <span class="ident">depth_stencil_attachment</span>: <span class="prelude-val">Some</span>(<span class="ident">wgpu::RenderPassDepthStencilAttachment</span> {
-                        <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">depth_texture</span>.<span class="ident">view</span>,
-                        <span class="ident">depth_ops</span>: <span class="prelude-val">Some</span>(<span class="ident">wgpu::Operations</span> {
-                            <span class="ident">load</span>: <span class="ident">wgpu::LoadOp::Clear</span>(<span class="number">0.0</span>),
-                            <span class="ident">store</span>: <span class="bool-val">true</span>,
+        <span class="kw">let </span>render_pass =
+            render_context
+                .command_encoder
+                .begin_render_pass(<span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
+                    label: <span class="prelude-val">None</span>,
+                    color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(color_attachment)],
+                    depth_stencil_attachment: <span class="prelude-val">Some</span>(wgpu::RenderPassDepthStencilAttachment {
+                        view: <span class="kw-2">&amp;</span>depth_texture.view,
+                        depth_ops: <span class="prelude-val">Some</span>(wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(<span class="number">0.0</span>),
+                            store: <span class="bool-val">true</span>,
                         }),
-                        <span class="ident">stencil_ops</span>: <span class="prelude-val">Some</span>(<span class="ident">wgpu::Operations</span> {
-                            <span class="ident">load</span>: <span class="ident">wgpu::LoadOp::Clear</span>(<span class="number">0</span>),
-                            <span class="ident">store</span>: <span class="bool-val">true</span>,
+                        stencil_ops: <span class="prelude-val">Some</span>(wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(<span class="number">0</span>),
+                            store: <span class="bool-val">true</span>,
                         }),
                     }),
                 });
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracked_pass</span> <span class="op">=</span> <span class="ident">TrackedRenderPass::new</span>(<span class="ident">render_pass</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>tracked_pass = TrackedRenderPass::new(render_pass);
 
-        <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">mask_phase</span>.<span class="ident">items</span> {
-            <span class="ident">DrawMasks::render</span>(<span class="ident">state</span>, <span class="ident">item</span>, <span class="kw-2">&amp;mut</span> <span class="ident">tracked_pass</span>);
+        <span class="kw">for </span>item <span class="kw">in </span><span class="kw-2">&amp;</span>state.mask_phase.items {
+            DrawMasks::render(state, item, <span class="kw-2">&amp;mut </span>tracked_pass);
         }
 
-        <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">tile_phase</span>.<span class="ident">items</span> {
-            <span class="ident">DrawTiles::render</span>(<span class="ident">state</span>, <span class="ident">item</span>, <span class="kw-2">&amp;mut</span> <span class="ident">tracked_pass</span>);
+        <span class="kw">for </span>item <span class="kw">in </span><span class="kw-2">&amp;</span>state.tile_phase.items {
+            DrawTiles::render(state, item, <span class="kw-2">&amp;mut </span>tracked_pass);
         }
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MainPassDriverNode</span>;
+<span class="kw">pub struct </span>MainPassDriverNode;
 
-<span class="kw">impl</span> <span class="ident">Node</span> <span class="kw">for</span> <span class="ident">MainPassDriverNode</span> {
-    <span class="kw">fn</span> <span class="ident">run</span>(
+<span class="kw">impl </span>Node <span class="kw">for </span>MainPassDriverNode {
+    <span class="kw">fn </span>run(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">graph</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RenderGraphContext</span>,
-        <span class="ident">_render_context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RenderContext</span>,
-        <span class="ident">_state</span>: <span class="kw-2">&amp;</span><span class="ident">RenderState</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">NodeRunError</span><span class="op">&gt;</span> {
-        <span class="ident">graph</span>.<span class="ident">run_sub_graph</span>(<span class="ident">draw_graph::NAME</span>, <span class="macro">vec!</span>[])<span class="question-mark">?</span>;
+        graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
+        _render_context: <span class="kw-2">&amp;mut </span>RenderContext,
+        _state: <span class="kw-2">&amp;</span>RenderState,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
+        graph.run_sub_graph(draw_graph::NAME, <span class="macro">vec!</span>[])<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

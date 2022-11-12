@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/io/tile_repository.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tile_repository.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/io/tile_repository.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tile_repository.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -182,189 +182,189 @@
 <span id="182">182</span>
 <span id="183">183</span>
 <span id="184">184</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Tile cache.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Tile cache.
 
-<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">btree_map</span>, <span class="ident">BTreeMap</span>};
+</span><span class="kw">use </span>std::collections::{btree_map, BTreeMap};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">coords</span>::{<span class="ident">Quadkey</span>, <span class="ident">WorldTileCoords</span>},
-    <span class="ident">render::ShaderVertex</span>,
-    <span class="ident">tessellation</span>::{<span class="ident">IndexDataType</span>, <span class="ident">OverAlignedVertexBuffer</span>},
+<span class="kw">use crate</span>::{
+    coords::{Quadkey, WorldTileCoords},
+    render::ShaderVertex,
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
-<span class="doccomment">/// A layer which is stored for future use.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StoredLayer</span> {
-    <span class="ident">UnavailableLayer</span> {
-        <span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>,
-        <span class="ident">layer_name</span>: <span class="ident">String</span>,
+<span class="doccomment">/// A layer which is stored for future use.
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub enum </span>StoredLayer {
+    UnavailableLayer {
+        coords: WorldTileCoords,
+        layer_name: String,
     },
-    <span class="ident">TessellatedLayer</span> {
-        <span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>,
-        <span class="ident">layer_name</span>: <span class="ident">String</span>,
-        <span class="ident">buffer</span>: <span class="ident">OverAlignedVertexBuffer</span><span class="op">&lt;</span><span class="ident">ShaderVertex</span>, <span class="ident">IndexDataType</span><span class="op">&gt;</span>,
-        <span class="doccomment">/// Holds for each feature the count of indices.</span>
-        <span class="ident">feature_indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+    TessellatedLayer {
+        coords: WorldTileCoords,
+        layer_name: String,
+        buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
+        <span class="doccomment">/// Holds for each feature the count of indices.
+        </span>feature_indices: Vec&lt;u32&gt;,
     },
 }
 
-<span class="kw">impl</span> <span class="ident">StoredLayer</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_coords</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">WorldTileCoords</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">StoredLayer::UnavailableLayer</span> { <span class="ident">coords</span>, .. } =&gt; <span class="kw-2">*</span><span class="ident">coords</span>,
-            <span class="ident">StoredLayer::TessellatedLayer</span> { <span class="ident">coords</span>, .. } =&gt; <span class="kw-2">*</span><span class="ident">coords</span>,
+<span class="kw">impl </span>StoredLayer {
+    <span class="kw">pub fn </span>get_coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords {
+        <span class="kw">match </span><span class="self">self </span>{
+            StoredLayer::UnavailableLayer { coords, .. } =&gt; <span class="kw-2">*</span>coords,
+            StoredLayer::TessellatedLayer { coords, .. } =&gt; <span class="kw-2">*</span>coords,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">layer_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">StoredLayer::UnavailableLayer</span> { <span class="ident">layer_name</span>, .. } =&gt; <span class="ident">layer_name</span>.<span class="ident">as_str</span>(),
-            <span class="ident">StoredLayer::TessellatedLayer</span> { <span class="ident">layer_name</span>, .. } =&gt; <span class="ident">layer_name</span>.<span class="ident">as_str</span>(),
-        }
-    }
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TileStatus</span> {
-    <span class="ident">Pending</span>,
-    <span class="ident">Failed</span>,
-    <span class="ident">Success</span>,
-}
-
-<span class="doccomment">/// Stores multiple [StoredLayers](StoredLayer).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StoredTile</span> {
-    <span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>,
-    <span class="ident">layers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StoredLayer</span><span class="op">&gt;</span>,
-    <span class="ident">status</span>: <span class="ident">TileStatus</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">StoredTile</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pending</span>(<span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">coords</span>,
-            <span class="ident">layers</span>: <span class="macro">vec!</span>[],
-            <span class="ident">status</span>: <span class="ident">TileStatus::Pending</span>,
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">success</span>(<span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>, <span class="ident">layers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StoredLayer</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">coords</span>,
-            <span class="ident">layers</span>,
-            <span class="ident">status</span>: <span class="ident">TileStatus::Success</span>,
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">failed</span>(<span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">coords</span>,
-            <span class="ident">layers</span>: <span class="macro">vec!</span>[],
-            <span class="ident">status</span>: <span class="ident">TileStatus::Failed</span>,
+    <span class="kw">pub fn </span>layer_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">match </span><span class="self">self </span>{
+            StoredLayer::UnavailableLayer { layer_name, .. } =&gt; layer_name.as_str(),
+            StoredLayer::TessellatedLayer { layer_name, .. } =&gt; layer_name.as_str(),
         }
     }
 }
 
-<span class="doccomment">/// Stores and provides access to a quad tree of cached tiles with world tile coords.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TileRepository</span> {
-    <span class="ident">tree</span>: <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">Quadkey</span>, <span class="ident">StoredTile</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone, Copy, Eq, PartialEq)]
+</span><span class="kw">pub enum </span>TileStatus {
+    Pending,
+    Failed,
+    Success,
 }
 
-<span class="kw">impl</span> <span class="ident">TileRepository</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">tree</span>: <span class="ident">BTreeMap::new</span>(),
+<span class="doccomment">/// Stores multiple [StoredLayers](StoredLayer).
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>StoredTile {
+    coords: WorldTileCoords,
+    layers: Vec&lt;StoredLayer&gt;,
+    status: TileStatus,
+}
+
+<span class="kw">impl </span>StoredTile {
+    <span class="kw">pub fn </span>pending(coords: WorldTileCoords) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            coords,
+            layers: <span class="macro">vec!</span>[],
+            status: TileStatus::Pending,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">tree</span>.<span class="ident">clear</span>();
+    <span class="kw">pub fn </span>success(coords: WorldTileCoords, layers: Vec&lt;StoredLayer&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            coords,
+            layers,
+            status: TileStatus::Success,
+        }
     }
 
-    <span class="doccomment">/// Inserts a tessellated layer into the quad tree at its world tile coords.</span>
-    <span class="doccomment">/// If the space is vacant, the tessellated layer is inserted into a new</span>
-    <span class="doccomment">/// [crate::io::tile_repository::StoredLayer].</span>
-    <span class="doccomment">/// If the space is occupied, the tessellated layer is added to the current</span>
-    <span class="doccomment">/// [crate::io::tile_repository::StoredLayer].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">put_layer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">layer</span>: <span class="ident">StoredLayer</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="ident">layer</span>
-            .<span class="ident">get_coords</span>()
-            .<span class="ident">build_quad_key</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree</span>.<span class="ident">entry</span>(<span class="ident">key</span>))
+    <span class="kw">pub fn </span>failed(coords: WorldTileCoords) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            coords,
+            layers: <span class="macro">vec!</span>[],
+            status: TileStatus::Failed,
+        }
+    }
+}
+
+<span class="doccomment">/// Stores and provides access to a quad tree of cached tiles with world tile coords.
+</span><span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>TileRepository {
+    tree: BTreeMap&lt;Quadkey, StoredTile&gt;,
+}
+
+<span class="kw">impl </span>TileRepository {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            tree: BTreeMap::new(),
+        }
+    }
+
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.tree.clear();
+    }
+
+    <span class="doccomment">/// Inserts a tessellated layer into the quad tree at its world tile coords.
+    /// If the space is vacant, the tessellated layer is inserted into a new
+    /// [crate::io::tile_repository::StoredLayer].
+    /// If the space is occupied, the tessellated layer is added to the current
+    /// [crate::io::tile_repository::StoredLayer].
+    </span><span class="kw">pub fn </span>put_layer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, layer: StoredLayer) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = layer
+            .get_coords()
+            .build_quad_key()
+            .map(|key| <span class="self">self</span>.tree.entry(key))
         {
-            <span class="kw">match</span> <span class="ident">entry</span> {
-                <span class="ident">btree_map::Entry::Vacant</span>(<span class="ident">_entry</span>) =&gt; {
+            <span class="kw">match </span>entry {
+                btree_map::Entry::Vacant(_entry) =&gt; {
                     <span class="macro">panic!</span>(<span class="string">&quot;Can not add a tessellated layer if no request has been started before.&quot;</span>)
                 }
-                <span class="ident">btree_map::Entry::Occupied</span>(<span class="kw-2">mut</span> <span class="ident">entry</span>) =&gt; {
-                    <span class="ident">entry</span>.<span class="ident">get_mut</span>().<span class="ident">layers</span>.<span class="ident">push</span>(<span class="ident">layer</span>);
+                btree_map::Entry::Occupied(<span class="kw-2">mut </span>entry) =&gt; {
+                    entry.get_mut().layers.push(layer);
                 }
             }
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">put_tile</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">tile</span>: <span class="ident">StoredTile</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">key</span>) <span class="op">=</span> <span class="ident">tile</span>.<span class="ident">coords</span>.<span class="ident">build_quad_key</span>() {
-            <span class="self">self</span>.<span class="ident">tree</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">tile</span>);
+    <span class="kw">pub fn </span>put_tile(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tile: StoredTile) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(key) = tile.coords.build_quad_key() {
+            <span class="self">self</span>.tree.insert(key, tile);
         }
     }
 
-    <span class="doccomment">/// Returns the list of tessellated layers at the given world tile coords. None if tile is</span>
-    <span class="doccomment">/// missing from the cache.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter_layers_at</span>(
+    <span class="doccomment">/// Returns the list of tessellated layers at the given world tile coords. None if tile is
+    /// missing from the cache.
+    </span><span class="kw">pub fn </span>iter_layers_at(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">StoredLayer</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-        <span class="ident">coords</span>
-            .<span class="ident">build_quad_key</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>))
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">results</span><span class="op">|</span> <span class="ident">results</span>.<span class="ident">layers</span>.<span class="ident">iter</span>())
+        coords: <span class="kw-2">&amp;</span>WorldTileCoords,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>StoredLayer&gt; + <span class="lifetime">&#39;_</span>&gt; {
+        coords
+            .build_quad_key()
+            .and_then(|key| <span class="self">self</span>.tree.get(<span class="kw-2">&amp;</span>key))
+            .map(|results| results.layers.iter())
     }
 
-    <span class="doccomment">/// Create a new tile.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_tile</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="ident">coords</span>.<span class="ident">build_quad_key</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree</span>.<span class="ident">entry</span>(<span class="ident">key</span>)) {
-            <span class="kw">match</span> <span class="ident">entry</span> {
-                <span class="ident">btree_map::Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                    <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">StoredTile::pending</span>(<span class="ident">coords</span>));
+    <span class="doccomment">/// Create a new tile.
+    </span><span class="kw">pub fn </span>create_tile(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: WorldTileCoords) -&gt; bool {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = coords.build_quad_key().map(|key| <span class="self">self</span>.tree.entry(key)) {
+            <span class="kw">match </span>entry {
+                btree_map::Entry::Vacant(entry) =&gt; {
+                    entry.insert(StoredTile::pending(coords));
                 }
-                <span class="kw">_</span> =&gt; {}
+                <span class="kw">_ </span>=&gt; {}
             }
         }
-        <span class="bool-val">true</span>
-    }
+        <span class="bool-val">true
+    </span>}
 
-    <span class="doccomment">/// Checks if a layer has been fetched.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_tile</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="ident">coords</span>
-            .<span class="ident">build_quad_key</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>))
-            .<span class="ident">is_some</span>()
+    <span class="doccomment">/// Checks if a layer has been fetched.
+    </span><span class="kw">pub fn </span>has_tile(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; bool {
+        <span class="kw">if </span>coords
+            .build_quad_key()
+            .and_then(|key| <span class="self">self</span>.tree.get(<span class="kw-2">&amp;</span>key))
+            .is_some()
         {
-            <span class="kw">return</span> <span class="bool-val">false</span>;
+            <span class="kw">return </span><span class="bool-val">false</span>;
         }
-        <span class="bool-val">true</span>
-    }
+        <span class="bool-val">true
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mark_tile_succeeded</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cached_tile</span>) <span class="op">=</span> <span class="ident">coords</span>
-            .<span class="ident">build_quad_key</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>))
+    <span class="kw">pub fn </span>mark_tile_succeeded(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cached_tile) = coords
+            .build_quad_key()
+            .and_then(|key| <span class="self">self</span>.tree.get_mut(<span class="kw-2">&amp;</span>key))
         {
-            <span class="ident">cached_tile</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">TileStatus::Success</span>;
+            cached_tile.status = TileStatus::Success;
         }
     }
 
-    <span class="doccomment">/// Checks if a layer has been fetched.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mark_tile_failed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cached_tile</span>) <span class="op">=</span> <span class="ident">coords</span>
-            .<span class="ident">build_quad_key</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>))
+    <span class="doccomment">/// Checks if a layer has been fetched.
+    </span><span class="kw">pub fn </span>mark_tile_failed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cached_tile) = coords
+            .build_quad_key()
+            .and_then(|key| <span class="self">self</span>.tree.get_mut(<span class="kw-2">&amp;</span>key))
         {
-            <span class="ident">cached_tile</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">TileStatus::Failed</span>;
+            cached_tile.status = TileStatus::Failed;
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

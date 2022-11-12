@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/tessellation/zero_tessellator.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>zero_tessellator.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/tessellation/zero_tessellator.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>zero_tessellator.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -198,205 +198,205 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Tessellator implementation.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Tessellator implementation.
 
-<span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
+</span><span class="kw">use </span>std::cell::RefCell;
 
-<span class="kw">use</span> <span class="ident">geozero</span>::{<span class="ident">FeatureProcessor</span>, <span class="ident">GeomProcessor</span>, <span class="ident">PropertyProcessor</span>};
-<span class="kw">use</span> <span class="ident">lyon</span>::{
-    <span class="ident">geom</span>,
-    <span class="ident">lyon_tessellation::VertexBuffers</span>,
-    <span class="ident">path</span>::{<span class="ident">path::Builder</span>, <span class="ident">Path</span>},
-    <span class="ident">tessellation</span>::{
-        <span class="ident">geometry_builder::MaxIndex</span>, <span class="ident">BuffersBuilder</span>, <span class="ident">FillOptions</span>, <span class="ident">FillRule</span>, <span class="ident">FillTessellator</span>,
-        <span class="ident">StrokeOptions</span>, <span class="ident">StrokeTessellator</span>,
+<span class="kw">use </span>geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
+<span class="kw">use </span>lyon::{
+    geom,
+    lyon_tessellation::VertexBuffers,
+    path::{path::Builder, Path},
+    tessellation::{
+        geometry_builder::MaxIndex, BuffersBuilder, FillOptions, FillRule, FillTessellator,
+        StrokeOptions, StrokeTessellator,
     },
 };
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">render::ShaderVertex</span>,
-    <span class="ident">tessellation</span>::{<span class="ident">VertexConstructor</span>, <span class="ident">DEFAULT_TOLERANCE</span>},
+<span class="kw">use crate</span>::{
+    render::ShaderVertex,
+    tessellation::{VertexConstructor, DEFAULT_TOLERANCE},
 };
 
-<span class="kw">type</span> <span class="ident">GeoResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">geozero::error::Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
+<span class="kw">type </span>GeoResult&lt;T&gt; = geozero::error::Result&lt;T&gt;;
 
-<span class="doccomment">/// Build tessellations with vectors.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ZeroTessellator</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">std::ops::Add</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">lyon::tessellation::VertexId</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">MaxIndex</span><span class="op">&gt;</span> {
-    <span class="ident">path_builder</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Builder</span><span class="op">&gt;</span>,
-    <span class="ident">path_open</span>: <span class="ident">bool</span>,
-    <span class="ident">is_point</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// Build tessellations with vectors.
+</span><span class="kw">pub struct </span>ZeroTessellator&lt;I: std::ops::Add + From&lt;lyon::tessellation::VertexId&gt; + MaxIndex&gt; {
+    path_builder: RefCell&lt;Builder&gt;,
+    path_open: bool,
+    is_point: bool,
 
-    <span class="kw">pub</span> <span class="ident">buffer</span>: <span class="ident">VertexBuffers</span><span class="op">&lt;</span><span class="ident">ShaderVertex</span>, <span class="ident">I</span><span class="op">&gt;</span>,
+    <span class="kw">pub </span>buffer: VertexBuffers&lt;ShaderVertex, I&gt;,
 
-    <span class="kw">pub</span> <span class="ident">feature_indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="ident">current_index</span>: <span class="ident">usize</span>,
+    <span class="kw">pub </span>feature_indices: Vec&lt;u32&gt;,
+    current_index: usize,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">std::ops::Add</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">lyon::tessellation::VertexId</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">MaxIndex</span><span class="op">&gt;</span> <span class="ident">Default</span>
-    <span class="kw">for</span> <span class="ident">ZeroTessellator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>
+<span class="kw">impl</span>&lt;I: std::ops::Add + From&lt;lyon::tessellation::VertexId&gt; + MaxIndex&gt; Default
+    <span class="kw">for </span>ZeroTessellator&lt;I&gt;
 {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">path_builder</span>: <span class="ident">RefCell::new</span>(<span class="ident">Path::builder</span>()),
-            <span class="ident">buffer</span>: <span class="ident">VertexBuffers::new</span>(),
-            <span class="ident">feature_indices</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">current_index</span>: <span class="number">0</span>,
-            <span class="ident">path_open</span>: <span class="bool-val">false</span>,
-            <span class="ident">is_point</span>: <span class="bool-val">false</span>,
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            path_builder: RefCell::new(Path::builder()),
+            buffer: VertexBuffers::new(),
+            feature_indices: Vec::new(),
+            current_index: <span class="number">0</span>,
+            path_open: <span class="bool-val">false</span>,
+            is_point: <span class="bool-val">false</span>,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">std::ops::Add</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">lyon::tessellation::VertexId</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">MaxIndex</span><span class="op">&gt;</span> <span class="ident">ZeroTessellator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">update_feature_indices</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">next_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">indices</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">indices</span> <span class="op">=</span> (<span class="ident">next_index</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">current_index</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="self">self</span>.<span class="ident">feature_indices</span>.<span class="ident">push</span>(<span class="ident">indices</span>);
-        <span class="self">self</span>.<span class="ident">current_index</span> <span class="op">=</span> <span class="ident">next_index</span>;
+<span class="kw">impl</span>&lt;I: std::ops::Add + From&lt;lyon::tessellation::VertexId&gt; + MaxIndex&gt; ZeroTessellator&lt;I&gt; {
+    <span class="kw">fn </span>update_feature_indices(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>next_index = <span class="self">self</span>.buffer.indices.len();
+        <span class="kw">let </span>indices = (next_index - <span class="self">self</span>.current_index) <span class="kw">as </span>u32;
+        <span class="self">self</span>.feature_indices.push(indices);
+        <span class="self">self</span>.current_index = next_index;
     }
 
-    <span class="kw">fn</span> <span class="ident">tessellate_strokes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">path_builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">path_builder</span>.<span class="ident">replace</span>(<span class="ident">Path::builder</span>());
+    <span class="kw">fn </span>tessellate_strokes(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>path_builder = <span class="self">self</span>.path_builder.replace(Path::builder());
 
-        <span class="ident">StrokeTessellator::new</span>()
-            .<span class="ident">tessellate_path</span>(
-                <span class="kw-2">&amp;</span><span class="ident">path_builder</span>.<span class="ident">build</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">StrokeOptions::tolerance</span>(<span class="ident">DEFAULT_TOLERANCE</span>),
-                <span class="kw-2">&amp;mut</span> <span class="ident">BuffersBuilder::new</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">buffer</span>, <span class="ident">VertexConstructor</span> {}),
+        StrokeTessellator::new()
+            .tessellate_path(
+                <span class="kw-2">&amp;</span>path_builder.build(),
+                <span class="kw-2">&amp;</span>StrokeOptions::tolerance(DEFAULT_TOLERANCE),
+                <span class="kw-2">&amp;mut </span>BuffersBuilder::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer, VertexConstructor {}),
             )
-            .<span class="ident">unwrap</span>(); <span class="comment">// TODO: Remove unwrap</span>
-    }
+            .unwrap(); <span class="comment">// TODO: Remove unwrap
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">close</span>: <span class="ident">bool</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">path_open</span> {
-            <span class="self">self</span>.<span class="ident">path_builder</span>.<span class="ident">borrow_mut</span>().<span class="ident">end</span>(<span class="ident">close</span>);
-            <span class="self">self</span>.<span class="ident">path_open</span> <span class="op">=</span> <span class="bool-val">false</span>;
+    <span class="kw">fn </span>end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, close: bool) {
+        <span class="kw">if </span><span class="self">self</span>.path_open {
+            <span class="self">self</span>.path_builder.borrow_mut().end(close);
+            <span class="self">self</span>.path_open = <span class="bool-val">false</span>;
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">tessellate_fill</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">path_builder</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">path_builder</span>.<span class="ident">replace</span>(<span class="ident">Path::builder</span>());
+    <span class="kw">fn </span>tessellate_fill(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>path_builder = <span class="self">self</span>.path_builder.replace(Path::builder());
 
-        <span class="ident">FillTessellator::new</span>()
-            .<span class="ident">tessellate_path</span>(
-                <span class="kw-2">&amp;</span><span class="ident">path_builder</span>.<span class="ident">build</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">FillOptions::tolerance</span>(<span class="ident">DEFAULT_TOLERANCE</span>).<span class="ident">with_fill_rule</span>(<span class="ident">FillRule::NonZero</span>),
-                <span class="kw-2">&amp;mut</span> <span class="ident">BuffersBuilder::new</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">buffer</span>, <span class="ident">VertexConstructor</span> {}),
+        FillTessellator::new()
+            .tessellate_path(
+                <span class="kw-2">&amp;</span>path_builder.build(),
+                <span class="kw-2">&amp;</span>FillOptions::tolerance(DEFAULT_TOLERANCE).with_fill_rule(FillRule::NonZero),
+                <span class="kw-2">&amp;mut </span>BuffersBuilder::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer, VertexConstructor {}),
             )
-            .<span class="ident">unwrap</span>(); <span class="comment">// TODO: Remove unwrap</span>
-    }
+            .unwrap(); <span class="comment">// TODO: Remove unwrap
+    </span>}
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">std::ops::Add</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">lyon::tessellation::VertexId</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">MaxIndex</span><span class="op">&gt;</span> <span class="ident">GeomProcessor</span>
-    <span class="kw">for</span> <span class="ident">ZeroTessellator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>
+<span class="kw">impl</span>&lt;I: std::ops::Add + From&lt;lyon::tessellation::VertexId&gt; + MaxIndex&gt; GeomProcessor
+    <span class="kw">for </span>ZeroTessellator&lt;I&gt;
 {
-    <span class="kw">fn</span> <span class="ident">xy</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;xy&quot;);</span>
+    <span class="kw">fn </span>xy(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: f64, y: f64, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;xy&quot;);
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_point</span> {
-            <span class="comment">// log::info!(&quot;point&quot;);</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">path_open</span> {
-            <span class="self">self</span>.<span class="ident">path_builder</span>
-                .<span class="ident">borrow_mut</span>()
-                .<span class="ident">begin</span>(<span class="ident">geom::point</span>(<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">y</span> <span class="kw">as</span> <span class="ident">f32</span>));
-            <span class="self">self</span>.<span class="ident">path_open</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">path_builder</span>
-                .<span class="ident">borrow_mut</span>()
-                .<span class="ident">line_to</span>(<span class="ident">geom::point</span>(<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">y</span> <span class="kw">as</span> <span class="ident">f32</span>));
+        </span><span class="kw">if </span><span class="self">self</span>.is_point {
+            <span class="comment">// log::info!(&quot;point&quot;);
+        </span>} <span class="kw">else if </span>!<span class="self">self</span>.path_open {
+            <span class="self">self</span>.path_builder
+                .borrow_mut()
+                .begin(geom::point(x <span class="kw">as </span>f32, y <span class="kw">as </span>f32));
+            <span class="self">self</span>.path_open = <span class="bool-val">true</span>;
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.path_builder
+                .borrow_mut()
+                .line_to(geom::point(x <span class="kw">as </span>f32, y <span class="kw">as </span>f32));
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">point_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;point_begin&quot;);</span>
-        <span class="self">self</span>.<span class="ident">is_point</span> <span class="op">=</span> <span class="bool-val">true</span>;
+    <span class="kw">fn </span>point_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;point_begin&quot;);
+        </span><span class="self">self</span>.is_point = <span class="bool-val">true</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">point_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;point_end&quot;);</span>
-        <span class="self">self</span>.<span class="ident">is_point</span> <span class="op">=</span> <span class="bool-val">false</span>;
+    <span class="kw">fn </span>point_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;point_end&quot;);
+        </span><span class="self">self</span>.is_point = <span class="bool-val">false</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">multipoint_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_size</span>: <span class="ident">usize</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;multipoint_begin&quot;);</span>
-        <span class="prelude-val">Ok</span>(())
+    <span class="kw">fn </span>multipoint_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _size: usize, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;multipoint_begin&quot;);
+        </span><span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">multipoint_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;multipoint_end&quot;);</span>
-        <span class="prelude-val">Ok</span>(())
+    <span class="kw">fn </span>multipoint_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;multipoint_end&quot;);
+        </span><span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">linestring_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_tagged</span>: <span class="ident">bool</span>, <span class="ident">_size</span>: <span class="ident">usize</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;linestring_begin&quot;);</span>
-        <span class="prelude-val">Ok</span>(())
+    <span class="kw">fn </span>linestring_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _tagged: bool, _size: usize, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;linestring_begin&quot;);
+        </span><span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">linestring_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">tagged</span>: <span class="ident">bool</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;linestring_end&quot;);</span>
+    <span class="kw">fn </span>linestring_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tagged: bool, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;linestring_end&quot;);
 
-        <span class="self">self</span>.<span class="ident">end</span>(<span class="bool-val">false</span>);
+        </span><span class="self">self</span>.end(<span class="bool-val">false</span>);
 
-        <span class="kw">if</span> <span class="ident">tagged</span> {
-            <span class="self">self</span>.<span class="ident">tessellate_strokes</span>();
+        <span class="kw">if </span>tagged {
+            <span class="self">self</span>.tessellate_strokes();
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">multilinestring_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_size</span>: <span class="ident">usize</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;multilinestring_begin&quot;);</span>
+    <span class="kw">fn </span>multilinestring_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _size: usize, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;multilinestring_begin&quot;);
+        </span><span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>multilinestring_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;multilinestring_end&quot;);
+        </span><span class="self">self</span>.tessellate_strokes();
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">multilinestring_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;multilinestring_end&quot;);</span>
-        <span class="self">self</span>.<span class="ident">tessellate_strokes</span>();
-        <span class="prelude-val">Ok</span>(())
+    <span class="kw">fn </span>polygon_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _tagged: bool, _size: usize, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;polygon_begin&quot;);
+        </span><span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">polygon_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_tagged</span>: <span class="ident">bool</span>, <span class="ident">_size</span>: <span class="ident">usize</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;polygon_begin&quot;);</span>
-        <span class="prelude-val">Ok</span>(())
-    }
+    <span class="kw">fn </span>polygon_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tagged: bool, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;polygon_end&quot;);
 
-    <span class="kw">fn</span> <span class="ident">polygon_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">tagged</span>: <span class="ident">bool</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;polygon_end&quot;);</span>
-
-        <span class="self">self</span>.<span class="ident">end</span>(<span class="bool-val">true</span>);
-        <span class="kw">if</span> <span class="ident">tagged</span> {
-            <span class="self">self</span>.<span class="ident">tessellate_fill</span>();
+        </span><span class="self">self</span>.end(<span class="bool-val">true</span>);
+        <span class="kw">if </span>tagged {
+            <span class="self">self</span>.tessellate_fill();
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">multipolygon_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_size</span>: <span class="ident">usize</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;multipolygon_begin&quot;);</span>
-        <span class="prelude-val">Ok</span>(())
+    <span class="kw">fn </span>multipolygon_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _size: usize, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;multipolygon_begin&quot;);
+        </span><span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">multipolygon_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_idx</span>: <span class="ident">usize</span>) -&gt; <span class="ident">GeoResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// log::info!(&quot;multipolygon_end&quot;);</span>
+    <span class="kw">fn </span>multipolygon_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _idx: usize) -&gt; GeoResult&lt;()&gt; {
+        <span class="comment">// log::info!(&quot;multipolygon_end&quot;);
 
-        <span class="self">self</span>.<span class="ident">tessellate_fill</span>();
+        </span><span class="self">self</span>.tessellate_fill();
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">std::ops::Add</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">lyon::tessellation::VertexId</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">MaxIndex</span><span class="op">&gt;</span> <span class="ident">PropertyProcessor</span>
-    <span class="kw">for</span> <span class="ident">ZeroTessellator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>
+<span class="kw">impl</span>&lt;I: std::ops::Add + From&lt;lyon::tessellation::VertexId&gt; + MaxIndex&gt; PropertyProcessor
+    <span class="kw">for </span>ZeroTessellator&lt;I&gt;
 {
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">std::ops::Add</span> <span class="op">+</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">lyon::tessellation::VertexId</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">MaxIndex</span><span class="op">&gt;</span> <span class="ident">FeatureProcessor</span>
-    <span class="kw">for</span> <span class="ident">ZeroTessellator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>
+<span class="kw">impl</span>&lt;I: std::ops::Add + From&lt;lyon::tessellation::VertexId&gt; + MaxIndex&gt; FeatureProcessor
+    <span class="kw">for </span>ZeroTessellator&lt;I&gt;
 {
-    <span class="kw">fn</span> <span class="ident">feature_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_idx</span>: <span class="ident">u64</span>) -&gt; <span class="ident">geozero::error::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">update_feature_indices</span>();
+    <span class="kw">fn </span>feature_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _idx: u64) -&gt; geozero::error::Result&lt;()&gt; {
+        <span class="self">self</span>.update_feature_indices();
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

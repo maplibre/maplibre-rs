@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/resource/buffer_pool.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>buffer_pool.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/resource/buffer_pool.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>buffer_pool.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -720,727 +720,727 @@
 <span id="720">720</span>
 <span id="721">721</span>
 <span id="722">722</span>
-</pre><pre class="rust"><code><span class="doccomment">//! A ring-buffer like pool of [buffers](wgpu::Buffer).</span>
+</pre><pre class="rust"><code><span class="doccomment">//! A ring-buffer like pool of [buffers](wgpu::Buffer).
 
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">collections</span>::{<span class="ident">btree_map</span>, <span class="ident">BTreeMap</span>, <span class="ident">HashSet</span>, <span class="ident">VecDeque</span>},
-    <span class="ident">fmt::Debug</span>,
-    <span class="ident">marker::PhantomData</span>,
-    <span class="ident">mem::size_of</span>,
-    <span class="ident">ops::Range</span>,
+</span><span class="kw">use </span>std::{
+    collections::{btree_map, BTreeMap, HashSet, VecDeque},
+    fmt::Debug,
+    marker::PhantomData,
+    mem::size_of,
+    ops::Range,
 };
 
-<span class="kw">use</span> <span class="ident">bytemuck::Pod</span>;
+<span class="kw">use </span>bytemuck::Pod;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">coords</span>::{<span class="ident">Quadkey</span>, <span class="ident">WorldTileCoords</span>},
-    <span class="ident">render::resource::Queue</span>,
-    <span class="ident">style::layer::StyleLayer</span>,
-    <span class="ident">tessellation::OverAlignedVertexBuffer</span>,
+<span class="kw">use crate</span>::{
+    coords::{Quadkey, WorldTileCoords},
+    render::resource::Queue,
+    style::layer::StyleLayer,
+    tessellation::OverAlignedVertexBuffer,
 };
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VERTEX_SIZE</span>: <span class="ident">wgpu::BufferAddress</span> <span class="op">=</span> <span class="number">1_000_000</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">INDICES_SIZE</span>: <span class="ident">wgpu::BufferAddress</span> <span class="op">=</span> <span class="number">1_000_000</span>;
+<span class="kw">pub const </span>VERTEX_SIZE: wgpu::BufferAddress = <span class="number">1_000_000</span>;
+<span class="kw">pub const </span>INDICES_SIZE: wgpu::BufferAddress = <span class="number">1_000_000</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FEATURE_METADATA_SIZE</span>: <span class="ident">wgpu::BufferAddress</span> <span class="op">=</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1000</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LAYER_METADATA_SIZE</span>: <span class="ident">wgpu::BufferAddress</span> <span class="op">=</span> <span class="number">1024</span>;
+<span class="kw">pub const </span>FEATURE_METADATA_SIZE: wgpu::BufferAddress = <span class="number">1024 </span>* <span class="number">1000</span>;
+<span class="kw">pub const </span>LAYER_METADATA_SIZE: wgpu::BufferAddress = <span class="number">1024</span>;
 
-<span class="doccomment">/// This is inspired by the memory pool in Vulkan documented</span>
-<span class="doccomment">/// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferPool</span><span class="op">&lt;</span><span class="ident">Q</span>, <span class="ident">B</span>, <span class="ident">V</span>, <span class="ident">I</span>, <span class="ident">TM</span>, <span class="ident">FM</span><span class="op">&gt;</span> {
-    <span class="ident">vertices</span>: <span class="ident">BackingBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    <span class="ident">indices</span>: <span class="ident">BackingBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    <span class="ident">layer_metadata</span>: <span class="ident">BackingBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    <span class="ident">feature_metadata</span>: <span class="ident">BackingBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
+<span class="doccomment">/// This is inspired by the memory pool in Vulkan documented
+/// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>BufferPool&lt;Q, B, V, I, TM, FM&gt; {
+    vertices: BackingBuffer&lt;B&gt;,
+    indices: BackingBuffer&lt;B&gt;,
+    layer_metadata: BackingBuffer&lt;B&gt;,
+    feature_metadata: BackingBuffer&lt;B&gt;,
 
-    <span class="ident">index</span>: <span class="ident">RingIndex</span>,
-    <span class="ident">phantom_v</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>,
-    <span class="ident">phantom_i</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
-    <span class="ident">phantom_q</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
-    <span class="ident">phantom_m</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">TM</span><span class="op">&gt;</span>,
-    <span class="ident">phantom_fm</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">FM</span><span class="op">&gt;</span>,
+    index: RingIndex,
+    phantom_v: PhantomData&lt;V&gt;,
+    phantom_i: PhantomData&lt;I&gt;,
+    phantom_q: PhantomData&lt;Q&gt;,
+    phantom_m: PhantomData&lt;TM&gt;,
+    phantom_fm: PhantomData&lt;FM&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BackingBufferType</span> {
-    <span class="ident">Vertices</span>,
-    <span class="ident">Indices</span>,
-    <span class="ident">Metadata</span>,
-    <span class="ident">FeatureMetadata</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub enum </span>BackingBufferType {
+    Vertices,
+    Indices,
+    Metadata,
+    FeatureMetadata,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Pod</span>, <span class="ident">I</span>: <span class="ident">Pod</span>, <span class="ident">TM</span>: <span class="ident">Pod</span>, <span class="ident">FM</span>: <span class="ident">Pod</span><span class="op">&gt;</span> <span class="ident">BufferPool</span><span class="op">&lt;</span><span class="ident">wgpu::Queue</span>, <span class="ident">wgpu::Buffer</span>, <span class="ident">V</span>, <span class="ident">I</span>, <span class="ident">TM</span>, <span class="ident">FM</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_device</span>(<span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">wgpu::Device</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">vertex_buffer_desc</span> <span class="op">=</span> <span class="ident">wgpu::BufferDescriptor</span> {
-            <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;vertex buffer&quot;</span>),
-            <span class="ident">size</span>: <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span> <span class="op">*</span> <span class="ident">VERTEX_SIZE</span>,
-            <span class="ident">usage</span>: <span class="ident">wgpu::BufferUsages::VERTEX</span> <span class="op">|</span> <span class="ident">wgpu::BufferUsages::COPY_DST</span>,
-            <span class="ident">mapped_at_creation</span>: <span class="bool-val">false</span>,
+<span class="kw">impl</span>&lt;V: Pod, I: Pod, TM: Pod, FM: Pod&gt; BufferPool&lt;wgpu::Queue, wgpu::Buffer, V, I, TM, FM&gt; {
+    <span class="kw">pub fn </span>from_device(device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>vertex_buffer_desc = wgpu::BufferDescriptor {
+            label: <span class="prelude-val">Some</span>(<span class="string">&quot;vertex buffer&quot;</span>),
+            size: size_of::&lt;V&gt;() <span class="kw">as </span>wgpu::BufferAddress * VERTEX_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: <span class="bool-val">false</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">indices_buffer_desc</span> <span class="op">=</span> <span class="ident">wgpu::BufferDescriptor</span> {
-            <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;indices buffer&quot;</span>),
-            <span class="ident">size</span>: <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span> <span class="op">*</span> <span class="ident">INDICES_SIZE</span>,
-            <span class="ident">usage</span>: <span class="ident">wgpu::BufferUsages::INDEX</span> <span class="op">|</span> <span class="ident">wgpu::BufferUsages::COPY_DST</span>,
-            <span class="ident">mapped_at_creation</span>: <span class="bool-val">false</span>,
+        <span class="kw">let </span>indices_buffer_desc = wgpu::BufferDescriptor {
+            label: <span class="prelude-val">Some</span>(<span class="string">&quot;indices buffer&quot;</span>),
+            size: size_of::&lt;I&gt;() <span class="kw">as </span>wgpu::BufferAddress * INDICES_SIZE,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: <span class="bool-val">false</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">feature_metadata_desc</span> <span class="op">=</span> <span class="ident">wgpu::BufferDescriptor</span> {
-            <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;feature metadata buffer&quot;</span>),
-            <span class="ident">size</span>: <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">FM</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span> <span class="op">*</span> <span class="ident">FEATURE_METADATA_SIZE</span>,
-            <span class="ident">usage</span>: <span class="ident">wgpu::BufferUsages::VERTEX</span> <span class="op">|</span> <span class="ident">wgpu::BufferUsages::COPY_DST</span>,
-            <span class="ident">mapped_at_creation</span>: <span class="bool-val">false</span>,
+        <span class="kw">let </span>feature_metadata_desc = wgpu::BufferDescriptor {
+            label: <span class="prelude-val">Some</span>(<span class="string">&quot;feature metadata buffer&quot;</span>),
+            size: size_of::&lt;FM&gt;() <span class="kw">as </span>wgpu::BufferAddress * FEATURE_METADATA_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: <span class="bool-val">false</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">layer_metadata_desc</span> <span class="op">=</span> <span class="ident">wgpu::BufferDescriptor</span> {
-            <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;layer metadata buffer&quot;</span>),
-            <span class="ident">size</span>: <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">TM</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span> <span class="op">*</span> <span class="ident">LAYER_METADATA_SIZE</span>,
-            <span class="ident">usage</span>: <span class="ident">wgpu::BufferUsages::VERTEX</span> <span class="op">|</span> <span class="ident">wgpu::BufferUsages::COPY_DST</span>,
-            <span class="ident">mapped_at_creation</span>: <span class="bool-val">false</span>,
+        <span class="kw">let </span>layer_metadata_desc = wgpu::BufferDescriptor {
+            label: <span class="prelude-val">Some</span>(<span class="string">&quot;layer metadata buffer&quot;</span>),
+            size: size_of::&lt;TM&gt;() <span class="kw">as </span>wgpu::BufferAddress * LAYER_METADATA_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: <span class="bool-val">false</span>,
         };
 
-        <span class="ident">BufferPool::new</span>(
-            <span class="ident">BackingBufferDescriptor::new</span>(
-                <span class="ident">device</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">vertex_buffer_desc</span>),
-                <span class="ident">vertex_buffer_desc</span>.<span class="ident">size</span>,
+        BufferPool::new(
+            BackingBufferDescriptor::new(
+                device.create_buffer(<span class="kw-2">&amp;</span>vertex_buffer_desc),
+                vertex_buffer_desc.size,
             ),
-            <span class="ident">BackingBufferDescriptor::new</span>(
-                <span class="ident">device</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">indices_buffer_desc</span>),
-                <span class="ident">indices_buffer_desc</span>.<span class="ident">size</span>,
+            BackingBufferDescriptor::new(
+                device.create_buffer(<span class="kw-2">&amp;</span>indices_buffer_desc),
+                indices_buffer_desc.size,
             ),
-            <span class="ident">BackingBufferDescriptor::new</span>(
-                <span class="ident">device</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">layer_metadata_desc</span>),
-                <span class="ident">layer_metadata_desc</span>.<span class="ident">size</span>,
+            BackingBufferDescriptor::new(
+                device.create_buffer(<span class="kw-2">&amp;</span>layer_metadata_desc),
+                layer_metadata_desc.size,
             ),
-            <span class="ident">BackingBufferDescriptor::new</span>(
-                <span class="ident">device</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">feature_metadata_desc</span>),
-                <span class="ident">feature_metadata_desc</span>.<span class="ident">size</span>,
+            BackingBufferDescriptor::new(
+                device.create_buffer(<span class="kw-2">&amp;</span>feature_metadata_desc),
+                feature_metadata_desc.size,
             ),
         )
     }
 }
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">Queue</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">B</span>, <span class="ident">V</span>: <span class="ident">Pod</span>, <span class="ident">I</span>: <span class="ident">Pod</span>, <span class="ident">TM</span>: <span class="ident">Pod</span>, <span class="ident">FM</span>: <span class="ident">Pod</span><span class="op">&gt;</span> <span class="ident">BufferPool</span><span class="op">&lt;</span><span class="ident">Q</span>, <span class="ident">B</span>, <span class="ident">V</span>, <span class="ident">I</span>, <span class="ident">TM</span>, <span class="ident">FM</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">vertices</span>: <span class="ident">BackingBufferDescriptor</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-        <span class="ident">indices</span>: <span class="ident">BackingBufferDescriptor</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-        <span class="ident">layer_metadata</span>: <span class="ident">BackingBufferDescriptor</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-        <span class="ident">feature_metadata</span>: <span class="ident">BackingBufferDescriptor</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">vertices</span>: <span class="ident">BackingBuffer::new</span>(
-                <span class="ident">vertices</span>.<span class="ident">buffer</span>,
-                <span class="ident">vertices</span>.<span class="ident">inner_size</span>,
-                <span class="ident">BackingBufferType::Vertices</span>,
+<span class="kw">impl</span>&lt;Q: Queue&lt;B&gt;, B, V: Pod, I: Pod, TM: Pod, FM: Pod&gt; BufferPool&lt;Q, B, V, I, TM, FM&gt; {
+    <span class="kw">pub fn </span>new(
+        vertices: BackingBufferDescriptor&lt;B&gt;,
+        indices: BackingBufferDescriptor&lt;B&gt;,
+        layer_metadata: BackingBufferDescriptor&lt;B&gt;,
+        feature_metadata: BackingBufferDescriptor&lt;B&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            vertices: BackingBuffer::new(
+                vertices.buffer,
+                vertices.inner_size,
+                BackingBufferType::Vertices,
             ),
-            <span class="ident">indices</span>: <span class="ident">BackingBuffer::new</span>(
-                <span class="ident">indices</span>.<span class="ident">buffer</span>,
-                <span class="ident">indices</span>.<span class="ident">inner_size</span>,
-                <span class="ident">BackingBufferType::Indices</span>,
+            indices: BackingBuffer::new(
+                indices.buffer,
+                indices.inner_size,
+                BackingBufferType::Indices,
             ),
-            <span class="ident">layer_metadata</span>: <span class="ident">BackingBuffer::new</span>(
-                <span class="ident">layer_metadata</span>.<span class="ident">buffer</span>,
-                <span class="ident">layer_metadata</span>.<span class="ident">inner_size</span>,
-                <span class="ident">BackingBufferType::Metadata</span>,
+            layer_metadata: BackingBuffer::new(
+                layer_metadata.buffer,
+                layer_metadata.inner_size,
+                BackingBufferType::Metadata,
             ),
-            <span class="ident">feature_metadata</span>: <span class="ident">BackingBuffer::new</span>(
-                <span class="ident">feature_metadata</span>.<span class="ident">buffer</span>,
-                <span class="ident">feature_metadata</span>.<span class="ident">inner_size</span>,
-                <span class="ident">BackingBufferType::FeatureMetadata</span>,
+            feature_metadata: BackingBuffer::new(
+                feature_metadata.buffer,
+                feature_metadata.inner_size,
+                BackingBufferType::FeatureMetadata,
             ),
-            <span class="ident">index</span>: <span class="ident">RingIndex::new</span>(),
-            <span class="ident">phantom_v</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">phantom_i</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">phantom_q</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">phantom_m</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">phantom_fm</span>: <span class="ident">Default::default</span>(),
+            index: RingIndex::new(),
+            phantom_v: Default::default(),
+            phantom_i: Default::default(),
+            phantom_q: Default::default(),
+            phantom_m: Default::default(),
+            phantom_fm: Default::default(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">clear</span>()
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.index.clear()
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">available_space</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">typ</span>: <span class="ident">BackingBufferType</span>) -&gt; <span class="ident">wgpu::BufferAddress</span> {
-        <span class="kw">let</span> <span class="ident">gap</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">typ</span> {
-            <span class="ident">BackingBufferType::Vertices</span> =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">vertices</span>,
-            <span class="ident">BackingBufferType::Indices</span> =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">indices</span>,
-            <span class="ident">BackingBufferType::Metadata</span> =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">layer_metadata</span>,
-            <span class="ident">BackingBufferType::FeatureMetadata</span> =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">feature_metadata</span>,
+    <span class="attribute">#[cfg(test)]
+    </span><span class="kw">fn </span>available_space(<span class="kw-2">&amp;</span><span class="self">self</span>, typ: BackingBufferType) -&gt; wgpu::BufferAddress {
+        <span class="kw">let </span>gap = <span class="kw">match </span>typ {
+            BackingBufferType::Vertices =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.vertices,
+            BackingBufferType::Indices =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.indices,
+            BackingBufferType::Metadata =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.layer_metadata,
+            BackingBufferType::FeatureMetadata =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.feature_metadata,
         }
-        .<span class="ident">find_largest_gap</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">index</span>);
+        .find_largest_gap(<span class="kw-2">&amp;</span><span class="self">self</span>.index);
 
-        <span class="ident">gap</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">gap</span>.<span class="ident">start</span>
+        gap.end - gap.start
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vertices</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">B</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">vertices</span>.<span class="ident">inner</span>
+    <span class="kw">pub fn </span>vertices(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>B {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.vertices.inner
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">indices</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">B</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">inner</span>
+    <span class="kw">pub fn </span>indices(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>B {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.indices.inner
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">B</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">layer_metadata</span>.<span class="ident">inner</span>
+    <span class="kw">pub fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>B {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.layer_metadata.inner
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">feature_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">B</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">feature_metadata</span>.<span class="ident">inner</span>
+    <span class="kw">pub fn </span>feature_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>B {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.feature_metadata.inner
     }
 
-    <span class="doccomment">/// The VertexBuffers can contain padding elements. Not everything from a VertexBuffers is useable.</span>
-    <span class="doccomment">/// The function returns the `bytes` and `aligned_bytes`. See [`OverAlignedVertexBuffer`].</span>
-    <span class="kw">fn</span> <span class="ident">align</span>(
-        <span class="ident">stride</span>: <span class="ident">wgpu::BufferAddress</span>,
-        <span class="ident">elements</span>: <span class="ident">wgpu::BufferAddress</span>,
-        <span class="ident">usable_elements</span>: <span class="ident">wgpu::BufferAddress</span>,
-    ) -&gt; (<span class="ident">wgpu::BufferAddress</span>, <span class="ident">wgpu::BufferAddress</span>) {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">elements</span> <span class="op">*</span> <span class="ident">stride</span>;
+    <span class="doccomment">/// The VertexBuffers can contain padding elements. Not everything from a VertexBuffers is useable.
+    /// The function returns the `bytes` and `aligned_bytes`. See [`OverAlignedVertexBuffer`].
+    </span><span class="kw">fn </span>align(
+        stride: wgpu::BufferAddress,
+        elements: wgpu::BufferAddress,
+        usable_elements: wgpu::BufferAddress,
+    ) -&gt; (wgpu::BufferAddress, wgpu::BufferAddress) {
+        <span class="kw">let </span>bytes = elements * stride;
 
-        <span class="kw">let</span> <span class="ident">usable_bytes</span> <span class="op">=</span> (<span class="ident">usable_elements</span> <span class="op">*</span> <span class="ident">stride</span>) <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>;
+        <span class="kw">let </span>usable_bytes = (usable_elements * stride) <span class="kw">as </span>wgpu::BufferAddress;
 
-        <span class="kw">let</span> <span class="ident">align</span> <span class="op">=</span> <span class="ident">wgpu::COPY_BUFFER_ALIGNMENT</span>;
-        <span class="kw">let</span> <span class="ident">padding</span> <span class="op">=</span> (<span class="ident">align</span> <span class="op">-</span> <span class="ident">usable_bytes</span> <span class="op">%</span> <span class="ident">align</span>) <span class="op">%</span> <span class="ident">align</span>;
+        <span class="kw">let </span>align = wgpu::COPY_BUFFER_ALIGNMENT;
+        <span class="kw">let </span>padding = (align - usable_bytes % align) % align;
 
-        <span class="kw">let</span> <span class="ident">aligned_bytes</span> <span class="op">=</span> <span class="ident">usable_bytes</span> <span class="op">+</span> <span class="ident">padding</span>;
+        <span class="kw">let </span>aligned_bytes = usable_bytes + padding;
 
-        (<span class="ident">bytes</span>, <span class="ident">aligned_bytes</span>)
+        (bytes, aligned_bytes)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_loaded_layers_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">get_layers</span>(<span class="ident">coords</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">layers</span><span class="op">|</span> {
-            <span class="ident">layers</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">style_layer</span>.<span class="ident">source_layer</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">as_str</span>()) <span class="comment">// TODO: Remove unwrap</span>
-                .<span class="ident">collect</span>()
+    <span class="kw">pub fn </span>get_loaded_layers_at(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;HashSet&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
+        <span class="self">self</span>.index.get_layers(coords).map(|layers| {
+            layers
+                .iter()
+                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str()) <span class="comment">// TODO: Remove unwrap
+                </span>.collect()
         })
     }
 
-    <span class="doccomment">/// Allocates</span>
-    <span class="doccomment">/// * `geometry`</span>
-    <span class="doccomment">/// * `layer_metadata` and</span>
-    <span class="doccomment">/// * `feature_metadata` for a layer. This function is able to dynamically evict layers if there</span>
-    <span class="doccomment">/// is not enough space available.</span>
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allocate_layer_geometry</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>,
-        <span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>,
-        <span class="ident">style_layer</span>: <span class="ident">StyleLayer</span>,
-        <span class="ident">geometry</span>: <span class="kw-2">&amp;</span><span class="ident">OverAlignedVertexBuffer</span><span class="op">&lt;</span><span class="ident">V</span>, <span class="ident">I</span><span class="op">&gt;</span>,
-        <span class="ident">layer_metadata</span>: <span class="ident">TM</span>,
-        <span class="ident">feature_metadata</span>: <span class="kw-2">&amp;</span>[<span class="ident">FM</span>],
+    <span class="doccomment">/// Allocates
+    /// * `geometry`
+    /// * `layer_metadata` and
+    /// * `feature_metadata` for a layer. This function is able to dynamically evict layers if there
+    /// is not enough space available.
+    </span><span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>allocate_layer_geometry(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        queue: <span class="kw-2">&amp;</span>Q,
+        coords: WorldTileCoords,
+        style_layer: StyleLayer,
+        geometry: <span class="kw-2">&amp;</span>OverAlignedVertexBuffer&lt;V, I&gt;,
+        layer_metadata: TM,
+        feature_metadata: <span class="kw-2">&amp;</span>[FM],
     ) {
-        <span class="kw">let</span> <span class="ident">vertices_stride</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>;
-        <span class="kw">let</span> <span class="ident">indices_stride</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>;
-        <span class="kw">let</span> <span class="ident">layer_metadata_stride</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">TM</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>;
-        <span class="kw">let</span> <span class="ident">feature_metadata_stride</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">FM</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>;
+        <span class="kw">let </span>vertices_stride = size_of::&lt;V&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+        <span class="kw">let </span>indices_stride = size_of::&lt;I&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+        <span class="kw">let </span>layer_metadata_stride = size_of::&lt;TM&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+        <span class="kw">let </span>feature_metadata_stride = size_of::&lt;FM&gt;() <span class="kw">as </span>wgpu::BufferAddress;
 
-        <span class="kw">let</span> (<span class="ident">vertices_bytes</span>, <span class="ident">aligned_vertices_bytes</span>) <span class="op">=</span> <span class="ident"><span class="self">Self</span>::align</span>(
-            <span class="ident">vertices_stride</span>,
-            <span class="ident">geometry</span>.<span class="ident">buffer</span>.<span class="ident">vertices</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>,
-            <span class="ident">geometry</span>.<span class="ident">buffer</span>.<span class="ident">vertices</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>,
+        <span class="kw">let </span>(vertices_bytes, aligned_vertices_bytes) = <span class="self">Self</span>::align(
+            vertices_stride,
+            geometry.buffer.vertices.len() <span class="kw">as </span>wgpu::BufferAddress,
+            geometry.buffer.vertices.len() <span class="kw">as </span>wgpu::BufferAddress,
         );
-        <span class="kw">let</span> (<span class="ident">indices_bytes</span>, <span class="ident">aligned_indices_bytes</span>) <span class="op">=</span> <span class="ident"><span class="self">Self</span>::align</span>(
-            <span class="ident">indices_stride</span>,
-            <span class="ident">geometry</span>.<span class="ident">buffer</span>.<span class="ident">indices</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>,
-            <span class="ident">geometry</span>.<span class="ident">usable_indices</span> <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>,
+        <span class="kw">let </span>(indices_bytes, aligned_indices_bytes) = <span class="self">Self</span>::align(
+            indices_stride,
+            geometry.buffer.indices.len() <span class="kw">as </span>wgpu::BufferAddress,
+            geometry.usable_indices <span class="kw">as </span>wgpu::BufferAddress,
         );
-        <span class="kw">let</span> (<span class="ident">layer_metadata_bytes</span>, <span class="ident">aligned_layer_metadata_bytes</span>) <span class="op">=</span>
-            <span class="ident"><span class="self">Self</span>::align</span>(<span class="ident">layer_metadata_stride</span>, <span class="number">1</span>, <span class="number">1</span>);
+        <span class="kw">let </span>(layer_metadata_bytes, aligned_layer_metadata_bytes) =
+            <span class="self">Self</span>::align(layer_metadata_stride, <span class="number">1</span>, <span class="number">1</span>);
 
-        <span class="kw">let</span> (<span class="ident">feature_metadata_bytes</span>, <span class="ident">aligned_feature_metadata_bytes</span>) <span class="op">=</span> <span class="ident"><span class="self">Self</span>::align</span>(
-            <span class="ident">feature_metadata_stride</span>,
-            <span class="ident">feature_metadata</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>,
-            <span class="ident">feature_metadata</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>,
+        <span class="kw">let </span>(feature_metadata_bytes, aligned_feature_metadata_bytes) = <span class="self">Self</span>::align(
+            feature_metadata_stride,
+            feature_metadata.len() <span class="kw">as </span>wgpu::BufferAddress,
+            feature_metadata.len() <span class="kw">as </span>wgpu::BufferAddress,
         );
 
-        <span class="kw">if</span> <span class="ident">feature_metadata_bytes</span> <span class="op">!</span><span class="op">=</span> <span class="ident">aligned_feature_metadata_bytes</span> {
-            <span class="comment">// FIXME: align if not aligned?</span>
-            <span class="macro">panic!</span>(
-                <span class="string">&quot;feature_metadata is not aligned. This should not happen as long as size_of::&lt;FM&gt;() is a multiple of the alignment.&quot;</span>
-            )
+        <span class="kw">if </span>feature_metadata_bytes != aligned_feature_metadata_bytes {
+            <span class="comment">// FIXME: align if not aligned?
+            </span><span class="macro">panic!</span>(
+                <span class="string">&quot;feature_metadata is not aligned. This should not happen as long as size_of::&lt;FM&gt;() is a multiple of the alignment.&quot;
+            </span>)
         }
 
-        <span class="kw">let</span> <span class="ident">maybe_entry</span> <span class="op">=</span> <span class="ident">IndexEntry</span> {
-            <span class="ident">coords</span>,
-            <span class="ident">style_layer</span>,
-            <span class="ident">buffer_vertices</span>: <span class="self">self</span>.<span class="ident">vertices</span>.<span class="ident">make_room</span>(<span class="ident">vertices_bytes</span>, <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">index</span>),
-            <span class="ident">buffer_indices</span>: <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">make_room</span>(<span class="ident">indices_bytes</span>, <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">index</span>),
-            <span class="ident">usable_indices</span>: <span class="ident">geometry</span>.<span class="ident">usable_indices</span>,
-            <span class="ident">buffer_layer_metadata</span>: <span class="self">self</span>
-                .<span class="ident">layer_metadata</span>
-                .<span class="ident">make_room</span>(<span class="ident">layer_metadata_bytes</span>, <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">index</span>),
-            <span class="ident">buffer_feature_metadata</span>: <span class="self">self</span>
-                .<span class="ident">feature_metadata</span>
-                .<span class="ident">make_room</span>(<span class="ident">feature_metadata_bytes</span>, <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">index</span>),
+        <span class="kw">let </span>maybe_entry = IndexEntry {
+            coords,
+            style_layer,
+            buffer_vertices: <span class="self">self</span>.vertices.make_room(vertices_bytes, <span class="kw-2">&amp;mut </span><span class="self">self</span>.index),
+            buffer_indices: <span class="self">self</span>.indices.make_room(indices_bytes, <span class="kw-2">&amp;mut </span><span class="self">self</span>.index),
+            usable_indices: geometry.usable_indices,
+            buffer_layer_metadata: <span class="self">self
+                </span>.layer_metadata
+                .make_room(layer_metadata_bytes, <span class="kw-2">&amp;mut </span><span class="self">self</span>.index),
+            buffer_feature_metadata: <span class="self">self
+                </span>.feature_metadata
+                .make_room(feature_metadata_bytes, <span class="kw-2">&amp;mut </span><span class="self">self</span>.index),
         };
 
-        <span class="comment">// write_buffer() is the preferred method for WASM: https://toji.github.io/webgpu-best-practices/buffer-uploads.html#when-in-doubt-writebuffer</span>
-        <span class="ident">queue</span>.<span class="ident">write_buffer</span>(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">vertices</span>.<span class="ident">inner</span>,
-            <span class="ident">maybe_entry</span>.<span class="ident">buffer_vertices</span>.<span class="ident">start</span>,
-            <span class="kw-2">&amp;</span><span class="ident">bytemuck::cast_slice</span>(<span class="kw-2">&amp;</span><span class="ident">geometry</span>.<span class="ident">buffer</span>.<span class="ident">vertices</span>)[<span class="number">0</span>..<span class="ident">aligned_vertices_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>],
+        <span class="comment">// write_buffer() is the preferred method for WASM: https://toji.github.io/webgpu-best-practices/buffer-uploads.html#when-in-doubt-writebuffer
+        </span>queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.vertices.inner,
+            maybe_entry.buffer_vertices.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(<span class="kw-2">&amp;</span>geometry.buffer.vertices)[<span class="number">0</span>..aligned_vertices_bytes <span class="kw">as </span>usize],
         );
 
-        <span class="ident">queue</span>.<span class="ident">write_buffer</span>(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">inner</span>,
-            <span class="ident">maybe_entry</span>.<span class="ident">buffer_indices</span>.<span class="ident">start</span>,
-            <span class="kw-2">&amp;</span><span class="ident">bytemuck::cast_slice</span>(<span class="kw-2">&amp;</span><span class="ident">geometry</span>.<span class="ident">buffer</span>.<span class="ident">indices</span>)[<span class="number">0</span>..<span class="ident">aligned_indices_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>],
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.indices.inner,
+            maybe_entry.buffer_indices.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(<span class="kw-2">&amp;</span>geometry.buffer.indices)[<span class="number">0</span>..aligned_indices_bytes <span class="kw">as </span>usize],
         );
 
-        <span class="ident">queue</span>.<span class="ident">write_buffer</span>(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">layer_metadata</span>.<span class="ident">inner</span>,
-            <span class="ident">maybe_entry</span>.<span class="ident">buffer_layer_metadata</span>.<span class="ident">start</span>,
-            <span class="kw-2">&amp;</span><span class="ident">bytemuck::cast_slice</span>(<span class="kw-2">&amp;</span>[<span class="ident">layer_metadata</span>])[<span class="number">0</span>..<span class="ident">aligned_layer_metadata_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>],
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.layer_metadata.inner,
+            maybe_entry.buffer_layer_metadata.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(<span class="kw-2">&amp;</span>[layer_metadata])[<span class="number">0</span>..aligned_layer_metadata_bytes <span class="kw">as </span>usize],
         );
 
-        <span class="ident">queue</span>.<span class="ident">write_buffer</span>(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">feature_metadata</span>.<span class="ident">inner</span>,
-            <span class="ident">maybe_entry</span>.<span class="ident">buffer_feature_metadata</span>.<span class="ident">start</span>,
-            <span class="kw-2">&amp;</span><span class="ident">bytemuck::cast_slice</span>(<span class="ident">feature_metadata</span>)[<span class="number">0</span>..<span class="ident">aligned_feature_metadata_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>],
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.feature_metadata.inner,
+            maybe_entry.buffer_feature_metadata.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(feature_metadata)[<span class="number">0</span>..aligned_feature_metadata_bytes <span class="kw">as </span>usize],
         );
 
-        <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">push_back</span>(<span class="ident">maybe_entry</span>);
+        <span class="self">self</span>.index.push_back(maybe_entry);
     }
 
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_layer_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>, <span class="ident">entry</span>: <span class="kw-2">&amp;</span><span class="ident">IndexEntry</span>, <span class="ident">layer_metadata</span>: <span class="ident">TM</span>) {
-        <span class="kw">let</span> <span class="ident">layer_metadata_stride</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">TM</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>; <span class="comment">// TODO: deduplicate</span>
-        <span class="kw">let</span> (<span class="ident">layer_metadata_bytes</span>, <span class="ident">aligned_layer_metadata_bytes</span>) <span class="op">=</span>
-            <span class="ident"><span class="self">Self</span>::align</span>(<span class="ident">layer_metadata_stride</span>, <span class="number">1</span>, <span class="number">1</span>);
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>update_layer_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>Q, entry: <span class="kw-2">&amp;</span>IndexEntry, layer_metadata: TM) {
+        <span class="kw">let </span>layer_metadata_stride = size_of::&lt;TM&gt;() <span class="kw">as </span>wgpu::BufferAddress; <span class="comment">// TODO: deduplicate
+        </span><span class="kw">let </span>(layer_metadata_bytes, aligned_layer_metadata_bytes) =
+            <span class="self">Self</span>::align(layer_metadata_stride, <span class="number">1</span>, <span class="number">1</span>);
 
-        <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">buffer_layer_metadata</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">entry</span>.<span class="ident">buffer_layer_metadata</span>.<span class="ident">start</span>
-            <span class="op">!</span><span class="op">=</span> <span class="ident">layer_metadata_bytes</span>
+        <span class="kw">if </span>entry.buffer_layer_metadata.end - entry.buffer_layer_metadata.start
+            != layer_metadata_bytes
         {
             <span class="macro">panic!</span>(<span class="string">&quot;Updated layer metadata has wrong size!&quot;</span>);
         }
 
-        <span class="ident">queue</span>.<span class="ident">write_buffer</span>(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">layer_metadata</span>.<span class="ident">inner</span>,
-            <span class="ident">entry</span>.<span class="ident">buffer_layer_metadata</span>.<span class="ident">start</span>,
-            <span class="kw-2">&amp;</span><span class="ident">bytemuck::cast_slice</span>(<span class="kw-2">&amp;</span>[<span class="ident">layer_metadata</span>])[<span class="number">0</span>..<span class="ident">aligned_layer_metadata_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>],
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.layer_metadata.inner,
+            entry.buffer_layer_metadata.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(<span class="kw-2">&amp;</span>[layer_metadata])[<span class="number">0</span>..aligned_layer_metadata_bytes <span class="kw">as </span>usize],
         );
     }
 
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_feature_metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>, <span class="ident">entry</span>: <span class="kw-2">&amp;</span><span class="ident">IndexEntry</span>, <span class="ident">feature_metadata</span>: <span class="kw-2">&amp;</span>[<span class="ident">FM</span>]) {
-        <span class="kw">let</span> <span class="ident">feature_metadata_stride</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">FM</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>; <span class="comment">// TODO: deduplicate</span>
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>update_feature_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>Q, entry: <span class="kw-2">&amp;</span>IndexEntry, feature_metadata: <span class="kw-2">&amp;</span>[FM]) {
+        <span class="kw">let </span>feature_metadata_stride = size_of::&lt;FM&gt;() <span class="kw">as </span>wgpu::BufferAddress; <span class="comment">// TODO: deduplicate
 
-        <span class="kw">let</span> (<span class="ident">feature_metadata_bytes</span>, <span class="ident">aligned_feature_metadata_bytes</span>) <span class="op">=</span> <span class="ident"><span class="self">Self</span>::align</span>(
-            <span class="ident">feature_metadata_stride</span>,
-            <span class="ident">feature_metadata</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>,
-            <span class="ident">feature_metadata</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>,
+        </span><span class="kw">let </span>(feature_metadata_bytes, aligned_feature_metadata_bytes) = <span class="self">Self</span>::align(
+            feature_metadata_stride,
+            feature_metadata.len() <span class="kw">as </span>wgpu::BufferAddress,
+            feature_metadata.len() <span class="kw">as </span>wgpu::BufferAddress,
         );
 
-        <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">buffer_feature_metadata</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">entry</span>.<span class="ident">buffer_feature_metadata</span>.<span class="ident">start</span>
-            <span class="op">!</span><span class="op">=</span> <span class="ident">feature_metadata_bytes</span>
+        <span class="kw">if </span>entry.buffer_feature_metadata.end - entry.buffer_feature_metadata.start
+            != feature_metadata_bytes
         {
             <span class="macro">panic!</span>(<span class="string">&quot;Updated feature metadata has wrong size!&quot;</span>);
         }
 
-        <span class="kw">if</span> <span class="ident">feature_metadata_bytes</span> <span class="op">!</span><span class="op">=</span> <span class="ident">aligned_feature_metadata_bytes</span> {
-            <span class="comment">// FIXME: align if not aligned?</span>
-            <span class="macro">panic!</span>(
-                <span class="string">&quot;feature_metadata is not aligned. This should not happen as long as size_of::&lt;FM&gt;() is a multiple of the alignment.&quot;</span>
-            )
+        <span class="kw">if </span>feature_metadata_bytes != aligned_feature_metadata_bytes {
+            <span class="comment">// FIXME: align if not aligned?
+            </span><span class="macro">panic!</span>(
+                <span class="string">&quot;feature_metadata is not aligned. This should not happen as long as size_of::&lt;FM&gt;() is a multiple of the alignment.&quot;
+            </span>)
         }
 
-        <span class="ident">queue</span>.<span class="ident">write_buffer</span>(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">feature_metadata</span>.<span class="ident">inner</span>,
-            <span class="ident">entry</span>.<span class="ident">buffer_feature_metadata</span>.<span class="ident">start</span>,
-            <span class="kw-2">&amp;</span><span class="ident">bytemuck::cast_slice</span>(<span class="ident">feature_metadata</span>)[<span class="number">0</span>..<span class="ident">aligned_feature_metadata_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>],
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.feature_metadata.inner,
+            entry.buffer_feature_metadata.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(feature_metadata)[<span class="number">0</span>..aligned_feature_metadata_bytes <span class="kw">as </span>usize],
         );
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">RingIndex</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">index</span>
+    <span class="kw">pub fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RingIndex {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.index
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BackingBufferDescriptor</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The buffer which is used</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">buffer</span>: <span class="ident">B</span>,
-    <span class="doccomment">/// The size of buffer</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">inner_size</span>: <span class="ident">wgpu::BufferAddress</span>,
+<span class="kw">pub struct </span>BackingBufferDescriptor&lt;B&gt; {
+    <span class="doccomment">/// The buffer which is used
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) buffer: B,
+    <span class="doccomment">/// The size of buffer
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) inner_size: wgpu::BufferAddress,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> <span class="ident">BackingBufferDescriptor</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">buffer</span>: <span class="ident">B</span>, <span class="ident">inner_size</span>: <span class="ident">wgpu::BufferAddress</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">buffer</span>, <span class="ident">inner_size</span> }
+<span class="kw">impl</span>&lt;B&gt; BackingBufferDescriptor&lt;B&gt; {
+    <span class="kw">pub fn </span>new(buffer: B, inner_size: wgpu::BufferAddress) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ buffer, inner_size }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">BackingBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The internal structure which is used for storage</span>
-    <span class="ident">inner</span>: <span class="ident">B</span>,
-    <span class="doccomment">/// The size of the `inner` buffer</span>
-    <span class="ident">inner_size</span>: <span class="ident">wgpu::BufferAddress</span>,
-    <span class="ident">typ</span>: <span class="ident">BackingBufferType</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">struct </span>BackingBuffer&lt;B&gt; {
+    <span class="doccomment">/// The internal structure which is used for storage
+    </span>inner: B,
+    <span class="doccomment">/// The size of the `inner` buffer
+    </span>inner_size: wgpu::BufferAddress,
+    typ: BackingBufferType,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> <span class="ident">BackingBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">inner</span>: <span class="ident">B</span>, <span class="ident">inner_size</span>: <span class="ident">wgpu::BufferAddress</span>, <span class="ident">typ</span>: <span class="ident">BackingBufferType</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>,
-            <span class="ident">inner_size</span>,
-            <span class="ident">typ</span>,
+<span class="kw">impl</span>&lt;B&gt; BackingBuffer&lt;B&gt; {
+    <span class="kw">fn </span>new(inner: B, inner_size: wgpu::BufferAddress, typ: BackingBufferType) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner,
+            inner_size,
+            typ,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">make_room</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">new_data</span>: <span class="ident">wgpu::BufferAddress</span>,
-        <span class="ident">index</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RingIndex</span>,
-    ) -&gt; <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">new_data</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">inner_size</span> {
+    <span class="kw">fn </span>make_room(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        new_data: wgpu::BufferAddress,
+        index: <span class="kw-2">&amp;mut </span>RingIndex,
+    ) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="kw">if </span>new_data &gt; <span class="self">self</span>.inner_size {
             <span class="macro">panic!</span>(
                 <span class="string">&quot;can not allocate because backing buffer {:?} are too small&quot;</span>,
-                <span class="self">self</span>.<span class="ident">typ</span>
+                <span class="self">self</span>.typ
             )
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">available_gap</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_largest_gap</span>(<span class="ident">index</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>available_gap = <span class="self">self</span>.find_largest_gap(index);
 
-        <span class="kw">while</span> <span class="ident">new_data</span> <span class="op">&gt;</span> <span class="ident">available_gap</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">available_gap</span>.<span class="ident">start</span> {
-            <span class="comment">// no more space, we need to evict items</span>
-            <span class="kw">if</span> <span class="ident">index</span>.<span class="ident">pop_front</span>().<span class="ident">is_some</span>() {
-                <span class="ident">available_gap</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_largest_gap</span>(<span class="ident">index</span>);
-            } <span class="kw">else</span> {
+        <span class="kw">while </span>new_data &gt; available_gap.end - available_gap.start {
+            <span class="comment">// no more space, we need to evict items
+            </span><span class="kw">if </span>index.pop_front().is_some() {
+                available_gap = <span class="self">self</span>.find_largest_gap(index);
+            } <span class="kw">else </span>{
                 <span class="macro">panic!</span>(<span class="string">&quot;evicted even though index is empty&quot;</span>)
             }
         }
 
-        <span class="ident">available_gap</span>.<span class="ident">start</span>..<span class="ident">available_gap</span>.<span class="ident">start</span> <span class="op">+</span> <span class="ident">new_data</span>
+        available_gap.start..available_gap.start + new_data
     }
 
-    <span class="kw">fn</span> <span class="ident">find_largest_gap</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="kw-2">&amp;</span><span class="ident">RingIndex</span>) -&gt; <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">index</span>.<span class="ident">front</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">first</span><span class="op">|</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">typ</span> {
-            <span class="ident">BackingBufferType::Vertices</span> =&gt; <span class="ident">first</span>.<span class="ident">buffer_vertices</span>.<span class="ident">start</span>,
-            <span class="ident">BackingBufferType::Indices</span> =&gt; <span class="ident">first</span>.<span class="ident">buffer_indices</span>.<span class="ident">start</span>,
-            <span class="ident">BackingBufferType::Metadata</span> =&gt; <span class="ident">first</span>.<span class="ident">buffer_layer_metadata</span>.<span class="ident">start</span>,
-            <span class="ident">BackingBufferType::FeatureMetadata</span> =&gt; <span class="ident">first</span>.<span class="ident">buffer_feature_metadata</span>.<span class="ident">start</span>,
+    <span class="kw">fn </span>find_largest_gap(<span class="kw-2">&amp;</span><span class="self">self</span>, index: <span class="kw-2">&amp;</span>RingIndex) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="kw">let </span>start = index.front().map(|first| <span class="kw">match </span><span class="self">self</span>.typ {
+            BackingBufferType::Vertices =&gt; first.buffer_vertices.start,
+            BackingBufferType::Indices =&gt; first.buffer_indices.start,
+            BackingBufferType::Metadata =&gt; first.buffer_layer_metadata.start,
+            BackingBufferType::FeatureMetadata =&gt; first.buffer_feature_metadata.start,
         });
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">index</span>.<span class="ident">back</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">first</span><span class="op">|</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">typ</span> {
-            <span class="ident">BackingBufferType::Vertices</span> =&gt; <span class="ident">first</span>.<span class="ident">buffer_vertices</span>.<span class="ident">end</span>,
-            <span class="ident">BackingBufferType::Indices</span> =&gt; <span class="ident">first</span>.<span class="ident">buffer_indices</span>.<span class="ident">end</span>,
-            <span class="ident">BackingBufferType::Metadata</span> =&gt; <span class="ident">first</span>.<span class="ident">buffer_layer_metadata</span>.<span class="ident">end</span>,
-            <span class="ident">BackingBufferType::FeatureMetadata</span> =&gt; <span class="ident">first</span>.<span class="ident">buffer_feature_metadata</span>.<span class="ident">end</span>,
+        <span class="kw">let </span>end = index.back().map(|first| <span class="kw">match </span><span class="self">self</span>.typ {
+            BackingBufferType::Vertices =&gt; first.buffer_vertices.end,
+            BackingBufferType::Indices =&gt; first.buffer_indices.end,
+            BackingBufferType::Metadata =&gt; first.buffer_layer_metadata.end,
+            BackingBufferType::FeatureMetadata =&gt; first.buffer_feature_metadata.end,
         });
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">start</span>) <span class="op">=</span> <span class="ident">start</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">end</span>) <span class="op">=</span> <span class="ident">end</span> {
-                <span class="kw">if</span> <span class="ident">end</span> <span class="op">&gt;</span> <span class="ident">start</span> {
-                    <span class="comment">// we haven&#39;t wrapped yet in the ring buffer</span>
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(start) = start {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(end) = end {
+                <span class="kw">if </span>end &gt; start {
+                    <span class="comment">// we haven&#39;t wrapped yet in the ring buffer
 
-                    <span class="kw">let</span> <span class="ident">gap_from_start</span> <span class="op">=</span> <span class="number">0</span>..<span class="ident">start</span>; <span class="comment">// gap from beginning to first entry</span>
-                    <span class="kw">let</span> <span class="ident">gap_to_end</span> <span class="op">=</span> <span class="ident">end</span>..<span class="self">self</span>.<span class="ident">inner_size</span>;
+                    </span><span class="kw">let </span>gap_from_start = <span class="number">0</span>..start; <span class="comment">// gap from beginning to first entry
+                    </span><span class="kw">let </span>gap_to_end = end..<span class="self">self</span>.inner_size;
 
-                    <span class="kw">if</span> <span class="ident">gap_to_end</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">gap_to_end</span>.<span class="ident">start</span> <span class="op">&gt;</span> <span class="ident">gap_from_start</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">gap_from_start</span>.<span class="ident">start</span>
+                    <span class="kw">if </span>gap_to_end.end - gap_to_end.start &gt; gap_from_start.end - gap_from_start.start
                     {
-                        <span class="ident">gap_to_end</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">gap_from_start</span>
+                        gap_to_end
+                    } <span class="kw">else </span>{
+                        gap_from_start
                     }
-                } <span class="kw">else</span> {
-                    <span class="comment">// we already wrapped in the ring buffer</span>
-                    <span class="comment">// we choose the gab between the two</span>
-                    <span class="ident">end</span>..<span class="ident">start</span>
+                } <span class="kw">else </span>{
+                    <span class="comment">// we already wrapped in the ring buffer
+                    // we choose the gab between the two
+                    </span>end..start
                 }
-            } <span class="kw">else</span> {
+            } <span class="kw">else </span>{
                 <span class="macro">unreachable!</span>()
             }
-        } <span class="kw">else</span> {
-            <span class="number">0</span>..<span class="self">self</span>.<span class="ident">inner_size</span>
+        } <span class="kw">else </span>{
+            <span class="number">0</span>..<span class="self">self</span>.inner_size
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IndexEntry</span> {
-    <span class="kw">pub</span> <span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>,
-    <span class="kw">pub</span> <span class="ident">style_layer</span>: <span class="ident">StyleLayer</span>,
-    <span class="comment">// Range of bytes within the backing buffer for vertices</span>
-    <span class="ident">buffer_vertices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span>,
-    <span class="comment">// Range of bytes within the backing buffer for indices</span>
-    <span class="ident">buffer_indices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span>,
-    <span class="comment">// Range of bytes within the backing buffer for metadata</span>
-    <span class="ident">buffer_layer_metadata</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span>,
-    <span class="comment">// Range of bytes within the backing buffer for feature metadata</span>
-    <span class="ident">buffer_feature_metadata</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span>,
-    <span class="comment">// Amount of actually usable indices. Each index has the size/format `IndexDataType`.</span>
-    <span class="comment">// Can be lower than size(buffer_indices) / indices_stride because of alignment.</span>
-    <span class="ident">usable_indices</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>IndexEntry {
+    <span class="kw">pub </span>coords: WorldTileCoords,
+    <span class="kw">pub </span>style_layer: StyleLayer,
+    <span class="comment">// Range of bytes within the backing buffer for vertices
+    </span>buffer_vertices: Range&lt;wgpu::BufferAddress&gt;,
+    <span class="comment">// Range of bytes within the backing buffer for indices
+    </span>buffer_indices: Range&lt;wgpu::BufferAddress&gt;,
+    <span class="comment">// Range of bytes within the backing buffer for metadata
+    </span>buffer_layer_metadata: Range&lt;wgpu::BufferAddress&gt;,
+    <span class="comment">// Range of bytes within the backing buffer for feature metadata
+    </span>buffer_feature_metadata: Range&lt;wgpu::BufferAddress&gt;,
+    <span class="comment">// Amount of actually usable indices. Each index has the size/format `IndexDataType`.
+    // Can be lower than size(buffer_indices) / indices_stride because of alignment.
+    </span>usable_indices: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">IndexEntry</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">indices_range</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="number">0</span>..<span class="self">self</span>.<span class="ident">usable_indices</span>
+<span class="kw">impl </span>IndexEntry {
+    <span class="kw">pub fn </span>indices_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;u32&gt; {
+        <span class="number">0</span>..<span class="self">self</span>.usable_indices
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">indices_buffer_range</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">buffer_indices</span>.<span class="ident">clone</span>()
+    <span class="kw">pub fn </span>indices_buffer_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="self">self</span>.buffer_indices.clone()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vertices_buffer_range</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">buffer_vertices</span>.<span class="ident">clone</span>()
+    <span class="kw">pub fn </span>vertices_buffer_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="self">self</span>.buffer_vertices.clone()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">layer_metadata_buffer_range</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">buffer_layer_metadata</span>.<span class="ident">clone</span>()
+    <span class="kw">pub fn </span>layer_metadata_buffer_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="self">self</span>.buffer_layer_metadata.clone()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">feature_metadata_buffer_range</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">buffer_feature_metadata</span>.<span class="ident">clone</span>()
+    <span class="kw">pub fn </span>feature_metadata_buffer_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="self">self</span>.buffer_feature_metadata.clone()
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RingIndex</span> {
-    <span class="ident">tree_index</span>: <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">Quadkey</span>, <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">IndexEntry</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">linear_index</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Quadkey</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>RingIndex {
+    tree_index: BTreeMap&lt;Quadkey, VecDeque&lt;IndexEntry&gt;&gt;,
+    linear_index: VecDeque&lt;Quadkey&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">RingIndex</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">tree_index</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">linear_index</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl </span>RingIndex {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            tree_index: Default::default(),
+            linear_index: Default::default(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">linear_index</span>.<span class="ident">clear</span>();
-        <span class="self">self</span>.<span class="ident">tree_index</span>.<span class="ident">clear</span>();
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.linear_index.clear();
+        <span class="self">self</span>.tree_index.clear();
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">front</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">IndexEntry</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">linear_index</span>
-            .<span class="ident">front</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree_index</span>.<span class="ident">get</span>(<span class="ident">key</span>).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">entries</span><span class="op">|</span> <span class="ident">entries</span>.<span class="ident">front</span>()))
+    <span class="kw">pub fn </span>front(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>IndexEntry&gt; {
+        <span class="self">self</span>.linear_index
+            .front()
+            .and_then(|key| <span class="self">self</span>.tree_index.get(key).and_then(|entries| entries.front()))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">back</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">IndexEntry</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">linear_index</span>
-            .<span class="ident">back</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree_index</span>.<span class="ident">get</span>(<span class="ident">key</span>).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">entries</span><span class="op">|</span> <span class="ident">entries</span>.<span class="ident">back</span>()))
+    <span class="kw">pub fn </span>back(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>IndexEntry&gt; {
+        <span class="self">self</span>.linear_index
+            .back()
+            .and_then(|key| <span class="self">self</span>.tree_index.get(key).and_then(|entries| entries.back()))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_layers</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">IndexEntry</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">coords</span>
-            .<span class="ident">build_quad_key</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree_index</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>))
+    <span class="kw">pub fn </span>get_layers(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>VecDeque&lt;IndexEntry&gt;&gt; {
+        coords
+            .build_quad_key()
+            .and_then(|key| <span class="self">self</span>.tree_index.get(<span class="kw-2">&amp;</span>key))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_layers_fallback</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">IndexEntry</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">coords</span>;
-        <span class="kw">loop</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entries</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_layers</span>(<span class="kw-2">&amp;</span><span class="ident">current</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">entries</span>);
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">parent</span>) <span class="op">=</span> <span class="ident">current</span>.<span class="ident">get_parent</span>() {
-                <span class="ident">current</span> <span class="op">=</span> <span class="ident">parent</span>
-            } <span class="kw">else</span> {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">pub fn </span>get_layers_fallback(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>VecDeque&lt;IndexEntry&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>current = <span class="kw-2">*</span>coords;
+        <span class="kw">loop </span>{
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(entries) = <span class="self">self</span>.get_layers(<span class="kw-2">&amp;</span>current) {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(entries);
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(parent) = current.get_parent() {
+                current = parent
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_tile</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="ident">bool</span> {
-        <span class="ident">coords</span>
-            .<span class="ident">build_quad_key</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree_index</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>))
-            .<span class="ident">is_some</span>()
+    <span class="kw">pub fn </span>has_tile(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; bool {
+        coords
+            .build_quad_key()
+            .and_then(|key| <span class="self">self</span>.tree_index.get(<span class="kw-2">&amp;</span>key))
+            .is_some()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_tile_coords_fallback</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WorldTileCoords</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">coords</span>;
-        <span class="kw">loop</span> {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">has_tile</span>(<span class="kw-2">&amp;</span><span class="ident">current</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">current</span>);
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">parent</span>) <span class="op">=</span> <span class="ident">current</span>.<span class="ident">get_parent</span>() {
-                <span class="ident">current</span> <span class="op">=</span> <span class="ident">parent</span>
-            } <span class="kw">else</span> {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">pub fn </span>get_tile_coords_fallback(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;WorldTileCoords&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>current = <span class="kw-2">*</span>coords;
+        <span class="kw">loop </span>{
+            <span class="kw">if </span><span class="self">self</span>.has_tile(<span class="kw-2">&amp;</span>current) {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(current);
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(parent) = current.get_parent() {
+                current = parent
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">IndexEntry</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-        <span class="self">self</span>.<span class="ident">linear_index</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree_index</span>.<span class="ident">get</span>(<span class="ident">key</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">entries</span><span class="op">|</span> <span class="ident">entries</span>.<span class="ident">iter</span>()))
+    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>IndexEntry&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="self">self</span>.linear_index
+            .iter()
+            .flat_map(|key| <span class="self">self</span>.tree_index.get(key).map(|entries| entries.iter()))
     }
 
-    <span class="kw">fn</span> <span class="ident">pop_front</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IndexEntry</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entries</span>) <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">linear_index</span>
-            .<span class="ident">pop_front</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">tree_index</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>))
+    <span class="kw">fn </span>pop_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;IndexEntry&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(entries) = <span class="self">self
+            </span>.linear_index
+            .pop_front()
+            .and_then(|key| <span class="self">self</span>.tree_index.get_mut(<span class="kw-2">&amp;</span>key))
         {
-            <span class="ident">entries</span>.<span class="ident">pop_front</span>()
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+            entries.pop_front()
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 
-    <span class="kw">fn</span> <span class="ident">push_back</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">entry</span>: <span class="ident">IndexEntry</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">key</span>) <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">coords</span>.<span class="ident">build_quad_key</span>() {
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">tree_index</span>.<span class="ident">entry</span>(<span class="ident">key</span>) {
-                <span class="ident">btree_map::Entry::Vacant</span>(<span class="ident">index_entry</span>) =&gt; {
-                    <span class="ident">index_entry</span>.<span class="ident">insert</span>(<span class="ident">VecDeque::from</span>([<span class="ident">entry</span>]));
+    <span class="kw">fn </span>push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, entry: IndexEntry) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(key) = entry.coords.build_quad_key() {
+            <span class="kw">match </span><span class="self">self</span>.tree_index.entry(key) {
+                btree_map::Entry::Vacant(index_entry) =&gt; {
+                    index_entry.insert(VecDeque::from([entry]));
                 }
-                <span class="ident">btree_map::Entry::Occupied</span>(<span class="kw-2">mut</span> <span class="ident">index_entry</span>) =&gt; {
-                    <span class="ident">index_entry</span>.<span class="ident">get_mut</span>().<span class="ident">push_back</span>(<span class="ident">entry</span>);
+                btree_map::Entry::Occupied(<span class="kw-2">mut </span>index_entry) =&gt; {
+                    index_entry.get_mut().push_back(entry);
                 }
             }
 
-            <span class="self">self</span>.<span class="ident">linear_index</span>.<span class="ident">push_back</span>(<span class="ident">key</span>)
-        } <span class="kw">else</span> {
-            <span class="macro">unreachable!</span>() <span class="comment">// TODO handle</span>
-        }
+            <span class="self">self</span>.linear_index.push_back(key)
+        } <span class="kw">else </span>{
+            <span class="macro">unreachable!</span>() <span class="comment">// TODO handle
+        </span>}
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">lyon::tessellation::VertexBuffers</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>lyon::tessellation::VertexBuffers;
 
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">coords::ZoomLevel</span>,
-        <span class="ident">render::resource</span>::{
-            <span class="ident">buffer_pool::BackingBufferType</span>, <span class="ident">BackingBufferDescriptor</span>, <span class="ident">BufferPool</span>, <span class="ident">Queue</span>,
+    <span class="kw">use crate</span>::{
+        coords::ZoomLevel,
+        render::resource::{
+            buffer_pool::BackingBufferType, BackingBufferDescriptor, BufferPool, Queue,
         },
-        <span class="ident">style::layer::StyleLayer</span>,
+        style::layer::StyleLayer,
     };
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-    <span class="kw">struct</span> <span class="ident">TestBuffer</span> {
-        <span class="ident">size</span>: <span class="ident">wgpu::BufferAddress</span>,
+    <span class="attribute">#[derive(Debug)]
+    </span><span class="kw">struct </span>TestBuffer {
+        size: wgpu::BufferAddress,
     }
-    <span class="kw">struct</span> <span class="ident">TestQueue</span>;
+    <span class="kw">struct </span>TestQueue;
 
-    <span class="kw">impl</span> <span class="ident">Queue</span><span class="op">&lt;</span><span class="ident">TestBuffer</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TestQueue</span> {
-        <span class="kw">fn</span> <span class="ident">write_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">TestBuffer</span>, <span class="ident">offset</span>: <span class="ident">wgpu::BufferAddress</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-            <span class="kw">if</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span> <span class="op">&gt;</span> <span class="ident">buffer</span>.<span class="ident">size</span> {
+    <span class="kw">impl </span>Queue&lt;TestBuffer&gt; <span class="kw">for </span>TestQueue {
+        <span class="kw">fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>TestBuffer, offset: wgpu::BufferAddress, data: <span class="kw-2">&amp;</span>[u8]) {
+            <span class="kw">if </span>offset + data.len() <span class="kw">as </span>wgpu::BufferAddress &gt; buffer.size {
                 <span class="macro">panic!</span>(<span class="string">&quot;write out of bounds&quot;</span>);
             }
         }
     }
 
-    <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">bytemuck_derive::Pod</span>, <span class="ident">bytemuck_derive::Zeroable</span>)]</span>
-    <span class="kw">struct</span> <span class="ident">TestVertex</span> {
-        <span class="ident">data</span>: [<span class="ident">u8</span>; <span class="number">24</span>],
+    <span class="attribute">#[repr(C)]
+    #[derive(Default, Copy, Clone, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
+    </span><span class="kw">struct </span>TestVertex {
+        data: [u8; <span class="number">24</span>],
     }
 
-    <span class="kw">fn</span> <span class="ident">create_48byte</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TestVertex</span><span class="op">&gt;</span> {
-        <span class="macro">vec!</span>[<span class="ident">TestVertex::default</span>(), <span class="ident">TestVertex::default</span>()]
+    <span class="kw">fn </span>create_48byte() -&gt; Vec&lt;TestVertex&gt; {
+        <span class="macro">vec!</span>[TestVertex::default(), TestVertex::default()]
     }
 
-    <span class="kw">fn</span> <span class="ident">create_24byte</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TestVertex</span><span class="op">&gt;</span> {
-        <span class="macro">vec!</span>[<span class="ident">TestVertex::default</span>()]
+    <span class="kw">fn </span>create_24byte() -&gt; Vec&lt;TestVertex&gt; {
+        <span class="macro">vec!</span>[TestVertex::default()]
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_allocate</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pool</span>: <span class="ident">BufferPool</span><span class="op">&lt;</span><span class="ident">TestQueue</span>, <span class="ident">TestBuffer</span>, <span class="ident">TestVertex</span>, <span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span><span class="op">&gt;</span> <span class="op">=</span>
-            <span class="ident">BufferPool::new</span>(
-                <span class="ident">BackingBufferDescriptor::new</span>(<span class="ident">TestBuffer</span> { <span class="ident">size</span>: <span class="number">128</span> }, <span class="number">128</span>),
-                <span class="ident">BackingBufferDescriptor::new</span>(<span class="ident">TestBuffer</span> { <span class="ident">size</span>: <span class="number">128</span> }, <span class="number">128</span>),
-                <span class="ident">BackingBufferDescriptor::new</span>(<span class="ident">TestBuffer</span> { <span class="ident">size</span>: <span class="number">128</span> }, <span class="number">128</span>),
-                <span class="ident">BackingBufferDescriptor::new</span>(<span class="ident">TestBuffer</span> { <span class="ident">size</span>: <span class="number">128</span> }, <span class="number">128</span>),
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_allocate() {
+        <span class="kw">let </span><span class="kw-2">mut </span>pool: BufferPool&lt;TestQueue, TestBuffer, TestVertex, u32, u32, u32&gt; =
+            BufferPool::new(
+                BackingBufferDescriptor::new(TestBuffer { size: <span class="number">128 </span>}, <span class="number">128</span>),
+                BackingBufferDescriptor::new(TestBuffer { size: <span class="number">128 </span>}, <span class="number">128</span>),
+                BackingBufferDescriptor::new(TestBuffer { size: <span class="number">128 </span>}, <span class="number">128</span>),
+                BackingBufferDescriptor::new(TestBuffer { size: <span class="number">128 </span>}, <span class="number">128</span>),
             );
 
-        <span class="kw">let</span> <span class="ident">queue</span> <span class="op">=</span> <span class="ident">TestQueue</span> {};
-        <span class="kw">let</span> <span class="ident">style_layer</span> <span class="op">=</span> <span class="ident">StyleLayer::default</span>();
+        <span class="kw">let </span>queue = TestQueue {};
+        <span class="kw">let </span>style_layer = StyleLayer::default();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data48bytes</span> <span class="op">=</span> <span class="ident">VertexBuffers::new</span>();
-        <span class="ident">data48bytes</span>.<span class="ident">vertices</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">create_48byte</span>());
-        <span class="ident">data48bytes</span>.<span class="ident">indices</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
-        <span class="kw">let</span> <span class="ident">data48bytes_aligned</span> <span class="op">=</span> <span class="ident">data48bytes</span>.<span class="ident">into</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>data48bytes = VertexBuffers::new();
+        data48bytes.vertices.append(<span class="kw-2">&amp;mut </span>create_48byte());
+        data48bytes.indices.append(<span class="kw-2">&amp;mut </span><span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
+        <span class="kw">let </span>data48bytes_aligned = data48bytes.into();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data24bytes</span> <span class="op">=</span> <span class="ident">VertexBuffers::new</span>();
-        <span class="ident">data24bytes</span>.<span class="ident">vertices</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="ident">create_24byte</span>());
-        <span class="ident">data24bytes</span>.<span class="ident">indices</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
-        <span class="kw">let</span> <span class="ident">data24bytes_aligned</span> <span class="op">=</span> <span class="ident">data24bytes</span>.<span class="ident">into</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>data24bytes = VertexBuffers::new();
+        data24bytes.vertices.append(<span class="kw-2">&amp;mut </span>create_24byte());
+        data24bytes.indices.append(<span class="kw-2">&amp;mut </span><span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
+        <span class="kw">let </span>data24bytes_aligned = data24bytes.into();
 
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">2</span> {
-            <span class="ident">pool</span>.<span class="ident">allocate_layer_geometry</span>(
-                <span class="kw-2">&amp;</span><span class="ident">queue</span>,
-                (<span class="number">0</span>, <span class="number">0</span>, <span class="ident">ZoomLevel::default</span>()).<span class="ident">into</span>(),
-                <span class="ident">style_layer</span>.<span class="ident">clone</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">data48bytes_aligned</span>,
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">2 </span>{
+            pool.allocate_layer_geometry(
+                <span class="kw-2">&amp;</span>queue,
+                (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+                style_layer.clone(),
+                <span class="kw-2">&amp;</span>data48bytes_aligned,
                 <span class="number">2</span>,
                 <span class="kw-2">&amp;</span>[],
             );
         }
         <span class="macro">assert_eq!</span>(
-            <span class="number">128</span> <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="number">48</span>,
-            <span class="ident">pool</span>.<span class="ident">available_space</span>(<span class="ident">BackingBufferType::Vertices</span>)
+            <span class="number">128 </span>- <span class="number">2 </span>* <span class="number">48</span>,
+            pool.available_space(BackingBufferType::Vertices)
         );
 
-        <span class="ident">pool</span>.<span class="ident">allocate_layer_geometry</span>(
-            <span class="kw-2">&amp;</span><span class="ident">queue</span>,
-            (<span class="number">0</span>, <span class="number">0</span>, <span class="ident">ZoomLevel::default</span>()).<span class="ident">into</span>(),
-            <span class="ident">style_layer</span>.<span class="ident">clone</span>(),
-            <span class="kw-2">&amp;</span><span class="ident">data24bytes_aligned</span>,
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer.clone(),
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
             <span class="number">2</span>,
             <span class="kw-2">&amp;</span>[],
         );
         <span class="macro">assert_eq!</span>(
-            <span class="number">128</span> <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="number">48</span> <span class="op">-</span> <span class="number">24</span>,
-            <span class="ident">pool</span>.<span class="ident">available_space</span>(<span class="ident">BackingBufferType::Vertices</span>)
+            <span class="number">128 </span>- <span class="number">2 </span>* <span class="number">48 </span>- <span class="number">24</span>,
+            pool.available_space(BackingBufferType::Vertices)
         );
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">pool</span>.<span class="ident">index</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
 
-        <span class="ident">pool</span>.<span class="ident">allocate_layer_geometry</span>(
-            <span class="kw-2">&amp;</span><span class="ident">queue</span>,
-            (<span class="number">0</span>, <span class="number">0</span>, <span class="ident">ZoomLevel::default</span>()).<span class="ident">into</span>(),
-            <span class="ident">style_layer</span>.<span class="ident">clone</span>(),
-            <span class="kw-2">&amp;</span><span class="ident">data24bytes_aligned</span>,
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer.clone(),
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
             <span class="number">2</span>,
             <span class="kw-2">&amp;</span>[],
         );
-        <span class="comment">// appended now at the beginning</span>
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">pool</span>.<span class="ident">index</span>);
-        <span class="macro">assert_eq!</span>(<span class="number">24</span>, <span class="ident">pool</span>.<span class="ident">available_space</span>(<span class="ident">BackingBufferType::Vertices</span>));
+        <span class="comment">// appended now at the beginning
+        </span><span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
+        <span class="macro">assert_eq!</span>(<span class="number">24</span>, pool.available_space(BackingBufferType::Vertices));
 
-        <span class="ident">pool</span>.<span class="ident">allocate_layer_geometry</span>(
-            <span class="kw-2">&amp;</span><span class="ident">queue</span>,
-            (<span class="number">0</span>, <span class="number">0</span>, <span class="ident">ZoomLevel::default</span>()).<span class="ident">into</span>(),
-            <span class="ident">style_layer</span>.<span class="ident">clone</span>(),
-            <span class="kw-2">&amp;</span><span class="ident">data24bytes_aligned</span>,
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer.clone(),
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
             <span class="number">2</span>,
             <span class="kw-2">&amp;</span>[],
         );
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">pool</span>.<span class="ident">index</span>);
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, <span class="ident">pool</span>.<span class="ident">available_space</span>(<span class="ident">BackingBufferType::Vertices</span>));
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
+        <span class="macro">assert_eq!</span>(<span class="number">0</span>, pool.available_space(BackingBufferType::Vertices));
 
-        <span class="ident">pool</span>.<span class="ident">allocate_layer_geometry</span>(
-            <span class="kw-2">&amp;</span><span class="ident">queue</span>,
-            (<span class="number">0</span>, <span class="number">0</span>, <span class="ident">ZoomLevel::default</span>()).<span class="ident">into</span>(),
-            <span class="ident">style_layer</span>.<span class="ident">clone</span>(),
-            <span class="kw-2">&amp;</span><span class="ident">data24bytes_aligned</span>,
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer.clone(),
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
             <span class="number">2</span>,
             <span class="kw-2">&amp;</span>[],
         );
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">pool</span>.<span class="ident">index</span>);
-        <span class="macro">assert_eq!</span>(<span class="number">24</span>, <span class="ident">pool</span>.<span class="ident">available_space</span>(<span class="ident">BackingBufferType::Vertices</span>));
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
+        <span class="macro">assert_eq!</span>(<span class="number">24</span>, pool.available_space(BackingBufferType::Vertices));
 
-        <span class="ident">pool</span>.<span class="ident">allocate_layer_geometry</span>(
-            <span class="kw-2">&amp;</span><span class="ident">queue</span>,
-            (<span class="number">0</span>, <span class="number">0</span>, <span class="ident">ZoomLevel::default</span>()).<span class="ident">into</span>(),
-            <span class="ident">style_layer</span>,
-            <span class="kw-2">&amp;</span><span class="ident">data24bytes_aligned</span>,
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer,
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
             <span class="number">2</span>,
             <span class="kw-2">&amp;</span>[],
         );
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">pool</span>.<span class="ident">index</span>);
-        <span class="macro">assert_eq!</span>(<span class="number">0</span>, <span class="ident">pool</span>.<span class="ident">available_space</span>(<span class="ident">BackingBufferType::Vertices</span>));
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
+        <span class="macro">assert_eq!</span>(<span class="number">0</span>, pool.available_space(BackingBufferType::Vertices));
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

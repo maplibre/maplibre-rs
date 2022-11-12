@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/util/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/util/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -116,123 +116,123 @@
 <span id="116">116</span>
 <span id="117">117</span>
 <span id="118">118</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Utils which are used internally</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Utils which are used internally
 
-<span class="kw">mod</span> <span class="ident">fps_meter</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">grid</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">label</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">math</span>;
+</span><span class="kw">mod </span>fps_meter;
+<span class="kw">pub mod </span>grid;
+<span class="kw">pub mod </span>label;
+<span class="kw">pub mod </span>math;
 
-<span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
+<span class="kw">use </span>std::ops::{Deref, DerefMut};
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">fps_meter::FPSMeter</span>;
+<span class="kw">pub use </span>fps_meter::FPSMeter;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::coords::WorldTileCoords</span>;
+<span class="kw">use </span><span class="kw">crate</span>::coords::WorldTileCoords;
 
-<span class="kw">struct</span> <span class="ident">MinMaxBoundingBox</span> {
-    <span class="ident">min_x</span>: <span class="ident">i32</span>,
-    <span class="ident">min_y</span>: <span class="ident">i32</span>,
-    <span class="ident">max_x</span>: <span class="ident">i32</span>,
-    <span class="ident">max_y</span>: <span class="ident">i32</span>,
-    <span class="ident">initialized</span>: <span class="ident">bool</span>,
+<span class="kw">struct </span>MinMaxBoundingBox {
+    min_x: i32,
+    min_y: i32,
+    max_x: i32,
+    max_y: i32,
+    initialized: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">MinMaxBoundingBox</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">min_x</span>: <span class="ident">i32::MAX</span>,
-            <span class="ident">min_y</span>: <span class="ident">i32::MAX</span>,
-            <span class="ident">max_x</span>: <span class="ident">i32::MIN</span>,
-            <span class="ident">max_y</span>: <span class="ident">i32::MIN</span>,
-            <span class="ident">initialized</span>: <span class="bool-val">false</span>,
+<span class="kw">impl </span>MinMaxBoundingBox {
+    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            min_x: i32::MAX,
+            min_y: i32::MAX,
+            max_x: i32::MIN,
+            max_y: i32::MIN,
+            initialized: <span class="bool-val">false</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_initialized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">initialized</span>
+    <span class="kw">pub fn </span>is_initialized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.initialized
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">world_coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) {
-        <span class="self">self</span>.<span class="ident">initialized</span> <span class="op">=</span> <span class="bool-val">true</span>;
+    <span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, world_coords: <span class="kw-2">&amp;</span>WorldTileCoords) {
+        <span class="self">self</span>.initialized = <span class="bool-val">true</span>;
 
-        <span class="kw">if</span> <span class="ident">world_coords</span>.<span class="ident">x</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">min_x</span> {
-            <span class="self">self</span>.<span class="ident">min_x</span> <span class="op">=</span> <span class="ident">world_coords</span>.<span class="ident">x</span>;
+        <span class="kw">if </span>world_coords.x &lt; <span class="self">self</span>.min_x {
+            <span class="self">self</span>.min_x = world_coords.x;
         }
 
-        <span class="kw">if</span> <span class="ident">world_coords</span>.<span class="ident">y</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">min_y</span> {
-            <span class="self">self</span>.<span class="ident">min_y</span> <span class="op">=</span> <span class="ident">world_coords</span>.<span class="ident">y</span>;
+        <span class="kw">if </span>world_coords.y &lt; <span class="self">self</span>.min_y {
+            <span class="self">self</span>.min_y = world_coords.y;
         }
 
-        <span class="kw">if</span> <span class="ident">world_coords</span>.<span class="ident">x</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">max_x</span> {
-            <span class="self">self</span>.<span class="ident">max_x</span> <span class="op">=</span> <span class="ident">world_coords</span>.<span class="ident">x</span>;
+        <span class="kw">if </span>world_coords.x &gt; <span class="self">self</span>.max_x {
+            <span class="self">self</span>.max_x = world_coords.x;
         }
 
-        <span class="kw">if</span> <span class="ident">world_coords</span>.<span class="ident">y</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">max_y</span> {
-            <span class="self">self</span>.<span class="ident">max_y</span> <span class="op">=</span> <span class="ident">world_coords</span>.<span class="ident">y</span>;
-        }
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SignificantlyDifferent</span><span class="op">&lt;</span><span class="ident">Rhs</span>: <span class="question-mark">?</span><span class="ident">Sized</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Epsilon</span>;
-
-    <span class="doccomment">/// This method tests for `self` and `other` values to be significantly different</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">ne</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Rhs</span>, <span class="ident">epsilon</span>: <span class="ident"><span class="self">Self</span>::Epsilon</span>) -&gt; <span class="ident">bool</span>;
-}
-
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ChangeObserver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="ident">T</span>,
-    <span class="ident">reference_value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">ChangeObserver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">value</span>,
-            <span class="ident">reference_value</span>: <span class="prelude-val">None</span>,
+        <span class="kw">if </span>world_coords.y &gt; <span class="self">self</span>.max_y {
+            <span class="self">self</span>.max_y = world_coords.y;
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">ChangeObserver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">SignificantlyDifferent</span>,
+<span class="kw">pub trait </span>SignificantlyDifferent&lt;Rhs: <span class="question-mark">?</span>Sized = <span class="self">Self</span>&gt; {
+    <span class="kw">type </span>Epsilon;
+
+    <span class="doccomment">/// This method tests for `self` and `other` values to be significantly different
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">fn </span>ne(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Rhs, epsilon: <span class="self">Self</span>::Epsilon) -&gt; bool;
+}
+
+<span class="kw">pub struct </span>ChangeObserver&lt;T&gt; {
+    inner: T,
+    reference_value: <span class="prelude-ty">Option</span>&lt;T&gt;,
+}
+
+<span class="kw">impl</span>&lt;T&gt; ChangeObserver&lt;T&gt; {
+    <span class="kw">pub fn </span>new(value: T) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: value,
+            reference_value: <span class="prelude-val">None</span>,
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;T&gt; ChangeObserver&lt;T&gt;
+<span class="kw">where
+    </span>T: Clone + SignificantlyDifferent,
 {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_reference</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">reference_value</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">clone</span>());
+    <span class="kw">pub fn </span>update_reference(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.reference_value = <span class="prelude-val">Some</span>(<span class="self">self</span>.inner.clone());
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">did_change</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">epsilon</span>: <span class="ident">T::Epsilon</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reference_value</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">reference_value</span> {
-            <span class="ident">reference_value</span>.<span class="ident">ne</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>, <span class="ident">epsilon</span>)
-        } <span class="kw">else</span> {
-            <span class="bool-val">true</span>
-        }
+    <span class="kw">pub fn </span>did_change(<span class="kw-2">&amp;</span><span class="self">self</span>, epsilon: T::Epsilon) -&gt; bool {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(reference_value) = <span class="kw-2">&amp;</span><span class="self">self</span>.reference_value {
+            reference_value.ne(<span class="kw-2">&amp;</span><span class="self">self</span>.inner, epsilon)
+        } <span class="kw">else </span>{
+            <span class="bool-val">true
+        </span>}
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ChangeObserver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Default</span>,
+<span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>ChangeObserver&lt;T&gt;
+<span class="kw">where
+    </span>T: Default,
 {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">ChangeObserver::new</span>(<span class="ident">T::default</span>())
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        ChangeObserver::new(T::default())
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">ChangeObserver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">T</span>;
+<span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>ChangeObserver&lt;T&gt; {
+    <span class="kw">type </span>Target = T;
 
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.inner
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="ident">ChangeObserver</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">inner</span>
+<span class="kw">impl</span>&lt;T&gt; DerefMut <span class="kw">for </span>ChangeObserver&lt;T&gt; {
+    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.inner
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

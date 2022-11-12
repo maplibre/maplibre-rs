@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/stages/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/stages/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -65,72 +65,72 @@
 <span id="65">65</span>
 <span id="66">66</span>
 <span id="67">67</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Rendering specific [Stages](Stage)</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Rendering specific [Stages](Stage)
 
-<span class="kw">use</span> <span class="ident">graph_runner_stage::GraphRunnerStage</span>;
-<span class="kw">use</span> <span class="ident">resource_stage::ResourceStage</span>;
-<span class="kw">use</span> <span class="ident">upload_stage::UploadStage</span>;
+</span><span class="kw">use </span>graph_runner_stage::GraphRunnerStage;
+<span class="kw">use </span>resource_stage::ResourceStage;
+<span class="kw">use </span>upload_stage::UploadStage;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">context::MapContext</span>,
-    <span class="ident">multi_stage</span>,
-    <span class="ident">render</span>::{
-        <span class="ident">graph::RenderGraph</span>,
-        <span class="ident">stages</span>::{
-            <span class="ident">extract_stage::ExtractStage</span>, <span class="ident">phase_sort_stage::PhaseSortStage</span>, <span class="ident">queue_stage::QueueStage</span>,
+<span class="kw">use crate</span>::{
+    context::MapContext,
+    multi_stage,
+    render::{
+        graph::RenderGraph,
+        stages::{
+            extract_stage::ExtractStage, phase_sort_stage::PhaseSortStage, queue_stage::QueueStage,
         },
     },
-    <span class="ident">schedule</span>::{<span class="ident">Schedule</span>, <span class="ident">Stage</span>, <span class="ident">StageLabel</span>},
+    schedule::{Schedule, Stage, StageLabel},
 };
 
-<span class="kw">mod</span> <span class="ident">extract_stage</span>;
-<span class="kw">mod</span> <span class="ident">graph_runner_stage</span>;
-<span class="kw">mod</span> <span class="ident">phase_sort_stage</span>;
-<span class="kw">mod</span> <span class="ident">queue_stage</span>;
-<span class="kw">mod</span> <span class="ident">resource_stage</span>;
-<span class="kw">mod</span> <span class="ident">upload_stage</span>;
+<span class="kw">mod </span>extract_stage;
+<span class="kw">mod </span>graph_runner_stage;
+<span class="kw">mod </span>phase_sort_stage;
+<span class="kw">mod </span>queue_stage;
+<span class="kw">mod </span>resource_stage;
+<span class="kw">mod </span>upload_stage;
 
-<span class="doccomment">/// The labels of the default App rendering stages.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RenderStageLabel</span> {
-    <span class="doccomment">/// Prepare render resources from the extracted data for the GPU.</span>
-    <span class="doccomment">/// For example during this phase textures are created, buffers are allocated and written.</span>
-    <span class="ident">Prepare</span>,
+<span class="doccomment">/// The labels of the default App rendering stages.
+</span><span class="attribute">#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+</span><span class="kw">pub enum </span>RenderStageLabel {
+    <span class="doccomment">/// Prepare render resources from the extracted data for the GPU.
+    /// For example during this phase textures are created, buffers are allocated and written.
+    </span>Prepare,
 
-    <span class="doccomment">/// Queues [PhaseItems](crate::render::render_phase::draw::PhaseItem) that depend on</span>
-    <span class="doccomment">/// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the</span>
-    <span class="doccomment">/// [`Render`](RenderStageLabel::Render) stage.</span>
-    <span class="ident">Queue</span>,
+    <span class="doccomment">/// Queues [PhaseItems](crate::render::render_phase::draw::PhaseItem) that depend on
+    /// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the
+    /// [`Render`](RenderStageLabel::Render) stage.
+    </span>Queue,
 
-    <span class="doccomment">/// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.</span>
-    <span class="ident">PhaseSort</span>,
+    <span class="doccomment">/// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.
+    </span>PhaseSort,
 
-    <span class="doccomment">/// Actual rendering happens here.</span>
-    <span class="doccomment">/// In most cases, only the render backend should insert resources here.</span>
-    <span class="ident">Render</span>,
+    <span class="doccomment">/// Actual rendering happens here.
+    /// In most cases, only the render backend should insert resources here.
+    </span>Render,
 
-    <span class="doccomment">/// Cleanup render resources here.</span>
-    <span class="ident">Cleanup</span>,
+    <span class="doccomment">/// Cleanup render resources here.
+    </span>Cleanup,
 }
 
-<span class="kw">impl</span> <span class="ident">StageLabel</span> <span class="kw">for</span> <span class="ident">RenderStageLabel</span> {
-    <span class="kw">fn</span> <span class="ident">dyn_clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span><span class="op">&gt;</span> {
-        <span class="ident">Box::new</span>(<span class="self">self</span>.<span class="ident">clone</span>())
+<span class="kw">impl </span>StageLabel <span class="kw">for </span>RenderStageLabel {
+    <span class="kw">fn </span>dyn_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>StageLabel&gt; {
+        Box::new(<span class="self">self</span>.clone())
     }
 }
 
 <span class="macro">multi_stage!</span>(
-    <span class="ident">PrepareStage</span>,
-    <span class="ident">resource</span>: <span class="ident">ResourceStage</span>,
-    <span class="ident">extract</span>: <span class="ident">ExtractStage</span>,
-    <span class="ident">upload</span>: <span class="ident">UploadStage</span>
+    PrepareStage,
+    resource: ResourceStage,
+    extract: ExtractStage,
+    upload: UploadStage
 );
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register_default_render_stages</span>(<span class="ident">graph</span>: <span class="ident">RenderGraph</span>, <span class="ident">schedule</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Schedule</span>) {
-    <span class="ident">schedule</span>.<span class="ident">add_stage</span>(<span class="ident">RenderStageLabel::Prepare</span>, <span class="ident">PrepareStage::default</span>());
-    <span class="ident">schedule</span>.<span class="ident">add_stage</span>(<span class="ident">RenderStageLabel::Queue</span>, <span class="ident">QueueStage::default</span>());
-    <span class="ident">schedule</span>.<span class="ident">add_stage</span>(<span class="ident">RenderStageLabel::PhaseSort</span>, <span class="ident">PhaseSortStage::default</span>());
-    <span class="ident">schedule</span>.<span class="ident">add_stage</span>(<span class="ident">RenderStageLabel::Render</span>, <span class="ident">GraphRunnerStage::new</span>(<span class="ident">graph</span>));
+<span class="kw">pub fn </span>register_default_render_stages(graph: RenderGraph, schedule: <span class="kw-2">&amp;mut </span>Schedule) {
+    schedule.add_stage(RenderStageLabel::Prepare, PrepareStage::default());
+    schedule.add_stage(RenderStageLabel::Queue, QueueStage::default());
+    schedule.add_stage(RenderStageLabel::PhaseSort, PhaseSortStage::default());
+    schedule.add_stage(RenderStageLabel::Render, GraphRunnerStage::new(graph));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

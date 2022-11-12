@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/io/geometry_index.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>geometry_index.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/io/geometry_index.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>geometry_index.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -299,306 +299,306 @@
 <span id="299">299</span>
 <span id="300">300</span>
 <span id="301">301</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Geometry index.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Geometry index.
 
-<span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeMap</span>, <span class="ident">HashMap</span>};
+</span><span class="kw">use </span>std::collections::{BTreeMap, HashMap};
 
-<span class="kw">use</span> <span class="ident">cgmath</span>::{<span class="ident">num_traits::Signed</span>, <span class="ident">Bounded</span>};
-<span class="kw">use</span> <span class="ident">geo::prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">geo_types</span>::{<span class="ident">CoordFloat</span>, <span class="ident">Coordinate</span>, <span class="ident">Geometry</span>, <span class="ident">LineString</span>, <span class="ident">Point</span>, <span class="ident">Polygon</span>};
-<span class="kw">use</span> <span class="ident">geozero</span>::{
-    <span class="ident">error::GeozeroError</span>, <span class="ident">geo_types::GeoWriter</span>, <span class="ident">ColumnValue</span>, <span class="ident">FeatureProcessor</span>, <span class="ident">GeomProcessor</span>,
-    <span class="ident">PropertyProcessor</span>,
+<span class="kw">use </span>cgmath::{num_traits::Signed, Bounded};
+<span class="kw">use </span>geo::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
+<span class="kw">use </span>geozero::{
+    error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
+    PropertyProcessor,
 };
-<span class="kw">use</span> <span class="ident">rstar</span>::{<span class="ident">Envelope</span>, <span class="ident">PointDistance</span>, <span class="ident">RTree</span>, <span class="ident">RTreeObject</span>, <span class="ident">AABB</span>};
+<span class="kw">use </span>rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">coords</span>::{
-        <span class="ident">InnerCoords</span>, <span class="ident">Quadkey</span>, <span class="ident">WorldCoords</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">EXTENT</span>, <span class="ident">TILE_SIZE</span>,
+<span class="kw">use crate</span>::{
+    coords::{
+        InnerCoords, Quadkey, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT, TILE_SIZE,
     },
-    <span class="ident">util::math::bounds_from_points</span>,
+    util::math::bounds_from_points,
 };
 
-<span class="doccomment">/// A quad tree storing the currently loaded tiles.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GeometryIndex</span> {
-    <span class="ident">index</span>: <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">Quadkey</span>, <span class="ident">TileIndex</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A quad tree storing the currently loaded tiles.
+</span><span class="kw">pub struct </span>GeometryIndex {
+    index: BTreeMap&lt;Quadkey, TileIndex&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">GeometryIndex</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">index</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl </span>GeometryIndex {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            index: Default::default(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">index_tile</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>, <span class="ident">tile_index</span>: <span class="ident">TileIndex</span>) {
-        <span class="ident">coords</span>
-            .<span class="ident">build_quad_key</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">tile_index</span>));
+    <span class="kw">pub fn </span>index_tile(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords, tile_index: TileIndex) {
+        coords
+            .build_quad_key()
+            .and_then(|key| <span class="self">self</span>.index.insert(key, tile_index));
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query_point</span>(
+    <span class="kw">pub fn </span>query_point(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">world_coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldCoords</span>,
-        <span class="ident">z</span>: <span class="ident">ZoomLevel</span>,
-        <span class="ident">zoom</span>: <span class="ident">Zoom</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">world_tile_coords</span> <span class="op">=</span> <span class="ident">world_coords</span>.<span class="ident">into_world_tile</span>(<span class="ident">z</span>, <span class="ident">zoom</span>);
+        world_coords: <span class="kw-2">&amp;</span>WorldCoords,
+        z: ZoomLevel,
+        zoom: Zoom,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="kw-2">&amp;</span>IndexedGeometry&lt;f64&gt;&gt;&gt; {
+        <span class="kw">let </span>world_tile_coords = world_coords.into_world_tile(z, zoom);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="ident">world_tile_coords</span>
-            .<span class="ident">build_quad_key</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>))
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = world_tile_coords
+            .build_quad_key()
+            .and_then(|key| <span class="self">self</span>.index.get(<span class="kw-2">&amp;</span>key))
         {
-            <span class="kw">let</span> <span class="ident">scale</span> <span class="op">=</span> <span class="ident">zoom</span>.<span class="ident">scale_delta</span>(<span class="kw-2">&amp;</span><span class="ident">Zoom::from</span>(<span class="ident">z</span>)); <span class="comment">// FIXME: can be wrong, if tiles of different z are visible</span>
+            <span class="kw">let </span>scale = zoom.scale_delta(<span class="kw-2">&amp;</span>Zoom::from(z)); <span class="comment">// FIXME: can be wrong, if tiles of different z are visible
 
-            <span class="kw">let</span> <span class="ident">delta_x</span> <span class="op">=</span> <span class="ident">world_coords</span>.<span class="ident">x</span> <span class="op">/</span> <span class="ident">TILE_SIZE</span> <span class="op">*</span> <span class="ident">scale</span> <span class="op">-</span> <span class="ident">world_tile_coords</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f64</span>;
-            <span class="kw">let</span> <span class="ident">delta_y</span> <span class="op">=</span> <span class="ident">world_coords</span>.<span class="ident">y</span> <span class="op">/</span> <span class="ident">TILE_SIZE</span> <span class="op">*</span> <span class="ident">scale</span> <span class="op">-</span> <span class="ident">world_tile_coords</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">f64</span>;
+            </span><span class="kw">let </span>delta_x = world_coords.x / TILE_SIZE * scale - world_tile_coords.x <span class="kw">as </span>f64;
+            <span class="kw">let </span>delta_y = world_coords.y / TILE_SIZE * scale - world_tile_coords.y <span class="kw">as </span>f64;
 
-            <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">delta_x</span> <span class="op">*</span> <span class="ident">EXTENT</span>;
-            <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">delta_y</span> <span class="op">*</span> <span class="ident">EXTENT</span>;
-            <span class="prelude-val">Some</span>(<span class="ident">index</span>.<span class="ident">point_query</span>(<span class="ident">InnerCoords</span> { <span class="ident">x</span>, <span class="ident">y</span> }))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
+            <span class="kw">let </span>x = delta_x * EXTENT;
+            <span class="kw">let </span>y = delta_y * EXTENT;
+            <span class="prelude-val">Some</span>(index.point_query(InnerCoords { x, y }))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
+    }
+}
+
+<span class="doccomment">/// Index of tiles which can be of two types: spatial or linear.
+/// Spatial tiles are stored in a multi-dimentional tree which represents their position in the tile.
+/// Linear tiles are simply stored in a vector.
+///
+/// A spatial tile index can theoretically improve query performance on tiles. Practically it could be slower though. The `Spatial` index is experimental and currently unused.
+</span><span class="kw">pub enum </span>TileIndex {
+    Spatial { tree: RTree&lt;IndexedGeometry&lt;f64&gt;&gt; },
+    Linear { list: Vec&lt;IndexedGeometry&lt;f64&gt;&gt; },
+}
+
+<span class="kw">impl </span>TileIndex {
+    <span class="kw">pub fn </span>point_query(<span class="kw-2">&amp;</span><span class="self">self</span>, inner_coords: InnerCoords) -&gt; Vec&lt;<span class="kw-2">&amp;</span>IndexedGeometry&lt;f64&gt;&gt; {
+        <span class="kw">let </span>point = geo_types::Point::new(inner_coords.x, inner_coords.y);
+        <span class="kw">let </span>coordinate: Coordinate&lt;<span class="kw">_</span>&gt; = point.into();
+
+        <span class="comment">// FIXME: Respect layer order of style
+        </span><span class="kw">match </span><span class="self">self </span>{
+            TileIndex::Spatial { tree } =&gt; tree
+                .nearest_neighbor_iter(<span class="kw-2">&amp;</span>point)
+                .filter(|geometry| <span class="kw">match </span><span class="kw-2">&amp;</span>geometry.exact {
+                    ExactGeometry::Polygon(exact) =&gt; exact.contains(<span class="kw-2">&amp;</span>coordinate),
+                    ExactGeometry::LineString(exact) =&gt; exact.distance_2(<span class="kw-2">&amp;</span>point) &lt;= <span class="number">64.0</span>,
+                })
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+            TileIndex::Linear { list } =&gt; list
+                .iter()
+                .filter(|geometry| <span class="kw">match </span><span class="kw-2">&amp;</span>geometry.exact {
+                    ExactGeometry::Polygon(exact) =&gt; exact.contains(<span class="kw-2">&amp;</span>coordinate),
+                    ExactGeometry::LineString(exact) =&gt; exact.distance_2(<span class="kw-2">&amp;</span>point) &lt;= <span class="number">64.0</span>,
+                })
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
         }
     }
 }
 
-<span class="doccomment">/// Index of tiles which can be of two types: spatial or linear.</span>
-<span class="doccomment">/// Spatial tiles are stored in a multi-dimentional tree which represents their position in the tile.</span>
-<span class="doccomment">/// Linear tiles are simply stored in a vector.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// A spatial tile index can theoretically improve query performance on tiles. Practically it could be slower though. The `Spatial` index is experimental and currently unused.</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TileIndex</span> {
-    <span class="ident">Spatial</span> { <span class="ident">tree</span>: <span class="ident">RTree</span><span class="op">&lt;</span><span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> },
-    <span class="ident">Linear</span> { <span class="ident">list</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> },
-}
-
-<span class="kw">impl</span> <span class="ident">TileIndex</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">inner_coords</span>: <span class="ident">InnerCoords</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">point</span> <span class="op">=</span> <span class="ident">geo_types::Point::new</span>(<span class="ident">inner_coords</span>.<span class="ident">x</span>, <span class="ident">inner_coords</span>.<span class="ident">y</span>);
-        <span class="kw">let</span> <span class="ident">coordinate</span>: <span class="ident">Coordinate</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">point</span>.<span class="ident">into</span>();
-
-        <span class="comment">// FIXME: Respect layer order of style</span>
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">TileIndex::Spatial</span> { <span class="ident">tree</span> } =&gt; <span class="ident">tree</span>
-                .<span class="ident">nearest_neighbor_iter</span>(<span class="kw-2">&amp;</span><span class="ident">point</span>)
-                .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">geometry</span><span class="op">|</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">geometry</span>.<span class="ident">exact</span> {
-                    <span class="ident">ExactGeometry::Polygon</span>(<span class="ident">exact</span>) =&gt; <span class="ident">exact</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">coordinate</span>),
-                    <span class="ident">ExactGeometry::LineString</span>(<span class="ident">exact</span>) =&gt; <span class="ident">exact</span>.<span class="ident">distance_2</span>(<span class="kw-2">&amp;</span><span class="ident">point</span>) <span class="op">&lt;</span><span class="op">=</span> <span class="number">64.0</span>,
-                })
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
-            <span class="ident">TileIndex::Linear</span> { <span class="ident">list</span> } =&gt; <span class="ident">list</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">geometry</span><span class="op">|</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">geometry</span>.<span class="ident">exact</span> {
-                    <span class="ident">ExactGeometry::Polygon</span>(<span class="ident">exact</span>) =&gt; <span class="ident">exact</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">coordinate</span>),
-                    <span class="ident">ExactGeometry::LineString</span>(<span class="ident">exact</span>) =&gt; <span class="ident">exact</span>.<span class="ident">distance_2</span>(<span class="kw-2">&amp;</span><span class="ident">point</span>) <span class="op">&lt;</span><span class="op">=</span> <span class="number">64.0</span>,
-                })
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
-        }
-    }
-}
-
-<span class="doccomment">/// An indexed geometry contains an exact vector geometry, computed bounds which</span>
-<span class="doccomment">/// can be helpful when interacting with the geometry and a hashmap of properties.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">CoordFloat</span> <span class="op">+</span> <span class="ident">Bounded</span> <span class="op">+</span> <span class="ident">Signed</span>,
+<span class="doccomment">/// An indexed geometry contains an exact vector geometry, computed bounds which
+/// can be helpful when interacting with the geometry and a hashmap of properties.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>IndexedGeometry&lt;T&gt;
+<span class="kw">where
+    </span>T: CoordFloat + Bounded + Signed,
 {
-    <span class="kw">pub</span> <span class="ident">bounds</span>: <span class="ident">AABB</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">exact</span>: <span class="ident">ExactGeometry</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">properties</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="kw">pub </span>bounds: AABB&lt;Point&lt;T&gt;&gt;,
+    <span class="kw">pub </span>exact: ExactGeometry&lt;T&gt;,
+    <span class="kw">pub </span>properties: HashMap&lt;String, String&gt;,
 }
 
-<span class="doccomment">/// Contains either a polygon or line vector.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ExactGeometry</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">CoordFloat</span> <span class="op">+</span> <span class="ident">Bounded</span> <span class="op">+</span> <span class="ident">Signed</span>,
+<span class="doccomment">/// Contains either a polygon or line vector.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub enum </span>ExactGeometry&lt;T&gt;
+<span class="kw">where
+    </span>T: CoordFloat + Bounded + Signed,
 {
-    <span class="ident">Polygon</span>(<span class="ident">Polygon</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
-    <span class="ident">LineString</span>(<span class="ident">LineString</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>),
+    Polygon(Polygon&lt;T&gt;),
+    LineString(LineString&lt;T&gt;),
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">CoordFloat</span> <span class="op">+</span> <span class="ident">Bounded</span> <span class="op">+</span> <span class="ident">Signed</span> <span class="op">+</span> <span class="ident">PartialOrd</span>,
+<span class="kw">impl</span>&lt;T&gt; IndexedGeometry&lt;T&gt;
+<span class="kw">where
+    </span>T: CoordFloat + Bounded + Signed + PartialOrd,
 {
-    <span class="kw">fn</span> <span class="ident">from_polygon</span>(<span class="ident">polygon</span>: <span class="ident">Polygon</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">properties</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">min</span>, <span class="ident">max</span>) <span class="op">=</span> <span class="ident">bounds_from_points</span>(<span class="ident">polygon</span>.<span class="ident">exterior</span>().<span class="ident">points</span>())<span class="question-mark">?</span>;
+    <span class="kw">fn </span>from_polygon(polygon: Polygon&lt;T&gt;, properties: HashMap&lt;String, String&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>(min, max) = bounds_from_points(polygon.exterior().points())<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Some</span>(<span class="self">Self</span> {
-            <span class="ident">exact</span>: <span class="ident">ExactGeometry::Polygon</span>(<span class="ident">polygon</span>),
-            <span class="ident">bounds</span>: <span class="ident">AABB::from_corners</span>(<span class="ident">Point::from</span>(<span class="ident">min</span>), <span class="ident">Point::from</span>(<span class="ident">max</span>)),
-            <span class="ident">properties</span>,
+        <span class="prelude-val">Some</span>(<span class="self">Self </span>{
+            exact: ExactGeometry::Polygon(polygon),
+            bounds: AABB::from_corners(Point::from(min), Point::from(max)),
+            properties,
         })
     }
-    <span class="kw">fn</span> <span class="ident">from_linestring</span>(
-        <span class="ident">linestring</span>: <span class="ident">LineString</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-        <span class="ident">properties</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">bounds</span> <span class="op">=</span> <span class="ident">linestring</span>.<span class="ident">envelope</span>();
+    <span class="kw">fn </span>from_linestring(
+        linestring: LineString&lt;T&gt;,
+        properties: HashMap&lt;String, String&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>bounds = linestring.envelope();
 
-        <span class="prelude-val">Some</span>(<span class="self">Self</span> {
-            <span class="ident">exact</span>: <span class="ident">ExactGeometry::LineString</span>(<span class="ident">linestring</span>),
-            <span class="ident">bounds</span>,
-            <span class="ident">properties</span>,
+        <span class="prelude-val">Some</span>(<span class="self">Self </span>{
+            exact: ExactGeometry::LineString(linestring),
+            bounds,
+            properties,
         })
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">RTreeObject</span> <span class="kw">for</span> <span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">CoordFloat</span> <span class="op">+</span> <span class="ident">Bounded</span> <span class="op">+</span> <span class="ident">Signed</span> <span class="op">+</span> <span class="ident">PartialOrd</span>,
+<span class="kw">impl</span>&lt;T&gt; RTreeObject <span class="kw">for </span>IndexedGeometry&lt;T&gt;
+<span class="kw">where
+    </span>T: CoordFloat + Bounded + Signed + PartialOrd,
 {
-    <span class="kw">type</span> <span class="ident">Envelope</span> <span class="op">=</span> <span class="ident">AABB</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">type </span>Envelope = AABB&lt;Point&lt;T&gt;&gt;;
 
-    <span class="kw">fn</span> <span class="ident">envelope</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Envelope</span> {
-        <span class="self">self</span>.<span class="ident">bounds</span>
+    <span class="kw">fn </span>envelope(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Envelope {
+        <span class="self">self</span>.bounds
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">PointDistance</span> <span class="kw">for</span> <span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">CoordFloat</span> <span class="op">+</span> <span class="ident">Bounded</span> <span class="op">+</span> <span class="ident">Signed</span> <span class="op">+</span> <span class="ident">PartialOrd</span>,
+<span class="kw">impl</span>&lt;T&gt; PointDistance <span class="kw">for </span>IndexedGeometry&lt;T&gt;
+<span class="kw">where
+    </span>T: CoordFloat + Bounded + Signed + PartialOrd,
 {
-    <span class="kw">fn</span> <span class="ident">distance_2</span>(
+    <span class="kw">fn </span>distance_2(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">point</span>: <span class="kw-2">&amp;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Envelope</span> <span class="kw">as</span> <span class="ident">Envelope</span><span class="op">&gt;</span><span class="ident">::Point</span>,
-    ) -&gt; <span class="op">&lt;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Envelope</span> <span class="kw">as</span> <span class="ident">Envelope</span><span class="op">&gt;</span><span class="ident">::Point</span> <span class="kw">as</span> <span class="ident">rstar::Point</span><span class="op">&gt;</span><span class="ident">::Scalar</span> {
-        <span class="self">self</span>.<span class="ident">bounds</span>.<span class="ident">center</span>().<span class="ident">distance_2</span>(<span class="ident">point</span>)
+        point: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::Envelope <span class="kw">as </span>Envelope&gt;::Point,
+    ) -&gt; &lt;&lt;<span class="self">Self</span>::Envelope <span class="kw">as </span>Envelope&gt;::Point <span class="kw">as </span>rstar::Point&gt;::Scalar {
+        <span class="self">self</span>.bounds.center().distance_2(point)
     }
 
-    <span class="kw">fn</span> <span class="ident">contains_point</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">point</span>: <span class="kw-2">&amp;</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Envelope</span> <span class="kw">as</span> <span class="ident">Envelope</span><span class="op">&gt;</span><span class="ident">::Point</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">bounds</span>.<span class="ident">contains_point</span>(<span class="ident">point</span>)
+    <span class="kw">fn </span>contains_point(<span class="kw-2">&amp;</span><span class="self">self</span>, point: <span class="kw-2">&amp;</span>&lt;<span class="self">Self</span>::Envelope <span class="kw">as </span>Envelope&gt;::Point) -&gt; bool {
+        <span class="self">self</span>.bounds.contains_point(point)
     }
 }
 
-<span class="doccomment">/// A processor able to create geometries using `[geozero::geo_types::GeoWriter]`.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IndexProcessor</span> {
-    <span class="ident">geo_writer</span>: <span class="ident">GeoWriter</span>,
-    <span class="ident">geometries</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">properties</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A processor able to create geometries using `[geozero::geo_types::GeoWriter]`.
+</span><span class="kw">pub struct </span>IndexProcessor {
+    geo_writer: GeoWriter,
+    geometries: Vec&lt;IndexedGeometry&lt;f64&gt;&gt;,
+    properties: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, String&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">IndexProcessor</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">geo_writer</span>: <span class="ident">GeoWriter::new</span>(),
-            <span class="ident">geometries</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">properties</span>: <span class="prelude-val">None</span>,
+<span class="kw">impl </span>IndexProcessor {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            geo_writer: GeoWriter::new(),
+            geometries: Vec::new(),
+            properties: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_tree</span>(<span class="self">self</span>) -&gt; <span class="ident">RTree</span><span class="op">&lt;</span><span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">RTree::bulk_load</span>(<span class="self">self</span>.<span class="ident">geometries</span>)
+    <span class="kw">pub fn </span>build_tree(<span class="self">self</span>) -&gt; RTree&lt;IndexedGeometry&lt;f64&gt;&gt; {
+        RTree::bulk_load(<span class="self">self</span>.geometries)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_geometries</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">IndexedGeometry</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geometries</span>
+    <span class="kw">pub fn </span>get_geometries(<span class="self">self</span>) -&gt; Vec&lt;IndexedGeometry&lt;f64&gt;&gt; {
+        <span class="self">self</span>.geometries
     }
 }
 
-<span class="kw">impl</span> <span class="ident">GeomProcessor</span> <span class="kw">for</span> <span class="ident">IndexProcessor</span> {
-    <span class="kw">fn</span> <span class="ident">xy</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">f64</span>, <span class="ident">y</span>: <span class="ident">f64</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">xy</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">idx</span>)
+<span class="kw">impl </span>GeomProcessor <span class="kw">for </span>IndexProcessor {
+    <span class="kw">fn </span>xy(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: f64, y: f64, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.xy(x, y, idx)
     }
-    <span class="kw">fn</span> <span class="ident">point_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">point_begin</span>(<span class="ident">idx</span>)
+    <span class="kw">fn </span>point_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.point_begin(idx)
     }
-    <span class="kw">fn</span> <span class="ident">multipoint_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">multipoint_begin</span>(<span class="ident">size</span>, <span class="ident">idx</span>)
+    <span class="kw">fn </span>multipoint_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.multipoint_begin(size, idx)
     }
-    <span class="kw">fn</span> <span class="ident">linestring_begin</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">tagged</span>: <span class="ident">bool</span>,
-        <span class="ident">size</span>: <span class="ident">usize</span>,
-        <span class="ident">idx</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">linestring_begin</span>(<span class="ident">tagged</span>, <span class="ident">size</span>, <span class="ident">idx</span>)
+    <span class="kw">fn </span>linestring_begin(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        tagged: bool,
+        size: usize,
+        idx: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.linestring_begin(tagged, size, idx)
     }
-    <span class="kw">fn</span> <span class="ident">linestring_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">tagged</span>: <span class="ident">bool</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">linestring_end</span>(<span class="ident">tagged</span>, <span class="ident">idx</span>)
+    <span class="kw">fn </span>linestring_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tagged: bool, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.linestring_end(tagged, idx)
     }
-    <span class="kw">fn</span> <span class="ident">multilinestring_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">multilinestring_begin</span>(<span class="ident">size</span>, <span class="ident">idx</span>)
+    <span class="kw">fn </span>multilinestring_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.multilinestring_begin(size, idx)
     }
-    <span class="kw">fn</span> <span class="ident">multilinestring_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">multilinestring_end</span>(<span class="ident">idx</span>)
+    <span class="kw">fn </span>multilinestring_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.multilinestring_end(idx)
     }
-    <span class="kw">fn</span> <span class="ident">polygon_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">tagged</span>: <span class="ident">bool</span>, <span class="ident">size</span>: <span class="ident">usize</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">polygon_begin</span>(<span class="ident">tagged</span>, <span class="ident">size</span>, <span class="ident">idx</span>)
+    <span class="kw">fn </span>polygon_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tagged: bool, size: usize, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.polygon_begin(tagged, size, idx)
     }
-    <span class="kw">fn</span> <span class="ident">polygon_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">tagged</span>: <span class="ident">bool</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">polygon_end</span>(<span class="ident">tagged</span>, <span class="ident">idx</span>)
+    <span class="kw">fn </span>polygon_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tagged: bool, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.polygon_end(tagged, idx)
     }
-    <span class="kw">fn</span> <span class="ident">multipolygon_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>, <span class="ident">idx</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">multipolygon_begin</span>(<span class="ident">size</span>, <span class="ident">idx</span>)
+    <span class="kw">fn </span>multipolygon_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.multipolygon_begin(size, idx)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">PropertyProcessor</span> <span class="kw">for</span> <span class="ident">IndexProcessor</span> {
-    <span class="kw">fn</span> <span class="ident">property</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">_idx</span>: <span class="ident">usize</span>,
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ColumnValue</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">properties</span>
-            .<span class="ident">as_mut</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">insert</span>(<span class="ident">name</span>.<span class="ident">to_string</span>(), <span class="ident">value</span>.<span class="ident">to_string</span>());
+<span class="kw">impl </span>PropertyProcessor <span class="kw">for </span>IndexProcessor {
+    <span class="kw">fn </span>property(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        _idx: usize,
+        name: <span class="kw-2">&amp;</span>str,
+        value: <span class="kw-2">&amp;</span>ColumnValue,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, GeozeroError&gt; {
+        <span class="self">self</span>.properties
+            .as_mut()
+            .unwrap()
+            .insert(name.to_string(), value.to_string());
         <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">FeatureProcessor</span> <span class="kw">for</span> <span class="ident">IndexProcessor</span> {
-    <span class="doccomment">/// Begin of dataset processing.</span>
-    <span class="kw">fn</span> <span class="ident">dataset_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
+<span class="kw">impl </span>FeatureProcessor <span class="kw">for </span>IndexProcessor {
+    <span class="doccomment">/// Begin of dataset processing.
+    </span><span class="kw">fn </span>dataset_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _name: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="doccomment">/// End of dataset processing.</span>
-    <span class="kw">fn</span> <span class="ident">dataset_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// End of dataset processing.
+    </span><span class="kw">fn </span>dataset_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="doccomment">/// Begin of feature processing.</span>
-    <span class="kw">fn</span> <span class="ident">feature_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_idx</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Begin of feature processing.
+    </span><span class="kw">fn </span>feature_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _idx: u64) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="doccomment">/// End of feature processing.</span>
-    <span class="kw">fn</span> <span class="ident">feature_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_idx</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// End of feature processing.
+    </span><span class="kw">fn </span>feature_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _idx: u64) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="doccomment">/// Begin of feature property processing.</span>
-    <span class="kw">fn</span> <span class="ident">properties_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">properties</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">HashMap::new</span>());
+    <span class="doccomment">/// Begin of feature property processing.
+    </span><span class="kw">fn </span>properties_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.properties = <span class="prelude-val">Some</span>(HashMap::new());
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="doccomment">/// End of feature property processing.</span>
-    <span class="kw">fn</span> <span class="ident">properties_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// End of feature property processing.
+    </span><span class="kw">fn </span>properties_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="doccomment">/// Begin of feature geometry processing.</span>
-    <span class="kw">fn</span> <span class="ident">geometry_begin</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Begin of feature geometry processing.
+    </span><span class="kw">fn </span>geometry_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
-    <span class="doccomment">/// End of feature geometry processing.</span>
-    <span class="kw">fn</span> <span class="ident">geometry_end</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GeozeroError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">geometry</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">geo_writer</span>.<span class="ident">take_geometry</span>().<span class="ident">unwrap</span>();
+    <span class="doccomment">/// End of feature geometry processing.
+    </span><span class="kw">fn </span>geometry_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="kw">let </span>geometry = <span class="self">self</span>.geo_writer.take_geometry().unwrap();
 
-        <span class="kw">match</span> <span class="ident">geometry</span> {
-            <span class="ident">Geometry::Polygon</span>(<span class="ident">polygon</span>) =&gt; <span class="self">self</span>.<span class="ident">geometries</span>.<span class="ident">push</span>(
-                <span class="ident">IndexedGeometry::from_polygon</span>(<span class="ident">polygon</span>, <span class="self">self</span>.<span class="ident">properties</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>(),
+        <span class="kw">match </span>geometry {
+            Geometry::Polygon(polygon) =&gt; <span class="self">self</span>.geometries.push(
+                IndexedGeometry::from_polygon(polygon, <span class="self">self</span>.properties.take().unwrap()).unwrap(),
             ),
-            <span class="ident">Geometry::LineString</span>(<span class="ident">linestring</span>) =&gt; <span class="self">self</span>.<span class="ident">geometries</span>.<span class="ident">push</span>(
-                <span class="ident">IndexedGeometry::from_linestring</span>(<span class="ident">linestring</span>, <span class="self">self</span>.<span class="ident">properties</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>())
-                    .<span class="ident">unwrap</span>(),
+            Geometry::LineString(linestring) =&gt; <span class="self">self</span>.geometries.push(
+                IndexedGeometry::from_linestring(linestring, <span class="self">self</span>.properties.take().unwrap())
+                    .unwrap(),
             ),
-            <span class="kw">_</span> =&gt; {}
+            <span class="kw">_ </span>=&gt; {}
         };
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

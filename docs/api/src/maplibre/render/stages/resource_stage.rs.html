@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/stages/resource_stage.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>resource_stage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/stages/resource_stage.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>resource_stage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -138,145 +138,145 @@
 <span id="138">138</span>
 <span id="139">139</span>
 <span id="140">140</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.
 
-<span class="kw">use</span> <span class="ident">std::mem::size_of</span>;
+</span><span class="kw">use </span>std::mem::size_of;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">context::MapContext</span>,
-    <span class="ident">render</span>::{
-        <span class="ident">resource</span>::{<span class="ident">BackingBufferDescriptor</span>, <span class="ident">BufferPool</span>, <span class="ident">Globals</span>, <span class="ident">RenderPipeline</span>, <span class="ident">Texture</span>},
-        <span class="ident">shaders</span>,
-        <span class="ident">shaders</span>::{<span class="ident">Shader</span>, <span class="ident">ShaderTileMetadata</span>},
-        <span class="ident">tile_pipeline::TilePipeline</span>,
-        <span class="ident">tile_view_pattern</span>::{<span class="ident">TileViewPattern</span>, <span class="ident">DEFAULT_TILE_VIEW_SIZE</span>},
-        <span class="ident">Renderer</span>,
+<span class="kw">use crate</span>::{
+    context::MapContext,
+    render::{
+        resource::{BackingBufferDescriptor, BufferPool, Globals, RenderPipeline, Texture},
+        shaders,
+        shaders::{Shader, ShaderTileMetadata},
+        tile_pipeline::TilePipeline,
+        tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE},
+        Renderer,
     },
-    <span class="ident">schedule::Stage</span>,
+    schedule::Stage,
 };
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResourceStage</span>;
+<span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>ResourceStage;
 
-<span class="kw">impl</span> <span class="ident">Stage</span> <span class="kw">for</span> <span class="ident">ResourceStage</span> {
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;ResourceStage&quot;</span>, <span class="ident">skip_all</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">run</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">MapContext</span> {
-            <span class="ident">renderer</span>:
-                <span class="ident">Renderer</span> {
-                    <span class="ident">settings</span>,
-                    <span class="ident">device</span>,
-                    <span class="ident">state</span>,
+<span class="kw">impl </span>Stage <span class="kw">for </span>ResourceStage {
+    <span class="attribute">#[tracing::instrument(name = <span class="string">&quot;ResourceStage&quot;</span>, skip_all)]
+    </span><span class="kw">fn </span>run(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        MapContext {
+            renderer:
+                Renderer {
+                    settings,
+                    device,
+                    state,
                     ..
                 },
             ..
-        }: <span class="kw-2">&amp;mut</span> <span class="ident">MapContext</span>,
+        }: <span class="kw-2">&amp;mut </span>MapContext,
     ) {
-        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">state</span>.<span class="ident">surface</span>;
+        <span class="kw">let </span>surface = <span class="kw-2">&amp;mut </span>state.surface;
 
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">surface</span>.<span class="ident">size</span>();
+        <span class="kw">let </span>size = surface.size();
 
-        <span class="ident">surface</span>.<span class="ident">reconfigure</span>(<span class="ident">device</span>);
+        surface.reconfigure(device);
 
-        <span class="ident">state</span>
-            .<span class="ident">render_target</span>
-            .<span class="ident">initialize</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">surface</span>.<span class="ident">create_view</span>(<span class="ident">device</span>));
+        state
+            .render_target
+            .initialize(|| surface.create_view(device));
 
-        <span class="ident">state</span>.<span class="ident">depth_texture</span>.<span class="ident">reinitialize</span>(
-            <span class="op">|</span><span class="op">|</span> {
-                <span class="ident">Texture::new</span>(
+        state.depth_texture.reinitialize(
+            || {
+                Texture::new(
                     <span class="prelude-val">Some</span>(<span class="string">&quot;depth texture&quot;</span>),
-                    <span class="ident">device</span>,
-                    <span class="ident">settings</span>.<span class="ident">depth_texture_format</span>,
-                    <span class="ident">size</span>.<span class="ident">width</span>(),
-                    <span class="ident">size</span>.<span class="ident">height</span>(),
-                    <span class="ident">settings</span>.<span class="ident">msaa</span>,
+                    device,
+                    settings.depth_texture_format,
+                    size.width(),
+                    size.height(),
+                    settings.msaa,
                 )
             },
-            <span class="kw-2">&amp;</span>(<span class="ident">size</span>.<span class="ident">width</span>(), <span class="ident">size</span>.<span class="ident">height</span>()),
+            <span class="kw-2">&amp;</span>(size.width(), size.height()),
         );
 
-        <span class="ident">state</span>.<span class="ident">multisampling_texture</span>.<span class="ident">reinitialize</span>(
-            <span class="op">|</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">settings</span>.<span class="ident">msaa</span>.<span class="ident">is_active</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">Texture::new</span>(
+        state.multisampling_texture.reinitialize(
+            || {
+                <span class="kw">if </span>settings.msaa.is_active() {
+                    <span class="prelude-val">Some</span>(Texture::new(
                         <span class="prelude-val">Some</span>(<span class="string">&quot;multisampling texture&quot;</span>),
-                        <span class="ident">device</span>,
-                        <span class="ident">settings</span>.<span class="ident">texture_format</span>,
-                        <span class="ident">size</span>.<span class="ident">width</span>(),
-                        <span class="ident">size</span>.<span class="ident">height</span>(),
-                        <span class="ident">settings</span>.<span class="ident">msaa</span>,
+                        device,
+                        settings.texture_format,
+                        size.width(),
+                        size.height(),
+                        settings.msaa,
                     ))
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                }
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
             },
-            <span class="kw-2">&amp;</span>(<span class="ident">size</span>.<span class="ident">width</span>(), <span class="ident">size</span>.<span class="ident">height</span>()),
+            <span class="kw-2">&amp;</span>(size.width(), size.height()),
         );
 
-        <span class="ident">state</span>
-            .<span class="ident">buffer_pool</span>
-            .<span class="ident">initialize</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">BufferPool::from_device</span>(<span class="ident">device</span>));
+        state
+            .buffer_pool
+            .initialize(|| BufferPool::from_device(device));
 
-        <span class="ident">state</span>.<span class="ident">tile_view_pattern</span>.<span class="ident">initialize</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">tile_view_buffer_desc</span> <span class="op">=</span> <span class="ident">wgpu::BufferDescriptor</span> {
-                <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;tile view buffer&quot;</span>),
-                <span class="ident">size</span>: <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderTileMetadata</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span>
-                    <span class="op">*</span> <span class="ident">DEFAULT_TILE_VIEW_SIZE</span>,
-                <span class="ident">usage</span>: <span class="ident">wgpu::BufferUsages::VERTEX</span> <span class="op">|</span> <span class="ident">wgpu::BufferUsages::COPY_DST</span>,
-                <span class="ident">mapped_at_creation</span>: <span class="bool-val">false</span>,
+        state.tile_view_pattern.initialize(|| {
+            <span class="kw">let </span>tile_view_buffer_desc = wgpu::BufferDescriptor {
+                label: <span class="prelude-val">Some</span>(<span class="string">&quot;tile view buffer&quot;</span>),
+                size: size_of::&lt;ShaderTileMetadata&gt;() <span class="kw">as </span>wgpu::BufferAddress
+                    * DEFAULT_TILE_VIEW_SIZE,
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: <span class="bool-val">false</span>,
             };
 
-            <span class="ident">TileViewPattern::new</span>(<span class="ident">BackingBufferDescriptor::new</span>(
-                <span class="ident">device</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">tile_view_buffer_desc</span>),
-                <span class="ident">tile_view_buffer_desc</span>.<span class="ident">size</span>,
+            TileViewPattern::new(BackingBufferDescriptor::new(
+                device.create_buffer(<span class="kw-2">&amp;</span>tile_view_buffer_desc),
+                tile_view_buffer_desc.size,
             ))
         });
 
-        <span class="ident">state</span>.<span class="ident">tile_pipeline</span>.<span class="ident">initialize</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">tile_shader</span> <span class="op">=</span> <span class="ident">shaders::TileShader</span> {
-                <span class="ident">format</span>: <span class="ident">settings</span>.<span class="ident">texture_format</span>,
+        state.tile_pipeline.initialize(|| {
+            <span class="kw">let </span>tile_shader = shaders::TileShader {
+                format: settings.texture_format,
             };
 
-            <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">TilePipeline::new</span>(
-                <span class="kw-2">*</span><span class="ident">settings</span>,
-                <span class="ident">tile_shader</span>.<span class="ident">describe_vertex</span>(),
-                <span class="ident">tile_shader</span>.<span class="ident">describe_fragment</span>(),
+            <span class="kw">let </span>pipeline = TilePipeline::new(
+                <span class="kw-2">*</span>settings,
+                tile_shader.describe_vertex(),
+                tile_shader.describe_fragment(),
                 <span class="bool-val">true</span>,
                 <span class="bool-val">false</span>,
                 <span class="bool-val">false</span>,
                 <span class="bool-val">false</span>,
             )
-            .<span class="ident">describe_render_pipeline</span>()
-            .<span class="ident">initialize</span>(<span class="ident">device</span>);
+            .describe_render_pipeline()
+            .initialize(device);
 
-            <span class="ident">state</span>
-                .<span class="ident">globals_bind_group</span>
-                .<span class="ident">initialize</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Globals::from_device</span>(<span class="ident">device</span>, <span class="kw-2">&amp;</span><span class="ident">pipeline</span>.<span class="ident">get_bind_group_layout</span>(<span class="number">0</span>)));
+            state
+                .globals_bind_group
+                .initialize(|| Globals::from_device(device, <span class="kw-2">&amp;</span>pipeline.get_bind_group_layout(<span class="number">0</span>)));
 
-            <span class="ident">pipeline</span>
+            pipeline
         });
 
-        <span class="ident">state</span>.<span class="ident">mask_pipeline</span>.<span class="ident">initialize</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">mask_shader</span> <span class="op">=</span> <span class="ident">shaders::TileMaskShader</span> {
-                <span class="ident">format</span>: <span class="ident">settings</span>.<span class="ident">texture_format</span>,
-                <span class="ident">draw_colors</span>: <span class="bool-val">false</span>,
+        state.mask_pipeline.initialize(|| {
+            <span class="kw">let </span>mask_shader = shaders::TileMaskShader {
+                format: settings.texture_format,
+                draw_colors: <span class="bool-val">false</span>,
             };
 
-            <span class="ident">TilePipeline::new</span>(
-                <span class="kw-2">*</span><span class="ident">settings</span>,
-                <span class="ident">mask_shader</span>.<span class="ident">describe_vertex</span>(),
-                <span class="ident">mask_shader</span>.<span class="ident">describe_fragment</span>(),
+            TilePipeline::new(
+                <span class="kw-2">*</span>settings,
+                mask_shader.describe_vertex(),
+                mask_shader.describe_fragment(),
                 <span class="bool-val">false</span>,
                 <span class="bool-val">true</span>,
                 <span class="bool-val">false</span>,
                 <span class="bool-val">false</span>,
             )
-            .<span class="ident">describe_render_pipeline</span>()
-            .<span class="ident">initialize</span>(<span class="ident">device</span>)
+            .describe_render_pipeline()
+            .initialize(device)
         });
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

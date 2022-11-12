@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/util/label.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>label.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/util/label.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>label.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -99,106 +99,106 @@
 <span id="99">99</span>
 <span id="100">100</span>
 <span id="101">101</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Traits used by label implementations</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Traits used by label implementations
 
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">any::Any</span>,
-    <span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>},
+</span><span class="kw">use </span>std::{
+    any::Any,
+    hash::{Hash, Hasher},
 };
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DynEq</span>: <span class="ident">Any</span> {
-    <span class="kw">fn</span> <span class="ident">as_any</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Any</span>;
+<span class="kw">pub trait </span>DynEq: Any {
+    <span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Any;
 
-    <span class="kw">fn</span> <span class="ident">dyn_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DynEq</span>) -&gt; <span class="ident">bool</span>;
+    <span class="kw">fn </span>dyn_eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="kw">dyn </span>DynEq) -&gt; bool;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">DynEq</span> <span class="kw">for</span> <span class="ident">T</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Any</span> <span class="op">+</span> <span class="ident">Eq</span>,
+<span class="kw">impl</span>&lt;T&gt; DynEq <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: Any + Eq,
 {
-    <span class="kw">fn</span> <span class="ident">as_any</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Any</span> {
-        <span class="self">self</span>
-    }
+    <span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Any {
+        <span class="self">self
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">dyn_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DynEq</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">other</span>) <span class="op">=</span> <span class="ident">other</span>.<span class="ident">as_any</span>().<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() {
-            <span class="kw">return</span> <span class="self">self</span> <span class="op">==</span> <span class="ident">other</span>;
+    <span class="kw">fn </span>dyn_eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="kw">dyn </span>DynEq) -&gt; bool {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(other) = other.as_any().downcast_ref::&lt;T&gt;() {
+            <span class="kw">return </span><span class="self">self </span>== other;
         }
-        <span class="bool-val">false</span>
-    }
+        <span class="bool-val">false
+    </span>}
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DynHash</span>: <span class="ident">DynEq</span> {
-    <span class="kw">fn</span> <span class="ident">as_dyn_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DynEq</span>;
+<span class="kw">pub trait </span>DynHash: DynEq {
+    <span class="kw">fn </span>as_dyn_eq(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>DynEq;
 
-    <span class="kw">fn</span> <span class="ident">dyn_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="kw">dyn</span> <span class="ident">Hasher</span>);
+    <span class="kw">fn </span>dyn_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Hasher);
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">DynHash</span> <span class="kw">for</span> <span class="ident">T</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">DynEq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="kw">impl</span>&lt;T&gt; DynHash <span class="kw">for </span>T
+<span class="kw">where
+    </span>T: DynEq + Hash,
 {
-    <span class="kw">fn</span> <span class="ident">as_dyn_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">DynEq</span> {
-        <span class="self">self</span>
-    }
+    <span class="kw">fn </span>as_dyn_eq(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>DynEq {
+        <span class="self">self
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">dyn_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="kw">dyn</span> <span class="ident">Hasher</span>) {
-        <span class="ident">T::hash</span>(<span class="self">self</span>, <span class="kw-2">&amp;mut</span> <span class="ident">state</span>);
-        <span class="self">self</span>.<span class="ident">type_id</span>().<span class="ident">hash</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>);
+    <span class="kw">fn </span>dyn_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>state: <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Hasher) {
+        T::hash(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>state);
+        <span class="self">self</span>.type_id().hash(<span class="kw-2">&amp;mut </span>state);
     }
 }
 
-<span class="doccomment">/// Macro to define a new label trait</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Example</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use maplibre::define_label;</span>
-<span class="doccomment">/// define_label!(MyNewLabelTrait);</span>
-<span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">define_label</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span>:<span class="ident">ident</span>) =&gt; {
-        <span class="doccomment">/// Defines a set of strongly-typed labels for a class of objects</span>
-        <span class="kw">pub</span> <span class="kw">trait</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span>:
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::util::label::DynHash</span> <span class="op">+</span> <span class="ident">::std::fmt::Debug</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>
-        {
-            <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">dyn_clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Macro to define a new label trait
+///
+/// # Example
+///
+/// ```
+/// # use maplibre::define_label;
+/// define_label!(MyNewLabelTrait);
+/// ```
+</span><span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>define_label {
+    (<span class="macro-nonterminal">$label_trait_name</span>:ident) =&gt; {
+        <span class="doccomment">/// Defines a set of strongly-typed labels for a class of objects
+        </span><span class="kw">pub trait </span><span class="macro-nonterminal">$label_trait_name</span>:
+            <span class="macro-nonterminal">$crate::util::label::DynHash </span>+ ::std::fmt::Debug + Send + Sync + <span class="lifetime">&#39;static
+        </span>{
+            <span class="attribute">#[doc(hidden)]
+            </span><span class="kw">fn </span>dyn_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$label_trait_name</span>&gt;;
         }
 
-        <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span> {
-            <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-                <span class="self">self</span>.<span class="ident">dyn_eq</span>(<span class="ident">other</span>.<span class="ident">as_dyn_eq</span>())
+        <span class="kw">impl </span>PartialEq <span class="kw">for dyn </span><span class="macro-nonterminal">$label_trait_name </span>{
+            <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+                <span class="self">self</span>.dyn_eq(other.as_dyn_eq())
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span> {}
+        <span class="kw">impl </span>Eq <span class="kw">for dyn </span><span class="macro-nonterminal">$label_trait_name </span>{}
 
-        <span class="kw">impl</span> <span class="ident">::std::hash::Hash</span> <span class="kw">for</span> <span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span> {
-            <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">::std::hash::Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">H</span>) {
-                <span class="self">self</span>.<span class="ident">dyn_hash</span>(<span class="ident">state</span>);
+        <span class="kw">impl </span>::std::hash::Hash <span class="kw">for dyn </span><span class="macro-nonterminal">$label_trait_name </span>{
+            <span class="kw">fn </span>hash&lt;H: ::std::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
+                <span class="self">self</span>.dyn_hash(state);
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-                <span class="self">self</span>.<span class="ident">dyn_clone</span>()
+        <span class="kw">impl </span>Clone <span class="kw">for </span>Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$label_trait_name</span>&gt; {
+            <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+                <span class="self">self</span>.dyn_clone()
             }
         }
 
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span> <span class="kw">for</span> <span class="ident">::std::borrow::Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">dyn_clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span><span class="op">&gt;</span> {
-                <span class="ident">Box::new</span>(<span class="self">self</span>.<span class="ident">clone</span>())
+        <span class="kw">impl </span><span class="macro-nonterminal">$label_trait_name </span><span class="kw">for </span>::std::borrow::Cow&lt;<span class="lifetime">&#39;static</span>, str&gt; {
+            <span class="kw">fn </span>dyn_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$label_trait_name</span>&gt; {
+                Box::new(<span class="self">self</span>.clone())
             }
         }
 
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-            <span class="kw">fn</span> <span class="ident">dyn_clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">label_trait_name</span><span class="op">&gt;</span> {
-                <span class="ident">Box::new</span>(<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="ident">::clone</span>(<span class="self">self</span>))
+        <span class="kw">impl </span><span class="macro-nonterminal">$label_trait_name </span><span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+            <span class="kw">fn </span>dyn_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span><span class="macro-nonterminal">$label_trait_name</span>&gt; {
+                Box::new(&lt;<span class="kw-2">&amp;</span>str&gt;::clone(<span class="self">self</span>))
             }
         }
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

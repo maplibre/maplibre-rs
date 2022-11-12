@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/stages/request_stage.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>request_stage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/stages/request_stage.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>request_stage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -166,110 +166,110 @@
 <span id="166">166</span>
 <span id="167">167</span>
 <span id="168">168</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">rc::Rc</span>};
+</span><span class="kw">use </span>std::{collections::HashSet, rc::Rc};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">context::MapContext</span>,
-    <span class="ident">coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">WorldTileCoords</span>},
-    <span class="ident">environment::Environment</span>,
-    <span class="ident">error::Error</span>,
-    <span class="ident">io</span>::{
-        <span class="ident">apc</span>::{<span class="ident">AsyncProcedureCall</span>, <span class="ident">AsyncProcedureFuture</span>, <span class="ident">Context</span>, <span class="ident">Input</span>, <span class="ident">Message</span>},
-        <span class="ident">pipeline</span>::{<span class="ident">PipelineContext</span>, <span class="ident">Processable</span>},
-        <span class="ident">tile_pipelines::build_vector_tile_pipeline</span>,
-        <span class="ident">tile_repository::TileRepository</span>,
-        <span class="ident">transferables</span>::{<span class="ident">Transferables</span>, <span class="ident">UnavailableLayer</span>},
-        <span class="ident">TileRequest</span>,
+<span class="kw">use crate</span>::{
+    context::MapContext,
+    coords::{ViewRegion, WorldTileCoords},
+    environment::Environment,
+    error::Error,
+    io::{
+        apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message},
+        pipeline::{PipelineContext, Processable},
+        tile_pipelines::build_vector_tile_pipeline,
+        tile_repository::TileRepository,
+        transferables::{Transferables, UnavailableLayer},
+        TileRequest,
     },
-    <span class="ident">kernel::Kernel</span>,
-    <span class="ident">schedule::Stage</span>,
-    <span class="ident">stages::HeadedPipelineProcessor</span>,
-    <span class="ident">style::Style</span>,
-    <span class="ident">world::World</span>,
+    kernel::Kernel,
+    schedule::Stage,
+    stages::HeadedPipelineProcessor,
+    style::Style,
+    world::World,
 };
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RequestStage</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Environment</span><span class="op">&gt;</span> {
-    <span class="ident">kernel</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Kernel</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>RequestStage&lt;E: Environment&gt; {
+    kernel: Rc&lt;Kernel&lt;E&gt;&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Environment</span><span class="op">&gt;</span> <span class="ident">RequestStage</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">kernel</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Kernel</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">kernel</span> }
+<span class="kw">impl</span>&lt;E: Environment&gt; RequestStage&lt;E&gt; {
+    <span class="kw">pub fn </span>new(kernel: Rc&lt;Kernel&lt;E&gt;&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ kernel }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Environment</span><span class="op">&gt;</span> <span class="ident">Stage</span> <span class="kw">for</span> <span class="ident">RequestStage</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">run</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">MapContext</span> {
-            <span class="ident">world</span>:
-                <span class="ident">World</span> {
-                    <span class="ident">tile_repository</span>,
-                    <span class="ident">view_state</span>,
+<span class="kw">impl</span>&lt;E: Environment&gt; Stage <span class="kw">for </span>RequestStage&lt;E&gt; {
+    <span class="kw">fn </span>run(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        MapContext {
+            world:
+                World {
+                    tile_repository,
+                    view_state,
                 },
-            <span class="ident">style</span>,
+            style,
             ..
-        }: <span class="kw-2">&amp;mut</span> <span class="ident">MapContext</span>,
+        }: <span class="kw-2">&amp;mut </span>MapContext,
     ) {
-        <span class="kw">let</span> <span class="ident">view_region</span> <span class="op">=</span> <span class="ident">view_state</span>.<span class="ident">create_view_region</span>();
+        <span class="kw">let </span>view_region = view_state.create_view_region();
 
-        <span class="kw">if</span> <span class="ident">view_state</span>.<span class="ident">did_camera_change</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">view_state</span>.<span class="ident">did_zoom_change</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">view_region</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">view_region</span> {
-                <span class="comment">// FIXME: We also need to request tiles from layers above if we are over the maximum zoom level</span>
-                <span class="self">self</span>.<span class="ident">request_tiles_in_view</span>(<span class="ident">tile_repository</span>, <span class="ident">style</span>, <span class="ident">view_region</span>);
+        <span class="kw">if </span>view_state.did_camera_change() || view_state.did_zoom_change() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(view_region) = <span class="kw-2">&amp;</span>view_region {
+                <span class="comment">// FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
+                </span><span class="self">self</span>.request_tiles_in_view(tile_repository, style, view_region);
             }
         }
 
-        <span class="ident">view_state</span>.<span class="ident">update_references</span>();
+        view_state.update_references();
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">schedule</span><span class="op">&lt;</span>
-    <span class="ident">E</span>: <span class="ident">Environment</span>,
-    <span class="ident">C</span>: <span class="ident">Context</span><span class="op">&lt;</span>
-        <span class="op">&lt;</span><span class="ident">E::AsyncProcedureCall</span> <span class="kw">as</span> <span class="ident">AsyncProcedureCall</span><span class="op">&lt;</span><span class="ident">E::HttpClient</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Transferables</span>,
-        <span class="ident">E::HttpClient</span>,
-    <span class="op">&gt;</span>,
-<span class="op">&gt;</span>(
-    <span class="ident">input</span>: <span class="ident">Input</span>,
-    <span class="ident">context</span>: <span class="ident">C</span>,
-) -&gt; <span class="ident">AsyncProcedureFuture</span> {
-    <span class="comment">// FIXME: improve input handling</span>
-    <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span> {
-        <span class="ident">Input::TileRequest</span>(<span class="ident">input</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">input</span>),
-        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+<span class="kw">pub fn </span>schedule&lt;
+    E: Environment,
+    C: Context&lt;
+        &lt;E::AsyncProcedureCall <span class="kw">as </span>AsyncProcedureCall&lt;E::HttpClient&gt;&gt;::Transferables,
+        E::HttpClient,
+    &gt;,
+&gt;(
+    input: Input,
+    context: C,
+) -&gt; AsyncProcedureFuture {
+    <span class="comment">// FIXME: improve input handling
+    </span><span class="kw">let </span>input = <span class="kw">match </span>input {
+        Input::TileRequest(input) =&gt; <span class="prelude-val">Some</span>(input),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
-    .<span class="ident">unwrap</span>(); <span class="comment">// FIXME (wasm-executor): Remove unwrap</span>
+    .unwrap(); <span class="comment">// FIXME (wasm-executor): Remove unwrap
 
-    <span class="ident">Box::pin</span>(<span class="kw">async</span> <span class="kw">move</span> {
-        <span class="kw">let</span> <span class="ident">coords</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">coords</span>;
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">source_client</span>();
+    </span>Box::pin(<span class="kw">async move </span>{
+        <span class="kw">let </span>coords = input.coords;
+        <span class="kw">let </span>client = context.source_client();
 
-        <span class="kw">match</span> <span class="ident">client</span>.<span class="ident">fetch</span>(<span class="kw-2">&amp;</span><span class="ident">coords</span>).<span class="kw">await</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">data</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">into_boxed_slice</span>();
+        <span class="kw">match </span>client.fetch(<span class="kw-2">&amp;</span>coords).<span class="kw">await </span>{
+            <span class="prelude-val">Ok</span>(data) =&gt; {
+                <span class="kw">let </span>data = data.into_boxed_slice();
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pipeline_context</span> <span class="op">=</span> <span class="ident">PipelineContext::new</span>(<span class="ident">HeadedPipelineProcessor</span> {
-                    <span class="ident">context</span>,
-                    <span class="ident">phantom_t</span>: <span class="ident">Default::default</span>(),
-                    <span class="ident">phantom_hc</span>: <span class="ident">Default::default</span>(),
+                <span class="kw">let </span><span class="kw-2">mut </span>pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
+                    context,
+                    phantom_t: Default::default(),
+                    phantom_hc: Default::default(),
                 });
-                <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">build_vector_tile_pipeline</span>();
-                <span class="ident">pipeline</span>.<span class="ident">process</span>((<span class="ident">input</span>, <span class="ident">data</span>), <span class="kw-2">&amp;mut</span> <span class="ident">pipeline_context</span>);
+                <span class="kw">let </span>pipeline = build_vector_tile_pipeline();
+                pipeline.process((input, data), <span class="kw-2">&amp;mut </span>pipeline_context);
             }
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                <span class="macro">log::error!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">e</span>);
-                <span class="kw">for</span> <span class="ident">to_load</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">layers</span> {
-                    <span class="macro">tracing::warn!</span>(<span class="string">&quot;layer {} at {} unavailable&quot;</span>, <span class="ident">to_load</span>, <span class="ident">coords</span>);
-                    <span class="comment">// FIXME: Handle result</span>
-                    <span class="ident">context</span>.<span class="ident">send</span>(
-                        <span class="ident">Message::UnavailableLayer</span>(<span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">E::AsyncProcedureCall</span> <span class="kw">as</span> <span class="ident">AsyncProcedureCall</span><span class="op">&lt;</span>
-                            <span class="ident">E::HttpClient</span>,
-                        <span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Transferables</span> <span class="kw">as</span> <span class="ident">Transferables</span><span class="op">&gt;</span><span class="ident">::UnavailableLayer::new</span>(
-                            <span class="ident">input</span>.<span class="ident">coords</span>,
-                            <span class="ident">to_load</span>.<span class="ident">to_string</span>(),
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="macro">log::error!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>e);
+                <span class="kw">for </span>to_load <span class="kw">in </span><span class="kw-2">&amp;</span>input.layers {
+                    <span class="macro">tracing::warn!</span>(<span class="string">&quot;layer {} at {} unavailable&quot;</span>, to_load, coords);
+                    <span class="comment">// FIXME: Handle result
+                    </span>context.send(
+                        Message::UnavailableLayer(&lt;&lt;E::AsyncProcedureCall <span class="kw">as </span>AsyncProcedureCall&lt;
+                            E::HttpClient,
+                        &gt;&gt;::Transferables <span class="kw">as </span>Transferables&gt;::UnavailableLayer::new(
+                            input.coords,
+                            to_load.to_string(),
                         )),
                     );
                 }
@@ -278,56 +278,56 @@
     })
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Environment</span><span class="op">&gt;</span> <span class="ident">RequestStage</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Request tiles which are currently in view.</span>
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">skip_all</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">request_tiles_in_view</span>(
+<span class="kw">impl</span>&lt;E: Environment&gt; RequestStage&lt;E&gt; {
+    <span class="doccomment">/// Request tiles which are currently in view.
+    </span><span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">fn </span>request_tiles_in_view(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">tile_repository</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TileRepository</span>,
-        <span class="ident">style</span>: <span class="kw-2">&amp;</span><span class="ident">Style</span>,
-        <span class="ident">view_region</span>: <span class="kw-2">&amp;</span><span class="ident">ViewRegion</span>,
+        tile_repository: <span class="kw-2">&amp;mut </span>TileRepository,
+        style: <span class="kw-2">&amp;</span>Style,
+        view_region: <span class="kw-2">&amp;</span>ViewRegion,
     ) {
-        <span class="kw">let</span> <span class="ident">source_layers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">style</span>
-            .<span class="ident">layers</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">layer</span><span class="op">|</span> <span class="ident">layer</span>.<span class="ident">source_layer</span>.<span class="ident">clone</span>())
-            .<span class="ident">collect</span>();
+        <span class="kw">let </span>source_layers: HashSet&lt;String&gt; = style
+            .layers
+            .iter()
+            .filter_map(|layer| layer.source_layer.clone())
+            .collect();
 
-        <span class="kw">for</span> <span class="ident">coords</span> <span class="kw">in</span> <span class="ident">view_region</span>.<span class="ident">iter</span>() {
-            <span class="kw">if</span> <span class="ident">coords</span>.<span class="ident">build_quad_key</span>().<span class="ident">is_some</span>() {
-                <span class="comment">// TODO: Make tesselation depend on style?</span>
-                <span class="self">self</span>.<span class="ident">request_tile</span>(<span class="ident">tile_repository</span>, <span class="ident">coords</span>, <span class="kw-2">&amp;</span><span class="ident">source_layers</span>)
-                    .<span class="ident">unwrap</span>(); <span class="comment">// TODO: Remove unwrap</span>
-            }
+        <span class="kw">for </span>coords <span class="kw">in </span>view_region.iter() {
+            <span class="kw">if </span>coords.build_quad_key().is_some() {
+                <span class="comment">// TODO: Make tesselation depend on style?
+                </span><span class="self">self</span>.request_tile(tile_repository, coords, <span class="kw-2">&amp;</span>source_layers)
+                    .unwrap(); <span class="comment">// TODO: Remove unwrap
+            </span>}
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">request_tile</span>(
+    <span class="kw">fn </span>request_tile(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">tile_repository</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TileRepository</span>,
-        <span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>,
-        <span class="ident">layers</span>: <span class="kw-2">&amp;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        tile_repository: <span class="kw-2">&amp;mut </span>TileRepository,
+        coords: WorldTileCoords,
+        layers: <span class="kw-2">&amp;</span>HashSet&lt;String&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="comment">/* TODO: is this still required?
         if !tile_repository.is_layers_missing(coords, layers) {
             return Ok(false);
-        }*/</span>
+        }*/
 
-        <span class="kw">if</span> <span class="ident">tile_repository</span>.<span class="ident">has_tile</span>(<span class="kw-2">&amp;</span><span class="ident">coords</span>) {
-            <span class="ident">tile_repository</span>.<span class="ident">create_tile</span>(<span class="ident">coords</span>);
+        </span><span class="kw">if </span>tile_repository.has_tile(<span class="kw-2">&amp;</span>coords) {
+            tile_repository.create_tile(coords);
 
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;new tile request: {}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">coords</span>);
-            <span class="self">self</span>.<span class="ident">kernel</span>.<span class="ident">apc</span>().<span class="ident">call</span>(
-                <span class="ident">Input::TileRequest</span>(<span class="ident">TileRequest</span> {
-                    <span class="ident">coords</span>,
-                    <span class="ident">layers</span>: <span class="ident">layers</span>.<span class="ident">clone</span>(),
+            <span class="macro">tracing::info!</span>(<span class="string">&quot;new tile request: {}&quot;</span>, <span class="kw-2">&amp;</span>coords);
+            <span class="self">self</span>.kernel.apc().call(
+                Input::TileRequest(TileRequest {
+                    coords,
+                    layers: layers.clone(),
                 }),
-                <span class="ident">schedule</span>::<span class="op">&lt;</span>
-                    <span class="ident">E</span>,
-                    <span class="op">&lt;</span><span class="ident">E::AsyncProcedureCall</span> <span class="kw">as</span> <span class="ident">AsyncProcedureCall</span><span class="op">&lt;</span>
-                        <span class="ident">E::HttpClient</span>,
-                    <span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Context</span>,
-                <span class="op">&gt;</span>,
+                schedule::&lt;
+                    E,
+                    &lt;E::AsyncProcedureCall <span class="kw">as </span>AsyncProcedureCall&lt;
+                        E::HttpClient,
+                    &gt;&gt;::Context,
+                &gt;,
             );
         }
 
@@ -335,4 +335,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

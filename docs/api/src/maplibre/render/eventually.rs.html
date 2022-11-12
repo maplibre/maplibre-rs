@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/eventually.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>eventually.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/eventually.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>eventually.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -61,68 +61,68 @@
 <span id="61">61</span>
 <span id="62">62</span>
 <span id="63">63</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::mem</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::mem;
 
-<span class="doccomment">/// Wrapper around a resource which can be initialized or uninitialized.</span>
-<span class="doccomment">/// Uninitialized resourced can be initialized by calling [`Eventually::initialize()`].</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">Initialized</span>(<span class="ident">T</span>),
-    <span class="ident">Uninitialized</span>,
+<span class="doccomment">/// Wrapper around a resource which can be initialized or uninitialized.
+/// Uninitialized resourced can be initialized by calling [`Eventually::initialize()`].
+</span><span class="kw">pub enum </span>Eventually&lt;T&gt; {
+    Initialized(T),
+    Uninitialized,
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">HasChanged</span> {
-    <span class="kw">type</span> <span class="ident">Criteria</span>: <span class="ident">Eq</span>;
+<span class="kw">pub trait </span>HasChanged {
+    <span class="kw">type </span>Criteria: Eq;
 
-    <span class="kw">fn</span> <span class="ident">has_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">criteria</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Criteria</span>) -&gt; <span class="ident">bool</span>;
+    <span class="kw">fn </span>has_changed(<span class="kw-2">&amp;</span><span class="self">self</span>, criteria: <span class="kw-2">&amp;</span><span class="self">Self</span>::Criteria) -&gt; bool;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">HasChanged</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">HasChanged</span>,
+<span class="kw">impl</span>&lt;T&gt; HasChanged <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;T&gt;
+<span class="kw">where
+    </span>T: HasChanged,
 {
-    <span class="kw">type</span> <span class="ident">Criteria</span> <span class="op">=</span> <span class="ident">T::Criteria</span>;
+    <span class="kw">type </span>Criteria = T::Criteria;
 
-    <span class="kw">fn</span> <span class="ident">has_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">criteria</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Criteria</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="prelude-val">None</span> =&gt; <span class="bool-val">true</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">has_changed</span>(<span class="ident">criteria</span>),
+    <span class="kw">fn </span>has_changed(<span class="kw-2">&amp;</span><span class="self">self</span>, criteria: <span class="kw-2">&amp;</span><span class="self">Self</span>::Criteria) -&gt; bool {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="prelude-val">None </span>=&gt; <span class="bool-val">true</span>,
+            <span class="prelude-val">Some</span>(value) =&gt; value.has_changed(criteria),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">HasChanged</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; Eventually&lt;T&gt;
+<span class="kw">where
+    </span>T: HasChanged,
 {
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;reinitialize&quot;</span>, <span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reinitialize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() -&gt; <span class="ident">T</span>, <span class="ident">criteria</span>: <span class="kw-2">&amp;</span><span class="ident">T::Criteria</span>) {
-        <span class="kw">let</span> <span class="ident">should_replace</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span> {
-            <span class="ident">Eventually::Initialized</span>(<span class="ident">current</span>) =&gt; <span class="ident">current</span>.<span class="ident">has_changed</span>(<span class="ident">criteria</span>),
-            <span class="ident">Eventually::Uninitialized</span> =&gt; <span class="bool-val">true</span>,
+    <span class="attribute">#[tracing::instrument(name = <span class="string">&quot;reinitialize&quot;</span>, skip_all)]
+    </span><span class="kw">pub fn </span>reinitialize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: <span class="kw">impl </span>FnOnce() -&gt; T, criteria: <span class="kw-2">&amp;</span>T::Criteria) {
+        <span class="kw">let </span>should_replace = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self </span>{
+            Eventually::Initialized(current) =&gt; current.has_changed(criteria),
+            Eventually::Uninitialized =&gt; <span class="bool-val">true</span>,
         };
 
-        <span class="kw">if</span> <span class="ident">should_replace</span> {
-            <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="ident">Eventually::Initialized</span>(<span class="ident">f</span>());
+        <span class="kw">if </span>should_replace {
+            <span class="kw-2">*</span><span class="self">self </span>= Eventually::Initialized(f());
         }
     }
 }
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;initialize&quot;</span>, <span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() -&gt; <span class="ident">T</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Eventually::Uninitialized</span> <span class="op">=</span> <span class="self">self</span> {
-            <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="ident">Eventually::Initialized</span>(<span class="ident">f</span>());
+<span class="kw">impl</span>&lt;T&gt; Eventually&lt;T&gt; {
+    <span class="attribute">#[tracing::instrument(name = <span class="string">&quot;initialize&quot;</span>, skip_all)]
+    </span><span class="kw">pub fn </span>initialize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: <span class="kw">impl </span>FnOnce() -&gt; T) {
+        <span class="kw">if let </span>Eventually::Uninitialized = <span class="self">self </span>{
+            <span class="kw-2">*</span><span class="self">self </span>= Eventually::Initialized(f());
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">mem::replace</span>(<span class="self">self</span>, <span class="ident">Eventually::Uninitialized</span>)
+    <span class="kw">pub fn </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Eventually&lt;T&gt; {
+        mem::replace(<span class="self">self</span>, Eventually::Uninitialized)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">Eventually::Uninitialized</span>
+<span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>Eventually&lt;T&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        Eventually::Uninitialized
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/resource/tracked_render_pass.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tracked_render_pass.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/resource/tracked_render_pass.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tracked_render_pass.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -245,252 +245,252 @@
 <span id="245">245</span>
 <span id="246">246</span>
 <span id="247">247</span>
-</pre><pre class="rust"><code><span class="doccomment">//! A render pass which allows tracking, for example using a tracing framework.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! A render pass which allows tracking, for example using a tracing framework.
 
-<span class="kw">use</span> <span class="ident">std::ops::Range</span>;
+</span><span class="kw">use </span>std::ops::Range;
 
-<span class="kw">use</span> <span class="ident">log::trace</span>;
+<span class="kw">use </span>log::trace;
 
-<span class="doccomment">/// A [`RenderPass`], which tracks the current pipeline state to ensure all draw calls are valid.</span>
-<span class="doccomment">/// It is used to set the current [`RenderPipeline`], [`BindGroups`](BindGroup) and buffers.</span>
-<span class="doccomment">/// After all requirements are specified, draw calls can be issued.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TrackedRenderPass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">pass</span>: <span class="ident">wgpu::RenderPass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A [`RenderPass`], which tracks the current pipeline state to ensure all draw calls are valid.
+/// It is used to set the current [`RenderPipeline`], [`BindGroups`](BindGroup) and buffers.
+/// After all requirements are specified, draw calls can be issued.
+</span><span class="kw">pub struct </span>TrackedRenderPass&lt;<span class="lifetime">&#39;a</span>&gt; {
+    pass: wgpu::RenderPass&lt;<span class="lifetime">&#39;a</span>&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">TrackedRenderPass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Tracks the supplied render pass.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">pass</span>: <span class="ident">wgpu::RenderPass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">pass</span> }
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; TrackedRenderPass&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Tracks the supplied render pass.
+    </span><span class="kw">pub fn </span>new(pass: wgpu::RenderPass&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ pass }
     }
 
-    <span class="doccomment">/// Sets the active [`RenderPipeline`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent draw calls will exhibit the behavior defined by the `pipeline`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_render_pipeline</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">wgpu::RenderPipeline</span>) {
-        <span class="macro">trace!</span>(<span class="string">&quot;set pipeline: {:?}&quot;</span>, <span class="ident">pipeline</span>);
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">set_pipeline</span>(<span class="ident">pipeline</span>);
+    <span class="doccomment">/// Sets the active [`RenderPipeline`].
+    ///
+    /// Subsequent draw calls will exhibit the behavior defined by the `pipeline`.
+    </span><span class="kw">pub fn </span>set_render_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgpu::RenderPipeline) {
+        <span class="macro">trace!</span>(<span class="string">&quot;set pipeline: {:?}&quot;</span>, pipeline);
+        <span class="self">self</span>.pass.set_pipeline(pipeline);
     }
 
-    <span class="doccomment">/// Sets the active [`BindGroup`] for a given bind group index. The bind group layout in the</span>
-    <span class="doccomment">/// active pipeline when any `draw()` function is called must match the layout of this `bind group`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_bind_group</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">index</span>: <span class="ident">usize</span>,
-        <span class="ident">bind_group</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">wgpu::BindGroup</span>,
-        <span class="ident">dynamic_uniform_indices</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>],
+    <span class="doccomment">/// Sets the active [`BindGroup`] for a given bind group index. The bind group layout in the
+    /// active pipeline when any `draw()` function is called must match the layout of this `bind group`.
+    </span><span class="kw">pub fn </span>set_bind_group(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        index: usize,
+        bind_group: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgpu::BindGroup,
+        dynamic_uniform_indices: <span class="kw-2">&amp;</span>[u32],
     ) {
-        <span class="self">self</span>.<span class="ident">pass</span>
-            .<span class="ident">set_bind_group</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">bind_group</span>, <span class="ident">dynamic_uniform_indices</span>);
+        <span class="self">self</span>.pass
+            .set_bind_group(index <span class="kw">as </span>u32, bind_group, dynamic_uniform_indices);
     }
 
-    <span class="doccomment">/// Assign a vertex buffer to a slot.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent calls to [`TrackedRenderPass::draw`] and [`TrackedRenderPass::draw_indexed`]</span>
-    <span class="doccomment">/// will use the buffer referenced by `buffer_slice` as one of the source vertex buffer(s).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The `slot_index` refers to the index of the matching descriptor in</span>
-    <span class="doccomment">/// [`VertexState::buffers`](crate::render_resource::VertexState::buffers).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot_index</span>: <span class="ident">usize</span>, <span class="ident">buffer_slice</span>: <span class="ident">wgpu::BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">set_vertex_buffer</span>(<span class="ident">slot_index</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">buffer_slice</span>);
+    <span class="doccomment">/// Assign a vertex buffer to a slot.
+    ///
+    /// Subsequent calls to [`TrackedRenderPass::draw`] and [`TrackedRenderPass::draw_indexed`]
+    /// will use the buffer referenced by `buffer_slice` as one of the source vertex buffer(s).
+    ///
+    /// The `slot_index` refers to the index of the matching descriptor in
+    /// [`VertexState::buffers`](crate::render_resource::VertexState::buffers).
+    </span><span class="kw">pub fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot_index: usize, buffer_slice: wgpu::BufferSlice&lt;<span class="lifetime">&#39;a</span>&gt;) {
+        <span class="self">self</span>.pass.set_vertex_buffer(slot_index <span class="kw">as </span>u32, buffer_slice);
     }
 
-    <span class="doccomment">/// Sets the active index buffer.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent calls to [`TrackedRenderPass::draw_indexed`] will use the buffer referenced by</span>
-    <span class="doccomment">/// `buffer_slice` as the source index buffer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">buffer_slice</span>: <span class="ident">wgpu::BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-        <span class="ident">index_format</span>: <span class="ident">wgpu::IndexFormat</span>,
+    <span class="doccomment">/// Sets the active index buffer.
+    ///
+    /// Subsequent calls to [`TrackedRenderPass::draw_indexed`] will use the buffer referenced by
+    /// `buffer_slice` as the source index buffer.
+    </span><span class="kw">pub fn </span>set_index_buffer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer_slice: wgpu::BufferSlice&lt;<span class="lifetime">&#39;a</span>&gt;,
+        index_format: wgpu::IndexFormat,
     ) {
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">set_index_buffer</span>(<span class="ident">buffer_slice</span>, <span class="ident">index_format</span>);
+        <span class="self">self</span>.pass.set_index_buffer(buffer_slice, index_format);
     }
 
-    <span class="doccomment">/// Draws primitives from the active vertex buffer(s).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The active vertex buffer(s) can be set with [`TrackedRenderPass::set_vertex_buffer`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">instances</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
-        <span class="macro">trace!</span>(<span class="string">&quot;draw: {:?} {:?}&quot;</span>, <span class="ident">vertices</span>, <span class="ident">instances</span>);
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">draw</span>(<span class="ident">vertices</span>, <span class="ident">instances</span>);
+    <span class="doccomment">/// Draws primitives from the active vertex buffer(s).
+    ///
+    /// The active vertex buffer(s) can be set with [`TrackedRenderPass::set_vertex_buffer`].
+    </span><span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
+        <span class="macro">trace!</span>(<span class="string">&quot;draw: {:?} {:?}&quot;</span>, vertices, instances);
+        <span class="self">self</span>.pass.draw(vertices, instances);
     }
 
-    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffer(s).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The active index buffer can be set with [`TrackedRenderPass::set_index_buffer`], while the</span>
-    <span class="doccomment">/// active vertex buffer(s) can be set with [`TrackedRenderPass::set_vertex_buffer`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
+    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffer(s).
+    ///
+    /// The active index buffer can be set with [`TrackedRenderPass::set_index_buffer`], while the
+    /// active vertex buffer(s) can be set with [`TrackedRenderPass::set_vertex_buffer`].
+    </span><span class="kw">pub fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
         <span class="macro">trace!</span>(
             <span class="string">&quot;draw indexed: {:?} {} {:?}&quot;</span>,
-            <span class="ident">indices</span>,
-            <span class="ident">base_vertex</span>,
-            <span class="ident">instances</span>
+            indices,
+            base_vertex,
+            instances
         );
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">draw_indexed</span>(<span class="ident">indices</span>, <span class="ident">base_vertex</span>, <span class="ident">instances</span>);
+        <span class="self">self</span>.pass.draw_indexed(indices, base_vertex, instances);
     }
 
-    <span class="doccomment">/// Draws primitives from the active vertex buffer(s) based on the contents of the `indirect_buffer`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The active vertex buffers can be set with [`TrackedRenderPass::set_vertex_buffer`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The structure expected in `indirect_buffer` is the following:</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```rust</span>
-    <span class="doccomment">/// #[repr(C)]</span>
-    <span class="doccomment">/// struct DrawIndirect {</span>
-    <span class="doccomment">///     vertex_count: u32, // The number of vertices to draw.</span>
-    <span class="doccomment">///     instance_count: u32, // The number of instances to draw.</span>
-    <span class="doccomment">///     first_vertex: u32, // The Index of the first vertex to draw.</span>
-    <span class="doccomment">///     first_instance: u32, // The instance ID of the first instance to draw.</span>
-    <span class="doccomment">///     // has to be 0, unless [`Features::INDIRECT_FIRST_INSTANCE`] is enabled.</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">draw_indirect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indirect_buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">wgpu::Buffer</span>, <span class="ident">indirect_offset</span>: <span class="ident">u64</span>) {
-        <span class="macro">trace!</span>(<span class="string">&quot;draw indirect: {:?} {}&quot;</span>, <span class="ident">indirect_buffer</span>, <span class="ident">indirect_offset</span>);
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">draw_indirect</span>(<span class="ident">indirect_buffer</span>, <span class="ident">indirect_offset</span>);
+    <span class="doccomment">/// Draws primitives from the active vertex buffer(s) based on the contents of the `indirect_buffer`.
+    ///
+    /// The active vertex buffers can be set with [`TrackedRenderPass::set_vertex_buffer`].
+    ///
+    /// The structure expected in `indirect_buffer` is the following:
+    ///
+    /// ```rust
+    /// #[repr(C)]
+    /// struct DrawIndirect {
+    ///     vertex_count: u32, // The number of vertices to draw.
+    ///     instance_count: u32, // The number of instances to draw.
+    ///     first_vertex: u32, // The Index of the first vertex to draw.
+    ///     first_instance: u32, // The instance ID of the first instance to draw.
+    ///     // has to be 0, unless [`Features::INDIRECT_FIRST_INSTANCE`] is enabled.
+    /// }
+    /// ```
+    </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgpu::Buffer, indirect_offset: u64) {
+        <span class="macro">trace!</span>(<span class="string">&quot;draw indirect: {:?} {}&quot;</span>, indirect_buffer, indirect_offset);
+        <span class="self">self</span>.pass.draw_indirect(indirect_buffer, indirect_offset);
     }
 
-    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,</span>
-    <span class="doccomment">/// based on the contents of the `indirect_buffer`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The active index buffer can be set with [`TrackedRenderPass::set_index_buffer`], while the active</span>
-    <span class="doccomment">/// vertex buffers can be set with [`TrackedRenderPass::set_vertex_buffer`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The structure expected in `indirect_buffer` is the following:</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```rust</span>
-    <span class="doccomment">/// #[repr(C)]</span>
-    <span class="doccomment">/// struct DrawIndexedIndirect {</span>
-    <span class="doccomment">///     vertex_count: u32, // The number of vertices to draw.</span>
-    <span class="doccomment">///     instance_count: u32, // The number of instances to draw.</span>
-    <span class="doccomment">///     first_index: u32, // The base index within the index buffer.</span>
-    <span class="doccomment">///     vertex_offset: i32, // The value added to the vertex index before indexing into the vertex buffer.</span>
-    <span class="doccomment">///     first_instance: u32, // The instance ID of the first instance to draw.</span>
-    <span class="doccomment">///     // has to be 0, unless [`Features::INDIRECT_FIRST_INSTANCE`] is enabled.</span>
-    <span class="doccomment">/// }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">draw_indexed_indirect</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">indirect_buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">wgpu::Buffer</span>,
-        <span class="ident">indirect_offset</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,
+    /// based on the contents of the `indirect_buffer`.
+    ///
+    /// The active index buffer can be set with [`TrackedRenderPass::set_index_buffer`], while the active
+    /// vertex buffers can be set with [`TrackedRenderPass::set_vertex_buffer`].
+    ///
+    /// The structure expected in `indirect_buffer` is the following:
+    ///
+    /// ```rust
+    /// #[repr(C)]
+    /// struct DrawIndexedIndirect {
+    ///     vertex_count: u32, // The number of vertices to draw.
+    ///     instance_count: u32, // The number of instances to draw.
+    ///     first_index: u32, // The base index within the index buffer.
+    ///     vertex_offset: i32, // The value added to the vertex index before indexing into the vertex buffer.
+    ///     first_instance: u32, // The instance ID of the first instance to draw.
+    ///     // has to be 0, unless [`Features::INDIRECT_FIRST_INSTANCE`] is enabled.
+    /// }
+    /// ```
+    </span><span class="kw">pub fn </span>draw_indexed_indirect(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgpu::Buffer,
+        indirect_offset: u64,
     ) {
         <span class="macro">trace!</span>(
             <span class="string">&quot;draw indexed indirect: {:?} {}&quot;</span>,
-            <span class="ident">indirect_buffer</span>,
-            <span class="ident">indirect_offset</span>
+            indirect_buffer,
+            indirect_offset
         );
-        <span class="self">self</span>.<span class="ident">pass</span>
-            .<span class="ident">draw_indexed_indirect</span>(<span class="ident">indirect_buffer</span>, <span class="ident">indirect_offset</span>);
+        <span class="self">self</span>.pass
+            .draw_indexed_indirect(indirect_buffer, indirect_offset);
     }
 
-    <span class="doccomment">/// Sets the stencil reference.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent stencil tests will test against this value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_stencil_reference</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">reference</span>: <span class="ident">u32</span>) {
-        <span class="macro">trace!</span>(<span class="string">&quot;set stencil reference: {}&quot;</span>, <span class="ident">reference</span>);
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">set_stencil_reference</span>(<span class="ident">reference</span>);
+    <span class="doccomment">/// Sets the stencil reference.
+    ///
+    /// Subsequent stencil tests will test against this value.
+    </span><span class="kw">pub fn </span>set_stencil_reference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, reference: u32) {
+        <span class="macro">trace!</span>(<span class="string">&quot;set stencil reference: {}&quot;</span>, reference);
+        <span class="self">self</span>.pass.set_stencil_reference(reference);
     }
 
-    <span class="doccomment">/// Sets the scissor region.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent draw calls will discard any fragments that fall outside this region.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_scissor_rect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">u32</span>, <span class="ident">y</span>: <span class="ident">u32</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) {
-        <span class="macro">trace!</span>(<span class="string">&quot;set_scissor_rect: {} {} {} {}&quot;</span>, <span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">width</span>, <span class="ident">height</span>);
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">set_scissor_rect</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">width</span>, <span class="ident">height</span>);
+    <span class="doccomment">/// Sets the scissor region.
+    ///
+    /// Subsequent draw calls will discard any fragments that fall outside this region.
+    </span><span class="kw">pub fn </span>set_scissor_rect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: u32, y: u32, width: u32, height: u32) {
+        <span class="macro">trace!</span>(<span class="string">&quot;set_scissor_rect: {} {} {} {}&quot;</span>, x, y, width, height);
+        <span class="self">self</span>.pass.set_scissor_rect(x, y, width, height);
     }
 
-    <span class="doccomment">/// Set push constant data.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// `Features::PUSH_CONSTANTS` must be enabled on the device in order to call these functions.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_push_constants</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">stages</span>: <span class="ident">wgpu::ShaderStages</span>, <span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
+    <span class="doccomment">/// Set push constant data.
+    ///
+    /// `Features::PUSH_CONSTANTS` must be enabled on the device in order to call these functions.
+    </span><span class="kw">pub fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgpu::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
         <span class="macro">trace!</span>(
             <span class="string">&quot;set push constants: {:?} offset: {} data.len: {}&quot;</span>,
-            <span class="ident">stages</span>,
-            <span class="ident">offset</span>,
-            <span class="ident">data</span>.<span class="ident">len</span>()
+            stages,
+            offset,
+            data.len()
         );
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">set_push_constants</span>(<span class="ident">stages</span>, <span class="ident">offset</span>, <span class="ident">data</span>);
+        <span class="self">self</span>.pass.set_push_constants(stages, offset, data);
     }
 
-    <span class="doccomment">/// Set the rendering viewport.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent draw calls will be projected into that viewport.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_viewport</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">x</span>: <span class="ident">f32</span>,
-        <span class="ident">y</span>: <span class="ident">f32</span>,
-        <span class="ident">width</span>: <span class="ident">f32</span>,
-        <span class="ident">height</span>: <span class="ident">f32</span>,
-        <span class="ident">min_depth</span>: <span class="ident">f32</span>,
-        <span class="ident">max_depth</span>: <span class="ident">f32</span>,
+    <span class="doccomment">/// Set the rendering viewport.
+    ///
+    /// Subsequent draw calls will be projected into that viewport.
+    </span><span class="kw">pub fn </span>set_viewport(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        min_depth: f32,
+        max_depth: f32,
     ) {
         <span class="macro">trace!</span>(
             <span class="string">&quot;set viewport: {} {} {} {} {} {}&quot;</span>,
-            <span class="ident">x</span>,
-            <span class="ident">y</span>,
-            <span class="ident">width</span>,
-            <span class="ident">height</span>,
-            <span class="ident">min_depth</span>,
-            <span class="ident">max_depth</span>
+            x,
+            y,
+            width,
+            height,
+            min_depth,
+            max_depth
         );
-        <span class="self">self</span>.<span class="ident">pass</span>
-            .<span class="ident">set_viewport</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">width</span>, <span class="ident">height</span>, <span class="ident">min_depth</span>, <span class="ident">max_depth</span>);
+        <span class="self">self</span>.pass
+            .set_viewport(x, y, width, height, min_depth, max_depth);
     }
 
-    <span class="doccomment">/// Insert a single debug marker.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is a GPU debugging feature. This has no effect on the rendering itself.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_debug_marker</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="macro">trace!</span>(<span class="string">&quot;insert debug marker: {}&quot;</span>, <span class="ident">label</span>);
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">insert_debug_marker</span>(<span class="ident">label</span>);
+    <span class="doccomment">/// Insert a single debug marker.
+    ///
+    /// This is a GPU debugging feature. This has no effect on the rendering itself.
+    </span><span class="kw">pub fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
+        <span class="macro">trace!</span>(<span class="string">&quot;insert debug marker: {}&quot;</span>, label);
+        <span class="self">self</span>.pass.insert_debug_marker(label);
     }
 
-    <span class="doccomment">/// Start a new debug group.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Push a new debug group over the internal stack. Subsequent render commands and debug</span>
-    <span class="doccomment">/// markers are grouped into this new group, until [`pop_debug_group`] is called.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # fn example(mut pass: maplibre::render::resource::TrackedRenderPass&lt;&#39;static&gt;) {</span>
-    <span class="doccomment">/// pass.push_debug_group(&quot;Render the car&quot;);</span>
-    <span class="doccomment">/// // [setup pipeline etc...]</span>
-    <span class="doccomment">/// pass.draw(0..64, 0..1);</span>
-    <span class="doccomment">/// pass.pop_debug_group();</span>
-    <span class="doccomment">/// # }</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that [`push_debug_group`] and [`pop_debug_group`] must always be called in pairs.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is a GPU debugging feature. This has no effect on the rendering itself.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`push_debug_group`]: TrackedRenderPass::push_debug_group</span>
-    <span class="doccomment">/// [`pop_debug_group`]: TrackedRenderPass::pop_debug_group</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_debug_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="macro">trace!</span>(<span class="string">&quot;push_debug_group marker: {}&quot;</span>, <span class="ident">label</span>);
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">push_debug_group</span>(<span class="ident">label</span>);
+    <span class="doccomment">/// Start a new debug group.
+    ///
+    /// Push a new debug group over the internal stack. Subsequent render commands and debug
+    /// markers are grouped into this new group, until [`pop_debug_group`] is called.
+    ///
+    /// ```
+    /// # fn example(mut pass: maplibre::render::resource::TrackedRenderPass&lt;&#39;static&gt;) {
+    /// pass.push_debug_group(&quot;Render the car&quot;);
+    /// // [setup pipeline etc...]
+    /// pass.draw(0..64, 0..1);
+    /// pass.pop_debug_group();
+    /// # }
+    /// ```
+    ///
+    /// Note that [`push_debug_group`] and [`pop_debug_group`] must always be called in pairs.
+    ///
+    /// This is a GPU debugging feature. This has no effect on the rendering itself.
+    ///
+    /// [`push_debug_group`]: TrackedRenderPass::push_debug_group
+    /// [`pop_debug_group`]: TrackedRenderPass::pop_debug_group
+    </span><span class="kw">pub fn </span>push_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
+        <span class="macro">trace!</span>(<span class="string">&quot;push_debug_group marker: {}&quot;</span>, label);
+        <span class="self">self</span>.pass.push_debug_group(label);
     }
 
-    <span class="doccomment">/// End the current debug group.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent render commands and debug markers are not grouped anymore in</span>
-    <span class="doccomment">/// this group, but in the previous one (if any) or the default top-level one</span>
-    <span class="doccomment">/// if the debug group was the last one on the stack.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that [`push_debug_group`] and [`pop_debug_group`] must always be called in pairs.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is a GPU debugging feature. This has no effect on the rendering itself.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`push_debug_group`]: TrackedRenderPass::push_debug_group</span>
-    <span class="doccomment">/// [`pop_debug_group`]: TrackedRenderPass::pop_debug_group</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop_debug_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+    <span class="doccomment">/// End the current debug group.
+    ///
+    /// Subsequent render commands and debug markers are not grouped anymore in
+    /// this group, but in the previous one (if any) or the default top-level one
+    /// if the debug group was the last one on the stack.
+    ///
+    /// Note that [`push_debug_group`] and [`pop_debug_group`] must always be called in pairs.
+    ///
+    /// This is a GPU debugging feature. This has no effect on the rendering itself.
+    ///
+    /// [`push_debug_group`]: TrackedRenderPass::push_debug_group
+    /// [`pop_debug_group`]: TrackedRenderPass::pop_debug_group
+    </span><span class="kw">pub fn </span>pop_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">trace!</span>(<span class="string">&quot;pop_debug_group&quot;</span>);
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">pop_debug_group</span>();
+        <span class="self">self</span>.pass.pop_debug_group();
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_blend_constant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">color</span>: <span class="ident">wgpu::Color</span>) {
-        <span class="macro">trace!</span>(<span class="string">&quot;set blend constant: {:?}&quot;</span>, <span class="ident">color</span>);
-        <span class="self">self</span>.<span class="ident">pass</span>.<span class="ident">set_blend_constant</span>(<span class="ident">color</span>);
+    <span class="kw">pub fn </span>set_blend_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: wgpu::Color) {
+        <span class="macro">trace!</span>(<span class="string">&quot;set blend constant: {:?}&quot;</span>, color);
+        <span class="self">self</span>.pass.set_blend_constant(color);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

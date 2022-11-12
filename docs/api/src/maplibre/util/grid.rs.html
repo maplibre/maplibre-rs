@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/util/grid.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>grid.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/util/grid.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>grid.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -65,20 +65,20 @@
 <span id="65">65</span>
 <span id="66">66</span>
 <span id="67">67</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">tile_grid</span>::{<span class="ident">extent_wgs84_to_merc</span>, <span class="ident">Extent</span>, <span class="ident">Grid</span>, <span class="ident">GridIterator</span>, <span class="ident">Origin</span>, <span class="ident">Unit</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>tile_grid::{extent_wgs84_to_merc, Extent, Grid, GridIterator, Origin, Unit};
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">google_mercator</span>() -&gt; <span class="ident">Grid</span> {
-    <span class="ident">Grid::new</span>(
+<span class="kw">pub fn </span>google_mercator() -&gt; Grid {
+    Grid::new(
         <span class="number">256</span>,
         <span class="number">256</span>,
-        <span class="ident">Extent</span> {
-            <span class="ident">minx</span>: <span class="op">-</span><span class="number">20037508.342789248</span>,
-            <span class="ident">miny</span>: <span class="op">-</span><span class="number">20037508.342789248</span>,
-            <span class="ident">maxx</span>: <span class="number">20037508.342789248</span>,
-            <span class="ident">maxy</span>: <span class="number">20037508.342789248</span>,
+        Extent {
+            minx: -<span class="number">20037508.342789248</span>,
+            miny: -<span class="number">20037508.342789248</span>,
+            maxx: <span class="number">20037508.342789248</span>,
+            maxy: <span class="number">20037508.342789248</span>,
         },
         <span class="number">3857</span>,
-        <span class="ident">Unit::Meters</span>,
+        Unit::Meters,
         <span class="macro">vec!</span>[
             <span class="number">156543.033928041</span>,
             <span class="number">78271.5169640205</span>,
@@ -104,33 +104,33 @@
             <span class="number">0.07464553543474245</span>,
             <span class="number">0.037322767717371225</span>,
         ],
-        <span class="ident">Origin::TopLeft</span>,
+        Origin::TopLeft,
     )
 }
 
-<span class="doccomment">///</span>
-<span class="doccomment">/// Returns coordinates for tiles within bavaria according to the specified grid.</span>
-<span class="doccomment">/// The grid is responsible for defining the coordinate system. For example whether</span>
-<span class="doccomment">/// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames) (also known as</span>
-<span class="doccomment">/// XYZ) or [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#TileMap_Diagram) is</span>
-<span class="doccomment">/// used.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Additional Resources:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// * https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection</span>
-<span class="doccomment">/// * https://gist.github.com/maptiler/fddb5ce33ba995d5523de9afdf8ef118</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tile_coordinates_bavaria</span>(<span class="ident">grid</span>: <span class="kw-2">&amp;</span><span class="ident">Grid</span>, <span class="ident">zoom</span>: <span class="ident">u8</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">u8</span>, <span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">tile_limits</span> <span class="op">=</span> <span class="ident">grid</span>.<span class="ident">tile_limits</span>(
-        <span class="ident">extent_wgs84_to_merc</span>(<span class="kw-2">&amp;</span><span class="ident">Extent</span> {
-            <span class="ident">minx</span>: <span class="number">8.9771580802</span>,
-            <span class="ident">miny</span>: <span class="number">47.2703623267</span>,
-            <span class="ident">maxx</span>: <span class="number">13.8350427083</span>,
-            <span class="ident">maxy</span>: <span class="number">50.5644529365</span>,
+<span class="doccomment">///
+/// Returns coordinates for tiles within bavaria according to the specified grid.
+/// The grid is responsible for defining the coordinate system. For example whether
+/// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames) (also known as
+/// XYZ) or [TMS](https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#TileMap_Diagram) is
+/// used.
+///
+/// ## Additional Resources:
+///
+/// * https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection
+/// * https://gist.github.com/maptiler/fddb5ce33ba995d5523de9afdf8ef118
+</span><span class="kw">pub fn </span>tile_coordinates_bavaria(grid: <span class="kw-2">&amp;</span>Grid, zoom: u8) -&gt; Vec&lt;(u8, u32, u32)&gt; {
+    <span class="kw">let </span>tile_limits = grid.tile_limits(
+        extent_wgs84_to_merc(<span class="kw-2">&amp;</span>Extent {
+            minx: <span class="number">8.9771580802</span>,
+            miny: <span class="number">47.2703623267</span>,
+            maxx: <span class="number">13.8350427083</span>,
+            maxy: <span class="number">50.5644529365</span>,
         }),
         <span class="number">0</span>,
     );
 
-    <span class="ident">GridIterator::new</span>(<span class="ident">zoom</span>, <span class="ident">zoom</span>, <span class="ident">tile_limits</span>).<span class="ident">collect</span>()
+    GridIterator::new(zoom, zoom, tile_limits).collect()
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

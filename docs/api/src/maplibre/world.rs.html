@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/world.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>world.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../maplibre/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/world.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>world.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../maplibre/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -160,167 +160,167 @@
 <span id="160">160</span>
 <span id="161">161</span>
 <span id="162">162</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::ops::{Deref, DerefMut};
 
-<span class="kw">use</span> <span class="ident">cgmath::Angle</span>;
+<span class="kw">use </span>cgmath::Angle;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">coords</span>::{<span class="ident">LatLon</span>, <span class="ident">ViewRegion</span>, <span class="ident">WorldCoords</span>, <span class="ident">Zoom</span>, <span class="ident">ZoomLevel</span>, <span class="ident">TILE_SIZE</span>},
-    <span class="ident">io::tile_repository::TileRepository</span>,
-    <span class="ident">render::camera</span>::{<span class="ident">Camera</span>, <span class="ident">Perspective</span>, <span class="ident">ViewProjection</span>},
-    <span class="ident">util::ChangeObserver</span>,
-    <span class="ident">window::WindowSize</span>,
+<span class="kw">use crate</span>::{
+    coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
+    io::tile_repository::TileRepository,
+    render::camera::{Camera, Perspective, ViewProjection},
+    util::ChangeObserver,
+    window::WindowSize,
 };
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">World</span> {
-    <span class="kw">pub</span> <span class="ident">view_state</span>: <span class="ident">ViewState</span>,
-    <span class="kw">pub</span> <span class="ident">tile_repository</span>: <span class="ident">TileRepository</span>,
+<span class="kw">pub struct </span>World {
+    <span class="kw">pub </span>view_state: ViewState,
+    <span class="kw">pub </span>tile_repository: TileRepository,
 }
 
-<span class="kw">impl</span> <span class="ident">World</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_at</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">cgmath::Deg</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">window_size</span>: <span class="ident">WindowSize</span>,
-        <span class="ident">initial_center</span>: <span class="ident">LatLon</span>,
-        <span class="ident">initial_zoom</span>: <span class="ident">Zoom</span>,
-        <span class="ident">pitch</span>: <span class="ident">P</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::new</span>(
-            <span class="ident">window_size</span>,
-            <span class="ident">WorldCoords::from_lat_lon</span>(<span class="ident">initial_center</span>, <span class="ident">initial_zoom</span>),
-            <span class="ident">initial_zoom</span>,
-            <span class="ident">pitch</span>,
+<span class="kw">impl </span>World {
+    <span class="kw">pub fn </span>new_at&lt;P: Into&lt;cgmath::Deg&lt;f64&gt;&gt;&gt;(
+        window_size: WindowSize,
+        initial_center: LatLon,
+        initial_zoom: Zoom,
+        pitch: P,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(
+            window_size,
+            WorldCoords::from_lat_lon(initial_center, initial_zoom),
+            initial_zoom,
+            pitch,
         )
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">cgmath::Deg</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">window_size</span>: <span class="ident">WindowSize</span>,
-        <span class="ident">initial_center</span>: <span class="ident">WorldCoords</span>,
-        <span class="ident">initial_zoom</span>: <span class="ident">Zoom</span>,
-        <span class="ident">pitch</span>: <span class="ident">P</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">position</span> <span class="op">=</span> <span class="ident">initial_center</span>;
-        <span class="kw">let</span> <span class="ident">view_state</span> <span class="op">=</span> <span class="ident">ViewState::new</span>(
-            <span class="ident">window_size</span>,
-            <span class="ident">position</span>,
-            <span class="ident">initial_zoom</span>,
-            <span class="ident">pitch</span>,
-            <span class="ident">cgmath::Deg</span>(<span class="number">110.0</span>),
+    <span class="kw">pub fn </span>new&lt;P: Into&lt;cgmath::Deg&lt;f64&gt;&gt;&gt;(
+        window_size: WindowSize,
+        initial_center: WorldCoords,
+        initial_zoom: Zoom,
+        pitch: P,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>position = initial_center;
+        <span class="kw">let </span>view_state = ViewState::new(
+            window_size,
+            position,
+            initial_zoom,
+            pitch,
+            cgmath::Deg(<span class="number">110.0</span>),
         );
 
-        <span class="kw">let</span> <span class="ident">tile_repository</span> <span class="op">=</span> <span class="ident">TileRepository::new</span>();
+        <span class="kw">let </span>tile_repository = TileRepository::new();
 
-        <span class="ident">World</span> {
-            <span class="ident">view_state</span>,
-            <span class="ident">tile_repository</span>,
+        World {
+            view_state,
+            tile_repository,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">view_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">ViewState</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">view_state</span>
+    <span class="kw">pub fn </span>view_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ViewState {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.view_state
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">view_state_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ViewState</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">view_state</span>
+    <span class="kw">pub fn </span>view_state_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ViewState {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.view_state
     }
 }
 
-<span class="doccomment">/// Stores the camera configuration.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ViewState</span> {
-    <span class="ident">zoom</span>: <span class="ident">ChangeObserver</span><span class="op">&lt;</span><span class="ident">Zoom</span><span class="op">&gt;</span>,
-    <span class="ident">camera</span>: <span class="ident">ChangeObserver</span><span class="op">&lt;</span><span class="ident">Camera</span><span class="op">&gt;</span>,
-    <span class="ident">perspective</span>: <span class="ident">Perspective</span>,
+<span class="doccomment">/// Stores the camera configuration.
+</span><span class="kw">pub struct </span>ViewState {
+    zoom: ChangeObserver&lt;Zoom&gt;,
+    camera: ChangeObserver&lt;Camera&gt;,
+    perspective: Perspective,
 }
 
-<span class="kw">impl</span> <span class="ident">ViewState</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">cgmath::Deg</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">window_size</span>: <span class="ident">WindowSize</span>,
-        <span class="ident">position</span>: <span class="ident">WorldCoords</span>,
-        <span class="ident">zoom</span>: <span class="ident">Zoom</span>,
-        <span class="ident">pitch</span>: <span class="ident">P</span>,
-        <span class="ident">fovy</span>: <span class="ident">F</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">tile_center</span> <span class="op">=</span> <span class="ident">TILE_SIZE</span> <span class="op">/</span> <span class="number">2.0</span>;
-        <span class="kw">let</span> <span class="ident">fovy</span> <span class="op">=</span> <span class="ident">fovy</span>.<span class="ident">into</span>();
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">tile_center</span> <span class="op">/</span> (<span class="ident">fovy</span> <span class="op">/</span> <span class="number">2.0</span>).<span class="ident">tan</span>();
+<span class="kw">impl </span>ViewState {
+    <span class="kw">pub fn </span>new&lt;F: Into&lt;cgmath::Rad&lt;f64&gt;&gt;, P: Into&lt;cgmath::Deg&lt;f64&gt;&gt;&gt;(
+        window_size: WindowSize,
+        position: WorldCoords,
+        zoom: Zoom,
+        pitch: P,
+        fovy: F,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>tile_center = TILE_SIZE / <span class="number">2.0</span>;
+        <span class="kw">let </span>fovy = fovy.into();
+        <span class="kw">let </span>height = tile_center / (fovy / <span class="number">2.0</span>).tan();
 
-        <span class="kw">let</span> <span class="ident">camera</span> <span class="op">=</span> <span class="ident">Camera::new</span>(
-            (<span class="ident">position</span>.<span class="ident">x</span>, <span class="ident">position</span>.<span class="ident">y</span>, <span class="ident">height</span>),
-            <span class="ident">cgmath::Deg</span>(<span class="op">-</span><span class="number">90.0</span>),
-            <span class="ident">pitch</span>.<span class="ident">into</span>(),
-            <span class="ident">window_size</span>.<span class="ident">width</span>(),
-            <span class="ident">window_size</span>.<span class="ident">height</span>(),
+        <span class="kw">let </span>camera = Camera::new(
+            (position.x, position.y, height),
+            cgmath::Deg(-<span class="number">90.0</span>),
+            pitch.into(),
+            window_size.width(),
+            window_size.height(),
         );
 
-        <span class="kw">let</span> <span class="ident">perspective</span> <span class="op">=</span> <span class="ident">Perspective::new</span>(
-            <span class="ident">window_size</span>.<span class="ident">width</span>(),
-            <span class="ident">window_size</span>.<span class="ident">height</span>(),
-            <span class="ident">cgmath::Deg</span>(<span class="number">110.0</span>),
-            <span class="comment">// in tile.vertex.wgsl we are setting each layer&#39;s final `z` in ndc space to `z_index`.</span>
-            <span class="comment">// This means that regardless of the `znear` value all layers will be rendered as part</span>
-            <span class="comment">// of the near plane.</span>
-            <span class="comment">// These values have been selected experimentally:</span>
-            <span class="comment">// https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html</span>
-            <span class="number">1024.0</span>,
+        <span class="kw">let </span>perspective = Perspective::new(
+            window_size.width(),
+            window_size.height(),
+            cgmath::Deg(<span class="number">110.0</span>),
+            <span class="comment">// in tile.vertex.wgsl we are setting each layer&#39;s final `z` in ndc space to `z_index`.
+            // This means that regardless of the `znear` value all layers will be rendered as part
+            // of the near plane.
+            // These values have been selected experimentally:
+            // https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
+            </span><span class="number">1024.0</span>,
             <span class="number">2048.0</span>,
         );
 
-        <span class="self">Self</span> {
-            <span class="ident">zoom</span>: <span class="ident">ChangeObserver::new</span>(<span class="ident">zoom</span>),
-            <span class="ident">camera</span>: <span class="ident">ChangeObserver::new</span>(<span class="ident">camera</span>),
-            <span class="ident">perspective</span>,
+        <span class="self">Self </span>{
+            zoom: ChangeObserver::new(zoom),
+            camera: ChangeObserver::new(camera),
+            perspective,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">perspective</span>.<span class="ident">resize</span>(<span class="ident">width</span>, <span class="ident">height</span>);
-        <span class="self">self</span>.<span class="ident">camera</span>.<span class="ident">resize</span>(<span class="ident">width</span>, <span class="ident">height</span>);
+    <span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32) {
+        <span class="self">self</span>.perspective.resize(width, height);
+        <span class="self">self</span>.camera.resize(width, height);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_view_region</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ViewRegion</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">camera</span>
-            .<span class="ident">view_region_bounding_box</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">view_projection</span>().<span class="ident">invert</span>())
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">bounding_box</span><span class="op">|</span> {
-                <span class="ident">ViewRegion::new</span>(<span class="ident">bounding_box</span>, <span class="number">0</span>, <span class="number">32</span>, <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">zoom</span>, <span class="self">self</span>.<span class="ident">visible_level</span>())
+    <span class="kw">pub fn </span>create_view_region(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;ViewRegion&gt; {
+        <span class="self">self</span>.camera
+            .view_region_bounding_box(<span class="kw-2">&amp;</span><span class="self">self</span>.view_projection().invert())
+            .map(|bounding_box| {
+                ViewRegion::new(bounding_box, <span class="number">0</span>, <span class="number">32</span>, <span class="kw-2">*</span><span class="self">self</span>.zoom, <span class="self">self</span>.visible_level())
             })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">view_projection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ViewProjection</span> {
-        <span class="self">self</span>.<span class="ident">camera</span>.<span class="ident">calc_view_proj</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">perspective</span>)
+    <span class="kw">pub fn </span>view_projection(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ViewProjection {
+        <span class="self">self</span>.camera.calc_view_proj(<span class="kw-2">&amp;</span><span class="self">self</span>.perspective)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">visible_level</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ZoomLevel</span> {
-        <span class="self">self</span>.<span class="ident">zoom</span>.<span class="ident">level</span>()
+    <span class="kw">pub fn </span>visible_level(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ZoomLevel {
+        <span class="self">self</span>.zoom.level()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zoom</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Zoom</span> {
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">zoom</span>
+    <span class="kw">pub fn </span>zoom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Zoom {
+        <span class="kw-2">*</span><span class="self">self</span>.zoom
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">did_zoom_change</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">zoom</span>.<span class="ident">did_change</span>(<span class="number">0.05</span>)
+    <span class="kw">pub fn </span>did_zoom_change(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.zoom.did_change(<span class="number">0.05</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_zoom</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">new_zoom</span>: <span class="ident">Zoom</span>) {
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">zoom</span> <span class="op">=</span> <span class="ident">new_zoom</span>;
-        <span class="macro">log::info!</span>(<span class="string">&quot;zoom: {}&quot;</span>, <span class="ident">new_zoom</span>);
+    <span class="kw">pub fn </span>update_zoom(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_zoom: Zoom) {
+        <span class="kw-2">*</span><span class="self">self</span>.zoom = new_zoom;
+        <span class="macro">log::info!</span>(<span class="string">&quot;zoom: {}&quot;</span>, new_zoom);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">camera</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Camera</span> {
-        <span class="self">self</span>.<span class="ident">camera</span>.<span class="ident">deref</span>()
+    <span class="kw">pub fn </span>camera(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Camera {
+        <span class="self">self</span>.camera.deref()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">camera_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">Camera</span> {
-        <span class="self">self</span>.<span class="ident">camera</span>.<span class="ident">deref_mut</span>()
+    <span class="kw">pub fn </span>camera_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Camera {
+        <span class="self">self</span>.camera.deref_mut()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">did_camera_change</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">camera</span>.<span class="ident">did_change</span>(<span class="number">0.05</span>)
+    <span class="kw">pub fn </span>did_camera_change(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.camera.did_change(<span class="number">0.05</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_references</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">camera</span>.<span class="ident">update_reference</span>();
-        <span class="self">self</span>.<span class="ident">zoom</span>.<span class="ident">update_reference</span>();
+    <span class="kw">pub fn </span>update_references(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.camera.update_reference();
+        <span class="self">self</span>.zoom.update_reference();
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

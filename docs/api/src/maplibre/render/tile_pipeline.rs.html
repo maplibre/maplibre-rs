@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/tile_pipeline.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tile_pipeline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/tile_pipeline.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tile_pipeline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -124,131 +124,131 @@
 <span id="124">124</span>
 <span id="125">125</span>
 <span id="126">126</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Utility for declaring pipelines.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Utility for declaring pipelines.
 
-<span class="kw">use</span> <span class="ident">std::cmp</span>;
+</span><span class="kw">use </span>std::cmp;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">platform::MIN_WEBGL_BUFFER_SIZE</span>,
-    <span class="ident">render</span>::{
-        <span class="ident">resource</span>::{<span class="ident">FragmentState</span>, <span class="ident">RenderPipeline</span>, <span class="ident">RenderPipelineDescriptor</span>, <span class="ident">VertexState</span>},
-        <span class="ident">settings::RendererSettings</span>,
-        <span class="ident">shaders::ShaderGlobals</span>,
+<span class="kw">use crate</span>::{
+    platform::MIN_WEBGL_BUFFER_SIZE,
+    render::{
+        resource::{FragmentState, RenderPipeline, RenderPipelineDescriptor, VertexState},
+        settings::RendererSettings,
+        shaders::ShaderGlobals,
     },
 };
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TilePipeline</span> {
-    <span class="ident">bind_globals</span>: <span class="ident">bool</span>,
-    <span class="ident">update_stencil</span>: <span class="ident">bool</span>,
-    <span class="ident">debug_stencil</span>: <span class="ident">bool</span>,
-    <span class="ident">wireframe</span>: <span class="ident">bool</span>,
-    <span class="ident">settings</span>: <span class="ident">RendererSettings</span>,
+<span class="kw">pub struct </span>TilePipeline {
+    bind_globals: bool,
+    update_stencil: bool,
+    debug_stencil: bool,
+    wireframe: bool,
+    settings: RendererSettings,
 
-    <span class="ident">vertex_state</span>: <span class="ident">VertexState</span>,
-    <span class="ident">fragment_state</span>: <span class="ident">FragmentState</span>,
+    vertex_state: VertexState,
+    fragment_state: FragmentState,
 }
 
-<span class="kw">impl</span> <span class="ident">TilePipeline</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">settings</span>: <span class="ident">RendererSettings</span>,
-        <span class="ident">vertex_state</span>: <span class="ident">VertexState</span>,
-        <span class="ident">fragment_state</span>: <span class="ident">FragmentState</span>,
-        <span class="ident">bind_globals</span>: <span class="ident">bool</span>,
-        <span class="ident">update_stencil</span>: <span class="ident">bool</span>,
-        <span class="ident">debug_stencil</span>: <span class="ident">bool</span>,
-        <span class="ident">wireframe</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="ident">TilePipeline</span> {
-            <span class="ident">bind_globals</span>,
-            <span class="ident">update_stencil</span>,
-            <span class="ident">debug_stencil</span>,
-            <span class="ident">wireframe</span>,
-            <span class="ident">settings</span>,
-            <span class="ident">vertex_state</span>,
-            <span class="ident">fragment_state</span>,
+<span class="kw">impl </span>TilePipeline {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
+        settings: RendererSettings,
+        vertex_state: VertexState,
+        fragment_state: FragmentState,
+        bind_globals: bool,
+        update_stencil: bool,
+        debug_stencil: bool,
+        wireframe: bool,
+    ) -&gt; <span class="self">Self </span>{
+        TilePipeline {
+            bind_globals,
+            update_stencil,
+            debug_stencil,
+            wireframe,
+            settings,
+            vertex_state,
+            fragment_state,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">RenderPipeline</span> <span class="kw">for</span> <span class="ident">TilePipeline</span> {
-    <span class="kw">fn</span> <span class="ident">describe_render_pipeline</span>(<span class="self">self</span>) -&gt; <span class="ident">RenderPipelineDescriptor</span> {
-        <span class="kw">let</span> <span class="ident">stencil_state</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">update_stencil</span> {
-            <span class="ident">wgpu::StencilFaceState</span> {
-                <span class="ident">compare</span>: <span class="ident">wgpu::CompareFunction::Always</span>, <span class="comment">// Allow ALL values to update the stencil</span>
-                <span class="ident">fail_op</span>: <span class="ident">wgpu::StencilOperation::Keep</span>,
-                <span class="ident">depth_fail_op</span>: <span class="ident">wgpu::StencilOperation::Keep</span>, <span class="comment">// This is used when the depth test already failed</span>
-                <span class="ident">pass_op</span>: <span class="ident">wgpu::StencilOperation::Replace</span>,
+<span class="kw">impl </span>RenderPipeline <span class="kw">for </span>TilePipeline {
+    <span class="kw">fn </span>describe_render_pipeline(<span class="self">self</span>) -&gt; RenderPipelineDescriptor {
+        <span class="kw">let </span>stencil_state = <span class="kw">if </span><span class="self">self</span>.update_stencil {
+            wgpu::StencilFaceState {
+                compare: wgpu::CompareFunction::Always, <span class="comment">// Allow ALL values to update the stencil
+                </span>fail_op: wgpu::StencilOperation::Keep,
+                depth_fail_op: wgpu::StencilOperation::Keep, <span class="comment">// This is used when the depth test already failed
+                </span>pass_op: wgpu::StencilOperation::Replace,
             }
-        } <span class="kw">else</span> {
-            <span class="ident">wgpu::StencilFaceState</span> {
-                <span class="ident">compare</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debug_stencil</span> {
-                    <span class="ident">wgpu::CompareFunction::Always</span>
-                } <span class="kw">else</span> {
-                    <span class="ident">wgpu::CompareFunction::Equal</span>
+        } <span class="kw">else </span>{
+            wgpu::StencilFaceState {
+                compare: <span class="kw">if </span><span class="self">self</span>.debug_stencil {
+                    wgpu::CompareFunction::Always
+                } <span class="kw">else </span>{
+                    wgpu::CompareFunction::Equal
                 },
-                <span class="ident">fail_op</span>: <span class="ident">wgpu::StencilOperation::Keep</span>,
-                <span class="ident">depth_fail_op</span>: <span class="ident">wgpu::StencilOperation::Keep</span>,
-                <span class="ident">pass_op</span>: <span class="ident">wgpu::StencilOperation::Keep</span>,
+                fail_op: wgpu::StencilOperation::Keep,
+                depth_fail_op: wgpu::StencilOperation::Keep,
+                pass_op: wgpu::StencilOperation::Keep,
             }
         };
 
-        <span class="kw">let</span> <span class="ident">globals_buffer_byte_size</span> <span class="op">=</span> <span class="ident">cmp::max</span>(
-            <span class="ident">MIN_WEBGL_BUFFER_SIZE</span>,
-            <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderGlobals</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>,
+        <span class="kw">let </span>globals_buffer_byte_size = cmp::max(
+            MIN_WEBGL_BUFFER_SIZE,
+            std::mem::size_of::&lt;ShaderGlobals&gt;() <span class="kw">as </span>u64,
         );
 
-        <span class="ident">RenderPipelineDescriptor</span> {
-            <span class="ident">label</span>: <span class="prelude-val">None</span>,
-            <span class="ident">layout</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bind_globals</span> {
-                <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="macro">vec!</span>[<span class="ident">wgpu::BindGroupLayoutEntry</span> {
-                    <span class="ident">binding</span>: <span class="number">0</span>,
-                    <span class="ident">visibility</span>: <span class="ident">wgpu::ShaderStages::VERTEX</span>,
-                    <span class="ident">ty</span>: <span class="ident">wgpu::BindingType::Buffer</span> {
-                        <span class="ident">ty</span>: <span class="ident">wgpu::BufferBindingType::Uniform</span>,
-                        <span class="ident">has_dynamic_offset</span>: <span class="bool-val">false</span>,
-                        <span class="ident">min_binding_size</span>: <span class="ident">wgpu::BufferSize::new</span>(<span class="ident">globals_buffer_byte_size</span>),
+        RenderPipelineDescriptor {
+            label: <span class="prelude-val">None</span>,
+            layout: <span class="kw">if </span><span class="self">self</span>.bind_globals {
+                <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="macro">vec!</span>[wgpu::BindGroupLayoutEntry {
+                    binding: <span class="number">0</span>,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: <span class="bool-val">false</span>,
+                        min_binding_size: wgpu::BufferSize::new(globals_buffer_byte_size),
                     },
-                    <span class="ident">count</span>: <span class="prelude-val">None</span>,
+                    count: <span class="prelude-val">None</span>,
                 }]])
-            } <span class="kw">else</span> {
-                <span class="prelude-val">None</span>
-            },
-            <span class="ident">vertex</span>: <span class="self">self</span>.<span class="ident">vertex_state</span>,
-            <span class="ident">fragment</span>: <span class="self">self</span>.<span class="ident">fragment_state</span>,
-            <span class="ident">primitive</span>: <span class="ident">wgpu::PrimitiveState</span> {
-                <span class="ident">topology</span>: <span class="ident">wgpu::PrimitiveTopology::TriangleList</span>,
-                <span class="ident">polygon_mode</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">update_stencil</span> {
-                    <span class="ident">wgpu::PolygonMode::Fill</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">wireframe</span> {
-                    <span class="ident">wgpu::PolygonMode::Line</span>
-                } <span class="kw">else</span> {
-                    <span class="ident">wgpu::PolygonMode::Fill</span>
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>},
+            vertex: <span class="self">self</span>.vertex_state,
+            fragment: <span class="self">self</span>.fragment_state,
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                polygon_mode: <span class="kw">if </span><span class="self">self</span>.update_stencil {
+                    wgpu::PolygonMode::Fill
+                } <span class="kw">else if </span><span class="self">self</span>.wireframe {
+                    wgpu::PolygonMode::Line
+                } <span class="kw">else </span>{
+                    wgpu::PolygonMode::Fill
                 },
-                <span class="ident">front_face</span>: <span class="ident">wgpu::FrontFace::Ccw</span>,
-                <span class="ident">strip_index_format</span>: <span class="prelude-val">None</span>,
-                <span class="ident">cull_mode</span>: <span class="prelude-val">None</span>, <span class="comment">// Maps look the same from he bottom and above -&gt; No culling needed</span>
-                <span class="ident">conservative</span>: <span class="bool-val">false</span>,
-                <span class="ident">unclipped_depth</span>: <span class="bool-val">false</span>,
+                front_face: wgpu::FrontFace::Ccw,
+                strip_index_format: <span class="prelude-val">None</span>,
+                cull_mode: <span class="prelude-val">None</span>, <span class="comment">// Maps look the same from he bottom and above -&gt; No culling needed
+                </span>conservative: <span class="bool-val">false</span>,
+                unclipped_depth: <span class="bool-val">false</span>,
             },
-            <span class="ident">depth_stencil</span>: <span class="prelude-val">Some</span>(<span class="ident">wgpu::DepthStencilState</span> {
-                <span class="ident">format</span>: <span class="self">self</span>.<span class="ident">settings</span>.<span class="ident">depth_texture_format</span>,
-                <span class="ident">depth_write_enabled</span>: <span class="op">!</span><span class="self">self</span>.<span class="ident">update_stencil</span>,
-                <span class="ident">depth_compare</span>: <span class="ident">wgpu::CompareFunction::Greater</span>,
-                <span class="ident">stencil</span>: <span class="ident">wgpu::StencilState</span> {
-                    <span class="ident">front</span>: <span class="ident">stencil_state</span>,
-                    <span class="ident">back</span>: <span class="ident">stencil_state</span>,
-                    <span class="ident">read_mask</span>: <span class="number">0xff</span>, <span class="comment">// Applied to stencil values being read from the stencil buffer</span>
-                    <span class="ident">write_mask</span>: <span class="number">0xff</span>, <span class="comment">// Applied to fragment stencil values before being written to  the stencil buffer</span>
-                },
-                <span class="ident">bias</span>: <span class="ident">wgpu::DepthBiasState::default</span>(),
+            depth_stencil: <span class="prelude-val">Some</span>(wgpu::DepthStencilState {
+                format: <span class="self">self</span>.settings.depth_texture_format,
+                depth_write_enabled: !<span class="self">self</span>.update_stencil,
+                depth_compare: wgpu::CompareFunction::Greater,
+                stencil: wgpu::StencilState {
+                    front: stencil_state,
+                    back: stencil_state,
+                    read_mask: <span class="number">0xff</span>, <span class="comment">// Applied to stencil values being read from the stencil buffer
+                    </span>write_mask: <span class="number">0xff</span>, <span class="comment">// Applied to fragment stencil values before being written to  the stencil buffer
+                </span>},
+                bias: wgpu::DepthBiasState::default(),
             }),
-            <span class="ident">multisample</span>: <span class="ident">wgpu::MultisampleState</span> {
-                <span class="ident">count</span>: <span class="self">self</span>.<span class="ident">settings</span>.<span class="ident">msaa</span>.<span class="ident">samples</span>,
-                <span class="ident">mask</span>: <span class="op">!</span><span class="number">0</span>,
-                <span class="ident">alpha_to_coverage_enabled</span>: <span class="bool-val">false</span>,
+            multisample: wgpu::MultisampleState {
+                count: <span class="self">self</span>.settings.msaa.samples,
+                mask: !<span class="number">0</span>,
+                alpha_to_coverage_enabled: <span class="bool-val">false</span>,
             },
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

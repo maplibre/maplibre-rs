@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/tile_view_pattern.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tile_view_pattern.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/tile_view_pattern.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tile_view_pattern.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -183,190 +183,190 @@
 <span id="183">183</span>
 <span id="184">184</span>
 <span id="185">185</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Utility for generating a tile pattern which can be used for masking.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Utility for generating a tile pattern which can be used for masking.
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">mem::size_of</span>, <span class="ident">ops::Range</span>};
+</span><span class="kw">use </span>std::{marker::PhantomData, mem::size_of, ops::Range};
 
-<span class="kw">use</span> <span class="ident">cgmath::Matrix4</span>;
+<span class="kw">use </span>cgmath::Matrix4;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">coords</span>::{<span class="ident">ViewRegion</span>, <span class="ident">WorldTileCoords</span>, <span class="ident">Zoom</span>},
-    <span class="ident">render</span>::{
-        <span class="ident">camera::ViewProjection</span>,
-        <span class="ident">resource</span>::{<span class="ident">BackingBufferDescriptor</span>, <span class="ident">BufferPool</span>, <span class="ident">Queue</span>},
-        <span class="ident">shaders</span>::{<span class="ident">ShaderFeatureStyle</span>, <span class="ident">ShaderLayerMetadata</span>, <span class="ident">ShaderTileMetadata</span>},
-        <span class="ident">ShaderVertex</span>,
+<span class="kw">use crate</span>::{
+    coords::{ViewRegion, WorldTileCoords, Zoom},
+    render::{
+        camera::ViewProjection,
+        resource::{BackingBufferDescriptor, BufferPool, Queue},
+        shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata},
+        ShaderVertex,
     },
-    <span class="ident">tessellation::IndexDataType</span>,
+    tessellation::IndexDataType,
 };
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_TILE_VIEW_SIZE</span>: <span class="ident">wgpu::BufferAddress</span> <span class="op">=</span> <span class="number">32</span> <span class="op">*</span> <span class="number">4</span>;
+<span class="kw">pub const </span>DEFAULT_TILE_VIEW_SIZE: wgpu::BufferAddress = <span class="number">32 </span>* <span class="number">4</span>;
 
-<span class="doccomment">/// The tile mask pattern assigns each tile a value which can be used for stencil testing.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TileViewPattern</span><span class="op">&lt;</span><span class="ident">Q</span>, <span class="ident">B</span><span class="op">&gt;</span> {
-    <span class="ident">in_view</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TileInView</span><span class="op">&gt;</span>,
-    <span class="ident">buffer</span>: <span class="ident">BackingBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    <span class="ident">phantom_q</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">Q</span><span class="op">&gt;</span>,
+<span class="doccomment">/// The tile mask pattern assigns each tile a value which can be used for stencil testing.
+</span><span class="kw">pub struct </span>TileViewPattern&lt;Q, B&gt; {
+    in_view: Vec&lt;TileInView&gt;,
+    buffer: BackingBuffer&lt;B&gt;,
+    phantom_q: PhantomData&lt;Q&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TileShape</span> {
-    <span class="kw">pub</span> <span class="ident">zoom_factor</span>: <span class="ident">f64</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>TileShape {
+    <span class="kw">pub </span>zoom_factor: f64,
 
-    <span class="kw">pub</span> <span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>,
+    <span class="kw">pub </span>coords: WorldTileCoords,
 
-    <span class="kw">pub</span> <span class="ident">transform</span>: <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">buffer_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgpu::BufferAddress</span><span class="op">&gt;</span>,
+    <span class="kw">pub </span>transform: Matrix4&lt;f64&gt;,
+    <span class="kw">pub </span>buffer_range: Range&lt;wgpu::BufferAddress&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">TileShape</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">coords</span>: <span class="ident">WorldTileCoords</span>, <span class="ident">zoom</span>: <span class="ident">Zoom</span>, <span class="ident">index</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">const</span> <span class="ident">STRIDE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderTileMetadata</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="self">Self</span> {
-            <span class="ident">coords</span>,
-            <span class="ident">zoom_factor</span>: <span class="ident">zoom</span>.<span class="ident">scale_to_tile</span>(<span class="kw-2">&amp;</span><span class="ident">coords</span>),
-            <span class="ident">transform</span>: <span class="ident">coords</span>.<span class="ident">transform_for_zoom</span>(<span class="ident">zoom</span>),
-            <span class="ident">buffer_range</span>: <span class="ident">index</span> <span class="op">*</span> <span class="ident">STRIDE</span>..(<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">STRIDE</span>,
+<span class="kw">impl </span>TileShape {
+    <span class="kw">fn </span>new(coords: WorldTileCoords, zoom: Zoom, index: u64) -&gt; <span class="self">Self </span>{
+        <span class="kw">const </span>STRIDE: u64 = size_of::&lt;ShaderTileMetadata&gt;() <span class="kw">as </span>u64;
+        <span class="self">Self </span>{
+            coords,
+            zoom_factor: zoom.scale_to_tile(<span class="kw-2">&amp;</span>coords),
+            transform: coords.transform_for_zoom(zoom),
+            buffer_range: index * STRIDE..(index + <span class="number">1</span>) * STRIDE,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TileInView</span> {
-    <span class="kw">pub</span> <span class="ident">shape</span>: <span class="ident">TileShape</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>TileInView {
+    <span class="kw">pub </span>shape: TileShape,
 
-    <span class="kw">pub</span> <span class="ident">fallback</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TileShape</span><span class="op">&gt;</span>,
+    <span class="kw">pub </span>fallback: <span class="prelude-ty">Option</span>&lt;TileShape&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">BackingBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The internal structure which is used for storage</span>
-    <span class="ident">inner</span>: <span class="ident">B</span>,
-    <span class="doccomment">/// The size of the `inner` buffer</span>
-    <span class="ident">inner_size</span>: <span class="ident">wgpu::BufferAddress</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">struct </span>BackingBuffer&lt;B&gt; {
+    <span class="doccomment">/// The internal structure which is used for storage
+    </span>inner: B,
+    <span class="doccomment">/// The size of the `inner` buffer
+    </span>inner_size: wgpu::BufferAddress,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> <span class="ident">BackingBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">inner</span>: <span class="ident">B</span>, <span class="ident">inner_size</span>: <span class="ident">wgpu::BufferAddress</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">inner</span>, <span class="ident">inner_size</span> }
+<span class="kw">impl</span>&lt;B&gt; BackingBuffer&lt;B&gt; {
+    <span class="kw">fn </span>new(inner: B, inner_size: wgpu::BufferAddress) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ inner, inner_size }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Q</span>: <span class="ident">Queue</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">TileViewPattern</span><span class="op">&lt;</span><span class="ident">Q</span>, <span class="ident">B</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">buffer</span>: <span class="ident">BackingBufferDescriptor</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">in_view</span>: <span class="ident">Vec::with_capacity</span>(<span class="number">64</span>),
-            <span class="ident">buffer</span>: <span class="ident">BackingBuffer::new</span>(<span class="ident">buffer</span>.<span class="ident">buffer</span>, <span class="ident">buffer</span>.<span class="ident">inner_size</span>),
-            <span class="ident">phantom_q</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl</span>&lt;Q: Queue&lt;B&gt;, B&gt; TileViewPattern&lt;Q, B&gt; {
+    <span class="kw">pub fn </span>new(buffer: BackingBufferDescriptor&lt;B&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            in_view: Vec::with_capacity(<span class="number">64</span>),
+            buffer: BackingBuffer::new(buffer.buffer, buffer.inner_size),
+            phantom_q: Default::default(),
         }
     }
 
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_pattern</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">view_region</span>: <span class="kw-2">&amp;</span><span class="ident">ViewRegion</span>,
-        <span class="ident">buffer_pool</span>: <span class="kw-2">&amp;</span><span class="ident">BufferPool</span><span class="op">&lt;</span>
-            <span class="ident">wgpu::Queue</span>,
-            <span class="ident">wgpu::Buffer</span>,
-            <span class="ident">ShaderVertex</span>,
-            <span class="ident">IndexDataType</span>,
-            <span class="ident">ShaderLayerMetadata</span>,
-            <span class="ident">ShaderFeatureStyle</span>,
-        <span class="op">&gt;</span>,
-        <span class="ident">zoom</span>: <span class="ident">Zoom</span>,
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>update_pattern(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        view_region: <span class="kw-2">&amp;</span>ViewRegion,
+        buffer_pool: <span class="kw-2">&amp;</span>BufferPool&lt;
+            wgpu::Queue,
+            wgpu::Buffer,
+            ShaderVertex,
+            IndexDataType,
+            ShaderLayerMetadata,
+            ShaderFeatureStyle,
+        &gt;,
+        zoom: Zoom,
     ) {
-        <span class="self">self</span>.<span class="ident">in_view</span>.<span class="ident">clear</span>();
+        <span class="self">self</span>.in_view.clear();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="ident">pool_index</span> <span class="op">=</span> <span class="ident">buffer_pool</span>.<span class="ident">index</span>();
+        <span class="kw">let </span>pool_index = buffer_pool.index();
 
-        <span class="kw">for</span> <span class="ident">coords</span> <span class="kw">in</span> <span class="ident">view_region</span>.<span class="ident">iter</span>() {
-            <span class="kw">if</span> <span class="ident">coords</span>.<span class="ident">build_quad_key</span>().<span class="ident">is_none</span>() {
+        <span class="kw">for </span>coords <span class="kw">in </span>view_region.iter() {
+            <span class="kw">if </span>coords.build_quad_key().is_none() {
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">let</span> <span class="ident">shape</span> <span class="op">=</span> <span class="ident">TileShape::new</span>(<span class="ident">coords</span>, <span class="ident">zoom</span>, <span class="ident">index</span>);
+            <span class="kw">let </span>shape = TileShape::new(coords, zoom, index);
 
-            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            index += <span class="number">1</span>;
 
-            <span class="kw">let</span> <span class="ident">fallback</span> <span class="op">=</span> {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">pool_index</span>.<span class="ident">has_tile</span>(<span class="kw-2">&amp;</span><span class="ident">coords</span>) {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">fallback_coords</span>) <span class="op">=</span> <span class="ident">pool_index</span>.<span class="ident">get_tile_coords_fallback</span>(<span class="kw-2">&amp;</span><span class="ident">coords</span>) {
+            <span class="kw">let </span>fallback = {
+                <span class="kw">if </span>!pool_index.has_tile(<span class="kw-2">&amp;</span>coords) {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(fallback_coords) = pool_index.get_tile_coords_fallback(<span class="kw-2">&amp;</span>coords) {
                         <span class="macro">tracing::trace!</span>(
-                            <span class="string">&quot;Could not find data at {coords}. Falling back to {fallback_coords}&quot;</span>
-                        );
+                            <span class="string">&quot;Could not find data at {coords}. Falling back to {fallback_coords}&quot;
+                        </span>);
 
-                        <span class="kw">let</span> <span class="ident">shape</span> <span class="op">=</span> <span class="ident">TileShape::new</span>(<span class="ident">fallback_coords</span>, <span class="ident">zoom</span>, <span class="ident">index</span>);
+                        <span class="kw">let </span>shape = TileShape::new(fallback_coords, zoom, index);
 
-                        <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                        <span class="prelude-val">Some</span>(<span class="ident">shape</span>)
-                    } <span class="kw">else</span> {
-                        <span class="prelude-val">None</span>
-                    }
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                }
+                        index += <span class="number">1</span>;
+                        <span class="prelude-val">Some</span>(shape)
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">None
+                    </span>}
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>}
             };
 
-            <span class="self">self</span>.<span class="ident">in_view</span>.<span class="ident">push</span>(<span class="ident">TileInView</span> { <span class="ident">shape</span>, <span class="ident">fallback</span> });
+            <span class="self">self</span>.in_view.push(TileInView { shape, fallback });
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">TileInView</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-        <span class="self">self</span>.<span class="ident">in_view</span>.<span class="ident">iter</span>()
+    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>TileInView&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="self">self</span>.in_view.iter()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">B</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">inner</span>
+    <span class="kw">pub fn </span>buffer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>B {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.buffer.inner
     }
 
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">upload_pattern</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">Q</span>, <span class="ident">view_proj</span>: <span class="kw-2">&amp;</span><span class="ident">ViewProjection</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="self">self</span>.<span class="ident">in_view</span>.<span class="ident">len</span>());
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>upload_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>Q, view_proj: <span class="kw-2">&amp;</span>ViewProjection) {
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = Vec::with_capacity(<span class="self">self</span>.in_view.len());
 
-        <span class="kw">for</span> <span class="ident">tile</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">in_view</span> {
-            <span class="ident">buffer</span>.<span class="ident">push</span>(<span class="ident">ShaderTileMetadata</span> {
-                <span class="comment">// We are casting here from 64bit to 32bit, because 32bit is more performant and is</span>
-                <span class="comment">// better supported.</span>
-                <span class="ident">transform</span>: <span class="ident">view_proj</span>
-                    .<span class="ident">to_model_view_projection</span>(<span class="ident">tile</span>.<span class="ident">shape</span>.<span class="ident">transform</span>)
-                    .<span class="ident">downcast</span>()
-                    .<span class="ident">into</span>(),
-                <span class="ident">zoom_factor</span>: <span class="ident">tile</span>.<span class="ident">shape</span>.<span class="ident">zoom_factor</span> <span class="kw">as</span> <span class="ident">f32</span>,
+        <span class="kw">for </span>tile <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.in_view {
+            buffer.push(ShaderTileMetadata {
+                <span class="comment">// We are casting here from 64bit to 32bit, because 32bit is more performant and is
+                // better supported.
+                </span>transform: view_proj
+                    .to_model_view_projection(tile.shape.transform)
+                    .downcast()
+                    .into(),
+                zoom_factor: tile.shape.zoom_factor <span class="kw">as </span>f32,
             });
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">fallback_shape</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tile</span>.<span class="ident">fallback</span> {
-                <span class="ident">buffer</span>.<span class="ident">push</span>(<span class="ident">ShaderTileMetadata</span> {
-                    <span class="comment">// We are casting here from 64bit to 32bit, because 32bit is more performant and is</span>
-                    <span class="comment">// better supported.</span>
-                    <span class="ident">transform</span>: <span class="ident">view_proj</span>
-                        .<span class="ident">to_model_view_projection</span>(<span class="ident">fallback_shape</span>.<span class="ident">transform</span>)
-                        .<span class="ident">downcast</span>()
-                        .<span class="ident">into</span>(),
-                    <span class="ident">zoom_factor</span>: <span class="ident">fallback_shape</span>.<span class="ident">zoom_factor</span> <span class="kw">as</span> <span class="ident">f32</span>,
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(fallback_shape) = <span class="kw-2">&amp;</span>tile.fallback {
+                buffer.push(ShaderTileMetadata {
+                    <span class="comment">// We are casting here from 64bit to 32bit, because 32bit is more performant and is
+                    // better supported.
+                    </span>transform: view_proj
+                        .to_model_view_projection(fallback_shape.transform)
+                        .downcast()
+                        .into(),
+                    zoom_factor: fallback_shape.zoom_factor <span class="kw">as </span>f32,
                 });
             }
         }
 
-        <span class="kw">let</span> <span class="ident">raw_buffer</span> <span class="op">=</span> <span class="ident">bytemuck::cast_slice</span>(<span class="ident">buffer</span>.<span class="ident">as_slice</span>());
-        <span class="kw">if</span> <span class="ident">raw_buffer</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgpu::BufferAddress</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">inner_size</span> {
+        <span class="kw">let </span>raw_buffer = bytemuck::cast_slice(buffer.as_slice());
+        <span class="kw">if </span>raw_buffer.len() <span class="kw">as </span>wgpu::BufferAddress &gt; <span class="self">self</span>.buffer.inner_size {
             <span class="comment">/* TODO: We need to avoid this case by either choosing a proper size
-            TODO: (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */</span>
-            <span class="macro">panic!</span>(<span class="string">&quot;Buffer is too small to store the tile pattern!&quot;</span>);
+            TODO: (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */
+            </span><span class="macro">panic!</span>(<span class="string">&quot;Buffer is too small to store the tile pattern!&quot;</span>);
         }
-        <span class="ident">queue</span>.<span class="ident">write_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">inner</span>, <span class="number">0</span>, <span class="ident">raw_buffer</span>);
+        queue.write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer.inner, <span class="number">0</span>, raw_buffer);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stencil_reference_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">world_coords</span>: <span class="kw-2">&amp;</span><span class="ident">WorldTileCoords</span>) -&gt; <span class="ident">u8</span> {
-        <span class="kw">match</span> (<span class="ident">world_coords</span>.<span class="ident">x</span>, <span class="ident">world_coords</span>.<span class="ident">y</span>) {
-            (<span class="ident">x</span>, <span class="ident">y</span>) <span class="kw">if</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">y</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span> =&gt; <span class="number">2</span>,
-            (<span class="ident">x</span>, <span class="ident">y</span>) <span class="kw">if</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">y</span> <span class="op">%</span> <span class="number">2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> =&gt; <span class="number">1</span>,
-            (<span class="ident">x</span>, <span class="ident">y</span>) <span class="kw">if</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">y</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span> =&gt; <span class="number">4</span>,
-            (<span class="ident">x</span>, <span class="ident">y</span>) <span class="kw">if</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">y</span> <span class="op">%</span> <span class="number">2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> =&gt; <span class="number">3</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
+    <span class="kw">pub fn </span>stencil_reference_value(<span class="kw-2">&amp;</span><span class="self">self</span>, world_coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; u8 {
+        <span class="kw">match </span>(world_coords.x, world_coords.y) {
+            (x, y) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">2</span>,
+            (x, y) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">1</span>,
+            (x, y) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">4</span>,
+            (x, y) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">3</span>,
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

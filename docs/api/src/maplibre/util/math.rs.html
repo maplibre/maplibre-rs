@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/util/math.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>math.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/util/math.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>math.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -420,427 +420,427 @@
 <span id="420">420</span>
 <span id="421">421</span>
 <span id="422">422</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cmp::Ordering</span>, <span class="ident">fmt</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{cmp::Ordering, fmt};
 
-<span class="kw">use</span> <span class="ident">cgmath</span>::{
-    <span class="ident">ulps_eq</span>, <span class="ident">BaseFloat</span>, <span class="ident">BaseNum</span>, <span class="ident">EuclideanSpace</span>, <span class="ident">InnerSpace</span>, <span class="ident">Point2</span>, <span class="ident">Point3</span>, <span class="ident">Vector3</span>, <span class="ident">Zero</span>,
+<span class="kw">use </span>cgmath::{
+    ulps_eq, BaseFloat, BaseNum, EuclideanSpace, InnerSpace, Point2, Point3, Vector3, Zero,
 };
 
-<span class="doccomment">/// A 3-dimensional plane formed from the equation: `A*x + B*y + C*z - D = 0`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Fields</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// - `n`: a unit vector representing the normal of the plane where:</span>
-<span class="doccomment">///   - `n.x`: corresponds to `A` in the plane equation</span>
-<span class="doccomment">///   - `n.y`: corresponds to `B` in the plane equation</span>
-<span class="doccomment">///   - `n.z`: corresponds to `C` in the plane equation</span>
-<span class="doccomment">/// - `d`: the distance value, corresponding to `D` in the plane equation</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Notes</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The `A*x + B*y + C*z - D = 0` form is preferred over the other common</span>
-<span class="doccomment">/// alternative, `A*x + B*y + C*z + D = 0`, because it tends to avoid</span>
-<span class="doccomment">/// superfluous negations (see _Real Time Collision Detection_, p. 55).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Copied from: https://github.com/rustgd/collision-rs</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Plane</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Plane normal</span>
-    <span class="kw">pub</span> <span class="ident">n</span>: <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Plane distance value</span>
-    <span class="kw">pub</span> <span class="ident">d</span>: <span class="ident">S</span>,
+<span class="doccomment">/// A 3-dimensional plane formed from the equation: `A*x + B*y + C*z - D = 0`.
+///
+/// # Fields
+///
+/// - `n`: a unit vector representing the normal of the plane where:
+///   - `n.x`: corresponds to `A` in the plane equation
+///   - `n.y`: corresponds to `B` in the plane equation
+///   - `n.z`: corresponds to `C` in the plane equation
+/// - `d`: the distance value, corresponding to `D` in the plane equation
+///
+/// # Notes
+///
+/// The `A*x + B*y + C*z - D = 0` form is preferred over the other common
+/// alternative, `A*x + B*y + C*z + D = 0`, because it tends to avoid
+/// superfluous negations (see _Real Time Collision Detection_, p. 55).
+///
+/// Copied from: https://github.com/rustgd/collision-rs
+</span><span class="kw">pub struct </span>Plane&lt;S&gt; {
+    <span class="doccomment">/// Plane normal
+    </span><span class="kw">pub </span>n: Vector3&lt;S&gt;,
+    <span class="doccomment">/// Plane distance value
+    </span><span class="kw">pub </span>d: S,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">BaseFloat</span><span class="op">&gt;</span> <span class="ident">Plane</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Construct a plane from a normal vector and a scalar distance. The</span>
-    <span class="doccomment">/// plane will be perpendicular to `n`, and `d` units offset from the</span>
-    <span class="doccomment">/// origin.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">n</span>: <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">d</span>: <span class="ident">S</span>) -&gt; <span class="ident">Plane</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-        <span class="ident">Plane</span> { <span class="ident">n</span>, <span class="ident">d</span> }
+<span class="kw">impl</span>&lt;S: BaseFloat&gt; Plane&lt;S&gt; {
+    <span class="doccomment">/// Construct a plane from a normal vector and a scalar distance. The
+    /// plane will be perpendicular to `n`, and `d` units offset from the
+    /// origin.
+    </span><span class="kw">pub fn </span>new(n: Vector3&lt;S&gt;, d: S) -&gt; Plane&lt;S&gt; {
+        Plane { n, d }
     }
 
-    <span class="doccomment">/// Constructs a plane that passes through the the three points `a`, `b` and `c`</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_points</span>(<span class="ident">a</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">b</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">c</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Plane</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="comment">// create two vectors that run parallel to the plane</span>
-        <span class="kw">let</span> <span class="ident">v0</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">-</span> <span class="ident">a</span>;
-        <span class="kw">let</span> <span class="ident">v1</span> <span class="op">=</span> <span class="ident">c</span> <span class="op">-</span> <span class="ident">a</span>;
+    <span class="doccomment">/// Constructs a plane that passes through the the three points `a`, `b` and `c`
+    </span><span class="kw">pub fn </span>from_points(a: Point3&lt;S&gt;, b: Point3&lt;S&gt;, c: Point3&lt;S&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Plane&lt;S&gt;&gt; {
+        <span class="comment">// create two vectors that run parallel to the plane
+        </span><span class="kw">let </span>v0 = b - a;
+        <span class="kw">let </span>v1 = c - a;
 
-        <span class="comment">// find the normal vector that is perpendicular to v1 and v2</span>
-        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">v0</span>.<span class="ident">cross</span>(<span class="ident">v1</span>);
-        <span class="kw">if</span> <span class="macro">ulps_eq!</span>(<span class="ident">n</span>, <span class="kw-2">&amp;</span><span class="ident">Vector3::zero</span>()) {
-            <span class="prelude-val">None</span>
-        } <span class="kw">else</span> {
-            <span class="comment">// compute the normal and the distance to the plane</span>
-            <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">n</span>.<span class="ident">normalize</span>();
-            <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="op">-</span><span class="ident">a</span>.<span class="ident">dot</span>(<span class="ident">n</span>);
+        <span class="comment">// find the normal vector that is perpendicular to v1 and v2
+        </span><span class="kw">let </span>n = v0.cross(v1);
+        <span class="kw">if </span><span class="macro">ulps_eq!</span>(n, <span class="kw-2">&amp;</span>Vector3::zero()) {
+            <span class="prelude-val">None
+        </span>} <span class="kw">else </span>{
+            <span class="comment">// compute the normal and the distance to the plane
+            </span><span class="kw">let </span>n = n.normalize();
+            <span class="kw">let </span>d = -a.dot(n);
 
-            <span class="prelude-val">Some</span>(<span class="ident">Plane::new</span>(<span class="ident">n</span>, <span class="ident">d</span>))
+            <span class="prelude-val">Some</span>(Plane::new(n, d))
         }
     }
 
-    <span class="doccomment">/// Construct a plane from a point and a normal vector.</span>
-    <span class="doccomment">/// The plane will contain the point `p` and be perpendicular to `n`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_point_normal</span>(<span class="ident">p</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">n</span>: <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) -&gt; <span class="ident">Plane</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-        <span class="ident">Plane</span> { <span class="ident">n</span>, <span class="ident">d</span>: <span class="ident">p</span>.<span class="ident">dot</span>(<span class="ident">n</span>) }
+    <span class="doccomment">/// Construct a plane from a point and a normal vector.
+    /// The plane will contain the point `p` and be perpendicular to `n`.
+    </span><span class="kw">pub fn </span>from_point_normal(p: Point3&lt;S&gt;, n: Vector3&lt;S&gt;) -&gt; Plane&lt;S&gt; {
+        Plane { n, d: p.dot(n) }
     }
 
-    <span class="kw">fn</span> <span class="ident">intersection_distance_ray</span>(
+    <span class="kw">fn </span>intersection_distance_ray(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ray_origin</span>: <span class="kw-2">&amp;</span><span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-        <span class="ident">ray_direction</span>: <span class="kw-2">&amp;</span><span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">vd</span>: <span class="ident">S</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">x</span> <span class="op">*</span> <span class="ident">ray_direction</span>.<span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">y</span> <span class="op">*</span> <span class="ident">ray_direction</span>.<span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">z</span> <span class="op">*</span> <span class="ident">ray_direction</span>.<span class="ident">z</span>;
-        <span class="kw">if</span> <span class="ident">vd</span> <span class="op">==</span> <span class="ident">S::zero</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        ray_origin: <span class="kw-2">&amp;</span>Vector3&lt;S&gt;,
+        ray_direction: <span class="kw-2">&amp;</span>Vector3&lt;S&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;S&gt; {
+        <span class="kw">let </span>vd: S =
+            <span class="self">self</span>.n.x * ray_direction.x + <span class="self">self</span>.n.y * ray_direction.y + <span class="self">self</span>.n.z * ray_direction.z;
+        <span class="kw">if </span>vd == S::zero() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-        <span class="kw">let</span> <span class="ident">t</span>: <span class="ident">S</span> <span class="op">=</span>
-            <span class="op">-</span>(<span class="self">self</span>.<span class="ident">n</span>.<span class="ident">x</span> <span class="op">*</span> <span class="ident">ray_origin</span>.<span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">y</span> <span class="op">*</span> <span class="ident">ray_origin</span>.<span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">z</span> <span class="op">*</span> <span class="ident">ray_origin</span>.<span class="ident">z</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">d</span>)
-                <span class="op">/</span> <span class="ident">vd</span>;
+        <span class="kw">let </span>t: S =
+            -(<span class="self">self</span>.n.x * ray_origin.x + <span class="self">self</span>.n.y * ray_origin.y + <span class="self">self</span>.n.z * ray_origin.z + <span class="self">self</span>.d)
+                / vd;
 
-        <span class="prelude-val">Some</span>(<span class="ident">t</span>)
+        <span class="prelude-val">Some</span>(t)
     }
 
-    <span class="doccomment">/// Returns unsorted intersection points with an Aabb3</span>
-    <span class="doccomment">/// Adopted from: https://www.asawicki.info/news_1428_finding_polygon_of_plane-aabb_intersection</span>
-    <span class="doccomment">/// Inspired by: https://godotengine.org/qa/54688/camera-frustum-intersection-with-plane</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">intersection_points_aabb3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">aabb</span>: <span class="kw-2">&amp;</span><span class="ident">Aabb3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out_points</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="ident">aabb_min</span>: <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">aabb</span>.<span class="ident">min</span>.<span class="ident">to_vec</span>();
-        <span class="kw">let</span> <span class="ident">aabb_max</span>: <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">aabb</span>.<span class="ident">max</span>.<span class="ident">to_vec</span>();
+    <span class="doccomment">/// Returns unsorted intersection points with an Aabb3
+    /// Adopted from: https://www.asawicki.info/news_1428_finding_polygon_of_plane-aabb_intersection
+    /// Inspired by: https://godotengine.org/qa/54688/camera-frustum-intersection-with-plane
+    </span><span class="kw">pub fn </span>intersection_points_aabb3(<span class="kw-2">&amp;</span><span class="self">self</span>, aabb: <span class="kw-2">&amp;</span>Aabb3&lt;S&gt;) -&gt; Vec&lt;Vector3&lt;S&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>out_points: Vec&lt;Vector3&lt;S&gt;&gt; = Vec::new();
+        <span class="kw">let </span>aabb_min: Vector3&lt;S&gt; = aabb.min.to_vec();
+        <span class="kw">let </span>aabb_max: Vector3&lt;S&gt; = aabb.max.to_vec();
 
-        <span class="comment">// Test edges along X axis, pointing right.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dir</span>: <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_max</span>.<span class="ident">x</span> <span class="op">-</span> <span class="ident">aabb_min</span>.<span class="ident">x</span>, <span class="ident">S::zero</span>(), <span class="ident">S::zero</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">orig</span> <span class="op">=</span> <span class="ident">aabb_min</span>;
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        <span class="comment">// Test edges along X axis, pointing right.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>dir: Vector3&lt;S&gt; = Vector3::new(aabb_max.x - aabb_min.x, S::zero(), S::zero());
+        <span class="kw">let </span><span class="kw-2">mut </span>orig = aabb_min;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_min</span>.<span class="ident">x</span>, <span class="ident">aabb_max</span>.<span class="ident">y</span>, <span class="ident">aabb_min</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        orig = Vector3::new(aabb_min.x, aabb_max.y, aabb_min.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_min</span>.<span class="ident">x</span>, <span class="ident">aabb_min</span>.<span class="ident">y</span>, <span class="ident">aabb_max</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        orig = Vector3::new(aabb_min.x, aabb_min.y, aabb_max.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_min</span>.<span class="ident">x</span>, <span class="ident">aabb_max</span>.<span class="ident">y</span>, <span class="ident">aabb_max</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        orig = Vector3::new(aabb_min.x, aabb_max.y, aabb_max.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="comment">// Test edges along Y axis, pointing up.</span>
-        <span class="ident">dir</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">S::zero</span>(), <span class="ident">aabb_max</span>.<span class="ident">y</span> <span class="op">-</span> <span class="ident">aabb_min</span>.<span class="ident">y</span>, <span class="ident">S::zero</span>());
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_min</span>.<span class="ident">x</span>, <span class="ident">aabb_min</span>.<span class="ident">y</span>, <span class="ident">aabb_min</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        <span class="comment">// Test edges along Y axis, pointing up.
+        </span>dir = Vector3::new(S::zero(), aabb_max.y - aabb_min.y, S::zero());
+        orig = Vector3::new(aabb_min.x, aabb_min.y, aabb_min.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_max</span>.<span class="ident">x</span>, <span class="ident">aabb_min</span>.<span class="ident">y</span>, <span class="ident">aabb_min</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        orig = Vector3::new(aabb_max.x, aabb_min.y, aabb_min.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_min</span>.<span class="ident">x</span>, <span class="ident">aabb_min</span>.<span class="ident">y</span>, <span class="ident">aabb_max</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        orig = Vector3::new(aabb_min.x, aabb_min.y, aabb_max.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_max</span>.<span class="ident">x</span>, <span class="ident">aabb_min</span>.<span class="ident">y</span>, <span class="ident">aabb_max</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        orig = Vector3::new(aabb_max.x, aabb_min.y, aabb_max.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="comment">// Test edges along Z axis, pointing forward.</span>
-        <span class="ident">dir</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">S::zero</span>(), <span class="ident">S::zero</span>(), <span class="ident">aabb_max</span>.<span class="ident">z</span> <span class="op">-</span> <span class="ident">aabb_min</span>.<span class="ident">z</span>);
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_min</span>.<span class="ident">x</span>, <span class="ident">aabb_min</span>.<span class="ident">y</span>, <span class="ident">aabb_min</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        <span class="comment">// Test edges along Z axis, pointing forward.
+        </span>dir = Vector3::new(S::zero(), S::zero(), aabb_max.z - aabb_min.z);
+        orig = Vector3::new(aabb_min.x, aabb_min.y, aabb_min.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_max</span>.<span class="ident">x</span>, <span class="ident">aabb_min</span>.<span class="ident">y</span>, <span class="ident">aabb_min</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        orig = Vector3::new(aabb_max.x, aabb_min.y, aabb_min.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_min</span>.<span class="ident">x</span>, <span class="ident">aabb_max</span>.<span class="ident">y</span>, <span class="ident">aabb_min</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        orig = Vector3::new(aabb_min.x, aabb_max.y, aabb_min.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">orig</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="ident">aabb_max</span>.<span class="ident">x</span>, <span class="ident">aabb_max</span>.<span class="ident">y</span>, <span class="ident">aabb_min</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_distance_ray</span>(<span class="kw-2">&amp;</span><span class="ident">orig</span>, <span class="kw-2">&amp;</span><span class="ident">dir</span>) {
-            <span class="kw">if</span> <span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">S::zero</span>() <span class="op">&amp;&amp;</span> <span class="ident">t</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">S::one</span>() {
-                <span class="ident">out_points</span>.<span class="ident">push</span>(<span class="ident">orig</span> <span class="op">+</span> <span class="ident">dir</span> <span class="op">*</span> <span class="ident">t</span>);
+        orig = Vector3::new(aabb_max.x, aabb_max.y, aabb_min.z);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = <span class="self">self</span>.intersection_distance_ray(<span class="kw-2">&amp;</span>orig, <span class="kw-2">&amp;</span>dir) {
+            <span class="kw">if </span>t &gt;= S::zero() &amp;&amp; t &lt;= S::one() {
+                out_points.push(orig + dir * t);
             }
         }
 
-        <span class="ident">out_points</span>
+        out_points
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">intersection_polygon_aabb3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">aabb</span>: <span class="kw-2">&amp;</span><span class="ident">Aabb3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">points</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">intersection_points_aabb3</span>(<span class="ident">aabb</span>);
+    <span class="kw">pub fn </span>intersection_polygon_aabb3(<span class="kw-2">&amp;</span><span class="self">self</span>, aabb: <span class="kw-2">&amp;</span>Aabb3&lt;S&gt;) -&gt; Vec&lt;Vector3&lt;S&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>points = <span class="self">self</span>.intersection_points_aabb3(aabb);
 
-        <span class="kw">if</span> <span class="ident">points</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="ident">points</span>;
+        <span class="kw">if </span>points.is_empty() {
+            <span class="kw">return </span>points;
         };
 
-        <span class="kw">let</span> <span class="ident">plane_normal</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="self">self</span>.<span class="ident">n</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">z</span>);
-        <span class="kw">let</span> <span class="ident">origin</span> <span class="op">=</span> <span class="ident">points</span>[<span class="number">0</span>];
+        <span class="kw">let </span>plane_normal = Vector3::new(<span class="self">self</span>.n.x, <span class="self">self</span>.n.y, <span class="self">self</span>.n.z);
+        <span class="kw">let </span>origin = points[<span class="number">0</span>];
 
-        <span class="ident">points</span>.<span class="ident">sort_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">cmp</span> <span class="op">=</span> (<span class="ident">a</span> <span class="op">-</span> <span class="ident">origin</span>).<span class="ident">cross</span>(<span class="ident">b</span> <span class="op">-</span> <span class="ident">origin</span>).<span class="ident">dot</span>(<span class="ident">plane_normal</span>);
-            <span class="kw">if</span> <span class="ident">cmp</span> <span class="op">&lt;</span> <span class="ident">S::zero</span>() {
-                <span class="ident">Ordering::Less</span>
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">cmp</span> <span class="op">==</span> <span class="ident">S::zero</span>() {
-                <span class="ident">Ordering::Equal</span>
-            } <span class="kw">else</span> {
-                <span class="ident">Ordering::Greater</span>
+        points.sort_by(|a, b| {
+            <span class="kw">let </span>cmp = (a - origin).cross(b - origin).dot(plane_normal);
+            <span class="kw">if </span>cmp &lt; S::zero() {
+                Ordering::Less
+            } <span class="kw">else if </span>cmp == S::zero() {
+                Ordering::Equal
+            } <span class="kw">else </span>{
+                Ordering::Greater
             }
         });
 
-        <span class="ident">points</span>
+        points
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">BaseFloat</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Plane</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+<span class="kw">impl</span>&lt;S: BaseFloat&gt; fmt::Debug <span class="kw">for </span>Plane&lt;S&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(
-            <span class="ident">f</span>,
+            f,
             <span class="string">&quot;{:?}x + {:?}y + {:?}z - {:?} = 0&quot;</span>,
-            <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">n</span>.<span class="ident">z</span>, <span class="self">self</span>.<span class="ident">d</span>
+            <span class="self">self</span>.n.x, <span class="self">self</span>.n.y, <span class="self">self</span>.n.z, <span class="self">self</span>.d
         )
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">min</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PartialOrd</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">lhs</span>: <span class="ident">S</span>, <span class="ident">rhs</span>: <span class="ident">S</span>) -&gt; <span class="ident">S</span> {
-    <span class="kw">match</span> <span class="ident">lhs</span>.<span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="ident">rhs</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">Ordering::Less</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">Ordering::Equal</span>) <span class="op">|</span> <span class="prelude-val">None</span> =&gt; <span class="ident">lhs</span>,
-        <span class="kw">_</span> =&gt; <span class="ident">rhs</span>,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>min&lt;S: PartialOrd + Copy&gt;(lhs: S, rhs: S) -&gt; S {
+    <span class="kw">match </span>lhs.partial_cmp(<span class="kw-2">&amp;</span>rhs) {
+        <span class="prelude-val">Some</span>(Ordering::Less) | <span class="prelude-val">Some</span>(Ordering::Equal) | <span class="prelude-val">None </span>=&gt; lhs,
+        <span class="kw">_ </span>=&gt; rhs,
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">max</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PartialOrd</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">lhs</span>: <span class="ident">S</span>, <span class="ident">rhs</span>: <span class="ident">S</span>) -&gt; <span class="ident">S</span> {
-    <span class="kw">match</span> <span class="ident">lhs</span>.<span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="ident">rhs</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">Ordering::Greater</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">Ordering::Equal</span>) <span class="op">|</span> <span class="prelude-val">None</span> =&gt; <span class="ident">lhs</span>,
-        <span class="kw">_</span> =&gt; <span class="ident">rhs</span>,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>max&lt;S: PartialOrd + Copy&gt;(lhs: S, rhs: S) -&gt; S {
+    <span class="kw">match </span>lhs.partial_cmp(<span class="kw-2">&amp;</span>rhs) {
+        <span class="prelude-val">Some</span>(Ordering::Greater) | <span class="prelude-val">Some</span>(Ordering::Equal) | <span class="prelude-val">None </span>=&gt; lhs,
+        <span class="kw">_ </span>=&gt; rhs,
     }
 }
 
-<span class="doccomment">/// A two-dimensional AABB, aka a rectangle.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Aabb2</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Minimum point of the AABB</span>
-    <span class="kw">pub</span> <span class="ident">min</span>: <span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Maximum point of the AABB</span>
-    <span class="kw">pub</span> <span class="ident">max</span>: <span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A two-dimensional AABB, aka a rectangle.
+</span><span class="kw">pub struct </span>Aabb2&lt;S&gt; {
+    <span class="doccomment">/// Minimum point of the AABB
+    </span><span class="kw">pub </span>min: Point2&lt;S&gt;,
+    <span class="doccomment">/// Maximum point of the AABB
+    </span><span class="kw">pub </span>max: Point2&lt;S&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">BaseNum</span><span class="op">&gt;</span> <span class="ident">Aabb2</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Construct a new axis-aligned bounding box from two points.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">p1</span>: <span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">p2</span>: <span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) -&gt; <span class="ident">Aabb2</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-        <span class="ident">Aabb2</span> {
-            <span class="ident">min</span>: <span class="ident">Point2::new</span>(<span class="ident">min</span>(<span class="ident">p1</span>.<span class="ident">x</span>, <span class="ident">p2</span>.<span class="ident">x</span>), <span class="ident">min</span>(<span class="ident">p1</span>.<span class="ident">y</span>, <span class="ident">p2</span>.<span class="ident">y</span>)),
-            <span class="ident">max</span>: <span class="ident">Point2::new</span>(<span class="ident">max</span>(<span class="ident">p1</span>.<span class="ident">x</span>, <span class="ident">p2</span>.<span class="ident">x</span>), <span class="ident">max</span>(<span class="ident">p1</span>.<span class="ident">y</span>, <span class="ident">p2</span>.<span class="ident">y</span>)),
+<span class="kw">impl</span>&lt;S: BaseNum&gt; Aabb2&lt;S&gt; {
+    <span class="doccomment">/// Construct a new axis-aligned bounding box from two points.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>new(p1: Point2&lt;S&gt;, p2: Point2&lt;S&gt;) -&gt; Aabb2&lt;S&gt; {
+        Aabb2 {
+            min: Point2::new(min(p1.x, p2.x), min(p1.y, p2.y)),
+            max: Point2::new(max(p1.x, p2.x), max(p1.y, p2.y)),
         }
     }
 
-    <span class="doccomment">/// Compute corners.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_corners</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">Point2</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>; <span class="number">4</span>] {
+    <span class="doccomment">/// Compute corners.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>to_corners(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [Point2&lt;S&gt;; <span class="number">4</span>] {
         [
-            <span class="self">self</span>.<span class="ident">min</span>,
-            <span class="ident">Point2::new</span>(<span class="self">self</span>.<span class="ident">max</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">min</span>.<span class="ident">y</span>),
-            <span class="ident">Point2::new</span>(<span class="self">self</span>.<span class="ident">min</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">max</span>.<span class="ident">y</span>),
-            <span class="self">self</span>.<span class="ident">max</span>,
+            <span class="self">self</span>.min,
+            Point2::new(<span class="self">self</span>.max.x, <span class="self">self</span>.min.y),
+            Point2::new(<span class="self">self</span>.min.x, <span class="self">self</span>.max.y),
+            <span class="self">self</span>.max,
         ]
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">BaseNum</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Aabb2</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;[{:?} - {:?}]&quot;</span>, <span class="self">self</span>.<span class="ident">min</span>, <span class="self">self</span>.<span class="ident">max</span>)
+<span class="kw">impl</span>&lt;S: BaseNum&gt; fmt::Debug <span class="kw">for </span>Aabb2&lt;S&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;[{:?} - {:?}]&quot;</span>, <span class="self">self</span>.min, <span class="self">self</span>.max)
     }
 }
 
-<span class="doccomment">/// A three-dimensional AABB, aka a rectangular prism.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Aabb3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Minimum point of the AABB</span>
-    <span class="kw">pub</span> <span class="ident">min</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Maximum point of the AABB</span>
-    <span class="kw">pub</span> <span class="ident">max</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A three-dimensional AABB, aka a rectangular prism.
+</span><span class="kw">pub struct </span>Aabb3&lt;S&gt; {
+    <span class="doccomment">/// Minimum point of the AABB
+    </span><span class="kw">pub </span>min: Point3&lt;S&gt;,
+    <span class="doccomment">/// Maximum point of the AABB
+    </span><span class="kw">pub </span>max: Point3&lt;S&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">BaseNum</span><span class="op">&gt;</span> <span class="ident">Aabb3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Construct a new axis-aligned bounding box from two points.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">p1</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">p2</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) -&gt; <span class="ident">Aabb3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-        <span class="ident">Aabb3</span> {
-            <span class="ident">min</span>: <span class="ident">Point3::new</span>(<span class="ident">min</span>(<span class="ident">p1</span>.<span class="ident">x</span>, <span class="ident">p2</span>.<span class="ident">x</span>), <span class="ident">min</span>(<span class="ident">p1</span>.<span class="ident">y</span>, <span class="ident">p2</span>.<span class="ident">y</span>), <span class="ident">min</span>(<span class="ident">p1</span>.<span class="ident">z</span>, <span class="ident">p2</span>.<span class="ident">z</span>)),
-            <span class="ident">max</span>: <span class="ident">Point3::new</span>(<span class="ident">max</span>(<span class="ident">p1</span>.<span class="ident">x</span>, <span class="ident">p2</span>.<span class="ident">x</span>), <span class="ident">max</span>(<span class="ident">p1</span>.<span class="ident">y</span>, <span class="ident">p2</span>.<span class="ident">y</span>), <span class="ident">max</span>(<span class="ident">p1</span>.<span class="ident">z</span>, <span class="ident">p2</span>.<span class="ident">z</span>)),
+<span class="kw">impl</span>&lt;S: BaseNum&gt; Aabb3&lt;S&gt; {
+    <span class="doccomment">/// Construct a new axis-aligned bounding box from two points.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>new(p1: Point3&lt;S&gt;, p2: Point3&lt;S&gt;) -&gt; Aabb3&lt;S&gt; {
+        Aabb3 {
+            min: Point3::new(min(p1.x, p2.x), min(p1.y, p2.y), min(p1.z, p2.z)),
+            max: Point3::new(max(p1.x, p2.x), max(p1.y, p2.y), max(p1.z, p2.z)),
         }
     }
 
-    <span class="doccomment">/// Compute corners.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_corners</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [<span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>; <span class="number">8</span>] {
+    <span class="doccomment">/// Compute corners.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>to_corners(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; [Point3&lt;S&gt;; <span class="number">8</span>] {
         [
-            <span class="self">self</span>.<span class="ident">min</span>,
-            <span class="ident">Point3::new</span>(<span class="self">self</span>.<span class="ident">max</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">min</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">min</span>.<span class="ident">z</span>),
-            <span class="ident">Point3::new</span>(<span class="self">self</span>.<span class="ident">min</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">max</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">min</span>.<span class="ident">z</span>),
-            <span class="ident">Point3::new</span>(<span class="self">self</span>.<span class="ident">max</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">max</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">min</span>.<span class="ident">z</span>),
-            <span class="ident">Point3::new</span>(<span class="self">self</span>.<span class="ident">min</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">min</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">max</span>.<span class="ident">z</span>),
-            <span class="ident">Point3::new</span>(<span class="self">self</span>.<span class="ident">max</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">min</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">max</span>.<span class="ident">z</span>),
-            <span class="ident">Point3::new</span>(<span class="self">self</span>.<span class="ident">min</span>.<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">max</span>.<span class="ident">y</span>, <span class="self">self</span>.<span class="ident">max</span>.<span class="ident">z</span>),
-            <span class="self">self</span>.<span class="ident">max</span>,
+            <span class="self">self</span>.min,
+            Point3::new(<span class="self">self</span>.max.x, <span class="self">self</span>.min.y, <span class="self">self</span>.min.z),
+            Point3::new(<span class="self">self</span>.min.x, <span class="self">self</span>.max.y, <span class="self">self</span>.min.z),
+            Point3::new(<span class="self">self</span>.max.x, <span class="self">self</span>.max.y, <span class="self">self</span>.min.z),
+            Point3::new(<span class="self">self</span>.min.x, <span class="self">self</span>.min.y, <span class="self">self</span>.max.z),
+            Point3::new(<span class="self">self</span>.max.x, <span class="self">self</span>.min.y, <span class="self">self</span>.max.z),
+            Point3::new(<span class="self">self</span>.min.x, <span class="self">self</span>.max.y, <span class="self">self</span>.max.z),
+            <span class="self">self</span>.max,
         ]
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">BaseNum</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Aabb3</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;[{:?} - {:?}]&quot;</span>, <span class="self">self</span>.<span class="ident">min</span>, <span class="self">self</span>.<span class="ident">max</span>)
+<span class="kw">impl</span>&lt;S: BaseNum&gt; fmt::Debug <span class="kw">for </span>Aabb3&lt;S&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;[{:?} - {:?}]&quot;</span>, <span class="self">self</span>.min, <span class="self">self</span>.max)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bounds_from_points</span><span class="op">&lt;</span><span class="ident">P</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">points</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">P</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>([<span class="ident">T</span>; <span class="number">2</span>], [<span class="ident">T</span>; <span class="number">2</span>])<span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span>[<span class="ident">T</span>; <span class="number">2</span>]<span class="op">&gt;</span>,
-    <span class="ident">T</span>: <span class="ident">PartialOrd</span> <span class="op">+</span> <span class="ident">Copy</span>,
+<span class="kw">pub fn </span>bounds_from_points&lt;P, T&gt;(points: <span class="kw">impl </span>Iterator&lt;Item = P&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;([T; <span class="number">2</span>], [T; <span class="number">2</span>])&gt;
+<span class="kw">where
+    </span>P: Into&lt;[T; <span class="number">2</span>]&gt;,
+    T: PartialOrd + Copy,
 {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">min</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">T</span>; <span class="number">2</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">T</span>; <span class="number">2</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>min: <span class="prelude-ty">Option</span>&lt;[T; <span class="number">2</span>]&gt; = <span class="prelude-val">None</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>max: <span class="prelude-ty">Option</span>&lt;[T; <span class="number">2</span>]&gt; = <span class="prelude-val">None</span>;
 
-    <span class="kw">for</span> <span class="ident">point</span> <span class="kw">in</span> <span class="ident">points</span> {
-        <span class="kw">let</span> [<span class="ident">x</span>, <span class="ident">y</span>] <span class="op">=</span> <span class="ident">point</span>.<span class="ident">into</span>();
+    <span class="kw">for </span>point <span class="kw">in </span>points {
+        <span class="kw">let </span>[x, y] = point.into();
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>([<span class="ident">min_x</span>, <span class="ident">min_y</span>]) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">min</span> {
-            <span class="kw">if</span> <span class="ident">x</span> <span class="op">&lt;</span> <span class="kw-2">*</span><span class="ident">min_x</span> {
-                <span class="kw-2">*</span><span class="ident">min_x</span> <span class="op">=</span> <span class="ident">x</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>([min_x, min_y]) = <span class="kw-2">&amp;mut </span>min {
+            <span class="kw">if </span>x &lt; <span class="kw-2">*</span>min_x {
+                <span class="kw-2">*</span>min_x = x;
             }
-            <span class="kw">if</span> <span class="ident">y</span> <span class="op">&lt;</span> <span class="kw-2">*</span><span class="ident">min_y</span> {
-                <span class="kw-2">*</span><span class="ident">min_y</span> <span class="op">=</span> <span class="ident">y</span>;
+            <span class="kw">if </span>y &lt; <span class="kw-2">*</span>min_y {
+                <span class="kw-2">*</span>min_y = y;
             }
-        } <span class="kw">else</span> {
-            <span class="ident">min</span> <span class="op">=</span> <span class="prelude-val">Some</span>([<span class="ident">x</span>, <span class="ident">y</span>])
+        } <span class="kw">else </span>{
+            min = <span class="prelude-val">Some</span>([x, y])
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>([<span class="ident">max_x</span>, <span class="ident">max_y</span>]) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">max</span> {
-            <span class="kw">if</span> <span class="ident">x</span> <span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">max_x</span> {
-                <span class="kw-2">*</span><span class="ident">max_x</span> <span class="op">=</span> <span class="ident">x</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>([max_x, max_y]) = <span class="kw-2">&amp;mut </span>max {
+            <span class="kw">if </span>x &gt; <span class="kw-2">*</span>max_x {
+                <span class="kw-2">*</span>max_x = x;
             }
-            <span class="kw">if</span> <span class="ident">y</span> <span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">max_y</span> {
-                <span class="kw-2">*</span><span class="ident">max_y</span> <span class="op">=</span> <span class="ident">y</span>;
+            <span class="kw">if </span>y &gt; <span class="kw-2">*</span>max_y {
+                <span class="kw-2">*</span>max_y = y;
             }
-        } <span class="kw">else</span> {
-            <span class="ident">max</span> <span class="op">=</span> <span class="prelude-val">Some</span>([<span class="ident">x</span>, <span class="ident">y</span>])
+        } <span class="kw">else </span>{
+            max = <span class="prelude-val">Some</span>([x, y])
         }
     }
 
-    <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">min</span>), <span class="prelude-val">Some</span>(<span class="ident">max</span>)) <span class="op">=</span> (<span class="ident">min</span>, <span class="ident">max</span>) {
-        <span class="prelude-val">Some</span>((<span class="ident">min</span>, <span class="ident">max</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
+    <span class="kw">if let </span>(<span class="prelude-val">Some</span>(min), <span class="prelude-val">Some</span>(max)) = (min, max) {
+        <span class="prelude-val">Some</span>((min, max))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
+}
+
+<span class="doccomment">/// A wrapper type that enables ordering floats. This is a work around for the famous &quot;rust float
+/// ordering&quot; problem. By using it, you acknowledge that sorting NaN is undefined according to spec.
+/// This implementation treats NaN as the &quot;smallest&quot; float.
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialOrd)]
+</span><span class="kw">pub struct </span>FloatOrd(<span class="kw">pub </span>f32);
+
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>FloatOrd {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.is_nan() &amp;&amp; other.<span class="number">0</span>.is_nan() {
+            <span class="bool-val">true
+        </span>} <span class="kw">else </span>{
+            <span class="self">self</span>.<span class="number">0 </span>== other.<span class="number">0
+        </span>}
     }
 }
 
-<span class="doccomment">/// A wrapper type that enables ordering floats. This is a work around for the famous &quot;rust float</span>
-<span class="doccomment">/// ordering&quot; problem. By using it, you acknowledge that sorting NaN is undefined according to spec.</span>
-<span class="doccomment">/// This implementation treats NaN as the &quot;smallest&quot; float.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialOrd</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FloatOrd</span>(<span class="kw">pub</span> <span class="ident">f32</span>);
+<span class="kw">impl </span>Eq <span class="kw">for </span>FloatOrd {}
 
-<span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">FloatOrd</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">is_nan</span>() <span class="op">&amp;&amp;</span> <span class="ident">other</span>.<span class="number">0</span>.<span class="ident">is_nan</span>() {
-            <span class="bool-val">true</span>
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="number">0</span> <span class="op">==</span> <span class="ident">other</span>.<span class="number">0</span>
-        }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">FloatOrd</span> {}
-
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::derive_ord_xor_partial_ord</span>)]</span>
-<span class="kw">impl</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">FloatOrd</span> {
-    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">Ordering</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">0</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">is_nan</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">other</span>.<span class="number">0</span>.<span class="ident">is_nan</span>() {
-                <span class="ident">Ordering::Less</span>
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">is_nan</span>() <span class="op">&amp;&amp;</span> <span class="ident">other</span>.<span class="number">0</span>.<span class="ident">is_nan</span>() {
-                <span class="ident">Ordering::Greater</span>
-            } <span class="kw">else</span> {
-                <span class="ident">Ordering::Equal</span>
+<span class="attribute">#[allow(clippy::derive_ord_xor_partial_ord)]
+</span><span class="kw">impl </span>Ord <span class="kw">for </span>FloatOrd {
+    <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; Ordering {
+        <span class="self">self</span>.<span class="number">0</span>.partial_cmp(<span class="kw-2">&amp;</span>other.<span class="number">0</span>).unwrap_or_else(|| {
+            <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.is_nan() &amp;&amp; !other.<span class="number">0</span>.is_nan() {
+                Ordering::Less
+            } <span class="kw">else if </span>!<span class="self">self</span>.<span class="number">0</span>.is_nan() &amp;&amp; other.<span class="number">0</span>.is_nan() {
+                Ordering::Greater
+            } <span class="kw">else </span>{
+                Ordering::Equal
             }
         })
     }
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">div_away</span>(<span class="ident">lhs</span>: <span class="ident">i32</span>, <span class="ident">rhs</span>: <span class="ident">i32</span>) -&gt; <span class="ident">i32</span> {
-    <span class="kw">if</span> <span class="ident">rhs</span> <span class="op">&lt;</span> <span class="number">0</span> {
+<span class="kw">pub const fn </span>div_away(lhs: i32, rhs: i32) -&gt; i32 {
+    <span class="kw">if </span>rhs &lt; <span class="number">0 </span>{
         <span class="macro">panic!</span>(<span class="string">&quot;rhs must be positive&quot;</span>)
     }
 
-    <span class="kw">if</span> <span class="ident">lhs</span> <span class="op">&lt;</span> <span class="number">0</span> {
-        <span class="ident">div_floor</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">div_ceil</span>(<span class="ident">lhs</span>, <span class="ident">rhs</span>)
+    <span class="kw">if </span>lhs &lt; <span class="number">0 </span>{
+        div_floor(lhs, rhs)
+    } <span class="kw">else </span>{
+        div_ceil(lhs, rhs)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">div_ceil</span>(<span class="ident">lhs</span>: <span class="ident">i32</span>, <span class="ident">rhs</span>: <span class="ident">i32</span>) -&gt; <span class="ident">i32</span> {
-    <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">lhs</span> <span class="op">/</span> <span class="ident">rhs</span>;
-    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">lhs</span> <span class="op">%</span> <span class="ident">rhs</span>;
-    <span class="kw">if</span> (<span class="ident">r</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">rhs</span> <span class="op">&gt;</span> <span class="number">0</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">r</span> <span class="op">&lt;</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">rhs</span> <span class="op">&lt;</span> <span class="number">0</span>) {
-        <span class="ident">d</span> <span class="op">+</span> <span class="number">1</span>
-    } <span class="kw">else</span> {
-        <span class="ident">d</span>
+<span class="kw">pub const fn </span>div_ceil(lhs: i32, rhs: i32) -&gt; i32 {
+    <span class="kw">let </span>d = lhs / rhs;
+    <span class="kw">let </span>r = lhs % rhs;
+    <span class="kw">if </span>(r &gt; <span class="number">0 </span>&amp;&amp; rhs &gt; <span class="number">0</span>) || (r &lt; <span class="number">0 </span>&amp;&amp; rhs &lt; <span class="number">0</span>) {
+        d + <span class="number">1
+    </span>} <span class="kw">else </span>{
+        d
     }
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">div_floor</span>(<span class="ident">lhs</span>: <span class="ident">i32</span>, <span class="ident">rhs</span>: <span class="ident">i32</span>) -&gt; <span class="ident">i32</span> {
-    <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">lhs</span> <span class="op">/</span> <span class="ident">rhs</span>;
-    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">lhs</span> <span class="op">%</span> <span class="ident">rhs</span>;
-    <span class="kw">if</span> (<span class="ident">r</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">rhs</span> <span class="op">&lt;</span> <span class="number">0</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">r</span> <span class="op">&lt;</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">rhs</span> <span class="op">&gt;</span> <span class="number">0</span>) {
-        <span class="ident">d</span> <span class="op">-</span> <span class="number">1</span>
-    } <span class="kw">else</span> {
-        <span class="ident">d</span>
+<span class="kw">pub const fn </span>div_floor(lhs: i32, rhs: i32) -&gt; i32 {
+    <span class="kw">let </span>d = lhs / rhs;
+    <span class="kw">let </span>r = lhs % rhs;
+    <span class="kw">if </span>(r &gt; <span class="number">0 </span>&amp;&amp; rhs &lt; <span class="number">0</span>) || (r &lt; <span class="number">0 </span>&amp;&amp; rhs &gt; <span class="number">0</span>) {
+        d - <span class="number">1
+    </span>} <span class="kw">else </span>{
+        d
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">coords::EXTENT_SINT</span>, <span class="ident">util::math::div_ceil</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use crate</span>::{coords::EXTENT_SINT, util::math::div_ceil};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">test_div_floor</span>() {
-        <span class="macro">assert_eq!</span>(<span class="ident">div_ceil</span>(<span class="number">7000</span>, <span class="ident">EXTENT_SINT</span>), <span class="number">2</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">div_ceil</span>(<span class="op">-</span><span class="number">7000</span>, <span class="ident">EXTENT_SINT</span>), <span class="op">-</span><span class="number">1</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">pub fn </span>test_div_floor() {
+        <span class="macro">assert_eq!</span>(div_ceil(<span class="number">7000</span>, EXTENT_SINT), <span class="number">2</span>);
+        <span class="macro">assert_eq!</span>(div_ceil(-<span class="number">7000</span>, EXTENT_SINT), -<span class="number">1</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

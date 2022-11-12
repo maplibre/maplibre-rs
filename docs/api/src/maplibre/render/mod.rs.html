@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -528,535 +528,535 @@
 <span id="528">528</span>
 <span id="529">529</span>
 <span id="530">530</span>
-</pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole</span>
-<span class="doccomment">//! communication with the GPU.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The render in this module is largely based on the</span>
-<span class="doccomment">//! [bevy_render](https://github.com/bevyengine/bevy/tree/aced6a/crates/bevy_render)</span>
-<span class="doccomment">//! crate with commit `aced6a`.</span>
-<span class="doccomment">//! It is dual-licensed under MIT and Apache:</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```text</span>
-<span class="doccomment">//! Bevy is dual-licensed under either</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! * MIT License (docs/LICENSE-MIT or http://opensource.org/licenses/MIT)</span>
-<span class="doccomment">//! * Apache License, Version 2.0 (docs/LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0)</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! at your option.</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! We appreciate the design and implementation work which as gone into it.</span>
-<span class="doccomment">//!</span>
+</pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
+//! communication with the GPU.
+//!
+//! The render in this module is largely based on the
+//! [bevy_render](https://github.com/bevyengine/bevy/tree/aced6a/crates/bevy_render)
+//! crate with commit `aced6a`.
+//! It is dual-licensed under MIT and Apache:
+//!
+//! ```text
+//! Bevy is dual-licensed under either
+//!
+//! * MIT License (docs/LICENSE-MIT or http://opensource.org/licenses/MIT)
+//! * Apache License, Version 2.0 (docs/LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0)
+//!
+//! at your option.
+//! ```
+//!
+//! We appreciate the design and implementation work which as gone into it.
+//!
 
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+</span><span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use</span> <span class="ident">log::info</span>;
+<span class="kw">use </span>log::info;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">render</span>::{
-        <span class="ident">eventually::Eventually</span>,
-        <span class="ident">render_phase::RenderPhase</span>,
-        <span class="ident">resource</span>::{<span class="ident">BufferPool</span>, <span class="ident">Globals</span>, <span class="ident">Head</span>, <span class="ident">IndexEntry</span>, <span class="ident">Surface</span>, <span class="ident">Texture</span>, <span class="ident">TextureView</span>},
-        <span class="ident">settings</span>::{<span class="ident">RendererSettings</span>, <span class="ident">WgpuSettings</span>},
-        <span class="ident">shaders</span>::{<span class="ident">ShaderFeatureStyle</span>, <span class="ident">ShaderLayerMetadata</span>},
-        <span class="ident">tile_view_pattern</span>::{<span class="ident">TileInView</span>, <span class="ident">TileShape</span>, <span class="ident">TileViewPattern</span>},
+<span class="kw">use crate</span>::{
+    render::{
+        eventually::Eventually,
+        render_phase::RenderPhase,
+        resource::{BufferPool, Globals, Head, IndexEntry, Surface, Texture, TextureView},
+        settings::{RendererSettings, WgpuSettings},
+        shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
+        tile_view_pattern::{TileInView, TileShape, TileViewPattern},
     },
-    <span class="ident">tessellation::IndexDataType</span>,
+    tessellation::IndexDataType,
 };
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">graph</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">resource</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">stages</span>;
+<span class="kw">pub mod </span>graph;
+<span class="kw">pub mod </span>resource;
+<span class="kw">pub mod </span>stages;
 
-<span class="comment">// Rendering internals</span>
-<span class="kw">mod</span> <span class="ident">graph_runner</span>;
-<span class="kw">mod</span> <span class="ident">main_pass</span>;
-<span class="kw">mod</span> <span class="ident">render_commands</span>;
-<span class="kw">mod</span> <span class="ident">render_phase</span>;
-<span class="kw">mod</span> <span class="ident">shaders</span>;
-<span class="kw">mod</span> <span class="ident">tile_pipeline</span>;
-<span class="kw">mod</span> <span class="ident">tile_view_pattern</span>;
+<span class="comment">// Rendering internals
+</span><span class="kw">mod </span>graph_runner;
+<span class="kw">mod </span>main_pass;
+<span class="kw">mod </span>render_commands;
+<span class="kw">mod </span>render_phase;
+<span class="kw">mod </span>shaders;
+<span class="kw">mod </span>tile_pipeline;
+<span class="kw">mod </span>tile_view_pattern;
 
-<span class="comment">// Public API</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">builder</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">camera</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">error</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">eventually</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">settings</span>;
+<span class="comment">// Public API
+</span><span class="kw">pub mod </span>builder;
+<span class="kw">pub mod </span>camera;
+<span class="kw">pub mod </span>error;
+<span class="kw">pub mod </span>eventually;
+<span class="kw">pub mod </span>settings;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">shaders::ShaderVertex</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">stages::register_default_render_stages</span>;
+<span class="kw">pub use </span>shaders::ShaderVertex;
+<span class="kw">pub use </span>stages::register_default_render_stages;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">render</span>::{
-        <span class="ident">graph</span>::{<span class="ident">EmptyNode</span>, <span class="ident">RenderGraph</span>, <span class="ident">RenderGraphError</span>},
-        <span class="ident">main_pass</span>::{<span class="ident">MainPassDriverNode</span>, <span class="ident">MainPassNode</span>},
+<span class="kw">use crate</span>::{
+    render::{
+        graph::{EmptyNode, RenderGraph, RenderGraphError},
+        main_pass::{MainPassDriverNode, MainPassNode},
     },
-    <span class="ident">window</span>::{<span class="ident">HeadedMapWindow</span>, <span class="ident">MapWindow</span>},
+    window::{HeadedMapWindow, MapWindow},
 };
 
-<span class="kw">const</span> <span class="ident">INDEX_FORMAT</span>: <span class="ident">wgpu::IndexFormat</span> <span class="op">=</span> <span class="ident">wgpu::IndexFormat::Uint32</span>; <span class="comment">// Must match IndexDataType</span>
+<span class="kw">const </span>INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; <span class="comment">// Must match IndexDataType
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderState</span> {
-    <span class="ident">render_target</span>: <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">TextureView</span><span class="op">&gt;</span>,
+</span><span class="kw">pub struct </span>RenderState {
+    render_target: Eventually&lt;TextureView&gt;,
 
-    <span class="ident">buffer_pool</span>: <span class="ident">Eventually</span><span class="op">&lt;</span>
-        <span class="ident">BufferPool</span><span class="op">&lt;</span>
-            <span class="ident">wgpu::Queue</span>,
-            <span class="ident">wgpu::Buffer</span>,
-            <span class="ident">ShaderVertex</span>,
-            <span class="ident">IndexDataType</span>,
-            <span class="ident">ShaderLayerMetadata</span>,
-            <span class="ident">ShaderFeatureStyle</span>,
-        <span class="op">&gt;</span>,
-    <span class="op">&gt;</span>,
-    <span class="ident">tile_view_pattern</span>: <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">TileViewPattern</span><span class="op">&lt;</span><span class="ident">wgpu::Queue</span>, <span class="ident">wgpu::Buffer</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    buffer_pool: Eventually&lt;
+        BufferPool&lt;
+            wgpu::Queue,
+            wgpu::Buffer,
+            ShaderVertex,
+            IndexDataType,
+            ShaderLayerMetadata,
+            ShaderFeatureStyle,
+        &gt;,
+    &gt;,
+    tile_view_pattern: Eventually&lt;TileViewPattern&lt;wgpu::Queue, wgpu::Buffer&gt;&gt;,
 
-    <span class="ident">tile_pipeline</span>: <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">wgpu::RenderPipeline</span><span class="op">&gt;</span>,
-    <span class="ident">mask_pipeline</span>: <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">wgpu::RenderPipeline</span><span class="op">&gt;</span>,
+    tile_pipeline: Eventually&lt;wgpu::RenderPipeline&gt;,
+    mask_pipeline: Eventually&lt;wgpu::RenderPipeline&gt;,
 
-    <span class="ident">globals_bind_group</span>: <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">Globals</span><span class="op">&gt;</span>,
+    globals_bind_group: Eventually&lt;Globals&gt;,
 
-    <span class="ident">depth_texture</span>: <span class="ident">Eventually</span><span class="op">&lt;</span><span class="ident">Texture</span><span class="op">&gt;</span>,
-    <span class="ident">multisampling_texture</span>: <span class="ident">Eventually</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Texture</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    depth_texture: Eventually&lt;Texture&gt;,
+    multisampling_texture: Eventually&lt;<span class="prelude-ty">Option</span>&lt;Texture&gt;&gt;,
 
-    <span class="ident">surface</span>: <span class="ident">Surface</span>,
+    surface: Surface,
 
-    <span class="ident">mask_phase</span>: <span class="ident">RenderPhase</span><span class="op">&lt;</span><span class="ident">TileInView</span><span class="op">&gt;</span>,
-    <span class="ident">tile_phase</span>: <span class="ident">RenderPhase</span><span class="op">&lt;</span>(<span class="ident">IndexEntry</span>, <span class="ident">TileShape</span>)<span class="op">&gt;</span>,
+    mask_phase: RenderPhase&lt;TileInView&gt;,
+    tile_phase: RenderPhase&lt;(IndexEntry, TileShape)&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">RenderState</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">surface</span>: <span class="ident">Surface</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">render_target</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">buffer_pool</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">tile_view_pattern</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">tile_pipeline</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">mask_pipeline</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">globals_bind_group</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">depth_texture</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">multisampling_texture</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">surface</span>,
-            <span class="ident">mask_phase</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">tile_phase</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl </span>RenderState {
+    <span class="kw">pub fn </span>new(surface: Surface) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            render_target: Default::default(),
+            buffer_pool: Default::default(),
+            tile_view_pattern: Default::default(),
+            tile_pipeline: Default::default(),
+            mask_pipeline: Default::default(),
+            globals_bind_group: Default::default(),
+            depth_texture: Default::default(),
+            multisampling_texture: Default::default(),
+            surface,
+            mask_phase: Default::default(),
+            tile_phase: Default::default(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recreate_surface</span><span class="op">&lt;</span><span class="ident">MW</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">MW</span>, <span class="ident">instance</span>: <span class="kw-2">&amp;</span><span class="ident">wgpu::Instance</span>)
-    <span class="kw">where</span>
-        <span class="ident">MW</span>: <span class="ident">MapWindow</span> <span class="op">+</span> <span class="ident">HeadedMapWindow</span>,
+    <span class="kw">pub fn </span>recreate_surface&lt;MW&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;</span>MW, instance: <span class="kw-2">&amp;</span>wgpu::Instance)
+    <span class="kw">where
+        </span>MW: MapWindow + HeadedMapWindow,
     {
-        <span class="self">self</span>.<span class="ident">surface</span>.<span class="ident">recreate</span>::<span class="op">&lt;</span><span class="ident">MW</span><span class="op">&gt;</span>(<span class="ident">window</span>, <span class="ident">instance</span>);
+        <span class="self">self</span>.surface.recreate::&lt;MW&gt;(window, instance);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">surface</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Surface</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">surface</span>
+    <span class="kw">pub fn </span>surface(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Surface {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.surface
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">buffer_pool_mut</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-    ) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">Eventually</span><span class="op">&lt;</span>
-        <span class="ident">BufferPool</span><span class="op">&lt;</span>
-            <span class="ident">wgpu::Queue</span>,
-            <span class="ident">wgpu::Buffer</span>,
-            <span class="ident">ShaderVertex</span>,
-            <span class="ident">IndexDataType</span>,
-            <span class="ident">ShaderLayerMetadata</span>,
-            <span class="ident">ShaderFeatureStyle</span>,
-        <span class="op">&gt;</span>,
-    <span class="op">&gt;</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">buffer_pool</span>
+    <span class="kw">pub fn </span>buffer_pool_mut(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+    ) -&gt; <span class="kw-2">&amp;mut </span>Eventually&lt;
+        BufferPool&lt;
+            wgpu::Queue,
+            wgpu::Buffer,
+            ShaderVertex,
+            IndexDataType,
+            ShaderLayerMetadata,
+            ShaderFeatureStyle,
+        &gt;,
+    &gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer_pool
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Renderer</span> {
-    <span class="kw">pub</span> <span class="ident">instance</span>: <span class="ident">wgpu::Instance</span>,
-    <span class="kw">pub</span> <span class="ident">device</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">wgpu::Device</span><span class="op">&gt;</span>, <span class="comment">// TODO: Arc is needed for headless rendering. Is there a simpler solution?</span>
-    <span class="kw">pub</span> <span class="ident">queue</span>: <span class="ident">wgpu::Queue</span>,
-    <span class="kw">pub</span> <span class="ident">adapter_info</span>: <span class="ident">wgpu::AdapterInfo</span>,
+<span class="kw">pub struct </span>Renderer {
+    <span class="kw">pub </span>instance: wgpu::Instance,
+    <span class="kw">pub </span>device: Arc&lt;wgpu::Device&gt;, <span class="comment">// TODO: Arc is needed for headless rendering. Is there a simpler solution?
+    </span><span class="kw">pub </span>queue: wgpu::Queue,
+    <span class="kw">pub </span>adapter_info: wgpu::AdapterInfo,
 
-    <span class="kw">pub</span> <span class="ident">wgpu_settings</span>: <span class="ident">WgpuSettings</span>,
-    <span class="kw">pub</span> <span class="ident">settings</span>: <span class="ident">RendererSettings</span>,
+    <span class="kw">pub </span>wgpu_settings: WgpuSettings,
+    <span class="kw">pub </span>settings: RendererSettings,
 
-    <span class="kw">pub</span> <span class="ident">state</span>: <span class="ident">RenderState</span>,
+    <span class="kw">pub </span>state: RenderState,
 }
 
-<span class="kw">impl</span> <span class="ident">Renderer</span> {
-    <span class="doccomment">/// Initializes the renderer by retrieving and preparing the GPU instance, device and queue</span>
-    <span class="doccomment">/// for the specified backend.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">initialize</span><span class="op">&lt;</span><span class="ident">MW</span><span class="op">&gt;</span>(
-        <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">MW</span>,
-        <span class="ident">wgpu_settings</span>: <span class="ident">WgpuSettings</span>,
-        <span class="ident">settings</span>: <span class="ident">RendererSettings</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">wgpu::RequestDeviceError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">MW</span>: <span class="ident">MapWindow</span> <span class="op">+</span> <span class="ident">HeadedMapWindow</span>,
+<span class="kw">impl </span>Renderer {
+    <span class="doccomment">/// Initializes the renderer by retrieving and preparing the GPU instance, device and queue
+    /// for the specified backend.
+    </span><span class="kw">pub async fn </span>initialize&lt;MW&gt;(
+        window: <span class="kw-2">&amp;</span>MW,
+        wgpu_settings: WgpuSettings,
+        settings: RendererSettings,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, wgpu::RequestDeviceError&gt;
+    <span class="kw">where
+        </span>MW: MapWindow + HeadedMapWindow,
     {
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">wgpu::Instance::new</span>(<span class="ident">wgpu_settings</span>.<span class="ident">backends</span>.<span class="ident">unwrap_or</span>(<span class="ident">wgpu::Backends::all</span>()));
+        <span class="kw">let </span>instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="ident">Surface::from_window</span>(<span class="kw-2">&amp;</span><span class="ident">instance</span>, <span class="ident">window</span>, <span class="kw-2">&amp;</span><span class="ident">settings</span>);
+        <span class="kw">let </span>surface = Surface::from_window(<span class="kw-2">&amp;</span>instance, window, <span class="kw-2">&amp;</span>settings);
 
-        <span class="kw">let</span> <span class="ident">compatible_surface</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">surface</span>.<span class="ident">head</span>() {
-            <span class="ident">Head::Headed</span>(<span class="ident">window_head</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">window_head</span>.<span class="ident">surface</span>()),
-            <span class="ident">Head::Headless</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">let </span>compatible_surface = <span class="kw">match </span><span class="kw-2">&amp;</span>surface.head() {
+            Head::Headed(window_head) =&gt; <span class="prelude-val">Some</span>(window_head.surface()),
+            Head::Headless(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
         };
 
-        <span class="kw">let</span> (<span class="ident">device</span>, <span class="ident">queue</span>, <span class="ident">adapter_info</span>) <span class="op">=</span> <span class="ident"><span class="self">Self</span>::request_device</span>(
-            <span class="kw-2">&amp;</span><span class="ident">instance</span>,
-            <span class="kw-2">&amp;</span><span class="ident">wgpu_settings</span>,
-            <span class="kw-2">&amp;</span><span class="ident">wgpu::RequestAdapterOptions</span> {
-                <span class="ident">power_preference</span>: <span class="ident">wgpu_settings</span>.<span class="ident">power_preference</span>,
-                <span class="ident">force_fallback_adapter</span>: <span class="bool-val">false</span>,
-                <span class="ident">compatible_surface</span>,
+        <span class="kw">let </span>(device, queue, adapter_info) = <span class="self">Self</span>::request_device(
+            <span class="kw-2">&amp;</span>instance,
+            <span class="kw-2">&amp;</span>wgpu_settings,
+            <span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
+                power_preference: wgpu_settings.power_preference,
+                force_fallback_adapter: <span class="bool-val">false</span>,
+                compatible_surface,
             },
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">match</span> <span class="ident">surface</span>.<span class="ident">head</span>() {
-            <span class="ident">Head::Headed</span>(<span class="ident">window</span>) =&gt; <span class="ident">window</span>.<span class="ident">configure</span>(<span class="kw-2">&amp;</span><span class="ident">device</span>),
-            <span class="ident">Head::Headless</span>(<span class="kw">_</span>) =&gt; {}
+        <span class="kw">match </span>surface.head() {
+            Head::Headed(window) =&gt; window.configure(<span class="kw-2">&amp;</span>device),
+            Head::Headless(<span class="kw">_</span>) =&gt; {}
         }
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">instance</span>,
-            <span class="ident">device</span>: <span class="ident">Arc::new</span>(<span class="ident">device</span>),
-            <span class="ident">queue</span>,
-            <span class="ident">adapter_info</span>,
-            <span class="ident">wgpu_settings</span>,
-            <span class="ident">settings</span>,
-            <span class="ident">state</span>: <span class="ident">RenderState::new</span>(<span class="ident">surface</span>),
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            instance,
+            device: Arc::new(device),
+            queue,
+            adapter_info,
+            wgpu_settings,
+            settings,
+            state: RenderState::new(surface),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">initialize_headless</span><span class="op">&lt;</span><span class="ident">MW</span><span class="op">&gt;</span>(
-        <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">MW</span>,
-        <span class="ident">wgpu_settings</span>: <span class="ident">WgpuSettings</span>,
-        <span class="ident">settings</span>: <span class="ident">RendererSettings</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">wgpu::RequestDeviceError</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">MW</span>: <span class="ident">MapWindow</span>,
+    <span class="kw">pub async fn </span>initialize_headless&lt;MW&gt;(
+        window: <span class="kw-2">&amp;</span>MW,
+        wgpu_settings: WgpuSettings,
+        settings: RendererSettings,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, wgpu::RequestDeviceError&gt;
+    <span class="kw">where
+        </span>MW: MapWindow,
     {
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">wgpu::Instance::new</span>(<span class="ident">wgpu_settings</span>.<span class="ident">backends</span>.<span class="ident">unwrap_or</span>(<span class="ident">wgpu::Backends::all</span>()));
+        <span class="kw">let </span>instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        <span class="kw">let</span> (<span class="ident">device</span>, <span class="ident">queue</span>, <span class="ident">adapter_info</span>) <span class="op">=</span> <span class="ident"><span class="self">Self</span>::request_device</span>(
-            <span class="kw-2">&amp;</span><span class="ident">instance</span>,
-            <span class="kw-2">&amp;</span><span class="ident">wgpu_settings</span>,
-            <span class="kw-2">&amp;</span><span class="ident">wgpu::RequestAdapterOptions</span> {
-                <span class="ident">power_preference</span>: <span class="ident">wgpu_settings</span>.<span class="ident">power_preference</span>,
-                <span class="ident">force_fallback_adapter</span>: <span class="bool-val">false</span>,
-                <span class="ident">compatible_surface</span>: <span class="prelude-val">None</span>,
+        <span class="kw">let </span>(device, queue, adapter_info) = <span class="self">Self</span>::request_device(
+            <span class="kw-2">&amp;</span>instance,
+            <span class="kw-2">&amp;</span>wgpu_settings,
+            <span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
+                power_preference: wgpu_settings.power_preference,
+                force_fallback_adapter: <span class="bool-val">false</span>,
+                compatible_surface: <span class="prelude-val">None</span>,
             },
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="ident">Surface::from_image</span>(<span class="kw-2">&amp;</span><span class="ident">device</span>, <span class="ident">window</span>, <span class="kw-2">&amp;</span><span class="ident">settings</span>);
+        <span class="kw">let </span>surface = Surface::from_image(<span class="kw-2">&amp;</span>device, window, <span class="kw-2">&amp;</span>settings);
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">instance</span>,
-            <span class="ident">device</span>: <span class="ident">Arc::new</span>(<span class="ident">device</span>),
-            <span class="ident">queue</span>,
-            <span class="ident">adapter_info</span>,
-            <span class="ident">wgpu_settings</span>,
-            <span class="ident">settings</span>,
-            <span class="ident">state</span>: <span class="ident">RenderState::new</span>(<span class="ident">surface</span>),
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            instance,
+            device: Arc::new(device),
+            queue,
+            adapter_info,
+            wgpu_settings,
+            settings,
+            state: RenderState::new(surface),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">surface</span>.<span class="ident">resize</span>(<span class="ident">width</span>, <span class="ident">height</span>)
+    <span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32) {
+        <span class="self">self</span>.state.surface.resize(width, height)
     }
 
-    <span class="doccomment">/// Requests a device</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">request_device</span>(
-        <span class="ident">instance</span>: <span class="kw-2">&amp;</span><span class="ident">wgpu::Instance</span>,
-        <span class="ident">settings</span>: <span class="kw-2">&amp;</span><span class="ident">WgpuSettings</span>,
-        <span class="ident">request_adapter_options</span>: <span class="kw-2">&amp;</span><span class="ident">wgpu::RequestAdapterOptions</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">wgpu::Device</span>, <span class="ident">wgpu::Queue</span>, <span class="ident">wgpu::AdapterInfo</span>), <span class="ident">wgpu::RequestDeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="ident">instance</span>
-            .<span class="ident">request_adapter</span>(<span class="ident">request_adapter_options</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to find a GPU! Make sure you have installed required drivers!&quot;</span>);
+    <span class="doccomment">/// Requests a device
+    </span><span class="kw">async fn </span>request_device(
+        instance: <span class="kw-2">&amp;</span>wgpu::Instance,
+        settings: <span class="kw-2">&amp;</span>WgpuSettings,
+        request_adapter_options: <span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions&lt;<span class="lifetime">&#39;_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(wgpu::Device, wgpu::Queue, wgpu::AdapterInfo), wgpu::RequestDeviceError&gt; {
+        <span class="kw">let </span>adapter = instance
+            .request_adapter(request_adapter_options)
+            .<span class="kw">await
+            </span>.expect(<span class="string">&quot;Unable to find a GPU! Make sure you have installed required drivers!&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">adapter_info</span> <span class="op">=</span> <span class="ident">adapter</span>.<span class="ident">get_info</span>();
-        <span class="macro">info!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">adapter_info</span>);
+        <span class="kw">let </span>adapter_info = adapter.get_info();
+        <span class="macro">info!</span>(<span class="string">&quot;{:?}&quot;</span>, adapter_info);
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-        <span class="kw">let</span> <span class="ident">trace_path</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">settings</span>.<span class="ident">record_trace</span> {
-            <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">std::path::Path::new</span>(<span class="string">&quot;wgpu_trace&quot;</span>);
-            <span class="comment">// ignore potential error, wgpu will log it</span>
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">std::fs::create_dir</span>(<span class="ident">path</span>);
-            <span class="prelude-val">Some</span>(<span class="ident">path</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        };
+        <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+        </span><span class="kw">let </span>trace_path = <span class="kw">if </span>settings.record_trace {
+            <span class="kw">let </span>path = std::path::Path::new(<span class="string">&quot;wgpu_trace&quot;</span>);
+            <span class="comment">// ignore potential error, wgpu will log it
+            </span><span class="kw">let _ </span>= std::fs::create_dir(path);
+            <span class="prelude-val">Some</span>(path)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
-        <span class="kw">let</span> <span class="ident">trace_path</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+        </span><span class="kw">let </span>trace_path = <span class="prelude-val">None</span>;
 
-        <span class="comment">// Maybe get features and limits based on what is supported by the adapter/backend</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgpu::Features::empty</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">limits</span> <span class="op">=</span> <span class="ident">settings</span>.<span class="ident">limits</span>.<span class="ident">clone</span>();
+        <span class="comment">// Maybe get features and limits based on what is supported by the adapter/backend
+        </span><span class="kw">let </span><span class="kw-2">mut </span>features = wgpu::Features::empty();
+        <span class="kw">let </span><span class="kw-2">mut </span>limits = settings.limits.clone();
 
-        <span class="ident">features</span> <span class="op">=</span> <span class="ident">adapter</span>.<span class="ident">features</span>() <span class="op">|</span> <span class="ident">wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>;
-        <span class="kw">if</span> <span class="ident">adapter_info</span>.<span class="ident">device_type</span> <span class="op">==</span> <span class="ident">wgpu::DeviceType::DiscreteGpu</span> {
-            <span class="comment">// `MAPPABLE_PRIMARY_BUFFERS` can have a significant, negative performance impact for</span>
-            <span class="comment">// discrete GPUs due to having to transfer data across the PCI-E bus and so it</span>
-            <span class="comment">// should not be automatically enabled in this case. It is however beneficial for</span>
-            <span class="comment">// integrated GPUs.</span>
-            <span class="ident">features</span> <span class="op">-</span><span class="op">=</span> <span class="ident">wgpu::Features::MAPPABLE_PRIMARY_BUFFERS</span>;
+        features = adapter.features() | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
+        <span class="kw">if </span>adapter_info.device_type == wgpu::DeviceType::DiscreteGpu {
+            <span class="comment">// `MAPPABLE_PRIMARY_BUFFERS` can have a significant, negative performance impact for
+            // discrete GPUs due to having to transfer data across the PCI-E bus and so it
+            // should not be automatically enabled in this case. It is however beneficial for
+            // integrated GPUs.
+            </span>features -= wgpu::Features::MAPPABLE_PRIMARY_BUFFERS;
         }
-        <span class="ident">limits</span> <span class="op">=</span> <span class="ident">adapter</span>.<span class="ident">limits</span>();
+        limits = adapter.limits();
 
-        <span class="comment">// Enforce the disabled features</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">disabled_features</span>) <span class="op">=</span> <span class="ident">settings</span>.<span class="ident">disabled_features</span> {
-            <span class="ident">features</span> <span class="op">-</span><span class="op">=</span> <span class="ident">disabled_features</span>;
+        <span class="comment">// Enforce the disabled features
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(disabled_features) = settings.disabled_features {
+            features -= disabled_features;
         }
-        <span class="comment">// NOTE: |= is used here to ensure that any explicitly-enabled features are respected.</span>
-        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">settings</span>.<span class="ident">features</span>;
+        <span class="comment">// NOTE: |= is used here to ensure that any explicitly-enabled features are respected.
+        </span>features |= settings.features;
 
-        <span class="comment">// Enforce the limit constraints</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">constrained_limits</span>) <span class="op">=</span> <span class="ident">settings</span>.<span class="ident">constrained_limits</span>.<span class="ident">as_ref</span>() {
-            <span class="comment">// NOTE: Respect the configured limits as an &#39;upper bound&#39;. This means for &#39;max&#39; limits, we</span>
-            <span class="comment">// take the minimum of the calculated limits according to the adapter/backend and the</span>
-            <span class="comment">// specified max_limits. For &#39;min&#39; limits, take the maximum instead. This is intended to</span>
-            <span class="comment">// err on the side of being conservative. We can&#39;t claim &#39;higher&#39; limits that are supported</span>
-            <span class="comment">// but we can constrain to &#39;lower&#39; limits.</span>
-            <span class="ident">limits</span> <span class="op">=</span> <span class="ident">wgpu::Limits</span> {
-                <span class="ident">max_texture_dimension_1d</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_texture_dimension_1d</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_texture_dimension_1d</span>),
-                <span class="ident">max_texture_dimension_2d</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_texture_dimension_2d</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_texture_dimension_2d</span>),
-                <span class="ident">max_texture_dimension_3d</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_texture_dimension_3d</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_texture_dimension_3d</span>),
-                <span class="ident">max_texture_array_layers</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_texture_array_layers</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_texture_array_layers</span>),
-                <span class="ident">max_bind_groups</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_bind_groups</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_bind_groups</span>),
-                <span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>),
-                <span class="ident">max_dynamic_storage_buffers_per_pipeline_layout</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_dynamic_storage_buffers_per_pipeline_layout</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_dynamic_storage_buffers_per_pipeline_layout</span>),
-                <span class="ident">max_sampled_textures_per_shader_stage</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_sampled_textures_per_shader_stage</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_sampled_textures_per_shader_stage</span>),
-                <span class="ident">max_samplers_per_shader_stage</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_samplers_per_shader_stage</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_samplers_per_shader_stage</span>),
-                <span class="ident">max_storage_buffers_per_shader_stage</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_storage_buffers_per_shader_stage</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_storage_buffers_per_shader_stage</span>),
-                <span class="ident">max_storage_textures_per_shader_stage</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_storage_textures_per_shader_stage</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_storage_textures_per_shader_stage</span>),
-                <span class="ident">max_uniform_buffers_per_shader_stage</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_uniform_buffers_per_shader_stage</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_uniform_buffers_per_shader_stage</span>),
-                <span class="ident">max_uniform_buffer_binding_size</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_uniform_buffer_binding_size</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_uniform_buffer_binding_size</span>),
-                <span class="ident">max_storage_buffer_binding_size</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_storage_buffer_binding_size</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_storage_buffer_binding_size</span>),
-                <span class="ident">max_vertex_buffers</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_vertex_buffers</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_vertex_buffers</span>),
-                <span class="ident">max_vertex_attributes</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_vertex_attributes</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_vertex_attributes</span>),
-                <span class="ident">max_vertex_buffer_array_stride</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_vertex_buffer_array_stride</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_vertex_buffer_array_stride</span>),
-                <span class="ident">max_push_constant_size</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_push_constant_size</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_push_constant_size</span>),
-                <span class="ident">min_uniform_buffer_offset_alignment</span>: <span class="ident">limits</span>
-                    .<span class="ident">min_uniform_buffer_offset_alignment</span>
-                    .<span class="ident">max</span>(<span class="ident">constrained_limits</span>.<span class="ident">min_uniform_buffer_offset_alignment</span>),
-                <span class="ident">min_storage_buffer_offset_alignment</span>: <span class="ident">limits</span>
-                    .<span class="ident">min_storage_buffer_offset_alignment</span>
-                    .<span class="ident">max</span>(<span class="ident">constrained_limits</span>.<span class="ident">min_storage_buffer_offset_alignment</span>),
-                <span class="ident">max_inter_stage_shader_components</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_inter_stage_shader_components</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_inter_stage_shader_components</span>),
-                <span class="ident">max_compute_workgroup_storage_size</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_compute_workgroup_storage_size</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_compute_workgroup_storage_size</span>),
-                <span class="ident">max_compute_invocations_per_workgroup</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_compute_invocations_per_workgroup</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_compute_invocations_per_workgroup</span>),
-                <span class="ident">max_compute_workgroup_size_x</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_compute_workgroup_size_x</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_compute_workgroup_size_x</span>),
-                <span class="ident">max_compute_workgroup_size_y</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_compute_workgroup_size_y</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_compute_workgroup_size_y</span>),
-                <span class="ident">max_compute_workgroup_size_z</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_compute_workgroup_size_z</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_compute_workgroup_size_z</span>),
-                <span class="ident">max_compute_workgroups_per_dimension</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_compute_workgroups_per_dimension</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_compute_workgroups_per_dimension</span>),
-                <span class="ident">max_buffer_size</span>: <span class="ident">limits</span>
-                    .<span class="ident">max_buffer_size</span>
-                    .<span class="ident">min</span>(<span class="ident">constrained_limits</span>.<span class="ident">max_buffer_size</span>),
+        <span class="comment">// Enforce the limit constraints
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(constrained_limits) = settings.constrained_limits.as_ref() {
+            <span class="comment">// NOTE: Respect the configured limits as an &#39;upper bound&#39;. This means for &#39;max&#39; limits, we
+            // take the minimum of the calculated limits according to the adapter/backend and the
+            // specified max_limits. For &#39;min&#39; limits, take the maximum instead. This is intended to
+            // err on the side of being conservative. We can&#39;t claim &#39;higher&#39; limits that are supported
+            // but we can constrain to &#39;lower&#39; limits.
+            </span>limits = wgpu::Limits {
+                max_texture_dimension_1d: limits
+                    .max_texture_dimension_1d
+                    .min(constrained_limits.max_texture_dimension_1d),
+                max_texture_dimension_2d: limits
+                    .max_texture_dimension_2d
+                    .min(constrained_limits.max_texture_dimension_2d),
+                max_texture_dimension_3d: limits
+                    .max_texture_dimension_3d
+                    .min(constrained_limits.max_texture_dimension_3d),
+                max_texture_array_layers: limits
+                    .max_texture_array_layers
+                    .min(constrained_limits.max_texture_array_layers),
+                max_bind_groups: limits
+                    .max_bind_groups
+                    .min(constrained_limits.max_bind_groups),
+                max_dynamic_uniform_buffers_per_pipeline_layout: limits
+                    .max_dynamic_uniform_buffers_per_pipeline_layout
+                    .min(constrained_limits.max_dynamic_uniform_buffers_per_pipeline_layout),
+                max_dynamic_storage_buffers_per_pipeline_layout: limits
+                    .max_dynamic_storage_buffers_per_pipeline_layout
+                    .min(constrained_limits.max_dynamic_storage_buffers_per_pipeline_layout),
+                max_sampled_textures_per_shader_stage: limits
+                    .max_sampled_textures_per_shader_stage
+                    .min(constrained_limits.max_sampled_textures_per_shader_stage),
+                max_samplers_per_shader_stage: limits
+                    .max_samplers_per_shader_stage
+                    .min(constrained_limits.max_samplers_per_shader_stage),
+                max_storage_buffers_per_shader_stage: limits
+                    .max_storage_buffers_per_shader_stage
+                    .min(constrained_limits.max_storage_buffers_per_shader_stage),
+                max_storage_textures_per_shader_stage: limits
+                    .max_storage_textures_per_shader_stage
+                    .min(constrained_limits.max_storage_textures_per_shader_stage),
+                max_uniform_buffers_per_shader_stage: limits
+                    .max_uniform_buffers_per_shader_stage
+                    .min(constrained_limits.max_uniform_buffers_per_shader_stage),
+                max_uniform_buffer_binding_size: limits
+                    .max_uniform_buffer_binding_size
+                    .min(constrained_limits.max_uniform_buffer_binding_size),
+                max_storage_buffer_binding_size: limits
+                    .max_storage_buffer_binding_size
+                    .min(constrained_limits.max_storage_buffer_binding_size),
+                max_vertex_buffers: limits
+                    .max_vertex_buffers
+                    .min(constrained_limits.max_vertex_buffers),
+                max_vertex_attributes: limits
+                    .max_vertex_attributes
+                    .min(constrained_limits.max_vertex_attributes),
+                max_vertex_buffer_array_stride: limits
+                    .max_vertex_buffer_array_stride
+                    .min(constrained_limits.max_vertex_buffer_array_stride),
+                max_push_constant_size: limits
+                    .max_push_constant_size
+                    .min(constrained_limits.max_push_constant_size),
+                min_uniform_buffer_offset_alignment: limits
+                    .min_uniform_buffer_offset_alignment
+                    .max(constrained_limits.min_uniform_buffer_offset_alignment),
+                min_storage_buffer_offset_alignment: limits
+                    .min_storage_buffer_offset_alignment
+                    .max(constrained_limits.min_storage_buffer_offset_alignment),
+                max_inter_stage_shader_components: limits
+                    .max_inter_stage_shader_components
+                    .min(constrained_limits.max_inter_stage_shader_components),
+                max_compute_workgroup_storage_size: limits
+                    .max_compute_workgroup_storage_size
+                    .min(constrained_limits.max_compute_workgroup_storage_size),
+                max_compute_invocations_per_workgroup: limits
+                    .max_compute_invocations_per_workgroup
+                    .min(constrained_limits.max_compute_invocations_per_workgroup),
+                max_compute_workgroup_size_x: limits
+                    .max_compute_workgroup_size_x
+                    .min(constrained_limits.max_compute_workgroup_size_x),
+                max_compute_workgroup_size_y: limits
+                    .max_compute_workgroup_size_y
+                    .min(constrained_limits.max_compute_workgroup_size_y),
+                max_compute_workgroup_size_z: limits
+                    .max_compute_workgroup_size_z
+                    .min(constrained_limits.max_compute_workgroup_size_z),
+                max_compute_workgroups_per_dimension: limits
+                    .max_compute_workgroups_per_dimension
+                    .min(constrained_limits.max_compute_workgroups_per_dimension),
+                max_buffer_size: limits
+                    .max_buffer_size
+                    .min(constrained_limits.max_buffer_size),
             };
         }
 
-        <span class="kw">let</span> (<span class="ident">device</span>, <span class="ident">queue</span>) <span class="op">=</span> <span class="ident">adapter</span>
-            .<span class="ident">request_device</span>(
-                <span class="kw-2">&amp;</span><span class="ident">wgpu::DeviceDescriptor</span> {
-                    <span class="ident">label</span>: <span class="ident">settings</span>.<span class="ident">device_label</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">as_ref</span>()),
-                    <span class="ident">features</span>,
-                    <span class="ident">limits</span>,
+        <span class="kw">let </span>(device, queue) = adapter
+            .request_device(
+                <span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
+                    label: settings.device_label.as_ref().map(|a| a.as_ref()),
+                    features,
+                    limits,
                 },
-                <span class="ident">trace_path</span>,
+                trace_path,
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">device</span>, <span class="ident">queue</span>, <span class="ident">adapter_info</span>))
+        <span class="prelude-val">Ok</span>((device, queue, adapter_info))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">instance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">wgpu::Instance</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instance</span>
+    <span class="kw">pub fn </span>instance(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Instance {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.instance
     }
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">wgpu::Device</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">device</span>
+    <span class="kw">pub fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Device {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.device
     }
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">queue</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">wgpu::Queue</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">queue</span>
+    <span class="kw">pub fn </span>queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Queue {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.queue
     }
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">RenderState</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">state</span>
+    <span class="kw">pub fn </span>state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RenderState {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.state
     }
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">surface</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Surface</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">state</span>.<span class="ident">surface</span>
+    <span class="kw">pub fn </span>surface(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Surface {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.state.surface
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::window</span>::{<span class="ident">MapWindow</span>, <span class="ident">MapWindowConfig</span>, <span class="ident">WindowSize</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">crate</span>::window::{MapWindow, MapWindowConfig, WindowSize};
 
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HeadlessMapWindowConfig</span> {
-        <span class="ident">size</span>: <span class="ident">WindowSize</span>,
+    <span class="kw">pub struct </span>HeadlessMapWindowConfig {
+        size: WindowSize,
     }
 
-    <span class="kw">impl</span> <span class="ident">MapWindowConfig</span> <span class="kw">for</span> <span class="ident">HeadlessMapWindowConfig</span> {
-        <span class="kw">type</span> <span class="ident">MapWindow</span> <span class="op">=</span> <span class="ident">HeadlessMapWindow</span>;
+    <span class="kw">impl </span>MapWindowConfig <span class="kw">for </span>HeadlessMapWindowConfig {
+        <span class="kw">type </span>MapWindow = HeadlessMapWindow;
 
-        <span class="kw">fn</span> <span class="ident">create</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::MapWindow</span> {
-            <span class="ident"><span class="self">Self</span>::MapWindow</span> { <span class="ident">size</span>: <span class="self">self</span>.<span class="ident">size</span> }
+        <span class="kw">fn </span>create(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span>::MapWindow {
+            <span class="self">Self</span>::MapWindow { size: <span class="self">self</span>.size }
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HeadlessMapWindow</span> {
-        <span class="ident">size</span>: <span class="ident">WindowSize</span>,
+    <span class="kw">pub struct </span>HeadlessMapWindow {
+        size: WindowSize,
     }
 
-    <span class="kw">impl</span> <span class="ident">MapWindow</span> <span class="kw">for</span> <span class="ident">HeadlessMapWindow</span> {
-        <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">WindowSize</span> {
-            <span class="self">self</span>.<span class="ident">size</span>
+    <span class="kw">impl </span>MapWindow <span class="kw">for </span>HeadlessMapWindow {
+        <span class="kw">fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WindowSize {
+            <span class="self">self</span>.size
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_render</span>() {
-        <span class="kw">use</span> <span class="ident">log::LevelFilter</span>;
+    <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+    #[tokio::test]
+    </span><span class="kw">async fn </span>test_render() {
+        <span class="kw">use </span>log::LevelFilter;
 
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
-            <span class="ident">graph::RenderGraph</span>, <span class="ident">graph_runner::RenderGraphRunner</span>, <span class="ident">resource::Surface</span>, <span class="ident">RenderState</span>,
-            <span class="ident">RendererSettings</span>,
+        <span class="kw">use </span><span class="kw">crate</span>::render::{
+            graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface, RenderState,
+            RendererSettings,
         };
 
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">env_logger::builder</span>()
-            .<span class="ident">filter_level</span>(<span class="ident">LevelFilter::Trace</span>)
-            .<span class="ident">is_test</span>(<span class="bool-val">true</span>)
-            .<span class="ident">try_init</span>();
-        <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">RenderGraph::default</span>();
+        <span class="kw">let _ </span>= env_logger::builder()
+            .filter_level(LevelFilter::Trace)
+            .is_test(<span class="bool-val">true</span>)
+            .try_init();
+        <span class="kw">let </span>graph = RenderGraph::default();
 
-        <span class="kw">let</span> <span class="ident">backends</span> <span class="op">=</span> <span class="ident">wgpu::util::backend_bits_from_env</span>().<span class="ident">unwrap_or</span>(<span class="ident">wgpu::Backends::all</span>());
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">wgpu::Instance::new</span>(<span class="ident">backends</span>);
-        <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="ident">wgpu::util::initialize_adapter_from_env_or_default</span>(<span class="kw-2">&amp;</span><span class="ident">instance</span>, <span class="ident">backends</span>, <span class="prelude-val">None</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all());
+        <span class="kw">let </span>instance = wgpu::Instance::new(backends);
+        <span class="kw">let </span>adapter = wgpu::util::initialize_adapter_from_env_or_default(<span class="kw-2">&amp;</span>instance, backends, <span class="prelude-val">None</span>)
+            .<span class="kw">await
+            </span>.unwrap();
 
-        <span class="kw">let</span> (<span class="ident">device</span>, <span class="ident">queue</span>) <span class="op">=</span> <span class="ident">adapter</span>
-            .<span class="ident">request_device</span>(
-                <span class="kw-2">&amp;</span><span class="ident">wgpu::DeviceDescriptor</span> {
-                    <span class="ident">label</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">features</span>: <span class="ident">wgpu::Features::default</span>(),
-                    <span class="ident">limits</span>: <span class="ident">wgpu::Limits::default</span>(),
+        <span class="kw">let </span>(device, queue) = adapter
+            .request_device(
+                <span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
+                    label: <span class="prelude-val">None</span>,
+                    features: wgpu::Features::default(),
+                    limits: wgpu::Limits::default(),
                 },
                 <span class="prelude-val">None</span>,
             )
-            .<span class="kw">await</span>
-            .<span class="ident">ok</span>()
-            .<span class="ident">unwrap</span>();
+            .<span class="kw">await
+            </span>.ok()
+            .unwrap();
 
-        <span class="kw">let</span> <span class="ident">render_state</span> <span class="op">=</span> <span class="ident">RenderState::new</span>(<span class="ident">Surface::from_image</span>(
-            <span class="kw-2">&amp;</span><span class="ident">device</span>,
-            <span class="kw-2">&amp;</span><span class="ident">HeadlessMapWindow</span> {
-                <span class="ident">size</span>: <span class="ident">WindowSize::new</span>(<span class="number">100</span>, <span class="number">100</span>).<span class="ident">unwrap</span>(),
+        <span class="kw">let </span>render_state = RenderState::new(Surface::from_image(
+            <span class="kw-2">&amp;</span>device,
+            <span class="kw-2">&amp;</span>HeadlessMapWindow {
+                size: WindowSize::new(<span class="number">100</span>, <span class="number">100</span>).unwrap(),
             },
-            <span class="kw-2">&amp;</span><span class="ident">RendererSettings::default</span>(),
+            <span class="kw-2">&amp;</span>RendererSettings::default(),
         ));
 
-        <span class="ident">RenderGraphRunner::run</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>, <span class="kw-2">&amp;</span><span class="ident">device</span>, <span class="kw-2">&amp;</span><span class="ident">queue</span>, <span class="kw-2">&amp;</span><span class="ident">render_state</span>).<span class="ident">unwrap</span>();
+        RenderGraphRunner::run(<span class="kw-2">&amp;</span>graph, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue, <span class="kw-2">&amp;</span>render_state).unwrap();
     }
 }
 
-<span class="comment">// Contributors to the RenderGraph should use the following label conventions:</span>
-<span class="comment">// 1. Graph modules should have a NAME, input module, and node module (where relevant)</span>
-<span class="comment">// 2. The &quot;main_graph&quot; graph is the root.</span>
-<span class="comment">// 3. &quot;sub graph&quot; modules should be nested beneath their parent graph module</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">main_graph</span> {
-    <span class="comment">// Labels for input nodes</span>
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">input</span> {}
-    <span class="comment">// Labels for non-input nodes</span>
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">node</span> {
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAIN_PASS_DEPENDENCIES</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;main_pass_dependencies&quot;</span>;
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAIN_PASS_DRIVER</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;main_pass_driver&quot;</span>;
+<span class="comment">// Contributors to the RenderGraph should use the following label conventions:
+// 1. Graph modules should have a NAME, input module, and node module (where relevant)
+// 2. The &quot;main_graph&quot; graph is the root.
+// 3. &quot;sub graph&quot; modules should be nested beneath their parent graph module
+</span><span class="kw">pub mod </span>main_graph {
+    <span class="comment">// Labels for input nodes
+    </span><span class="kw">pub mod </span>input {}
+    <span class="comment">// Labels for non-input nodes
+    </span><span class="kw">pub mod </span>node {
+        <span class="kw">pub const </span>MAIN_PASS_DEPENDENCIES: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass_dependencies&quot;</span>;
+        <span class="kw">pub const </span>MAIN_PASS_DRIVER: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass_driver&quot;</span>;
     }
 }
 
-<span class="doccomment">/// Labels for the &quot;draw&quot; graph</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">draw_graph</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NAME</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;draw&quot;</span>;
-    <span class="comment">// Labels for input nodes</span>
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">input</span> {}
-    <span class="comment">// Labels for non-input nodes</span>
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">node</span> {
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAIN_PASS</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;main_pass&quot;</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;headless&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">COPY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;copy&quot;</span>;
+<span class="doccomment">/// Labels for the &quot;draw&quot; graph
+</span><span class="kw">pub mod </span>draw_graph {
+    <span class="kw">pub const </span>NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;draw&quot;</span>;
+    <span class="comment">// Labels for input nodes
+    </span><span class="kw">pub mod </span>input {}
+    <span class="comment">// Labels for non-input nodes
+    </span><span class="kw">pub mod </span>node {
+        <span class="kw">pub const </span>MAIN_PASS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass&quot;</span>;
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;headless&quot;</span>)]
+        </span><span class="kw">pub const </span>COPY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;copy&quot;</span>;
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_default_render_graph</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RenderGraph</span>, <span class="ident">RenderGraphError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">RenderGraph::default</span>();
+<span class="kw">pub fn </span>create_default_render_graph() -&gt; <span class="prelude-ty">Result</span>&lt;RenderGraph, RenderGraphError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>graph = RenderGraph::default();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">draw_graph</span> <span class="op">=</span> <span class="ident">RenderGraph::default</span>();
-    <span class="ident">draw_graph</span>.<span class="ident">add_node</span>(<span class="ident">draw_graph::node::MAIN_PASS</span>, <span class="ident">MainPassNode::new</span>());
-    <span class="kw">let</span> <span class="ident">input_node_id</span> <span class="op">=</span> <span class="ident">draw_graph</span>.<span class="ident">set_input</span>(<span class="macro">vec!</span>[]);
-    <span class="ident">draw_graph</span>.<span class="ident">add_node_edge</span>(<span class="ident">input_node_id</span>, <span class="ident">draw_graph::node::MAIN_PASS</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>draw_graph = RenderGraph::default();
+    draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+    <span class="kw">let </span>input_node_id = draw_graph.set_input(<span class="macro">vec!</span>[]);
+    draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)<span class="question-mark">?</span>;
 
-    <span class="ident">graph</span>.<span class="ident">add_sub_graph</span>(<span class="ident">draw_graph::NAME</span>, <span class="ident">draw_graph</span>);
-    <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="ident">main_graph::node::MAIN_PASS_DEPENDENCIES</span>, <span class="ident">EmptyNode</span>);
-    <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="ident">main_graph::node::MAIN_PASS_DRIVER</span>, <span class="ident">MainPassDriverNode</span>);
-    <span class="ident">graph</span>.<span class="ident">add_node_edge</span>(
-        <span class="ident">main_graph::node::MAIN_PASS_DEPENDENCIES</span>,
-        <span class="ident">main_graph::node::MAIN_PASS_DRIVER</span>,
+    graph.add_sub_graph(draw_graph::NAME, draw_graph);
+    graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
+    graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
+    graph.add_node_edge(
+        main_graph::node::MAIN_PASS_DEPENDENCIES,
+        main_graph::node::MAIN_PASS_DRIVER,
     )<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">graph</span>)
+    <span class="prelude-val">Ok</span>(graph)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

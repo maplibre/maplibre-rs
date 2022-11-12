@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/io/tile_pipelines.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tile_pipelines.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/io/tile_pipelines.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tile_pipelines.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -168,175 +168,175 @@
 <span id="168">168</span>
 <span id="169">169</span>
 <span id="170">170</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashSet;
 
-<span class="kw">use</span> <span class="ident">geozero::GeozeroDatasource</span>;
-<span class="kw">use</span> <span class="ident">prost::Message</span>;
+<span class="kw">use </span>geozero::GeozeroDatasource;
+<span class="kw">use </span>prost::Message;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">io</span>::{
-        <span class="ident">geometry_index::IndexProcessor</span>,
-        <span class="ident">pipeline</span>::{<span class="ident">DataPipeline</span>, <span class="ident">PipelineContext</span>, <span class="ident">PipelineEnd</span>, <span class="ident">Processable</span>},
-        <span class="ident">TileRequest</span>,
+<span class="kw">use crate</span>::{
+    io::{
+        geometry_index::IndexProcessor,
+        pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable},
+        TileRequest,
     },
-    <span class="ident">tessellation</span>::{<span class="ident">zero_tessellator::ZeroTessellator</span>, <span class="ident">IndexDataType</span>},
+    tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
 };
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ParseTile</span>;
+<span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>ParseTile;
 
-<span class="kw">impl</span> <span class="ident">Processable</span> <span class="kw">for</span> <span class="ident">ParseTile</span> {
-    <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> (<span class="ident">TileRequest</span>, <span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>);
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> (<span class="ident">TileRequest</span>, <span class="ident">geozero::mvt::Tile</span>);
+<span class="kw">impl </span>Processable <span class="kw">for </span>ParseTile {
+    <span class="kw">type </span>Input = (TileRequest, Box&lt;[u8]&gt;);
+    <span class="kw">type </span>Output = (TileRequest, geozero::mvt::Tile);
 
-    <span class="comment">// TODO (perf): Maybe force inline</span>
-    <span class="kw">fn</span> <span class="ident">process</span>(
+    <span class="comment">// TODO (perf): Maybe force inline
+    </span><span class="kw">fn </span>process(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        (<span class="ident">tile_request</span>, <span class="ident">data</span>): <span class="ident"><span class="self">Self</span>::Input</span>,
-        <span class="ident">_context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PipelineContext</span>,
-    ) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw">let</span> <span class="ident">tile</span> <span class="op">=</span> <span class="ident">geozero::mvt::Tile::decode</span>(<span class="ident">data</span>.<span class="ident">as_ref</span>()).<span class="ident">expect</span>(<span class="string">&quot;failed to load tile&quot;</span>);
-        (<span class="ident">tile_request</span>, <span class="ident">tile</span>)
+        (tile_request, data): <span class="self">Self</span>::Input,
+        _context: <span class="kw-2">&amp;mut </span>PipelineContext,
+    ) -&gt; <span class="self">Self</span>::Output {
+        <span class="kw">let </span>tile = geozero::mvt::Tile::decode(data.as_ref()).expect(<span class="string">&quot;failed to load tile&quot;</span>);
+        (tile_request, tile)
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IndexLayer</span>;
+<span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>IndexLayer;
 
-<span class="kw">impl</span> <span class="ident">Processable</span> <span class="kw">for</span> <span class="ident">IndexLayer</span> {
-    <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> (<span class="ident">TileRequest</span>, <span class="ident">geozero::mvt::Tile</span>);
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> (<span class="ident">TileRequest</span>, <span class="ident">geozero::mvt::Tile</span>);
+<span class="kw">impl </span>Processable <span class="kw">for </span>IndexLayer {
+    <span class="kw">type </span>Input = (TileRequest, geozero::mvt::Tile);
+    <span class="kw">type </span>Output = (TileRequest, geozero::mvt::Tile);
 
-    <span class="comment">// TODO (perf): Maybe force inline</span>
-    <span class="kw">fn</span> <span class="ident">process</span>(
+    <span class="comment">// TODO (perf): Maybe force inline
+    </span><span class="kw">fn </span>process(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        (<span class="ident">tile_request</span>, <span class="ident">tile</span>): <span class="ident"><span class="self">Self</span>::Input</span>,
-        <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PipelineContext</span>,
-    ) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">IndexProcessor::new</span>();
+        (tile_request, tile): <span class="self">Self</span>::Input,
+        context: <span class="kw-2">&amp;mut </span>PipelineContext,
+    ) -&gt; <span class="self">Self</span>::Output {
+        <span class="kw">let </span>index = IndexProcessor::new();
 
-        <span class="comment">// FIXME: Handle result</span>
-        <span class="ident">context</span>
-            .<span class="ident">processor_mut</span>()
-            .<span class="ident">layer_indexing_finished</span>(<span class="kw-2">&amp;</span><span class="ident">tile_request</span>.<span class="ident">coords</span>, <span class="ident">index</span>.<span class="ident">get_geometries</span>());
-        (<span class="ident">tile_request</span>, <span class="ident">tile</span>)
+        <span class="comment">// FIXME: Handle result
+        </span>context
+            .processor_mut()
+            .layer_indexing_finished(<span class="kw-2">&amp;</span>tile_request.coords, index.get_geometries());
+        (tile_request, tile)
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TessellateLayer</span>;
+<span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>TessellateLayer;
 
-<span class="kw">impl</span> <span class="ident">Processable</span> <span class="kw">for</span> <span class="ident">TessellateLayer</span> {
-    <span class="kw">type</span> <span class="ident">Input</span> <span class="op">=</span> (<span class="ident">TileRequest</span>, <span class="ident">geozero::mvt::Tile</span>);
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> (<span class="ident">TileRequest</span>, <span class="ident">geozero::mvt::Tile</span>);
+<span class="kw">impl </span>Processable <span class="kw">for </span>TessellateLayer {
+    <span class="kw">type </span>Input = (TileRequest, geozero::mvt::Tile);
+    <span class="kw">type </span>Output = (TileRequest, geozero::mvt::Tile);
 
-    <span class="comment">// TODO (perf): Maybe force inline</span>
-    <span class="kw">fn</span> <span class="ident">process</span>(
+    <span class="comment">// TODO (perf): Maybe force inline
+    </span><span class="kw">fn </span>process(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        (<span class="ident">tile_request</span>, <span class="kw-2">mut</span> <span class="ident">tile</span>): <span class="ident"><span class="self">Self</span>::Input</span>,
-        <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PipelineContext</span>,
-    ) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw">let</span> <span class="ident">coords</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">tile_request</span>.<span class="ident">coords</span>;
+        (tile_request, <span class="kw-2">mut </span>tile): <span class="self">Self</span>::Input,
+        context: <span class="kw-2">&amp;mut </span>PipelineContext,
+    ) -&gt; <span class="self">Self</span>::Output {
+        <span class="kw">let </span>coords = <span class="kw-2">&amp;</span>tile_request.coords;
 
-        <span class="kw">for</span> <span class="ident">layer</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">tile</span>.<span class="ident">layers</span> {
-            <span class="kw">let</span> <span class="ident">cloned_layer</span> <span class="op">=</span> <span class="ident">layer</span>.<span class="ident">clone</span>();
-            <span class="kw">let</span> <span class="ident">layer_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">cloned_layer</span>.<span class="ident">name</span>;
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">tile_request</span>.<span class="ident">layers</span>.<span class="ident">contains</span>(<span class="ident">layer_name</span>) {
+        <span class="kw">for </span>layer <span class="kw">in </span><span class="kw-2">&amp;mut </span>tile.layers {
+            <span class="kw">let </span>cloned_layer = layer.clone();
+            <span class="kw">let </span>layer_name: <span class="kw-2">&amp;</span>str = <span class="kw-2">&amp;</span>cloned_layer.name;
+            <span class="kw">if </span>!tile_request.layers.contains(layer_name) {
                 <span class="kw">continue</span>;
             }
 
-            <span class="macro">tracing::info!</span>(<span class="string">&quot;layer {} at {} ready&quot;</span>, <span class="ident">layer_name</span>, <span class="ident">coords</span>);
+            <span class="macro">tracing::info!</span>(<span class="string">&quot;layer {} at {} ready&quot;</span>, layer_name, coords);
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tessellator</span> <span class="op">=</span> <span class="ident">ZeroTessellator</span>::<span class="op">&lt;</span><span class="ident">IndexDataType</span><span class="op">&gt;</span><span class="ident">::default</span>();
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">layer</span>.<span class="ident">process</span>(<span class="kw-2">&amp;mut</span> <span class="ident">tessellator</span>) {
-                <span class="comment">// FIXME: Handle result</span>
-                <span class="ident">context</span>
-                    .<span class="ident">processor_mut</span>()
-                    .<span class="ident">layer_unavailable</span>(<span class="ident">coords</span>, <span class="ident">layer_name</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>tessellator = ZeroTessellator::&lt;IndexDataType&gt;::default();
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = layer.process(<span class="kw-2">&amp;mut </span>tessellator) {
+                <span class="comment">// FIXME: Handle result
+                </span>context
+                    .processor_mut()
+                    .layer_unavailable(coords, layer_name);
 
                 <span class="macro">tracing::error!</span>(
                     <span class="string">&quot;layer {} at {} tesselation failed {:?}&quot;</span>,
-                    <span class="ident">layer_name</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">coords</span>,
-                    <span class="ident">e</span>
+                    layer_name,
+                    <span class="kw-2">&amp;</span>coords,
+                    e
                 );
-            } <span class="kw">else</span> {
-                <span class="comment">// FIXME: Handle result</span>
-                <span class="ident">context</span>.<span class="ident">processor_mut</span>().<span class="ident">layer_tesselation_finished</span>(
-                    <span class="ident">coords</span>,
-                    <span class="ident">tessellator</span>.<span class="ident">buffer</span>.<span class="ident">into</span>(),
-                    <span class="ident">tessellator</span>.<span class="ident">feature_indices</span>,
-                    <span class="ident">cloned_layer</span>,
+            } <span class="kw">else </span>{
+                <span class="comment">// FIXME: Handle result
+                </span>context.processor_mut().layer_tesselation_finished(
+                    coords,
+                    tessellator.buffer.into(),
+                    tessellator.feature_indices,
+                    cloned_layer,
                 );
             }
         }
 
-        <span class="kw">let</span> <span class="ident">available_layers</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">tile</span>
-            .<span class="ident">layers</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">layer</span><span class="op">|</span> <span class="ident">layer</span>.<span class="ident">name</span>.<span class="ident">clone</span>())
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="kw">let </span>available_layers: HashSet&lt;<span class="kw">_</span>&gt; = tile
+            .layers
+            .iter()
+            .map(|layer| layer.name.clone())
+            .collect::&lt;HashSet&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">for</span> <span class="ident">missing_layer</span> <span class="kw">in</span> <span class="ident">tile_request</span>.<span class="ident">layers</span>.<span class="ident">difference</span>(<span class="kw-2">&amp;</span><span class="ident">available_layers</span>) {
-            <span class="comment">// FIXME: Handle result</span>
-            <span class="ident">context</span>
-                .<span class="ident">processor_mut</span>()
-                .<span class="ident">layer_unavailable</span>(<span class="ident">coords</span>, <span class="ident">missing_layer</span>);
+        <span class="kw">for </span>missing_layer <span class="kw">in </span>tile_request.layers.difference(<span class="kw-2">&amp;</span>available_layers) {
+            <span class="comment">// FIXME: Handle result
+            </span>context
+                .processor_mut()
+                .layer_unavailable(coords, missing_layer);
 
             <span class="macro">tracing::info!</span>(
                 <span class="string">&quot;requested layer {} at {} not found in tile&quot;</span>,
-                <span class="ident">missing_layer</span>,
-                <span class="kw-2">&amp;</span><span class="ident">coords</span>
+                missing_layer,
+                <span class="kw-2">&amp;</span>coords
             );
         }
 
-        <span class="macro">tracing::info!</span>(<span class="string">&quot;tile tessellated at {} finished&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">tile_request</span>.<span class="ident">coords</span>);
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;tile tessellated at {} finished&quot;</span>, <span class="kw-2">&amp;</span>tile_request.coords);
 
-        <span class="comment">// FIXME: Handle result</span>
-        <span class="ident">context</span>.<span class="ident">processor_mut</span>().<span class="ident">tile_finished</span>(<span class="kw-2">&amp;</span><span class="ident">tile_request</span>.<span class="ident">coords</span>);
+        <span class="comment">// FIXME: Handle result
+        </span>context.processor_mut().tile_finished(<span class="kw-2">&amp;</span>tile_request.coords);
 
-        (<span class="ident">tile_request</span>, <span class="ident">tile</span>)
+        (tile_request, tile)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_vector_tile_pipeline</span>() -&gt; <span class="kw">impl</span> <span class="ident">Processable</span><span class="op">&lt;</span><span class="ident">Input</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">ParseTile</span> <span class="kw">as</span> <span class="ident">Processable</span><span class="op">&gt;</span><span class="ident">::Input</span><span class="op">&gt;</span> {
-    <span class="ident">DataPipeline::new</span>(
-        <span class="ident">ParseTile</span>,
-        <span class="ident">DataPipeline::new</span>(<span class="ident">TessellateLayer</span>, <span class="ident">PipelineEnd::default</span>()),
+<span class="kw">pub fn </span>build_vector_tile_pipeline() -&gt; <span class="kw">impl </span>Processable&lt;Input = &lt;ParseTile <span class="kw">as </span>Processable&gt;::Input&gt; {
+    DataPipeline::new(
+        ParseTile,
+        DataPipeline::new(TessellateLayer, PipelineEnd::default()),
     )
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::build_vector_tile_pipeline</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::{
-        <span class="ident">coords::ZoomLevel</span>,
-        <span class="ident">io</span>::{
-            <span class="ident">pipeline</span>::{<span class="ident">PipelineContext</span>, <span class="ident">PipelineProcessor</span>, <span class="ident">Processable</span>},
-            <span class="ident">TileRequest</span>,
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">super</span>::build_vector_tile_pipeline;
+    <span class="kw">use crate</span>::{
+        coords::ZoomLevel,
+        io::{
+            pipeline::{PipelineContext, PipelineProcessor, Processable},
+            TileRequest,
         },
     };
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DummyPipelineProcessor</span>;
+    <span class="kw">pub struct </span>DummyPipelineProcessor;
 
-    <span class="kw">impl</span> <span class="ident">PipelineProcessor</span> <span class="kw">for</span> <span class="ident">DummyPipelineProcessor</span> {}
+    <span class="kw">impl </span>PipelineProcessor <span class="kw">for </span>DummyPipelineProcessor {}
 
-    <span class="attribute">#[<span class="ident">test</span>]</span> <span class="comment">// TODO: Add proper tile byte array</span>
-    <span class="attribute">#[<span class="ident">ignore</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">PipelineContext::new</span>(<span class="ident">DummyPipelineProcessor</span>);
+    <span class="attribute">#[test] </span><span class="comment">// TODO: Add proper tile byte array
+    </span><span class="attribute">#[ignore]
+    </span><span class="kw">fn </span>test() {
+        <span class="kw">let </span><span class="kw-2">mut </span>context = PipelineContext::new(DummyPipelineProcessor);
 
-        <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">build_vector_tile_pipeline</span>();
-        <span class="kw">let</span> <span class="ident">_output</span> <span class="op">=</span> <span class="ident">pipeline</span>.<span class="ident">process</span>(
+        <span class="kw">let </span>pipeline = build_vector_tile_pipeline();
+        <span class="kw">let </span>_output = pipeline.process(
             (
-                <span class="ident">TileRequest</span> {
-                    <span class="ident">coords</span>: (<span class="number">0</span>, <span class="number">0</span>, <span class="ident">ZoomLevel::default</span>()).<span class="ident">into</span>(),
-                    <span class="ident">layers</span>: <span class="ident">Default::default</span>(),
+                TileRequest {
+                    coords: (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+                    layers: Default::default(),
                 },
-                <span class="ident">Box::new</span>([<span class="number">0</span>]),
+                Box::new([<span class="number">0</span>]),
             ),
-            <span class="kw-2">&amp;mut</span> <span class="ident">context</span>,
+            <span class="kw-2">&amp;mut </span>context,
         );
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

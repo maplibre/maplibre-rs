@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/graph_runner.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>graph_runner.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/graph_runner.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>graph_runner.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -213,215 +213,215 @@
 <span id="213">213</span>
 <span id="214">214</span>
 <span id="215">215</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Executes a [`RenderGraph`]</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Executes a [`RenderGraph`]
 
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">borrow::Cow</span>,
-    <span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">VecDeque</span>},
+</span><span class="kw">use </span>std::{
+    borrow::Cow,
+    collections::{HashMap, VecDeque},
 };
 
-<span class="kw">use</span> <span class="ident">log::error</span>;
-<span class="kw">use</span> <span class="ident">smallvec</span>::{<span class="ident">smallvec</span>, <span class="ident">SmallVec</span>};
-<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+<span class="kw">use </span>log::error;
+<span class="kw">use </span>smallvec::{smallvec, SmallVec};
+<span class="kw">use </span>thiserror::Error;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render</span>::{
-    <span class="ident">graph</span>::{
-        <span class="ident">Edge</span>, <span class="ident">NodeId</span>, <span class="ident">NodeRunError</span>, <span class="ident">NodeState</span>, <span class="ident">RenderContext</span>, <span class="ident">RenderGraph</span>, <span class="ident">RenderGraphContext</span>,
-        <span class="ident">SlotLabel</span>, <span class="ident">SlotType</span>, <span class="ident">SlotValue</span>,
+<span class="kw">use </span><span class="kw">crate</span>::render::{
+    graph::{
+        Edge, NodeId, NodeRunError, NodeState, RenderContext, RenderGraph, RenderGraphContext,
+        SlotLabel, SlotType, SlotValue,
     },
-    <span class="ident">RenderState</span>,
+    RenderState,
 };
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">RenderGraphRunner</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RenderGraphRunner;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RenderGraphRunnerError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">NodeRunError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">NodeRunError</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;node output slot not set (index {slot_index}, name {slot_name})&quot;</span>)]</span>
-    <span class="ident">EmptyNodeOutputSlot</span> {
-        <span class="ident">type_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-        <span class="ident">slot_index</span>: <span class="ident">usize</span>,
-        <span class="ident">slot_name</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Error, Debug)]
+</span><span class="kw">pub enum </span>RenderGraphRunnerError {
+    <span class="attribute">#[error(transparent)]
+    </span>NodeRunError(<span class="attribute">#[from] </span>NodeRunError),
+    <span class="attribute">#[error(<span class="string">&quot;node output slot not set (index {slot_index}, name {slot_name})&quot;</span>)]
+    </span>EmptyNodeOutputSlot {
+        type_name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        slot_index: usize,
+        slot_name: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
     },
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;graph (name: &#39;{graph_name:?}&#39;) could not be run because slot &#39;{slot_name}&#39; at index {slot_index} has no value&quot;</span>)]</span>
-    <span class="ident">MissingInput</span> {
-        <span class="ident">slot_index</span>: <span class="ident">usize</span>,
-        <span class="ident">slot_name</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span>,
-        <span class="ident">graph_name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[error(<span class="string">&quot;graph (name: &#39;{graph_name:?}&#39;) could not be run because slot &#39;{slot_name}&#39; at index {slot_index} has no value&quot;</span>)]
+    </span>MissingInput {
+        slot_index: usize,
+        slot_name: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
+        graph_name: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
     },
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attempted to use the wrong type for input slot&quot;</span>)]</span>
-    <span class="ident">MismatchedInputSlotType</span> {
-        <span class="ident">slot_index</span>: <span class="ident">usize</span>,
-        <span class="ident">label</span>: <span class="ident">SlotLabel</span>,
-        <span class="ident">expected</span>: <span class="ident">SlotType</span>,
-        <span class="ident">actual</span>: <span class="ident">SlotType</span>,
+    <span class="attribute">#[error(<span class="string">&quot;attempted to use the wrong type for input slot&quot;</span>)]
+    </span>MismatchedInputSlotType {
+        slot_index: usize,
+        label: SlotLabel,
+        expected: SlotType,
+        actual: SlotType,
     },
 }
 
-<span class="kw">impl</span> <span class="ident">RenderGraphRunner</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(
-        <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">RenderGraph</span>,
-        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">wgpu::Device</span>,
-        <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">wgpu::Queue</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">RenderState</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">RenderGraphRunnerError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">command_encoder</span> <span class="op">=</span>
-            <span class="ident">device</span>.<span class="ident">create_command_encoder</span>(<span class="kw-2">&amp;</span><span class="ident">wgpu::CommandEncoderDescriptor::default</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">render_context</span> <span class="op">=</span> <span class="ident">RenderContext</span> {
-            <span class="ident">device</span>,
-            <span class="ident">command_encoder</span>,
+<span class="kw">impl </span>RenderGraphRunner {
+    <span class="kw">pub fn </span>run(
+        graph: <span class="kw-2">&amp;</span>RenderGraph,
+        device: <span class="kw-2">&amp;</span>wgpu::Device,
+        queue: <span class="kw-2">&amp;</span>wgpu::Queue,
+        state: <span class="kw-2">&amp;</span>RenderState,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderGraphRunnerError&gt; {
+        <span class="kw">let </span>command_encoder =
+            device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default());
+        <span class="kw">let </span><span class="kw-2">mut </span>render_context = RenderContext {
+            device,
+            command_encoder,
         };
 
-        <span class="ident"><span class="self">Self</span>::run_graph</span>(<span class="ident">graph</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut</span> <span class="ident">render_context</span>, <span class="ident">state</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+        <span class="self">Self</span>::run_graph(graph, <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut </span>render_context, state, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
         {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-            <span class="kw">let</span> <span class="ident">_span</span> <span class="op">=</span> <span class="macro">tracing::info_span!</span>(<span class="string">&quot;submit_graph_commands&quot;</span>).<span class="ident">entered</span>();
-            <span class="ident">queue</span>.<span class="ident">submit</span>(<span class="macro">vec!</span>[<span class="ident">render_context</span>.<span class="ident">command_encoder</span>.<span class="ident">finish</span>()]);
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            </span><span class="kw">let </span>_span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;submit_graph_commands&quot;</span>).entered();
+            queue.submit(<span class="macro">vec!</span>[render_context.command_encoder.finish()]);
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">run_graph</span>(
-        <span class="ident">graph</span>: <span class="kw-2">&amp;</span><span class="ident">RenderGraph</span>,
-        <span class="ident">graph_name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">render_context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RenderContext</span>,
-        <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">RenderState</span>,
-        <span class="ident">inputs</span>: <span class="kw-2">&amp;</span>[<span class="ident">SlotValue</span>],
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">RenderGraphRunnerError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">node_outputs</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">NodeId</span>, <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">SlotValue</span>; <span class="number">4</span>]<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap::default</span>();
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-        <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">graph_name</span> {
-            <span class="macro">tracing::info_span!</span>(<span class="string">&quot;run_graph&quot;</span>, <span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">as_ref</span>())
-        } <span class="kw">else</span> {
-            <span class="macro">tracing::info_span!</span>(<span class="string">&quot;run_graph&quot;</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;main_graph&quot;</span>)
+    <span class="kw">fn </span>run_graph(
+        graph: <span class="kw-2">&amp;</span>RenderGraph,
+        graph_name: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+        render_context: <span class="kw-2">&amp;mut </span>RenderContext,
+        state: <span class="kw-2">&amp;</span>RenderState,
+        inputs: <span class="kw-2">&amp;</span>[SlotValue],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderGraphRunnerError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>node_outputs: HashMap&lt;NodeId, SmallVec&lt;[SlotValue; <span class="number">4</span>]&gt;&gt; = HashMap::default();
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        </span><span class="kw">let </span>span = <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = <span class="kw-2">&amp;</span>graph_name {
+            <span class="macro">tracing::info_span!</span>(<span class="string">&quot;run_graph&quot;</span>, name = name.as_ref())
+        } <span class="kw">else </span>{
+            <span class="macro">tracing::info_span!</span>(<span class="string">&quot;run_graph&quot;</span>, name = <span class="string">&quot;main_graph&quot;</span>)
         };
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-        <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">span</span>.<span class="ident">enter</span>();
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        </span><span class="kw">let </span>_guard = span.enter();
 
-        <span class="comment">// Queue up nodes without inputs, which can be run immediately</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">node_queue</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">NodeState</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">graph</span>
-            .<span class="ident">iter_nodes</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">node</span><span class="op">|</span> <span class="ident">node</span>.<span class="ident">input_slots</span>.<span class="ident">is_empty</span>())
-            .<span class="ident">collect</span>();
+        <span class="comment">// Queue up nodes without inputs, which can be run immediately
+        </span><span class="kw">let </span><span class="kw-2">mut </span>node_queue: VecDeque&lt;<span class="kw-2">&amp;</span>NodeState&gt; = graph
+            .iter_nodes()
+            .filter(|node| node.input_slots.is_empty())
+            .collect();
 
-        <span class="comment">// pass inputs into the graph</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">input_node</span>) <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">input_node</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input_values</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">SlotValue</span>; <span class="number">4</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SmallVec::new</span>();
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">input_slot</span>) <span class="kw">in</span> <span class="ident">input_node</span>.<span class="ident">input_slots</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">input_value</span>) <span class="op">=</span> <span class="ident">inputs</span>.<span class="ident">get</span>(<span class="ident">i</span>) {
-                    <span class="kw">if</span> <span class="ident">input_slot</span>.<span class="ident">slot_type</span> <span class="op">!</span><span class="op">=</span> <span class="ident">input_value</span>.<span class="ident">slot_type</span>() {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderGraphRunnerError::MismatchedInputSlotType</span> {
-                            <span class="ident">slot_index</span>: <span class="ident">i</span>,
-                            <span class="ident">actual</span>: <span class="ident">input_value</span>.<span class="ident">slot_type</span>(),
-                            <span class="ident">expected</span>: <span class="ident">input_slot</span>.<span class="ident">slot_type</span>,
-                            <span class="ident">label</span>: <span class="ident">input_slot</span>.<span class="ident">name</span>.<span class="ident">clone</span>().<span class="ident">into</span>(),
+        <span class="comment">// pass inputs into the graph
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(input_node) = graph.input_node() {
+            <span class="kw">let </span><span class="kw-2">mut </span>input_values: SmallVec&lt;[SlotValue; <span class="number">4</span>]&gt; = SmallVec::new();
+            <span class="kw">for </span>(i, input_slot) <span class="kw">in </span>input_node.input_slots.iter().enumerate() {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(input_value) = inputs.get(i) {
+                    <span class="kw">if </span>input_slot.slot_type != input_value.slot_type() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(RenderGraphRunnerError::MismatchedInputSlotType {
+                            slot_index: i,
+                            actual: input_value.slot_type(),
+                            expected: input_slot.slot_type,
+                            label: input_slot.name.clone().into(),
                         });
-                    } <span class="kw">else</span> {
-                        <span class="ident">input_values</span>.<span class="ident">push</span>(<span class="ident">input_value</span>.<span class="ident">clone</span>());
+                    } <span class="kw">else </span>{
+                        input_values.push(input_value.clone());
                     }
-                } <span class="kw">else</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderGraphRunnerError::MissingInput</span> {
-                        <span class="ident">slot_index</span>: <span class="ident">i</span>,
-                        <span class="ident">slot_name</span>: <span class="ident">input_slot</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
-                        <span class="ident">graph_name</span>: <span class="ident">graph_name</span>.<span class="ident">clone</span>(),
+                } <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(RenderGraphRunnerError::MissingInput {
+                        slot_index: i,
+                        slot_name: input_slot.name.clone(),
+                        graph_name: graph_name.clone(),
                     });
                 }
             }
 
-            <span class="ident">node_outputs</span>.<span class="ident">insert</span>(<span class="ident">input_node</span>.<span class="ident">id</span>, <span class="ident">input_values</span>);
+            node_outputs.insert(input_node.id, input_values);
 
-            <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">node_state</span>) <span class="kw">in</span> <span class="ident">graph</span>.<span class="ident">iter_node_outputs</span>(<span class="ident">input_node</span>.<span class="ident">id</span>).<span class="ident">expect</span>(<span class="string">&quot;node exists&quot;</span>) {
-                <span class="ident">node_queue</span>.<span class="ident">push_front</span>(<span class="ident">node_state</span>);
+            <span class="kw">for </span>(<span class="kw">_</span>, node_state) <span class="kw">in </span>graph.iter_node_outputs(input_node.id).expect(<span class="string">&quot;node exists&quot;</span>) {
+                node_queue.push_front(node_state);
             }
         }
 
-        <span class="lifetime">&#39;handle_node</span>: <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">node_state</span>) <span class="op">=</span> <span class="ident">node_queue</span>.<span class="ident">pop_back</span>() {
-            <span class="comment">// skip nodes that are already processed</span>
-            <span class="kw">if</span> <span class="ident">node_outputs</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">node_state</span>.<span class="ident">id</span>) {
+        <span class="lifetime">&#39;handle_node</span>: <span class="kw">while let </span><span class="prelude-val">Some</span>(node_state) = node_queue.pop_back() {
+            <span class="comment">// skip nodes that are already processed
+            </span><span class="kw">if </span>node_outputs.contains_key(<span class="kw-2">&amp;</span>node_state.id) {
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">slot_indices_and_inputs</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[(<span class="ident">usize</span>, <span class="ident">SlotValue</span>); <span class="number">4</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SmallVec::new</span>();
-            <span class="comment">// check if all dependencies have finished running</span>
-            <span class="kw">for</span> (<span class="ident">edge</span>, <span class="ident">input_node</span>) <span class="kw">in</span> <span class="ident">graph</span>
-                .<span class="ident">iter_node_inputs</span>(<span class="ident">node_state</span>.<span class="ident">id</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;node is in graph&quot;</span>)
+            <span class="kw">let </span><span class="kw-2">mut </span>slot_indices_and_inputs: SmallVec&lt;[(usize, SlotValue); <span class="number">4</span>]&gt; = SmallVec::new();
+            <span class="comment">// check if all dependencies have finished running
+            </span><span class="kw">for </span>(edge, input_node) <span class="kw">in </span>graph
+                .iter_node_inputs(node_state.id)
+                .expect(<span class="string">&quot;node is in graph&quot;</span>)
             {
-                <span class="kw">match</span> <span class="ident">edge</span> {
-                    <span class="ident">Edge::SlotEdge</span> {
-                        <span class="ident">output_index</span>,
-                        <span class="ident">input_index</span>,
+                <span class="kw">match </span>edge {
+                    Edge::SlotEdge {
+                        output_index,
+                        input_index,
                         ..
                     } =&gt; {
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">outputs</span>) <span class="op">=</span> <span class="ident">node_outputs</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">input_node</span>.<span class="ident">id</span>) {
-                            <span class="ident">slot_indices_and_inputs</span>
-                                .<span class="ident">push</span>((<span class="kw-2">*</span><span class="ident">input_index</span>, <span class="ident">outputs</span>[<span class="kw-2">*</span><span class="ident">output_index</span>].<span class="ident">clone</span>()));
-                        } <span class="kw">else</span> {
-                            <span class="ident">node_queue</span>.<span class="ident">push_front</span>(<span class="ident">node_state</span>);
-                            <span class="kw">continue</span> <span class="lifetime">&#39;handle_node</span>;
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(outputs) = node_outputs.get(<span class="kw-2">&amp;</span>input_node.id) {
+                            slot_indices_and_inputs
+                                .push((<span class="kw-2">*</span>input_index, outputs[<span class="kw-2">*</span>output_index].clone()));
+                        } <span class="kw">else </span>{
+                            node_queue.push_front(node_state);
+                            <span class="kw">continue </span><span class="lifetime">&#39;handle_node</span>;
                         }
                     }
-                    <span class="ident">Edge::NodeEdge</span> { .. } =&gt; {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">node_outputs</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">input_node</span>.<span class="ident">id</span>) {
-                            <span class="ident">node_queue</span>.<span class="ident">push_front</span>(<span class="ident">node_state</span>);
-                            <span class="kw">continue</span> <span class="lifetime">&#39;handle_node</span>;
+                    Edge::NodeEdge { .. } =&gt; {
+                        <span class="kw">if </span>!node_outputs.contains_key(<span class="kw-2">&amp;</span>input_node.id) {
+                            node_queue.push_front(node_state);
+                            <span class="kw">continue </span><span class="lifetime">&#39;handle_node</span>;
                         }
                     }
                 }
             }
 
-            <span class="comment">// construct final sorted input list</span>
-            <span class="ident">slot_indices_and_inputs</span>.<span class="ident">sort_by_key</span>(<span class="op">|</span>(<span class="ident">index</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">*</span><span class="ident">index</span>);
-            <span class="kw">let</span> <span class="ident">inputs</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">SlotValue</span>; <span class="number">4</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">slot_indices_and_inputs</span>
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">value</span>)<span class="op">|</span> <span class="ident">value</span>)
-                .<span class="ident">collect</span>();
+            <span class="comment">// construct final sorted input list
+            </span>slot_indices_and_inputs.sort_by_key(|(index, <span class="kw">_</span>)| <span class="kw-2">*</span>index);
+            <span class="kw">let </span>inputs: SmallVec&lt;[SlotValue; <span class="number">4</span>]&gt; = slot_indices_and_inputs
+                .into_iter()
+                .map(|(<span class="kw">_</span>, value)| value)
+                .collect();
 
-            <span class="macro">assert_eq!</span>(<span class="ident">inputs</span>.<span class="ident">len</span>(), <span class="ident">node_state</span>.<span class="ident">input_slots</span>.<span class="ident">len</span>());
+            <span class="macro">assert_eq!</span>(inputs.len(), node_state.input_slots.len());
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SlotValue</span><span class="op">&gt;</span>; <span class="number">4</span>]<span class="op">&gt;</span> <span class="op">=</span>
-                <span class="macro">smallvec!</span>[<span class="prelude-val">None</span>; <span class="ident">node_state</span>.<span class="ident">output_slots</span>.<span class="ident">len</span>()];
+            <span class="kw">let </span><span class="kw-2">mut </span>outputs: SmallVec&lt;[<span class="prelude-ty">Option</span>&lt;SlotValue&gt;; <span class="number">4</span>]&gt; =
+                <span class="macro">smallvec!</span>[<span class="prelude-val">None</span>; node_state.output_slots.len()];
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">RenderGraphContext::new</span>(<span class="ident">graph</span>, <span class="ident">node_state</span>, <span class="kw-2">&amp;</span><span class="ident">inputs</span>, <span class="kw-2">&amp;mut</span> <span class="ident">outputs</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>context = RenderGraphContext::new(graph, node_state, <span class="kw-2">&amp;</span>inputs, <span class="kw-2">&amp;mut </span>outputs);
                 {
-                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-                    <span class="kw">let</span> <span class="ident">_span</span> <span class="op">=</span> <span class="macro">tracing::info_span!</span>(<span class="string">&quot;node&quot;</span>, <span class="ident">name</span> <span class="op">=</span> <span class="ident">node_state</span>.<span class="ident">type_name</span>).<span class="ident">entered</span>();
+                    <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                    </span><span class="kw">let </span>_span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;node&quot;</span>, name = node_state.type_name).entered();
 
-                    <span class="ident">node_state</span>.<span class="ident">node</span>.<span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="ident">context</span>, <span class="ident">render_context</span>, <span class="ident">state</span>)<span class="question-mark">?</span>;
+                    node_state.node.run(<span class="kw-2">&amp;mut </span>context, render_context, state)<span class="question-mark">?</span>;
                 }
 
-                <span class="kw">for</span> <span class="ident">run_sub_graph</span> <span class="kw">in</span> <span class="ident">context</span>.<span class="ident">finish</span>() {
-                    <span class="kw">let</span> <span class="ident">sub_graph</span> <span class="op">=</span> <span class="ident">graph</span>
-                        .<span class="ident">get_sub_graph</span>(<span class="kw-2">&amp;</span><span class="ident">run_sub_graph</span>.<span class="ident">name</span>)
-                        .<span class="ident">expect</span>(<span class="string">&quot;sub graph exists because it was validated when queued.&quot;</span>);
-                    <span class="ident"><span class="self">Self</span>::run_graph</span>(
-                        <span class="ident">sub_graph</span>,
-                        <span class="prelude-val">Some</span>(<span class="ident">run_sub_graph</span>.<span class="ident">name</span>),
-                        <span class="ident">render_context</span>,
-                        <span class="ident">state</span>,
-                        <span class="kw-2">&amp;</span><span class="ident">run_sub_graph</span>.<span class="ident">inputs</span>,
+                <span class="kw">for </span>run_sub_graph <span class="kw">in </span>context.finish() {
+                    <span class="kw">let </span>sub_graph = graph
+                        .get_sub_graph(<span class="kw-2">&amp;</span>run_sub_graph.name)
+                        .expect(<span class="string">&quot;sub graph exists because it was validated when queued.&quot;</span>);
+                    <span class="self">Self</span>::run_graph(
+                        sub_graph,
+                        <span class="prelude-val">Some</span>(run_sub_graph.name),
+                        render_context,
+                        state,
+                        <span class="kw-2">&amp;</span>run_sub_graph.inputs,
                     )<span class="question-mark">?</span>;
                 }
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">values</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">SlotValue</span>; <span class="number">4</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SmallVec::new</span>();
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">output</span>) <span class="kw">in</span> <span class="ident">outputs</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>() {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">output</span> {
-                    <span class="ident">values</span>.<span class="ident">push</span>(<span class="ident">value</span>);
-                } <span class="kw">else</span> {
-                    <span class="kw">let</span> <span class="ident">empty_slot</span> <span class="op">=</span> <span class="ident">node_state</span>.<span class="ident">output_slots</span>.<span class="ident">get_slot</span>(<span class="ident">i</span>).<span class="ident">unwrap</span>();
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderGraphRunnerError::EmptyNodeOutputSlot</span> {
-                        <span class="ident">type_name</span>: <span class="ident">node_state</span>.<span class="ident">type_name</span>,
-                        <span class="ident">slot_index</span>: <span class="ident">i</span>,
-                        <span class="ident">slot_name</span>: <span class="ident">empty_slot</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
+            <span class="kw">let </span><span class="kw-2">mut </span>values: SmallVec&lt;[SlotValue; <span class="number">4</span>]&gt; = SmallVec::new();
+            <span class="kw">for </span>(i, output) <span class="kw">in </span>outputs.into_iter().enumerate() {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = output {
+                    values.push(value);
+                } <span class="kw">else </span>{
+                    <span class="kw">let </span>empty_slot = node_state.output_slots.get_slot(i).unwrap();
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(RenderGraphRunnerError::EmptyNodeOutputSlot {
+                        type_name: node_state.type_name,
+                        slot_index: i,
+                        slot_name: empty_slot.name.clone(),
                     });
                 }
             }
-            <span class="ident">node_outputs</span>.<span class="ident">insert</span>(<span class="ident">node_state</span>.<span class="ident">id</span>, <span class="ident">values</span>);
+            node_outputs.insert(node_state.id, values);
 
-            <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">node_state</span>) <span class="kw">in</span> <span class="ident">graph</span>.<span class="ident">iter_node_outputs</span>(<span class="ident">node_state</span>.<span class="ident">id</span>).<span class="ident">expect</span>(<span class="string">&quot;node exists&quot;</span>) {
-                <span class="ident">node_queue</span>.<span class="ident">push_front</span>(<span class="ident">node_state</span>);
+            <span class="kw">for </span>(<span class="kw">_</span>, node_state) <span class="kw">in </span>graph.iter_node_outputs(node_state.id).expect(<span class="string">&quot;node exists&quot;</span>) {
+                node_queue.push_front(node_state);
             }
         }
 
@@ -429,4 +429,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

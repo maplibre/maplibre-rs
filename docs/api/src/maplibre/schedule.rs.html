@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/schedule.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>schedule.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../maplibre/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/schedule.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>schedule.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../maplibre/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -268,275 +268,275 @@
 <span id="268">268</span>
 <span id="269">269</span>
 <span id="270">270</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
-<span class="kw">use</span> <span class="ident">downcast_rs</span>::{<span class="ident">impl_downcast</span>, <span class="ident">Downcast</span>};
+<span class="kw">use </span>downcast_rs::{impl_downcast, Downcast};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">context::MapContext</span>, <span class="ident">define_label</span>};
+<span class="kw">use crate</span>::{context::MapContext, define_label};
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NopStage</span>;
+<span class="kw">pub struct </span>NopStage;
 
-<span class="kw">impl</span> <span class="ident">Stage</span> <span class="kw">for</span> <span class="ident">NopStage</span> {
-    <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MapContext</span>) {}
+<span class="kw">impl </span>Stage <span class="kw">for </span>NopStage {
+    <span class="kw">fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _context: <span class="kw-2">&amp;mut </span>MapContext) {}
 }
 
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">multi_stage</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">multi_stage</span>:<span class="ident">ident</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">stage</span>:<span class="ident">ident</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">stage_ty</span>:<span class="ident">ty</span>),<span class="kw-2">*</span>) =&gt; {
-        <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">multi_stage</span> {
-            $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">stage</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">stage_ty</span>),<span class="op">*</span>
+<span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>multi_stage {
+    (<span class="macro-nonterminal">$multi_stage</span>:ident, $(<span class="macro-nonterminal">$stage</span>:ident: <span class="macro-nonterminal">$stage_ty</span>:ty),<span class="kw-2">*</span>) =&gt; {
+        <span class="kw">pub struct </span><span class="macro-nonterminal">$multi_stage </span>{
+            $(<span class="macro-nonterminal">$stage</span>: <span class="macro-nonterminal">$stage_ty</span>),*
         }
 
-        <span class="kw">impl</span> <span class="ident">Stage</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">multi_stage</span> {
-            <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MapContext</span>) {
-                 $(<span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">stage</span>.<span class="ident">run</span>(<span class="ident">context</span>);)<span class="op">*</span>
+        <span class="kw">impl </span>Stage <span class="kw">for </span><span class="macro-nonterminal">$multi_stage </span>{
+            <span class="kw">fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>MapContext) {
+                 $(<span class="self">self</span>.<span class="macro-nonterminal">$stage</span>.run(context);)*
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">multi_stage</span> {
-            <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">multi_stage</span> {
-                     $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">stage</span>: <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">stage_ty</span><span class="op">&gt;</span><span class="ident">::default</span>()),<span class="op">*</span>
+        <span class="kw">impl </span>Default <span class="kw">for </span><span class="macro-nonterminal">$multi_stage </span>{
+            <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+                <span class="macro-nonterminal">$multi_stage </span>{
+                     $(<span class="macro-nonterminal">$stage</span>: &lt;<span class="macro-nonterminal">$stage_ty</span>&gt;::default()),*
                 }
             }
         }
     };
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultiStage</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">I</span>: <span class="ident">usize</span>, <span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Stage</span>,
+<span class="kw">pub struct </span>MultiStage&lt;<span class="kw">const </span>I: usize, S&gt;
+<span class="kw">where
+    </span>S: Stage,
 {
-    <span class="ident">stages</span>: [<span class="ident">S</span>; <span class="ident">I</span>],
+    stages: [S; I],
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">I</span>: <span class="ident">usize</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="ident">MultiStage</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Stage</span>,
+<span class="kw">impl</span>&lt;<span class="kw">const </span>I: usize, S&gt; MultiStage&lt;I, S&gt;
+<span class="kw">where
+    </span>S: Stage,
 {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">stages</span>: [<span class="ident">S</span>; <span class="ident">I</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">stages</span> }
+    <span class="kw">pub fn </span>new(stages: [S; I]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ stages }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">I</span>: <span class="ident">usize</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="ident">Stage</span> <span class="kw">for</span> <span class="ident">MultiStage</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">S</span>: <span class="ident">Stage</span>,
+<span class="kw">impl</span>&lt;<span class="kw">const </span>I: usize, S&gt; Stage <span class="kw">for </span>MultiStage&lt;I, S&gt;
+<span class="kw">where
+    </span>S: Stage,
 {
-    <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MapContext</span>) {
-        <span class="kw">for</span> <span class="ident">stage</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">stages</span>.<span class="ident">iter_mut</span>() {
-            <span class="ident">stage</span>.<span class="ident">run</span>(<span class="ident">context</span>)
+    <span class="kw">fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>MapContext) {
+        <span class="kw">for </span>stage <span class="kw">in </span><span class="self">self</span>.stages.iter_mut() {
+            stage.run(context)
         }
     }
 }
 
-<span class="macro">define_label!</span>(<span class="ident">StageLabel</span>);
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">BoxedStageLabel</span> <span class="op">=</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span><span class="op">&gt;</span>;
+<span class="macro">define_label!</span>(StageLabel);
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>BoxedStageLabel = Box&lt;<span class="kw">dyn </span>StageLabel&gt;;
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Stage</span>: <span class="ident">Downcast</span> {
-    <span class="doccomment">/// Runs the stage; this happens once per update.</span>
-    <span class="doccomment">/// Implementors must initialize all of their state before running the first time.</span>
-    <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MapContext</span>);
+<span class="kw">pub trait </span>Stage: Downcast {
+    <span class="doccomment">/// Runs the stage; this happens once per update.
+    /// Implementors must initialize all of their state before running the first time.
+    </span><span class="kw">fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>MapContext);
 }
 
-<span class="macro">impl_downcast!</span>(<span class="ident">Stage</span>);
+<span class="macro">impl_downcast!</span>(Stage);
 
-<span class="doccomment">/// A container of [`Stage`]s set to be run in a linear order.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Since `Schedule` implements the [`Stage`] trait, it can be inserted into another schedule.</span>
-<span class="doccomment">/// In this way, the properties of the child schedule can be set differently from the parent.</span>
-<span class="doccomment">/// For example, it can be set to run only once during app execution, while the parent schedule</span>
-<span class="doccomment">/// runs indefinitely.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Schedule</span> {
-    <span class="ident">stages</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">BoxedStageLabel</span>, <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Stage</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">stage_order</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BoxedStageLabel</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A container of [`Stage`]s set to be run in a linear order.
+///
+/// Since `Schedule` implements the [`Stage`] trait, it can be inserted into another schedule.
+/// In this way, the properties of the child schedule can be set differently from the parent.
+/// For example, it can be set to run only once during app execution, while the parent schedule
+/// runs indefinitely.
+</span><span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>Schedule {
+    stages: HashMap&lt;BoxedStageLabel, Box&lt;<span class="kw">dyn </span>Stage&gt;&gt;,
+    stage_order: Vec&lt;BoxedStageLabel&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Schedule</span> {
-    <span class="doccomment">/// Adds the given `stage` at the last position of the schedule.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use maplibre::schedule::{Schedule, NopStage};</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// # let mut schedule = Schedule::default();</span>
-    <span class="doccomment">/// schedule.add_stage(&quot;my_stage&quot;, NopStage);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_stage</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Stage</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="kw">impl</span> <span class="ident">StageLabel</span>, <span class="ident">stage</span>: <span class="ident">S</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">label</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">label</span>);
-        <span class="self">self</span>.<span class="ident">stage_order</span>.<span class="ident">push</span>(<span class="ident">label</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="ident">prev</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stages</span>.<span class="ident">insert</span>(<span class="ident">label</span>.<span class="ident">clone</span>(), <span class="ident">Box::new</span>(<span class="ident">stage</span>));
-        <span class="macro">assert!</span>(<span class="ident">prev</span>.<span class="ident">is_none</span>(), <span class="string">&quot;Stage already exists: {:?}.&quot;</span>, <span class="ident">label</span>);
-        <span class="self">self</span>
-    }
+<span class="kw">impl </span>Schedule {
+    <span class="doccomment">/// Adds the given `stage` at the last position of the schedule.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use maplibre::schedule::{Schedule, NopStage};
+    /// #
+    /// # let mut schedule = Schedule::default();
+    /// schedule.add_stage(&quot;my_stage&quot;, NopStage);
+    /// ```
+    </span><span class="kw">pub fn </span>add_stage&lt;S: Stage&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw">impl </span>StageLabel, stage: S) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">let </span>label: Box&lt;<span class="kw">dyn </span>StageLabel&gt; = Box::new(label);
+        <span class="self">self</span>.stage_order.push(label.clone());
+        <span class="kw">let </span>prev = <span class="self">self</span>.stages.insert(label.clone(), Box::new(stage));
+        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {:?}.&quot;</span>, label);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Adds the given `stage` immediately after the `target` stage.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use maplibre::schedule::{Schedule, NopStage};</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// # let mut schedule = Schedule::default();</span>
-    <span class="doccomment">/// # schedule.add_stage(&quot;target_stage&quot;, NopStage);</span>
-    <span class="doccomment">/// schedule.add_stage_after(&quot;target_stage&quot;, &quot;my_stage&quot;, NopStage);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_stage_after</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Stage</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">target</span>: <span class="kw">impl</span> <span class="ident">StageLabel</span>,
-        <span class="ident">label</span>: <span class="kw">impl</span> <span class="ident">StageLabel</span>,
-        <span class="ident">stage</span>: <span class="ident">S</span>,
-    ) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">label</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">label</span>);
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">target</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span>;
-        <span class="kw">let</span> <span class="ident">target_index</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">stage_order</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">_i</span>, <span class="ident">stage_label</span>)<span class="op">|</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">stage_label</span> <span class="op">==</span> <span class="ident">target</span>)
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">i</span>)
-            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {:?}.&quot;</span>, <span class="ident">target</span>));
+    <span class="doccomment">/// Adds the given `stage` immediately after the `target` stage.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use maplibre::schedule::{Schedule, NopStage};
+    /// #
+    /// # let mut schedule = Schedule::default();
+    /// # schedule.add_stage(&quot;target_stage&quot;, NopStage);
+    /// schedule.add_stage_after(&quot;target_stage&quot;, &quot;my_stage&quot;, NopStage);
+    /// ```
+    </span><span class="kw">pub fn </span>add_stage_after&lt;S: Stage&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        target: <span class="kw">impl </span>StageLabel,
+        label: <span class="kw">impl </span>StageLabel,
+        stage: S,
+    ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">let </span>label: Box&lt;<span class="kw">dyn </span>StageLabel&gt; = Box::new(label);
+        <span class="kw">let </span>target = <span class="kw-2">&amp;</span>target <span class="kw">as </span><span class="kw-2">&amp;</span><span class="kw">dyn </span>StageLabel;
+        <span class="kw">let </span>target_index = <span class="self">self
+            </span>.stage_order
+            .iter()
+            .enumerate()
+            .find(|(_i, stage_label)| <span class="kw-2">&amp;***</span>stage_label == target)
+            .map(|(i, <span class="kw">_</span>)| i)
+            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {:?}.&quot;</span>, target));
 
-        <span class="self">self</span>.<span class="ident">stage_order</span>.<span class="ident">insert</span>(<span class="ident">target_index</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">label</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="ident">prev</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stages</span>.<span class="ident">insert</span>(<span class="ident">label</span>.<span class="ident">clone</span>(), <span class="ident">Box::new</span>(<span class="ident">stage</span>));
-        <span class="macro">assert!</span>(<span class="ident">prev</span>.<span class="ident">is_none</span>(), <span class="string">&quot;Stage already exists: {:?}.&quot;</span>, <span class="ident">label</span>);
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.stage_order.insert(target_index + <span class="number">1</span>, label.clone());
+        <span class="kw">let </span>prev = <span class="self">self</span>.stages.insert(label.clone(), Box::new(stage));
+        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {:?}.&quot;</span>, label);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Adds the given `stage` immediately before the `target` stage.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use maplibre::schedule::{Schedule, NopStage};</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// # let mut schedule = Schedule::default();</span>
-    <span class="doccomment">/// # schedule.add_stage(&quot;target_stage&quot;, NopStage);</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// schedule.add_stage_before(&quot;target_stage&quot;, &quot;my_stage&quot;, NopStage);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_stage_before</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Stage</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">target</span>: <span class="kw">impl</span> <span class="ident">StageLabel</span>,
-        <span class="ident">label</span>: <span class="kw">impl</span> <span class="ident">StageLabel</span>,
-        <span class="ident">stage</span>: <span class="ident">S</span>,
-    ) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">label</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">label</span>);
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">target</span> <span class="kw">as</span> <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span>;
-        <span class="kw">let</span> <span class="ident">target_index</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">stage_order</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">_i</span>, <span class="ident">stage_label</span>)<span class="op">|</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">stage_label</span> <span class="op">==</span> <span class="ident">target</span>)
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">i</span>)
-            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {:?}.&quot;</span>, <span class="ident">target</span>));
+    <span class="doccomment">/// Adds the given `stage` immediately before the `target` stage.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use maplibre::schedule::{Schedule, NopStage};
+    /// #
+    /// # let mut schedule = Schedule::default();
+    /// # schedule.add_stage(&quot;target_stage&quot;, NopStage);
+    /// #
+    /// schedule.add_stage_before(&quot;target_stage&quot;, &quot;my_stage&quot;, NopStage);
+    /// ```
+    </span><span class="kw">pub fn </span>add_stage_before&lt;S: Stage&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        target: <span class="kw">impl </span>StageLabel,
+        label: <span class="kw">impl </span>StageLabel,
+        stage: S,
+    ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">let </span>label: Box&lt;<span class="kw">dyn </span>StageLabel&gt; = Box::new(label);
+        <span class="kw">let </span>target = <span class="kw-2">&amp;</span>target <span class="kw">as </span><span class="kw-2">&amp;</span><span class="kw">dyn </span>StageLabel;
+        <span class="kw">let </span>target_index = <span class="self">self
+            </span>.stage_order
+            .iter()
+            .enumerate()
+            .find(|(_i, stage_label)| <span class="kw-2">&amp;***</span>stage_label == target)
+            .map(|(i, <span class="kw">_</span>)| i)
+            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {:?}.&quot;</span>, target));
 
-        <span class="self">self</span>.<span class="ident">stage_order</span>.<span class="ident">insert</span>(<span class="ident">target_index</span>, <span class="ident">label</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="ident">prev</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stages</span>.<span class="ident">insert</span>(<span class="ident">label</span>.<span class="ident">clone</span>(), <span class="ident">Box::new</span>(<span class="ident">stage</span>));
-        <span class="macro">assert!</span>(<span class="ident">prev</span>.<span class="ident">is_none</span>(), <span class="string">&quot;Stage already exists: {:?}.&quot;</span>, <span class="ident">label</span>);
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.stage_order.insert(target_index, label.clone());
+        <span class="kw">let </span>prev = <span class="self">self</span>.stages.insert(label.clone(), Box::new(stage));
+        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {:?}.&quot;</span>, label);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Fetches the [`Stage`] of type `T` marked with `label`, then executes the provided</span>
-    <span class="doccomment">/// `func` passing the fetched stage to it as an argument.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The `func` argument should be a function or a closure that accepts a mutable reference</span>
-    <span class="doccomment">/// to a struct implementing `Stage` and returns the same type. That means that it should</span>
-    <span class="doccomment">/// also assume that the stage has already been fetched successfully.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use maplibre::schedule::{Schedule, NopStage};</span>
-    <span class="doccomment">/// # let mut schedule = Schedule::default();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # schedule.add_stage(&quot;my_stage&quot;, NopStage);</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// schedule.stage(&quot;my_stage&quot;, |stage: &amp;mut NopStage| {</span>
-    <span class="doccomment">///     // modify stage</span>
-    <span class="doccomment">///     stage</span>
-    <span class="doccomment">/// });</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Panics if `label` refers to a non-existing stage, or if it&#39;s not of type `T`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stage</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Stage</span>, <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;mut</span> <span class="ident">T</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">label</span>: <span class="kw">impl</span> <span class="ident">StageLabel</span>,
-        <span class="ident">func</span>: <span class="ident">F</span>,
-    ) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">stage</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_stage_mut</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">label</span>).<span class="ident">unwrap_or_else</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-            <span class="macro">panic!</span>(<span class="string">&quot;stage &#39;{:?}&#39; does not exist or is the wrong type&quot;</span>, <span class="ident">label</span>)
+    <span class="doccomment">/// Fetches the [`Stage`] of type `T` marked with `label`, then executes the provided
+    /// `func` passing the fetched stage to it as an argument.
+    ///
+    /// The `func` argument should be a function or a closure that accepts a mutable reference
+    /// to a struct implementing `Stage` and returns the same type. That means that it should
+    /// also assume that the stage has already been fetched successfully.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use maplibre::schedule::{Schedule, NopStage};
+    /// # let mut schedule = Schedule::default();
+    ///
+    /// # schedule.add_stage(&quot;my_stage&quot;, NopStage);
+    /// #
+    /// schedule.stage(&quot;my_stage&quot;, |stage: &amp;mut NopStage| {
+    ///     // modify stage
+    ///     stage
+    /// });
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if `label` refers to a non-existing stage, or if it&#39;s not of type `T`.
+    </span><span class="kw">pub fn </span>stage&lt;T: Stage, F: FnOnce(<span class="kw-2">&amp;mut </span>T) -&gt; <span class="kw-2">&amp;mut </span>T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        label: <span class="kw">impl </span>StageLabel,
+        func: F,
+    ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="kw">let </span>stage = <span class="self">self</span>.get_stage_mut::&lt;T&gt;(<span class="kw-2">&amp;</span>label).unwrap_or_else(<span class="kw">move </span>|| {
+            <span class="macro">panic!</span>(<span class="string">&quot;stage &#39;{:?}&#39; does not exist or is the wrong type&quot;</span>, label)
         });
-        <span class="ident">func</span>(<span class="ident">stage</span>);
-        <span class="self">self</span>
+        func(stage);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Returns a shared reference to the stage identified by `label`, if it exists.
+    ///
+    /// If the requested stage does not exist, `None` is returned instead.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use maplibre::schedule::{Schedule, NopStage};
+    /// #
+    /// # let mut schedule = Schedule::default();
+    /// # schedule.add_stage(&quot;my_stage&quot;, NopStage);
+    /// #
+    /// let stage = schedule.get_stage::&lt;NopStage&gt;(&amp;&quot;my_stage&quot;).unwrap();
+    /// ```
+    </span><span class="kw">pub fn </span>get_stage&lt;T: Stage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="kw">dyn </span>StageLabel) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
+        <span class="self">self</span>.stages
+            .get(label)
+            .and_then(|stage| stage.downcast_ref::&lt;T&gt;())
     }
 
-    <span class="doccomment">/// Returns a shared reference to the stage identified by `label`, if it exists.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the requested stage does not exist, `None` is returned instead.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use maplibre::schedule::{Schedule, NopStage};</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// # let mut schedule = Schedule::default();</span>
-    <span class="doccomment">/// # schedule.add_stage(&quot;my_stage&quot;, NopStage);</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// let stage = schedule.get_stage::&lt;NopStage&gt;(&amp;&quot;my_stage&quot;).unwrap();</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_stage</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Stage</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">stages</span>
-            .<span class="ident">get</span>(<span class="ident">label</span>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">stage</span><span class="op">|</span> <span class="ident">stage</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())
+    <span class="doccomment">/// Returns a unique, mutable reference to the stage identified by `label`, if it exists.
+    ///
+    /// If the requested stage does not exist, `None` is returned instead.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use maplibre::schedule::{Schedule, NopStage};
+    /// #
+    /// # let mut schedule = Schedule::default();
+    /// # schedule.add_stage(&quot;my_stage&quot;, NopStage);
+    /// #
+    /// let stage = schedule.get_stage_mut::&lt;NopStage&gt;(&amp;&quot;my_stage&quot;).unwrap();
+    /// ```
+    </span><span class="kw">pub fn </span>get_stage_mut&lt;T: Stage&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="kw">dyn </span>StageLabel) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>T&gt; {
+        <span class="self">self</span>.stages
+            .get_mut(label)
+            .and_then(|stage| stage.downcast_mut::&lt;T&gt;())
     }
 
-    <span class="doccomment">/// Returns a unique, mutable reference to the stage identified by `label`, if it exists.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the requested stage does not exist, `None` is returned instead.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Example</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use maplibre::schedule::{Schedule, NopStage};</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// # let mut schedule = Schedule::default();</span>
-    <span class="doccomment">/// # schedule.add_stage(&quot;my_stage&quot;, NopStage);</span>
-    <span class="doccomment">/// #</span>
-    <span class="doccomment">/// let stage = schedule.get_stage_mut::&lt;NopStage&gt;(&amp;&quot;my_stage&quot;).unwrap();</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_stage_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Stage</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">stages</span>
-            .<span class="ident">get_mut</span>(<span class="ident">label</span>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">stage</span><span class="op">|</span> <span class="ident">stage</span>.<span class="ident">downcast_mut</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())
-    }
-
-    <span class="doccomment">/// Executes each [`Stage`] contained in the schedule, one at a time.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_once</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MapContext</span>) {
-        <span class="kw">for</span> <span class="ident">label</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stage_order</span> {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-            <span class="kw">let</span> <span class="ident">_stage_span</span> <span class="op">=</span> <span class="macro">tracing::info_span!</span>(<span class="string">&quot;stage&quot;</span>, <span class="ident">name</span> <span class="op">=</span> <span class="question-mark">?</span><span class="ident">label</span>).<span class="ident">entered</span>();
-            <span class="kw">let</span> <span class="ident">stage</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stages</span>.<span class="ident">get_mut</span>(<span class="ident">label</span>).<span class="ident">unwrap</span>(); <span class="comment">// TODO: Remove unwrap</span>
-            <span class="ident">stage</span>.<span class="ident">run</span>(<span class="ident">context</span>);
+    <span class="doccomment">/// Executes each [`Stage`] contained in the schedule, one at a time.
+    </span><span class="kw">pub fn </span>run_once(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>MapContext) {
+        <span class="kw">for </span>label <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.stage_order {
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            </span><span class="kw">let </span>_stage_span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;stage&quot;</span>, name = <span class="question-mark">?</span>label).entered();
+            <span class="kw">let </span>stage = <span class="self">self</span>.stages.get_mut(label).unwrap(); <span class="comment">// TODO: Remove unwrap
+            </span>stage.run(context);
         }
     }
 
-    <span class="doccomment">/// Iterates over all of schedule&#39;s stages and their labels, in execution order.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter_stages</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">StageLabel</span>, <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Stage</span>)<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">stage_order</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">label</span><span class="op">|</span> (<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">stages</span>[<span class="ident">label</span>]))
+    <span class="doccomment">/// Iterates over all of schedule&#39;s stages and their labels, in execution order.
+    </span><span class="kw">pub fn </span>iter_stages(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span><span class="kw">dyn </span>StageLabel, <span class="kw-2">&amp;</span><span class="kw">dyn </span>Stage)&gt; {
+        <span class="self">self</span>.stage_order
+            .iter()
+            .map(<span class="kw">move </span>|label| (<span class="kw-2">&amp;**</span>label, <span class="kw-2">&amp;*</span><span class="self">self</span>.stages[label]))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Stage</span> <span class="kw">for</span> <span class="ident">Schedule</span> {
-    <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MapContext</span>) {
-        <span class="self">self</span>.<span class="ident">run_once</span>(<span class="ident">context</span>);
+<span class="kw">impl </span>Stage <span class="kw">for </span>Schedule {
+    <span class="kw">fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>MapContext) {
+        <span class="self">self</span>.run_once(context);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/style/style.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>style.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/style/style.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>style.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -203,159 +203,159 @@
 <span id="203">203</span>
 <span id="204">204</span>
 <span id="205">205</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Default vector tile styles configuration.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Default vector tile styles configuration.
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">str::FromStr</span>};
+</span><span class="kw">use </span>std::{collections::HashMap, str::FromStr};
 
-<span class="kw">use</span> <span class="ident">csscolorparser::Color</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use </span>csscolorparser::Color;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::style</span>::{
-    <span class="ident">layer</span>::{<span class="ident">LayerPaint</span>, <span class="ident">LinePaint</span>, <span class="ident">StyleLayer</span>},
-    <span class="ident">source::Source</span>,
+<span class="kw">use </span><span class="kw">crate</span>::style::{
+    layer::{LayerPaint, LinePaint, StyleLayer},
+    source::Source,
 };
 
-<span class="doccomment">/// Stores the style for a multi-layered map.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Style</span> {
-    <span class="kw">pub</span> <span class="ident">version</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="kw">pub</span> <span class="ident">metadata</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">sources</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Source</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">layers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StyleLayer</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">center</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">f64</span>; <span class="number">2</span>]<span class="op">&gt;</span>, <span class="comment">// TODO: Use LatLon type here</span>
-    <span class="kw">pub</span> <span class="ident">zoom</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">pitch</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Stores the style for a multi-layered map.
+</span><span class="attribute">#[derive(Serialize, Deserialize, Debug, Clone)]
+</span><span class="kw">pub struct </span>Style {
+    <span class="kw">pub </span>version: u16,
+    <span class="kw">pub </span>name: String,
+    <span class="kw">pub </span>metadata: HashMap&lt;String, String&gt;,
+    <span class="kw">pub </span>sources: HashMap&lt;String, Source&gt;,
+    <span class="kw">pub </span>layers: Vec&lt;StyleLayer&gt;,
+    <span class="kw">pub </span>center: <span class="prelude-ty">Option</span>&lt;[f64; <span class="number">2</span>]&gt;, <span class="comment">// TODO: Use LatLon type here
+    </span><span class="kw">pub </span>zoom: <span class="prelude-ty">Option</span>&lt;f64&gt;,
+    <span class="kw">pub </span>pitch: <span class="prelude-ty">Option</span>&lt;f64&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Style</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">Style</span> {
-            <span class="ident">version</span>: <span class="number">8</span>,
-            <span class="ident">name</span>: <span class="string">&quot;Default Style&quot;</span>.<span class="ident">to_string</span>(),
-            <span class="ident">metadata</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">sources</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">center</span>: <span class="prelude-val">Some</span>([<span class="number">46.5197</span>, <span class="number">6.6323</span>]),
-            <span class="ident">pitch</span>: <span class="prelude-val">Some</span>(<span class="number">0.0</span>),
-            <span class="ident">zoom</span>: <span class="prelude-val">Some</span>(<span class="number">13.0</span>),
-            <span class="ident">layers</span>: <span class="macro">vec!</span>[
-                <span class="ident">StyleLayer</span> {
-                    <span class="ident">index</span>: <span class="number">0</span>,
-                    <span class="ident">id</span>: <span class="string">&quot;park&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">typ</span>: <span class="string">&quot;fill&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">maxzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">minzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">metadata</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">paint</span>: <span class="prelude-val">Some</span>(<span class="ident">LayerPaint::Line</span>(<span class="ident">LinePaint</span> {
-                        <span class="ident">line_color</span>: <span class="prelude-val">Some</span>(<span class="ident">Color::from_str</span>(<span class="string">&quot;#c8facc&quot;</span>).<span class="ident">unwrap</span>()),
+<span class="kw">impl </span>Default <span class="kw">for </span>Style {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        Style {
+            version: <span class="number">8</span>,
+            name: <span class="string">&quot;Default Style&quot;</span>.to_string(),
+            metadata: Default::default(),
+            sources: Default::default(),
+            center: <span class="prelude-val">Some</span>([<span class="number">46.5197</span>, <span class="number">6.6323</span>]),
+            pitch: <span class="prelude-val">Some</span>(<span class="number">0.0</span>),
+            zoom: <span class="prelude-val">Some</span>(<span class="number">13.0</span>),
+            layers: <span class="macro">vec!</span>[
+                StyleLayer {
+                    index: <span class="number">0</span>,
+                    id: <span class="string">&quot;park&quot;</span>.to_string(),
+                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
+                    maxzoom: <span class="prelude-val">None</span>,
+                    minzoom: <span class="prelude-val">None</span>,
+                    metadata: <span class="prelude-val">None</span>,
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
+                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#c8facc&quot;</span>).unwrap()),
                     })),
-                    <span class="ident">source</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">source_layer</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;park&quot;</span>.<span class="ident">to_string</span>()),
+                    source: <span class="prelude-val">None</span>,
+                    source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;park&quot;</span>.to_string()),
                 },
-                <span class="ident">StyleLayer</span> {
-                    <span class="ident">index</span>: <span class="number">1</span>,
-                    <span class="ident">id</span>: <span class="string">&quot;landuse&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">typ</span>: <span class="string">&quot;fill&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">maxzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">minzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">metadata</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">paint</span>: <span class="prelude-val">Some</span>(<span class="ident">LayerPaint::Line</span>(<span class="ident">LinePaint</span> {
-                        <span class="ident">line_color</span>: <span class="prelude-val">Some</span>(<span class="ident">Color::from_str</span>(<span class="string">&quot;#e0dfdf&quot;</span>).<span class="ident">unwrap</span>()),
+                StyleLayer {
+                    index: <span class="number">1</span>,
+                    id: <span class="string">&quot;landuse&quot;</span>.to_string(),
+                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
+                    maxzoom: <span class="prelude-val">None</span>,
+                    minzoom: <span class="prelude-val">None</span>,
+                    metadata: <span class="prelude-val">None</span>,
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
+                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#e0dfdf&quot;</span>).unwrap()),
                     })),
-                    <span class="ident">source</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">source_layer</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;landuse&quot;</span>.<span class="ident">to_string</span>()),
+                    source: <span class="prelude-val">None</span>,
+                    source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;landuse&quot;</span>.to_string()),
                 },
-                <span class="ident">StyleLayer</span> {
-                    <span class="ident">index</span>: <span class="number">2</span>,
-                    <span class="ident">id</span>: <span class="string">&quot;landcover&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">typ</span>: <span class="string">&quot;fill&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">maxzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">minzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">metadata</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">paint</span>: <span class="prelude-val">Some</span>(<span class="ident">LayerPaint::Line</span>(<span class="ident">LinePaint</span> {
-                        <span class="ident">line_color</span>: <span class="prelude-val">Some</span>(<span class="ident">Color::from_str</span>(<span class="string">&quot;#aedfa3&quot;</span>).<span class="ident">unwrap</span>()),
+                StyleLayer {
+                    index: <span class="number">2</span>,
+                    id: <span class="string">&quot;landcover&quot;</span>.to_string(),
+                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
+                    maxzoom: <span class="prelude-val">None</span>,
+                    minzoom: <span class="prelude-val">None</span>,
+                    metadata: <span class="prelude-val">None</span>,
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
+                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#aedfa3&quot;</span>).unwrap()),
                     })),
-                    <span class="ident">source</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">source_layer</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;landcover&quot;</span>.<span class="ident">to_string</span>()),
+                    source: <span class="prelude-val">None</span>,
+                    source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;landcover&quot;</span>.to_string()),
                 },
-                <span class="ident">StyleLayer</span> {
-                    <span class="ident">index</span>: <span class="number">3</span>,
-                    <span class="ident">id</span>: <span class="string">&quot;transportation&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">typ</span>: <span class="string">&quot;line&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">maxzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">minzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">metadata</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">paint</span>: <span class="prelude-val">Some</span>(<span class="ident">LayerPaint::Line</span>(<span class="ident">LinePaint</span> {
-                        <span class="ident">line_color</span>: <span class="prelude-val">Some</span>(<span class="ident">Color::from_str</span>(<span class="string">&quot;#ffffff&quot;</span>).<span class="ident">unwrap</span>()),
+                StyleLayer {
+                    index: <span class="number">3</span>,
+                    id: <span class="string">&quot;transportation&quot;</span>.to_string(),
+                    typ: <span class="string">&quot;line&quot;</span>.to_string(),
+                    maxzoom: <span class="prelude-val">None</span>,
+                    minzoom: <span class="prelude-val">None</span>,
+                    metadata: <span class="prelude-val">None</span>,
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
+                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#ffffff&quot;</span>).unwrap()),
                     })),
-                    <span class="ident">source</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">source_layer</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;transportation&quot;</span>.<span class="ident">to_string</span>()),
+                    source: <span class="prelude-val">None</span>,
+                    source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;transportation&quot;</span>.to_string()),
                 },
-                <span class="ident">StyleLayer</span> {
-                    <span class="ident">index</span>: <span class="number">4</span>,
-                    <span class="ident">id</span>: <span class="string">&quot;building&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">typ</span>: <span class="string">&quot;fill&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">maxzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">minzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">metadata</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">paint</span>: <span class="prelude-val">Some</span>(<span class="ident">LayerPaint::Line</span>(<span class="ident">LinePaint</span> {
-                        <span class="ident">line_color</span>: <span class="prelude-val">Some</span>(<span class="ident">Color::from_str</span>(<span class="string">&quot;#d9d0c9&quot;</span>).<span class="ident">unwrap</span>()),
+                StyleLayer {
+                    index: <span class="number">4</span>,
+                    id: <span class="string">&quot;building&quot;</span>.to_string(),
+                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
+                    maxzoom: <span class="prelude-val">None</span>,
+                    minzoom: <span class="prelude-val">None</span>,
+                    metadata: <span class="prelude-val">None</span>,
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
+                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#d9d0c9&quot;</span>).unwrap()),
                     })),
-                    <span class="ident">source</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">source_layer</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;building&quot;</span>.<span class="ident">to_string</span>()),
+                    source: <span class="prelude-val">None</span>,
+                    source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;building&quot;</span>.to_string()),
                 },
-                <span class="ident">StyleLayer</span> {
-                    <span class="ident">index</span>: <span class="number">4</span>,
-                    <span class="ident">id</span>: <span class="string">&quot;water&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">typ</span>: <span class="string">&quot;fill&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">maxzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">minzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">metadata</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">paint</span>: <span class="prelude-val">Some</span>(<span class="ident">LayerPaint::Line</span>(<span class="ident">LinePaint</span> {
-                        <span class="ident">line_color</span>: <span class="prelude-val">Some</span>(<span class="ident">Color::from_str</span>(<span class="string">&quot;#aad3df&quot;</span>).<span class="ident">unwrap</span>()),
+                StyleLayer {
+                    index: <span class="number">4</span>,
+                    id: <span class="string">&quot;water&quot;</span>.to_string(),
+                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
+                    maxzoom: <span class="prelude-val">None</span>,
+                    minzoom: <span class="prelude-val">None</span>,
+                    metadata: <span class="prelude-val">None</span>,
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
+                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#aad3df&quot;</span>).unwrap()),
                     })),
-                    <span class="ident">source</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">source_layer</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;water&quot;</span>.<span class="ident">to_string</span>()),
+                    source: <span class="prelude-val">None</span>,
+                    source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;water&quot;</span>.to_string()),
                 },
-                <span class="ident">StyleLayer</span> {
-                    <span class="ident">index</span>: <span class="number">6</span>,
-                    <span class="ident">id</span>: <span class="string">&quot;waterway&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">typ</span>: <span class="string">&quot;fill&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">maxzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">minzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">metadata</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">paint</span>: <span class="prelude-val">Some</span>(<span class="ident">LayerPaint::Line</span>(<span class="ident">LinePaint</span> {
-                        <span class="ident">line_color</span>: <span class="prelude-val">Some</span>(<span class="ident">Color::from_str</span>(<span class="string">&quot;#aad3df&quot;</span>).<span class="ident">unwrap</span>()),
+                StyleLayer {
+                    index: <span class="number">6</span>,
+                    id: <span class="string">&quot;waterway&quot;</span>.to_string(),
+                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
+                    maxzoom: <span class="prelude-val">None</span>,
+                    minzoom: <span class="prelude-val">None</span>,
+                    metadata: <span class="prelude-val">None</span>,
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
+                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#aad3df&quot;</span>).unwrap()),
                     })),
-                    <span class="ident">source</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">source_layer</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;waterway&quot;</span>.<span class="ident">to_string</span>()),
+                    source: <span class="prelude-val">None</span>,
+                    source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;waterway&quot;</span>.to_string()),
                 },
-                <span class="ident">StyleLayer</span> {
-                    <span class="ident">index</span>: <span class="number">7</span>,
-                    <span class="ident">id</span>: <span class="string">&quot;boundary&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">typ</span>: <span class="string">&quot;line&quot;</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">maxzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">minzoom</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">metadata</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">paint</span>: <span class="prelude-val">Some</span>(<span class="ident">LayerPaint::Line</span>(<span class="ident">LinePaint</span> {
-                        <span class="ident">line_color</span>: <span class="prelude-val">Some</span>(<span class="ident">Color::from_str</span>(<span class="string">&quot;black&quot;</span>).<span class="ident">unwrap</span>()),
+                StyleLayer {
+                    index: <span class="number">7</span>,
+                    id: <span class="string">&quot;boundary&quot;</span>.to_string(),
+                    typ: <span class="string">&quot;line&quot;</span>.to_string(),
+                    maxzoom: <span class="prelude-val">None</span>,
+                    minzoom: <span class="prelude-val">None</span>,
+                    metadata: <span class="prelude-val">None</span>,
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
+                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;black&quot;</span>).unwrap()),
                     })),
-                    <span class="ident">source</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">source_layer</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;boundary&quot;</span>.<span class="ident">to_string</span>()),
+                    source: <span class="prelude-val">None</span>,
+                    source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;boundary&quot;</span>.to_string()),
                 },
             ],
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_reading</span>() {
-        <span class="comment">// language=JSON</span>
-        <span class="kw">let</span> <span class="ident">style_json_str</span> <span class="op">=</span> <span class="string">r##&quot;
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_reading() {
+        <span class="comment">// language=JSON
+        </span><span class="kw">let </span>style_json_str = <span class="string">r##&quot;
         {
           &quot;version&quot;: 8,
           &quot;name&quot;: &quot;Test Style&quot;,
@@ -405,8 +405,8 @@
         }
         &quot;##</span>;
 
-        <span class="kw">let</span> <span class="ident">_style</span>: <span class="ident">Style</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="ident">style_json_str</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>_style: Style = serde_json::from_str(style_json_str).unwrap();
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

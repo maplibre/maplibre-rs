@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/camera.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>camera.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/camera.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>camera.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -515,522 +515,522 @@
 <span id="515">515</span>
 <span id="516">516</span>
 <span id="517">517</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Main camera</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Main camera
 
-<span class="kw">use</span> <span class="ident">cgmath</span>::{<span class="ident">prelude</span>::<span class="kw-2">*</span>, <span class="ident">AbsDiffEq</span>, <span class="ident">Matrix4</span>, <span class="ident">Point2</span>, <span class="ident">Point3</span>, <span class="ident">Rad</span>, <span class="ident">Vector2</span>, <span class="ident">Vector3</span>, <span class="ident">Vector4</span>};
+</span><span class="kw">use </span>cgmath::{prelude::<span class="kw-2">*</span>, AbsDiffEq, Matrix4, Point2, Point3, Rad, Vector2, Vector3, Vector4};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::util</span>::{
-    <span class="ident">math</span>::{<span class="ident">bounds_from_points</span>, <span class="ident">Aabb2</span>, <span class="ident">Aabb3</span>, <span class="ident">Plane</span>},
-    <span class="ident">SignificantlyDifferent</span>,
+<span class="kw">use </span><span class="kw">crate</span>::util::{
+    math::{bounds_from_points, Aabb2, Aabb3, Plane},
+    SignificantlyDifferent,
 };
 
-<span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">OPENGL_TO_WGPU_MATRIX</span>: <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Matrix4::new</span>(
+<span class="attribute">#[rustfmt::skip]
+</span><span class="kw">pub const </span>OPENGL_TO_WGPU_MATRIX: Matrix4&lt;f64&gt; = Matrix4::new(
     <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>,
     <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>,
     <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.5</span>, <span class="number">0.0</span>,
     <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.5</span>, <span class="number">1.0</span>,
 );
 
-<span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FLIP_Y</span>: <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Matrix4::new</span>(
+<span class="attribute">#[rustfmt::skip]
+</span><span class="kw">pub const </span>FLIP_Y: Matrix4&lt;f64&gt; = Matrix4::new(
     <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, 
-    <span class="number">0.0</span>, <span class="op">-</span><span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, 
+    <span class="number">0.0</span>, -<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, 
     <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, 
     <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>,
 );
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ViewProjection</span>(<span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>);
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>ViewProjection(Matrix4&lt;f64&gt;);
 
-<span class="kw">impl</span> <span class="ident">ViewProjection</span> {
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invert</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">InvertedViewProjection</span> {
-        <span class="ident">InvertedViewProjection</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">invert</span>().<span class="ident">expect</span>(<span class="string">&quot;Unable to invert view projection&quot;</span>))
+<span class="kw">impl </span>ViewProjection {
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>invert(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; InvertedViewProjection {
+        InvertedViewProjection(<span class="self">self</span>.<span class="number">0</span>.invert().expect(<span class="string">&quot;Unable to invert view projection&quot;</span>))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">project</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="ident">Vector4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vector4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span> <span class="op">*</span> <span class="ident">vector</span>
+    <span class="kw">pub fn </span>project(<span class="kw-2">&amp;</span><span class="self">self</span>, vector: Vector4&lt;f64&gt;) -&gt; Vector4&lt;f64&gt; {
+        <span class="self">self</span>.<span class="number">0 </span>* vector
     }
 
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_model_view_projection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">projection</span>: <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>) -&gt; <span class="ident">ModelViewProjection</span> {
-        <span class="ident">ModelViewProjection</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">*</span> <span class="ident">projection</span>)
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>to_model_view_projection(<span class="kw-2">&amp;</span><span class="self">self</span>, projection: Matrix4&lt;f64&gt;) -&gt; ModelViewProjection {
+        ModelViewProjection(<span class="self">self</span>.<span class="number">0 </span>* projection)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">downcast</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">cast</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to cast view projection to f32&quot;</span>)
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InvertedViewProjection</span>(<span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>);
-
-<span class="kw">impl</span> <span class="ident">InvertedViewProjection</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">project</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vector</span>: <span class="ident">Vector4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vector4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span> <span class="op">*</span> <span class="ident">vector</span>
+    <span class="kw">pub fn </span>downcast(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Matrix4&lt;f32&gt; {
+        <span class="self">self</span>.<span class="number">0
+            </span>.cast::&lt;f32&gt;()
+            .expect(<span class="string">&quot;Unable to cast view projection to f32&quot;</span>)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ModelViewProjection</span>(<span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>);
+<span class="kw">pub struct </span>InvertedViewProjection(Matrix4&lt;f64&gt;);
 
-<span class="kw">impl</span> <span class="ident">ModelViewProjection</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">downcast</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">cast</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to cast view projection to f32&quot;</span>)
+<span class="kw">impl </span>InvertedViewProjection {
+    <span class="kw">pub fn </span>project(<span class="kw-2">&amp;</span><span class="self">self</span>, vector: Vector4&lt;f64&gt;) -&gt; Vector4&lt;f64&gt; {
+        <span class="self">self</span>.<span class="number">0 </span>* vector
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Camera</span> {
-    <span class="ident">position</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>, <span class="comment">// The z axis never changes, the zoom is used instead</span>
-    <span class="ident">yaw</span>: <span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
-    <span class="ident">pitch</span>: <span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>ModelViewProjection(Matrix4&lt;f64&gt;);
 
-    <span class="ident">width</span>: <span class="ident">f64</span>,
-    <span class="ident">height</span>: <span class="ident">f64</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">SignificantlyDifferent</span> <span class="kw">for</span> <span class="ident">Camera</span> {
-    <span class="kw">type</span> <span class="ident">Epsilon</span> <span class="op">=</span> <span class="ident">f64</span>;
-
-    <span class="kw">fn</span> <span class="ident">ne</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>, <span class="ident">epsilon</span>: <span class="ident"><span class="self">Self</span>::Epsilon</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">position</span>.<span class="ident">abs_diff_ne</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">position</span>, <span class="ident">epsilon</span>)
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">yaw</span>.<span class="ident">abs_diff_ne</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">yaw</span>, <span class="ident">epsilon</span>)
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">pitch</span>.<span class="ident">abs_diff_ne</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">pitch</span>, <span class="ident">epsilon</span>)
+<span class="kw">impl </span>ModelViewProjection {
+    <span class="kw">pub fn </span>downcast(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Matrix4&lt;f32&gt; {
+        <span class="self">self</span>.<span class="number">0
+            </span>.cast::&lt;f32&gt;()
+            .expect(<span class="string">&quot;Unable to cast view projection to f32&quot;</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Camera</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Y</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">position</span>: <span class="ident">V</span>,
-        <span class="ident">yaw</span>: <span class="ident">Y</span>,
-        <span class="ident">pitch</span>: <span class="ident">P</span>,
-        <span class="ident">width</span>: <span class="ident">u32</span>,
-        <span class="ident">height</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">position</span>: <span class="ident">position</span>.<span class="ident">into</span>(),
-            <span class="ident">yaw</span>: <span class="ident">yaw</span>.<span class="ident">into</span>(),
-            <span class="ident">pitch</span>: <span class="ident">pitch</span>.<span class="ident">into</span>(),
-            <span class="ident">width</span>: <span class="ident">width</span> <span class="kw">as</span> <span class="ident">f64</span>,
-            <span class="ident">height</span>: <span class="ident">height</span> <span class="kw">as</span> <span class="ident">f64</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>Camera {
+    position: Point3&lt;f64&gt;, <span class="comment">// The z axis never changes, the zoom is used instead
+    </span>yaw: cgmath::Rad&lt;f64&gt;,
+    pitch: cgmath::Rad&lt;f64&gt;,
+
+    width: f64,
+    height: f64,
+}
+
+<span class="kw">impl </span>SignificantlyDifferent <span class="kw">for </span>Camera {
+    <span class="kw">type </span>Epsilon = f64;
+
+    <span class="kw">fn </span>ne(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>, epsilon: <span class="self">Self</span>::Epsilon) -&gt; bool {
+        <span class="self">self</span>.position.abs_diff_ne(<span class="kw-2">&amp;</span>other.position, epsilon)
+            || <span class="self">self</span>.yaw.abs_diff_ne(<span class="kw-2">&amp;</span>other.yaw, epsilon)
+            || <span class="self">self</span>.pitch.abs_diff_ne(<span class="kw-2">&amp;</span>other.pitch, epsilon)
+    }
+}
+
+<span class="kw">impl </span>Camera {
+    <span class="kw">pub fn </span>new&lt;V: Into&lt;Point3&lt;f64&gt;&gt;, Y: Into&lt;cgmath::Rad&lt;f64&gt;&gt;, P: Into&lt;cgmath::Rad&lt;f64&gt;&gt;&gt;(
+        position: V,
+        yaw: Y,
+        pitch: P,
+        width: u32,
+        height: u32,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            position: position.into(),
+            yaw: yaw.into(),
+            pitch: pitch.into(),
+            width: width <span class="kw">as </span>f64,
+            height: height <span class="kw">as </span>f64,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">move_to</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">point</span>: <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">position</span> <span class="op">=</span> <span class="ident">point</span>;
+    <span class="kw">pub fn </span>move_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, point: Point3&lt;f64&gt;) {
+        <span class="self">self</span>.position = point;
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">move_relative</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">delta</span>: <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">position</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>;
+    <span class="kw">pub fn </span>move_relative(<span class="kw-2">&amp;mut </span><span class="self">self</span>, delta: Vector3&lt;f64&gt;) {
+        <span class="self">self</span>.position += delta;
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">width</span> <span class="op">=</span> <span class="ident">width</span> <span class="kw">as</span> <span class="ident">f64</span>;
-        <span class="self">self</span>.<span class="ident">height</span> <span class="op">=</span> <span class="ident">height</span> <span class="kw">as</span> <span class="ident">f64</span>;
+    <span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32) {
+        <span class="self">self</span>.width = width <span class="kw">as </span>f64;
+        <span class="self">self</span>.height = height <span class="kw">as </span>f64;
     }
 
-    <span class="kw">fn</span> <span class="ident">calc_matrix</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="ident">Matrix4::look_to_rh</span>(
-            <span class="self">self</span>.<span class="ident">position</span>,
-            <span class="ident">Vector3::new</span>(<span class="self">self</span>.<span class="ident">yaw</span>.<span class="ident">cos</span>(), <span class="self">self</span>.<span class="ident">pitch</span>.<span class="ident">sin</span>(), <span class="self">self</span>.<span class="ident">yaw</span>.<span class="ident">sin</span>()).<span class="ident">normalize</span>(),
-            <span class="ident">Vector3::unit_y</span>(),
+    <span class="kw">fn </span>calc_matrix(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Matrix4&lt;f64&gt; {
+        Matrix4::look_to_rh(
+            <span class="self">self</span>.position,
+            Vector3::new(<span class="self">self</span>.yaw.cos(), <span class="self">self</span>.pitch.sin(), <span class="self">self</span>.yaw.sin()).normalize(),
+            Vector3::unit_y(),
         )
     }
 
-    <span class="attribute">#[<span class="ident">tracing::instrument</span>(<span class="ident">skip_all</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">calc_view_proj</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">perspective</span>: <span class="kw-2">&amp;</span><span class="ident">Perspective</span>) -&gt; <span class="ident">ViewProjection</span> {
-        <span class="ident">ViewProjection</span>(<span class="ident">FLIP_Y</span> <span class="op">*</span> <span class="ident">perspective</span>.<span class="ident">current_projection</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">calc_matrix</span>())
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>calc_view_proj(<span class="kw-2">&amp;</span><span class="self">self</span>, perspective: <span class="kw-2">&amp;</span>Perspective) -&gt; ViewProjection {
+        ViewProjection(FLIP_Y * perspective.current_projection * <span class="self">self</span>.calc_matrix())
     }
 
-    <span class="doccomment">/// A transform which can be used to transfrom between clip and window space.</span>
-    <span class="doccomment">/// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle) (Direct3D).</span>
-    <span class="kw">fn</span> <span class="ident">clip_to_window_transform</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">min_depth</span> <span class="op">=</span> <span class="number">0.0</span>;
-        <span class="kw">let</span> <span class="ident">max_depth</span> <span class="op">=</span> <span class="number">1.0</span>;
-        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="number">0.0</span>;
-        <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="number">0.0</span>;
-        <span class="kw">let</span> <span class="ident">ox</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">width</span> <span class="op">/</span> <span class="number">2.0</span>;
-        <span class="kw">let</span> <span class="ident">oy</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">height</span> <span class="op">/</span> <span class="number">2.0</span>;
-        <span class="kw">let</span> <span class="ident">oz</span> <span class="op">=</span> <span class="ident">min_depth</span>;
-        <span class="kw">let</span> <span class="ident">pz</span> <span class="op">=</span> <span class="ident">max_depth</span> <span class="op">-</span> <span class="ident">min_depth</span>;
-        <span class="ident">Matrix4::from_cols</span>(
-            <span class="ident">Vector4::new</span>(<span class="self">self</span>.<span class="ident">width</span> <span class="op">/</span> <span class="number">2.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
-            <span class="ident">Vector4::new</span>(<span class="number">0.0</span>, <span class="op">-</span><span class="self">self</span>.<span class="ident">height</span> <span class="op">/</span> <span class="number">2.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
-            <span class="ident">Vector4::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="ident">pz</span>, <span class="number">0.0</span>),
-            <span class="ident">Vector4::new</span>(<span class="ident">ox</span>, <span class="ident">oy</span>, <span class="ident">oz</span>, <span class="number">1.0</span>),
+    <span class="doccomment">/// A transform which can be used to transfrom between clip and window space.
+    /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle) (Direct3D).
+    </span><span class="kw">fn </span>clip_to_window_transform(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Matrix4&lt;f64&gt; {
+        <span class="kw">let </span>min_depth = <span class="number">0.0</span>;
+        <span class="kw">let </span>max_depth = <span class="number">1.0</span>;
+        <span class="kw">let </span>x = <span class="number">0.0</span>;
+        <span class="kw">let </span>y = <span class="number">0.0</span>;
+        <span class="kw">let </span>ox = x + <span class="self">self</span>.width / <span class="number">2.0</span>;
+        <span class="kw">let </span>oy = y + <span class="self">self</span>.height / <span class="number">2.0</span>;
+        <span class="kw">let </span>oz = min_depth;
+        <span class="kw">let </span>pz = max_depth - min_depth;
+        Matrix4::from_cols(
+            Vector4::new(<span class="self">self</span>.width / <span class="number">2.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
+            Vector4::new(<span class="number">0.0</span>, -<span class="self">self</span>.height / <span class="number">2.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
+            Vector4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, pz, <span class="number">0.0</span>),
+            Vector4::new(ox, oy, oz, <span class="number">1.0</span>),
         )
     }
 
-    <span class="doccomment">/// Transforms coordinates in clip space to window coordinates.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline) (Direct3D).</span>
-    <span class="kw">fn</span> <span class="ident">clip_to_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">clip</span>: <span class="kw-2">&amp;</span><span class="ident">Vector4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vector4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-            <span class="kw">let</span> <span class="ident">ndc</span> <span class="op">=</span> <span class="ident">Vector4::new</span>(
-            <span class="ident">clip</span>.<span class="ident">x</span> <span class="op">/</span> <span class="ident">clip</span>.<span class="ident">w</span>,
-            <span class="ident">clip</span>.<span class="ident">y</span> <span class="op">/</span> <span class="ident">clip</span>.<span class="ident">w</span>,
-            <span class="ident">clip</span>.<span class="ident">z</span> <span class="op">/</span> <span class="ident">clip</span>.<span class="ident">w</span>,
-            <span class="number">1.0</span>
-        );
+    <span class="doccomment">/// Transforms coordinates in clip space to window coordinates.
+    ///
+    /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline) (Direct3D).
+    </span><span class="kw">fn </span>clip_to_window(<span class="kw-2">&amp;</span><span class="self">self</span>, clip: <span class="kw-2">&amp;</span>Vector4&lt;f64&gt;) -&gt; Vector4&lt;f64&gt; {
+        <span class="attribute">#[rustfmt::skip]
+            </span><span class="kw">let </span>ndc = Vector4::new(
+            clip.x / clip.w,
+            clip.y / clip.w,
+            clip.z / clip.w,
+            <span class="number">1.0
+        </span>);
 
-        <span class="self">self</span>.<span class="ident">clip_to_window_transform</span>() <span class="op">*</span> <span class="ident">ndc</span>
+        <span class="self">self</span>.clip_to_window_transform() * ndc
     }
-    <span class="doccomment">/// Alternative implementation to `clip_to_window`. Transforms coordinates in clip space to</span>
-    <span class="doccomment">/// window coordinates.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Adopted from [here](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkViewport.html)</span>
-    <span class="doccomment">/// and [here](https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/) (Vulkan).</span>
-    <span class="kw">fn</span> <span class="ident">clip_to_window_vulkan</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">clip</span>: <span class="kw-2">&amp;</span><span class="ident">Vector4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>) -&gt; <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-            <span class="kw">let</span> <span class="ident">ndc</span> <span class="op">=</span> <span class="ident">Vector4::new</span>(
-            <span class="ident">clip</span>.<span class="ident">x</span> <span class="op">/</span> <span class="ident">clip</span>.<span class="ident">w</span>,
-            <span class="ident">clip</span>.<span class="ident">y</span> <span class="op">/</span> <span class="ident">clip</span>.<span class="ident">w</span>,
-            <span class="ident">clip</span>.<span class="ident">z</span> <span class="op">/</span> <span class="ident">clip</span>.<span class="ident">w</span>,
-            <span class="number">1.0</span>
-        );
+    <span class="doccomment">/// Alternative implementation to `clip_to_window`. Transforms coordinates in clip space to
+    /// window coordinates.
+    ///
+    /// Adopted from [here](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkViewport.html)
+    /// and [here](https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/) (Vulkan).
+    </span><span class="kw">fn </span>clip_to_window_vulkan(<span class="kw-2">&amp;</span><span class="self">self</span>, clip: <span class="kw-2">&amp;</span>Vector4&lt;f64&gt;) -&gt; Vector3&lt;f64&gt; {
+        <span class="attribute">#[rustfmt::skip]
+            </span><span class="kw">let </span>ndc = Vector4::new(
+            clip.x / clip.w,
+            clip.y / clip.w,
+            clip.z / clip.w,
+            <span class="number">1.0
+        </span>);
 
-        <span class="kw">let</span> <span class="ident">min_depth</span> <span class="op">=</span> <span class="number">0.0</span>;
-        <span class="kw">let</span> <span class="ident">max_depth</span> <span class="op">=</span> <span class="number">1.0</span>;
+        <span class="kw">let </span>min_depth = <span class="number">0.0</span>;
+        <span class="kw">let </span>max_depth = <span class="number">1.0</span>;
 
-        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="number">0.0</span>;
-        <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="number">0.0</span>;
-        <span class="kw">let</span> <span class="ident">ox</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">width</span> <span class="op">/</span> <span class="number">2.0</span>;
-        <span class="kw">let</span> <span class="ident">oy</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">height</span> <span class="op">/</span> <span class="number">2.0</span>;
-        <span class="kw">let</span> <span class="ident">oz</span> <span class="op">=</span> <span class="ident">min_depth</span>;
-        <span class="kw">let</span> <span class="ident">px</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>;
-        <span class="kw">let</span> <span class="ident">py</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">height</span>;
-        <span class="kw">let</span> <span class="ident">pz</span> <span class="op">=</span> <span class="ident">max_depth</span> <span class="op">-</span> <span class="ident">min_depth</span>;
-        <span class="kw">let</span> <span class="ident">xd</span> <span class="op">=</span> <span class="ident">ndc</span>.<span class="ident">x</span>;
-        <span class="kw">let</span> <span class="ident">yd</span> <span class="op">=</span> <span class="ident">ndc</span>.<span class="ident">y</span>;
-        <span class="kw">let</span> <span class="ident">zd</span> <span class="op">=</span> <span class="ident">ndc</span>.<span class="ident">z</span>;
-        <span class="ident">Vector3::new</span>(<span class="ident">px</span> <span class="op">/</span> <span class="number">2.0</span> <span class="op">*</span> <span class="ident">xd</span> <span class="op">+</span> <span class="ident">ox</span>, <span class="ident">py</span> <span class="op">/</span> <span class="number">2.0</span> <span class="op">*</span> <span class="ident">yd</span> <span class="op">+</span> <span class="ident">oy</span>, <span class="ident">pz</span> <span class="op">*</span> <span class="ident">zd</span> <span class="op">+</span> <span class="ident">oz</span>)
+        <span class="kw">let </span>x = <span class="number">0.0</span>;
+        <span class="kw">let </span>y = <span class="number">0.0</span>;
+        <span class="kw">let </span>ox = x + <span class="self">self</span>.width / <span class="number">2.0</span>;
+        <span class="kw">let </span>oy = y + <span class="self">self</span>.height / <span class="number">2.0</span>;
+        <span class="kw">let </span>oz = min_depth;
+        <span class="kw">let </span>px = <span class="self">self</span>.width;
+        <span class="kw">let </span>py = <span class="self">self</span>.height;
+        <span class="kw">let </span>pz = max_depth - min_depth;
+        <span class="kw">let </span>xd = ndc.x;
+        <span class="kw">let </span>yd = ndc.y;
+        <span class="kw">let </span>zd = ndc.z;
+        Vector3::new(px / <span class="number">2.0 </span>* xd + ox, py / <span class="number">2.0 </span>* yd + oy, pz * zd + oz)
     }
 
-    <span class="doccomment">/// Order of transformations reversed: https://computergraphics.stackexchange.com/questions/6087/screen-space-coordinates-to-eye-space-conversion/6093</span>
-    <span class="doccomment">/// `w` is lost.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// OpenGL explanation: https://www.khronos.org/opengl/wiki/Compute_eye_space_from_window_space#From_window_to_ndc</span>
-    <span class="kw">fn</span> <span class="ident">window_to_world</span>(
+    <span class="doccomment">/// Order of transformations reversed: https://computergraphics.stackexchange.com/questions/6087/screen-space-coordinates-to-eye-space-conversion/6093
+    /// `w` is lost.
+    ///
+    /// OpenGL explanation: https://www.khronos.org/opengl/wiki/Compute_eye_space_from_window_space#From_window_to_ndc
+    </span><span class="kw">fn </span>window_to_world(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
-        <span class="ident">inverted_view_proj</span>: <span class="kw-2">&amp;</span><span class="ident">InvertedViewProjection</span>,
-    ) -&gt; <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
-        <span class="kw">let</span> <span class="ident">fixed_window</span> <span class="op">=</span> <span class="ident">Vector4::new</span>(
-            <span class="ident">window</span>.<span class="ident">x</span>,
-            <span class="ident">window</span>.<span class="ident">y</span>,
-            <span class="ident">window</span>.<span class="ident">z</span>,
-            <span class="number">1.0</span>
-        );
+        window: <span class="kw-2">&amp;</span>Vector3&lt;f64&gt;,
+        inverted_view_proj: <span class="kw-2">&amp;</span>InvertedViewProjection,
+    ) -&gt; Vector3&lt;f64&gt; {
+        <span class="attribute">#[rustfmt::skip]
+        </span><span class="kw">let </span>fixed_window = Vector4::new(
+            window.x,
+            window.y,
+            window.z,
+            <span class="number">1.0
+        </span>);
 
-        <span class="kw">let</span> <span class="ident">ndc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clip_to_window_transform</span>().<span class="ident">invert</span>().<span class="ident">unwrap</span>() <span class="op">*</span> <span class="ident">fixed_window</span>;
-        <span class="kw">let</span> <span class="ident">unprojected</span> <span class="op">=</span> <span class="ident">inverted_view_proj</span>.<span class="ident">project</span>(<span class="ident">ndc</span>);
+        <span class="kw">let </span>ndc = <span class="self">self</span>.clip_to_window_transform().invert().unwrap() * fixed_window;
+        <span class="kw">let </span>unprojected = inverted_view_proj.project(ndc);
 
-        <span class="ident">Vector3::new</span>(
-            <span class="ident">unprojected</span>.<span class="ident">x</span> <span class="op">/</span> <span class="ident">unprojected</span>.<span class="ident">w</span>,
-            <span class="ident">unprojected</span>.<span class="ident">y</span> <span class="op">/</span> <span class="ident">unprojected</span>.<span class="ident">w</span>,
-            <span class="ident">unprojected</span>.<span class="ident">z</span> <span class="op">/</span> <span class="ident">unprojected</span>.<span class="ident">w</span>,
+        Vector3::new(
+            unprojected.x / unprojected.w,
+            unprojected.y / unprojected.w,
+            unprojected.z / unprojected.w,
         )
     }
 
-    <span class="doccomment">/// Alternative implementation to `window_to_world`</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Adopted from [here](https://docs.rs/nalgebra-glm/latest/src/nalgebra_glm/ext/matrix_projection.rs.html#164-181).</span>
-    <span class="kw">fn</span> <span class="ident">window_to_world_nalgebra</span>(
-        <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
-        <span class="ident">inverted_view_proj</span>: <span class="kw-2">&amp;</span><span class="ident">InvertedViewProjection</span>,
-        <span class="ident">width</span>: <span class="ident">f64</span>,
-        <span class="ident">height</span>: <span class="ident">f64</span>,
-    ) -&gt; <span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">pt</span> <span class="op">=</span> <span class="ident">Vector4::new</span>(
-            <span class="number">2.0</span> <span class="op">*</span> (<span class="ident">window</span>.<span class="ident">x</span> <span class="op">-</span> <span class="number">0.0</span>) <span class="op">/</span> <span class="ident">width</span> <span class="op">-</span> <span class="number">1.0</span>,
-            <span class="number">2.0</span> <span class="op">*</span> (<span class="ident">height</span> <span class="op">-</span> <span class="ident">window</span>.<span class="ident">y</span> <span class="op">-</span> <span class="number">0.0</span>) <span class="op">/</span> <span class="ident">height</span> <span class="op">-</span> <span class="number">1.0</span>,
-            <span class="ident">window</span>.<span class="ident">z</span>,
+    <span class="doccomment">/// Alternative implementation to `window_to_world`
+    ///
+    /// Adopted from [here](https://docs.rs/nalgebra-glm/latest/src/nalgebra_glm/ext/matrix_projection.rs.html#164-181).
+    </span><span class="kw">fn </span>window_to_world_nalgebra(
+        window: <span class="kw-2">&amp;</span>Vector3&lt;f64&gt;,
+        inverted_view_proj: <span class="kw-2">&amp;</span>InvertedViewProjection,
+        width: f64,
+        height: f64,
+    ) -&gt; Vector3&lt;f64&gt; {
+        <span class="kw">let </span>pt = Vector4::new(
+            <span class="number">2.0 </span>* (window.x - <span class="number">0.0</span>) / width - <span class="number">1.0</span>,
+            <span class="number">2.0 </span>* (height - window.y - <span class="number">0.0</span>) / height - <span class="number">1.0</span>,
+            window.z,
             <span class="number">1.0</span>,
         );
-        <span class="kw">let</span> <span class="ident">unprojected</span> <span class="op">=</span> <span class="ident">inverted_view_proj</span>.<span class="ident">project</span>(<span class="ident">pt</span>);
+        <span class="kw">let </span>unprojected = inverted_view_proj.project(pt);
 
-        <span class="ident">Vector3::new</span>(
-            <span class="ident">unprojected</span>.<span class="ident">x</span> <span class="op">/</span> <span class="ident">unprojected</span>.<span class="ident">w</span>,
-            <span class="ident">unprojected</span>.<span class="ident">y</span> <span class="op">/</span> <span class="ident">unprojected</span>.<span class="ident">w</span>,
-            <span class="ident">unprojected</span>.<span class="ident">z</span> <span class="op">/</span> <span class="ident">unprojected</span>.<span class="ident">w</span>,
+        Vector3::new(
+            unprojected.x / unprojected.w,
+            unprojected.y / unprojected.w,
+            unprojected.z / unprojected.w,
         )
     }
 
-    <span class="doccomment">/// Gets the world coordinates for the specified `window` coordinates on the `z=0` plane.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">window_to_world_at_ground</span>(
+    <span class="doccomment">/// Gets the world coordinates for the specified `window` coordinates on the `z=0` plane.
+    </span><span class="kw">pub fn </span>window_to_world_at_ground(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">Vector2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
-        <span class="ident">inverted_view_proj</span>: <span class="kw-2">&amp;</span><span class="ident">InvertedViewProjection</span>,
-        <span class="ident">bound</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vector3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">near_world</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">window_to_world</span>(<span class="kw-2">&amp;</span><span class="ident">Vector3::new</span>(<span class="ident">window</span>.<span class="ident">x</span>, <span class="ident">window</span>.<span class="ident">y</span>, <span class="number">0.0</span>), <span class="ident">inverted_view_proj</span>);
+        window: <span class="kw-2">&amp;</span>Vector2&lt;f64&gt;,
+        inverted_view_proj: <span class="kw-2">&amp;</span>InvertedViewProjection,
+        bound: bool,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Vector3&lt;f64&gt;&gt; {
+        <span class="kw">let </span>near_world =
+            <span class="self">self</span>.window_to_world(<span class="kw-2">&amp;</span>Vector3::new(window.x, window.y, <span class="number">0.0</span>), inverted_view_proj);
 
-        <span class="kw">let</span> <span class="ident">far_world</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">window_to_world</span>(<span class="kw-2">&amp;</span><span class="ident">Vector3::new</span>(<span class="ident">window</span>.<span class="ident">x</span>, <span class="ident">window</span>.<span class="ident">y</span>, <span class="number">1.0</span>), <span class="ident">inverted_view_proj</span>);
+        <span class="kw">let </span>far_world =
+            <span class="self">self</span>.window_to_world(<span class="kw-2">&amp;</span>Vector3::new(window.x, window.y, <span class="number">1.0</span>), inverted_view_proj);
 
-        <span class="comment">// for z = 0 in world coordinates</span>
-        <span class="comment">// Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf</span>
-        <span class="kw">let</span> <span class="ident">u</span> <span class="op">=</span> <span class="op">-</span><span class="ident">near_world</span>.<span class="ident">z</span> <span class="op">/</span> (<span class="ident">far_world</span>.<span class="ident">z</span> <span class="op">-</span> <span class="ident">near_world</span>.<span class="ident">z</span>);
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">bound</span> <span class="op">|</span><span class="op">|</span> (<span class="number">0.0</span>..<span class="op">=</span><span class="number">1.0</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">u</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">near_world</span> <span class="op">+</span> <span class="ident">u</span> <span class="op">*</span> (<span class="ident">far_world</span> <span class="op">-</span> <span class="ident">near_world</span>))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+        <span class="comment">// for z = 0 in world coordinates
+        // Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf
+        </span><span class="kw">let </span>u = -near_world.z / (far_world.z - near_world.z);
+        <span class="kw">if </span>!bound || (<span class="number">0.0</span>..=<span class="number">1.0</span>).contains(<span class="kw-2">&amp;</span>u) {
+            <span class="prelude-val">Some</span>(near_world + u * (far_world - near_world))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 
-    <span class="doccomment">/// Calculates an [`Aabb2`] bounding box which contains at least the visible area on the `z=0`</span>
-    <span class="doccomment">/// plane. One can think of it as being the bounding box of the geometry which forms the</span>
-    <span class="doccomment">/// intersection between the viewing frustum and the `z=0` plane.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This implementation works in the world 3D space. It casts rays from the corners of the</span>
-    <span class="doccomment">/// window to calculate intersections points with the `z=0` plane. Then a bounding box is</span>
-    <span class="doccomment">/// calculated.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *Note:* It is possible that no such bounding box exists. This is the case if the `z=0` plane</span>
-    <span class="doccomment">/// is not in view.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">view_region_bounding_box</span>(
+    <span class="doccomment">/// Calculates an [`Aabb2`] bounding box which contains at least the visible area on the `z=0`
+    /// plane. One can think of it as being the bounding box of the geometry which forms the
+    /// intersection between the viewing frustum and the `z=0` plane.
+    ///
+    /// This implementation works in the world 3D space. It casts rays from the corners of the
+    /// window to calculate intersections points with the `z=0` plane. Then a bounding box is
+    /// calculated.
+    ///
+    /// *Note:* It is possible that no such bounding box exists. This is the case if the `z=0` plane
+    /// is not in view.
+    </span><span class="kw">pub fn </span>view_region_bounding_box(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">inverted_view_proj</span>: <span class="kw-2">&amp;</span><span class="ident">InvertedViewProjection</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Aabb2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">screen_bounding_box</span> <span class="op">=</span> [
-            <span class="ident">Vector2::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>),
-            <span class="ident">Vector2::new</span>(<span class="self">self</span>.<span class="ident">width</span>, <span class="number">0.0</span>),
-            <span class="ident">Vector2::new</span>(<span class="self">self</span>.<span class="ident">width</span>, <span class="self">self</span>.<span class="ident">height</span>),
-            <span class="ident">Vector2::new</span>(<span class="number">0.0</span>, <span class="self">self</span>.<span class="ident">height</span>),
+        inverted_view_proj: <span class="kw-2">&amp;</span>InvertedViewProjection,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Aabb2&lt;f64&gt;&gt; {
+        <span class="kw">let </span>screen_bounding_box = [
+            Vector2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+            Vector2::new(<span class="self">self</span>.width, <span class="number">0.0</span>),
+            Vector2::new(<span class="self">self</span>.width, <span class="self">self</span>.height),
+            Vector2::new(<span class="number">0.0</span>, <span class="self">self</span>.height),
         ]
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">point</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">window_to_world_at_ground</span>(<span class="kw-2">&amp;</span><span class="ident">point</span>, <span class="ident">inverted_view_proj</span>, <span class="bool-val">false</span>));
+        .map(|point| <span class="self">self</span>.window_to_world_at_ground(<span class="kw-2">&amp;</span>point, inverted_view_proj, <span class="bool-val">false</span>));
 
-        <span class="kw">let</span> (<span class="ident">min</span>, <span class="ident">max</span>) <span class="op">=</span> <span class="ident">bounds_from_points</span>(
-            <span class="ident">screen_bounding_box</span>
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">flatten</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">point</span><span class="op">|</span> [<span class="ident">point</span>.<span class="ident">x</span>, <span class="ident">point</span>.<span class="ident">y</span>]),
+        <span class="kw">let </span>(min, max) = bounds_from_points(
+            screen_bounding_box
+                .into_iter()
+                .flatten()
+                .map(|point| [point.x, point.y]),
         )<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Some</span>(<span class="ident">Aabb2::new</span>(<span class="ident">Point2::from</span>(<span class="ident">min</span>), <span class="ident">Point2::from</span>(<span class="ident">max</span>)))
+        <span class="prelude-val">Some</span>(Aabb2::new(Point2::from(min), Point2::from(max)))
     }
-    <span class="doccomment">/// An alternative implementation for `view_bounding_box`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This implementation works in the NDC space. We are creating a plane in the world 3D space.</span>
-    <span class="doccomment">/// Then we are transforming it to the NDC space. In NDC space it is easy to calculate</span>
-    <span class="doccomment">/// the intersection points between an Aabb3 and a plane. The resulting Aabb2 is returned.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">view_region_bounding_box_ndc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">perspective</span>: <span class="kw-2">&amp;</span><span class="ident">Perspective</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Aabb2</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">view_proj</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">calc_view_proj</span>(<span class="ident">perspective</span>);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">view_proj</span>.<span class="ident">project</span>(<span class="ident">Vector4::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">view_proj</span>.<span class="ident">project</span>(<span class="ident">Vector4::new</span>(<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">view_proj</span>.<span class="ident">project</span>(<span class="ident">Vector4::new</span>(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
+    <span class="doccomment">/// An alternative implementation for `view_bounding_box`.
+    ///
+    /// This implementation works in the NDC space. We are creating a plane in the world 3D space.
+    /// Then we are transforming it to the NDC space. In NDC space it is easy to calculate
+    /// the intersection points between an Aabb3 and a plane. The resulting Aabb2 is returned.
+    </span><span class="kw">pub fn </span>view_region_bounding_box_ndc(<span class="kw-2">&amp;</span><span class="self">self</span>, perspective: <span class="kw-2">&amp;</span>Perspective) -&gt; <span class="prelude-ty">Option</span>&lt;Aabb2&lt;f64&gt;&gt; {
+        <span class="kw">let </span>view_proj = <span class="self">self</span>.calc_view_proj(perspective);
+        <span class="kw">let </span>a = view_proj.project(Vector4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
+        <span class="kw">let </span>b = view_proj.project(Vector4::new(<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
+        <span class="kw">let </span>c = view_proj.project(Vector4::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
 
-        <span class="kw">let</span> <span class="ident">a_ndc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clip_to_window</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>).<span class="ident">truncate</span>();
-        <span class="kw">let</span> <span class="ident">b_ndc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clip_to_window</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>).<span class="ident">truncate</span>();
-        <span class="kw">let</span> <span class="ident">c_ndc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clip_to_window</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>).<span class="ident">truncate</span>();
-        <span class="kw">let</span> <span class="ident">to_ndc</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="number">1.0</span> <span class="op">/</span> <span class="self">self</span>.<span class="ident">width</span>, <span class="number">1.0</span> <span class="op">/</span> <span class="self">self</span>.<span class="ident">height</span>, <span class="number">1.0</span>);
-        <span class="kw">let</span> <span class="ident">plane</span>: <span class="ident">Plane</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Plane::from_points</span>(
-            <span class="ident">Point3::from_vec</span>(<span class="ident">a_ndc</span>.<span class="ident">mul_element_wise</span>(<span class="ident">to_ndc</span>)),
-            <span class="ident">Point3::from_vec</span>(<span class="ident">b_ndc</span>.<span class="ident">mul_element_wise</span>(<span class="ident">to_ndc</span>)),
-            <span class="ident">Point3::from_vec</span>(<span class="ident">c_ndc</span>.<span class="ident">mul_element_wise</span>(<span class="ident">to_ndc</span>)),
+        <span class="kw">let </span>a_ndc = <span class="self">self</span>.clip_to_window(<span class="kw-2">&amp;</span>a).truncate();
+        <span class="kw">let </span>b_ndc = <span class="self">self</span>.clip_to_window(<span class="kw-2">&amp;</span>b).truncate();
+        <span class="kw">let </span>c_ndc = <span class="self">self</span>.clip_to_window(<span class="kw-2">&amp;</span>c).truncate();
+        <span class="kw">let </span>to_ndc = Vector3::new(<span class="number">1.0 </span>/ <span class="self">self</span>.width, <span class="number">1.0 </span>/ <span class="self">self</span>.height, <span class="number">1.0</span>);
+        <span class="kw">let </span>plane: Plane&lt;f64&gt; = Plane::from_points(
+            Point3::from_vec(a_ndc.mul_element_wise(to_ndc)),
+            Point3::from_vec(b_ndc.mul_element_wise(to_ndc)),
+            Point3::from_vec(c_ndc.mul_element_wise(to_ndc)),
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">points</span> <span class="op">=</span> <span class="ident">plane</span>.<span class="ident">intersection_points_aabb3</span>(<span class="kw-2">&amp;</span><span class="ident">Aabb3::new</span>(
-            <span class="ident">Point3::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
-            <span class="ident">Point3::new</span>(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>),
+        <span class="kw">let </span>points = plane.intersection_points_aabb3(<span class="kw-2">&amp;</span>Aabb3::new(
+            Point3::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),
+            Point3::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>),
         ));
 
-        <span class="kw">let</span> <span class="ident">inverted_view_proj</span> <span class="op">=</span> <span class="ident">view_proj</span>.<span class="ident">invert</span>();
+        <span class="kw">let </span>inverted_view_proj = view_proj.invert();
 
-        <span class="kw">let</span> <span class="ident">from_ndc</span> <span class="op">=</span> <span class="ident">Vector3::new</span>(<span class="self">self</span>.<span class="ident">width</span>, <span class="self">self</span>.<span class="ident">height</span>, <span class="number">1.0</span>);
-        <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">points</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">point</span><span class="op">|</span> {
-                <span class="self">self</span>.<span class="ident">window_to_world</span>(<span class="kw-2">&amp;</span><span class="ident">point</span>.<span class="ident">mul_element_wise</span>(<span class="ident">from_ndc</span>), <span class="kw-2">&amp;</span><span class="ident">inverted_view_proj</span>)
+        <span class="kw">let </span>from_ndc = Vector3::new(<span class="self">self</span>.width, <span class="self">self</span>.height, <span class="number">1.0</span>);
+        <span class="kw">let </span>vec = points
+            .iter()
+            .map(|point| {
+                <span class="self">self</span>.window_to_world(<span class="kw-2">&amp;</span>point.mul_element_wise(from_ndc), <span class="kw-2">&amp;</span>inverted_view_proj)
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let</span> <span class="ident">min_x</span> <span class="op">=</span> <span class="ident">vec</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">point</span><span class="op">|</span> <span class="ident">point</span>.<span class="ident">x</span>)
-            .<span class="ident">min_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">partial_cmp</span>(<span class="ident">b</span>).<span class="ident">unwrap</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">min_y</span> <span class="op">=</span> <span class="ident">vec</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">point</span><span class="op">|</span> <span class="ident">point</span>.<span class="ident">y</span>)
-            .<span class="ident">min_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">partial_cmp</span>(<span class="ident">b</span>).<span class="ident">unwrap</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">max_x</span> <span class="op">=</span> <span class="ident">vec</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">point</span><span class="op">|</span> <span class="ident">point</span>.<span class="ident">x</span>)
-            .<span class="ident">max_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">partial_cmp</span>(<span class="ident">b</span>).<span class="ident">unwrap</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">max_y</span> <span class="op">=</span> <span class="ident">vec</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">point</span><span class="op">|</span> <span class="ident">point</span>.<span class="ident">y</span>)
-            .<span class="ident">max_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">partial_cmp</span>(<span class="ident">b</span>).<span class="ident">unwrap</span>())<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(<span class="ident">Aabb2::new</span>(
-            <span class="ident">Point2::new</span>(<span class="ident">min_x</span>, <span class="ident">min_y</span>),
-            <span class="ident">Point2::new</span>(<span class="ident">max_x</span>, <span class="ident">max_y</span>),
+        <span class="kw">let </span>min_x = vec
+            .iter()
+            .map(|point| point.x)
+            .min_by(|a, b| a.partial_cmp(b).unwrap())<span class="question-mark">?</span>;
+        <span class="kw">let </span>min_y = vec
+            .iter()
+            .map(|point| point.y)
+            .min_by(|a, b| a.partial_cmp(b).unwrap())<span class="question-mark">?</span>;
+        <span class="kw">let </span>max_x = vec
+            .iter()
+            .map(|point| point.x)
+            .max_by(|a, b| a.partial_cmp(b).unwrap())<span class="question-mark">?</span>;
+        <span class="kw">let </span>max_y = vec
+            .iter()
+            .map(|point| point.y)
+            .max_by(|a, b| a.partial_cmp(b).unwrap())<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>(Aabb2::new(
+            Point2::new(min_x, min_y),
+            Point2::new(max_x, max_y),
         ))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Point3</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">position</span>
+    <span class="kw">pub fn </span>position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Point3&lt;f64&gt; {
+        <span class="self">self</span>.position
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">yaw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">yaw</span>
+    <span class="kw">pub fn </span>yaw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; cgmath::Rad&lt;f64&gt; {
+        <span class="self">self</span>.yaw
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">yaw_self</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">delta</span>: <span class="ident">P</span>) {
-        <span class="self">self</span>.<span class="ident">yaw</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>.<span class="ident">into</span>();
+    <span class="kw">pub fn </span>yaw_self&lt;P: Into&lt;Rad&lt;f64&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, delta: P) {
+        <span class="self">self</span>.yaw += delta.into();
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pitch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">pitch</span>
+    <span class="kw">pub fn </span>pitch(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; cgmath::Rad&lt;f64&gt; {
+        <span class="self">self</span>.pitch
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pitch_self</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">delta</span>: <span class="ident">P</span>) {
-        <span class="self">self</span>.<span class="ident">pitch</span> <span class="op">+</span><span class="op">=</span> <span class="ident">delta</span>.<span class="ident">into</span>();
+    <span class="kw">pub fn </span>pitch_self&lt;P: Into&lt;Rad&lt;f64&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, delta: P) {
+        <span class="self">self</span>.pitch += delta.into();
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Perspective</span> {
-    <span class="ident">fovy</span>: <span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
-    <span class="ident">znear</span>: <span class="ident">f64</span>,
-    <span class="ident">zfar</span>: <span class="ident">f64</span>,
+<span class="kw">pub struct </span>Perspective {
+    fovy: cgmath::Rad&lt;f64&gt;,
+    znear: f64,
+    zfar: f64,
 
-    <span class="ident">current_projection</span>: <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>,
+    current_projection: Matrix4&lt;f64&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Perspective</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">width</span>: <span class="ident">u32</span>,
-        <span class="ident">height</span>: <span class="ident">u32</span>,
-        <span class="ident">fovy</span>: <span class="ident">F</span>,
-        <span class="ident">znear</span>: <span class="ident">f64</span>,
-        <span class="ident">zfar</span>: <span class="ident">f64</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">rad</span> <span class="op">=</span> <span class="ident">fovy</span>.<span class="ident">into</span>();
-        <span class="self">Self</span> {
-            <span class="ident">current_projection</span>: <span class="ident"><span class="self">Self</span>::calc_matrix</span>(<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="ident">height</span> <span class="kw">as</span> <span class="ident">f64</span>, <span class="ident">rad</span>, <span class="ident">znear</span>, <span class="ident">zfar</span>),
-            <span class="ident">fovy</span>: <span class="ident">rad</span>,
-            <span class="ident">znear</span>,
-            <span class="ident">zfar</span>,
+<span class="kw">impl </span>Perspective {
+    <span class="kw">pub fn </span>new&lt;F: Into&lt;cgmath::Rad&lt;f64&gt;&gt;&gt;(
+        width: u32,
+        height: u32,
+        fovy: F,
+        znear: f64,
+        zfar: f64,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>rad = fovy.into();
+        <span class="self">Self </span>{
+            current_projection: <span class="self">Self</span>::calc_matrix(width <span class="kw">as </span>f64 / height <span class="kw">as </span>f64, rad, znear, zfar),
+            fovy: rad,
+            znear,
+            zfar,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">current_projection</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::calc_matrix</span>(
-            <span class="ident">width</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">/</span> <span class="ident">height</span> <span class="kw">as</span> <span class="ident">f64</span>,
-            <span class="self">self</span>.<span class="ident">fovy</span>,
-            <span class="self">self</span>.<span class="ident">znear</span>,
-            <span class="self">self</span>.<span class="ident">zfar</span>,
+    <span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32) {
+        <span class="self">self</span>.current_projection = <span class="self">Self</span>::calc_matrix(
+            width <span class="kw">as </span>f64 / height <span class="kw">as </span>f64,
+            <span class="self">self</span>.fovy,
+            <span class="self">self</span>.znear,
+            <span class="self">self</span>.zfar,
         );
     }
 
-    <span class="kw">fn</span> <span class="ident">calc_matrix</span>(<span class="ident">aspect</span>: <span class="ident">f64</span>, <span class="ident">fovy</span>: <span class="ident">cgmath::Rad</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span>, <span class="ident">znear</span>: <span class="ident">f64</span>, <span class="ident">zfar</span>: <span class="ident">f64</span>) -&gt; <span class="ident">Matrix4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> {
-        <span class="ident">OPENGL_TO_WGPU_MATRIX</span> <span class="op">*</span> <span class="ident">cgmath::perspective</span>(<span class="ident">fovy</span>, <span class="ident">aspect</span>, <span class="ident">znear</span>, <span class="ident">zfar</span>)
+    <span class="kw">fn </span>calc_matrix(aspect: f64, fovy: cgmath::Rad&lt;f64&gt;, znear: f64, zfar: f64) -&gt; Matrix4&lt;f64&gt; {
+        OPENGL_TO_WGPU_MATRIX * cgmath::perspective(fovy, aspect, znear, zfar)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">cgmath</span>::{<span class="ident">AbsDiffEq</span>, <span class="ident">Vector2</span>, <span class="ident">Vector3</span>, <span class="ident">Vector4</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>cgmath::{AbsDiffEq, Vector2, Vector3, Vector4};
 
-    <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Camera</span>, <span class="ident">Perspective</span>};
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::render::camera</span>::{<span class="ident">InvertedViewProjection</span>, <span class="ident">ViewProjection</span>};
+    <span class="kw">use super</span>::{Camera, Perspective};
+    <span class="kw">use </span><span class="kw">crate</span>::render::camera::{InvertedViewProjection, ViewProjection};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test</span>() {
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="number">1920.0</span>;
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="number">1080.0</span>;
-        <span class="kw">let</span> <span class="ident">camera</span> <span class="op">=</span> <span class="ident">Camera::new</span>(
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test() {
+        <span class="kw">let </span>width = <span class="number">1920.0</span>;
+        <span class="kw">let </span>height = <span class="number">1080.0</span>;
+        <span class="kw">let </span>camera = Camera::new(
             (<span class="number">0.0</span>, <span class="number">5.0</span>, <span class="number">5000.0</span>),
-            <span class="ident">cgmath::Deg</span>(<span class="op">-</span><span class="number">90.0</span>),
-            <span class="ident">cgmath::Deg</span>(<span class="number">45.0</span>),
-            <span class="ident">width</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>,
+            cgmath::Deg(-<span class="number">90.0</span>),
+            cgmath::Deg(<span class="number">45.0</span>),
+            width <span class="kw">as </span>u32,
+            height <span class="kw">as </span>u32,
         );
-        <span class="comment">// 4732.561319582916</span>
-        <span class="kw">let</span> <span class="ident">perspective</span> <span class="op">=</span> <span class="ident">Perspective::new</span>(
-            <span class="ident">width</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">cgmath::Deg</span>(<span class="number">45.0</span>),
+        <span class="comment">// 4732.561319582916
+        </span><span class="kw">let </span>perspective = Perspective::new(
+            width <span class="kw">as </span>u32,
+            height <span class="kw">as </span>u32,
+            cgmath::Deg(<span class="number">45.0</span>),
             <span class="number">0.1</span>,
             <span class="number">100000.0</span>,
         );
-        <span class="kw">let</span> <span class="ident">view_proj</span>: <span class="ident">ViewProjection</span> <span class="op">=</span> <span class="ident">camera</span>.<span class="ident">calc_view_proj</span>(<span class="kw-2">&amp;</span><span class="ident">perspective</span>);
-        <span class="kw">let</span> <span class="ident">inverted_view_proj</span>: <span class="ident">InvertedViewProjection</span> <span class="op">=</span> <span class="ident">view_proj</span>.<span class="ident">invert</span>();
+        <span class="kw">let </span>view_proj: ViewProjection = camera.calc_view_proj(<span class="kw-2">&amp;</span>perspective);
+        <span class="kw">let </span>inverted_view_proj: InvertedViewProjection = view_proj.invert();
 
-        <span class="kw">let</span> <span class="ident">world_pos</span>: <span class="ident">Vector4</span><span class="op">&lt;</span><span class="ident">f64</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vector4::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>);
-        <span class="kw">let</span> <span class="ident">clip</span> <span class="op">=</span> <span class="ident">view_proj</span>.<span class="ident">project</span>(<span class="ident">world_pos</span>);
+        <span class="kw">let </span>world_pos: Vector4&lt;f64&gt; = Vector4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>);
+        <span class="kw">let </span>clip = view_proj.project(world_pos);
 
-        <span class="kw">let</span> <span class="ident">origin_clip_space</span> <span class="op">=</span> <span class="ident">view_proj</span>.<span class="ident">project</span>(<span class="ident">Vector4::new</span>(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
-        <span class="macro">println!</span>(<span class="string">&quot;origin w in clip space: {:?}&quot;</span>, <span class="ident">origin_clip_space</span>.<span class="ident">w</span>);
+        <span class="kw">let </span>origin_clip_space = view_proj.project(Vector4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
+        <span class="macro">println!</span>(<span class="string">&quot;origin w in clip space: {:?}&quot;</span>, origin_clip_space.w);
 
-        <span class="macro">println!</span>(<span class="string">&quot;world_pos: {:?}&quot;</span>, <span class="ident">world_pos</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;clip: {:?}&quot;</span>, <span class="ident">clip</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;world_pos: {:?}&quot;</span>, <span class="ident">view_proj</span>.<span class="ident">invert</span>().<span class="ident">project</span>(<span class="ident">clip</span>));
+        <span class="macro">println!</span>(<span class="string">&quot;world_pos: {:?}&quot;</span>, world_pos);
+        <span class="macro">println!</span>(<span class="string">&quot;clip: {:?}&quot;</span>, clip);
+        <span class="macro">println!</span>(<span class="string">&quot;world_pos: {:?}&quot;</span>, view_proj.invert().project(clip));
 
-        <span class="macro">println!</span>(<span class="string">&quot;window: {:?}&quot;</span>, <span class="ident">camera</span>.<span class="ident">clip_to_window_vulkan</span>(<span class="kw-2">&amp;</span><span class="ident">clip</span>));
-        <span class="kw">let</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">camera</span>.<span class="ident">clip_to_window</span>(<span class="kw-2">&amp;</span><span class="ident">clip</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;window (matrix): {:?}&quot;</span>, <span class="ident">window</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;window: {:?}&quot;</span>, camera.clip_to_window_vulkan(<span class="kw-2">&amp;</span>clip));
+        <span class="kw">let </span>window = camera.clip_to_window(<span class="kw-2">&amp;</span>clip);
+        <span class="macro">println!</span>(<span class="string">&quot;window (matrix): {:?}&quot;</span>, window);
 
-        <span class="comment">// --------- nalgebra</span>
+        <span class="comment">// --------- nalgebra
 
-        <span class="macro">println!</span>(
+        </span><span class="macro">println!</span>(
             <span class="string">&quot;r world (nalgebra): {:?}&quot;</span>,
-            <span class="ident">Camera::window_to_world_nalgebra</span>(
-                <span class="kw-2">&amp;</span><span class="ident">window</span>.<span class="ident">truncate</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">inverted_view_proj</span>,
-                <span class="ident">width</span>,
-                <span class="ident">height</span>
+            Camera::window_to_world_nalgebra(
+                <span class="kw-2">&amp;</span>window.truncate(),
+                <span class="kw-2">&amp;</span>inverted_view_proj,
+                width,
+                height
             )
         );
 
-        <span class="comment">// -------- far vs. near plane trick</span>
+        <span class="comment">// -------- far vs. near plane trick
 
-        <span class="kw">let</span> <span class="ident">near_world</span> <span class="op">=</span> <span class="ident">Camera::window_to_world_nalgebra</span>(
-            <span class="kw-2">&amp;</span><span class="ident">Vector3::new</span>(<span class="ident">window</span>.<span class="ident">x</span>, <span class="ident">window</span>.<span class="ident">y</span>, <span class="number">0.0</span>),
-            <span class="kw-2">&amp;</span><span class="ident">inverted_view_proj</span>,
-            <span class="ident">width</span>,
-            <span class="ident">height</span>,
+        </span><span class="kw">let </span>near_world = Camera::window_to_world_nalgebra(
+            <span class="kw-2">&amp;</span>Vector3::new(window.x, window.y, <span class="number">0.0</span>),
+            <span class="kw-2">&amp;</span>inverted_view_proj,
+            width,
+            height,
         );
 
-        <span class="kw">let</span> <span class="ident">far_world</span> <span class="op">=</span> <span class="ident">Camera::window_to_world_nalgebra</span>(
-            <span class="kw-2">&amp;</span><span class="ident">Vector3::new</span>(<span class="ident">window</span>.<span class="ident">x</span>, <span class="ident">window</span>.<span class="ident">y</span>, <span class="number">1.0</span>),
-            <span class="kw-2">&amp;</span><span class="ident">inverted_view_proj</span>,
-            <span class="ident">width</span>,
-            <span class="ident">height</span>,
+        <span class="kw">let </span>far_world = Camera::window_to_world_nalgebra(
+            <span class="kw-2">&amp;</span>Vector3::new(window.x, window.y, <span class="number">1.0</span>),
+            <span class="kw-2">&amp;</span>inverted_view_proj,
+            width,
+            height,
         );
 
-        <span class="comment">// for z = 0 in world coordinates</span>
-        <span class="kw">let</span> <span class="ident">u</span> <span class="op">=</span> <span class="op">-</span><span class="ident">near_world</span>.<span class="ident">z</span> <span class="op">/</span> (<span class="ident">far_world</span>.<span class="ident">z</span> <span class="op">-</span> <span class="ident">near_world</span>.<span class="ident">z</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;u: {:?}&quot;</span>, <span class="ident">u</span>);
-        <span class="kw">let</span> <span class="ident">unprojected</span> <span class="op">=</span> <span class="ident">near_world</span> <span class="op">+</span> <span class="ident">u</span> <span class="op">*</span> (<span class="ident">far_world</span> <span class="op">-</span> <span class="ident">near_world</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;unprojected: {:?}&quot;</span>, <span class="ident">unprojected</span>);
-        <span class="macro">assert!</span>(<span class="ident">Vector3::new</span>(<span class="ident">world_pos</span>.<span class="ident">x</span>, <span class="ident">world_pos</span>.<span class="ident">y</span>, <span class="ident">world_pos</span>.<span class="ident">z</span>).<span class="ident">abs_diff_eq</span>(<span class="kw-2">&amp;</span><span class="ident">unprojected</span>, <span class="number">0.05</span>));
+        <span class="comment">// for z = 0 in world coordinates
+        </span><span class="kw">let </span>u = -near_world.z / (far_world.z - near_world.z);
+        <span class="macro">println!</span>(<span class="string">&quot;u: {:?}&quot;</span>, u);
+        <span class="kw">let </span>unprojected = near_world + u * (far_world - near_world);
+        <span class="macro">println!</span>(<span class="string">&quot;unprojected: {:?}&quot;</span>, unprojected);
+        <span class="macro">assert!</span>(Vector3::new(world_pos.x, world_pos.y, world_pos.z).abs_diff_eq(<span class="kw-2">&amp;</span>unprojected, <span class="number">0.05</span>));
 
-        <span class="comment">// ---- test for unproject</span>
+        <span class="comment">// ---- test for unproject
 
-        <span class="kw">let</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">Vector2::new</span>(<span class="number">960.0</span>, <span class="number">631.0</span>); <span class="comment">// 0, 4096: passt nicht</span>
-                                                 <span class="comment">//let window = Vector2::new(962.0, 1.0); // 0, 300: passt nicht</span>
-                                                 <span class="comment">//let window = Vector2::new(960.0, 540.0); // 0, 0 passt</span>
-        <span class="kw">let</span> <span class="ident">near_world</span> <span class="op">=</span>
-            <span class="ident">camera</span>.<span class="ident">window_to_world</span>(<span class="kw-2">&amp;</span><span class="ident">Vector3::new</span>(<span class="ident">window</span>.<span class="ident">x</span>, <span class="ident">window</span>.<span class="ident">y</span>, <span class="number">0.0</span>), <span class="kw-2">&amp;</span><span class="ident">inverted_view_proj</span>);
+        </span><span class="kw">let </span>window = Vector2::new(<span class="number">960.0</span>, <span class="number">631.0</span>); <span class="comment">// 0, 4096: passt nicht
+                                                 //let window = Vector2::new(962.0, 1.0); // 0, 300: passt nicht
+                                                 //let window = Vector2::new(960.0, 540.0); // 0, 0 passt
+        </span><span class="kw">let </span>near_world =
+            camera.window_to_world(<span class="kw-2">&amp;</span>Vector3::new(window.x, window.y, <span class="number">0.0</span>), <span class="kw-2">&amp;</span>inverted_view_proj);
 
-        <span class="kw">let</span> <span class="ident">far_world</span> <span class="op">=</span>
-            <span class="ident">camera</span>.<span class="ident">window_to_world</span>(<span class="kw-2">&amp;</span><span class="ident">Vector3::new</span>(<span class="ident">window</span>.<span class="ident">x</span>, <span class="ident">window</span>.<span class="ident">y</span>, <span class="number">1.0</span>), <span class="kw-2">&amp;</span><span class="ident">inverted_view_proj</span>);
+        <span class="kw">let </span>far_world =
+            camera.window_to_world(<span class="kw-2">&amp;</span>Vector3::new(window.x, window.y, <span class="number">1.0</span>), <span class="kw-2">&amp;</span>inverted_view_proj);
 
-        <span class="comment">// for z = 0 in world coordinates</span>
-        <span class="kw">let</span> <span class="ident">u</span> <span class="op">=</span> <span class="op">-</span><span class="ident">near_world</span>.<span class="ident">z</span> <span class="op">/</span> (<span class="ident">far_world</span>.<span class="ident">z</span> <span class="op">-</span> <span class="ident">near_world</span>.<span class="ident">z</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;u: {:?}&quot;</span>, <span class="ident">u</span>);
-        <span class="kw">let</span> <span class="ident">unprojected</span> <span class="op">=</span> <span class="ident">near_world</span> <span class="op">+</span> <span class="ident">u</span> <span class="op">*</span> (<span class="ident">far_world</span> <span class="op">-</span> <span class="ident">near_world</span>);
-        <span class="macro">println!</span>(<span class="string">&quot;unprojected: {:?}&quot;</span>, <span class="ident">unprojected</span>);
-        <span class="comment">// ----</span>
+        <span class="comment">// for z = 0 in world coordinates
+        </span><span class="kw">let </span>u = -near_world.z / (far_world.z - near_world.z);
+        <span class="macro">println!</span>(<span class="string">&quot;u: {:?}&quot;</span>, u);
+        <span class="kw">let </span>unprojected = near_world + u * (far_world - near_world);
+        <span class="macro">println!</span>(<span class="string">&quot;unprojected: {:?}&quot;</span>, unprojected);
+        <span class="comment">// ----
 
-        <span class="comment">//assert!(reverse_world.abs_diff_eq(&amp;world_pos, 0.05))</span>
-    }
+        //assert!(reverse_world.abs_diff_eq(&amp;world_pos, 0.05))
+    </span>}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/shaders/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/shaders/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -290,175 +290,175 @@
 <span id="290">290</span>
 <span id="291">291</span>
 <span id="292">292</span>
-</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::identity_op</span>)]</span>
+</pre><pre class="rust"><code><span class="attribute">#![allow(clippy::identity_op)]
 
-<span class="kw">use</span> <span class="ident">bytemuck_derive</span>::{<span class="ident">Pod</span>, <span class="ident">Zeroable</span>};
-<span class="kw">use</span> <span class="ident">cgmath::SquareMatrix</span>;
+</span><span class="kw">use </span>bytemuck_derive::{Pod, Zeroable};
+<span class="kw">use </span>cgmath::SquareMatrix;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">coords::WorldCoords</span>,
-    <span class="ident">render::resource</span>::{<span class="ident">FragmentState</span>, <span class="ident">VertexBufferLayout</span>, <span class="ident">VertexState</span>},
+<span class="kw">use crate</span>::{
+    coords::WorldCoords,
+    render::resource::{FragmentState, VertexBufferLayout, VertexState},
 };
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Vec2f32</span> <span class="op">=</span> [<span class="ident">f32</span>; <span class="number">2</span>];
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Vec3f32</span> <span class="op">=</span> [<span class="ident">f32</span>; <span class="number">3</span>];
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Vec4f32</span> <span class="op">=</span> [<span class="ident">f32</span>; <span class="number">4</span>];
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Mat4x4f32</span> <span class="op">=</span> [<span class="ident">Vec4f32</span>; <span class="number">4</span>];
+<span class="kw">pub type </span>Vec2f32 = [f32; <span class="number">2</span>];
+<span class="kw">pub type </span>Vec3f32 = [f32; <span class="number">3</span>];
+<span class="kw">pub type </span>Vec4f32 = [f32; <span class="number">4</span>];
+<span class="kw">pub type </span>Mat4x4f32 = [Vec4f32; <span class="number">4</span>];
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">WorldCoords</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Vec3f32</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">world_coords</span>: <span class="ident">WorldCoords</span>) -&gt; <span class="self">Self</span> {
-        [<span class="ident">world_coords</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">world_coords</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="number">0.0</span>]
+<span class="kw">impl </span>From&lt;WorldCoords&gt; <span class="kw">for </span>Vec3f32 {
+    <span class="kw">fn </span>from(world_coords: WorldCoords) -&gt; <span class="self">Self </span>{
+        [world_coords.x <span class="kw">as </span>f32, world_coords.y <span class="kw">as </span>f32, <span class="number">0.0</span>]
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Shader</span> {
-    <span class="kw">fn</span> <span class="ident">describe_vertex</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">VertexState</span>;
-    <span class="kw">fn</span> <span class="ident">describe_fragment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">FragmentState</span>;
+<span class="kw">pub trait </span>Shader {
+    <span class="kw">fn </span>describe_vertex(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VertexState;
+    <span class="kw">fn </span>describe_fragment(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FragmentState;
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TileMaskShader</span> {
-    <span class="kw">pub</span> <span class="ident">format</span>: <span class="ident">wgpu::TextureFormat</span>,
-    <span class="kw">pub</span> <span class="ident">draw_colors</span>: <span class="ident">bool</span>,
+<span class="kw">pub struct </span>TileMaskShader {
+    <span class="kw">pub </span>format: wgpu::TextureFormat,
+    <span class="kw">pub </span>draw_colors: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">Shader</span> <span class="kw">for</span> <span class="ident">TileMaskShader</span> {
-    <span class="kw">fn</span> <span class="ident">describe_vertex</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">VertexState</span> {
-        <span class="ident">VertexState</span> {
-            <span class="ident">source</span>: <span class="macro">include_str!</span>(<span class="string">&quot;tile_mask.vertex.wgsl&quot;</span>),
-            <span class="ident">entry_point</span>: <span class="string">&quot;main&quot;</span>,
-            <span class="ident">buffers</span>: <span class="macro">vec!</span>[<span class="ident">VertexBufferLayout</span> {
-                <span class="ident">array_stride</span>: <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderTileMetadata</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>,
-                <span class="ident">step_mode</span>: <span class="ident">wgpu::VertexStepMode::Instance</span>,
-                <span class="ident">attributes</span>: <span class="macro">vec!</span>[
-                    <span class="comment">// translate</span>
-                    <span class="ident">wgpu::VertexAttribute</span> {
-                        <span class="ident">offset</span>: <span class="number">0</span>,
-                        <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x4</span>,
-                        <span class="ident">shader_location</span>: <span class="number">4</span>,
+<span class="kw">impl </span>Shader <span class="kw">for </span>TileMaskShader {
+    <span class="kw">fn </span>describe_vertex(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VertexState {
+        VertexState {
+            source: <span class="macro">include_str!</span>(<span class="string">&quot;tile_mask.vertex.wgsl&quot;</span>),
+            entry_point: <span class="string">&quot;main&quot;</span>,
+            buffers: <span class="macro">vec!</span>[VertexBufferLayout {
+                array_stride: std::mem::size_of::&lt;ShaderTileMetadata&gt;() <span class="kw">as </span>u64,
+                step_mode: wgpu::VertexStepMode::Instance,
+                attributes: <span class="macro">vec!</span>[
+                    <span class="comment">// translate
+                    </span>wgpu::VertexAttribute {
+                        offset: <span class="number">0</span>,
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: <span class="number">4</span>,
                     },
-                    <span class="ident">wgpu::VertexAttribute</span> {
-                        <span class="ident">offset</span>: <span class="number">1</span> <span class="op">*</span> <span class="ident">wgpu::VertexFormat::Float32x4</span>.<span class="ident">size</span>(),
-                        <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x4</span>,
-                        <span class="ident">shader_location</span>: <span class="number">5</span>,
+                    wgpu::VertexAttribute {
+                        offset: <span class="number">1 </span>* wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: <span class="number">5</span>,
                     },
-                    <span class="ident">wgpu::VertexAttribute</span> {
-                        <span class="ident">offset</span>: <span class="number">2</span> <span class="op">*</span> <span class="ident">wgpu::VertexFormat::Float32x4</span>.<span class="ident">size</span>(),
-                        <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x4</span>,
-                        <span class="ident">shader_location</span>: <span class="number">6</span>,
+                    wgpu::VertexAttribute {
+                        offset: <span class="number">2 </span>* wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: <span class="number">6</span>,
                     },
-                    <span class="ident">wgpu::VertexAttribute</span> {
-                        <span class="ident">offset</span>: <span class="number">3</span> <span class="op">*</span> <span class="ident">wgpu::VertexFormat::Float32x4</span>.<span class="ident">size</span>(),
-                        <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x4</span>,
-                        <span class="ident">shader_location</span>: <span class="number">7</span>,
+                    wgpu::VertexAttribute {
+                        offset: <span class="number">3 </span>* wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32x4,
+                        shader_location: <span class="number">7</span>,
                     },
                 ],
             }],
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">describe_fragment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">FragmentState</span> {
-        <span class="ident">FragmentState</span> {
-            <span class="ident">source</span>: <span class="macro">include_str!</span>(<span class="string">&quot;tile_mask.fragment.wgsl&quot;</span>),
-            <span class="ident">entry_point</span>: <span class="string">&quot;main&quot;</span>,
-            <span class="ident">targets</span>: <span class="macro">vec!</span>[<span class="prelude-val">Some</span>(<span class="ident">wgpu::ColorTargetState</span> {
-                <span class="ident">format</span>: <span class="self">self</span>.<span class="ident">format</span>,
-                <span class="ident">blend</span>: <span class="prelude-val">None</span>,
-                <span class="ident">write_mask</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">draw_colors</span> {
-                    <span class="ident">wgpu::ColorWrites::ALL</span>
-                } <span class="kw">else</span> {
-                    <span class="ident">wgpu::ColorWrites::empty</span>()
+    <span class="kw">fn </span>describe_fragment(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FragmentState {
+        FragmentState {
+            source: <span class="macro">include_str!</span>(<span class="string">&quot;tile_mask.fragment.wgsl&quot;</span>),
+            entry_point: <span class="string">&quot;main&quot;</span>,
+            targets: <span class="macro">vec!</span>[<span class="prelude-val">Some</span>(wgpu::ColorTargetState {
+                format: <span class="self">self</span>.format,
+                blend: <span class="prelude-val">None</span>,
+                write_mask: <span class="kw">if </span><span class="self">self</span>.draw_colors {
+                    wgpu::ColorWrites::ALL
+                } <span class="kw">else </span>{
+                    wgpu::ColorWrites::empty()
                 },
             })],
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TileShader</span> {
-    <span class="kw">pub</span> <span class="ident">format</span>: <span class="ident">wgpu::TextureFormat</span>,
+<span class="kw">pub struct </span>TileShader {
+    <span class="kw">pub </span>format: wgpu::TextureFormat,
 }
 
-<span class="kw">impl</span> <span class="ident">Shader</span> <span class="kw">for</span> <span class="ident">TileShader</span> {
-    <span class="kw">fn</span> <span class="ident">describe_vertex</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">VertexState</span> {
-        <span class="ident">VertexState</span> {
-            <span class="ident">source</span>: <span class="macro">include_str!</span>(<span class="string">&quot;tile.vertex.wgsl&quot;</span>),
-            <span class="ident">entry_point</span>: <span class="string">&quot;main&quot;</span>,
-            <span class="ident">buffers</span>: <span class="macro">vec!</span>[
-                <span class="comment">// vertex data</span>
-                <span class="ident">VertexBufferLayout</span> {
-                    <span class="ident">array_stride</span>: <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderVertex</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>,
-                    <span class="ident">step_mode</span>: <span class="ident">wgpu::VertexStepMode::Vertex</span>,
-                    <span class="ident">attributes</span>: <span class="macro">vec!</span>[
-                        <span class="comment">// position</span>
-                        <span class="ident">wgpu::VertexAttribute</span> {
-                            <span class="ident">offset</span>: <span class="number">0</span>,
-                            <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x2</span>,
-                            <span class="ident">shader_location</span>: <span class="number">0</span>,
+<span class="kw">impl </span>Shader <span class="kw">for </span>TileShader {
+    <span class="kw">fn </span>describe_vertex(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VertexState {
+        VertexState {
+            source: <span class="macro">include_str!</span>(<span class="string">&quot;tile.vertex.wgsl&quot;</span>),
+            entry_point: <span class="string">&quot;main&quot;</span>,
+            buffers: <span class="macro">vec!</span>[
+                <span class="comment">// vertex data
+                </span>VertexBufferLayout {
+                    array_stride: std::mem::size_of::&lt;ShaderVertex&gt;() <span class="kw">as </span>u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: <span class="macro">vec!</span>[
+                        <span class="comment">// position
+                        </span>wgpu::VertexAttribute {
+                            offset: <span class="number">0</span>,
+                            format: wgpu::VertexFormat::Float32x2,
+                            shader_location: <span class="number">0</span>,
                         },
-                        <span class="comment">// normal</span>
-                        <span class="ident">wgpu::VertexAttribute</span> {
-                            <span class="ident">offset</span>: <span class="ident">wgpu::VertexFormat::Float32x2</span>.<span class="ident">size</span>(),
-                            <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x2</span>,
-                            <span class="ident">shader_location</span>: <span class="number">1</span>,
-                        },
-                    ],
-                },
-                <span class="comment">// tile metadata</span>
-                <span class="ident">VertexBufferLayout</span> {
-                    <span class="ident">array_stride</span>: <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderTileMetadata</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>,
-                    <span class="ident">step_mode</span>: <span class="ident">wgpu::VertexStepMode::Instance</span>,
-                    <span class="ident">attributes</span>: <span class="macro">vec!</span>[
-                        <span class="comment">// translate</span>
-                        <span class="ident">wgpu::VertexAttribute</span> {
-                            <span class="ident">offset</span>: <span class="number">0</span>,
-                            <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x4</span>,
-                            <span class="ident">shader_location</span>: <span class="number">4</span>,
-                        },
-                        <span class="ident">wgpu::VertexAttribute</span> {
-                            <span class="ident">offset</span>: <span class="number">1</span> <span class="op">*</span> <span class="ident">wgpu::VertexFormat::Float32x4</span>.<span class="ident">size</span>(),
-                            <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x4</span>,
-                            <span class="ident">shader_location</span>: <span class="number">5</span>,
-                        },
-                        <span class="ident">wgpu::VertexAttribute</span> {
-                            <span class="ident">offset</span>: <span class="number">2</span> <span class="op">*</span> <span class="ident">wgpu::VertexFormat::Float32x4</span>.<span class="ident">size</span>(),
-                            <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x4</span>,
-                            <span class="ident">shader_location</span>: <span class="number">6</span>,
-                        },
-                        <span class="ident">wgpu::VertexAttribute</span> {
-                            <span class="ident">offset</span>: <span class="number">3</span> <span class="op">*</span> <span class="ident">wgpu::VertexFormat::Float32x4</span>.<span class="ident">size</span>(),
-                            <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x4</span>,
-                            <span class="ident">shader_location</span>: <span class="number">7</span>,
-                        },
-                        <span class="comment">// zoom_factor</span>
-                        <span class="ident">wgpu::VertexAttribute</span> {
-                            <span class="ident">offset</span>: <span class="number">4</span> <span class="op">*</span> <span class="ident">wgpu::VertexFormat::Float32x4</span>.<span class="ident">size</span>(),
-                            <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32</span>,
-                            <span class="ident">shader_location</span>: <span class="number">9</span>,
+                        <span class="comment">// normal
+                        </span>wgpu::VertexAttribute {
+                            offset: wgpu::VertexFormat::Float32x2.size(),
+                            format: wgpu::VertexFormat::Float32x2,
+                            shader_location: <span class="number">1</span>,
                         },
                     ],
                 },
-                <span class="comment">// layer metadata</span>
-                <span class="ident">VertexBufferLayout</span> {
-                    <span class="ident">array_stride</span>: <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderLayerMetadata</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>,
-                    <span class="ident">step_mode</span>: <span class="ident">wgpu::VertexStepMode::Instance</span>,
-                    <span class="ident">attributes</span>: <span class="macro">vec!</span>[
-                        <span class="comment">// z_index</span>
-                        <span class="ident">wgpu::VertexAttribute</span> {
-                            <span class="ident">offset</span>: <span class="number">0</span>,
-                            <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32</span>,
-                            <span class="ident">shader_location</span>: <span class="number">10</span>,
+                <span class="comment">// tile metadata
+                </span>VertexBufferLayout {
+                    array_stride: std::mem::size_of::&lt;ShaderTileMetadata&gt;() <span class="kw">as </span>u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: <span class="macro">vec!</span>[
+                        <span class="comment">// translate
+                        </span>wgpu::VertexAttribute {
+                            offset: <span class="number">0</span>,
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: <span class="number">4</span>,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: <span class="number">1 </span>* wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: <span class="number">5</span>,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: <span class="number">2 </span>* wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: <span class="number">6</span>,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: <span class="number">3 </span>* wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: <span class="number">7</span>,
+                        },
+                        <span class="comment">// zoom_factor
+                        </span>wgpu::VertexAttribute {
+                            offset: <span class="number">4 </span>* wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: <span class="number">9</span>,
                         },
                     ],
                 },
-                <span class="comment">// features</span>
-                <span class="ident">VertexBufferLayout</span> {
-                    <span class="ident">array_stride</span>: <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">ShaderFeatureStyle</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>,
-                    <span class="ident">step_mode</span>: <span class="ident">wgpu::VertexStepMode::Vertex</span>,
-                    <span class="ident">attributes</span>: <span class="macro">vec!</span>[
-                        <span class="comment">// color</span>
-                        <span class="ident">wgpu::VertexAttribute</span> {
-                            <span class="ident">offset</span>: <span class="number">0</span>,
-                            <span class="ident">format</span>: <span class="ident">wgpu::VertexFormat::Float32x4</span>,
-                            <span class="ident">shader_location</span>: <span class="number">8</span>,
+                <span class="comment">// layer metadata
+                </span>VertexBufferLayout {
+                    array_stride: std::mem::size_of::&lt;ShaderLayerMetadata&gt;() <span class="kw">as </span>u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: <span class="macro">vec!</span>[
+                        <span class="comment">// z_index
+                        </span>wgpu::VertexAttribute {
+                            offset: <span class="number">0</span>,
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: <span class="number">10</span>,
+                        },
+                    ],
+                },
+                <span class="comment">// features
+                </span>VertexBufferLayout {
+                    array_stride: std::mem::size_of::&lt;ShaderFeatureStyle&gt;() <span class="kw">as </span>u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: <span class="macro">vec!</span>[
+                        <span class="comment">// color
+                        </span>wgpu::VertexAttribute {
+                            offset: <span class="number">0</span>,
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: <span class="number">8</span>,
                         },
                     ],
                 },
@@ -466,12 +466,12 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">describe_fragment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">FragmentState</span> {
-        <span class="ident">FragmentState</span> {
-            <span class="ident">source</span>: <span class="macro">include_str!</span>(<span class="string">&quot;tile.fragment.wgsl&quot;</span>),
-            <span class="ident">entry_point</span>: <span class="string">&quot;main&quot;</span>,
-            <span class="ident">targets</span>: <span class="macro">vec!</span>[<span class="prelude-val">Some</span>(<span class="ident">wgpu::ColorTargetState</span> {
-                <span class="ident">format</span>: <span class="self">self</span>.<span class="ident">format</span>,
+    <span class="kw">fn </span>describe_fragment(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FragmentState {
+        FragmentState {
+            source: <span class="macro">include_str!</span>(<span class="string">&quot;tile.fragment.wgsl&quot;</span>),
+            entry_point: <span class="string">&quot;main&quot;</span>,
+            targets: <span class="macro">vec!</span>[<span class="prelude-val">Some</span>(wgpu::ColorTargetState {
+                format: <span class="self">self</span>.format,
                 <span class="comment">/*blend: Some(wgpu::BlendState {
                     color: wgpu::BlendComponent {
                         src_factor: wgpu::BlendFactor::SrcAlpha,
@@ -483,104 +483,104 @@
                         dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
                         operation: wgpu::BlendOperation::Add,
                     },
-                }),*/</span>
-                <span class="ident">blend</span>: <span class="prelude-val">None</span>,
-                <span class="ident">write_mask</span>: <span class="ident">wgpu::ColorWrites::ALL</span>,
+                }),*/
+                </span>blend: <span class="prelude-val">None</span>,
+                write_mask: wgpu::ColorWrites::ALL,
             })],
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Pod</span>, <span class="ident">Zeroable</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderCamera</span> {
-    <span class="ident">view_proj</span>: <span class="ident">Mat4x4f32</span>,   <span class="comment">// 64 bytes</span>
-    <span class="ident">view_position</span>: <span class="ident">Vec4f32</span>, <span class="comment">// 16 bytes</span>
-}
+<span class="attribute">#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+</span><span class="kw">pub struct </span>ShaderCamera {
+    view_proj: Mat4x4f32,   <span class="comment">// 64 bytes
+    </span>view_position: Vec4f32, <span class="comment">// 16 bytes
+</span>}
 
-<span class="kw">impl</span> <span class="ident">ShaderCamera</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">view_proj</span>: <span class="ident">Mat4x4f32</span>, <span class="ident">view_position</span>: <span class="ident">Vec4f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">view_position</span>,
-            <span class="ident">view_proj</span>,
+<span class="kw">impl </span>ShaderCamera {
+    <span class="kw">pub fn </span>new(view_proj: Mat4x4f32, view_position: Vec4f32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            view_position,
+            view_proj,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ShaderCamera</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">view_position</span>: [<span class="number">0.0</span>; <span class="number">4</span>],
-            <span class="ident">view_proj</span>: <span class="ident">cgmath::Matrix4::identity</span>().<span class="ident">into</span>(),
+<span class="kw">impl </span>Default <span class="kw">for </span>ShaderCamera {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            view_position: [<span class="number">0.0</span>; <span class="number">4</span>],
+            view_proj: cgmath::Matrix4::identity().into(),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Pod</span>, <span class="ident">Zeroable</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderGlobals</span> {
-    <span class="ident">camera</span>: <span class="ident">ShaderCamera</span>,
+<span class="attribute">#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+</span><span class="kw">pub struct </span>ShaderGlobals {
+    camera: ShaderCamera,
 }
 
-<span class="kw">impl</span> <span class="ident">ShaderGlobals</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">camera_uniform</span>: <span class="ident">ShaderCamera</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">camera</span>: <span class="ident">camera_uniform</span>,
+<span class="kw">impl </span>ShaderGlobals {
+    <span class="kw">pub fn </span>new(camera_uniform: ShaderCamera) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            camera: camera_uniform,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Pod</span>, <span class="ident">Zeroable</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderVertex</span> {
-    <span class="kw">pub</span> <span class="ident">position</span>: <span class="ident">Vec2f32</span>,
-    <span class="kw">pub</span> <span class="ident">normal</span>: <span class="ident">Vec2f32</span>,
+<span class="attribute">#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+</span><span class="kw">pub struct </span>ShaderVertex {
+    <span class="kw">pub </span>position: Vec2f32,
+    <span class="kw">pub </span>normal: Vec2f32,
 }
 
-<span class="kw">impl</span> <span class="ident">ShaderVertex</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">position</span>: <span class="ident">Vec2f32</span>, <span class="ident">normal</span>: <span class="ident">Vec2f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">position</span>, <span class="ident">normal</span> }
+<span class="kw">impl </span>ShaderVertex {
+    <span class="kw">pub fn </span>new(position: Vec2f32, normal: Vec2f32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ position, normal }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ShaderVertex</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">ShaderVertex::new</span>([<span class="number">0.0</span>, <span class="number">0.0</span>], [<span class="number">0.0</span>, <span class="number">0.0</span>])
+<span class="kw">impl </span>Default <span class="kw">for </span>ShaderVertex {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        ShaderVertex::new([<span class="number">0.0</span>, <span class="number">0.0</span>], [<span class="number">0.0</span>, <span class="number">0.0</span>])
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Pod</span>, <span class="ident">Zeroable</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderFeatureStyle</span> {
-    <span class="kw">pub</span> <span class="ident">color</span>: <span class="ident">Vec4f32</span>,
+<span class="attribute">#[repr(C)]
+#[derive(Debug, Copy, Clone, Pod, Zeroable)]
+</span><span class="kw">pub struct </span>ShaderFeatureStyle {
+    <span class="kw">pub </span>color: Vec4f32,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Pod</span>, <span class="ident">Zeroable</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderLayerMetadata</span> {
-    <span class="kw">pub</span> <span class="ident">z_index</span>: <span class="ident">f32</span>,
+<span class="attribute">#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+</span><span class="kw">pub struct </span>ShaderLayerMetadata {
+    <span class="kw">pub </span>z_index: f32,
 }
 
-<span class="kw">impl</span> <span class="ident">ShaderLayerMetadata</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">z_index</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">z_index</span> }
+<span class="kw">impl </span>ShaderLayerMetadata {
+    <span class="kw">pub fn </span>new(z_index: f32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ z_index }
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Pod</span>, <span class="ident">Zeroable</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderTileMetadata</span> {
-    <span class="kw">pub</span> <span class="ident">transform</span>: <span class="ident">Mat4x4f32</span>,
-    <span class="kw">pub</span> <span class="ident">zoom_factor</span>: <span class="ident">f32</span>,
+<span class="attribute">#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+</span><span class="kw">pub struct </span>ShaderTileMetadata {
+    <span class="kw">pub </span>transform: Mat4x4f32,
+    <span class="kw">pub </span>zoom_factor: f32,
 }
 
-<span class="kw">impl</span> <span class="ident">ShaderTileMetadata</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">transform</span>: <span class="ident">Mat4x4f32</span>, <span class="ident">zoom_factor</span>: <span class="ident">f32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">transform</span>,
-            <span class="ident">zoom_factor</span>,
+<span class="kw">impl </span>ShaderTileMetadata {
+    <span class="kw">pub fn </span>new(transform: Mat4x4f32, zoom_factor: f32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            transform,
+            zoom_factor,
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
