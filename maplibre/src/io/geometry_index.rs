@@ -62,6 +62,12 @@ impl GeometryIndex {
     }
 }
 
+impl Default for GeometryIndex {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Index of tiles which can be of two types: spatial or linear.
 /// Spatial tiles are stored in a multi-dimentional tree which represents their position in the tile.
 /// Linear tiles are simply stored in a vector.
@@ -195,6 +201,12 @@ impl IndexProcessor {
 
     pub fn get_geometries(self) -> Vec<IndexedGeometry<f64>> {
         self.geometries
+    }
+}
+
+impl Default for IndexProcessor {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
