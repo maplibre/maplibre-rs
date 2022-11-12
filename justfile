@@ -4,8 +4,8 @@
 
 set shell := ["bash", "-c"]
 
-export NIGHTLY_TOOLCHAIN := "nightly-2022-10-23"
-export STABLE_TOOLCHAIN := "1.64"
+export NIGHTLY_TOOLCHAIN := "nightly-2022-11-12" #  Also change the version in android/gradle/lib/build.gradle
+export STABLE_TOOLCHAIN := "1.65"
 
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
