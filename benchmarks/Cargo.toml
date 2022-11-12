@@ -2,8 +2,6 @@
 name = "benchmarks"
 version = "0.1.0"
 description = ""
-categories = []
-edition = "2021"
 
 [dependencies]
 maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles", "thread-safe-futures"] }
