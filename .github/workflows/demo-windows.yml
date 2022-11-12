@@ -19,7 +19,12 @@ jobs:
         uses: ./.github/actions/setup
         with:
           targets: x86_64-pc-windows-msvc
-      - uses: ilammy/msvc-dev-cmd@v1 # Provide access to lib.exe
+      # Setup MSVC in the msys2 environment.
+      # Does roughly that: https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Fix environment
+        shell: bash
+        run: rm "C:\\msys64\usr\bin\link.exe" # Rust seems to prefer the link.exe from msys2 instead of MSVC
       - name: Show PATH
         shell: bash
         run: echo $PATH
