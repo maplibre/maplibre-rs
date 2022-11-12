@@ -40,7 +40,7 @@ jobs:
           }
           '@
           Out-File -FilePath .\test_program.c -InputObject $test_program -Encoding utf8
-          & cl .\test_program.c
+          cl .\test_program.c
       - name: Show PATH
         shell: powershell
         run: Write-Host $env:path
