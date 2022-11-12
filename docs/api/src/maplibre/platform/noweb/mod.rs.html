@@ -34,7 +34,7 @@
         .enable_time()
         .on_thread_start(|| {
             <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-            </span><span class="macro">tracy_client::set_thread_name!</span>(<span class="string">&quot;tokio-runtime-worker&quot;</span>);
+            </span><span class="macro">tracing_tracy::client::set_thread_name!</span>(<span class="string">&quot;tokio-runtime-worker&quot;</span>);
         })
         .build()
         .unwrap()
