@@ -14,25 +14,23 @@ export RUST_BACKTRACE := "1"
 stable-toolchain:
   rustup toolchain install $STABLE_TOOLCHAIN
 
-stable-override-toolchain:
+stable-override-toolchain: stable-toolchain
   rustup override set $STABLE_TOOLCHAIN
 
-stable-targets *FLAGS:
+stable-targets *FLAGS: stable-toolchain
   rustup toolchain install $STABLE_TOOLCHAIN --target {{FLAGS}}
 
-stable-install-clippy:
+stable-install-clippy: stable-toolchain
   rustup component add clippy --toolchain $STABLE_TOOLCHAIN
 
 
 nightly-toolchain:
   rustup toolchain install $NIGHTLY_TOOLCHAIN
-  # Without this, build could fail with rust not finding the 'core' crate
-  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN rustup target add wasm32-unknown-unknown
 
-nightly-override-toolchain:
+nightly-override-toolchain: nightly-toolchain
   rustup override set $NIGHTLY_TOOLCHAIN
 
-nightly-targets *FLAGS:
+nightly-targets *FLAGS: nightly-toolchain
   rustup toolchain install $NIGHTLY_TOOLCHAIN --target {{FLAGS}}
 
 nightly-install-rustfmt: nightly-toolchain
@@ -41,11 +39,11 @@ nightly-install-rustfmt: nightly-toolchain
 nightly-install-src: nightly-toolchain
   rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
 
-nightly-install-clippy:
+nightly-install-clippy: stable-toolchain
   rustup component add clippy --toolchain $NIGHTLY_TOOLCHAIN
 
 
-fixup:
+fixup: nightly-toolchain
   cargo clippy --allow-dirty --no-deps -p maplibre --fix
   cargo clippy --allow-dirty --no-deps -p maplibre-winit --fix
   cargo clippy --allow-dirty --no-deps -p maplibre-demo --fix
@@ -90,7 +88,7 @@ web-install PROJECT:
 # Example: just web-lib build-webgl
 # Example: just web-lib watch
 # Example: just web-lib watch-webgl
-web-lib TARGET *FLAGS: nightly-toolchain (web-install "lib")
+web-lib TARGET *FLAGS: nightly-toolchain (nightly-targets "wasm32-unknown-unknown") (web-install "lib")
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{TARGET}} -- {{FLAGS}}
 
 # Example: just web-demo start
@@ -98,7 +96,7 @@ web-lib TARGET *FLAGS: nightly-toolchain (web-install "lib")
 web-demo TARGET *FLAGS: (web-install "demo")
   cd web/demo && npm run {{TARGET}} -- {{FLAGS}}
 
-web-test FEATURES: nightly-toolchain
+web-test FEATURES: nightly-toolchain (nightly-targets "wasm32-unknown-unknown")
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown
 
 #profile-bench:
