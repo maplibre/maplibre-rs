@@ -104,14 +104,16 @@ web-test FEATURES: nightly-toolchain (nightly-targets "wasm32-unknown-unknown")
 
 build-android: build-android-lib build-android-demo
 
-build-android-lib: nightly-toolchain print-android-env
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd android/gradle && ./gradlew :lib:assembleDebug
+ensure-android-toolchain: nightly-toolchain (nightly-targets "x86_64-linux-android" "aarch64-linux-android" "i686-linux-android")
 
-build-android-demo: nightly-toolchain print-android-env
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd android/gradle && ./gradlew :demo:assembleDebug
+build-android-lib: ensure-android-toolchain print-android-env
+  cd android/gradle && ./gradlew :lib:assembleDebug
 
-install-android-demo: nightly-toolchain print-android-env
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd android/gradle && ./gradlew :demo:installDebug
+build-android-demo: ensure-android-toolchain print-android-env
+  cd android/gradle && ./gradlew :demo:assembleDebug
+
+install-android-demo: ensure-android-toolchain print-android-env
+  cd android/gradle && ./gradlew :demo:installDebug
 
 test-android TARGET: nightly-toolchain print-android-env
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p maplibre-android --target {{TARGET}} -Z build-std=std,panic_abort
@@ -131,7 +133,9 @@ PROJECT_DIR := "./apple/xcode/maplibre-rs.xcodeproj"
 BINARY_NAME := "maplibre_rs"
 BUILD_DIR := "./apple/build"
 
-xcodebuild-archive ARCH PLATFORM:
+ensure-apple-toolchain: stable-toolchain (stable-targets "aarch64-apple-darwin" "x86_64-apple-darwin" "aarch64-apple-ios" "aarch64-apple-ios-sim")
+
+xcodebuild-archive ARCH PLATFORM: ensure-apple-toolchain
   xcodebuild ARCHS="{{ARCH}}" archive -project "{{PROJECT_DIR}}" \
                                     -scheme "maplibre-rs" \
                                     -destination "generic/platform={{PLATFORM}}" \
@@ -176,9 +180,6 @@ xcodebuild-xcframework:
   echo "XC_FRAMEWORK_PATH: $XC_FRAMEWORK_PATH"
   echo "$framework_args" | xargs xcodebuild -create-xcframework -output "$XC_FRAMEWORK_PATH"
   cat "$XC_FRAMEWORK_PATH/Info.plist"
-
-book-serve:
-  mdbook serve docs
 
 # language=bash
 extract-tiles:
