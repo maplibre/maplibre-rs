@@ -50,9 +50,9 @@ pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
 }
 
 #[cfg(feature = "thread-safe-futures")]
-pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + Send + 'static)>>;
+pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = Result<(), Error>> + Send + 'static)>>;
 #[cfg(not(feature = "thread-safe-futures"))]
-pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + 'static)>>;
+pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = Result<(), Error>> + 'static)>>;
 
 /// Type definitions for asynchronous procedure calls. These functions can be called in an
 /// [`AsyncProcedureCall`]. Functions of this type are required to be statically available at
@@ -169,7 +169,8 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
                         source_client: SourceClient::new(HttpSourceClient::new(client)),
                     },
                 )
-                .await;
+                .await
+                .unwrap();
             })
             .unwrap();
     }

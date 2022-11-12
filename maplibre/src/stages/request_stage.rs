@@ -69,14 +69,14 @@ pub fn schedule<
     input: Input,
     context: C,
 ) -> AsyncProcedureFuture {
-    // FIXME: improve input handling
-    let input = match input {
-        Input::TileRequest(input) => Some(input),
-        _ => None,
-    }
-    .unwrap(); // FIXME (wasm-executor): Remove unwrap
-
     Box::pin(async move {
+        // FIXME: improve input handling
+        let input = match input {
+            Input::TileRequest(input) => Some(input),
+            _ => None,
+        }
+        .unwrap(); // FIXME (wasm-executor): Remove unwrap
+
         let coords = input.coords;
         let client = context.source_client();
 
@@ -108,6 +108,7 @@ pub fn schedule<
                 }
             }
         }
+        Ok(())
     })
 }
 
