@@ -15,7 +15,7 @@ runs:
         sudo apt install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers
     - name: Install wgpu-info
       shell: bash
-      run: cargo install --git "https://github.com/gfx-rs/wgpu" wgpu-info
+      run: cargo install --debug --git "https://github.com/gfx-rs/wgpu" wgpu-info
     - name: wgpu-info
       shell: bash
       run: wgpu-info
