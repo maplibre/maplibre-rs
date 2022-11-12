@@ -87,7 +87,7 @@ pub fn schedule<
                     phantom_hc: Default::default(),
                 });
                 let pipeline = build_vector_tile_pipeline();
-                pipeline.process((input, data), &mut pipeline_context);
+                pipeline.process((input, data), &mut pipeline_context)?;
             }
             Err(e) => {
                 log::error!("{:?}", &e);

@@ -76,7 +76,7 @@ impl BufferedTextureHead {
         use std::{fs::File, io::Write};
         // Note that we're not calling `.await` here.
         let buffer_slice = self.output_buffer.slice(..);
-        let buffer_future = buffer_slice.map_async(wgpu::MapMode::Read, |_| ());
+        buffer_slice.map_async(wgpu::MapMode::Read, |_| ());
 
         // Poll the device in a blocking manner so that our future resolves.
         // In an actual application, `device.poll(...)` should

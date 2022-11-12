@@ -7,7 +7,7 @@ use std::{
 };
 
 use bytemuck_derive::{Pod, Zeroable};
-use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
+use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -519,10 +519,6 @@ impl AlignedWorldTileCoords {
 pub struct WorldCoords {
     pub x: f64,
     pub y: f64,
-}
-
-fn tiles_with_z(z: u8) -> f64 {
-    2.0.pow(z)
 }
 
 impl WorldCoords {

@@ -193,8 +193,8 @@ pub struct WinitEventLoopProxy<ET: 'static> {
 }
 
 impl<ET: 'static> EventLoopProxy<ET> for WinitEventLoopProxy<ET> {
-    fn send_event(&self, event: ET) {
-        self.proxy.send_event(event); // FIXME: Handle unwrap
+    fn send_event(&self, event: ET) -> Result<(), Error> {
+        self.proxy.send_event(event).map_err(|e| Error::EventLoop)
     }
 }
 
