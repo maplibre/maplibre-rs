@@ -38,12 +38,12 @@ pub enum Message<T: Transferables> {
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Input {
     TileRequest(TileRequest),
+    NotYetImplemented, // TODO: Placeholder, should be removed when second input is added
 }
 
 /// Allows sending messages from workers to back to the caller.
 pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
     /// Send a message back to the caller.
-    // FIXME (wasm-executor): handle results send() calls
     fn send(&self, data: Message<T>) -> Result<(), Error>;
 
     fn source_client(&self) -> &SourceClient<HC>;

@@ -43,7 +43,6 @@ impl Scheduler for WebWorkerPoolScheduler {
                     Ok(JsValue::undefined())
                 })
             })
-            .unwrap(); // FIXME (wasm-executor): remove unwrap
-        Ok(())
+            .map_err(|e| Error::Scheduler)
     }
 }

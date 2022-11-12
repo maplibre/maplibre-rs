@@ -70,12 +70,9 @@ pub fn schedule<
     context: C,
 ) -> AsyncProcedureFuture {
     Box::pin(async move {
-        // FIXME: improve input handling
-        let input = match input {
-            Input::TileRequest(input) => Some(input),
-            _ => None,
-        }
-        .unwrap(); // FIXME (wasm-executor): Remove unwrap
+        let Input::TileRequest(input) = input else {
+            return Err(Error::APC)
+        };
 
         let coords = input.coords;
         let client = context.source_client();
@@ -96,7 +93,6 @@ pub fn schedule<
                 log::error!("{:?}", &e);
                 for to_load in &input.layers {
                     tracing::warn!("layer {} at {} unavailable", to_load, coords);
-                    // FIXME: Handle result
                     context.send(
                         Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
                             E::HttpClient,
@@ -104,7 +100,7 @@ pub fn schedule<
                             input.coords,
                             to_load.to_string(),
                         )),
-                    );
+                    )?;
                 }
             }
         }
