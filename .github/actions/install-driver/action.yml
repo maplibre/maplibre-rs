@@ -4,7 +4,8 @@ description: Install drivers
 runs:
   using: "composite"
   steps:
-    # lavapipe in Ubuntu 20.04 SEGVs. We can fix that with this PPA
+    # lavapipe in Ubuntu 20.04 SEGVs. We can fix that with this PPA.
+    # On Ubuntu 22.04 (currently used) using the PPA introduces SEGVs.
     #- name: Use oibaf PPA for drivers
     #  shell: bash
     #  run: |
@@ -16,7 +17,7 @@ runs:
     - name: Install wgpu-info
       shell: bash
       # Rev is for 0.14.1: https://github.com/gfx-rs/wgpu/tree/v0.14.1
-      run: cargo install --debug --git "https://github.com/gfx-rs/wgpu" --rev 77b9a99cf4c7ca2b6d46124f9e48e510c04b605d wgpu-info
+      run: cargo install --force --debug --git "https://github.com/gfx-rs/wgpu" --rev 77b9a99cf4c7ca2b6d46124f9e48e510c04b605d wgpu-info
     - name: wgpu-info
       shell: bash
       run: wgpu-info
