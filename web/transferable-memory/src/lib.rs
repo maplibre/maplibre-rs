@@ -1,17 +1,49 @@
-use std::{
-    mem,
-    mem::{align_of, size_of},
-};
+#![feature(allocator_api, new_uninit)]
+#![deny(unused_imports)]
 
-pub unsafe trait MemoryTransferable {
-    fn to_array_buffer(&self) {
+use std::mem::{align_of, size_of};
+
+use js_sys::{ArrayBuffer, Uint8Array};
+
+pub struct InTransferMemory {
+    pub type_id: u32,
+    pub buffer: ArrayBuffer,
+}
+
+pub unsafe trait MemoryTransferable
+where
+    Self: Copy,
+{
+    fn to_in_transfer(&self, type_id: u32) -> InTransferMemory {
+        let data = unsafe { bytes_of(self) };
+        let serialized_array_buffer = ArrayBuffer::new(data.len() as u32);
+        let serialized_array = Uint8Array::new(&serialized_array_buffer);
         unsafe {
-            let serialized_array_buffer = js_sys::ArrayBuffer::new(data.len() as u32);
-            let serialized_array = js_sys::Uint8Array::new(&serialized_array_buffer);
-            unsafe {
-                serialized_array.set(&Uint8Array::view(data), 0);
-            }
-            serialized_array_buffer
+            serialized_array.set(&Uint8Array::view(data), 0);
+        }
+
+        InTransferMemory {
+            type_id,
+            buffer: serialized_array_buffer,
+        }
+    }
+
+    fn from_in_transfer(in_transfer: InTransferMemory) -> Self
+    where
+        Self: Sized,
+    {
+        unsafe { *from_bytes(&Uint8Array::new(&in_transfer.buffer).to_vec()) }
+    }
+
+    fn from_in_transfer_boxed(in_transfer: InTransferMemory) -> Box<Self>
+    where
+        Self: Sized,
+    {
+        unsafe {
+            let data = Uint8Array::new(&in_transfer.buffer);
+            let mut uninit = Box::<Self>::new_zeroed();
+            data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
+            uninit.assume_init()
         }
     }
 }
@@ -72,7 +104,7 @@ impl core::fmt::Display for MemoryTransferableError {
 ///
 /// This is [`try_from_bytes`] but will panic on error.
 #[inline]
-pub unsafe fn from_bytes<T: Copy>(s: &[u8]) -> &T {
+unsafe fn from_bytes<T: Copy>(s: &[u8]) -> &T {
     match try_from_bytes(s) {
         Ok(t) => t,
         Err(e) => something_went_wrong("from_bytes", e),
@@ -86,7 +118,7 @@ pub unsafe fn from_bytes<T: Copy>(s: &[u8]) -> &T {
 /// * If the slice isn't aligned for the new type
 /// * If the slice's length isn’t exactly the size of the new type
 #[inline]
-pub(crate) unsafe fn try_from_bytes<T: Copy>(s: &[u8]) -> Result<&T, MemoryTransferableError> {
+unsafe fn try_from_bytes<T: Copy>(s: &[u8]) -> Result<&T, MemoryTransferableError> {
     if s.len() != size_of::<T>() {
         Err(MemoryTransferableError::SizeMismatch)
     } else if (s.as_ptr() as usize) % align_of::<T>() != 0 {
@@ -101,7 +133,7 @@ pub(crate) unsafe fn try_from_bytes<T: Copy>(s: &[u8]) -> Result<&T, MemoryTrans
 /// Any ZST becomes an empty slice, and in that case the pointer value of that
 /// empty slice might not match the pointer value of the input reference.
 #[inline(always)]
-pub(crate) unsafe fn bytes_of<T: Copy>(t: &T) -> &[u8] {
+unsafe fn bytes_of<T: Copy>(t: &T) -> &[u8] {
     if size_of::<T>() == 0 {
         &[]
     } else {
@@ -128,9 +160,7 @@ pub(crate) unsafe fn bytes_of<T: Copy>(t: &T) -> &[u8] {
 /// * Similarly, you can't convert between a [ZST](https://doc.rust-lang.org/nomicon/exotic-sizes.html#zero-sized-types-zsts)
 ///   and a non-ZST.
 #[inline]
-pub(crate) unsafe fn try_cast_slice<A: Copy, B: Copy>(
-    a: &[A],
-) -> Result<&[B], MemoryTransferableError> {
+unsafe fn try_cast_slice<A: Copy, B: Copy>(a: &[A]) -> Result<&[B], MemoryTransferableError> {
     // Note(Lokathor): everything with `align_of` and `size_of` will optimize away
     // after monomorphization.
     if align_of::<B>() > align_of::<A>() && (a.as_ptr() as usize) % align_of::<B>() != 0 {

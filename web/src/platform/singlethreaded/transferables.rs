@@ -47,7 +47,7 @@ impl Into<WorldTileCoords> for TransferableWorldTileCoords {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(MemoryTransferable, Copy, Clone)]
 pub struct LinearTileTessellated {
     pub coords: TransferableWorldTileCoords,
 }
@@ -64,7 +64,7 @@ impl TileTessellated for LinearTileTessellated {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(MemoryTransferable, Copy, Clone)]
 pub struct LinearLayerUnavailable {
     pub coords: TransferableWorldTileCoords,
     pub layer_name: [u8; 32],
@@ -92,7 +92,7 @@ impl UnavailableLayer for LinearLayerUnavailable {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(MemoryTransferable, Copy, Clone)]
 pub struct InnerData {
     pub coords: TransferableWorldTileCoords,
     pub layer_name: [u8; 32],
@@ -236,7 +236,7 @@ impl TessellatedLayer for LinearLayerTesselated {
     }
 }
 
-#[derive(Copy, Clone, MemoryTransferable)]
+#[derive(MemoryTransferable, Copy, Clone)]
 pub struct LinearLayerIndexed {
     pub coords: TransferableWorldTileCoords,
 }
@@ -260,7 +260,7 @@ impl IndexedLayer for LinearLayerIndexed {
     }
 }
 
-#[derive(MemoryTransferable)]
+#[derive(MemoryTransferable, Copy, Clone)]
 pub struct LinearTransferables;
 
 impl Transferables for LinearTransferables {

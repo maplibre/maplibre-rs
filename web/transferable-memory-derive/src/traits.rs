@@ -1,11 +1,6 @@
-use proc_macro2::{Ident, Span, TokenStream, TokenTree};
-use quote::{quote, quote_spanned, ToTokens};
-use syn::{
-    parse::{Parse, ParseStream, Parser},
-    punctuated::Punctuated,
-    spanned::Spanned,
-    Result, *,
-};
+use proc_macro2::{Span, TokenStream};
+use quote::{quote, quote_spanned};
+use syn::{spanned::Spanned, Result, *};
 
 macro_rules! bail {
     ($msg:expr $(,)?) => {

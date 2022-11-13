@@ -1,6 +1,5 @@
-use std::{cell::RefCell, mem, mem::size_of, rc::Rc, slice};
+use std::{cell::RefCell, mem, rc::Rc};
 
-use js_sys::Uint8Array;
 use log::info;
 use maplibre::{
     error::Error,
@@ -10,6 +9,7 @@ use maplibre::{
         transferables::Transferables,
     },
 };
+use transferable_memory::{InTransferMemory, MemoryTransferable};
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
@@ -54,62 +54,54 @@ impl SerializedMessageTag {
 }
 
 trait SerializableMessage {
-    fn serialize(&self) -> &[u8];
+    fn serialize(&self) -> InTransferMemory;
 
-    fn deserialize(tag: SerializedMessageTag, data: Uint8Array) -> Message<UsedTransferables>;
+    fn deserialize(
+        tag: SerializedMessageTag,
+        in_transfer: InTransferMemory,
+    ) -> Message<UsedTransferables>;
 
     fn tag(&self) -> SerializedMessageTag;
 }
 
 impl SerializableMessage for Message<LinearTransferables> {
-    fn serialize(&self) -> js_sys::ArrayBuffer {
-        let data = unsafe {
-            match self {
-                Message::TileTessellated(message) => transferable_memory::bytes_of(message),
-                Message::LayerUnavailable(message) => transferable_memory::bytes_of(message),
-                Message::LayerTessellated(message) => {
-                    transferable_memory::bytes_of(message.data.as_ref())
-                }
-                Message::LayerIndexed(message) => transferable_memory::bytes_of(message),
+    fn serialize(&self) -> InTransferMemory {
+        match self {
+            Message::TileTessellated(message) => message.to_in_transfer(self.tag() as u32),
+            Message::LayerUnavailable(message) => message.to_in_transfer(self.tag() as u32),
+            Message::LayerTessellated(message) => {
+                message.data.as_ref().to_in_transfer(self.tag() as u32)
             }
-        };
-
-        let serialized_array_buffer = js_sys::ArrayBuffer::new(data.len() as u32);
-        let serialized_array = js_sys::Uint8Array::new(&serialized_array_buffer);
-        unsafe {
-            serialized_array.set(&Uint8Array::view(data), 0);
+            Message::LayerIndexed(message) => message.to_in_transfer(self.tag() as u32),
         }
-        serialized_array_buffer
     }
 
-    fn deserialize(tag: SerializedMessageTag, data: Uint8Array) -> Message<UsedTransferables> {
+    fn deserialize(
+        tag: SerializedMessageTag,
+        in_transfer: InTransferMemory,
+    ) -> Message<UsedTransferables> {
         type TileTessellated = <UsedTransferables as Transferables>::TileTessellated;
         type UnavailableLayer = <UsedTransferables as Transferables>::LayerUnavailable;
         type IndexedLayer = <UsedTransferables as Transferables>::LayerIndexed;
         unsafe {
             match tag {
                 SerializedMessageTag::TileTessellated => {
-                    Message::<UsedTransferables>::TileTessellated(*transferable_memory::from_bytes(
-                        &data.to_vec(),
-                    ))
+                    Message::<UsedTransferables>::TileTessellated(
+                        LinearTileTessellated::from_in_transfer(in_transfer),
+                    )
                 }
                 SerializedMessageTag::LayerUnavailable => {
                     Message::<UsedTransferables>::LayerUnavailable(
-                        *transferable_memory::from_bytes(&data.to_vec()),
+                        LinearLayerUnavailable::from_in_transfer(in_transfer),
                     )
                 }
                 SerializedMessageTag::LayerTessellated => {
                     Message::<UsedTransferables>::LayerTessellated(LinearLayerTesselated {
-                        data: unsafe {
-                            let mut uninit = Box::<InnerData>::new_zeroed();
-                            data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
-
-                            uninit.assume_init()
-                        },
+                        data: InnerData::from_in_transfer_boxed(in_transfer),
                     })
                 }
                 SerializedMessageTag::LayerIndexed => Message::<UsedTransferables>::LayerIndexed(
-                    *transferable_memory::from_bytes(&data.to_vec()),
+                    LinearLayerIndexed::from_in_transfer(in_transfer),
                 ),
             }
         }
@@ -132,21 +124,22 @@ pub struct PassingContext {
 
 impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
     fn send(&self, data: Message<UsedTransferables>) -> Result<(), Error> {
-        let tag = data.tag();
-        let serialized_array_buffer = data.serialize();
+        let in_transfer = data.serialize();
 
         let global: DedicatedWorkerGlobalScope =
             js_sys::global().dyn_into().map_err(|_e| Error::APC)?;
-        let array = js_sys::Array::new();
-        array.push(&JsValue::from(tag as u32));
-        array.push(&serialized_array_buffer);
+
+        // TODO use object
+        let transfer_obj = js_sys::Array::new();
+        transfer_obj.push(&JsValue::from(in_transfer.type_id as u32));
+        transfer_obj.push(&in_transfer.buffer);
 
         let transfer = js_sys::Array::new();
-        array.push(&serialized_array_buffer);
+        transfer.push(&in_transfer.buffer);
 
         // TODO: Verify transfer
         global
-            .post_message_with_transfer(&array, &transfer)
+            .post_message_with_transfer(&transfer_obj, &transfer)
             .map_err(|_e| Error::APC)
     }
 
@@ -230,7 +223,7 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
         source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
     };
 
-    (procedure)(input, context).await;
+    (procedure)(input, context).await.unwrap(); // FIXME (wasm-executor): Remove unwrap
 
     Ok(())
 }
@@ -239,15 +232,20 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
 #[wasm_bindgen]
 pub unsafe fn singlethreaded_main_entry(
     received_ptr: *const ReceivedType,
-    type_id: u32,
-    data: Uint8Array,
+    in_transfer_obj: js_sys::Array,
 ) -> Result<(), JsValue> {
     // FIXME (wasm-executor): Can we make this call safe? check if it was cloned before?
     let received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
 
+    let id = in_transfer_obj.get(0).as_f64().unwrap();
+    let in_transfer = InTransferMemory {
+        type_id: id as u32,
+        buffer: in_transfer_obj.get(1).dyn_into().unwrap(),
+    };
+
     let message = Message::<UsedTransferables>::deserialize(
-        SerializedMessageTag::from_u32(type_id).unwrap(),
-        data,
+        SerializedMessageTag::from_u32(in_transfer.type_id).unwrap(),
+        in_transfer,
     );
 
     info!("singlethreaded_main_entry {:?}", message.tag());
