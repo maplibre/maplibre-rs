@@ -116,7 +116,7 @@ impl HeadlessMap {
                 data,
             ),
             &mut pipeline_context,
-        );
+        )?;
 
         let processor = pipeline_context
             .take_processor::<HeadlessPipelineProcessor>()

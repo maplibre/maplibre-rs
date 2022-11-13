@@ -11,7 +11,7 @@ use crate::{
     error::Error,
     io::{
         apc::{Context, Message},
-        geometry_index::IndexedGeometry,
+        geometry_index::{IndexedGeometry, TileIndex},
         pipeline::PipelineProcessor,
         source_client::HttpClient,
         transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
@@ -52,7 +52,7 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         layer_name: &str,
     ) -> Result<(), Error> {
         self.context
-            .send(Message::UnavailableLayer(T::UnavailableLayer::new(
+            .send(Message::LayerUnavailable(T::LayerUnavailable::new(
                 *coords,
                 layer_name.to_owned(),
             )))
@@ -66,7 +66,7 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         layer_data: tile::Layer,
     ) -> Result<(), Error> {
         self.context
-            .send(Message::TessellatedLayer(T::TessellatedLayer::new(
+            .send(Message::LayerTessellated(T::LayerTessellated::new(
                 *coords,
                 buffer,
                 feature_indices,
@@ -76,36 +76,13 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
 
     fn layer_indexing_finished(
         &mut self,
-        _coords: &WorldTileCoords,
-        _geometries: Vec<IndexedGeometry<f64>>,
+        coords: &WorldTileCoords,
+        geometries: Vec<IndexedGeometry<f64>>,
     ) -> Result<(), Error> {
-        // FIXME (wasm-executor): Readd
-        /*        if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
-            geometry_index.index_tile(coords, TileIndex::Linear { list: geometries })
-        }*/
-        Ok(())
+        self.context
+            .send(Message::LayerIndexed(T::LayerIndexed::from((
+                *coords,
+                TileIndex::Linear { list: geometries },
+            ))))
     }
 }
-
-// FIXME (wasm-executor): Readd
-/*pub fn query_point(
-    &self,
-    world_coords: &WorldCoords,
-    z: ZoomLevel,
-    zoom: Zoom,
-) -> Option<Vec<IndexedGeometry<f64>>> {
-    if let Ok(geometry_index) = self.geometry_index.lock() {
-        geometry_index
-            .query_point(world_coords, z, zoom)
-            .map(|geometries| {
-                geometries
-                    .iter()
-                    .cloned()
-                    .cloned()
-                    .collect::<Vec<IndexedGeometry<f64>>>()
-            })
-    } else {
-        unimplemented!()
-    }
-}*/
-//}

@@ -8,7 +8,7 @@ use crate::{
     io::{
         apc::{AsyncProcedureCall, Message},
         tile_repository::StoredLayer,
-        transferables::{TessellatedLayer, TileTessellated, UnavailableLayer},
+        transferables::{IndexedLayer, TessellatedLayer, TileTessellated, UnavailableLayer},
     },
     kernel::Kernel,
     schedule::Stage,
@@ -29,32 +29,40 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
     fn run(
         &mut self,
         MapContext {
-            world: World {
-                tile_repository, ..
-            },
+            world:
+                World {
+                    tile_repository,
+                    geometry_index,
+                    ..
+                },
             ..
         }: &mut MapContext,
     ) {
         if let Some(result) = self.kernel.apc().receive() {
             match result {
-                Message::TileTessellated(tranferred) => {
-                    let coords = tranferred.coords();
-                    tile_repository.mark_tile_succeeded(coords);
+                Message::TileTessellated(message) => {
+                    let coords = message.coords();
+
                     tracing::trace!("Tile at {} finished loading", coords);
                     log::warn!("Tile at {} finished loading", coords);
+
+                    tile_repository.mark_tile_succeeded(coords);
                 }
                 // FIXME: deduplicate
-                Message::UnavailableLayer(tranferred) => {
-                    let layer: StoredLayer = tranferred.to_stored_layer();
+                Message::LayerUnavailable(message) => {
+                    let layer: StoredLayer = message.to_stored_layer();
+
                     tracing::debug!(
                         "Layer {} at {} reached main thread",
                         layer.layer_name(),
                         layer.get_coords()
                     );
+
                     tile_repository.put_layer(layer);
                 }
-                Message::TessellatedLayer(data) => {
-                    let layer: StoredLayer = data.to_stored_layer();
+                Message::LayerTessellated(message) => {
+                    let layer: StoredLayer = message.to_stored_layer();
+
                     tracing::debug!(
                         "Layer {} at {} reached main thread",
                         layer.layer_name(),
@@ -65,7 +73,15 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                         layer.layer_name(),
                         layer.get_coords()
                     );
+
                     tile_repository.put_layer(layer);
+                }
+                Message::LayerIndexed(message) => {
+                    let coords = *message.coords();
+
+                    log::warn!("Layer index at {} reached main thread", coords);
+
+                    geometry_index.index_tile(&coords, message.to_tile_index());
                 }
             }
         }

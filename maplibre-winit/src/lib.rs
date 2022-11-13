@@ -143,7 +143,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         last_render_time = now;
 
                         if let Ok(map_context) =  map.context_mut() {
-                            input_controller.update_state(map_context.world.view_state_mut(), dt);
+                            input_controller.update_state(map_context, dt);
                         }
 
                         match map.run_schedule() {
@@ -193,8 +193,8 @@ pub struct WinitEventLoopProxy<ET: 'static> {
 }
 
 impl<ET: 'static> EventLoopProxy<ET> for WinitEventLoopProxy<ET> {
-    fn send_event(&self, event: ET) {
-        self.proxy.send_event(event); // FIXME: Handle unwrap
+    fn send_event(&self, event: ET) -> Result<(), Error> {
+        self.proxy.send_event(event).map_err(|e| Error::EventLoop)
     }
 }
 

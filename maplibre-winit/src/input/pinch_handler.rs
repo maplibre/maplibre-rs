@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-use maplibre::world::ViewState;
+use maplibre::context::MapContext;
 
 use super::UpdateState;
 
 pub struct PinchHandler {}
 
 impl UpdateState for PinchHandler {
-    fn update_state(&mut self, _state: &mut ViewState, _dt: Duration) {
+    fn update_state(&mut self, _map_context: &mut MapContext, _dt: Duration) {
         // TODO
     }
 }

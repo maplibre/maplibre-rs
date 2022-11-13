@@ -11,6 +11,7 @@ use crate::render::error::RenderError;
 pub enum Error {
     APC,
     Scheduler,
+    EventLoop,
     Network(String),
     Tesselation(TessellationError),
     Render(RenderError),
