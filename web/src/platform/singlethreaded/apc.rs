@@ -9,7 +9,7 @@ use maplibre::{
         transferables::Transferables,
     },
 };
-use transferable_memory::{InTransferMemory, MemoryTransferable};
+use transferable_memory::intransfer::{InTransfer, InTransferMemory};
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
 

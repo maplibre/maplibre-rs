@@ -44,7 +44,7 @@ console_log = { version = "0.2.0", features = ["color"] }
 tracing-wasm = { version = "0.2.1", optional = true } # TODO: Low quality dependency
 # For passing Inputs in AsyncProcedureCalls
 serde_json = "1.0.85"
-transferable-memory = { path = "./transferable-memory" }
+transferable-memory = { path = "./transferable-memory", features = ["box", "web"] }
 transferable-memory-derive = { path = "./transferable-memory-derive" }
 
 [dev-dependencies]

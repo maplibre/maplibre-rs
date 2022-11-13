@@ -3,5 +3,9 @@ name = "transferable-memory"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+box = []
+web = ["js-sys"]
+
 [dependencies]
-js-sys = "0.3.58"
+js-sys = { version = "0.3.58", optional = true }

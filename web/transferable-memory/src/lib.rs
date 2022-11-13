@@ -1,53 +1,12 @@
-#![feature(allocator_api, new_uninit)]
 #![deny(unused_imports)]
+#![cfg_attr(feature = "box", feature(new_uninit))]
+
+#[cfg(feature = "web")]
+pub mod intransfer;
 
 use std::mem::{align_of, size_of};
 
-use js_sys::{ArrayBuffer, Uint8Array};
-
-pub struct InTransferMemory {
-    pub type_id: u32,
-    pub buffer: ArrayBuffer,
-}
-
-pub unsafe trait MemoryTransferable
-where
-    Self: Copy,
-{
-    fn to_in_transfer(&self, type_id: u32) -> InTransferMemory {
-        let data = unsafe { bytes_of(self) };
-        let serialized_array_buffer = ArrayBuffer::new(data.len() as u32);
-        let serialized_array = Uint8Array::new(&serialized_array_buffer);
-        unsafe {
-            serialized_array.set(&Uint8Array::view(data), 0);
-        }
-
-        InTransferMemory {
-            type_id,
-            buffer: serialized_array_buffer,
-        }
-    }
-
-    fn from_in_transfer(in_transfer: InTransferMemory) -> Self
-    where
-        Self: Sized,
-    {
-        unsafe { *from_bytes(&Uint8Array::new(&in_transfer.buffer).to_vec()) }
-    }
-
-    fn from_in_transfer_boxed(in_transfer: InTransferMemory) -> Box<Self>
-    where
-        Self: Sized,
-    {
-        unsafe {
-            let data = Uint8Array::new(&in_transfer.buffer);
-            let mut uninit = Box::<Self>::new_zeroed();
-            data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
-            uninit.assume_init()
-        }
-    }
-}
-
+pub unsafe trait MemoryTransferable {}
 unsafe impl<T, const N: usize> MemoryTransferable for [T; N] where T: MemoryTransferable {}
 
 unsafe impl MemoryTransferable for () {}
