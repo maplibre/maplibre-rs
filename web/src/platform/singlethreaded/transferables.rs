@@ -1,91 +1,73 @@
-use bytemuck::{TransparentWrapper, Zeroable};
-use bytemuck_derive::{Pod, Zeroable};
 use log::warn;
 use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::WorldTileCoords,
     io::{
+        geometry_index::TileIndex,
         tile_repository::StoredLayer,
-        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
+        transferables::{
+            IndexedLayer, TessellatedLayer, TileTessellated, Transferables, UnavailableLayer,
+        },
     },
     render::ShaderVertex,
     tile::Layer,
 };
 
-// FIXME (wasm-executor): properly do this!, fix this whole file
-#[derive(Copy, Clone, Debug)]
-#[repr(transparent)]
-pub struct WrapperWorldTileCoords(WorldTileCoords);
-unsafe impl TransparentWrapper<WorldTileCoords> for WrapperWorldTileCoords {}
-unsafe impl bytemuck::Zeroable for WrapperWorldTileCoords {}
-unsafe impl bytemuck::Pod for WrapperWorldTileCoords {}
-
 #[derive(Copy, Clone)]
-#[repr(transparent)]
-pub struct LongVertexShader([ShaderVertex; 15000]);
-unsafe impl TransparentWrapper<[ShaderVertex; 15000]> for LongVertexShader {}
-unsafe impl bytemuck::Zeroable for LongVertexShader {}
-unsafe impl bytemuck::Pod for LongVertexShader {}
-
-#[derive(Copy, Clone)]
-#[repr(transparent)]
-pub struct LongIndices([IndexDataType; 40000]);
-unsafe impl TransparentWrapper<[IndexDataType; 40000]> for LongIndices {}
-unsafe impl bytemuck::Zeroable for LongIndices {}
-unsafe impl bytemuck::Pod for LongIndices {}
-
-#[derive(Copy, Clone, Pod, Zeroable)]
-#[repr(C)]
 pub struct LinearTileTessellated {
-    pub coords: WrapperWorldTileCoords,
+    pub coords: WorldTileCoords,
+    pub _padding: u8,
 }
 
 impl TileTessellated for LinearTileTessellated {
     fn new(coords: WorldTileCoords) -> Self {
         Self {
-            coords: WrapperWorldTileCoords::wrap(coords),
+            coords,
+            _padding: 0,
         }
     }
 
     fn coords(&self) -> &WorldTileCoords {
-        WrapperWorldTileCoords::peel_ref(&self.coords)
+        &self.coords
     }
 }
 
-#[derive(Copy, Clone, Pod, Zeroable)]
-#[repr(C)]
-pub struct LinearUnavailableLayer {
-    pub coords: WrapperWorldTileCoords,
+#[derive(Copy, Clone)]
+pub struct LinearLayerUnavailable {
+    pub coords: WorldTileCoords,
     pub layer_name: [u8; 32],
 }
 
-impl UnavailableLayer for LinearUnavailableLayer {
+impl UnavailableLayer for LinearLayerUnavailable {
     fn new(coords: WorldTileCoords, layer_name: String) -> Self {
         let mut new_layer_name = [0; 32];
         new_layer_name[0..layer_name.len()].clone_from_slice(layer_name.as_bytes());
         Self {
-            coords: WrapperWorldTileCoords::wrap(coords),
+            coords,
             layer_name: new_layer_name,
         }
     }
 
+    fn coords(&self) -> &WorldTileCoords {
+        &self.coords
+    }
+
     fn to_stored_layer(self) -> StoredLayer {
         StoredLayer::UnavailableLayer {
-            coords: WrapperWorldTileCoords::peel(self.coords),
+            coords: self.coords,
             layer_name: String::from_utf8(Vec::from(self.layer_name)).unwrap(), // FIXME (wasm-executor): Remove unwrap
         }
     }
 }
 
-#[derive(Copy, Clone, Pod, Zeroable)]
-#[repr(C)]
+#[derive(Copy, Clone)]
 pub struct InnerData {
-    pub coords: WrapperWorldTileCoords,
+    pub coords: WorldTileCoords,
     pub layer_name: [u8; 32],
     pub layer_name_len: usize,
-    pub vertices: LongVertexShader,
+    pub vertices: [ShaderVertex; 15000],
     pub vertices_len: usize,
-    pub indices: LongIndices,
+    pub indices: [IndexDataType; 40000],
     pub indices_len: usize,
     pub usable_indices: u32,
     /// Holds for each feature the count of indices.
@@ -94,11 +76,11 @@ pub struct InnerData {
 }
 
 #[derive(Clone)]
-pub struct LinearTessellatedLayer {
+pub struct LinearLayerTesselated {
     pub data: Box<InnerData>,
 }
 
-impl TessellatedLayer for LinearTessellatedLayer {
+impl TessellatedLayer for LinearLayerTesselated {
     fn new(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -106,15 +88,15 @@ impl TessellatedLayer for LinearTessellatedLayer {
         layer_data: Layer,
     ) -> Self {
         let mut data = Box::new(InnerData {
-            coords: WrapperWorldTileCoords::wrap(coords),
+            coords,
 
             layer_name: [0; 32],
             layer_name_len: layer_data.name.len(),
 
-            vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
+            vertices: [ShaderVertex::new([0.0, 0.0], [0.0, 0.0]); 15000],
             vertices_len: buffer.buffer.vertices.len(),
 
-            indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
+            indices: [0; 40000],
             indices_len: buffer.buffer.indices.len(),
 
             usable_indices: buffer.usable_indices,
@@ -127,15 +109,15 @@ impl TessellatedLayer for LinearTessellatedLayer {
             warn!("vertices too large");
             return Self {
                 data: Box::new(InnerData {
-                    coords: WrapperWorldTileCoords::wrap(coords),
+                    coords,
 
                     layer_name: [0; 32],
                     layer_name_len: 0,
 
-                    vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
+                    vertices: [ShaderVertex::new([0.0, 0.0], [0.0, 0.0]); 15000],
                     vertices_len: 0,
 
-                    indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
+                    indices: [0; 40000],
                     indices_len: 0,
 
                     usable_indices: 0,
@@ -150,15 +132,15 @@ impl TessellatedLayer for LinearTessellatedLayer {
             warn!("indices too large");
             return Self {
                 data: Box::new(InnerData {
-                    coords: WrapperWorldTileCoords::wrap(coords),
+                    coords,
 
                     layer_name: [0; 32],
                     layer_name_len: 0,
 
-                    vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
+                    vertices: [ShaderVertex::new([0.0, 0.0], [0.0, 0.0]); 15000],
                     vertices_len: 0,
 
-                    indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
+                    indices: [0; 40000],
                     indices_len: 0,
 
                     usable_indices: 0,
@@ -173,15 +155,15 @@ impl TessellatedLayer for LinearTessellatedLayer {
             warn!("feature_indices too large");
             return Self {
                 data: Box::new(InnerData {
-                    coords: WrapperWorldTileCoords::wrap(coords),
+                    coords,
 
                     layer_name: [0; 32],
                     layer_name_len: 0,
 
-                    vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
+                    vertices: [ShaderVertex::new([0.0, 0.0], [0.0, 0.0]); 15000],
                     vertices_len: 0,
 
-                    indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
+                    indices: [0; 40000],
                     indices_len: 0,
 
                     usable_indices: 0,
@@ -192,25 +174,29 @@ impl TessellatedLayer for LinearTessellatedLayer {
             };
         }
 
-        data.vertices.0[0..buffer.buffer.vertices.len()].clone_from_slice(&buffer.buffer.vertices);
-        data.indices.0[0..buffer.buffer.indices.len()].clone_from_slice(&buffer.buffer.indices);
+        data.vertices[0..buffer.buffer.vertices.len()].clone_from_slice(&buffer.buffer.vertices);
+        data.indices[0..buffer.buffer.indices.len()].clone_from_slice(&buffer.buffer.indices);
         data.feature_indices[0..feature_indices.len()].clone_from_slice(&feature_indices);
         data.layer_name[0..layer_data.name.len()].clone_from_slice(layer_data.name.as_bytes());
 
         Self { data }
     }
 
+    fn coords(&self) -> &WorldTileCoords {
+        &self.data.coords
+    }
+
     fn to_stored_layer(self) -> StoredLayer {
         // TODO: Avoid copies here
         StoredLayer::TessellatedLayer {
-            coords: WrapperWorldTileCoords::peel(self.data.coords),
+            coords: self.data.coords,
             layer_name: String::from_utf8(Vec::from(
                 &self.data.layer_name[..self.data.layer_name_len],
             ))
             .unwrap(), // FIXME (wasm-executor): Remove unwrap
             buffer: OverAlignedVertexBuffer::from_slices(
-                &self.data.vertices.0[..self.data.vertices_len],
-                &self.data.indices.0[..self.data.indices_len],
+                &self.data.vertices[..self.data.vertices_len],
+                &self.data.indices[..self.data.indices_len],
                 self.data.usable_indices,
             ),
             feature_indices: Vec::from(&self.data.feature_indices[..self.data.feature_indices_len]),
@@ -218,10 +204,33 @@ impl TessellatedLayer for LinearTessellatedLayer {
     }
 }
 
+#[derive(Copy, Clone)]
+pub struct LinearLayerIndexed {
+    pub coords: WorldTileCoords,
+}
+
+impl From<(WorldTileCoords, TileIndex)> for LinearLayerIndexed {
+    fn from((coords, _index): (WorldTileCoords, TileIndex)) -> Self {
+        Self { coords }
+    }
+}
+
+impl IndexedLayer for LinearLayerIndexed {
+    fn coords(&self) -> &WorldTileCoords {
+        &self.coords
+    }
+
+    fn to_tile_index(self) -> TileIndex {
+        // FIXME replace this stub implementation
+        TileIndex::Linear { list: vec![] }
+    }
+}
+
 pub struct LinearTransferables;
 
 impl Transferables for LinearTransferables {
     type TileTessellated = LinearTileTessellated;
-    type UnavailableLayer = LinearUnavailableLayer;
-    type TessellatedLayer = LinearTessellatedLayer;
+    type LayerUnavailable = LinearLayerUnavailable;
+    type LayerTessellated = LinearLayerTesselated;
+    type LayerIndexed = LinearLayerIndexed;
 }

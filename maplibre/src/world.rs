@@ -4,7 +4,7 @@ use cgmath::Angle;
 
 use crate::{
     coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
-    io::tile_repository::TileRepository,
+    io::{geometry_index::GeometryIndex, tile_repository::TileRepository},
     render::camera::{Camera, Perspective, ViewProjection},
     util::ChangeObserver,
     window::WindowSize,
@@ -13,6 +13,7 @@ use crate::{
 pub struct World {
     pub view_state: ViewState,
     pub tile_repository: TileRepository,
+    pub geometry_index: GeometryIndex,
 }
 
 impl World {
@@ -46,10 +47,12 @@ impl World {
         );
 
         let tile_repository = TileRepository::new();
+        let geometry_index = GeometryIndex::new();
 
         World {
             view_state,
             tile_repository,
+            geometry_index,
         }
     }
 
