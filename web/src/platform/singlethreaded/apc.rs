@@ -1,4 +1,4 @@
-use std::{cell::RefCell, mem, rc::Rc};
+use std::{cell::RefCell, mem, mem::size_of, rc::Rc, slice};
 
 use js_sys::Uint8Array;
 use log::info;
@@ -15,7 +15,8 @@ use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
 use crate::{
     platform::singlethreaded::transferables::{
-        InnerData, LinearLayerTesselated, LinearTransferables,
+        InnerData, LinearLayerIndexed, LinearLayerTesselated, LinearLayerUnavailable,
+        LinearTileTessellated, LinearTransferables,
     },
     WHATWGFetchHttpClient,
 };

@@ -44,6 +44,12 @@ pub struct KernelBuilder<E: Environment> {
     http_client: Option<E::HttpClient>,
 }
 
+impl<E: Environment> Default for KernelBuilder<E> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<E: Environment> KernelBuilder<E> {
     pub fn new() -> Self {
         Self {

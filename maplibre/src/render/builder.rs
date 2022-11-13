@@ -38,6 +38,12 @@ impl RendererBuilder {
     }
 }
 
+impl Default for RendererBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub enum InitializationResult {
     Initialized(InitializedRenderer),
     Uninizalized(UninitializedRenderer),
@@ -110,7 +116,7 @@ impl UninitializedRenderer {
         Ok(Renderer::initialize_headless(
             existing_window,
             self.wgpu_settings.clone(),
-            self.renderer_settings.clone(),
+            self.renderer_settings,
         )
         .await?)
     }

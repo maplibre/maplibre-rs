@@ -264,11 +264,8 @@ impl Renderer {
         #[cfg(target_arch = "wasm32")]
         let trace_path = None;
 
-        // Maybe get features and limits based on what is supported by the adapter/backend
-        let mut features = wgpu::Features::empty();
-        let mut limits = settings.limits.clone();
-
-        features = adapter.features() | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
+        let mut features =
+            adapter.features() | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
         if adapter_info.device_type == wgpu::DeviceType::DiscreteGpu {
             // `MAPPABLE_PRIMARY_BUFFERS` can have a significant, negative performance impact for
             // discrete GPUs due to having to transfer data across the PCI-E bus and so it
@@ -276,7 +273,7 @@ impl Renderer {
             // integrated GPUs.
             features -= wgpu::Features::MAPPABLE_PRIMARY_BUFFERS;
         }
-        limits = adapter.limits();
+        let mut limits = adapter.limits();
 
         // Enforce the disabled features
         if let Some(disabled_features) = settings.disabled_features {
@@ -456,7 +453,7 @@ mod tests {
         let instance = wgpu::Instance::new(backends);
         let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
             .await
-            .unwrap();
+            .expect("Unable to initialize adapter");
 
         let (device, queue) = adapter
             .request_device(
@@ -469,7 +466,7 @@ mod tests {
             )
             .await
             .ok()
-            .unwrap();
+            .expect("Unable to request device");
 
         let render_state = RenderState::new(Surface::from_image(
             &device,

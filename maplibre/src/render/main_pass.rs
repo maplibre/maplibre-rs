@@ -15,16 +15,6 @@ use crate::render::{
     RenderState,
 };
 
-pub mod graph {
-    // Labels for input nodes
-    pub mod input {}
-    // Labels for non-input nodes
-    pub mod node {
-        pub const MAIN_PASS_DEPENDENCIES: &str = "main_pass_dependencies";
-        pub const MAIN_PASS_DRIVER: &str = "main_pass_driver";
-    }
-}
-
 pub struct MainPassNode {}
 
 impl MainPassNode {

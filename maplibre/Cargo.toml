@@ -1,18 +1,21 @@
 [package]
 name = "maplibre"
-version = "0.0.2"
-edition = "2021"
+version = "0.1.0"
 build = "build.rs"
-authors = ["Maximilian Ammann <max@maxammann.org>"]
-license = "MIT OR Apache-2.0"
-description = "Native Maps for Web, Mobile and Desktop"
 readme = "../README.md"
+
+description.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
 
 [features]
 default = []
 web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web
-trace = ["tracing-subscriber", "tracing-tracy", "tracy-client"]
+trace = ["tracing-subscriber", "tracing-tracy"]
 thread-safe-futures = []
 embed-static-tiles = ["maplibre-build-tools/sqlite"]
 headless = ["png"]
@@ -26,7 +29,6 @@ reqwest = { version = "0.11.11", default-features = false, features = ["rustls-t
 reqwest-middleware-cache = "0.1.1" # FIXME: Untrusted dependency
 reqwest-middleware = "0.1.6" # FIXME: Untrusted dependency
 tracing-tracy = { version = "0.10", optional = true }
-tracy-client = { version = "0.14", optional = true }
 
 [target.'cfg(target_os = "android")'.dependencies]
 # Use rusttls on android because cross compiling is difficult

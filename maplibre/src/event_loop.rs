@@ -1,5 +1,6 @@
 use crate::{
     environment::Environment,
+    error::Error,
     map::Map,
     window::{HeadedMapWindow, MapWindowConfig},
 };
@@ -12,7 +13,7 @@ pub trait EventLoopConfig {
 }
 
 pub trait EventLoopProxy<T: 'static> {
-    fn send_event(&self, event: T);
+    fn send_event(&self, event: T) -> Result<(), Error>;
 }
 
 pub trait EventLoop<ET: 'static + PartialEq> {

@@ -37,3 +37,9 @@ impl FPSMeter {
         }
     }
 }
+
+impl Default for FPSMeter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
