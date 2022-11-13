@@ -234,7 +234,8 @@ mod tests {
             add_two as fn(u8, &mut PipelineContext) -> u32,
             PipelineEnd::default(),
         )
-        .process(5u8, &mut context);
+        .process(5u8, &mut context)
+        .unwrap();
         assert_eq!(output, 7);
 
         let output: u32 = DataPipeline::new(
@@ -244,7 +245,8 @@ mod tests {
                 PipelineEnd::default(),
             ),
         )
-        .process(5u32, &mut context);
+        .process(5u32, &mut context)
+        .unwrap();
         assert_eq!(output, 8);
     }
 
@@ -258,8 +260,9 @@ mod tests {
             ClosureProcessable::from(|input: u8, _context: &mut PipelineContext| -> u32 {
                 input as u32 + 2 + outer_value
             });
-        let output: u32 =
-            DataPipeline::new(closure, PipelineEnd::default()).process(5u8, &mut context);
+        let output: u32 = DataPipeline::new(closure, PipelineEnd::default())
+            .process(5u8, &mut context)
+            .unwrap();
         assert_eq!(output, 10);
 
         // with into()
@@ -268,7 +271,8 @@ mod tests {
                 .into(),
             PipelineEnd::<u32>::default(),
         )
-        .process(5u8, &mut context);
+        .process(5u8, &mut context)
+        .unwrap();
         assert_eq!(output, 10);
     }
 }
