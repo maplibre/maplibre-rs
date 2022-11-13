@@ -453,7 +453,7 @@ mod tests {
         let instance = wgpu::Instance::new(backends);
         let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
             .await
-            .unwrap();
+            .expect("Unable to initialize adapter");
 
         let (device, queue) = adapter
             .request_device(
@@ -466,7 +466,7 @@ mod tests {
             )
             .await
             .ok()
-            .unwrap();
+            .expect("Unable to request device");
 
         let render_state = RenderState::new(Surface::from_image(
             &device,
