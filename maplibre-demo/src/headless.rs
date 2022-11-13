@@ -17,7 +17,7 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
         .map(|layer| layer.source_layer.as_ref().unwrap().clone())
         .collect::<Vec<_>>();
 
-    let mut map = HeadlessMap::new(style, renderer, kernel).unwrap();
+    let mut map = HeadlessMap::new(style, renderer, kernel, true).unwrap();
 
     let tile_limits = google_mercator().tile_limits(
         extent_wgs84_to_merc(&Extent {

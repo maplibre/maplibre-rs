@@ -36,6 +36,7 @@ impl HeadlessMap {
         style: Style,
         renderer: Renderer,
         kernel: Kernel<HeadlessEnvironment>,
+        write_to_disk: bool,
     ) -> Result<Self, Error> {
         let window_size = renderer.state().surface().size();
 
@@ -59,7 +60,7 @@ impl HeadlessMap {
         register_default_render_stages(graph, &mut schedule);
         schedule.add_stage(
             RenderStageLabel::Cleanup,
-            WriteSurfaceBufferStage::default(),
+            WriteSurfaceBufferStage::new(write_to_disk),
         );
 
         Ok(Self {
