@@ -172,6 +172,9 @@
 <span id="172">172</span>
 <span id="173">173</span>
 <span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     future::Future,
     pin::Pin,
@@ -202,29 +205,31 @@
 </span><span class="attribute">#[derive(Clone)]
 </span><span class="kw">pub enum </span>Message&lt;T: Transferables&gt; {
     TileTessellated(T::TileTessellated),
-    UnavailableLayer(T::UnavailableLayer),
-    TessellatedLayer(T::TessellatedLayer),
+    LayerUnavailable(T::LayerUnavailable),
+    LayerTessellated(T::LayerTessellated),
+
+    LayerIndexed(T::LayerIndexed),
 }
 
 <span class="doccomment">/// Inputs for an [`AsyncProcedure`]
 </span><span class="attribute">#[derive(Clone, Serialize, Deserialize)]
 </span><span class="kw">pub enum </span>Input {
     TileRequest(TileRequest),
-}
+    NotYetImplemented, <span class="comment">// TODO: Placeholder, should be removed when second input is added
+</span>}
 
 <span class="doccomment">/// Allows sending messages from workers to back to the caller.
 </span><span class="kw">pub trait </span>Context&lt;T: Transferables, HC: HttpClient&gt;: Send + <span class="lifetime">&#39;static </span>{
     <span class="doccomment">/// Send a message back to the caller.
-    </span><span class="comment">// FIXME (wasm-executor): handle results send() calls
     </span><span class="kw">fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, data: Message&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;;
 
     <span class="kw">fn </span>source_client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>SourceClient&lt;HC&gt;;
 }
 
 <span class="attribute">#[cfg(feature = <span class="string">&quot;thread-safe-futures&quot;</span>)]
-</span><span class="kw">pub type </span>AsyncProcedureFuture = Pin&lt;Box&lt;(<span class="kw">dyn </span>Future&lt;Output = ()&gt; + Send + <span class="lifetime">&#39;static</span>)&gt;&gt;;
+</span><span class="kw">pub type </span>AsyncProcedureFuture = Pin&lt;Box&lt;(<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;(), Error&gt;&gt; + Send + <span class="lifetime">&#39;static</span>)&gt;&gt;;
 <span class="attribute">#[cfg(not(feature = <span class="string">&quot;thread-safe-futures&quot;</span>))]
-</span><span class="kw">pub type </span>AsyncProcedureFuture = Pin&lt;Box&lt;(<span class="kw">dyn </span>Future&lt;Output = ()&gt; + <span class="lifetime">&#39;static</span>)&gt;&gt;;
+</span><span class="kw">pub type </span>AsyncProcedureFuture = Pin&lt;Box&lt;(<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;(), Error&gt;&gt; + <span class="lifetime">&#39;static</span>)&gt;&gt;;
 
 <span class="doccomment">/// Type definitions for asynchronous procedure calls. These functions can be called in an
 /// [`AsyncProcedureCall`]. Functions of this type are required to be statically available at
@@ -341,7 +346,8 @@
                         source_client: SourceClient::new(HttpSourceClient::new(client)),
                     },
                 )
-                .<span class="kw">await</span>;
+                .<span class="kw">await
+                </span>.unwrap();
             })
             .unwrap();
     }

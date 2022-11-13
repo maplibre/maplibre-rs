@@ -766,10 +766,6 @@
 <span id="766">766</span>
 <span id="767">767</span>
 <span id="768">768</span>
-<span id="769">769</span>
-<span id="770">770</span>
-<span id="771">771</span>
-<span id="772">772</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Provides utilities related to coordinates.
 
 </span><span class="kw">use </span>std::{
@@ -779,7 +775,7 @@
 };
 
 <span class="kw">use </span>bytemuck_derive::{Pod, Zeroable};
-<span class="kw">use </span>cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
+<span class="kw">use </span>cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use crate</span>::{
@@ -1291,10 +1287,6 @@
 </span><span class="kw">pub struct </span>WorldCoords {
     <span class="kw">pub </span>x: f64,
     <span class="kw">pub </span>y: f64,
-}
-
-<span class="kw">fn </span>tiles_with_z(z: u8) -&gt; f64 {
-    <span class="number">2.0</span>.pow(z)
 }
 
 <span class="kw">impl </span>WorldCoords {

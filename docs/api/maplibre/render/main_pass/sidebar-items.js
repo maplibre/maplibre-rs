@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["graph",""]],"struct":[["MainPassDriverNode",""],["MainPassNode",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["MainPassDriverNode",""],["MainPassNode",""]]};

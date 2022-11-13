@@ -311,6 +311,15 @@
 <span id="311">311</span>
 <span id="312">312</span>
 <span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Geometry index.
 
 </span><span class="kw">use </span>std::collections::{BTreeMap, HashMap};
@@ -322,6 +331,7 @@
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
 };
+<span class="kw">use </span>log::warn;
 <span class="kw">use </span>rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
 <span class="kw">use crate</span>::{
@@ -530,6 +540,9 @@
     <span class="kw">fn </span>point_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
         <span class="self">self</span>.geo_writer.point_begin(idx)
     }
+    <span class="kw">fn </span>point_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.point_end(idx)
+    }
     <span class="kw">fn </span>multipoint_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
         <span class="self">self</span>.geo_writer.multipoint_begin(size, idx)
     }
@@ -558,6 +571,9 @@
     }
     <span class="kw">fn </span>multipolygon_begin(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
         <span class="self">self</span>.geo_writer.multipolygon_begin(size, idx)
+    }
+    <span class="kw">fn </span>multipolygon_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>, idx: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
+        <span class="self">self</span>.geo_writer.multipolygon_end(idx)
     }
 }
 
@@ -608,17 +624,19 @@
     }
     <span class="doccomment">/// End of feature geometry processing.
     </span><span class="kw">fn </span>geometry_end(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), GeozeroError&gt; {
-        <span class="kw">let </span>geometry = <span class="self">self</span>.geo_writer.take_geometry().unwrap();
+        <span class="kw">let </span>geometry = <span class="self">self</span>.geo_writer.take_geometry();
 
         <span class="kw">match </span>geometry {
-            Geometry::Polygon(polygon) =&gt; <span class="self">self</span>.geometries.push(
+            <span class="prelude-val">Some</span>(Geometry::Polygon(polygon)) =&gt; <span class="self">self</span>.geometries.push(
                 IndexedGeometry::from_polygon(polygon, <span class="self">self</span>.properties.take().unwrap()).unwrap(),
             ),
-            Geometry::LineString(linestring) =&gt; <span class="self">self</span>.geometries.push(
+            <span class="prelude-val">Some</span>(Geometry::LineString(linestring)) =&gt; <span class="self">self</span>.geometries.push(
                 IndexedGeometry::from_linestring(linestring, <span class="self">self</span>.properties.take().unwrap())
                     .unwrap(),
             ),
-            <span class="kw">_ </span>=&gt; {}
+            <span class="kw">_ </span>=&gt; {
+                <span class="macro">warn!</span>(<span class="string">&quot;Unknown geometry in index&quot;</span>)
+            }
         };
 
         <span class="prelude-val">Ok</span>(())

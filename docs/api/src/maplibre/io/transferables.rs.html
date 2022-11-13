@@ -108,11 +108,53 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
-</pre><pre class="rust"><code><span class="kw">use </span>geozero::mvt::{tile, tile::Layer};
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+</pre><pre class="rust"><code><span class="kw">use </span>geozero::mvt::tile::Layer;
 
 <span class="kw">use crate</span>::{
     coords::WorldTileCoords,
-    io::tile_repository::StoredLayer,
+    io::{geometry_index::TileIndex, tile_repository::StoredLayer},
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
@@ -126,6 +168,8 @@
 <span class="kw">pub trait </span>UnavailableLayer: Send {
     <span class="kw">fn </span>new(coords: WorldTileCoords, layer_name: String) -&gt; <span class="self">Self</span>;
 
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords;
+
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer;
 }
 
@@ -134,9 +178,18 @@
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
         feature_indices: Vec&lt;u32&gt;,
-        layer_data: tile::Layer,
+        layer_data: Layer,
     ) -&gt; <span class="self">Self</span>;
+
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords;
+
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer;
+}
+
+<span class="kw">pub trait </span>IndexedLayer: Send + From&lt;(WorldTileCoords, TileIndex)&gt; {
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords;
+
+    <span class="kw">fn </span>to_tile_index(<span class="self">self</span>) -&gt; TileIndex;
 }
 
 <span class="kw">pub struct </span>DefaultTileTessellated {
@@ -153,14 +206,18 @@
     }
 }
 
-<span class="kw">pub struct </span>DefaultUnavailableLayer {
+<span class="kw">pub struct </span>DefaultLayerUnavailable {
     <span class="kw">pub </span>coords: WorldTileCoords,
     <span class="kw">pub </span>layer_name: String,
 }
 
-<span class="kw">impl </span>UnavailableLayer <span class="kw">for </span>DefaultUnavailableLayer {
+<span class="kw">impl </span>UnavailableLayer <span class="kw">for </span>DefaultLayerUnavailable {
     <span class="kw">fn </span>new(coords: WorldTileCoords, layer_name: String) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ coords, layer_name }
+    }
+
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.coords
     }
 
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer {
@@ -171,7 +228,7 @@
     }
 }
 
-<span class="kw">pub struct </span>DefaultTessellatedLayer {
+<span class="kw">pub struct </span>DefaultLayerTesselated {
     <span class="kw">pub </span>coords: WorldTileCoords,
     <span class="kw">pub </span>buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
     <span class="doccomment">/// Holds for each feature the count of indices.
@@ -179,7 +236,7 @@
     <span class="kw">pub </span>layer_data: Layer, <span class="comment">// FIXME (perf): Introduce a better structure for this
 </span>}
 
-<span class="kw">impl </span>TessellatedLayer <span class="kw">for </span>DefaultTessellatedLayer {
+<span class="kw">impl </span>TessellatedLayer <span class="kw">for </span>DefaultLayerTesselated {
     <span class="kw">fn </span>new(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
@@ -194,6 +251,10 @@
         }
     }
 
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.coords
+    }
+
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer {
         StoredLayer::TessellatedLayer {
             coords: <span class="self">self</span>.coords,
@@ -204,10 +265,32 @@
     }
 }
 
+<span class="kw">pub struct </span>DefaultLayerIndexed {
+    coords: WorldTileCoords,
+    index: TileIndex,
+}
+
+<span class="kw">impl </span>From&lt;(WorldTileCoords, TileIndex)&gt; <span class="kw">for </span>DefaultLayerIndexed {
+    <span class="kw">fn </span>from((coords, index): (WorldTileCoords, TileIndex)) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ coords, index }
+    }
+}
+
+<span class="kw">impl </span>IndexedLayer <span class="kw">for </span>DefaultLayerIndexed {
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.coords
+    }
+
+    <span class="kw">fn </span>to_tile_index(<span class="self">self</span>) -&gt; TileIndex {
+        <span class="self">self</span>.index
+    }
+}
+
 <span class="kw">pub trait </span>Transferables: <span class="lifetime">&#39;static </span>{
     <span class="kw">type </span>TileTessellated: TileTessellated;
-    <span class="kw">type </span>UnavailableLayer: UnavailableLayer;
-    <span class="kw">type </span>TessellatedLayer: TessellatedLayer;
+    <span class="kw">type </span>LayerUnavailable: UnavailableLayer;
+    <span class="kw">type </span>LayerTessellated: TessellatedLayer;
+    <span class="kw">type </span>LayerIndexed: IndexedLayer;
 }
 
 <span class="attribute">#[derive(Copy, Clone)]
@@ -215,8 +298,9 @@
 
 <span class="kw">impl </span>Transferables <span class="kw">for </span>DefaultTransferables {
     <span class="kw">type </span>TileTessellated = DefaultTileTessellated;
-    <span class="kw">type </span>UnavailableLayer = DefaultUnavailableLayer;
-    <span class="kw">type </span>TessellatedLayer = DefaultTessellatedLayer;
+    <span class="kw">type </span>LayerUnavailable = DefaultLayerUnavailable;
+    <span class="kw">type </span>LayerTessellated = DefaultLayerTesselated;
+    <span class="kw">type </span>LayerIndexed = DefaultLayerIndexed;
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

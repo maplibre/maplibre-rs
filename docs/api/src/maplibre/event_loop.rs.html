@@ -25,8 +25,10 @@
 <span id="25">25</span>
 <span id="26">26</span>
 <span id="27">27</span>
+<span id="28">28</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     environment::Environment,
+    error::Error,
     map::Map,
     window::{HeadedMapWindow, MapWindowConfig},
 };
@@ -39,7 +41,7 @@
 }
 
 <span class="kw">pub trait </span>EventLoopProxy&lt;T: <span class="lifetime">&#39;static</span>&gt; {
-    <span class="kw">fn </span>send_event(<span class="kw-2">&amp;</span><span class="self">self</span>, event: T);
+    <span class="kw">fn </span>send_event(<span class="kw-2">&amp;</span><span class="self">self</span>, event: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;;
 }
 
 <span class="kw">pub trait </span>EventLoop&lt;ET: <span class="lifetime">&#39;static </span>+ PartialEq&gt; {

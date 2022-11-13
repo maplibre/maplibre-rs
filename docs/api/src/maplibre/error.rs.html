@@ -37,6 +37,7 @@
 <span id="37">37</span>
 <span id="38">38</span>
 <span id="39">39</span>
+<span id="40">40</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Errors which can happen in various parts of the library.
 
 </span><span class="kw">use </span>std::{borrow::Cow, sync::mpsc::SendError};
@@ -50,6 +51,7 @@
 </span><span class="kw">pub enum </span>Error {
     APC,
     Scheduler,
+    EventLoop,
     Network(String),
     Tesselation(TessellationError),
     Render(RenderError),

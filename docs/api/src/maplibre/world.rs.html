@@ -160,13 +160,16 @@
 <span id="160">160</span>
 <span id="161">161</span>
 <span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::ops::{Deref, DerefMut};
 
 <span class="kw">use </span>cgmath::Angle;
 
 <span class="kw">use crate</span>::{
     coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
-    io::tile_repository::TileRepository,
+    io::{geometry_index::GeometryIndex, tile_repository::TileRepository},
     render::camera::{Camera, Perspective, ViewProjection},
     util::ChangeObserver,
     window::WindowSize,
@@ -175,6 +178,7 @@
 <span class="kw">pub struct </span>World {
     <span class="kw">pub </span>view_state: ViewState,
     <span class="kw">pub </span>tile_repository: TileRepository,
+    <span class="kw">pub </span>geometry_index: GeometryIndex,
 }
 
 <span class="kw">impl </span>World {
@@ -208,10 +212,12 @@
         );
 
         <span class="kw">let </span>tile_repository = TileRepository::new();
+        <span class="kw">let </span>geometry_index = GeometryIndex::new();
 
         World {
             view_state,
             tile_repository,
+            geometry_index,
         }
     }
 

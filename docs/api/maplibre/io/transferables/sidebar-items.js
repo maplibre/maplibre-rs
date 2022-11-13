@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["DefaultTessellatedLayer",""],["DefaultTileTessellated",""],["DefaultTransferables",""],["DefaultUnavailableLayer",""]],"trait":[["TessellatedLayer",""],["TileTessellated",""],["Transferables",""],["UnavailableLayer",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["DefaultLayerIndexed",""],["DefaultLayerTesselated",""],["DefaultLayerUnavailable",""],["DefaultTileTessellated",""],["DefaultTransferables",""]],"trait":[["IndexedLayer",""],["TessellatedLayer",""],["TileTessellated",""],["Transferables",""],["UnavailableLayer",""]]};

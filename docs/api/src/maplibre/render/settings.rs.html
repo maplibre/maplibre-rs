@@ -135,10 +135,15 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Settings for the renderer
 
 </span><span class="kw">use </span>std::borrow::Cow;
 
+<span class="kw">use </span>wgpu::PresentMode;
 <span class="kw">pub use </span>wgpu::{Backends, Features, Limits, PowerPreference, TextureFormat};
 
 <span class="doccomment">/// Provides configuration for renderer initialization. Use [`Device::features`](crate::renderer::Device::features),
@@ -241,6 +246,8 @@
     <span class="kw">pub </span>msaa: Msaa,
     <span class="kw">pub </span>texture_format: TextureFormat,
     <span class="kw">pub </span>depth_texture_format: TextureFormat,
+    <span class="doccomment">/// Present mode for surfaces if a surface is used.
+    </span><span class="kw">pub </span>present_mode: PresentMode,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>RendererSettings {
@@ -269,6 +276,7 @@
             </span>texture_format: TextureFormat::Bgra8UnormSrgb,
 
             depth_texture_format: TextureFormat::Depth24PlusStencil8,
+            present_mode: PresentMode::AutoVsync,
         }
     }
 }

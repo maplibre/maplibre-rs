@@ -272,7 +272,6 @@
 <span id="272">272</span>
 <span id="273">273</span>
 <span id="274">274</span>
-<span id="275">275</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
@@ -351,7 +350,7 @@
         <span class="kw">use </span>std::{fs::File, io::Write};
         <span class="comment">// Note that we&#39;re not calling `.await` here.
         </span><span class="kw">let </span>buffer_slice = <span class="self">self</span>.output_buffer.slice(..);
-        <span class="kw">let </span>buffer_future = buffer_slice.map_async(wgpu::MapMode::Read, |<span class="kw">_</span>| ());
+        buffer_slice.map_async(wgpu::MapMode::Read, |<span class="kw">_</span>| ());
 
         <span class="comment">// Poll the device in a blocking manner so that our future resolves.
         // In an actual application, `device.poll(...)` should
@@ -414,9 +413,8 @@
             format: settings.texture_format,
             width: size.width(),
             height: size.height(),
-            <span class="comment">//present_mode: wgpu::PresentMode::Immediate,
-            </span>present_mode: wgpu::PresentMode::Fifo, <span class="comment">// VSync
-        </span>};
+            present_mode: settings.present_mode,
+        };
 
         <span class="kw">let </span>surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw()) };
 

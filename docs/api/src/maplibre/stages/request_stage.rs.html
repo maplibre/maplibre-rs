@@ -164,8 +164,6 @@
 <span id="164">164</span>
 <span id="165">165</span>
 <span id="166">166</span>
-<span id="167">167</span>
-<span id="168">168</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view
 
 </span><span class="kw">use </span>std::{collections::HashSet, rc::Rc};
@@ -208,6 +206,7 @@
                 World {
                     tile_repository,
                     view_state,
+                    ..
                 },
             style,
             ..
@@ -236,14 +235,11 @@
     input: Input,
     context: C,
 ) -&gt; AsyncProcedureFuture {
-    <span class="comment">// FIXME: improve input handling
-    </span><span class="kw">let </span>input = <span class="kw">match </span>input {
-        Input::TileRequest(input) =&gt; <span class="prelude-val">Some</span>(input),
-        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-    }
-    .unwrap(); <span class="comment">// FIXME (wasm-executor): Remove unwrap
+    Box::pin(<span class="kw">async move </span>{
+        <span class="kw">let </span>Input::TileRequest(input) = input <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::APC)
+        };
 
-    </span>Box::pin(<span class="kw">async move </span>{
         <span class="kw">let </span>coords = input.coords;
         <span class="kw">let </span>client = context.source_client();
 
@@ -257,24 +253,24 @@
                     phantom_hc: Default::default(),
                 });
                 <span class="kw">let </span>pipeline = build_vector_tile_pipeline();
-                pipeline.process((input, data), <span class="kw-2">&amp;mut </span>pipeline_context);
+                pipeline.process((input, data), <span class="kw-2">&amp;mut </span>pipeline_context)<span class="question-mark">?</span>;
             }
             <span class="prelude-val">Err</span>(e) =&gt; {
                 <span class="macro">log::error!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>e);
                 <span class="kw">for </span>to_load <span class="kw">in </span><span class="kw-2">&amp;</span>input.layers {
                     <span class="macro">tracing::warn!</span>(<span class="string">&quot;layer {} at {} unavailable&quot;</span>, to_load, coords);
-                    <span class="comment">// FIXME: Handle result
-                    </span>context.send(
-                        Message::UnavailableLayer(&lt;&lt;E::AsyncProcedureCall <span class="kw">as </span>AsyncProcedureCall&lt;
+                    context.send(
+                        Message::LayerUnavailable(&lt;&lt;E::AsyncProcedureCall <span class="kw">as </span>AsyncProcedureCall&lt;
                             E::HttpClient,
-                        &gt;&gt;::Transferables <span class="kw">as </span>Transferables&gt;::UnavailableLayer::new(
+                        &gt;&gt;::Transferables <span class="kw">as </span>Transferables&gt;::LayerUnavailable::new(
                             input.coords,
                             to_load.to_string(),
                         )),
-                    );
+                    )<span class="question-mark">?</span>;
                 }
             }
         }
+        <span class="prelude-val">Ok</span>(())
     })
 }
 

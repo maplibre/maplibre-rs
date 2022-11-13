@@ -116,16 +116,6 @@
 <span id="116">116</span>
 <span id="117">117</span>
 <span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
-<span id="121">121</span>
-<span id="122">122</span>
-<span id="123">123</span>
-<span id="124">124</span>
-<span id="125">125</span>
-<span id="126">126</span>
-<span id="127">127</span>
-<span id="128">128</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The main render pass for this application.
 //!
 //! Right now there is only one render graph. A use case for multiple render passes would be
@@ -142,16 +132,6 @@
     Eventually::Initialized,
     RenderState,
 };
-
-<span class="kw">pub mod </span>graph {
-    <span class="comment">// Labels for input nodes
-    </span><span class="kw">pub mod </span>input {}
-    <span class="comment">// Labels for non-input nodes
-    </span><span class="kw">pub mod </span>node {
-        <span class="kw">pub const </span>MAIN_PASS_DEPENDENCIES: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass_dependencies&quot;</span>;
-        <span class="kw">pub const </span>MAIN_PASS_DRIVER: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass_driver&quot;</span>;
-    }
-}
 
 <span class="kw">pub struct </span>MainPassNode {}
 
