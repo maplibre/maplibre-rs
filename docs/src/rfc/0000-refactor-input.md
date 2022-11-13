@@ -1,7 +1,7 @@
-- Feature Name: (fill me in with a unique ident, `my_awesome_feature`)
-- Start Date: (fill me in with today's date, YYYY-MM-DD)
-- RFC PR: [maplibre/maplibre-rs#0000](https://github.com/maplibre/maplibre-rs/pull/0000)
-- maplibre-rs Issue: [maplibre/maplibre-rs#0000](https://github.com/maplibre/maplibre-rs/issues/0000)
+- Feature Name: (`refract_input`)
+- Start Date: (2022-11-13)
+- RFC PR: [maplibre/maplibre-rs#00??](https://github.com/maplibre/maplibre-rs/pull/00??)
+- maplibre-rs Issue: #91 and otherrs [maplibre/maplibre-rs#0000](https://github.com/maplibre/maplibre-rs/issues/91)
 
 # Summary
 
@@ -9,11 +9,20 @@
 
 One paragraph explanation of the feature.
 
+Refract the input modules:
+Define and document the function of the default input-controller, equaly to the input UI of maplibre-gl-js (Issue #186)
+Implement an event loop. Consider, in maplibre-gl-js the loop is part of the map-camera. (Issue #91)
+Check, if/what variations of winit, we need.
+Refract the splitting of the input controller functionality in modules/source-codes, may be like maplibre-gl-js (Issue #91)
+Sepatate the input-controller in an extra Rust module/crate (Issue #185)
+
 # Motivation
 
 [motivation]: #motivation
 
 Why are we doing this? What use cases does it support? What is the expected outcome?
+
+The input module, which handles key presses and other inputs is quite cluttered. That means that, the logic in order to update the libraries state is quite complicated.
 
 # Guide-level explanation
 
