@@ -15,8 +15,8 @@ use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
 use crate::{
     platform::singlethreaded::transferables::{
-        InnerData, LinearLayerIndexed, LinearLayerTesselated, LinearLayerUnavailable,
-        LinearTileTessellated, LinearTransferables,
+        LargeTesselationData, LinearLayerIndexed, LinearLayerTessellated, LinearLayerUnavailable,
+        LinearTileTessellated, LinearTransferables, VariableTessellationData,
     },
     WHATWGFetchHttpClient,
 };
@@ -69,9 +69,11 @@ impl SerializableMessage for Message<LinearTransferables> {
         match self {
             Message::TileTessellated(message) => message.to_in_transfer(self.tag() as u32),
             Message::LayerUnavailable(message) => message.to_in_transfer(self.tag() as u32),
-            Message::LayerTessellated(message) => {
-                message.data.as_ref().to_in_transfer(self.tag() as u32)
-            }
+            Message::LayerTessellated(message) => match &message.data {
+                VariableTessellationData::Large(message) => {
+                    message.to_in_transfer(self.tag() as u32)
+                }
+            },
             Message::LayerIndexed(message) => message.to_in_transfer(self.tag() as u32),
         }
     }
@@ -96,8 +98,10 @@ impl SerializableMessage for Message<LinearTransferables> {
                     )
                 }
                 SerializedMessageTag::LayerTessellated => {
-                    Message::<UsedTransferables>::LayerTessellated(LinearLayerTesselated {
-                        data: InnerData::from_in_transfer_boxed(in_transfer),
+                    Message::<UsedTransferables>::LayerTessellated(LinearLayerTessellated {
+                        data: VariableTessellationData::Large(
+                            LargeTesselationData::from_in_transfer_boxed(in_transfer),
+                        ), // TODO DO not use only large
                     })
                 }
                 SerializedMessageTag::LayerIndexed => Message::<UsedTransferables>::LayerIndexed(
@@ -197,7 +201,10 @@ impl AsyncProcedureCall<UsedHttpClient> for PassingAsyncProcedureCall {
     type Transferables = UsedTransferables;
 
     fn receive(&self) -> Option<Message<UsedTransferables>> {
-        self.received.borrow_mut().pop()
+        self.received
+            .try_borrow_mut()
+            .expect("Failed to borrow in receive of APC")
+            .pop()
     }
 
     fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
@@ -251,7 +258,10 @@ pub unsafe fn singlethreaded_main_entry(
     info!("singlethreaded_main_entry {:?}", message.tag());
 
     // MAJOR FIXME: Fix mutability
-    received.borrow_mut().push(message);
+    received
+        .try_borrow_mut()
+        .expect("Failed to borrow in singlethreaded_main_entry")
+        .push(message);
 
     mem::forget(received); // FIXME (wasm-executor): Enforce this somehow
 

@@ -1,4 +1,3 @@
-use log::warn;
 use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::{WorldTileCoords, ZoomLevel},
@@ -92,147 +91,136 @@ impl UnavailableLayer for LinearLayerUnavailable {
     }
 }
 
+// TODO: Missing
 #[derive(MemoryTransferable, Copy, Clone)]
-pub struct InnerData {
+pub struct TessellationData<const I: usize, const V: usize, const F: usize> {
+    pub size: u8,
     pub coords: TransferableWorldTileCoords,
     pub layer_name: [u8; 32],
     pub layer_name_len: usize,
-    pub vertices: [ShaderVertex; 15000],
+    pub vertices: [ShaderVertex; V],
     pub vertices_len: usize,
-    pub indices: [IndexDataType; 40000],
+    pub indices: [IndexDataType; I],
     pub indices_len: usize,
     pub usable_indices: u32,
     /// Holds for each feature the count of indices.
-    pub feature_indices: [u32; 2048],
+    pub feature_indices: [u32; F],
     pub feature_indices_len: usize,
 }
 
-#[derive(Clone)]
-pub struct LinearLayerTesselated {
-    pub data: Box<InnerData>,
+impl<const I: usize, const V: usize, const F: usize> TessellationData<I, V, F> {
+    pub fn new(
+        coords: WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+        feature_indices: Vec<u32>,
+        layer_data: Layer,
+    ) -> Box<TessellationData<I, V, F>> {
+        let mut uninit = Box::<Self>::new_zeroed();
+        let mut data: Box<TessellationData<I, V, F>> = unsafe { uninit.assume_init() };
+
+        let vertices_len = buffer.buffer.vertices.len();
+        let indices_len = buffer.buffer.indices.len();
+        let features_len = feature_indices.len();
+        if vertices_len >= V || indices_len >= I || features_len >= F {
+            panic!(
+                "Unsupported tessellated layer size: I: {} V: {} F: {}",
+                indices_len, vertices_len, features_len
+            )
+        }
+
+        data.coords = coords.into();
+
+        data.usable_indices = buffer.usable_indices;
+
+        data.vertices_len = vertices_len;
+        data.vertices[0..data.vertices_len].clone_from_slice(&buffer.buffer.vertices);
+
+        data.indices_len = indices_len;
+        data.indices[0..data.indices_len].clone_from_slice(&buffer.buffer.indices);
+
+        data.feature_indices_len = features_len;
+        data.feature_indices[0..data.feature_indices_len].clone_from_slice(&feature_indices);
+
+        data.layer_name_len = layer_data.name.len();
+        data.layer_name[0..data.layer_name_len].clone_from_slice(layer_data.name.as_bytes());
+
+        data
+    }
+
+    fn to_stored_layer(self) -> StoredLayer {
+        // TODO: Avoid copies here
+        StoredLayer::TessellatedLayer {
+            coords: self.coords.into(),
+            layer_name: String::from_utf8(Vec::from(&self.layer_name[..self.layer_name_len]))
+                .unwrap(), // FIXME (wasm-executor): Remove unwrap
+            buffer: OverAlignedVertexBuffer::from_slices(
+                &self.vertices[..self.vertices_len],
+                &self.indices[..self.indices_len],
+                self.usable_indices,
+            ),
+            feature_indices: Vec::from(&self.feature_indices[..self.feature_indices_len]),
+        }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        self.coords.into()
+    }
 }
 
-impl TessellatedLayer for LinearLayerTesselated {
+pub type LargeTesselationData = TessellationData<50000, 40000, 2048>;
+
+#[derive(Clone)]
+pub enum VariableTessellationData {
+    Large(Box<LargeTesselationData>),
+}
+
+impl VariableTessellationData {
+    fn coords(&self) -> WorldTileCoords {
+        match self {
+            VariableTessellationData::Large(data) => data.coords(),
+        }
+    }
+
+    fn to_stored_layer(self) -> StoredLayer {
+        match self {
+            VariableTessellationData::Large(data) => data.to_stored_layer(),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct LinearLayerTessellated {
+    pub data: VariableTessellationData,
+}
+
+impl TessellatedLayer for LinearLayerTessellated {
     fn new(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
         layer_data: Layer,
     ) -> Self {
-        let mut data = Box::new(InnerData {
-            coords: coords.into(),
-
-            layer_name: [0; 32],
-            layer_name_len: layer_data.name.len(),
-
-            vertices: [ShaderVertex::new([0.0, 0.0], [0.0, 0.0]); 15000],
-            vertices_len: buffer.buffer.vertices.len(),
-
-            indices: [0; 40000],
-            indices_len: buffer.buffer.indices.len(),
-
-            usable_indices: buffer.usable_indices,
-
-            feature_indices: [0u32; 2048],
-            feature_indices_len: feature_indices.len(),
-        });
-
-        if buffer.buffer.vertices.len() > 15000 {
-            warn!("vertices too large");
-            return Self {
-                data: Box::new(InnerData {
-                    coords: coords.into(),
-
-                    layer_name: [0; 32],
-                    layer_name_len: 0,
-
-                    vertices: [ShaderVertex::new([0.0, 0.0], [0.0, 0.0]); 15000],
-                    vertices_len: 0,
-
-                    indices: [0; 40000],
-                    indices_len: 0,
-
-                    usable_indices: 0,
-
-                    feature_indices: [0u32; 2048],
-                    feature_indices_len: 0,
-                }),
-            };
+        Self {
+            data: match buffer.buffer.vertices.len() {
+                n if n <= 30000 => {
+                    let mut data =
+                        TessellationData::new(coords, buffer, feature_indices, layer_data);
+                    data.size = 3;
+                    VariableTessellationData::Large(data)
+                }
+                _ => {
+                    panic!("Unsupported tesselated layer size")
+                }
+            },
         }
-
-        if buffer.buffer.indices.len() > 40000 {
-            warn!("indices too large");
-            return Self {
-                data: Box::new(InnerData {
-                    coords: coords.into(),
-
-                    layer_name: [0; 32],
-                    layer_name_len: 0,
-
-                    vertices: [ShaderVertex::new([0.0, 0.0], [0.0, 0.0]); 15000],
-                    vertices_len: 0,
-
-                    indices: [0; 40000],
-                    indices_len: 0,
-
-                    usable_indices: 0,
-
-                    feature_indices: [0u32; 2048],
-                    feature_indices_len: 0,
-                }),
-            };
-        }
-
-        if feature_indices.len() > 2048 {
-            warn!("feature_indices too large");
-            return Self {
-                data: Box::new(InnerData {
-                    coords: coords.into(),
-
-                    layer_name: [0; 32],
-                    layer_name_len: 0,
-
-                    vertices: [ShaderVertex::new([0.0, 0.0], [0.0, 0.0]); 15000],
-                    vertices_len: 0,
-
-                    indices: [0; 40000],
-                    indices_len: 0,
-
-                    usable_indices: 0,
-
-                    feature_indices: [0u32; 2048],
-                    feature_indices_len: 0,
-                }),
-            };
-        }
-
-        data.vertices[0..buffer.buffer.vertices.len()].clone_from_slice(&buffer.buffer.vertices);
-        data.indices[0..buffer.buffer.indices.len()].clone_from_slice(&buffer.buffer.indices);
-        data.feature_indices[0..feature_indices.len()].clone_from_slice(&feature_indices);
-        data.layer_name[0..layer_data.name.len()].clone_from_slice(layer_data.name.as_bytes());
-
-        Self { data }
     }
 
     fn coords(&self) -> WorldTileCoords {
-        self.data.coords.into()
+        self.data.coords()
     }
 
     fn to_stored_layer(self) -> StoredLayer {
-        // TODO: Avoid copies here
-        StoredLayer::TessellatedLayer {
-            coords: self.data.coords.into(),
-            layer_name: String::from_utf8(Vec::from(
-                &self.data.layer_name[..self.data.layer_name_len],
-            ))
-            .unwrap(), // FIXME (wasm-executor): Remove unwrap
-            buffer: OverAlignedVertexBuffer::from_slices(
-                &self.data.vertices[..self.data.vertices_len],
-                &self.data.indices[..self.data.indices_len],
-                self.data.usable_indices,
-            ),
-            feature_indices: Vec::from(&self.data.feature_indices[..self.data.feature_indices_len]),
-        }
+        self.data.to_stored_layer()
     }
 }
 
@@ -266,6 +254,6 @@ pub struct LinearTransferables;
 impl Transferables for LinearTransferables {
     type TileTessellated = LinearTileTessellated;
     type LayerUnavailable = LinearLayerUnavailable;
-    type LayerTessellated = LinearLayerTesselated;
+    type LayerTessellated = LinearLayerTessellated;
     type LayerIndexed = LinearLayerIndexed;
 }
