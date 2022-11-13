@@ -2,6 +2,7 @@
 
 use bytemuck_derive::{Pod, Zeroable};
 use cgmath::SquareMatrix;
+use transferable_memory_derive::MemoryTransferable;
 
 use crate::{
     coords::WorldCoords,
@@ -239,7 +240,7 @@ impl ShaderGlobals {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Pod, Zeroable)]
+#[derive(Copy, Clone, MemoryTransferable, Pod, Zeroable)]
 pub struct ShaderVertex {
     pub position: Vec2f32,
     pub normal: Vec2f32,
