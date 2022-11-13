@@ -980,7 +980,7 @@
         <span class="kw">let </span>instance = wgpu::Instance::new(backends);
         <span class="kw">let </span>adapter = wgpu::util::initialize_adapter_from_env_or_default(<span class="kw-2">&amp;</span>instance, backends, <span class="prelude-val">None</span>)
             .<span class="kw">await
-            </span>.unwrap();
+            </span>.expect(<span class="string">&quot;Unable to initialize adapter&quot;</span>);
 
         <span class="kw">let </span>(device, queue) = adapter
             .request_device(
@@ -993,7 +993,7 @@
             )
             .<span class="kw">await
             </span>.ok()
-            .unwrap();
+            .expect(<span class="string">&quot;Unable to request device&quot;</span>);
 
         <span class="kw">let </span>render_state = RenderState::new(Surface::from_image(
             <span class="kw-2">&amp;</span>device,
