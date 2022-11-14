@@ -10,11 +10,13 @@
 One paragraph explanation of the feature.
 
 Refract the input modules:
-Define and document the function of the default input-controller, equaly to the input UI of maplibre-gl-js (Issue #186)
-Implement an event loop. Consider, in maplibre-gl-js the loop is part of the map-camera. (Issue #91)
-Check, if/what variations of winit, we need.
-Refract the splitting of the input controller functionality in modules/source-codes, may be like maplibre-gl-js (Issue #91)
-Sepatate the input-controller in an extra Rust module/crate (Issue #185)
+* A) Define and document the function of the default input-controller, equaly to the input UI of maplibre-gl-js (Issue #186)
+* B) Implement an event loop. Consider, in maplibre-gl-js the loop is part of the map-camera. (Issue #91)
+* C) Check, if/what variations of winit, we need.
+* D) Refract the splitting of the input controller functionality in modules/source-codes, may be like maplibre-gl-js (Issue #91)
+* E) Sepatate the input-controller in an extra Rust module/crate (Issue #185)
+
+Should all this realy be in one RFC?
 
 # Motivation
 
@@ -22,9 +24,20 @@ Sepatate the input-controller in an extra Rust module/crate (Issue #185)
 
 Why are we doing this? What use cases does it support? What is the expected outcome?
 
-The input module, which handles key presses and other inputs is quite cluttered. That means that, the logic in order to update the libraries state is quite complicated.
+A) The user of maplibre-rs sould "feel at home", have the identical UI expirience
 
-# Guide-level explanation
+B) Now, each input module does the map move/slide itselve.
+If we do it in the map-module, maintaining the inputs and writing a custom imput controler would be les complex.
+
+C) Will the default winit work for all targets? - Todo: maxammann
+
+D) The input module, which handles key presses and other inputs is quite cluttered. That means that, the logic in order to update the libraries state is quite complicated. Just one input module for key, mouse and touch, calling the map-API (see B) would be simpler. 
+
+E) Actually, a fork of the whole repository to build a individual changed application.
+If we offer two extra rust crates for rendering and for control/UI, just the UI could be forked and changed.
+
+
+# Guide-level explanation        ???Detailed design???
 
 [guide-level-explanation]: #guide-level-explanation
 
