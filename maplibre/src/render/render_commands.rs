@@ -48,7 +48,11 @@ impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetRasterViewBindGroup<I
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         if let Initialized(raster_resources) = &state.raster_resources {
-            pass.set_bind_group(0, raster_resources.bind_group.as_ref().unwrap(), &[]);
+            pass.set_bind_group(
+                0,
+                raster_resources.bind_groups.get(&entry.coords).unwrap(),
+                &[],
+            );
             RenderCommandResult::Success
         } else {
             RenderCommandResult::Failure

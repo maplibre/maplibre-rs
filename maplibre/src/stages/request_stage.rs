@@ -2,7 +2,7 @@
 
 use std::{collections::HashSet, rc::Rc};
 
-use crate::io::source_type::{RasterSource, SourceType /*, TessellateSource*/};
+use crate::io::source_type::{ RasterSource , SourceType /*, TessellateSource */};
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},

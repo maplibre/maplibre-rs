@@ -1,103 +1,32 @@
-use crate::render::{
-    resource::{RenderPipeline, Texture},
-    settings::{Msaa, RendererSettings},
-    shaders::{RasterTileShader, Shader, ShaderTextureVertex},
-    tile_pipeline::TilePipeline,
+use std::collections::HashMap;
+
+use crate::{
+    coords::WorldTileCoords,
+    render::{
+        resource::{RenderPipeline, Texture},
+        settings::{Msaa, RendererSettings},
+        shaders::{RasterTileShader, Shader, ShaderTextureVertex},
+        tile_pipeline::TilePipeline,
+    },
 };
 
 pub const INDICES: &[u32] = &[0, 1, 3, 1, 2, 3];
 
 pub const ROOT: &[ShaderTextureVertex] = &[
     ShaderTextureVertex {
-        position: [-1.0, 1.0],
-        tex_coords: [0.0, 0.0], // A
-    }, // A
-    ShaderTextureVertex {
-        position: [-1.0, -1.0],
-        tex_coords: [0.0, 1.0], // B
-    }, // B
-    ShaderTextureVertex {
-        position: [1.0, -1.0],
-        tex_coords: [1.0, 1.0], // C
-    }, // C
-    ShaderTextureVertex {
-        position: [1.0, 1.0],
-        tex_coords: [1.0, 0.0], // D
-    }, // D
-];
-
-pub const UPPER_LEFT: &[ShaderTextureVertex] = &[
-    ShaderTextureVertex {
-        position: [-1.0, 1.0],
-        tex_coords: [0.0, 0.0], // A
-    }, // A
-    ShaderTextureVertex {
-        position: [-1.0, 0.0],
-        tex_coords: [0.0, 1.0], // B
-    }, // B
-    ShaderTextureVertex {
-        position: [0.0, 0.0],
-        tex_coords: [1.0, 1.0], // C
-    }, // C
-    ShaderTextureVertex {
-        position: [0.0, 1.0],
-        tex_coords: [1.0, 0.0], // D
-    }, // D
-];
-
-pub const UPPER_RIGHT: &[ShaderTextureVertex] = &[
-    ShaderTextureVertex {
-        position: [0.0, 1.0],
-        tex_coords: [0.0, 0.0], // A
-    }, // A
-    ShaderTextureVertex {
-        position: [0.0, 0.0],
-        tex_coords: [0.0, 1.0], // B
-    }, // B
-    ShaderTextureVertex {
-        position: [1.0, 0.0],
-        tex_coords: [1.0, 1.0], // C
-    }, // C
-    ShaderTextureVertex {
-        position: [1.0, 1.0],
-        tex_coords: [1.0, 0.0], // D
-    }, // D
-];
-
-pub const LOWER_LEFT: &[ShaderTextureVertex] = &[
-    ShaderTextureVertex {
-        position: [-1.0, 0.0],
-        tex_coords: [0.0, 0.0], // A
-    }, // A
-    ShaderTextureVertex {
-        position: [-1.0, -1.0],
-        tex_coords: [0.0, 1.0], // B
-    }, // B
-    ShaderTextureVertex {
-        position: [0.0, -1.0],
-        tex_coords: [1.0, 1.0], // C
-    }, // C
-    ShaderTextureVertex {
-        position: [0.0, 0.0],
-        tex_coords: [1.0, 0.0], // D
-    }, // D
-];
-
-pub const LOWER_RIGHT: &[ShaderTextureVertex] = &[
-    ShaderTextureVertex {
         position: [0.0, 0.0],
         tex_coords: [0.0, 0.0], // A
     }, // A
     ShaderTextureVertex {
-        position: [0.0, -1.0],
+        position: [0.0, 4096.0],
         tex_coords: [0.0, 1.0], // B
     }, // B
     ShaderTextureVertex {
-        position: [1.0, -1.0],
+        position: [4096.0, 4096.0],
         tex_coords: [1.0, 1.0], // C
     }, // C
     ShaderTextureVertex {
-        position: [1.0, 0.0],
+        position: [4096.0, 0.0],
         tex_coords: [1.0, 0.0], // D
     }, // D
 ];
@@ -169,23 +98,26 @@ impl RasterResources {
         );
     }
 
-    pub fn set_raster_bind_group(&mut self, device: &wgpu::Device) {
-        self.bind_group = Some(device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &self.pipeline.as_ref().unwrap().get_bind_group_layout(0),
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(
-                        &self.texture.as_ref().unwrap().view,
-                    ),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(self.sampler.as_ref().unwrap()),
-                },
-            ],
-            label: None,
-        }));
+    pub fn set_raster_bind_group(&mut self, device: &wgpu::Device, coords: &WorldTileCoords) {
+        self.bind_groups.insert(
+            coords.clone(),
+            device.create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &self.pipeline.as_ref().unwrap().get_bind_group_layout(0),
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(
+                            &self.texture.as_ref().unwrap().view,
+                        ),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Sampler(self.sampler.as_ref().unwrap()),
+                    },
+                ],
+                label: None,
+            }),
+        );
     }
 }
 
