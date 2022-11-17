@@ -2,7 +2,7 @@
 
 use std::{collections::HashSet, rc::Rc};
 
-use crate::io::source_type::{ RasterSource , SourceType /*, TessellateSource */};
+use crate::io::source_type::{RasterSource, SourceType /*, TessellateSource */};
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
@@ -92,7 +92,7 @@ pub fn schedule<
                 });
 
                 let pipeline = build_raster_tile_pipeline();
-                pipeline.process((input, data), &mut pipeline_context);
+                pipeline.process((input, data), &mut pipeline_context)?;
             }
             Err(e) => {
                 log::error!("{:?}", &e);

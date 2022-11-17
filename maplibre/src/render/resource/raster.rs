@@ -36,7 +36,7 @@ pub struct RasterResources {
     pub msaa: Option<Msaa>,
     pub texture: Option<Texture>,
     pub pipeline: Option<wgpu::RenderPipeline>,
-    pub bind_group: Option<wgpu::BindGroup>,
+    pub bind_groups: HashMap<WorldTileCoords, wgpu::BindGroup>,
 }
 
 impl RasterResources {
@@ -128,7 +128,7 @@ impl Default for RasterResources {
             msaa: None,
             texture: None,
             pipeline: None,
-            bind_group: None,
+            bind_groups: HashMap::new(),
         }
     }
 }

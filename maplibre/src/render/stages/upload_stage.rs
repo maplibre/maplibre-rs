@@ -284,7 +284,7 @@ impl UploadStage {
                                             raster_resources.texture.as_ref().unwrap().size.clone(),
                                         );
 
-                                        raster_resources.set_raster_bind_group(device);
+                                        raster_resources.set_raster_bind_group(device, coords);
                                     }
                                 }
                             }

@@ -33,7 +33,7 @@ impl Default for Style {
             sources: Default::default(),
             center: Some([46.5197, 6.6323]),
             pitch: Some(0.0),
-            zoom: Some(1.0),
+            zoom: Some(13.0),
             layers: vec![
                 StyleLayer {
                     index: 0,

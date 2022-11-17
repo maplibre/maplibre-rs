@@ -4,6 +4,7 @@ use geozero::GeozeroDatasource;
 use prost::Message;
 
 use crate::{
+    error,
     io::{
         geometry_index::IndexProcessor,
         pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable},
@@ -38,9 +39,9 @@ impl Processable for ParseTile {
         &self,
         (tile_request, data): Self::Input,
         _context: &mut PipelineContext,
-    ) -> Self::Output {
+    ) -> Result<Self::Output, error::Error> {
         let tile = geozero::mvt::Tile::decode(data.as_ref()).expect("failed to load tile");
-        (tile_request, tile)
+        Ok((tile_request, tile))
     }
 }
 
@@ -56,7 +57,7 @@ impl Processable for IndexLayer {
         &self,
         (tile_request, tile): Self::Input,
         context: &mut PipelineContext,
-    ) -> Self::Output {
+    ) -> Result<Self::Output, error::Error> {
         let index = IndexProcessor::new();
 
         // FIXME: Handle result
@@ -79,7 +80,7 @@ impl Processable for TessellateLayer {
         &self,
         (tile_request, mut tile): Self::Input,
         context: &mut PipelineContext,
-    ) -> Self::Output {
+    ) -> Result<Self::Output, error::Error> {
         let coords = &tile_request.coords;
 
         for layer in &mut tile.layers {
@@ -96,7 +97,7 @@ impl Processable for TessellateLayer {
                 // FIXME: Handle result
                 context
                     .processor_mut()
-                    .layer_unavailable(coords, layer_name);
+                    .layer_unavailable(coords, layer_name)?;
 
                 tracing::error!(
                     "layer {} at {} tesselation failed {:?}",
@@ -111,11 +112,11 @@ impl Processable for TessellateLayer {
                     tessellator.buffer.into(),
                     tessellator.feature_indices,
                     cloned_layer,
-                );
+                )?;
             }
         }
 
-        (tile_request, TileType::Vector(tile))
+        Ok((tile_request, TileType::Vector(tile)))
     }
 }
 
@@ -128,9 +129,9 @@ impl Processable for TilePipeline {
 
     fn process(
         &self,
-        (tile_request, mut tile): Self::Input,
+        (tile_request, tile): Self::Input,
         context: &mut PipelineContext,
-    ) -> Self::Output {
+    ) -> Result<Self::Output, error::Error> {
         let coords = &tile_request.coords;
 
         if let TileType::Vector(vector_tile) = &tile {
@@ -144,7 +145,7 @@ impl Processable for TilePipeline {
                 // FIXME: Handle result
                 context
                     .processor_mut()
-                    .layer_unavailable(coords, missing_layer);
+                    .layer_unavailable(coords, missing_layer)?;
 
                 tracing::info!(
                     "requested layer {} at {} not found in tile",
@@ -157,9 +158,11 @@ impl Processable for TilePipeline {
         tracing::info!("tile tessellated at {} finished", &tile_request.coords);
 
         // FIXME: Handle result
-        context.processor_mut().tile_finished(&tile_request.coords);
+        context
+            .processor_mut()
+            .tile_finished(&tile_request.coords)?;
 
-        (tile_request, tile)
+        Ok((tile_request, tile))
     }
 }
 
@@ -184,16 +187,18 @@ impl Processable for RasterLayer {
         &self,
         (tile_request, data): Self::Input,
         context: &mut PipelineContext,
-    ) -> Self::Output {
+    ) -> Result<Self::Output, error::Error> {
         let coords = &tile_request.coords;
         let data = data.to_vec();
 
         // FIXME: Handle result
-        context
-            .processor_mut()
-            .layer_raster_finished(coords, "raster".to_string(), data.clone());
+        context.processor_mut().layer_raster_finished(
+            coords,
+            "raster".to_string(),
+            data.clone(),
+        )?;
 
-        (tile_request, TileType::Raster(data))
+        Ok((tile_request, TileType::Raster(data)))
     }
 }
 

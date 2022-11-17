@@ -41,10 +41,10 @@ impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetVectorViewBindGroup<I
 }
 
 pub struct SetRasterViewBindGroup<const I: usize>;
-impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetRasterViewBindGroup<I> {
+impl<const I: usize> RenderCommand<(IndexEntry, TileShape)> for SetRasterViewBindGroup<I> {
     fn render<'w>(
         state: &'w RenderState,
-        _item: &P,
+        (entry, _shape): &(IndexEntry, TileShape),
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         if let Initialized(raster_resources) = &state.raster_resources {
