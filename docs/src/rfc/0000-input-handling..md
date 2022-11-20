@@ -1,4 +1,4 @@
-- Feature Name: (`refract_input`)
+- Feature Name: (`input_handling.`)
 - Start Date: (2022-11-13)
 - RFC PR: [maplibre/maplibre-rs#00??](https://github.com/maplibre/maplibre-rs/pull/00??)
 - maplibre-rs Issue: #91 and otherrs [maplibre/maplibre-rs#0000](https://github.com/maplibre/maplibre-rs/issues/91)
