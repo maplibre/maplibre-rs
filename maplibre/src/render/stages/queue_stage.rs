@@ -45,16 +45,14 @@ impl Stage for QueueStage {
                 let coords = shape.coords;
                 tracing::trace!("Drawing tile at {coords}");
 
+                // Use shape if fallback is unavailable
                 let shape_to_render = fallback.as_ref().unwrap_or(shape);
 
                 // Draw mask
                 mask_phase.add(tile_in_view.clone());
 
                 if let Some(entries) = index.get_layers(&shape_to_render.coords) {
-                    let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
-                    layers_to_render.sort_by_key(|entry| entry.style_layer.index);
-
-                    for entry in layers_to_render {
+                    for entry in entries {
                         // Draw tile
                         tile_phase.add((entry.clone(), shape_to_render.clone()))
                     }

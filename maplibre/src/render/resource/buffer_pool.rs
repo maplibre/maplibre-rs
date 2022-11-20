@@ -527,10 +527,14 @@ impl RingIndex {
     }
 
     pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
-        coords
+        let entry = coords
             .build_quad_key()
-            .and_then(|key| self.tree_index.get(&key))
-            .is_some()
+            .and_then(|key| self.tree_index.get(&key));
+        if let Some(entry) = entry {
+            entry.len() >= 4 // TODO: does that mean that all 4 children are loaded?
+        } else {
+            false
+        }
     }
 
     pub fn get_tile_coords_fallback(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
@@ -544,6 +548,21 @@ impl RingIndex {
                 return None;
             }
         }
+    }
+
+    pub fn get_tile_coords_children(
+        &self,
+        coords: &WorldTileCoords,
+    ) -> [Option<WorldTileCoords>; 4] {
+        let children = coords.get_children();
+
+        children.map(|child| {
+            if self.has_tile(&child) {
+                Some(child)
+            } else {
+                None
+            }
+        })
     }
 
     pub fn iter(&self) -> impl Iterator<Item = impl Iterator<Item = &IndexEntry>> + '_ {

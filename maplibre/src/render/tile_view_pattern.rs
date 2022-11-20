@@ -105,22 +105,44 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
 
             index += 1;
 
-            let fallback = {
-                if !pool_index.has_tile(&coords) {
-                    if let Some(fallback_coords) = pool_index.get_tile_coords_fallback(&coords) {
-                        tracing::trace!(
-                            "Could not find data at {coords}. Falling back to {fallback_coords}"
-                        );
+            let has_tile = pool_index.has_tile(&coords);
 
-                        let shape = TileShape::new(fallback_coords, zoom, index);
+            let fallback = if !has_tile {
+                if let Some(parent_coord) = pool_index.get_tile_coords_fallback(&coords) {
+                    tracing::trace!(
+                        "Could not find data at {coords}. Falling back to {parent_coord}"
+                    );
 
-                        index += 1;
-                        Some(shape)
-                    } else {
-                        None
-                    }
+                    let shape = TileShape::new(parent_coord, zoom, index);
+
+                    index += 1;
+                    Some(shape)
                 } else {
                     None
+                }
+            } else {
+                None
+            };
+
+            if fallback.is_none() && !has_tile {
+                let children_coords = pool_index.get_tile_coords_children(&coords);
+
+                let available: u64 = children_coords
+                    .map(|child| if child.is_some() { 1 } else { 0 })
+                    .iter()
+                    .sum();
+
+                index += available;
+                let children = children_coords
+                    .map(|child| child.map(|coords| TileShape::new(coords, zoom, index)));
+
+                for child in children {
+                    if let Some(child) = child {
+                        self.in_view.push(TileInView {
+                            shape: child,
+                            fallback: None,
+                        });
+                    }
                 }
             };
 
