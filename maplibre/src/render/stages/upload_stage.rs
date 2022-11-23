@@ -1,6 +1,8 @@
 //! Uploads data to the GPU which is needed for rendering.
 
+#[cfg(feature = "raster")]
 use image::GenericImageView;
+
 use std::iter;
 
 use crate::{
@@ -241,50 +243,62 @@ impl UploadStage {
                                     layer_name,
                                     layer_data,
                                 } => {
-                                    if let Initialized(raster_resources) = raster_resources {
-                                        buffer_pool.allocate_layer_raster(
-                                            device,
-                                            queue,
-                                            *coords,
-                                            style_layer.clone(),
-                                            layer_data.clone(),
-                                            raster_resources,
-                                        );
-                                        let img = image::load_from_memory(&layer_data).unwrap();
-                                        let rgba = img.to_rgba8();
-                                        let (width, height) = img.dimensions();
+                                    #[cfg(feature = "raster")]
+                                    {
+                                        if let Initialized(raster_resources) = raster_resources {
+                                            buffer_pool.allocate_layer_raster(
+                                                device,
+                                                queue,
+                                                *coords,
+                                                style_layer.clone(),
+                                                layer_data.clone(),
+                                                raster_resources,
+                                            );
+                                            let img = image::load_from_memory(&layer_data).unwrap();
+                                            let rgba = img.to_rgba8();
+                                            let (width, height) = img.dimensions();
 
-                                        raster_resources.set_texture(
-                                            None,
-                                            device,
-                                            wgpu::TextureFormat::Rgba8UnormSrgb,
-                                            width,
-                                            height,
-                                            wgpu::TextureUsages::TEXTURE_BINDING
-                                                | wgpu::TextureUsages::COPY_DST,
-                                        );
+                                            raster_resources.set_texture(
+                                                None,
+                                                device,
+                                                wgpu::TextureFormat::Rgba8UnormSrgb,
+                                                width,
+                                                height,
+                                                wgpu::TextureUsages::TEXTURE_BINDING
+                                                    | wgpu::TextureUsages::COPY_DST,
+                                            );
 
-                                        queue.write_texture(
-                                            wgpu::ImageCopyTexture {
-                                                aspect: wgpu::TextureAspect::All,
-                                                texture: &raster_resources
+                                            queue.write_texture(
+                                                wgpu::ImageCopyTexture {
+                                                    aspect: wgpu::TextureAspect::All,
+                                                    texture: &raster_resources
+                                                        .texture
+                                                        .as_ref()
+                                                        .unwrap()
+                                                        .texture,
+                                                    mip_level: 0,
+                                                    origin: wgpu::Origin3d::ZERO,
+                                                },
+                                                &rgba,
+                                                wgpu::ImageDataLayout {
+                                                    offset: 0,
+                                                    bytes_per_row: std::num::NonZeroU32::new(
+                                                        4 * width,
+                                                    ),
+                                                    rows_per_image: std::num::NonZeroU32::new(
+                                                        height,
+                                                    ),
+                                                },
+                                                raster_resources
                                                     .texture
                                                     .as_ref()
                                                     .unwrap()
-                                                    .texture,
-                                                mip_level: 0,
-                                                origin: wgpu::Origin3d::ZERO,
-                                            },
-                                            &rgba,
-                                            wgpu::ImageDataLayout {
-                                                offset: 0,
-                                                bytes_per_row: std::num::NonZeroU32::new(4 * width),
-                                                rows_per_image: std::num::NonZeroU32::new(height),
-                                            },
-                                            raster_resources.texture.as_ref().unwrap().size.clone(),
-                                        );
+                                                    .size
+                                                    .clone(),
+                                            );
 
-                                        raster_resources.set_raster_bind_group(device, coords);
+                                            raster_resources.set_raster_bind_group(device, coords);
+                                        }
                                     }
                                 }
                             }

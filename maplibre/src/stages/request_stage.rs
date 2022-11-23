@@ -2,7 +2,12 @@
 
 use std::{collections::HashSet, rc::Rc};
 
-use crate::io::source_type::{RasterSource, SourceType /*, TessellateSource */};
+#[cfg(feature = "raster")]
+use crate::io::{source_type::RasterSource, tile_pipelines::build_raster_tile_pipeline};
+
+#[cfg(not(feature = "raster"))]
+use crate::io::{source_type::TessellateSource, tile_pipelines::build_vector_tile_pipeline};
+
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
@@ -11,7 +16,7 @@ use crate::{
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message},
         pipeline::{PipelineContext, Processable},
-        tile_pipelines::build_raster_tile_pipeline,
+        source_type::SourceType,
         tile_repository::TileRepository,
         transferables::{Transferables, UnavailableLayer},
         TileRequest,
@@ -78,10 +83,12 @@ pub fn schedule<
         let coords = input.coords;
         let client = context.source_client();
 
-        match client
-            .fetch(&coords, &SourceType::Raster(RasterSource::default()))
-            .await
-        {
+        #[cfg(feature = "raster")]
+        let source = SourceType::Raster(RasterSource::default());
+        #[cfg(not(feature = "raster"))]
+        let source = SourceType::Tessellate(TessellateSource::default());
+
+        match client.fetch(&coords, &source).await {
             Ok(data) => {
                 let data = data.into_boxed_slice();
 
@@ -91,7 +98,11 @@ pub fn schedule<
                     phantom_hc: Default::default(),
                 });
 
+                #[cfg(feature = "raster")]
                 let pipeline = build_raster_tile_pipeline();
+                #[cfg(not(feature = "raster"))]
+                let pipeline = build_vector_tile_pipeline();
+
                 pipeline.process((input, data), &mut pipeline_context)?;
             }
             Err(e) => {
