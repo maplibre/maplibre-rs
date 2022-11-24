@@ -1,4 +1,5 @@
 use log::warn;
+
 use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::WorldTileCoords,
@@ -6,7 +7,8 @@ use maplibre::{
         geometry_index::TileIndex,
         tile_repository::StoredLayer,
         transferables::{
-            IndexedLayer, TessellatedLayer, TileTessellated, Transferables, UnavailableLayer,
+            IndexedLayer, RasterLayer, TessellatedLayer, TileTessellated, Transferables,
+            UnavailableLayer,
         },
     },
     render::ShaderVertex,
@@ -226,6 +228,30 @@ impl IndexedLayer for LinearLayerIndexed {
     }
 }
 
+pub struct LinearRasterLayer {
+    pub coords: WorldTileCoords,
+    pub layer_name: String,
+    pub layer_data: Vec<u8>,
+}
+
+impl RasterLayer for LinearRasterLayer {
+    fn new(coords: WorldTileCoords, layer_name: String, layer_data: Vec<u8>) -> Self {
+        Self {
+            coords,
+            layer_name,
+            layer_data,
+        }
+    }
+
+    fn to_stored_layer(self) -> StoredLayer {
+        StoredLayer::RasterLayer {
+            coords: self.coords,
+            layer_name: "raster".to_string(),
+            layer_data: self.layer_data,
+        }
+    }
+}
+
 pub struct LinearTransferables;
 
 impl Transferables for LinearTransferables {
@@ -233,4 +259,5 @@ impl Transferables for LinearTransferables {
     type LayerUnavailable = LinearLayerUnavailable;
     type LayerTessellated = LinearLayerTesselated;
     type LayerIndexed = LinearLayerIndexed;
+    type LayerRaster = LinearRasterLayer;
 }

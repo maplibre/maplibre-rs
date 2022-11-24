@@ -16,7 +16,7 @@ use web_sys::{DedicatedWorkerGlobalScope, Worker};
 use crate::{
     platform::singlethreaded::transferables::{
         InnerData, LinearLayerIndexed, LinearLayerTesselated, LinearLayerUnavailable,
-        LinearTileTessellated, LinearTransferables,
+        LinearRasterLayer, LinearTileTessellated, LinearTransferables,
     },
     WHATWGFetchHttpClient,
 };
@@ -31,6 +31,7 @@ enum SerializedMessageTag {
     LayerUnavailable = 2,
     LayerTessellated = 3,
     LayerIndexed = 4,
+    LayerRaster = 5,
 }
 
 impl SerializedMessageTag {
@@ -47,6 +48,9 @@ impl SerializedMessageTag {
             }
             x if x == SerializedMessageTag::LayerIndexed as u32 => {
                 Some(SerializedMessageTag::LayerIndexed)
+            }
+            x if x == SerializedMessageTag::LayerRaster as u32 => {
+                Some(SerializedMessageTag::LayerRaster)
             }
             _ => None,
         }
@@ -81,6 +85,10 @@ impl SerializableMessage for Message<LinearTransferables> {
                 Message::LayerIndexed(message) => slice::from_raw_parts(
                     message as *const LinearLayerIndexed as *mut u8,
                     size_of::<LinearLayerIndexed>(),
+                ),
+                Message::LayerRaster(message) => slice::from_raw_parts(
+                    message as *const LinearRasterLayer as *mut u8,
+                    size_of::<LinearRasterLayer>(),
                 ),
             }
         }
@@ -118,6 +126,7 @@ impl SerializableMessage for Message<LinearTransferables> {
                 SerializedMessageTag::LayerIndexed => Message::<UsedTransferables>::LayerIndexed(
                     (&*(data.to_vec().as_slice() as *const [u8] as *const IndexedLayer)).clone(),
                 ),
+                SerializedMessageTag::LayerRaster => todo!(),
             }
         }
     }
@@ -128,6 +137,7 @@ impl SerializableMessage for Message<LinearTransferables> {
             Message::LayerUnavailable(_) => SerializedMessageTag::LayerUnavailable,
             Message::LayerTessellated(_) => SerializedMessageTag::LayerTessellated,
             Message::LayerIndexed(_) => SerializedMessageTag::LayerIndexed,
+            Message::LayerRaster(_) => todo!(),
         }
     }
 }
