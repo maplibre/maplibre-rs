@@ -1,20 +1,9 @@
-use super::source_client::HttpSourceClient;
-use crate::io::apc::AsyncProcedureFuture;
-use crate::{
-    coords::WorldTileCoords, environment::Environment, style::source::TileAddressingScheme,
-};
+use dotenv::dotenv;
+use std::env;
 
-pub trait Source<E>
-where
-    E: Environment,
-{
-    fn load(
-        &self,
-        http_source_client: HttpSourceClient<E::HttpClient>,
-        coords: &WorldTileCoords,
-    ) -> AsyncProcedureFuture;
-}
+use crate::{coords::WorldTileCoords, style::source::TileAddressingScheme};
 
+/// Represents a source from which the vector tile are fetched.
 #[derive(Clone)]
 pub struct TessellateSource {
     pub url: String,
@@ -48,6 +37,7 @@ impl Default for TessellateSource {
     }
 }
 
+/// Represents a source from which the raster tile are fetched.
 #[derive(Clone)]
 pub struct RasterSource {
     pub url: String,
@@ -80,14 +70,22 @@ impl RasterSource {
 
 impl Default for RasterSource {
     fn default() -> Self {
+        dotenv().ok();
+
+        // Used so the API key is not in the source code.
+        // Put an '.env' file in the root directory with the following content:
+        // MAPTILER_API_KEY=your_api_key
+        let api_key = env::var("MAPTILER_API_KEY").expect("MAPTILER_API_KEY must be set");
+
         Self::new(
             "https://api.maptiler.com/tiles/satellite-v2",
             "jpg",
-            "qnePkfbGpMsLCi3KFBs3",
+            api_key.as_str(),
         )
     }
 }
 
+/// Represents the tiles' different types of source.
 #[derive(Clone)]
 pub enum SourceType {
     Raster(RasterSource),
@@ -102,79 +100,3 @@ impl SourceType {
         }
     }
 }
-
-/*
-impl<E> Source<E> for SourceType
-where
-    E: Environment,
-{
-    fn load(
-        &self,
-        http_source_client: HttpSourceClient<E::HttpClient>,
-        coords: &WorldTileCoords,
-    ) -> AsyncProcedureFuture {
-        let client = SourceClient::Http(http_source_client.clone());
-        let coords = *coords;
-        let source = self.clone();
-
-
-
-        /*scheduler
-        .schedule(Box::new(move || {
-            Box::pin(async move {
-                match client.fetch(&coords, &source).await {
-                    Ok(data) => match source {
-                        SourceType::Raster(raster_source) => {
-                            state
-                                .process_raster_data(request_id, data.into_boxed_slice())
-                                .unwrap();
-                        }
-                        SourceType::Tessellate(tessellate_source) => {
-                            state
-                                .process_vector_data(request_id, data.into_boxed_slice())
-                                .unwrap();
-                        }
-                    },
-                    Err(e) => {
-                        log::error!("{:?}", e);
-                        state.tile_unavailable(&coords, request_id).unwrap();
-                    }
-                }
-            })
-        }))
-        .unwrap();*/
-    }
-}
-
-
-
-impl<E> Source<E> for TessellateSource
-where
-    E: Environment,
-{
-    fn load(
-        &self,
-        http_source_client: HttpSourceClient<E::HttpClient>,
-        coords: &WorldTileCoords,
-    ) -> AsyncProcedureFuture {
-        let source = SourceType::Tessellate(self.clone());
-
-        source.load(http_source_client.clone(), scheduler, coords)
-    }
-}
-
-impl<E> Source<E> for RasterSource
-where
-    E: Environment,
-{
-    fn load(
-        &self,
-        http_source_client: HttpSourceClient<E::HttpClient>,
-        coords: &WorldTileCoords,
-    ) -> AsyncProcedureFuture {
-        let source = SourceType::Raster(self.clone());
-
-        source.load(http_source_client.clone(), scheduler, coords)
-    }
-}
-*/

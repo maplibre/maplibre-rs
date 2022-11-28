@@ -60,7 +60,6 @@ impl Processable for IndexLayer {
     ) -> Result<Self::Output, error::Error> {
         let index = IndexProcessor::new();
 
-        // FIXME: Handle result
         context
             .processor_mut()
             .layer_indexing_finished(&tile_request.coords, index.get_geometries())?;
@@ -94,7 +93,6 @@ impl Processable for TessellateLayer {
 
             let mut tessellator = ZeroTessellator::<IndexDataType>::default();
             if let Err(e) = layer.process(&mut tessellator) {
-                // FIXME: Handle result
                 context
                     .processor_mut()
                     .layer_unavailable(coords, layer_name)?;
@@ -106,7 +104,6 @@ impl Processable for TessellateLayer {
                     e
                 );
             } else {
-                // FIXME: Handle result
                 context.processor_mut().layer_tesselation_finished(
                     coords,
                     tessellator.buffer.into(),
@@ -142,7 +139,6 @@ impl Processable for TilePipeline {
                 .collect::<HashSet<_>>();
 
             for missing_layer in tile_request.layers.difference(&available_layers) {
-                // FIXME: Handle result
                 context
                     .processor_mut()
                     .layer_unavailable(coords, missing_layer)?;
@@ -157,7 +153,6 @@ impl Processable for TilePipeline {
 
         tracing::info!("tile tessellated at {} finished", &tile_request.coords);
 
-        // FIXME: Handle result
         context
             .processor_mut()
             .tile_finished(&tile_request.coords)?;
@@ -171,7 +166,10 @@ pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Pr
         ParseTile,
         DataPipeline::new(
             TessellateLayer,
-            DataPipeline::new(TilePipeline, PipelineEnd::default()),
+            DataPipeline::new(
+                TilePipeline,
+                DataPipeline::new(IndexLayer, PipelineEnd::default()),
+            ),
         ),
     )
 }
@@ -191,7 +189,6 @@ impl Processable for RasterLayer {
         let coords = &tile_request.coords;
         let data = data.to_vec();
 
-        // FIXME: Handle result
         context.processor_mut().layer_raster_finished(
             coords,
             "raster".to_string(),

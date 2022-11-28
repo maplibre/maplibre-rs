@@ -1,7 +1,6 @@
 //! Raster tile layer description
 
 use serde::{Deserialize, Serialize};
-// use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum RasterResampling {
@@ -10,13 +9,6 @@ pub enum RasterResampling {
     #[serde(rename = "nearest")]
     Nearest,
 }
-
-// pub enum RasterVisibility {
-//     #[serde(rename = "visible")]
-//     Visible,
-//     #[serde(rename = "none")]
-//     None,
-// }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RasterLayer {
@@ -44,7 +36,6 @@ pub struct RasterLayer {
     #[serde(rename = "raster-saturation")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub raster_saturation: Option<f32>,
-    // pub visibility: Option<RasterVisibility>,
 }
 
 impl Default for RasterLayer {
@@ -58,7 +49,6 @@ impl Default for RasterLayer {
             raster_opacity: Some(1.0),
             raster_resampling: Some(RasterResampling::Linear),
             raster_saturation: Some(0.0),
-            // visibility: None,
         }
     }
 }

@@ -72,19 +72,8 @@ where
         coords: &WorldTileCoords,
         source_type: &SourceType,
     ) -> Result<Vec<u8>, Error> {
-        // let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
         self.inner_client
             .fetch(&source_type.format(&coords).as_str())
             .await
-        /*.fetch(
-            format!(
-                "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
-                x = tile_coords.x,
-                y = tile_coords.y,
-                z = tile_coords.z
-            )
-            .as_str(),
-        )
-        .await*/
     }
 }

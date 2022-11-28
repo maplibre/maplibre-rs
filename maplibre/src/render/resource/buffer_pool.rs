@@ -12,7 +12,7 @@ use bytemuck::Pod;
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
-    render::resource::{raster::RasterResources, Queue, INDICES, ROOT},
+    render::resource::{Queue, INDICES, ROOT},
     style::layer::StyleLayer,
     tessellation::OverAlignedVertexBuffer,
 };
@@ -290,12 +290,9 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
     #[tracing::instrument(skip_all)]
     pub fn allocate_layer_raster(
         &mut self,
-        device: &wgpu::Device,
         queue: &Q,
         coords: WorldTileCoords,
         style_layer: StyleLayer,
-        layer_data: Vec<u8>,
-        raster_resources: &mut RasterResources,
     ) {
         let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
         let indices_stride = size_of::<I>() as wgpu::BufferAddress;
@@ -315,29 +312,6 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         };
 
         let mut vertices = ROOT;
-        /*if let Some(_parent) = coords.get_parent() {
-            let align_coords = coords.into_aligned();
-            let lower_left = align_coords.lower_left();
-            let upper_right = align_coords.upper_right();
-            let lower_right = align_coords.lower_right();
-            let upper_left = align_coords.upper_left();
-
-            if coords == upper_left {
-                vertices = UPPER_LEFT;
-            }
-
-            if coords == lower_left {
-                vertices = LOWER_LEFT;
-            }
-
-            if coords == upper_right {
-                vertices = UPPER_RIGHT;
-            }
-
-            if coords == lower_right {
-                vertices = LOWER_RIGHT;
-            }
-        }*/
 
         queue.write_buffer(
             &self.vertices.inner,

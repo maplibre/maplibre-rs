@@ -247,12 +247,9 @@ impl UploadStage {
                                     {
                                         if let Initialized(raster_resources) = raster_resources {
                                             buffer_pool.allocate_layer_raster(
-                                                device,
                                                 queue,
                                                 *coords,
                                                 style_layer.clone(),
-                                                layer_data.clone(),
-                                                raster_resources,
                                             );
                                             let img = image::load_from_memory(&layer_data).unwrap();
                                             let rgba = img.to_rgba8();

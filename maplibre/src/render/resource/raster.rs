@@ -10,8 +10,10 @@ use crate::{
     },
 };
 
+/// Defines the indices of two triangles which represents one rectangle.   
 pub const INDICES: &[u32] = &[0, 1, 3, 1, 2, 3];
 
+/// Defines the vertices of a the tile.
 pub const ROOT: &[ShaderTextureVertex] = &[
     ShaderTextureVertex {
         position: [0.0, 0.0],
@@ -31,6 +33,11 @@ pub const ROOT: &[ShaderTextureVertex] = &[
     }, // D
 ];
 
+/// Holds the resources necessary for the raster tiles such as the
+/// * sampler
+/// * texture
+/// * pipeline
+/// * bindgroups
 pub struct RasterResources {
     pub sampler: Option<wgpu::Sampler>,
     pub msaa: Option<Msaa>,
@@ -98,6 +105,7 @@ impl RasterResources {
         );
     }
 
+    /// Creates a bind group for each fetched raster tile and store it inside a hashmap.
     pub fn set_raster_bind_group(&mut self, device: &wgpu::Device, coords: &WorldTileCoords) {
         self.bind_groups.insert(
             coords.clone(),
