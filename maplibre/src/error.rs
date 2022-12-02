@@ -16,6 +16,7 @@ pub enum Error {
     Tesselation(TessellationError),
     Render(RenderError),
     Generic(Cow<'static, str>),
+    InvalidTileType,
 }
 
 impl<E> From<E> for Error

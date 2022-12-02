@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use geozero::GeozeroDatasource;
+use image::RgbaImage;
 use prost::Message;
 
 use crate::{
@@ -13,16 +14,19 @@ use crate::{
     tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
 };
 
+#[derive(Clone)]
 pub enum TileType {
     Vector(geozero::mvt::Tile),
-    Raster(Vec<u8>),
+    Raster(RgbaImage),
 }
 
-impl From<TileType> for geozero::mvt::Tile {
-    fn from(tile_type: TileType) -> Self {
+impl TryFrom<TileType> for geozero::mvt::Tile {
+    type Error = error::Error;
+
+    fn try_from(tile_type: TileType) -> Result<Self, Self::Error> {
         match tile_type {
-            TileType::Vector(tile) => tile,
-            TileType::Raster(_) => unimplemented!(),
+            TileType::Vector(tile) => Ok(tile),
+            TileType::Raster(_) => Err(error::Error::InvalidTileType),
         }
     }
 }
@@ -63,7 +67,7 @@ impl Processable for IndexLayer {
         context
             .processor_mut()
             .layer_indexing_finished(&tile_request.coords, index.get_geometries())?;
-        Ok((tile_request, tile.into()))
+        Ok((tile_request, tile.try_into()?))
     }
 }
 
@@ -118,9 +122,46 @@ impl Processable for TessellateLayer {
 }
 
 #[derive(Default)]
-pub struct TilePipeline;
+pub struct TessellateLayerUnavailable;
 
-impl Processable for TilePipeline {
+impl Processable for TessellateLayerUnavailable {
+    type Input = (TileRequest, TileType);
+    type Output = (TileRequest, TileType);
+
+    // TODO (perf): Maybe force inline
+    fn process(
+        &self,
+        (tile_request, tile): Self::Input,
+        context: &mut PipelineContext,
+    ) -> Result<Self::Output, error::Error> {
+        let coords = &tile_request.coords;
+
+        let vector_tile: geozero::mvt::Tile = tile.try_into()?;
+        let available_layers: HashSet<_> = vector_tile
+            .layers
+            .iter()
+            .map(|layer| layer.name.clone())
+            .collect::<HashSet<_>>();
+
+        for missing_layer in tile_request.layers.difference(&available_layers) {
+            context
+                .processor_mut()
+                .layer_unavailable(coords, missing_layer)?;
+
+            tracing::info!(
+                "requested layer {} at {} not found in tile",
+                missing_layer,
+                &coords
+            );
+        }
+        Ok((tile_request, TileType::Vector(vector_tile)))
+    }
+}
+
+#[derive(Default)]
+pub struct TileFinished;
+
+impl Processable for TileFinished {
     type Input = (TileRequest, TileType);
     type Output = (TileRequest, TileType);
 
@@ -129,28 +170,6 @@ impl Processable for TilePipeline {
         (tile_request, tile): Self::Input,
         context: &mut PipelineContext,
     ) -> Result<Self::Output, error::Error> {
-        let coords = &tile_request.coords;
-
-        if let TileType::Vector(vector_tile) = &tile {
-            let available_layers: HashSet<_> = vector_tile
-                .layers
-                .iter()
-                .map(|layer| layer.name.clone())
-                .collect::<HashSet<_>>();
-
-            for missing_layer in tile_request.layers.difference(&available_layers) {
-                context
-                    .processor_mut()
-                    .layer_unavailable(coords, missing_layer)?;
-
-                tracing::info!(
-                    "requested layer {} at {} not found in tile",
-                    missing_layer,
-                    &coords
-                );
-            }
-        }
-
         tracing::info!("tile tessellated at {} finished", &tile_request.coords);
 
         context
@@ -167,8 +186,11 @@ pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Pr
         DataPipeline::new(
             TessellateLayer,
             DataPipeline::new(
-                TilePipeline,
-                DataPipeline::new(IndexLayer, PipelineEnd::default()),
+                TessellateLayerUnavailable,
+                DataPipeline::new(
+                    TileFinished,
+                    DataPipeline::new(IndexLayer, PipelineEnd::default()),
+                ),
             ),
         ),
     )
@@ -188,14 +210,16 @@ impl Processable for RasterLayer {
     ) -> Result<Self::Output, error::Error> {
         let coords = &tile_request.coords;
         let data = data.to_vec();
+        let img = image::load_from_memory(&data).unwrap();
+        let rgba = img.to_rgba8();
 
         context.processor_mut().layer_raster_finished(
             coords,
             "raster".to_string(),
-            data.clone(),
+            rgba.clone(),
         )?;
 
-        Ok((tile_request, TileType::Raster(data)))
+        Ok((tile_request, TileType::Raster(rgba)))
     }
 }
 
@@ -203,7 +227,7 @@ pub fn build_raster_tile_pipeline() -> impl Processable<Input = <RasterLayer as 
 {
     DataPipeline::new(
         RasterLayer,
-        DataPipeline::new(TilePipeline, PipelineEnd::default()),
+        DataPipeline::new(TileFinished, PipelineEnd::default()),
     )
 }
 

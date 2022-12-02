@@ -1,4 +1,5 @@
 use geozero::mvt::tile::Layer;
+use image::RgbaImage;
 
 use crate::{
     coords::WorldTileCoords,
@@ -41,7 +42,7 @@ pub trait IndexedLayer: Send + From<(WorldTileCoords, TileIndex)> {
 }
 
 pub trait RasterLayer: Send {
-    fn new(coords: WorldTileCoords, layer_name: String, layer_data: Vec<u8>) -> Self;
+    fn new(coords: WorldTileCoords, layer_name: String, image_data: RgbaImage) -> Self;
 
     fn to_stored_layer(self) -> StoredLayer;
 }
@@ -143,15 +144,15 @@ impl IndexedLayer for DefaultLayerIndexed {
 pub struct DefaultRasterLayer {
     pub coords: WorldTileCoords,
     pub layer_name: String,
-    pub layer_data: Vec<u8>,
+    pub image_data: RgbaImage,
 }
 
 impl RasterLayer for DefaultRasterLayer {
-    fn new(coords: WorldTileCoords, layer_name: String, layer_data: Vec<u8>) -> Self {
+    fn new(coords: WorldTileCoords, layer_name: String, image_data: RgbaImage) -> Self {
         Self {
             coords,
             layer_name,
-            layer_data,
+            image_data,
         }
     }
 
@@ -159,7 +160,7 @@ impl RasterLayer for DefaultRasterLayer {
         StoredLayer::RasterLayer {
             coords: self.coords,
             layer_name: "raster".to_string(),
-            layer_data: self.layer_data,
+            image_data: self.image_data,
         }
     }
 }

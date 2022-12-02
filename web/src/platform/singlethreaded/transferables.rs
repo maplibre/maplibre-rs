@@ -247,7 +247,7 @@ impl RasterLayer for LinearRasterLayer {
         StoredLayer::RasterLayer {
             coords: self.coords,
             layer_name: "raster".to_string(),
-            layer_data: self.layer_data,
+            image_data: self.layer_data,
         }
     }
 }

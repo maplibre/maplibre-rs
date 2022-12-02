@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use downcast_rs::Downcast;
 use geozero::mvt::tile;
+use image::RgbaImage;
 
 use crate::{
     coords::WorldTileCoords,
@@ -36,7 +37,7 @@ pub trait PipelineProcessor: Downcast {
         &mut self,
         _coords: &WorldTileCoords,
         _layer_name: String,
-        _layer_data: Vec<u8>,
+        _layer_data: RgbaImage,
     ) -> Result<(), Error> {
         Ok(())
     }

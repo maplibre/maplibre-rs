@@ -3,6 +3,7 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use geozero::mvt::tile;
+use image::RgbaImage;
 use request_stage::RequestStage;
 
 use crate::io::transferables::RasterLayer;
@@ -79,10 +80,10 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         &mut self,
         coords: &WorldTileCoords,
         layer_name: String,
-        layer_data: Vec<u8>,
+        image_data: RgbaImage,
     ) -> Result<(), Error> {
         self.context.send(Message::LayerRaster(T::LayerRaster::new(
-            *coords, layer_name, layer_data,
+            *coords, layer_name, image_data,
         )))
     }
 

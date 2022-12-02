@@ -1,6 +1,3 @@
-use dotenv::dotenv;
-use std::env;
-
 use crate::{coords::WorldTileCoords, style::source::TileAddressingScheme};
 
 /// Represents a source from which the vector tile are fetched.
@@ -70,17 +67,10 @@ impl RasterSource {
 
 impl Default for RasterSource {
     fn default() -> Self {
-        dotenv().ok();
-
-        // Used so the API key is not in the source code.
-        // Put an '.env' file in the root directory with the following content:
-        // MAPTILER_API_KEY=your_api_key
-        let api_key = env::var("MAPTILER_API_KEY").expect("MAPTILER_API_KEY must be set");
-
         Self::new(
             "https://api.maptiler.com/tiles/satellite-v2",
             "jpg",
-            api_key.as_str(),
+            "qnePkfbGpMsLCi3KFBs3",
         )
     }
 }

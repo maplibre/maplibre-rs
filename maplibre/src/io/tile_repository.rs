@@ -1,5 +1,6 @@
 //! Tile cache.
 
+use image::RgbaImage;
 use std::collections::{btree_map, BTreeMap};
 
 use crate::{
@@ -25,7 +26,7 @@ pub enum StoredLayer {
     RasterLayer {
         coords: WorldTileCoords,
         layer_name: String,
-        layer_data: Vec<u8>,
+        image_data: RgbaImage,
     },
 }
 

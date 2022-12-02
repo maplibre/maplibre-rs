@@ -96,7 +96,8 @@ impl Node for MainPassNode {
         }
 
         for item in &state.tile_phase.items {
-            if !item.0.is_raster() {
+            let (index_entry, _) = item;
+            if !index_entry.is_raster() {
                 DrawVectorTiles::render(state, item, &mut tracked_pass);
             } else {
                 DrawRasterTiles::render(state, item, &mut tracked_pass);

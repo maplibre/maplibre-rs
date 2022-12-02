@@ -1,8 +1,5 @@
 //! Uploads data to the GPU which is needed for rendering.
 
-#[cfg(feature = "raster")]
-use image::GenericImageView;
-
 use std::iter;
 
 use crate::{
@@ -241,7 +238,7 @@ impl UploadStage {
                                 StoredLayer::RasterLayer {
                                     coords,
                                     layer_name,
-                                    layer_data,
+                                    image_data,
                                 } => {
                                     #[cfg(feature = "raster")]
                                     {
@@ -251,9 +248,8 @@ impl UploadStage {
                                                 *coords,
                                                 style_layer.clone(),
                                             );
-                                            let img = image::load_from_memory(&layer_data).unwrap();
-                                            let rgba = img.to_rgba8();
-                                            let (width, height) = img.dimensions();
+
+                                            let (width, height) = image_data.dimensions();
 
                                             raster_resources.set_texture(
                                                 None,
@@ -276,7 +272,7 @@ impl UploadStage {
                                                     mip_level: 0,
                                                     origin: wgpu::Origin3d::ZERO,
                                                 },
-                                                &rgba,
+                                                &image_data,
                                                 wgpu::ImageDataLayout {
                                                     offset: 0,
                                                     bytes_per_row: std::num::NonZeroU32::new(
@@ -294,7 +290,7 @@ impl UploadStage {
                                                     .clone(),
                                             );
 
-                                            raster_resources.set_raster_bind_group(device, coords);
+                                            raster_resources.set_raster_bind_group(device, &coords);
                                         }
                                     }
                                 }
