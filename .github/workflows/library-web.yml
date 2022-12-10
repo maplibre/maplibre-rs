@@ -32,6 +32,8 @@ jobs:
         with:
           nightly: true
           targets: wasm32-unknown-unknown
+      - name: Install Dependencies
+        uses: ./.github/actions/install-system-dependencies
       - name: Install wasm-bindgen
         uses: ./.github/actions/cargo-install
         # Install wasm-bindgen with test runner

@@ -14,6 +14,8 @@ jobs:
       - name: Install mysys2 dependencies
         shell: powershell
         run: pacman -S --noconfirm unzip
+      - name: Install Dependencies
+        uses: ./.github/actions/install-system-dependencies
       - name: Show PATH
         shell: powershell
         run: Write-Host $env:path

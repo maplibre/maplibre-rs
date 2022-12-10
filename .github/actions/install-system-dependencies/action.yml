@@ -1,0 +1,21 @@
+name: install-system-dependencies
+description: Install system dependencies
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install System Dependencies (Windows)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: pacman -S --noconfirm protobuf mingw-w64-flatbuffers
+    - name: Install System Dependencies (Ubuntu)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        sudo apt-get install -y \
+          protobuf-compiler flatbuffers-compiler \
+          libwayland-dev libxkbcommon-dev # Required for winit
+    - name: Install System Dependencies (Ubuntu)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: brew install protobuf flatbuffers
