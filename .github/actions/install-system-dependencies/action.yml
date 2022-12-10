@@ -7,9 +7,9 @@ runs:
     - name: Install System Dependencies (Windows)
       if: runner.os == 'Windows'
       shell: bash
-      run: pacman -S --noconfirm protobuf mingw-w64-flatbuffers
+      run: pacman -S --noconfirm protobuf mingw-w64-x86_64-flatbuffers
     - name: Install System Dependencies (Ubuntu)
-      if: runner.os == 'Windows'
+      if: runner.os == 'Linux'
       shell: bash
       run: |
         sudo apt-get install -y \
