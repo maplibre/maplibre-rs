@@ -32,11 +32,6 @@ jobs:
         with:
           nightly: true
           targets: wasm32-unknown-unknown
-      - name: Install rust sources (build-std)
-        if: inputs.multithreaded
-        shell: bash
-        run: |
-          just nightly-install-src
       - name: Install wasm-bindgen
         uses: ./.github/actions/cargo-install
         # Install wasm-bindgen with test runner
