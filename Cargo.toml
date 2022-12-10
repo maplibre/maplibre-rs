@@ -11,8 +11,6 @@ members = [
     "android",
     "apple",
     "web",
-    "web/transferable-memory",
-    "web/transferable-memory-derive",
 
     "benchmarks",
 ]

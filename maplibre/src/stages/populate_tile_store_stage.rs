@@ -8,7 +8,7 @@ use crate::{
     io::{
         apc::{AsyncProcedureCall, Message},
         tile_repository::StoredLayer,
-        transferables::{IndexedLayer, TessellatedLayer, TileTessellated, UnavailableLayer},
+        transferables::{LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated},
     },
     kernel::Kernel,
     schedule::Stage,

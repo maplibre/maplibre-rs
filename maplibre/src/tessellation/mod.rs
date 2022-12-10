@@ -57,14 +57,18 @@ impl<V, I> OverAlignedVertexBuffer<V, I> {
         }
     }
 
-    pub fn from_slices(vertices: &[V], indices: &[I], usable_indices: u32) -> Self
+    pub fn from_iters<IV, II>(vertices: IV, indices: II, usable_indices: u32) -> Self
     where
-        V: Copy,
-        I: Copy,
+        IV: IntoIterator<Item = V>,
+        II: IntoIterator<Item = I>,
+        IV::IntoIter: ExactSizeIterator,
+        II::IntoIter: ExactSizeIterator,
     {
-        let mut buffers = VertexBuffers::with_capacity(0, 0);
-        buffers.vertices = Vec::from(vertices);
-        buffers.indices = Vec::from(indices);
+        let vertices = vertices.into_iter();
+        let indices = indices.into_iter();
+        let mut buffers = VertexBuffers::with_capacity(vertices.len(), indices.len());
+        buffers.vertices.extend(vertices);
+        buffers.indices.extend(indices);
         Self {
             buffer: buffers,
             usable_indices,

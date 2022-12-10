@@ -1,0 +1,9 @@
+include "basic.fbs";
+
+//namespace transferables;
+
+table FlatTileTessellated {
+    coords: FlatWorldTileCoords;
+}
+
+root_type FlatTileTessellated;

@@ -1,6 +1,7 @@
 use std::{cell::RefCell, mem, rc::Rc};
 
-use log::info;
+use js_sys::{ArrayBuffer, Uint8Array};
+use log::{error, info};
 use maplibre::{
     error::Error,
     io::{
@@ -9,21 +10,22 @@ use maplibre::{
         transferables::Transferables,
     },
 };
-use transferable_memory::intransfer::{InTransfer, InTransferMemory};
 use wasm_bindgen::{prelude::*, JsCast, JsValue};
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
 use crate::{
-    platform::singlethreaded::transferables::{
-        LargeTesselationData, LinearLayerIndexed, LinearLayerTessellated, LinearLayerUnavailable,
-        LinearTileTessellated, LinearTransferables, VariableTessellationData,
-    },
+    platform::singlethreaded::transferables::{FlatBufferTransferable, FlatTransferables},
     WHATWGFetchHttpClient,
 };
 
-type UsedTransferables = LinearTransferables;
+type UsedTransferables = FlatTransferables;
 type UsedHttpClient = WHATWGFetchHttpClient;
 type UsedContext = PassingContext;
+
+pub struct InTransferMemory {
+    pub buffer: Uint8Array,
+    pub tag: u32,
+}
 
 #[derive(Debug)]
 enum SerializedMessageTag {
@@ -54,7 +56,7 @@ impl SerializedMessageTag {
 }
 
 trait SerializableMessage {
-    fn serialize(&self) -> InTransferMemory;
+    fn serialize(self) -> InTransferMemory;
 
     fn deserialize(
         tag: SerializedMessageTag,
@@ -64,17 +66,40 @@ trait SerializableMessage {
     fn tag(&self) -> SerializedMessageTag;
 }
 
-impl SerializableMessage for Message<LinearTransferables> {
-    fn serialize(&self) -> InTransferMemory {
-        match self {
-            Message::TileTessellated(message) => message.to_in_transfer(self.tag() as u32),
-            Message::LayerUnavailable(message) => message.to_in_transfer(self.tag() as u32),
-            Message::LayerTessellated(message) => match &message.data {
-                VariableTessellationData::Large(message) => {
-                    message.to_in_transfer(self.tag() as u32)
-                }
-            },
-            Message::LayerIndexed(message) => message.to_in_transfer(self.tag() as u32),
+impl SerializableMessage for Message<FlatTransferables> {
+    fn serialize(self) -> InTransferMemory {
+        let tag = self.tag() as u32;
+
+        let message = match self {
+            Message::TileTessellated(message) => {
+                let message: FlatBufferTransferable = message;
+                message
+            }
+            Message::LayerUnavailable(message) => {
+                let message: FlatBufferTransferable = message;
+                message
+            }
+            Message::LayerTessellated(message) => {
+                let message: FlatBufferTransferable = message;
+                message
+            }
+            Message::LayerIndexed(message) => {
+                let message: FlatBufferTransferable = message;
+                message
+            }
+        };
+
+        let data = &message.data[message.start..];
+
+        let serialized_array_buffer = ArrayBuffer::new(data.len() as u32);
+        let serialized_array = Uint8Array::new(&serialized_array_buffer);
+        unsafe {
+            serialized_array.set(&Uint8Array::view(data), 0);
+        }
+
+        InTransferMemory {
+            buffer: serialized_array,
+            tag,
         }
     }
 
@@ -85,28 +110,27 @@ impl SerializableMessage for Message<LinearTransferables> {
         type TileTessellated = <UsedTransferables as Transferables>::TileTessellated;
         type UnavailableLayer = <UsedTransferables as Transferables>::LayerUnavailable;
         type IndexedLayer = <UsedTransferables as Transferables>::LayerIndexed;
+
+        let data = Uint8Array::new(&in_transfer.buffer).to_vec();
+        let transferable = FlatBufferTransferable {
+            data,
+            start: 0, // TODO
+        };
+
         unsafe {
             match tag {
                 SerializedMessageTag::TileTessellated => {
-                    Message::<UsedTransferables>::TileTessellated(
-                        LinearTileTessellated::from_in_transfer(in_transfer),
-                    )
+                    Message::<UsedTransferables>::TileTessellated(transferable)
                 }
                 SerializedMessageTag::LayerUnavailable => {
-                    Message::<UsedTransferables>::LayerUnavailable(
-                        LinearLayerUnavailable::from_in_transfer(in_transfer),
-                    )
+                    Message::<UsedTransferables>::LayerUnavailable(transferable)
                 }
                 SerializedMessageTag::LayerTessellated => {
-                    Message::<UsedTransferables>::LayerTessellated(LinearLayerTessellated {
-                        data: VariableTessellationData::Large(
-                            LargeTesselationData::from_in_transfer_boxed(in_transfer),
-                        ), // TODO DO not use only large
-                    })
+                    Message::<UsedTransferables>::LayerTessellated(transferable)
                 }
-                SerializedMessageTag::LayerIndexed => Message::<UsedTransferables>::LayerIndexed(
-                    LinearLayerIndexed::from_in_transfer(in_transfer),
-                ),
+                SerializedMessageTag::LayerIndexed => {
+                    Message::<UsedTransferables>::LayerIndexed(transferable)
+                }
             }
         }
     }
@@ -135,16 +159,20 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
 
         // TODO use object
         let transfer_obj = js_sys::Array::new();
-        transfer_obj.push(&JsValue::from(in_transfer.type_id as u32));
-        transfer_obj.push(&in_transfer.buffer);
+        transfer_obj.push(&JsValue::from(in_transfer.tag as u32));
+        let buffer = in_transfer.buffer.buffer();
+        transfer_obj.push(&buffer);
 
         let transfer = js_sys::Array::new();
-        transfer.push(&in_transfer.buffer);
+        transfer.push(&buffer);
 
         // TODO: Verify transfer
         global
             .post_message_with_transfer(&transfer_obj, &transfer)
-            .map_err(|_e| Error::APC)
+            .map_err(|e| {
+                error!("{:?}", e);
+                Error::APC
+            })
     }
 
     fn source_client(&self) -> &SourceClient<UsedHttpClient> {
@@ -230,7 +258,11 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
         source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
     };
 
-    (procedure)(input, context).await.unwrap(); // FIXME (wasm-executor): Remove unwrap
+    let result = (procedure)(input, context).await;
+
+    if let Err(e) = result {
+        error!("{:?}", e); // TODO handle better
+    }
 
     Ok(())
 }
@@ -244,14 +276,14 @@ pub unsafe fn singlethreaded_main_entry(
     // FIXME (wasm-executor): Can we make this call safe? check if it was cloned before?
     let received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
 
-    let id = in_transfer_obj.get(0).as_f64().unwrap();
+    let array: ArrayBuffer = in_transfer_obj.get(1).dyn_into().unwrap();
     let in_transfer = InTransferMemory {
-        type_id: id as u32,
-        buffer: in_transfer_obj.get(1).dyn_into().unwrap(),
+        tag: in_transfer_obj.get(0).as_f64().unwrap() as u32,
+        buffer: Uint8Array::new(&array),
     };
 
     let message = Message::<UsedTransferables>::deserialize(
-        SerializedMessageTag::from_u32(in_transfer.type_id).unwrap(),
+        SerializedMessageTag::from_u32(in_transfer.tag).unwrap(),
         in_transfer,
     );
 
