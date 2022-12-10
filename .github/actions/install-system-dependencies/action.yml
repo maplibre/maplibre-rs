@@ -19,8 +19,14 @@ runs:
       if: runner.os == 'macOS'
       shell: bash
       run: brew install protobuf
+
     - name: Check Dependencies
       if: runner.os != 'Windows'
       shell: bash
       run: |
         protoc --version
+    - name: Check Dependencies
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        protoc.exe --version

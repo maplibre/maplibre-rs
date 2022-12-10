@@ -10,7 +10,9 @@ jobs:
     steps:
       - name: Switch to msys2
         shell: powershell
-        run: echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        run: |
+          echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Install mysys2 dependencies
         shell: powershell
         run: pacman -S --noconfirm unzip
