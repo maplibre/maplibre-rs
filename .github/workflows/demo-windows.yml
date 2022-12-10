@@ -14,8 +14,6 @@ jobs:
       - name: Install mysys2 dependencies
         shell: powershell
         run: pacman -S --noconfirm unzip
-      - name: Install Dependencies
-        uses: ./.github/actions/install-system-dependencies
       - name: Show PATH
         shell: powershell
         run: Write-Host $env:path
@@ -24,6 +22,8 @@ jobs:
         uses: ./.github/actions/setup
         with:
           targets: x86_64-pc-windows-msvc
+      - name: Install Dependencies
+        uses: ./.github/actions/install-system-dependencies
       - name: Build
         shell: powershell
         run: cargo build -p maplibre-demo --release --target x86_64-pc-windows-msvc
