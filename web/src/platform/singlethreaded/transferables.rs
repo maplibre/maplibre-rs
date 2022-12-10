@@ -1,7 +1,7 @@
 use flatbuffers::FlatBufferBuilder;
 use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    coords::{WorldTileCoords, ZoomLevel},
+    coords::WorldTileCoords,
     io::{
         geometry_index::TileIndex,
         tile_repository::StoredLayer,
@@ -20,7 +20,20 @@ use crate::platform::singlethreaded::transferables::{
 
 pub mod basic_generated {
     #![allow(unused_imports)]
+
+    use maplibre::coords::{WorldTileCoords, ZoomLevel};
+
     include!(concat!(env!("OUT_DIR"), "/basic_generated.rs"));
+
+    impl Into<WorldTileCoords> for &FlatWorldTileCoords {
+        fn into(self) -> WorldTileCoords {
+            WorldTileCoords {
+                x: self.x(),
+                y: self.y(),
+                z: ZoomLevel::new(self.z()),
+            }
+        }
+    }
 }
 pub mod layer_indexed_generated {
     #![allow(unused_imports)]
@@ -62,11 +75,7 @@ impl<'a, 'b> TileTessellated for FlatBufferTransferable {
 
     fn coords(&self) -> WorldTileCoords {
         let data = unsafe { root_as_flat_tile_tessellated_unchecked(&self.data[self.start..]) };
-        WorldTileCoords {
-            x: data.coords().unwrap().x(),
-            y: data.coords().unwrap().y(),
-            z: ZoomLevel::new(data.coords().unwrap().z()),
-        }
+        data.coords().unwrap().into()
     }
 }
 
@@ -91,11 +100,7 @@ impl LayerUnavailable for FlatBufferTransferable {
 
     fn coords(&self) -> WorldTileCoords {
         let data = unsafe { root_as_flat_layer_unavailable_unchecked(&self.data[self.start..]) };
-        WorldTileCoords {
-            x: data.coords().unwrap().x(),
-            y: data.coords().unwrap().y(),
-            z: ZoomLevel::new(data.coords().unwrap().z()),
-        }
+        data.coords().unwrap().into()
     }
 
     fn layer_name(&self) -> &str {
@@ -153,11 +158,7 @@ impl LayerTessellated for FlatBufferTransferable {
 
     fn coords(&self) -> WorldTileCoords {
         let data = unsafe { root_as_flat_layer_tessellated_unchecked(&self.data[self.start..]) };
-        WorldTileCoords {
-            x: data.coords().unwrap().x(),
-            y: data.coords().unwrap().y(),
-            z: ZoomLevel::new(data.coords().unwrap().z()),
-        }
+        data.coords().unwrap().into()
     }
 
     fn to_stored_layer(self) -> StoredLayer {
@@ -200,11 +201,7 @@ impl LayerIndexed for FlatBufferTransferable {
 
     fn coords(&self) -> WorldTileCoords {
         let data = unsafe { root_as_flat_layer_indexed_unchecked(&self.data[self.start..]) };
-        WorldTileCoords {
-            x: data.coords().unwrap().x(),
-            y: data.coords().unwrap().y(),
-            z: ZoomLevel::new(data.coords().unwrap().z()),
-        }
+        data.coords().unwrap().into()
     }
 
     fn to_tile_index(self) -> TileIndex {

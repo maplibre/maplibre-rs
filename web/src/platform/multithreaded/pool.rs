@@ -7,7 +7,6 @@ use std::{cell::RefCell, rc::Rc};
 use js_sys::Promise;
 use rand::prelude::*;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::JsFuture;
 use web_sys::Worker;
 
 #[wasm_bindgen()]
@@ -25,8 +24,24 @@ struct PoolState {
     workers: RefCell<Vec<Worker>>,
 }
 
-struct Work {
+impl PoolState {
+    fn push(&self, worker: Worker) {
+        let mut workers = self.workers.borrow_mut();
+        for existing_worker in workers.iter() {
+            assert_ne!(existing_worker as &JsValue, &worker as &JsValue);
+        }
+        workers.push(worker);
+    }
+}
+
+pub struct Work {
     func: Box<dyn (FnOnce() -> Promise) + Send>,
+}
+
+impl Work {
+    pub fn execute(self) -> Promise {
+        (self.func)()
+    }
 }
 
 impl WorkerPool {
@@ -129,22 +144,4 @@ impl WorkerPool {
             }
         }
     }
-}
-
-impl PoolState {
-    fn push(&self, worker: Worker) {
-        let mut workers = self.workers.borrow_mut();
-        for existing_worker in workers.iter() {
-            assert_ne!(existing_worker as &JsValue, &worker as &JsValue);
-        }
-        workers.push(worker);
-    }
-}
-
-/// Entry point invoked by the worker.
-#[wasm_bindgen]
-pub async fn multithreaded_worker_entry(ptr: u32) -> Result<(), JsValue> {
-    let ptr = unsafe { Box::from_raw(ptr as *mut Work) };
-    JsFuture::from((ptr.func)()).await?;
-    Ok(())
 }

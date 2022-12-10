@@ -1,12 +1,5 @@
 include "basic.fbs";
 
-//namespace transferables;
-
-//struct FlatVec2f32 {
-//    a: float;
-//    b: float;
-//}
-
 struct FlatShaderVertex {
     position: [float:2];
     normal: [float:2];

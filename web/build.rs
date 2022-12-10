@@ -26,15 +26,4 @@ fn main() {
         ..Default::default()
     })
     .expect("flatc");
-
-    println!("cargo:rerun-if-changed=transferables.capn");
-    capnpc::CompilerCommand::new()
-        .default_parent_module(vec![
-            "platform".to_string(),
-            "singlethreaded".to_string(),
-            "transferables".to_string(),
-        ])
-        .file("./transferables.capn")
-        .run()
-        .expect("compiling schema");
 }
