@@ -34,6 +34,8 @@ jobs:
           targets: wasm32-unknown-unknown
       - name: Install Dependencies
         uses: ./.github/actions/install-system-dependencies
+      - name: Install flatbuffers
+        uses: ./.github/actions/install-flatbuffers
       - name: Install wasm-bindgen
         uses: ./.github/actions/cargo-install
         # Install wasm-bindgen with test runner

@@ -1,0 +1,17 @@
+name: install-flatbuffers
+description: Install flatbuffers
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install flatbuffers
+      shell: bash
+      run: |
+        git clone https://github.com/google/flatbuffers.git
+        cd flatbuffers
+        git checkout v22.12.06
+        cmake -G "Unix Makefiles"
+        make
+        ./flattests
+        sudo make install
+        flatc --version

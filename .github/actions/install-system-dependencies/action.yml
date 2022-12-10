@@ -6,16 +6,27 @@ runs:
   steps:
     - name: Install System Dependencies (Windows)
       if: runner.os == 'Windows'
-      shell: bash
-      run: pacman -S --noconfirm protobuf mingw-w64-x86_64-flatbuffers
+      shell: powershell
+      run: pacman -S --noconfirm protobuf
     - name: Install System Dependencies (Ubuntu)
       if: runner.os == 'Linux'
       shell: bash
       run: |
         sudo apt-get install -y \
-          protobuf-compiler flatbuffers-compiler \
+          protobuf-compiler \
           libwayland-dev libxkbcommon-dev # Required for winit
     - name: Install System Dependencies (Ubuntu)
       if: runner.os == 'macOS'
       shell: bash
-      run: brew install protobuf flatbuffers
+      run: brew install protobuf
+
+    - name: Check Depdenencies
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        protoc --version
+    - name: Check Depdenencies
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        protoc --version
