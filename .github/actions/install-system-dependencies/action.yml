@@ -20,13 +20,13 @@ runs:
       shell: bash
       run: brew install protobuf
 
-    - name: Check Depdenencies
+    - name: Check Dependencies
       if: runner.os != 'Windows'
       shell: bash
       run: |
         protoc --version
-    - name: Check Depdenencies
+    - name: Check Dependencies
       if: runner.os == 'Windows'
       shell: powershell
       run: |
-        protoc --version
+        protoc.exe --version

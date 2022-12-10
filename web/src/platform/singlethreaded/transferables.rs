@@ -41,18 +41,22 @@ pub mod basic_generated {
 }
 pub mod layer_indexed_generated {
     #![allow(unused_imports)]
+    #![allow(clippy)]
     include!(concat!(env!("OUT_DIR"), "/layer_indexed_generated.rs"));
 }
 pub mod layer_tessellated_generated {
     #![allow(unused_imports)]
+    #![allow(clippy)]
     include!(concat!(env!("OUT_DIR"), "/layer_tessellated_generated.rs"));
 }
 pub mod layer_unavailable_generated {
     #![allow(unused_imports)]
+    #![allow(clippy)]
     include!(concat!(env!("OUT_DIR"), "/layer_unavailable_generated.rs"));
 }
 pub mod tile_tessellated_generated {
     #![allow(unused_imports)]
+    #![allow(clippy)]
     include!(concat!(env!("OUT_DIR"), "/tile_tessellated_generated.rs"));
 }
 
