@@ -3,6 +3,7 @@ use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::WorldTileCoords,
     io::{
+        apc::Message,
         geometry_index::TileIndex,
         tile_repository::StoredLayer,
         transferables::{
@@ -13,9 +14,12 @@ use maplibre::{
     tile::Layer,
 };
 
-use crate::platform::singlethreaded::transferables::{
-    basic_generated::*, layer_indexed_generated::*, layer_tessellated_generated::*,
-    layer_unavailable_generated::*, tile_tessellated_generated::*,
+use crate::platform::singlethreaded::{
+    transferables::{
+        basic_generated::*, layer_indexed_generated::*, layer_tessellated_generated::*,
+        layer_unavailable_generated::*, tile_tessellated_generated::*,
+    },
+    UsedTransferables,
 };
 
 pub mod basic_generated {
@@ -55,6 +59,17 @@ pub mod tile_tessellated_generated {
 pub struct FlatBufferTransferable {
     pub data: Vec<u8>,
     pub start: usize,
+}
+
+impl FlatBufferTransferable {
+    pub fn from_message(message: Message<UsedTransferables>) -> Self {
+        match message {
+            Message::TileTessellated(transferable) => transferable,
+            Message::LayerUnavailable(transferable) => transferable,
+            Message::LayerTessellated(transferable) => transferable,
+            Message::LayerIndexed(transferable) => transferable,
+        }
+    }
 }
 
 impl<'a, 'b> TileTessellated for FlatBufferTransferable {

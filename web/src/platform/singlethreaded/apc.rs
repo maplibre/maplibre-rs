@@ -16,11 +16,6 @@ use crate::platform::singlethreaded::{
     transferables::FlatBufferTransferable, UsedContext, UsedHttpClient, UsedTransferables,
 };
 
-pub struct InTransferMemory {
-    pub buffer: Uint8Array,
-    pub tag: u32,
-}
-
 #[derive(Debug)]
 pub enum SerializedMessageTag {
     TileTessellated = 1,
@@ -30,6 +25,15 @@ pub enum SerializedMessageTag {
 }
 
 impl SerializedMessageTag {
+    pub fn from_message(message: &Message<UsedTransferables>) -> Self {
+        match message {
+            Message::TileTessellated(_) => SerializedMessageTag::TileTessellated,
+            Message::LayerUnavailable(_) => SerializedMessageTag::LayerUnavailable,
+            Message::LayerTessellated(_) => SerializedMessageTag::LayerTessellated,
+            Message::LayerIndexed(_) => SerializedMessageTag::LayerIndexed,
+        }
+    }
+
     pub fn from_u32(tag: u32) -> Option<Self> {
         match tag {
             x if x == SerializedMessageTag::LayerUnavailable as u32 => {
@@ -55,53 +59,25 @@ pub struct PassingContext {
 }
 
 impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
-    fn send(&self, data: Message<UsedTransferables>) -> Result<(), Error> {
-        let tag = match data {
-            Message::TileTessellated(_) => SerializedMessageTag::TileTessellated,
-            Message::LayerUnavailable(_) => SerializedMessageTag::LayerUnavailable,
-            Message::LayerTessellated(_) => SerializedMessageTag::LayerTessellated,
-            Message::LayerIndexed(_) => SerializedMessageTag::LayerIndexed,
-        };
+    fn send(&self, message: Message<UsedTransferables>) -> Result<(), Error> {
+        let tag = SerializedMessageTag::from_message(&message);
+        let transferable = FlatBufferTransferable::from_message(message);
+        let data = &transferable.data[transferable.start..];
 
-        let message = match data {
-            Message::TileTessellated(message) => {
-                let message: FlatBufferTransferable = message;
-                message
-            }
-            Message::LayerUnavailable(message) => {
-                let message: FlatBufferTransferable = message;
-                message
-            }
-            Message::LayerTessellated(message) => {
-                let message: FlatBufferTransferable = message;
-                message
-            }
-            Message::LayerIndexed(message) => {
-                let message: FlatBufferTransferable = message;
-                message
-            }
-        };
-
-        let data = &message.data[message.start..];
-
-        let serialized_array_buffer = ArrayBuffer::new(data.len() as u32);
-        let serialized_array = Uint8Array::new(&serialized_array_buffer);
+        let buffer = ArrayBuffer::new(data.len() as u32);
+        let byte_buffer = Uint8Array::new(&buffer);
         unsafe {
-            serialized_array.set(&Uint8Array::view(data), 0);
+            byte_buffer.set(&Uint8Array::view(data), 0);
         }
 
-        let in_transfer = InTransferMemory {
-            buffer: serialized_array,
-            tag: tag as u32,
-        };
+        let tag = tag as u32;
 
         let global: DedicatedWorkerGlobalScope =
             js_sys::global().dyn_into().map_err(|_e| Error::APC)?;
 
-        // TODO use object
         let transfer_obj = js_sys::Array::new();
-        transfer_obj.push(&JsValue::from(in_transfer.tag as u32));
-        let buffer = in_transfer.buffer.buffer();
+        transfer_obj.push(&JsValue::from(tag as u32));
+
         transfer_obj.push(&buffer);
 
         let transfer = js_sys::Array::new();

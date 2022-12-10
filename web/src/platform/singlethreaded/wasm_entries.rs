@@ -13,7 +13,7 @@ use wasm_bindgen::{prelude::*, JsCast};
 
 use crate::{
     platform::singlethreaded::{
-        apc::{InTransferMemory, ReceivedType, SerializedMessageTag},
+        apc::{ReceivedType, SerializedMessageTag},
         transferables::FlatBufferTransferable,
         PassingContext, UsedContext, UsedTransferables,
     },
@@ -49,23 +49,24 @@ pub unsafe fn singlethreaded_main_entry(
     // FIXME (wasm-executor): Can we make this call safe? check if it was cloned before?
     let received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
 
-    let array: ArrayBuffer = in_transfer_obj.get(1).dyn_into().unwrap();
-    let in_transfer = InTransferMemory {
-        tag: in_transfer_obj.get(0).as_f64().unwrap() as u32,
-        buffer: Uint8Array::new(&array),
-    };
+    let tag = in_transfer_obj.get(0).as_f64().unwrap() as u32;
+    let tag = SerializedMessageTag::from_u32(tag).unwrap();
 
-    let tag = SerializedMessageTag::from_u32(in_transfer.tag).unwrap();
+    info!("singlethreaded_main_entry {:?}", tag);
+
+    let buffer: ArrayBuffer = in_transfer_obj.get(1).dyn_into().unwrap();
+    let buffer = Uint8Array::new(&buffer);
 
     type TileTessellated = <UsedTransferables as Transferables>::TileTessellated;
     type UnavailableLayer = <UsedTransferables as Transferables>::LayerUnavailable;
     type IndexedLayer = <UsedTransferables as Transferables>::LayerIndexed;
 
-    let data = Uint8Array::new(&in_transfer.buffer).to_vec();
     let transferable = FlatBufferTransferable {
-        data,
-        start: 0, // TODO
+        data: buffer.to_vec(),
+        start: 0,
     };
+
+    // TODO: Verify that data matches tag
 
     let message = match tag {
         SerializedMessageTag::TileTessellated => {
@@ -81,8 +82,6 @@ pub unsafe fn singlethreaded_main_entry(
             Message::<UsedTransferables>::LayerIndexed(transferable)
         }
     };
-
-    info!("singlethreaded_main_entry {:?}", tag);
 
     // MAJOR FIXME: Fix mutability
     received
