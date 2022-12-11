@@ -3,7 +3,7 @@
 
 use std::{mem::size_of, sync::Arc};
 
-use wgpu::{BufferSlice, BufferView, CompositeAlphaMode};
+use wgpu::CompositeAlphaMode;
 
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
@@ -67,7 +67,7 @@ pub struct BufferedTextureHead {
 
 #[cfg(feature = "headless")]
 impl BufferedTextureHead {
-    pub fn map_async<'a>(&self, device: &wgpu::Device) -> BufferSlice {
+    pub fn map_async<'a>(&self, device: &wgpu::Device) -> wgpu::BufferSlice {
         // Note that we're not calling `.await` here.
         let buffer_slice = self.output_buffer.slice(..);
         buffer_slice.map_async(wgpu::MapMode::Read, |_| ());
@@ -83,7 +83,7 @@ impl BufferedTextureHead {
         self.output_buffer.unmap();
     }
 
-    pub fn write_png<'a>(&self, padded_buffer: &BufferView<'a>, png_output_path: &str) {
+    pub fn write_png<'a>(&self, padded_buffer: &wgpu::BufferView<'a>, png_output_path: &str) {
         use std::{fs::File, io::Write};
         let mut png_encoder = png::Encoder::new(
             File::create(png_output_path).unwrap(), // TODO: Remove unwrap
