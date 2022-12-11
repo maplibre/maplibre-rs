@@ -54,9 +54,10 @@ We can more or less skip serialization because we can use zero-copy data formats
 There are several ways to do this:
 
 1. Reinterpreting between Rust structs (WebAssembly memory) and bytes
-2. Using a well-defined format like Captnproto or Flatbuffers
+2. **Using a well-defined format like Cap'n Proto or Flatbuffers** (Accepted solution)
 
-The second option has the benefit of being safer. By using established libraries for doing  the reinterpretation
+The second option has the benefit of being safer. Therefore, the current implementation for APCs is using it.
+By using established libraries for doing  the reinterpretation
 we do not have to deal with alignment, padding bytes, and avoiding undefined behavior.
 
 One might ask why we can not use the well-known library [bytemuck](https://docs.rs/bytemuck/latest/bytemuck/) to do 
@@ -120,7 +121,7 @@ There is no other way except for shared-memory and `postMessage` to exchange dat
 * Is shared-memory faster or `postMessage` in different browsers?
 
 
-[^1]: Implementation for `transferable-memory`
+[^1]: Implementation for `transferable-memory` (for reference, not used in maplibre-rs)
 ```rust
 pub mod intransfer {
     use js_sys::Uint8Array;
@@ -306,7 +307,7 @@ unsafe fn try_cast_slice<A: Copy, B: Copy>(a: &[A]) -> Result<&[B], MemoryTransf
 }
 ```
 
-[^2] Implementation for `transferable-memory-derive`
+[^2] Implementation for `transferable-memory-derive` (for reference, not used in maplibre-rs)
 ```rust
 mod traits {
     use proc_macro2::{Span, TokenStream};
