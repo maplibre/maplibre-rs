@@ -170,6 +170,10 @@
 <span id="170">170</span>
 <span id="171">171</span>
 <span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashSet;
 
 <span class="kw">use </span>geozero::GeozeroDatasource;
@@ -215,6 +219,10 @@
         context: <span class="kw-2">&amp;mut </span>PipelineContext,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>index = IndexProcessor::new();
+
+        <span class="kw">for </span>layer <span class="kw">in </span><span class="kw-2">&amp;mut </span>tile.layers {
+            layer.process(<span class="kw-2">&amp;mut </span>index).unwrap();
+        }
 
         <span class="kw">for </span>layer <span class="kw">in </span><span class="kw-2">&amp;mut </span>tile.layers {
             layer.process(<span class="kw-2">&amp;mut </span>index).unwrap();

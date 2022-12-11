@@ -150,6 +150,20 @@
 <span id="150">150</span>
 <span id="151">151</span>
 <span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
 </pre><pre class="rust"><code><span class="kw">use </span>geozero::mvt::tile::Layer;
 
 <span class="kw">use crate</span>::{
@@ -160,34 +174,45 @@
 };
 
 <span class="kw">pub trait </span>TileTessellated: Send {
-    <span class="kw">fn </span>new(coords: WorldTileCoords) -&gt; <span class="self">Self</span>;
+    <span class="kw">fn </span>build_from(coords: WorldTileCoords) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span><span class="self">Self</span>: Sized;
 
-    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords;
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords;
 }
 
-<span class="kw">pub trait </span>UnavailableLayer: Send {
-    <span class="kw">fn </span>new(coords: WorldTileCoords, layer_name: String) -&gt; <span class="self">Self</span>;
+<span class="kw">pub trait </span>LayerUnavailable: Send {
+    <span class="kw">fn </span>build_from(coords: WorldTileCoords, layer_name: String) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span><span class="self">Self</span>: Sized;
 
-    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords;
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords;
+    <span class="kw">fn </span>layer_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str;
 
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer;
 }
 
-<span class="kw">pub trait </span>TessellatedLayer: Send {
-    <span class="kw">fn </span>new(
+<span class="kw">pub trait </span>LayerTessellated: Send {
+    <span class="kw">fn </span>build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
         feature_indices: Vec&lt;u32&gt;,
         layer_data: Layer,
-    ) -&gt; <span class="self">Self</span>;
+    ) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span><span class="self">Self</span>: Sized;
 
-    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords;
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords;
 
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer;
 }
 
-<span class="kw">pub trait </span>IndexedLayer: Send + From&lt;(WorldTileCoords, TileIndex)&gt; {
-    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords;
+<span class="kw">pub trait </span>LayerIndexed: Send {
+    <span class="kw">fn </span>build_from(coords: WorldTileCoords, index: TileIndex) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span><span class="self">Self</span>: Sized;
+
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords;
 
     <span class="kw">fn </span>to_tile_index(<span class="self">self</span>) -&gt; TileIndex;
 }
@@ -197,12 +222,12 @@
 }
 
 <span class="kw">impl </span>TileTessellated <span class="kw">for </span>DefaultTileTessellated {
-    <span class="kw">fn </span>new(coords: WorldTileCoords) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>build_from(coords: WorldTileCoords) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ coords }
     }
 
-    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.coords
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords {
+        <span class="self">self</span>.coords
     }
 }
 
@@ -211,13 +236,17 @@
     <span class="kw">pub </span>layer_name: String,
 }
 
-<span class="kw">impl </span>UnavailableLayer <span class="kw">for </span>DefaultLayerUnavailable {
-    <span class="kw">fn </span>new(coords: WorldTileCoords, layer_name: String) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>LayerUnavailable <span class="kw">for </span>DefaultLayerUnavailable {
+    <span class="kw">fn </span>build_from(coords: WorldTileCoords, layer_name: String) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ coords, layer_name }
     }
 
-    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.coords
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords {
+        <span class="self">self</span>.coords
+    }
+
+    <span class="kw">fn </span>layer_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.layer_name
     }
 
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer {
@@ -228,7 +257,8 @@
     }
 }
 
-<span class="kw">pub struct </span>DefaultLayerTesselated {
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>DefaultLayerTesselated {
     <span class="kw">pub </span>coords: WorldTileCoords,
     <span class="kw">pub </span>buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
     <span class="doccomment">/// Holds for each feature the count of indices.
@@ -236,8 +266,8 @@
     <span class="kw">pub </span>layer_data: Layer, <span class="comment">// FIXME (perf): Introduce a better structure for this
 </span>}
 
-<span class="kw">impl </span>TessellatedLayer <span class="kw">for </span>DefaultLayerTesselated {
-    <span class="kw">fn </span>new(
+<span class="kw">impl </span>LayerTessellated <span class="kw">for </span>DefaultLayerTesselated {
+    <span class="kw">fn </span>build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
         feature_indices: Vec&lt;u32&gt;,
@@ -251,8 +281,8 @@
         }
     }
 
-    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.coords
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords {
+        <span class="self">self</span>.coords
     }
 
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer {
@@ -270,15 +300,13 @@
     index: TileIndex,
 }
 
-<span class="kw">impl </span>From&lt;(WorldTileCoords, TileIndex)&gt; <span class="kw">for </span>DefaultLayerIndexed {
-    <span class="kw">fn </span>from((coords, index): (WorldTileCoords, TileIndex)) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>LayerIndexed <span class="kw">for </span>DefaultLayerIndexed {
+    <span class="kw">fn </span>build_from(coords: WorldTileCoords, index: TileIndex) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ coords, index }
     }
-}
 
-<span class="kw">impl </span>IndexedLayer <span class="kw">for </span>DefaultLayerIndexed {
-    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>WorldTileCoords {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.coords
+    <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords {
+        <span class="self">self</span>.coords
     }
 
     <span class="kw">fn </span>to_tile_index(<span class="self">self</span>) -&gt; TileIndex {
@@ -288,9 +316,9 @@
 
 <span class="kw">pub trait </span>Transferables: <span class="lifetime">&#39;static </span>{
     <span class="kw">type </span>TileTessellated: TileTessellated;
-    <span class="kw">type </span>LayerUnavailable: UnavailableLayer;
-    <span class="kw">type </span>LayerTessellated: TessellatedLayer;
-    <span class="kw">type </span>LayerIndexed: IndexedLayer;
+    <span class="kw">type </span>LayerUnavailable: LayerUnavailable;
+    <span class="kw">type </span>LayerTessellated: LayerTessellated;
+    <span class="kw">type </span>LayerIndexed: LayerIndexed;
 }
 
 <span class="attribute">#[derive(Copy, Clone)]

@@ -86,6 +86,10 @@
 <span id="86">86</span>
 <span id="87">87</span>
 <span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
 </pre><pre class="rust"><code><span class="doccomment">//! [Stages](Stage) for requesting and preparing data
 
 </span><span class="kw">use </span>std::{marker::PhantomData, rc::Rc};
@@ -102,7 +106,9 @@
         geometry_index::{IndexedGeometry, TileIndex},
         pipeline::PipelineProcessor,
         source_client::HttpClient,
-        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
+        transferables::{
+            LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
+        },
     },
     kernel::Kernel,
     render::ShaderVertex,
@@ -131,7 +137,9 @@
 {
     <span class="kw">fn </span>tile_finished(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="self">self</span>.context
-            .send(Message::TileTessellated(T::TileTessellated::new(<span class="kw-2">*</span>coords)))
+            .send(Message::TileTessellated(T::TileTessellated::build_from(
+                <span class="kw-2">*</span>coords,
+            )))
     }
 
     <span class="kw">fn </span>layer_unavailable(
@@ -140,7 +148,7 @@
         layer_name: <span class="kw-2">&amp;</span>str,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="self">self</span>.context
-            .send(Message::LayerUnavailable(T::LayerUnavailable::new(
+            .send(Message::LayerUnavailable(T::LayerUnavailable::build_from(
                 <span class="kw-2">*</span>coords,
                 layer_name.to_owned(),
             )))
@@ -154,7 +162,7 @@
         layer_data: tile::Layer,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="self">self</span>.context
-            .send(Message::LayerTessellated(T::LayerTessellated::new(
+            .send(Message::LayerTessellated(T::LayerTessellated::build_from(
                 <span class="kw-2">*</span>coords,
                 buffer,
                 feature_indices,
@@ -168,10 +176,10 @@
         geometries: Vec&lt;IndexedGeometry&lt;f64&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
         <span class="self">self</span>.context
-            .send(Message::LayerIndexed(T::LayerIndexed::from((
+            .send(Message::LayerIndexed(T::LayerIndexed::build_from(
                 <span class="kw-2">*</span>coords,
                 TileIndex::Linear { list: geometries },
-            ))))
+            )))
     }
 }
 </code></pre></div>

@@ -178,7 +178,7 @@
         pipeline::{PipelineContext, Processable},
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::TileRepository,
-        transferables::{Transferables, UnavailableLayer},
+        transferables::{LayerUnavailable, Transferables},
         TileRequest,
     },
     kernel::Kernel,
@@ -262,7 +262,7 @@
                     context.send(
                         Message::LayerUnavailable(&lt;&lt;E::AsyncProcedureCall <span class="kw">as </span>AsyncProcedureCall&lt;
                             E::HttpClient,
-                        &gt;&gt;::Transferables <span class="kw">as </span>Transferables&gt;::LayerUnavailable::new(
+                        &gt;&gt;::Transferables <span class="kw">as </span>Transferables&gt;::LayerUnavailable::build_from(
                             input.coords,
                             to_load.to_string(),
                         )),

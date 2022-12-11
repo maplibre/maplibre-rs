@@ -97,7 +97,7 @@
     io::{
         apc::{AsyncProcedureCall, Message},
         tile_repository::StoredLayer,
-        transferables::{IndexedLayer, TessellatedLayer, TileTessellated, UnavailableLayer},
+        transferables::{LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated},
     },
     kernel::Kernel,
     schedule::Stage,
@@ -135,7 +135,7 @@
                     <span class="macro">tracing::trace!</span>(<span class="string">&quot;Tile at {} finished loading&quot;</span>, coords);
                     <span class="macro">log::warn!</span>(<span class="string">&quot;Tile at {} finished loading&quot;</span>, coords);
 
-                    tile_repository.mark_tile_succeeded(coords);
+                    tile_repository.mark_tile_succeeded(<span class="kw-2">&amp;</span>coords);
                 }
                 <span class="comment">// FIXME: deduplicate
                 </span>Message::LayerUnavailable(message) =&gt; {
@@ -166,7 +166,7 @@
                     tile_repository.put_layer(layer);
                 }
                 Message::LayerIndexed(message) =&gt; {
-                    <span class="kw">let </span>coords = <span class="kw-2">*</span>message.coords();
+                    <span class="kw">let </span>coords = message.coords();
 
                     <span class="macro">log::warn!</span>(<span class="string">&quot;Layer index at {} reached main thread&quot;</span>, coords);
 
