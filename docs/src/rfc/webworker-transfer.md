@@ -35,6 +35,9 @@ Depending on the platform a different implementation for APCs are used. On Linux
 asynchronously and use a multiple-consumer single-consumer channel to send data back and forth.
 On the Web platform we use `WebWorkers` to do work asynchronously and its`postMessage` API to send data back and forth.
 
+For more information about APCs and their definition read [here](https://maplibre.org/maplibre-rs/docs/api/maplibre/io/apc/trait.AsyncProcedureCall.html)
+more about them.
+
 ## Exchanging Data
 
 We are using the browser API `postMessage(message, targetOrigin, transfer)` to send data between WebWorkers and
