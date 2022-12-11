@@ -76,7 +76,7 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
             js_sys::global().dyn_into().map_err(|_e| Error::APC)?;
 
         let transfer_obj = js_sys::Array::new();
-        transfer_obj.push(&JsValue::from(tag as u32));
+        transfer_obj.push(&JsValue::from(tag));
 
         transfer_obj.push(&buffer);
 

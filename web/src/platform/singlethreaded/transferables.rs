@@ -197,7 +197,7 @@ impl LayerTessellated for FlatBufferTransferable {
 }
 
 impl LayerIndexed for FlatBufferTransferable {
-    fn build_from(coords: WorldTileCoords, index: TileIndex) -> Self {
+    fn build_from(coords: WorldTileCoords, _index: TileIndex) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
         let mut builder = FlatLayerIndexedBuilder::new(&mut inner_builder);
 
