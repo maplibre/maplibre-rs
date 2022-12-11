@@ -13,9 +13,18 @@ use crate::{
 
 /// Stage which writes the current contents of the GPU/CPU buffer in [`BufferedTextureHead`]
 /// to disk as PNG.
-#[derive(Default)]
 pub struct WriteSurfaceBufferStage {
     frame: u64,
+    write_to_disk: bool,
+}
+
+impl WriteSurfaceBufferStage {
+    pub fn new(write_to_disk: bool) -> Self {
+        Self {
+            frame: 0,
+            write_to_disk,
+        }
+    }
 }
 
 impl Stage for WriteSurfaceBufferStage {
@@ -35,13 +44,18 @@ impl Stage for WriteSurfaceBufferStage {
                 let device = device.clone();
                 let current_frame = self.frame;
 
-                task::block_in_place(|| {
-                    Handle::current().block_on(async {
-                        buffered_texture
-                            .create_png(&device, format!("frame_{}.png", current_frame).as_str())
-                            .await;
-                    })
-                });
+                if self.write_to_disk {
+                    task::block_in_place(|| {
+                        Handle::current().block_on(async {
+                            buffered_texture
+                                .create_png(
+                                    &device,
+                                    format!("frame_{}.png", current_frame).as_str(),
+                                )
+                                .await;
+                        })
+                    });
+                }
 
                 self.frame += 1;
             }

@@ -11,7 +11,7 @@ fn headless_render(c: &mut Criterion) {
         let (mut map, tile) = run_multithreaded(async {
             let (kernel, renderer) = create_headless_renderer(1000, None).await;
             let style = Style::default();
-            let map = HeadlessMap::new(style, renderer, kernel).unwrap();
+            let map = HeadlessMap::new(style, renderer, kernel, false).unwrap();
 
             let tile = map
                 .fetch_tile(WorldTileCoords::from((0, 0, ZoomLevel::default())))
