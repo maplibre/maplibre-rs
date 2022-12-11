@@ -18,9 +18,9 @@ impl WebWorkerPoolScheduler {
             Box::new(move || {
                 new_worker
                     .call0(&JsValue::undefined())
-                    .map_err(|e| WebError::from(e))?
+                    .map_err(WebError::from)?
                     .dyn_into::<Worker>()
-                    .map_err(|e| WebError::TypeError("Unable to cast to Worker".into()))
+                    .map_err(|_e| WebError::TypeError("Unable to cast to Worker".into()))
             }),
         )?;
         Ok(Self { pool })

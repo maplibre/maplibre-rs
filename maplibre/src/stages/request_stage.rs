@@ -101,7 +101,7 @@ pub fn schedule<
                             input.coords,
                             to_load.to_string(),
                         )),
-                    ).map_err(|e| ProcedureError::Send(e))?;
+                    ).map_err(ProcedureError::Send)?;
                 }
             }
         }

@@ -10,6 +10,6 @@ pub async fn multithreaded_worker_entry(ptr: u32) -> Result<(), WrappedError> {
     let work = unsafe { Box::from_raw(ptr as *mut Work) };
     JsFuture::from(work.execute())
         .await
-        .map_err(|e| CallError::Schedule)?;
+        .map_err(|_e| CallError::Schedule)?;
     Ok(())
 }

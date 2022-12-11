@@ -187,7 +187,7 @@ impl<ET: 'static> EventLoopProxy<ET> for WinitEventLoopProxy<ET> {
     fn send_event(&self, event: ET) -> Result<(), SendEventError> {
         self.proxy
             .send_event(event)
-            .map_err(|e| SendEventError::Closed)
+            .map_err(|_e| SendEventError::Closed)
     }
 }
 

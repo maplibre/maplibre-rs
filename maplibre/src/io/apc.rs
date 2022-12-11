@@ -224,6 +224,6 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
                 .await
                 .unwrap();
             })
-            .map_err(|e| CallError::Schedule)
+            .map_err(|_e| CallError::Schedule)
     }
 }

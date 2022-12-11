@@ -1,7 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
     coords::{WorldTileCoords, ZoomLevel},
-    error::Error,
     headless::{create_headless_renderer, map::HeadlessMap},
     platform::run_multithreaded,
     style::Style,
@@ -27,22 +26,8 @@ fn headless_render(c: &mut Criterion) {
             (map, tile)
         });
 
-        b.to_async(
-            tokio::runtime::Builder::new_multi_thread()
-                .enable_all()
-                .build()
-                .unwrap(),
-        )
-        .iter(|| {
-            match map.render_tile(tile.clone()) {
-                Ok(_) => {}
-                Err(Error::Render(e)) => {
-                    eprintln!("{}", e);
-                    if e.should_exit() {}
-                }
-                e => eprintln!("{:?}", e),
-            };
-            async {}
+        b.iter(|| {
+            map.render_tile(tile.clone());
         });
     });
 }

@@ -127,9 +127,9 @@ impl From<u8> for ZoomLevel {
     }
 }
 
-impl Into<u8> for ZoomLevel {
-    fn into(self) -> u8 {
-        self.0
+impl From<ZoomLevel> for u8 {
+    fn from(val: ZoomLevel) -> Self {
+        val.0
     }
 }
 
