@@ -66,26 +66,26 @@ impl Display for WrappedError {
 
 impl Error for WrappedError {}
 
-impl Into<JsValue> for WrappedError {
-    fn into(self) -> JsValue {
-        JsValue::from_str(&self.to_string())
+impl From<WrappedError> for JsValue {
+    fn from(val: WrappedError) -> Self {
+        JsValue::from_str(&val.to_string())
     }
 }
 
 impl From<CallError> for WrappedError {
     fn from(e: CallError) -> Self {
-        WrappedError::CallError(e.into())
+        WrappedError::CallError(e)
     }
 }
 
 impl From<ProcedureError> for WrappedError {
     fn from(e: ProcedureError) -> Self {
-        WrappedError::ProcedureError(e.into())
+        WrappedError::ProcedureError(e)
     }
 }
 
 impl From<WebError> for WrappedError {
     fn from(e: WebError) -> Self {
-        WrappedError::WebError(e.into())
+        WrappedError::WebError(e)
     }
 }

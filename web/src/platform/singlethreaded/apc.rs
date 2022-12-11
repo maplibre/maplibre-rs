@@ -99,13 +99,13 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
 
         let global: DedicatedWorkerGlobalScope = js_sys::global()
             .dyn_into()
-            .map_err(|e| SendError::Transmission)?;
+            .map_err(|_e| SendError::Transmission)?;
         global
             .post_message_with_transfer(
                 &js_sys::Array::of2(&JsValue::from(tag as u32), &buffer),
                 &js_sys::Array::of1(&buffer),
             )
-            .map_err(|e| SendError::Transmission)
+            .map_err(|_e| SendError::Transmission)
     }
 
     fn source_client(&self) -> &SourceClient<UsedHttpClient> {
@@ -146,9 +146,9 @@ impl PassingAsyncProcedureCall {
                     &JsValue::undefined(),
                     &JsValue::from(Rc::into_raw(received_ref.clone()) as u32),
                 )
-                .map_err(|e| WebError::from(e))?
+                .map_err(WebError::from)?
                 .dyn_into::<Worker>()
-                .map_err(|e| WebError::TypeError("Unable to cast to Worker".into()))
+                .map_err(|_e| WebError::TypeError("Unable to cast to Worker".into()))
         };
 
         let mut workers = Vec::with_capacity(initial_workers);
@@ -157,7 +157,7 @@ impl PassingAsyncProcedureCall {
             let worker: Worker = create_new_worker()?;
 
             let array = js_sys::Array::of1(&wasm_bindgen::module());
-            worker.post_message(&array).map_err(|e| WebError::from(e))?;
+            worker.post_message(&array).map_err(WebError::from)?;
             workers.push(worker);
         }
 
@@ -189,10 +189,10 @@ impl AsyncProcedureCall<UsedHttpClient> for PassingAsyncProcedureCall {
         let worker = self
             .workers
             .choose(&mut thread_rng())
-            .ok_or_else(|| CallError::Schedule)?;
+            .ok_or(CallError::Schedule)?;
 
         worker
             .post_message(&message)
-            .map_err(|e| CallError::Schedule)
+            .map_err(|_e| CallError::Schedule)
     }
 }

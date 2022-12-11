@@ -24,13 +24,13 @@ impl WHATWGFetchHttpClient {
         let global = js_sys::global();
         let scope = global
             .dyn_into::<WorkerGlobalScope>()
-            .map_err(|e| WebError::TypeError("Unable to cast to WorkerGlobalScope".into()))?;
+            .map_err(|_e| WebError::TypeError("Unable to cast to WorkerGlobalScope".into()))?;
 
         // Call fetch on global scope
         let maybe_response = JsFuture::from(scope.fetch_with_request(&request)).await?;
         let response: Response = maybe_response
             .dyn_into()
-            .map_err(|e| WebError::TypeError("Unable to cast to Response".into()))?;
+            .map_err(|_e| WebError::TypeError("Unable to cast to Response".into()))?;
 
         // Get ArrayBuffer
         let maybe_array_buffer = JsFuture::from(response.array_buffer()?).await?;
@@ -42,7 +42,7 @@ impl WHATWGFetchHttpClient {
 
         let array_buffer: ArrayBuffer = maybe_array_buffer
             .dyn_into()
-            .map_err(|e| WebError::TypeError("Unable to cast to ArrayBuffer".into()))?;
+            .map_err(|_e| WebError::TypeError("Unable to cast to ArrayBuffer".into()))?;
 
         // Copy data to Vec<u8>
         let buffer: Uint8Array = Uint8Array::new(&array_buffer);
