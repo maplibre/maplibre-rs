@@ -48,7 +48,7 @@ jobs:
       - name: Build demo
         shell: bash
         run: just web-demo build
-      - name: Check
+      - name: Check # TODO: Also check here multithreaded configurations
         shell: bash
         run: just nightly-check web wasm32-unknown-unknown ${{ inputs.webgl && 'web-webgl' || '""' }}
       - name: Test
