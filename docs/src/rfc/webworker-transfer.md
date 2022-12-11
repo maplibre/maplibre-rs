@@ -13,6 +13,9 @@
 
 # Alternatives
 
+1. Pod-like structure passing
+2. Captnproto
+
 
 # Unresolved questions
 
