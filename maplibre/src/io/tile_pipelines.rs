@@ -48,6 +48,10 @@ impl Processable for IndexLayer {
             layer.process(&mut index).unwrap();
         }
 
+        for layer in &mut tile.layers {
+            layer.process(&mut index).unwrap();
+        }
+
         context
             .processor_mut()
             .layer_indexing_finished(&tile_request.coords, index.get_geometries())?;

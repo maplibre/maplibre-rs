@@ -32,11 +32,10 @@ jobs:
         with:
           nightly: true
           targets: wasm32-unknown-unknown
-      - name: Install rust sources (build-std)
-        if: inputs.multithreaded
-        shell: bash
-        run: |
-          just nightly-install-src
+      - name: Install Dependencies
+        uses: ./.github/actions/install-system-dependencies
+      - name: Install flatbuffers
+        uses: ./.github/actions/install-flatbuffers
       - name: Install wasm-bindgen
         uses: ./.github/actions/cargo-install
         # Install wasm-bindgen with test runner
@@ -49,7 +48,7 @@ jobs:
       - name: Build demo
         shell: bash
         run: just web-demo build
-      - name: Check
+      - name: Check # TODO: Also check here multithreaded configurations
         shell: bash
         run: just nightly-check web wasm32-unknown-unknown ${{ inputs.webgl && 'web-webgl' || '""' }}
       - name: Test

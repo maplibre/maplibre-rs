@@ -1,0 +1,8 @@
+//namespace transferables;
+
+
+struct FlatWorldTileCoords {
+    x: int;
+    y: int;
+    z: ubyte;
+}

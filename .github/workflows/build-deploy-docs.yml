@@ -21,8 +21,7 @@ jobs:
         with:
           name: mdbook
       - name: Install Dependencies
-        shell: bash
-        run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
+        uses: ./.github/actions/install-system-dependencies
       - name: Build
         working-directory: docs
         shell: bash

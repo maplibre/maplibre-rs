@@ -8,34 +8,45 @@ use crate::{
 };
 
 pub trait TileTessellated: Send {
-    fn new(coords: WorldTileCoords) -> Self;
+    fn build_from(coords: WorldTileCoords) -> Self
+    where
+        Self: Sized;
 
-    fn coords(&self) -> &WorldTileCoords;
+    fn coords(&self) -> WorldTileCoords;
 }
 
-pub trait UnavailableLayer: Send {
-    fn new(coords: WorldTileCoords, layer_name: String) -> Self;
+pub trait LayerUnavailable: Send {
+    fn build_from(coords: WorldTileCoords, layer_name: String) -> Self
+    where
+        Self: Sized;
 
-    fn coords(&self) -> &WorldTileCoords;
+    fn coords(&self) -> WorldTileCoords;
+    fn layer_name(&self) -> &str;
 
     fn to_stored_layer(self) -> StoredLayer;
 }
 
-pub trait TessellatedLayer: Send {
-    fn new(
+pub trait LayerTessellated: Send {
+    fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
         layer_data: Layer,
-    ) -> Self;
+    ) -> Self
+    where
+        Self: Sized;
 
-    fn coords(&self) -> &WorldTileCoords;
+    fn coords(&self) -> WorldTileCoords;
 
     fn to_stored_layer(self) -> StoredLayer;
 }
 
-pub trait IndexedLayer: Send + From<(WorldTileCoords, TileIndex)> {
-    fn coords(&self) -> &WorldTileCoords;
+pub trait LayerIndexed: Send {
+    fn build_from(coords: WorldTileCoords, index: TileIndex) -> Self
+    where
+        Self: Sized;
+
+    fn coords(&self) -> WorldTileCoords;
 
     fn to_tile_index(self) -> TileIndex;
 }
@@ -45,12 +56,12 @@ pub struct DefaultTileTessellated {
 }
 
 impl TileTessellated for DefaultTileTessellated {
-    fn new(coords: WorldTileCoords) -> Self {
+    fn build_from(coords: WorldTileCoords) -> Self {
         Self { coords }
     }
 
-    fn coords(&self) -> &WorldTileCoords {
-        &self.coords
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
     }
 }
 
@@ -59,13 +70,17 @@ pub struct DefaultLayerUnavailable {
     pub layer_name: String,
 }
 
-impl UnavailableLayer for DefaultLayerUnavailable {
-    fn new(coords: WorldTileCoords, layer_name: String) -> Self {
+impl LayerUnavailable for DefaultLayerUnavailable {
+    fn build_from(coords: WorldTileCoords, layer_name: String) -> Self {
         Self { coords, layer_name }
     }
 
-    fn coords(&self) -> &WorldTileCoords {
-        &self.coords
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
+    }
+
+    fn layer_name(&self) -> &str {
+        &self.layer_name
     }
 
     fn to_stored_layer(self) -> StoredLayer {
@@ -76,6 +91,7 @@ impl UnavailableLayer for DefaultLayerUnavailable {
     }
 }
 
+#[derive(Clone)]
 pub struct DefaultLayerTesselated {
     pub coords: WorldTileCoords,
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -84,8 +100,8 @@ pub struct DefaultLayerTesselated {
     pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
 }
 
-impl TessellatedLayer for DefaultLayerTesselated {
-    fn new(
+impl LayerTessellated for DefaultLayerTesselated {
+    fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
@@ -99,8 +115,8 @@ impl TessellatedLayer for DefaultLayerTesselated {
         }
     }
 
-    fn coords(&self) -> &WorldTileCoords {
-        &self.coords
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
     }
 
     fn to_stored_layer(self) -> StoredLayer {
@@ -118,15 +134,13 @@ pub struct DefaultLayerIndexed {
     index: TileIndex,
 }
 
-impl From<(WorldTileCoords, TileIndex)> for DefaultLayerIndexed {
-    fn from((coords, index): (WorldTileCoords, TileIndex)) -> Self {
+impl LayerIndexed for DefaultLayerIndexed {
+    fn build_from(coords: WorldTileCoords, index: TileIndex) -> Self {
         Self { coords, index }
     }
-}
 
-impl IndexedLayer for DefaultLayerIndexed {
-    fn coords(&self) -> &WorldTileCoords {
-        &self.coords
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
     }
 
     fn to_tile_index(self) -> TileIndex {
@@ -136,9 +150,9 @@ impl IndexedLayer for DefaultLayerIndexed {
 
 pub trait Transferables: 'static {
     type TileTessellated: TileTessellated;
-    type LayerUnavailable: UnavailableLayer;
-    type LayerTessellated: TessellatedLayer;
-    type LayerIndexed: IndexedLayer;
+    type LayerUnavailable: LayerUnavailable;
+    type LayerTessellated: LayerTessellated;
+    type LayerIndexed: LayerIndexed;
 }
 
 #[derive(Copy, Clone)]
