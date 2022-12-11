@@ -23,7 +23,7 @@ use crate::platform::singlethreaded::{
 };
 
 pub mod basic_generated {
-    #![allow(unused_imports)]
+    #![allow(unused, unused_imports, clippy::all)]
 
     use maplibre::coords::{WorldTileCoords, ZoomLevel};
 
@@ -40,23 +40,19 @@ pub mod basic_generated {
     }
 }
 pub mod layer_indexed_generated {
-    #![allow(unused_imports)]
-    #![allow(clippy)]
+    #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/layer_indexed_generated.rs"));
 }
 pub mod layer_tessellated_generated {
-    #![allow(unused_imports)]
-    #![allow(clippy)]
+    #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/layer_tessellated_generated.rs"));
 }
 pub mod layer_unavailable_generated {
-    #![allow(unused_imports)]
-    #![allow(clippy)]
+    #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/layer_unavailable_generated.rs"));
 }
 pub mod tile_tessellated_generated {
-    #![allow(unused_imports)]
-    #![allow(clippy)]
+    #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/tile_tessellated_generated.rs"));
 }
 
@@ -76,7 +72,7 @@ impl FlatBufferTransferable {
     }
 }
 
-impl<'a, 'b> TileTessellated for FlatBufferTransferable {
+impl TileTessellated for FlatBufferTransferable {
     fn build_from(coords: WorldTileCoords) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
         let mut builder = FlatTileTessellatedBuilder::new(&mut inner_builder);
