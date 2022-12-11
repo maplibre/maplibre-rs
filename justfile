@@ -32,12 +32,11 @@ nightly-override-toolchain: nightly-toolchain
 
 nightly-targets *FLAGS: nightly-toolchain
   rustup toolchain install $NIGHTLY_TOOLCHAIN --target {{FLAGS}}
+  # We sometimes build the stdlib with nightly
+  rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
 
 nightly-install-rustfmt: nightly-toolchain
   rustup component add rustfmt --toolchain $NIGHTLY_TOOLCHAIN
-
-nightly-install-src: nightly-toolchain
-  rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
 
 nightly-install-clippy: stable-toolchain
   rustup component add clippy --toolchain $NIGHTLY_TOOLCHAIN

@@ -12,7 +12,7 @@ use crate::{
         pipeline::{PipelineContext, Processable},
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::TileRepository,
-        transferables::{Transferables, UnavailableLayer},
+        transferables::{LayerUnavailable, Transferables},
         TileRequest,
     },
     kernel::Kernel,
@@ -96,7 +96,7 @@ pub fn schedule<
                     context.send(
                         Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
                             E::HttpClient,
-                        >>::Transferables as Transferables>::LayerUnavailable::new(
+                        >>::Transferables as Transferables>::LayerUnavailable::build_from(
                             input.coords,
                             to_load.to_string(),
                         )),

@@ -46,11 +46,10 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
             }) : PoolWorker();
 
             worker.onmessage = (message: MessageEvent) => {
-                let tag = message.data[0];
-                let data = new Uint8Array(message.data[1]);
-
+                // WARNING: Do not modify in_transfer_obj!
+                let in_transfer_obj = message.data;
                 // @ts-ignore TODO singlethreaded_main_entry may not be defined
-                maplibre.singlethreaded_main_entry(ptr, tag, data)
+                maplibre.singlethreaded_main_entry(ptr, in_transfer_obj)
             }
 
             return worker;

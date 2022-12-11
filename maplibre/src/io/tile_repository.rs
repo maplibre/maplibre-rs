@@ -111,7 +111,8 @@ impl TileRepository {
         {
             match entry {
                 btree_map::Entry::Vacant(_entry) => {
-                    panic!("Can not add a tessellated layer if no request has been started before.")
+                    panic!("Can not add a tessellated layer at {} if no request has been started before. \
+                    We might received a tile which was not requested.", layer.get_coords())
                 }
                 btree_map::Entry::Occupied(mut entry) => {
                     entry.get_mut().layers.push(layer);

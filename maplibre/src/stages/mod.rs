@@ -14,7 +14,9 @@ use crate::{
         geometry_index::{IndexedGeometry, TileIndex},
         pipeline::PipelineProcessor,
         source_client::HttpClient,
-        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
+        transferables::{
+            LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
+        },
     },
     kernel::Kernel,
     render::ShaderVertex,
@@ -43,7 +45,9 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
 {
     fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), Error> {
         self.context
-            .send(Message::TileTessellated(T::TileTessellated::new(*coords)))
+            .send(Message::TileTessellated(T::TileTessellated::build_from(
+                *coords,
+            )))
     }
 
     fn layer_unavailable(
@@ -52,7 +56,7 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         layer_name: &str,
     ) -> Result<(), Error> {
         self.context
-            .send(Message::LayerUnavailable(T::LayerUnavailable::new(
+            .send(Message::LayerUnavailable(T::LayerUnavailable::build_from(
                 *coords,
                 layer_name.to_owned(),
             )))
@@ -66,7 +70,7 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         layer_data: tile::Layer,
     ) -> Result<(), Error> {
         self.context
-            .send(Message::LayerTessellated(T::LayerTessellated::new(
+            .send(Message::LayerTessellated(T::LayerTessellated::build_from(
                 *coords,
                 buffer,
                 feature_indices,
@@ -80,9 +84,9 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         geometries: Vec<IndexedGeometry<f64>>,
     ) -> Result<(), Error> {
         self.context
-            .send(Message::LayerIndexed(T::LayerIndexed::from((
+            .send(Message::LayerIndexed(T::LayerIndexed::build_from(
                 *coords,
                 TileIndex::Linear { list: geometries },
-            ))))
+            )))
     }
 }

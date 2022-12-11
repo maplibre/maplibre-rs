@@ -13,6 +13,8 @@ jobs:
         uses: ./.github/actions/setup
         with:
           targets: x86_64-unknown-linux-gnu
+      - name: Install Dependencies
+        uses: ./.github/actions/install-system-dependencies
       - name: Install GPU Drivers
         uses: ./.github/actions/install-driver
       - name: Test Vulkan
