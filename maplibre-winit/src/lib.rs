@@ -5,8 +5,7 @@ use std::{fmt::Debug, marker::PhantomData};
 use instant::Instant;
 use maplibre::{
     environment::Environment,
-    error::Error,
-    event_loop::{EventLoop, EventLoopProxy},
+    event_loop::{EventLoop, EventLoopProxy, SendEventError},
     io::{apc::AsyncProcedureCall, scheduler::Scheduler, source_client::HttpClient},
     map::Map,
     window::{HeadedMapWindow, MapWindowConfig},
@@ -146,16 +145,8 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                             input_controller.update_state(map_context, dt);
                         }
 
-                        match map.run_schedule() {
-                            Ok(_) => {}
-                            Err(Error::Render(e)) => {
-                                eprintln!("{}", e);
-                                if e.should_exit() {
-                                    *control_flow = ControlFlow::Exit;
-                                }
-                            }
-                            e => eprintln!("{:?}", e)
-                        };
+                        // TODO: Maybe handle gracefully
+                        map.run_schedule().expect("Failed to run schedule!");
 
                         if let Some(max_frames) = max_frames {
                             if current_frame >= max_frames {
@@ -193,8 +184,10 @@ pub struct WinitEventLoopProxy<ET: 'static> {
 }
 
 impl<ET: 'static> EventLoopProxy<ET> for WinitEventLoopProxy<ET> {
-    fn send_event(&self, event: ET) -> Result<(), Error> {
-        self.proxy.send_event(event).map_err(|e| Error::EventLoop)
+    fn send_event(&self, event: ET) -> Result<(), SendEventError> {
+        self.proxy
+            .send_event(event)
+            .map_err(|e| SendEventError::Closed)
     }
 }
 

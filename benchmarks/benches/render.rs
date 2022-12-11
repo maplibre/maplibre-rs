@@ -15,12 +15,14 @@ fn headless_render(c: &mut Criterion) {
             let map = HeadlessMap::new(style, renderer, kernel).unwrap();
 
             let tile = map
-                .fetch_tile(
-                    WorldTileCoords::from((0, 0, ZoomLevel::default())),
-                    &["water"],
-                )
+                .fetch_tile(WorldTileCoords::from((0, 0, ZoomLevel::default())))
                 .await
-                .expect("Failed to fetch and process!");
+                .expect("Failed to fetch!");
+
+            let tile = map
+                .process_tile(tile, &["water"])
+                .await
+                .expect("Failed to process!");
 
             (map, tile)
         });

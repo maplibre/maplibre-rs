@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{error::Error, render::graph::RenderGraphError};
+use crate::render::graph::RenderGraphError;
 
 #[derive(Debug)]
 pub enum RenderError {
@@ -37,14 +37,14 @@ impl From<RenderGraphError> for RenderError {
     }
 }
 
-impl From<wgpu::SurfaceError> for Error {
+impl From<wgpu::SurfaceError> for RenderError {
     fn from(e: wgpu::SurfaceError) -> Self {
-        Error::Render(RenderError::Surface(e))
+        RenderError::Surface(e)
     }
 }
 
-impl From<wgpu::RequestDeviceError> for Error {
+impl From<wgpu::RequestDeviceError> for RenderError {
     fn from(e: wgpu::RequestDeviceError) -> Self {
-        Error::Render(RenderError::Device(e))
+        RenderError::Device(e)
     }
 }
