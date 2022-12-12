@@ -7,6 +7,7 @@ use crate::{
     window::{HeadedMapWindow, MapWindowConfig},
 };
 
+#[derive(Clone)]
 pub struct RendererBuilder {
     wgpu_settings: Option<WgpuSettings>,
     renderer_settings: Option<RendererSettings>,

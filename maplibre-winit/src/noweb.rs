@@ -15,6 +15,8 @@ use maplibre::{
     window::{MapWindow, MapWindowConfig, WindowSize},
 };
 use winit::window::WindowBuilder;
+use maplibre::render::builder::RendererBuilder;
+use maplibre::render::settings::WgpuSettings;
 
 use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
@@ -38,13 +40,13 @@ impl<ET> MapWindow for WinitMapWindow<ET> {
     fn size(&self) -> WindowSize {
         let size = self.window.inner_size();
         #[cfg(target_os = "android")]
-        // On android we can not get the dimensions of the window initially. Therefore, we use a
-        // fallback until the window is ready to deliver its correct bounds.
-        let window_size =
+            // On android we can not get the dimensions of the window initially. Therefore, we use a
+            // fallback until the window is ready to deliver its correct bounds.
+            let window_size =
             WindowSize::new(size.width, size.height).unwrap_or(WindowSize::new(100, 100).unwrap());
 
         #[cfg(not(target_os = "android"))]
-        let window_size =
+            let window_size =
             WindowSize::new(size.width, size.height).expect("failed to get window dimensions.");
         window_size
     }
@@ -82,18 +84,18 @@ pub fn run_headed_map(cache_path: Option<String>) {
             .with_scheduler(TokioScheduler::new())
             .build();
 
-        let mut map = Map::new(Style::default(), kernel).unwrap();
+        let renderer_builder = RendererBuilder::new().with_wgpu_settings(WgpuSettings {
+            backends: Some(maplibre::render::settings::Backends::all()),
+            ..WgpuSettings::default()
+        });
+
+        let mut map = Map::new(Style::default(), kernel, renderer_builder).unwrap();
 
         #[cfg(not(target_os = "android"))]
         {
-            use maplibre::render::{builder::RendererBuilder, settings::WgpuSettings};
-
-            map.initialize_renderer(RendererBuilder::new().with_wgpu_settings(WgpuSettings {
-                backends: Some(maplibre::render::settings::Backends::VULKAN), // FIXME: Change
-                ..WgpuSettings::default()
-            }))
-            .await
-            .unwrap();
+            map.initialize_renderer()
+                .await
+                .unwrap();
         }
 
         map.window_mut()

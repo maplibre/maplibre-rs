@@ -28,6 +28,7 @@ pub enum MapError {
     /// No need to set renderer again
     RendererAlreadySet,
     RenderGraphInit(RenderGraphError),
+    DeviceInit
 }
 
 impl Display for MapError {
@@ -40,7 +41,7 @@ impl std::error::Error for MapError {}
 
 pub enum MapContextState {
     Ready(MapContext),
-    Pending { style: Style },
+    Pending { style: Style, renderer_builder: RendererBuilder },
 }
 
 pub struct Map<E: Environment> {
@@ -54,7 +55,7 @@ impl<E: Environment> Map<E>
 where
     <<E as Environment>::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow,
 {
-    pub fn new(style: Style, kernel: Kernel<E>) -> Result<Self, MapError> {
+    pub fn new(style: Style, kernel: Kernel<E>, renderer_builder: RendererBuilder) -> Result<Self, MapError> {
         let mut schedule = Schedule::default();
 
         let graph = create_default_render_graph().unwrap(); // TODO: Remove unwrap
@@ -68,7 +69,7 @@ where
 
         let map = Self {
             kernel,
-            map_context: MapContextState::Pending { style },
+            map_context: MapContextState::Pending { style, renderer_builder },
             schedule,
             window,
         };
@@ -76,18 +77,18 @@ where
     }
 
     pub async fn initialize_renderer(
-        &mut self,
-        render_builder: RendererBuilder,
+        &mut self
     ) -> Result<(), MapError> {
-        let result = render_builder
-            .build()
-            .initialize_renderer::<E::MapWindowConfig>(&self.window)
-            .await
-            .expect("Failed to initialize renderer");
-
         match &mut self.map_context {
             MapContextState::Ready(_) => Err(MapError::RendererAlreadySet),
-            MapContextState::Pending { style } => {
+            MapContextState::Pending { style, renderer_builder } => {
+                let init_result = renderer_builder
+                    .clone() // Cloning because we want to be able to build multiple times maybe
+                    .build()
+                    .initialize_renderer::<E::MapWindowConfig>(&self.window)
+                    .await
+                    .map_err(|e| MapError::DeviceInit)?;
+
                 let window_size = self.window.size();
 
                 let center = style.center.unwrap_or_default();
@@ -99,7 +100,7 @@ where
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
                 );
 
-                match result {
+                match init_result {
                     InitializationResult::Initialized(InitializedRenderer { renderer, .. }) => {
                         self.map_context = MapContextState::Ready(MapContext {
                             world,
