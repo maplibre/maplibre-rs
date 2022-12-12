@@ -2,6 +2,8 @@
 
 use std::{collections::HashSet, rc::Rc};
 
+use log::error;
+
 #[cfg(feature = "raster")]
 use crate::io::{source_type::RasterSource, tile_pipelines::build_raster_tile_pipeline};
 #[cfg(not(feature = "raster"))]
@@ -99,6 +101,8 @@ pub fn schedule<
                 let pipeline = build_raster_tile_pipeline();
                 #[cfg(not(feature = "raster"))]
                 let pipeline = build_vector_tile_pipeline();
+
+                error!("Pipeline is processing");
 
                 pipeline
                     .process((input, data), &mut pipeline_context)

@@ -1,6 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use js_sys::{ArrayBuffer, Uint8Array};
+use log::error;
 use maplibre::io::{
     apc::{AsyncProcedure, AsyncProcedureCall, CallError, Context, Input, Message, SendError},
     source_client::SourceClient,
@@ -58,7 +59,7 @@ impl MessageTag {
                 Message::<UsedTransferables>::LayerTessellated(transferable)
             }
             MessageTag::LayerIndexed => Message::<UsedTransferables>::LayerIndexed(transferable),
-            MessageTag::LayerRaster => Message::<UsedTransferables>::LayerIndexed(transferable),
+            MessageTag::LayerRaster => Message::<UsedTransferables>::LayerRaster(transferable), // FIXME: We can actually do here LayerIndexed(transferable) instead of LayerRaster(transferable) why?
         }
     }
 
@@ -91,6 +92,7 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
             byte_buffer.set(&Uint8Array::view(data), 0);
         }
 
+        error!("postMessage() during send {:?} {}", tag, data.len());
         let global: DedicatedWorkerGlobalScope = js_sys::global()
             .dyn_into()
             .map_err(|_e| SendError::Transmission)?;

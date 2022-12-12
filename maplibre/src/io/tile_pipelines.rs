@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use geozero::GeozeroDatasource;
 use image::RgbaImage;
+use log::error;
 use prost::Message;
 
 use crate::{
@@ -204,6 +205,7 @@ impl Processable for RasterLayer {
         let img = image::load_from_memory(&data).unwrap();
         let rgba = img.to_rgba8();
 
+        error!("layer raster finished");
         context.processor_mut().layer_raster_finished(
             coords,
             "raster".to_string(),

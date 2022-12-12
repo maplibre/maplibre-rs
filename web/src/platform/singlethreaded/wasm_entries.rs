@@ -1,6 +1,7 @@
 use std::{mem, rc::Rc};
 
 use js_sys::ArrayBuffer;
+use log::error;
 use maplibre::{
     benchmarking::io::{
         apc::{AsyncProcedure, Input},
@@ -66,6 +67,8 @@ pub unsafe fn singlethreaded_main_entry(
 
     // FIXME: Can we make this call safe? check if it was cloned before?
     let received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
+
+    error!("pushing finished message {:?}", tag);
 
     // MAJOR FIXME: Fix mutability
     received
