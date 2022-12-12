@@ -125,16 +125,18 @@
 <span id="125">125</span>
 <span id="126">126</span>
 <span id="127">127</span>
+<span id="128">128</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
-    error::Error,
     render::{
+        error::RenderError,
         settings::{RendererSettings, WgpuSettings},
         Renderer,
     },
     window::{HeadedMapWindow, MapWindowConfig},
 };
 
-<span class="kw">pub struct </span>RendererBuilder {
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>RendererBuilder {
     wgpu_settings: <span class="prelude-ty">Option</span>&lt;WgpuSettings&gt;,
     renderer_settings: <span class="prelude-ty">Option</span>&lt;RendererSettings&gt;,
 }
@@ -214,7 +216,7 @@
     </span><span class="kw">pub async fn </span>initialize_renderer&lt;MWC&gt;(
         <span class="self">self</span>,
         existing_window: <span class="kw-2">&amp;</span>MWC::MapWindow,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;InitializationResult, Error&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;InitializationResult, RenderError&gt;
     <span class="kw">where
         </span>MWC: MapWindowConfig,
         &lt;MWC <span class="kw">as </span>MapWindowConfig&gt;::MapWindow: HeadedMapWindow,
@@ -236,7 +238,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async fn </span>initialize_headless&lt;MWC&gt;(
         <span class="self">self</span>,
         existing_window: <span class="kw-2">&amp;</span>MWC::MapWindow,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Renderer, Error&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Renderer, RenderError&gt;
     <span class="kw">where
         </span>MWC: MapWindowConfig,
     {

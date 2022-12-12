@@ -77,11 +77,17 @@
 <span id="77">77</span>
 <span id="78">78</span>
 <span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
 </pre><pre class="rust"><code><span class="doccomment">//! HTTP client.
 
 </span><span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>thiserror::Error;
 
-<span class="kw">use crate</span>::{coords::WorldTileCoords, error::Error, style::source::TileAddressingScheme};
+<span class="kw">use crate</span>::{coords::WorldTileCoords, style::source::TileAddressingScheme};
 
 <span class="doccomment">/// A closure that returns a HTTP client.
 </span><span class="kw">pub type </span>HTTPClientFactory&lt;HC&gt; = <span class="kw">dyn </span>Fn() -&gt; HC;
@@ -95,7 +101,7 @@
 </span><span class="attribute">#[cfg_attr(not(feature = <span class="string">&quot;thread-safe-futures&quot;</span>), async_trait(<span class="question-mark">?</span>Send))]
 #[cfg_attr(feature = <span class="string">&quot;thread-safe-futures&quot;</span>, async_trait)]
 </span><span class="kw">pub trait </span>HttpClient: Clone + Sync + Send + <span class="lifetime">&#39;static </span>{
-    <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, url: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, Error&gt;;
+    <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, url: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, SourceFetchError&gt;;
 }
 
 <span class="doccomment">/// Gives access to the HTTP client which can be of multiple types,
@@ -107,6 +113,10 @@
 {
     inner_client: HC,
 }
+
+<span class="attribute">#[derive(Error, Debug)]
+#[error(<span class="string">&quot;failed to fetch from source&quot;</span>)]
+</span><span class="kw">pub struct </span>SourceFetchError(<span class="attribute">#[source] </span><span class="kw">pub </span>Box&lt;<span class="kw">dyn </span>std::error::Error&gt;);
 
 <span class="doccomment">/// Defines the different types of HTTP clients such as basic HTTP and Mbtiles.
 /// More types might be coming such as S3 and other cloud http clients.
@@ -126,7 +136,7 @@
         <span class="self">Self </span>{ http }
     }
 
-    <span class="kw">pub async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, Error&gt; {
+    <span class="kw">pub async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, SourceFetchError&gt; {
         <span class="self">self</span>.http.fetch(coords).<span class="kw">await
     </span>}
 }
@@ -141,7 +151,7 @@
         }
     }
 
-    <span class="kw">pub async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, Error&gt; {
+    <span class="kw">pub async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, SourceFetchError&gt; {
         <span class="kw">let </span>tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
         <span class="self">self</span>.inner_client
             .fetch(

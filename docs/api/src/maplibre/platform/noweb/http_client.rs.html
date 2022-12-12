@@ -58,26 +58,28 @@
 <span id="58">58</span>
 <span id="59">59</span>
 <span id="60">60</span>
+<span id="61">61</span>
 </pre><pre class="rust"><code><span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>reqwest::{Client, StatusCode};
 <span class="kw">use </span>reqwest_middleware::ClientWithMiddleware;
 <span class="kw">use </span>reqwest_middleware_cache::{managers::CACacheManager, Cache, CacheMode};
 
-<span class="kw">use crate</span>::{error::Error, io::source_client::HttpClient};
+<span class="kw">use </span><span class="kw">crate</span>::io::source_client::{HttpClient, SourceFetchError};
 
 <span class="attribute">#[derive(Clone)]
 </span><span class="kw">pub struct </span>ReqwestHttpClient {
     client: ClientWithMiddleware,
 }
-<span class="kw">impl </span>From&lt;reqwest::Error&gt; <span class="kw">for </span>Error {
+
+<span class="kw">impl </span>From&lt;reqwest::Error&gt; <span class="kw">for </span>SourceFetchError {
     <span class="kw">fn </span>from(err: reqwest::Error) -&gt; <span class="self">Self </span>{
-        Error::Network(err.to_string())
+        SourceFetchError(Box::new(err))
     }
 }
 
-<span class="kw">impl </span>From&lt;reqwest_middleware::Error&gt; <span class="kw">for </span>Error {
+<span class="kw">impl </span>From&lt;reqwest_middleware::Error&gt; <span class="kw">for </span>SourceFetchError {
     <span class="kw">fn </span>from(err: reqwest_middleware::Error) -&gt; <span class="self">Self </span>{
-        Error::Network(err.to_string())
+        SourceFetchError(Box::new(err))
     }
 }
 
@@ -103,7 +105,7 @@
 <span class="attribute">#[cfg_attr(not(feature = <span class="string">&quot;thread-safe-futures&quot;</span>), async_trait(<span class="question-mark">?</span>Send))]
 #[cfg_attr(feature = <span class="string">&quot;thread-safe-futures&quot;</span>, async_trait)]
 </span><span class="kw">impl </span>HttpClient <span class="kw">for </span>ReqwestHttpClient {
-    <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, url: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, Error&gt; {
+    <span class="kw">async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, url: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, SourceFetchError&gt; {
         <span class="kw">let </span>response = <span class="self">self</span>.client.get(url).send().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">match </span>response.error_for_status() {
             <span class="prelude-val">Ok</span>(response) =&gt; {
@@ -114,7 +116,7 @@
                 <span class="kw">let </span>body = response.bytes().<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(Vec::from(body.as_ref()))
             }
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(Error::Network(e.to_string())),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(SourceFetchError(Box::new(e))),
         }
     }
 }

@@ -145,19 +145,41 @@
 <span id="145">145</span>
 <span id="146">146</span>
 <span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::rc::Rc;
+
+<span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use crate</span>::{
     context::MapContext,
     coords::{LatLon, Zoom},
     environment::Environment,
-    error::Error,
     kernel::Kernel,
     render::{
         builder::{
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
         },
-        create_default_render_graph, register_default_render_stages,
+        create_default_render_graph,
+        graph::RenderGraphError,
+        register_default_render_stages,
     },
     schedule::{Schedule, Stage},
     stages::register_stages,
@@ -166,9 +188,23 @@
     world::World,
 };
 
+<span class="attribute">#[derive(Error, Debug)]
+</span><span class="kw">pub enum </span>MapError {
+    <span class="doccomment">/// No need to set renderer again
+    </span><span class="attribute">#[error(<span class="string">&quot;renderer was already set for this map&quot;</span>)]
+    </span>RendererAlreadySet,
+    <span class="attribute">#[error(<span class="string">&quot;initializing render graph failed&quot;</span>)]
+    </span>RenderGraphInit(RenderGraphError),
+    <span class="attribute">#[error(<span class="string">&quot;initializing device failed&quot;</span>)]
+    </span>DeviceInit,
+}
+
 <span class="kw">pub enum </span>MapContextState {
     Ready(MapContext),
-    Pending { style: Style },
+    Pending {
+        style: Style,
+        renderer_builder: RendererBuilder,
+    },
 }
 
 <span class="kw">pub struct </span>Map&lt;E: Environment&gt; {
@@ -182,7 +218,11 @@
 <span class="kw">where
     </span>&lt;&lt;E <span class="kw">as </span>Environment&gt;::MapWindowConfig <span class="kw">as </span>MapWindowConfig&gt;::MapWindow: HeadedMapWindow,
 {
-    <span class="kw">pub fn </span>new(style: Style, kernel: Kernel&lt;E&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
+    <span class="kw">pub fn </span>new(
+        style: Style,
+        kernel: Kernel&lt;E&gt;,
+        renderer_builder: RendererBuilder,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, MapError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>schedule = Schedule::default();
 
         <span class="kw">let </span>graph = create_default_render_graph().unwrap(); <span class="comment">// TODO: Remove unwrap
@@ -196,26 +236,30 @@
 
         <span class="kw">let </span>map = <span class="self">Self </span>{
             kernel,
-            map_context: MapContextState::Pending { style },
+            map_context: MapContextState::Pending {
+                style,
+                renderer_builder,
+            },
             schedule,
             window,
         };
         <span class="prelude-val">Ok</span>(map)
     }
 
-    <span class="kw">pub async fn </span>initialize_renderer(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        render_builder: RendererBuilder,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
-        <span class="kw">let </span>result = render_builder
-            .build()
-            .initialize_renderer::&lt;E::MapWindowConfig&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.window)
-            .<span class="kw">await
-            </span>.expect(<span class="string">&quot;Failed to initialize renderer&quot;</span>);
-
+    <span class="kw">pub async fn </span>initialize_renderer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.map_context {
-            MapContextState::Ready(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::Generic(<span class="string">&quot;Renderer is already set&quot;</span>.into())),
-            MapContextState::Pending { style } =&gt; {
+            MapContextState::Ready(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
+            MapContextState::Pending {
+                style,
+                renderer_builder,
+            } =&gt; {
+                <span class="kw">let </span>init_result = renderer_builder
+                    .clone() <span class="comment">// Cloning because we want to be able to build multiple times maybe
+                    </span>.build()
+                    .initialize_renderer::&lt;E::MapWindowConfig&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.window)
+                    .<span class="kw">await
+                    </span>.map_err(|e| MapError::DeviceInit)<span class="question-mark">?</span>;
+
                 <span class="kw">let </span>window_size = <span class="self">self</span>.window.size();
 
                 <span class="kw">let </span>center = style.center.unwrap_or_default();
@@ -227,7 +271,7 @@
                     cgmath::Deg::&lt;f64&gt;(style.pitch.unwrap_or_default()),
                 );
 
-                <span class="kw">match </span>result {
+                <span class="kw">match </span>init_result {
                     InitializationResult::Initialized(InitializedRenderer { renderer, .. }) =&gt; {
                         <span class="self">self</span>.map_context = MapContextState::Ready(MapContext {
                             world,
@@ -258,33 +302,27 @@
     }
 
     <span class="attribute">#[tracing::instrument(name = <span class="string">&quot;update_and_redraw&quot;</span>, skip_all)]
-    </span><span class="kw">pub fn </span>run_schedule(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    </span><span class="kw">pub fn </span>run_schedule(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.map_context {
             MapContextState::Ready(map_context) =&gt; {
                 <span class="self">self</span>.schedule.run(map_context);
                 <span class="prelude-val">Ok</span>(())
             }
-            MapContextState::Pending { .. } =&gt; {
-                <span class="prelude-val">Err</span>(Error::Generic(<span class="string">&quot;Renderer is already set&quot;</span>.into()))
-            }
+            MapContextState::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
         }
     }
 
-    <span class="kw">pub fn </span>context(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>MapContext, Error&gt; {
+    <span class="kw">pub fn </span>context(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>MapContext, MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.map_context {
             MapContextState::Ready(map_context) =&gt; <span class="prelude-val">Ok</span>(map_context),
-            MapContextState::Pending { .. } =&gt; {
-                <span class="prelude-val">Err</span>(Error::Generic(<span class="string">&quot;Renderer is already set&quot;</span>.into()))
-            }
+            MapContextState::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
         }
     }
 
-    <span class="kw">pub fn </span>context_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>MapContext, Error&gt; {
+    <span class="kw">pub fn </span>context_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>MapContext, MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.map_context {
             MapContextState::Ready(map_context) =&gt; <span class="prelude-val">Ok</span>(map_context),
-            MapContextState::Pending { .. } =&gt; {
-                <span class="prelude-val">Err</span>(Error::Generic(<span class="string">&quot;Renderer is already set&quot;</span>.into()))
-            }
+            MapContextState::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
         }
     }
 

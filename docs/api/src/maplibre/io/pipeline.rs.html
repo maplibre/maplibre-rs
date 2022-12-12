@@ -276,29 +276,49 @@
 <span id="276">276</span>
 <span id="277">277</span>
 <span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 
 <span class="kw">use </span>downcast_rs::Downcast;
 <span class="kw">use </span>geozero::mvt::tile;
+<span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use crate</span>::{
     coords::WorldTileCoords,
-    error::Error,
-    io::geometry_index::IndexedGeometry,
+    io::{apc::SendError, geometry_index::IndexedGeometry},
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
+<span class="attribute">#[derive(Error, Debug)]
+</span><span class="kw">pub enum </span>PipelineError {
+    <span class="doccomment">/// Sending of results failed
+    </span><span class="attribute">#[error(<span class="string">&quot;sending data back from pipeline failed&quot;</span>)]
+    </span>SendError(SendError),
+    <span class="doccomment">/// Error during processing of the pipeline
+    </span><span class="attribute">#[error(<span class="string">&quot;processing data in pipeline failed&quot;</span>)]
+    </span>Processing(Box&lt;<span class="kw">dyn </span>std::error::Error&gt;),
+}
+
 <span class="doccomment">/// Processes events which happen during the pipeline execution
 </span><span class="kw">pub trait </span>PipelineProcessor: Downcast {
-    <span class="kw">fn </span>tile_finished(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    <span class="kw">fn </span>tile_finished(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
     <span class="kw">fn </span>layer_unavailable(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _coords: <span class="kw-2">&amp;</span>WorldTileCoords,
         _layer_name: <span class="kw-2">&amp;</span>str,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
     <span class="kw">fn </span>layer_tesselation_finished(
@@ -307,14 +327,14 @@
         _buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
         _feature_indices: Vec&lt;u32&gt;,
         _layer_data: tile::Layer,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
     <span class="kw">fn </span>layer_indexing_finished(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _coords: <span class="kw-2">&amp;</span>WorldTileCoords,
         _geometries: Vec&lt;IndexedGeometry&lt;f64&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineError&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -354,7 +374,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input: <span class="self">Self</span>::Input,
         context: <span class="kw-2">&amp;mut </span>PipelineContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PipelineError&gt;;
 }
 
 <span class="doccomment">/// A pipeline which consists of multiple steps. Steps are [`Processable`] workloads. Later steps
@@ -390,7 +410,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input: <span class="self">Self</span>::Input,
         context: <span class="kw-2">&amp;mut </span>PipelineContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PipelineError&gt; {
         <span class="kw">let </span>output = <span class="self">self</span>.step.process(input, context)<span class="question-mark">?</span>;
         <span class="self">self</span>.next_step.process(output, context)
     }
@@ -417,7 +437,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input: <span class="self">Self</span>::Input,
         _context: <span class="kw-2">&amp;mut </span>PipelineContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PipelineError&gt; {
         <span class="prelude-val">Ok</span>(input)
     }
 }
@@ -430,7 +450,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input: <span class="self">Self</span>::Input,
         context: <span class="kw-2">&amp;mut </span>PipelineContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PipelineError&gt; {
         <span class="prelude-val">Ok</span>((<span class="self">self</span>)(input, context))
     }
 }
@@ -443,7 +463,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input: <span class="self">Self</span>::Input,
         context: <span class="kw-2">&amp;mut </span>PipelineContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PipelineError&gt; {
         <span class="prelude-val">Ok</span>((<span class="self">self</span>)(input, context))
     }
 }
@@ -481,7 +501,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input: <span class="self">Self</span>::Input,
         context: <span class="kw-2">&amp;mut </span>PipelineContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PipelineError&gt; {
         <span class="prelude-val">Ok</span>((<span class="self">self</span>.func)(input, context))
     }
 }

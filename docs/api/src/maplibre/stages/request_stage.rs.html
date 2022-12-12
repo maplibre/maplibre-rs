@@ -163,7 +163,6 @@
 <span id="163">163</span>
 <span id="164">164</span>
 <span id="165">165</span>
-<span id="166">166</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view
 
 </span><span class="kw">use </span>std::{collections::HashSet, rc::Rc};
@@ -172,9 +171,8 @@
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
     environment::Environment,
-    error::Error,
     io::{
-        apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message},
+        apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message, ProcedureError},
         pipeline::{PipelineContext, Processable},
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::TileRepository,
@@ -237,7 +235,7 @@
 ) -&gt; AsyncProcedureFuture {
     Box::pin(<span class="kw">async move </span>{
         <span class="kw">let </span>Input::TileRequest(input) = input <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::APC)
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ProcedureError::IncompatibleInput)
         };
 
         <span class="kw">let </span>coords = input.coords;
@@ -253,7 +251,9 @@
                     phantom_hc: Default::default(),
                 });
                 <span class="kw">let </span>pipeline = build_vector_tile_pipeline();
-                pipeline.process((input, data), <span class="kw-2">&amp;mut </span>pipeline_context)<span class="question-mark">?</span>;
+                pipeline
+                    .process((input, data), <span class="kw-2">&amp;mut </span>pipeline_context)
+                    .map_err(|e| ProcedureError::Execution(Box::new(e)))<span class="question-mark">?</span>;
             }
             <span class="prelude-val">Err</span>(e) =&gt; {
                 <span class="macro">log::error!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>e);
@@ -266,7 +266,7 @@
                             input.coords,
                             to_load.to_string(),
                         )),
-                    )<span class="question-mark">?</span>;
+                    ).map_err(ProcedureError::Send)<span class="question-mark">?</span>;
                 }
             }
         }
@@ -292,9 +292,8 @@
         <span class="kw">for </span>coords <span class="kw">in </span>view_region.iter() {
             <span class="kw">if </span>coords.build_quad_key().is_some() {
                 <span class="comment">// TODO: Make tesselation depend on style?
-                </span><span class="self">self</span>.request_tile(tile_repository, coords, <span class="kw-2">&amp;</span>source_layers)
-                    .unwrap(); <span class="comment">// TODO: Remove unwrap
-            </span>}
+                </span><span class="self">self</span>.request_tile(tile_repository, coords, <span class="kw-2">&amp;</span>source_layers);
+            }
         }
     }
 
@@ -303,7 +302,7 @@
         tile_repository: <span class="kw-2">&amp;mut </span>TileRepository,
         coords: WorldTileCoords,
         layers: <span class="kw-2">&amp;</span>HashSet&lt;String&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    ) {
         <span class="comment">/* TODO: is this still required?
         if !tile_repository.is_layers_missing(coords, layers) {
             return Ok(false);
@@ -313,21 +312,20 @@
             tile_repository.create_tile(coords);
 
             <span class="macro">tracing::info!</span>(<span class="string">&quot;new tile request: {}&quot;</span>, <span class="kw-2">&amp;</span>coords);
-            <span class="self">self</span>.kernel.apc().call(
-                Input::TileRequest(TileRequest {
-                    coords,
-                    layers: layers.clone(),
-                }),
-                schedule::&lt;
-                    E,
-                    &lt;E::AsyncProcedureCall <span class="kw">as </span>AsyncProcedureCall&lt;
-                        E::HttpClient,
-                    &gt;&gt;::Context,
-                &gt;,
-            );
-        }
-
-        <span class="prelude-val">Ok</span>(())
+            <span class="self">self</span>.kernel
+                .apc()
+                .call(
+                    Input::TileRequest(TileRequest {
+                        coords,
+                        layers: layers.clone(),
+                    }),
+                    schedule::&lt;
+                        E,
+                        &lt;E::AsyncProcedureCall <span class="kw">as </span>AsyncProcedureCall&lt;E::HttpClient&gt;&gt;::Context,
+                    &gt;,
+                )
+                .unwrap(); <span class="comment">// TODO: Remove unwrap
+        </span>}
     }
 }
 </code></pre></div>

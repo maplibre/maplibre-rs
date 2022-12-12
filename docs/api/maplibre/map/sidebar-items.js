@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["MapContextState",""]],"struct":[["Map",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["MapContextState",""],["MapError",""]],"struct":[["Map",""]]};

@@ -26,9 +26,19 @@
 <span id="26">26</span>
 <span id="27">27</span>
 <span id="28">28</span>
-</pre><pre class="rust"><code><span class="kw">use crate</span>::{
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+</pre><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
+
+<span class="kw">use crate</span>::{
     environment::Environment,
-    error::Error,
     map::Map,
     window::{HeadedMapWindow, MapWindowConfig},
 };
@@ -40,8 +50,16 @@
     <span class="kw">fn </span>create_proxy() -&gt; <span class="self">Self</span>::EventLoopProxy;
 }
 
+<span class="doccomment">/// When sending events to an event loop errors can occur.
+</span><span class="attribute">#[derive(Error, Debug)]
+</span><span class="kw">pub enum </span>SendEventError {
+    <span class="doccomment">/// The event loop was already closed
+    </span><span class="attribute">#[error(<span class="string">&quot;event loop is closed&quot;</span>)]
+    </span>Closed,
+}
+
 <span class="kw">pub trait </span>EventLoopProxy&lt;T: <span class="lifetime">&#39;static</span>&gt; {
-    <span class="kw">fn </span>send_event(<span class="kw-2">&amp;</span><span class="self">self</span>, event: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;;
+    <span class="kw">fn </span>send_event(<span class="kw-2">&amp;</span><span class="self">self</span>, event: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendEventError&gt;;
 }
 
 <span class="kw">pub trait </span>EventLoop&lt;ET: <span class="lifetime">&#39;static </span>+ PartialEq&gt; {

@@ -50,7 +50,7 @@
 <span id="50">50</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::fmt;
 
-<span class="kw">use crate</span>::{error::Error, render::graph::RenderGraphError};
+<span class="kw">use </span><span class="kw">crate</span>::render::graph::RenderGraphError;
 
 <span class="attribute">#[derive(Debug)]
 </span><span class="kw">pub enum </span>RenderError {
@@ -87,15 +87,15 @@
     }
 }
 
-<span class="kw">impl </span>From&lt;wgpu::SurfaceError&gt; <span class="kw">for </span>Error {
+<span class="kw">impl </span>From&lt;wgpu::SurfaceError&gt; <span class="kw">for </span>RenderError {
     <span class="kw">fn </span>from(e: wgpu::SurfaceError) -&gt; <span class="self">Self </span>{
-        Error::Render(RenderError::Surface(e))
+        RenderError::Surface(e)
     }
 }
 
-<span class="kw">impl </span>From&lt;wgpu::RequestDeviceError&gt; <span class="kw">for </span>Error {
+<span class="kw">impl </span>From&lt;wgpu::RequestDeviceError&gt; <span class="kw">for </span>RenderError {
     <span class="kw">fn </span>from(e: wgpu::RequestDeviceError) -&gt; <span class="self">Self </span>{
-        Error::Render(RenderError::Device(e))
+        RenderError::Device(e)
     }
 }
 </code></pre></div>

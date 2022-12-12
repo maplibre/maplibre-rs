@@ -90,6 +90,9 @@
 <span id="90">90</span>
 <span id="91">91</span>
 <span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
 </pre><pre class="rust"><code><span class="doccomment">//! [Stages](Stage) for requesting and preparing data
 
 </span><span class="kw">use </span>std::{marker::PhantomData, rc::Rc};
@@ -100,11 +103,10 @@
 <span class="kw">use crate</span>::{
     coords::WorldTileCoords,
     environment::Environment,
-    error::Error,
     io::{
         apc::{Context, Message},
         geometry_index::{IndexedGeometry, TileIndex},
-        pipeline::PipelineProcessor,
+        pipeline::{PipelineError, PipelineProcessor},
         source_client::HttpClient,
         transferables::{
             LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
@@ -135,23 +137,25 @@
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;c</span>, T: Transferables, HC: HttpClient, C: Context&lt;T, HC&gt;&gt; PipelineProcessor
     <span class="kw">for </span>HeadedPipelineProcessor&lt;T, HC, C&gt;
 {
-    <span class="kw">fn </span>tile_finished(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    <span class="kw">fn </span>tile_finished(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineError&gt; {
         <span class="self">self</span>.context
             .send(Message::TileTessellated(T::TileTessellated::build_from(
                 <span class="kw-2">*</span>coords,
             )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     <span class="kw">fn </span>layer_unavailable(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         coords: <span class="kw-2">&amp;</span>WorldTileCoords,
         layer_name: <span class="kw-2">&amp;</span>str,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineError&gt; {
         <span class="self">self</span>.context
             .send(Message::LayerUnavailable(T::LayerUnavailable::build_from(
                 <span class="kw-2">*</span>coords,
                 layer_name.to_owned(),
             )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     <span class="kw">fn </span>layer_tesselation_finished(
@@ -160,7 +164,7 @@
         buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
         feature_indices: Vec&lt;u32&gt;,
         layer_data: tile::Layer,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineError&gt; {
         <span class="self">self</span>.context
             .send(Message::LayerTessellated(T::LayerTessellated::build_from(
                 <span class="kw-2">*</span>coords,
@@ -168,18 +172,20 @@
                 feature_indices,
                 layer_data,
             )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     <span class="kw">fn </span>layer_indexing_finished(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         coords: <span class="kw-2">&amp;</span>WorldTileCoords,
         geometries: Vec&lt;IndexedGeometry&lt;f64&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineError&gt; {
         <span class="self">self</span>.context
             .send(Message::LayerIndexed(T::LayerIndexed::build_from(
                 <span class="kw-2">*</span>coords,
                 TileIndex::Linear { list: geometries },
             )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 }
 </code></pre></div>

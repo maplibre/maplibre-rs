@@ -173,17 +173,15 @@
 <span id="173">173</span>
 <span id="174">174</span>
 <span id="175">175</span>
-<span id="176">176</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashSet;
 
 <span class="kw">use </span>geozero::GeozeroDatasource;
 <span class="kw">use </span>prost::Message;
 
 <span class="kw">use crate</span>::{
-    error::Error,
     io::{
         geometry_index::IndexProcessor,
-        pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable},
+        pipeline::{DataPipeline, PipelineContext, PipelineEnd, PipelineError, Processable},
         TileRequest,
     },
     tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
@@ -200,7 +198,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         (tile_request, data): <span class="self">Self</span>::Input,
         _context: <span class="kw-2">&amp;mut </span>PipelineContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PipelineError&gt; {
         <span class="kw">let </span>tile = geozero::mvt::Tile::decode(data.as_ref()).expect(<span class="string">&quot;failed to load tile&quot;</span>);
         <span class="prelude-val">Ok</span>((tile_request, tile))
     }
@@ -217,7 +215,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         (tile_request, <span class="kw-2">mut </span>tile): <span class="self">Self</span>::Input,
         context: <span class="kw-2">&amp;mut </span>PipelineContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PipelineError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>index = IndexProcessor::new();
 
         <span class="kw">for </span>layer <span class="kw">in </span><span class="kw-2">&amp;mut </span>tile.layers {
@@ -246,7 +244,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         (tile_request, <span class="kw-2">mut </span>tile): <span class="self">Self</span>::Input,
         context: <span class="kw-2">&amp;mut </span>PipelineContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, Error&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Output, PipelineError&gt; {
         <span class="kw">let </span>coords = <span class="kw-2">&amp;</span>tile_request.coords;
 
         <span class="kw">for </span>layer <span class="kw">in </span><span class="kw-2">&amp;mut </span>tile.layers {

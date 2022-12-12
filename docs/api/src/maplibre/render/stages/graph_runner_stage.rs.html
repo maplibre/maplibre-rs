@@ -72,6 +72,8 @@
 <span id="72">72</span>
 <span id="73">73</span>
 <span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Executes the [`RenderGraph`] current render graph.
 
 </span><span class="kw">use </span>log::error;
@@ -125,7 +127,9 @@
                 }
             }
 
-            <span class="macro">panic!</span>(<span class="string">&quot;Error running render graph: {:?}&quot;</span>, e);
+            <span class="comment">// TODO: Replace panic with a graceful exit in the event loop
+            // if e.should_exit() { *control_flow = ControlFlow::Exit; }
+            </span><span class="macro">panic!</span>(<span class="string">&quot;Error running render graph: {:?}&quot;</span>, e);
         }
 
         {

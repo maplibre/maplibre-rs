@@ -350,14 +350,14 @@
     <span class="doccomment">/// Retrieves the [`SlotInfo`] for the provided label.
     </span><span class="kw">pub fn </span>get_slot(<span class="kw-2">&amp;</span><span class="self">self</span>, label: <span class="kw">impl </span>Into&lt;SlotLabel&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SlotInfo&gt; {
         <span class="kw">let </span>label = label.into();
-        <span class="kw">let </span>index = <span class="self">self</span>.get_slot_index(<span class="kw-2">&amp;</span>label)<span class="question-mark">?</span>;
+        <span class="kw">let </span>index = <span class="self">self</span>.get_slot_index(label)<span class="question-mark">?</span>;
         <span class="self">self</span>.slots.get(index)
     }
 
     <span class="doccomment">/// Retrieves the [`SlotInfo`] for the provided label mutably.
     </span><span class="kw">pub fn </span>get_slot_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw">impl </span>Into&lt;SlotLabel&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>SlotInfo&gt; {
         <span class="kw">let </span>label = label.into();
-        <span class="kw">let </span>index = <span class="self">self</span>.get_slot_index(<span class="kw-2">&amp;</span>label)<span class="question-mark">?</span>;
+        <span class="kw">let </span>index = <span class="self">self</span>.get_slot_index(label)<span class="question-mark">?</span>;
         <span class="self">self</span>.slots.get_mut(index)
     }
 

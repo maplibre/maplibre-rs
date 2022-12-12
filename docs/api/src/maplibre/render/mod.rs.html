@@ -522,9 +522,6 @@
 <span id="522">522</span>
 <span id="523">523</span>
 <span id="524">524</span>
-<span id="525">525</span>
-<span id="526">526</span>
-<span id="527">527</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -546,8 +543,6 @@
 //!
 
 </span><span class="kw">use </span>std::sync::Arc;
-
-<span class="kw">use </span>log::info;
 
 <span class="kw">use crate</span>::{
     render::{
@@ -773,10 +768,9 @@
         <span class="kw">let </span>adapter = instance
             .request_adapter(request_adapter_options)
             .<span class="kw">await
-            </span>.expect(<span class="string">&quot;Unable to find a GPU! Make sure you have installed required drivers!&quot;</span>);
+            </span>.ok_or_else(|| wgpu::RequestDeviceError)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>adapter_info = adapter.get_info();
-        <span class="macro">info!</span>(<span class="string">&quot;{:?}&quot;</span>, adapter_info);
 
         <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
         </span><span class="kw">let </span>trace_path = <span class="kw">if </span>settings.record_trace {
