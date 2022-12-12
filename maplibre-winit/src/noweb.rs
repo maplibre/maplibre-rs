@@ -5,6 +5,8 @@
 
 use std::marker::PhantomData;
 
+use maplibre::render::builder::RendererBuilder;
+use maplibre::render::settings::WgpuSettings;
 use maplibre::{
     event_loop::EventLoop,
     io::apc::SchedulerAsyncProcedureCall,
@@ -15,8 +17,6 @@ use maplibre::{
     window::{MapWindow, MapWindowConfig, WindowSize},
 };
 use winit::window::WindowBuilder;
-use maplibre::render::builder::RendererBuilder;
-use maplibre::render::settings::WgpuSettings;
 
 use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
@@ -40,13 +40,13 @@ impl<ET> MapWindow for WinitMapWindow<ET> {
     fn size(&self) -> WindowSize {
         let size = self.window.inner_size();
         #[cfg(target_os = "android")]
-            // On android we can not get the dimensions of the window initially. Therefore, we use a
-            // fallback until the window is ready to deliver its correct bounds.
-            let window_size =
+        // On android we can not get the dimensions of the window initially. Therefore, we use a
+        // fallback until the window is ready to deliver its correct bounds.
+        let window_size =
             WindowSize::new(size.width, size.height).unwrap_or(WindowSize::new(100, 100).unwrap());
 
         #[cfg(not(target_os = "android"))]
-            let window_size =
+        let window_size =
             WindowSize::new(size.width, size.height).expect("failed to get window dimensions.");
         window_size
     }
@@ -93,9 +93,7 @@ pub fn run_headed_map(cache_path: Option<String>) {
 
         #[cfg(not(target_os = "android"))]
         {
-            map.initialize_renderer()
-                .await
-                .unwrap();
+            map.initialize_renderer().await.unwrap();
         }
 
         map.window_mut()

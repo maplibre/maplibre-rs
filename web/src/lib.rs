@@ -94,9 +94,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), WrappedErr
     let kernel: Kernel<WinitEnvironment<_, _, _, ()>> = kernel_builder.build();
 
     let mut map: MapType = Map::new(Style::default(), kernel, RendererBuilder::new()).unwrap();
-    map.initialize_renderer()
-        .await
-        .unwrap();
+    map.initialize_renderer().await.unwrap();
 
     map.window_mut()
         .take_event_loop()

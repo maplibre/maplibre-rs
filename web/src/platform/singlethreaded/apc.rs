@@ -1,7 +1,4 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
+use std::{cell::RefCell, rc::Rc};
 
 use js_sys::{ArrayBuffer, Uint8Array};
 use maplibre::io::{

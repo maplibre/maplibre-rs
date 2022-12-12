@@ -1,6 +1,4 @@
-use std::{
-    marker::PhantomData,
-};
+use std::marker::PhantomData;
 
 use downcast_rs::Downcast;
 use geozero::mvt::tile;

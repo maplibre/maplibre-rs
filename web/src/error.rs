@@ -8,8 +8,8 @@ use std::{
 
 use js_sys::{Error as JSError, TypeError};
 use maplibre::io::apc::{CallError, ProcedureError};
-use wasm_bindgen::{JsCast, JsValue};
 use thiserror::Error;
+use wasm_bindgen::{JsCast, JsValue};
 
 #[derive(Error, Debug)]
 pub enum WebError {

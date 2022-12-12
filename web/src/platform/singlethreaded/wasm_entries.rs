@@ -1,10 +1,6 @@
-use std::{
-    mem,
-    rc::Rc,
-};
+use std::{mem, rc::Rc};
 
 use js_sys::ArrayBuffer;
-use thiserror::Error;
 use maplibre::{
     benchmarking::io::{
         apc::{AsyncProcedure, Input},
@@ -12,6 +8,7 @@ use maplibre::{
     },
     io::apc::CallError,
 };
+use thiserror::Error;
 use wasm_bindgen::{prelude::*, JsCast};
 
 use crate::{

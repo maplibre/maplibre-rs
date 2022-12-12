@@ -1,6 +1,4 @@
-use std::{
-    rc::Rc,
-};
+use std::rc::Rc;
 use thiserror::Error;
 
 use crate::{
@@ -31,12 +29,15 @@ pub enum MapError {
     #[error("initializing render graph failed")]
     RenderGraphInit(RenderGraphError),
     #[error("initializing device failed")]
-    DeviceInit
+    DeviceInit,
 }
 
 pub enum MapContextState {
     Ready(MapContext),
-    Pending { style: Style, renderer_builder: RendererBuilder },
+    Pending {
+        style: Style,
+        renderer_builder: RendererBuilder,
+    },
 }
 
 pub struct Map<E: Environment> {
@@ -50,7 +51,11 @@ impl<E: Environment> Map<E>
 where
     <<E as Environment>::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow,
 {
-    pub fn new(style: Style, kernel: Kernel<E>, renderer_builder: RendererBuilder) -> Result<Self, MapError> {
+    pub fn new(
+        style: Style,
+        kernel: Kernel<E>,
+        renderer_builder: RendererBuilder,
+    ) -> Result<Self, MapError> {
         let mut schedule = Schedule::default();
 
         let graph = create_default_render_graph().unwrap(); // TODO: Remove unwrap
@@ -64,19 +69,23 @@ where
 
         let map = Self {
             kernel,
-            map_context: MapContextState::Pending { style, renderer_builder },
+            map_context: MapContextState::Pending {
+                style,
+                renderer_builder,
+            },
             schedule,
             window,
         };
         Ok(map)
     }
 
-    pub async fn initialize_renderer(
-        &mut self
-    ) -> Result<(), MapError> {
+    pub async fn initialize_renderer(&mut self) -> Result<(), MapError> {
         match &mut self.map_context {
             MapContextState::Ready(_) => Err(MapError::RendererAlreadySet),
-            MapContextState::Pending { style, renderer_builder } => {
+            MapContextState::Pending {
+                style,
+                renderer_builder,
+            } => {
                 let init_result = renderer_builder
                     .clone() // Cloning because we want to be able to build multiple times maybe
                     .build()
