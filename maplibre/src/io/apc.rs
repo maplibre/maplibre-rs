@@ -214,7 +214,7 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
 
         self.scheduler
             .schedule(move || async move {
-                (procedure)(
+                procedure(
                     input,
                     SchedulerContext {
                         sender,

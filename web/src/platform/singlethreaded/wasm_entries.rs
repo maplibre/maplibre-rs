@@ -39,7 +39,7 @@ pub async fn singlethreaded_worker_entry(
         source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
     };
 
-    (procedure)(input, context).await?;
+    procedure(input, context).await?;
 
     Ok(())
 }
