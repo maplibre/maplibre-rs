@@ -3,18 +3,19 @@ use std::collections::HashSet;
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
-    error::Error,
     headless::{
         environment::HeadlessEnvironment, graph_node::CopySurfaceBufferNode,
         stage::WriteSurfaceBufferStage,
     },
     io::{
-        pipeline::{PipelineContext, PipelineProcessor, Processable},
+        pipeline::{PipelineContext, PipelineError, PipelineProcessor, Processable},
+        source_client::SourceFetchError,
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::{StoredLayer, StoredTile},
         RawLayer, TileRequest,
     },
     kernel::Kernel,
+    map::MapError,
     render::{
         create_default_render_graph, draw_graph, eventually::Eventually,
         register_default_render_stages, stages::RenderStageLabel, Renderer, ShaderVertex,
@@ -37,7 +38,7 @@ impl HeadlessMap {
         renderer: Renderer,
         kernel: Kernel<HeadlessEnvironment>,
         write_to_disk: bool,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, MapError> {
         let window_size = renderer.state().surface().size();
 
         let world = World::new(
@@ -47,7 +48,7 @@ impl HeadlessMap {
             cgmath::Deg(0.0),
         );
 
-        let mut graph = create_default_render_graph()?;
+        let mut graph = create_default_render_graph().map_err(|e| MapError::RenderGraphInit(e))?;
         let draw_graph = graph
             .get_sub_graph_mut(draw_graph::NAME)
             .expect("Subgraph does not exist");
@@ -74,7 +75,7 @@ impl HeadlessMap {
         })
     }
 
-    pub fn render_tile(&mut self, tile: StoredTile) -> Result<(), Error> {
+    pub fn render_tile(&mut self, tile: StoredTile) {
         let context = &mut self.map_context;
 
         if let Eventually::Initialized(pool) = context.renderer.state.buffer_pool_mut() {
@@ -88,18 +89,19 @@ impl HeadlessMap {
         context.world.tile_repository.put_tile(tile);
 
         self.schedule.run(&mut self.map_context);
-        Ok(())
     }
 
-    pub async fn fetch_tile(
-        &self,
-        coords: WorldTileCoords,
-        source_layers: &[&str],
-    ) -> Result<StoredTile, Error> {
+    pub async fn fetch_tile(&self, coords: WorldTileCoords) -> Result<Box<[u8]>, SourceFetchError> {
         let source_client = self.kernel.source_client();
 
-        let data = source_client.fetch(&coords).await?.into_boxed_slice();
+        Ok(source_client.fetch(&coords).await?.into_boxed_slice())
+    }
 
+    pub async fn process_tile(
+        &self,
+        tile_data: Box<[u8]>,
+        source_layers: &[&str],
+    ) -> Result<StoredTile, PipelineError> {
         let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
         let pipeline = build_vector_tile_pipeline();
 
@@ -113,7 +115,7 @@ impl HeadlessMap {
                         .map(|layer| layer.to_string())
                         .collect::<HashSet<String>>(),
                 },
-                data,
+                tile_data,
             ),
             &mut pipeline_context,
         )?;
@@ -138,7 +140,7 @@ impl PipelineProcessor for HeadlessPipelineProcessor {
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
         layer_data: RawLayer,
-    ) -> Result<(), Error> {
+    ) -> Result<(), PipelineError> {
         self.layers.push(StoredLayer::TessellatedLayer {
             coords: *coords,
             layer_name: layer_data.name,

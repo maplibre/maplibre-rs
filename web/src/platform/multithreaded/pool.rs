@@ -9,14 +9,19 @@ use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 use web_sys::Worker;
 
+use crate::error::WebError;
+
 #[wasm_bindgen()]
 extern "C" {
     #[wasm_bindgen(js_name = newWorker)]
     fn new_worker() -> JsValue;
 }
 
+type NewWorker = Box<dyn Fn() -> Result<Worker, WebError>>;
+type Execute = Box<dyn (FnOnce() -> Promise) + Send>;
+
 pub struct WorkerPool {
-    new_worker: Box<dyn Fn() -> Worker>,
+    new_worker: NewWorker,
     state: Rc<PoolState>,
 }
 
@@ -35,7 +40,7 @@ impl PoolState {
 }
 
 pub struct Work {
-    func: Box<dyn (FnOnce() -> Promise) + Send>,
+    func: Execute,
 }
 
 impl Work {
@@ -55,7 +60,7 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    pub fn new(initial: usize, new_worker: Box<dyn Fn() -> Worker>) -> Result<WorkerPool, JsValue> {
+    pub fn new(initial: usize, new_worker: NewWorker) -> Result<WorkerPool, WebError> {
         let pool = WorkerPool {
             new_worker,
             state: Rc::new(PoolState {
@@ -78,9 +83,9 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    fn spawn(&self) -> Result<(), JsValue> {
+    fn spawn(&self) -> Result<(), WebError> {
         log::info!("spawning new worker");
-        let worker = (self.new_worker)();
+        let worker = (self.new_worker)()?;
 
         // With a worker spun up send it the module/memory so it can start
         // instantiating the wasm module. Later it might receive further
@@ -104,7 +109,7 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    fn worker(&self) -> Result<Worker, JsValue> {
+    fn worker(&self) -> Result<Worker, WebError> {
         let workers = self.state.workers.borrow();
         let result = workers.choose(&mut thread_rng());
 
@@ -130,7 +135,7 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    pub fn execute(&self, f: impl (FnOnce() -> Promise) + Send + 'static) -> Result<(), JsValue> {
+    pub fn execute(&self, f: impl (FnOnce() -> Promise) + Send + 'static) -> Result<(), WebError> {
         let worker = self.worker()?;
         let work = Work { func: Box::new(f) };
         let work_ptr = Box::into_raw(Box::new(work));
@@ -140,7 +145,7 @@ impl WorkerPool {
                 unsafe {
                     drop(Box::from_raw(work_ptr));
                 }
-                Err(e)
+                Err(e.into())
             }
         }
     }

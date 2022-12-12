@@ -1,4 +1,5 @@
 use flatbuffers::FlatBufferBuilder;
+use js_sys::{ArrayBuffer, Uint8Array};
 use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::WorldTileCoords,
@@ -57,11 +58,24 @@ pub mod tile_tessellated_generated {
 }
 
 pub struct FlatBufferTransferable {
-    pub data: Vec<u8>,
-    pub start: usize,
+    data: Vec<u8>,
+    start: usize,
 }
 
 impl FlatBufferTransferable {
+    pub fn from_array_buffer(buffer: ArrayBuffer) -> Self {
+        let buffer = Uint8Array::new(&buffer);
+
+        FlatBufferTransferable {
+            data: buffer.to_vec(),
+            start: 0,
+        }
+    }
+
+    pub fn data(&self) -> &[u8] {
+        &self.data[self.start..]
+    }
+
     pub fn from_message(message: Message<UsedTransferables>) -> Self {
         match message {
             Message::TileTessellated(transferable) => transferable,
@@ -220,7 +234,7 @@ impl LayerIndexed for FlatBufferTransferable {
     }
 
     fn to_tile_index(self) -> TileIndex {
-        TileIndex::Linear { list: vec![] } // TODO
+        TileIndex::Linear { list: vec![] } // TODO index
     }
 }
 
