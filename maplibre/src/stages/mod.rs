@@ -89,7 +89,7 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         image_data: RgbaImage,
     ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::LayerRaster(T::LayerRaster::new(
+            .send(Message::LayerRaster(T::LayerRaster::build_from(
                 *coords, layer_name, image_data,
             )))
             .map_err(|e| PipelineError::Processing(Box::new(e)))

@@ -2,6 +2,8 @@
 
 use std::rc::Rc;
 
+use log::error;
+
 use crate::{
     context::MapContext,
     environment::Environment,
@@ -66,12 +68,12 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                     let layer: StoredLayer = message.to_stored_layer();
 
                     tracing::debug!(
-                        "Layer {} at {} reached main thread",
+                        "Vector layer {} at {} reached main thread",
                         layer.layer_name(),
                         layer.get_coords()
                     );
                     log::warn!(
-                        "Layer {} at {} reached main thread",
+                        "Vector layer {} at {} reached main thread",
                         layer.layer_name(),
                         layer.get_coords()
                     );
@@ -87,13 +89,20 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                 }
                 Message::LayerRaster(message) => {
                     let layer: StoredLayer = message.to_stored_layer();
+                    match &layer {
+                        StoredLayer::UnavailableLayer { .. } => {}
+                        StoredLayer::TessellatedLayer { .. } => {}
+                        StoredLayer::RasterLayer { image, .. } => {
+                            error!("ASDF {:?}", &image);
+                        }
+                    }
                     tracing::debug!(
-                        "Layer {} at {} reached main thread",
+                        "Raster layer {} at {} reached main thread",
                         layer.layer_name(),
                         layer.get_coords()
                     );
                     log::warn!(
-                        "Layer {} at {} reached main thread",
+                        "Raster layer {} at {} reached main thread",
                         layer.layer_name(),
                         layer.get_coords()
                     );

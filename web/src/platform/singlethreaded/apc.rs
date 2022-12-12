@@ -38,6 +38,7 @@ impl MessageTag {
             Message::LayerUnavailable(_) => MessageTag::LayerUnavailable,
             Message::LayerTessellated(_) => MessageTag::LayerTessellated,
             Message::LayerIndexed(_) => MessageTag::LayerIndexed,
+            Message::LayerRaster(_) => MessageTag::LayerRaster,
         }
     }
 
@@ -57,6 +58,7 @@ impl MessageTag {
                 Message::<UsedTransferables>::LayerTessellated(transferable)
             }
             MessageTag::LayerIndexed => Message::<UsedTransferables>::LayerIndexed(transferable),
+            MessageTag::LayerRaster => Message::<UsedTransferables>::LayerIndexed(transferable),
         }
     }
 
@@ -66,6 +68,7 @@ impl MessageTag {
             x if x == MessageTag::LayerTessellated as u32 => Ok(MessageTag::LayerTessellated),
             x if x == MessageTag::TileTessellated as u32 => Ok(MessageTag::TileTessellated),
             x if x == MessageTag::LayerIndexed as u32 => Ok(MessageTag::LayerIndexed),
+            x if x == MessageTag::LayerRaster as u32 => Ok(MessageTag::LayerRaster),
             _ => Err(MessageTagDeserializeError),
         }
     }

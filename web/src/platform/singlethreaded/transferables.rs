@@ -1,4 +1,5 @@
 use flatbuffers::FlatBufferBuilder;
+use image::RgbaImage;
 use js_sys::{ArrayBuffer, Uint8Array};
 use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
@@ -8,8 +9,8 @@ use maplibre::{
         geometry_index::TileIndex,
         tile_repository::StoredLayer,
         transferables::{
-            IndexedLayer, LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable,
-            TessellatedLayer, TileTessellated, Transferables, UnavailableLayer,
+            LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable, TileTessellated,
+            Transferables,
         },
     },
     render::ShaderVertex,
@@ -18,8 +19,9 @@ use maplibre::{
 
 use crate::platform::singlethreaded::{
     transferables::{
-        basic_generated::*, layer_indexed_generated::*, layer_tessellated_generated::*,
-        layer_unavailable_generated::*, tile_tessellated_generated::*,
+        basic_generated::*, layer_indexed_generated::*, layer_raster_generated::*,
+        layer_tessellated_generated::*, layer_unavailable_generated::*,
+        tile_tessellated_generated::*,
     },
     UsedTransferables,
 };
@@ -53,6 +55,10 @@ pub mod layer_unavailable_generated {
     #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/layer_unavailable_generated.rs"));
 }
+pub mod layer_raster_generated {
+    #![allow(unused, unused_imports, clippy::all)]
+    include!(concat!(env!("OUT_DIR"), "/layer_raster_generated.rs"));
+}
 pub mod tile_tessellated_generated {
     #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/tile_tessellated_generated.rs"));
@@ -83,6 +89,7 @@ impl FlatBufferTransferable {
             Message::LayerUnavailable(transferable) => transferable,
             Message::LayerTessellated(transferable) => transferable,
             Message::LayerIndexed(transferable) => transferable,
+            Message::LayerRaster(transferable) => transferable,
         }
     }
 }
@@ -236,6 +243,45 @@ impl LayerIndexed for FlatBufferTransferable {
 
     fn to_tile_index(self) -> TileIndex {
         TileIndex::Linear { list: vec![] } // TODO index
+    }
+}
+
+impl LayerRaster for FlatBufferTransferable {
+    fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self {
+        let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
+
+        let width = image.width();
+        let height = image.height();
+
+        let layer_name = inner_builder.create_string(&layer_name);
+        let image_data = inner_builder.create_vector(&image.into_vec());
+
+        let mut builder = FlatLayerRasterBuilder::new(&mut inner_builder);
+
+        builder.add_coords(&FlatWorldTileCoords::new(
+            coords.x,
+            coords.y,
+            coords.z.into(),
+        ));
+        builder.add_layer_name(layer_name);
+        builder.add_image_data(image_data);
+        builder.add_width(width);
+        builder.add_height(height);
+
+        let root = builder.finish();
+        inner_builder.finish(root, None);
+        let (data, start) = inner_builder.collapse();
+        FlatBufferTransferable { data, start }
+    }
+
+    fn to_stored_layer(self) -> StoredLayer {
+        let data = unsafe { root_as_flat_layer_raster_unchecked(&self.data[self.start..]) };
+        let image_data = data.image_data().unwrap().iter().collect();
+        StoredLayer::RasterLayer {
+            coords: LayerTessellated::coords(&self),
+            layer_name: "raster".to_owned(),
+            image: RgbaImage::from_vec(data.width(), data.height(), image_data).unwrap(),
+        }
     }
 }
 

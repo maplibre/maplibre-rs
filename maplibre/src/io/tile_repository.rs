@@ -27,7 +27,7 @@ pub enum StoredLayer {
     RasterLayer {
         coords: WorldTileCoords,
         layer_name: String,
-        image_data: RgbaImage,
+        image: RgbaImage,
     },
 }
 

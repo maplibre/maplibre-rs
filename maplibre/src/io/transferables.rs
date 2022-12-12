@@ -53,7 +53,7 @@ pub trait LayerIndexed: Send {
 }
 
 pub trait LayerRaster: Send {
-    fn new(coords: WorldTileCoords, layer_name: String, image_data: RgbaImage) -> Self;
+    fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self;
 
     fn to_stored_layer(self) -> StoredLayer;
 }
@@ -158,15 +158,15 @@ impl LayerIndexed for DefaultLayerIndexed {
 pub struct DefaultRasterLayer {
     pub coords: WorldTileCoords,
     pub layer_name: String,
-    pub image_data: RgbaImage,
+    pub image: RgbaImage,
 }
 
 impl LayerRaster for DefaultRasterLayer {
-    fn new(coords: WorldTileCoords, layer_name: String, image_data: RgbaImage) -> Self {
+    fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self {
         Self {
             coords,
             layer_name,
-            image_data,
+            image,
         }
     }
 
@@ -174,7 +174,7 @@ impl LayerRaster for DefaultRasterLayer {
         StoredLayer::RasterLayer {
             coords: self.coords,
             layer_name: "raster".to_string(),
-            image_data: self.image_data,
+            image: self.image,
         }
     }
 }

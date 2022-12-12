@@ -238,7 +238,7 @@ impl UploadStage {
                                 StoredLayer::RasterLayer {
                                     coords,
                                     layer_name,
-                                    image_data,
+                                    image,
                                 } => {
                                     #[cfg(feature = "raster")]
                                     {
@@ -249,7 +249,7 @@ impl UploadStage {
                                                 style_layer.clone(),
                                             );
 
-                                            let (width, height) = image_data.dimensions();
+                                            let (width, height) = image.dimensions();
 
                                             raster_resources.set_texture(
                                                 None,
@@ -272,7 +272,7 @@ impl UploadStage {
                                                     mip_level: 0,
                                                     origin: wgpu::Origin3d::ZERO,
                                                 },
-                                                &image_data,
+                                                &image,
                                                 wgpu::ImageDataLayout {
                                                     offset: 0,
                                                     bytes_per_row: std::num::NonZeroU32::new(
