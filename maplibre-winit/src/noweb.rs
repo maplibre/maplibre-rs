@@ -11,6 +11,7 @@ use maplibre::{
     kernel::{Kernel, KernelBuilder},
     map::Map,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
+    render::{builder::RendererBuilder, settings::WgpuSettings},
     style::Style,
     window::{MapWindow, MapWindowConfig, WindowSize},
 };
@@ -82,18 +83,16 @@ pub fn run_headed_map(cache_path: Option<String>) {
             .with_scheduler(TokioScheduler::new())
             .build();
 
-        let mut map = Map::new(Style::default(), kernel).unwrap();
+        let renderer_builder = RendererBuilder::new().with_wgpu_settings(WgpuSettings {
+            backends: Some(maplibre::render::settings::Backends::all()),
+            ..WgpuSettings::default()
+        });
+
+        let mut map = Map::new(Style::default(), kernel, renderer_builder).unwrap();
 
         #[cfg(not(target_os = "android"))]
         {
-            use maplibre::render::{builder::RendererBuilder, settings::WgpuSettings};
-
-            map.initialize_renderer(RendererBuilder::new().with_wgpu_settings(WgpuSettings {
-                backends: Some(maplibre::render::settings::Backends::VULKAN), // FIXME: Change
-                ..WgpuSettings::default()
-            }))
-            .await
-            .unwrap();
+            map.initialize_renderer().await.unwrap();
         }
 
         map.window_mut()

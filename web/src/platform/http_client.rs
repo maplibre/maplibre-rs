@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use js_sys::{ArrayBuffer, Uint8Array};
-use maplibre::{error::Error, io::source_client::HttpClient};
+use maplibre::io::source_client::{HttpClient, SourceFetchError};
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, Response, WorkerGlobalScope};
@@ -14,7 +14,7 @@ impl WHATWGFetchHttpClient {
         Self {}
     }
 
-    async fn fetch_array_buffer(url: &str) -> Result<JsValue, JsValue> {
+    async fn fetch_array_buffer(url: &str) -> Result<JsValue, WebError> {
         let mut opts = RequestInit::new();
         opts.method("GET");
 
@@ -22,13 +22,15 @@ impl WHATWGFetchHttpClient {
 
         // Get the global scope
         let global = js_sys::global();
-        assert!(global.is_instance_of::<WorkerGlobalScope>());
-        let scope = global.dyn_into::<WorkerGlobalScope>().unwrap(); // TODO: remove unwrap
+        let scope = global
+            .dyn_into::<WorkerGlobalScope>()
+            .map_err(|_e| WebError::TypeError("Unable to cast to WorkerGlobalScope".into()))?;
 
         // Call fetch on global scope
         let maybe_response = JsFuture::from(scope.fetch_with_request(&request)).await?;
-        assert!(maybe_response.is_instance_of::<Response>());
-        let response: Response = maybe_response.dyn_into().unwrap(); // TODO: remove unwrap
+        let response: Response = maybe_response
+            .dyn_into()
+            .map_err(|_e| WebError::TypeError("Unable to cast to Response".into()))?;
 
         // Get ArrayBuffer
         let maybe_array_buffer = JsFuture::from(response.array_buffer()?).await?;
@@ -38,8 +40,9 @@ impl WHATWGFetchHttpClient {
     async fn fetch_bytes(&self, url: &str) -> Result<Vec<u8>, WebError> {
         let maybe_array_buffer = Self::fetch_array_buffer(url).await?;
 
-        assert!(maybe_array_buffer.is_instance_of::<ArrayBuffer>());
-        let array_buffer: ArrayBuffer = maybe_array_buffer.dyn_into().unwrap(); // TODO: remove unwrap
+        let array_buffer: ArrayBuffer = maybe_array_buffer
+            .dyn_into()
+            .map_err(|_e| WebError::TypeError("Unable to cast to ArrayBuffer".into()))?;
 
         // Copy data to Vec<u8>
         let buffer: Uint8Array = Uint8Array::new(&array_buffer);
@@ -58,9 +61,9 @@ impl Clone for WHATWGFetchHttpClient {
 
 #[async_trait(?Send)]
 impl HttpClient for WHATWGFetchHttpClient {
-    async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
+    async fn fetch(&self, url: &str) -> Result<Vec<u8>, SourceFetchError> {
         self.fetch_bytes(url)
             .await
-            .map_err(|WebError(msg)| Error::Network(msg))
+            .map_err(|e| SourceFetchError(Box::new(e)))
     }
 }

@@ -11,7 +11,7 @@ use maplibre::{
 use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 
-use crate::platform::http_client::WHATWGFetchHttpClient;
+use crate::{error::WrappedError, platform::http_client::WHATWGFetchHttpClient};
 
 mod error;
 mod platform;
@@ -65,7 +65,7 @@ type CurrentEnvironment = WinitEnvironment<
 pub type MapType = Map<CurrentEnvironment>;
 
 #[wasm_bindgen]
-pub async fn run_maplibre(new_worker: js_sys::Function) {
+pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), WrappedError> {
     let mut kernel_builder = KernelBuilder::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
         .with_http_client(WHATWGFetchHttpClient::new());
@@ -77,31 +77,31 @@ pub async fn run_maplibre(new_worker: js_sys::Function) {
                 WHATWGFetchHttpClient::new(),
                 platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(
                     new_worker.clone(),
-                ),
+                )?,
             ))
             .with_scheduler(
-                platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(new_worker),
+                platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(new_worker)?,
             );
     }
 
     #[cfg(not(target_feature = "atomics"))]
     {
         kernel_builder = kernel_builder
-            .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4))
+            .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4)?)
             .with_scheduler(maplibre::io::scheduler::NopScheduler);
     }
 
     let kernel: Kernel<WinitEnvironment<_, _, _, ()>> = kernel_builder.build();
 
-    let mut map: MapType = Map::new(Style::default(), kernel).unwrap();
-    map.initialize_renderer(RendererBuilder::new())
-        .await
-        .unwrap();
+    let mut map: MapType = Map::new(Style::default(), kernel, RendererBuilder::new()).unwrap();
+    map.initialize_renderer().await.unwrap();
 
     map.window_mut()
         .take_event_loop()
         .expect("Event loop is not available")
-        .run(map, None)
+        .run(map, None);
+
+    Ok(())
 }
 
 #[cfg(test)]

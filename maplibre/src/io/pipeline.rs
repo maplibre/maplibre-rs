@@ -2,25 +2,35 @@ use std::marker::PhantomData;
 
 use downcast_rs::Downcast;
 use geozero::mvt::tile;
+use thiserror::Error;
 
 use crate::{
     coords::WorldTileCoords,
-    error::Error,
-    io::geometry_index::IndexedGeometry,
+    io::{apc::SendError, geometry_index::IndexedGeometry},
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
+#[derive(Error, Debug)]
+pub enum PipelineError {
+    /// Sending of results failed
+    #[error("sending data back from pipeline failed")]
+    SendError(SendError),
+    /// Error during processing of the pipeline
+    #[error("processing data in pipeline failed")]
+    Processing(Box<dyn std::error::Error>),
+}
+
 /// Processes events which happen during the pipeline execution
 pub trait PipelineProcessor: Downcast {
-    fn tile_finished(&mut self, _coords: &WorldTileCoords) -> Result<(), Error> {
+    fn tile_finished(&mut self, _coords: &WorldTileCoords) -> Result<(), PipelineError> {
         Ok(())
     }
     fn layer_unavailable(
         &mut self,
         _coords: &WorldTileCoords,
         _layer_name: &str,
-    ) -> Result<(), Error> {
+    ) -> Result<(), PipelineError> {
         Ok(())
     }
     fn layer_tesselation_finished(
@@ -29,14 +39,14 @@ pub trait PipelineProcessor: Downcast {
         _buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         _feature_indices: Vec<u32>,
         _layer_data: tile::Layer,
-    ) -> Result<(), Error> {
+    ) -> Result<(), PipelineError> {
         Ok(())
     }
     fn layer_indexing_finished(
         &mut self,
         _coords: &WorldTileCoords,
         _geometries: Vec<IndexedGeometry<f64>>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), PipelineError> {
         Ok(())
     }
 }
@@ -76,7 +86,7 @@ pub trait Processable {
         &self,
         input: Self::Input,
         context: &mut PipelineContext,
-    ) -> Result<Self::Output, Error>;
+    ) -> Result<Self::Output, PipelineError>;
 }
 
 /// A pipeline which consists of multiple steps. Steps are [`Processable`] workloads. Later steps
@@ -112,7 +122,7 @@ where
         &self,
         input: Self::Input,
         context: &mut PipelineContext,
-    ) -> Result<Self::Output, Error> {
+    ) -> Result<Self::Output, PipelineError> {
         let output = self.step.process(input, context)?;
         self.next_step.process(output, context)
     }
@@ -139,7 +149,7 @@ impl<I> Processable for PipelineEnd<I> {
         &self,
         input: Self::Input,
         _context: &mut PipelineContext,
-    ) -> Result<Self::Output, Error> {
+    ) -> Result<Self::Output, PipelineError> {
         Ok(input)
     }
 }
@@ -152,7 +162,7 @@ impl<I, O> Processable for &fn(input: I, context: &mut PipelineContext) -> O {
         &self,
         input: Self::Input,
         context: &mut PipelineContext,
-    ) -> Result<Self::Output, Error> {
+    ) -> Result<Self::Output, PipelineError> {
         Ok((self)(input, context))
     }
 }
@@ -165,7 +175,7 @@ impl<I, O> Processable for fn(input: I, context: &mut PipelineContext) -> O {
         &self,
         input: Self::Input,
         context: &mut PipelineContext,
-    ) -> Result<Self::Output, Error> {
+    ) -> Result<Self::Output, PipelineError> {
         Ok((self)(input, context))
     }
 }
@@ -203,7 +213,7 @@ where
         &self,
         input: Self::Input,
         context: &mut PipelineContext,
-    ) -> Result<Self::Output, Error> {
+    ) -> Result<Self::Output, PipelineError> {
         Ok((self.func)(input, context))
     }
 }
