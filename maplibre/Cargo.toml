@@ -66,6 +66,7 @@ log = "0.4.17"
 # Utils
 bytemuck = "1.12.1"
 bytemuck_derive = "1.2.1"
+thiserror = "1.0"
 
 # Static tiles inclusion
 include_dir = "0.7.2"
@@ -79,7 +80,6 @@ csscolorparser = { version = "0.6.2", features = ["serde", "cint"] }
 cint = "0.3.1"
 
 # Required by bevy renderer
-thiserror = "1.0.32"
 downcast-rs = "1.2.0"
 smallvec = "1.9.0"
 

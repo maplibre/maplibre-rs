@@ -9,25 +9,22 @@ use std::{
 use js_sys::{Error as JSError, TypeError};
 use maplibre::io::apc::{CallError, ProcedureError};
 use wasm_bindgen::{JsCast, JsValue};
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum WebError {
+    #[error("JS error type is unknown")]
     UnknownErrorType,
     /// Returned if the message is not valid, e.g. if it it is not valid UTF-8.
+    #[error("message string in error is invalid")]
     InvalidMessage,
     /// TypeError like it is defined in JS
+    #[error("TypeError from JS")]
     TypeError(Cow<'static, str>),
     /// Any other Error
+    #[error("Error from JS")]
     GenericError(Cow<'static, str>),
 }
-
-impl Display for WebError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl Error for WebError {}
 
 impl From<JsValue> for WebError {
     fn from(value: JsValue) -> Self {

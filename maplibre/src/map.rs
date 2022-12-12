@@ -1,7 +1,7 @@
 use std::{
-    fmt::{Display, Formatter},
     rc::Rc,
 };
+use thiserror::Error;
 
 use crate::{
     context::MapContext,
@@ -23,21 +23,16 @@ use crate::{
     world::World,
 };
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum MapError {
     /// No need to set renderer again
+    #[error("renderer was already set for this map")]
     RendererAlreadySet,
+    #[error("initializing render graph failed")]
     RenderGraphInit(RenderGraphError),
+    #[error("initializing device failed")]
     DeviceInit
 }
-
-impl Display for MapError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for MapError {}
 
 pub enum MapContextState {
     Ready(MapContext),

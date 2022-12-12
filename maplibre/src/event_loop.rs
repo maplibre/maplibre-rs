@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use thiserror::Error;
 
 use crate::{
     environment::Environment,
@@ -14,19 +14,12 @@ pub trait EventLoopConfig {
 }
 
 /// When sending events to an event loop errors can occur.
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum SendEventError {
     /// The event loop was already closed
+    #[error("event loop is closed")]
     Closed,
 }
-
-impl Display for SendEventError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for SendEventError {}
 
 pub trait EventLoopProxy<T: 'static> {
     fn send_event(&self, event: T) -> Result<(), SendEventError>;

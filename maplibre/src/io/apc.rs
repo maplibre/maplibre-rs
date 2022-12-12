@@ -1,5 +1,4 @@
 use std::{
-    fmt::{Display, Formatter},
     future::Future,
     pin::Pin,
     sync::{
@@ -9,6 +8,7 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 use crate::io::{
     scheduler::Scheduler,
@@ -39,19 +39,11 @@ pub enum Input {
     NotYetImplemented, // TODO: Placeholder, should be removed when second input is added
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum SendError {
-    // Error occured during transmission
+    #[error("could not transmit data")]
     Transmission,
 }
-
-impl Display for SendError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for SendError {}
 
 /// Allows sending messages from workers to back to the caller.
 pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
@@ -61,23 +53,16 @@ pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
     fn source_client(&self) -> &SourceClient<HC>;
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum ProcedureError {
     /// The [`Input`] is not compatible with the procedure
+    #[error("provided input is not compatible with procedure")]
     IncompatibleInput,
-    /// Error happened during execution of the procedure
+    #[error("execution of procedure failed")]
     Execution(Box<dyn std::error::Error>),
-    /// Error happened while sending results back
+    #[error("sending data failed")]
     Send(SendError),
 }
-
-impl Display for ProcedureError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for ProcedureError {}
 
 #[cfg(feature = "thread-safe-futures")]
 pub type AsyncProcedureFuture =
@@ -86,20 +71,15 @@ pub type AsyncProcedureFuture =
 pub type AsyncProcedureFuture =
     Pin<Box<(dyn Future<Output = Result<(), ProcedureError>> + 'static)>>;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum CallError {
+    #[error("scheduling work failed")]
     Schedule,
+    #[error("serializing data failed")]
     Serialize(Box<dyn std::error::Error>),
+    #[error("deserializing failed")]
     Deserialize(Box<dyn std::error::Error>),
 }
-
-impl Display for CallError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for CallError {}
 
 /// Type definitions for asynchronous procedure calls. These functions can be called in an
 /// [`AsyncProcedureCall`]. Functions of this type are required to be statically available at

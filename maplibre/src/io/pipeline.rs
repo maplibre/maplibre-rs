@@ -1,10 +1,10 @@
 use std::{
-    fmt::{Display, Formatter},
     marker::PhantomData,
 };
 
 use downcast_rs::Downcast;
 use geozero::mvt::tile;
+use thiserror::Error;
 
 use crate::{
     coords::WorldTileCoords,
@@ -13,21 +13,15 @@ use crate::{
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum PipelineError {
     /// Sending of results failed
+    #[error("sending data back from pipeline failed")]
     SendError(SendError),
     /// Error during processing of the pipeline
+    #[error("processing data in pipeline failed")]
     Processing(Box<dyn std::error::Error>),
 }
-
-impl Display for PipelineError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for PipelineError {}
 
 /// Processes events which happen during the pipeline execution
 pub trait PipelineProcessor: Downcast {

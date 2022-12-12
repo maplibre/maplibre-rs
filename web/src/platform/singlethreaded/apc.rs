@@ -1,6 +1,5 @@
 use std::{
     cell::RefCell,
-    fmt::{Display, Formatter},
     rc::Rc,
 };
 
@@ -10,6 +9,7 @@ use maplibre::io::{
     source_client::SourceClient,
 };
 use rand::{prelude::SliceRandom, thread_rng};
+use thiserror::Error;
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
@@ -21,16 +21,9 @@ use crate::{
 };
 
 /// Error which happens during serialization or deserialization of the tag
-#[derive(Debug)]
+#[derive(Error, Debug)]
+#[error("failed to deserialize message tag")]
 pub struct MessageTagDeserializeError;
-
-impl Display for MessageTagDeserializeError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for MessageTagDeserializeError {}
 
 #[derive(Debug)]
 pub enum MessageTag {
@@ -116,18 +109,11 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
 type NewWorker = Box<dyn Fn() -> Result<Worker, WebError>>;
 pub type ReceivedType = RefCell<Vec<Message<UsedTransferables>>>;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum PassingAPCError {
+    #[error("creating a worker failed")]
     Worker,
 }
-
-impl Display for PassingAPCError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for PassingAPCError {}
 
 pub struct PassingAsyncProcedureCall {
     workers: Vec<Worker>,

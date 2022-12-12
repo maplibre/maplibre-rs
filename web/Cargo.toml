@@ -30,6 +30,8 @@ maplibre-winit = { path = "../maplibre-winit", version = "0.1.0"  }
 log = "0.4.17"
 rand = { version = "0.7", features = ["wasm-bindgen"] }
 
+thiserror = "1.0"
+
 console_error_panic_hook = "0.1.7"
 # Exact version requirement can be removed as soon as https://github.com/gfx-rs/wgpu/pull/2954 is merged
 web-sys = { version = "0.3.58", features = [

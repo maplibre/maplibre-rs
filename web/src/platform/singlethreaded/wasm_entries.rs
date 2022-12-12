@@ -1,10 +1,10 @@
 use std::{
-    fmt::{Display, Formatter},
     mem,
     rc::Rc,
 };
 
 use js_sys::ArrayBuffer;
+use thiserror::Error;
 use maplibre::{
     benchmarking::io::{
         apc::{AsyncProcedure, Input},
@@ -44,16 +44,9 @@ pub async fn singlethreaded_worker_entry(
     Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
+#[error("unable to deserialize message sent by postMessage()")]
 pub struct DeserializeMessage;
-
-impl Display for DeserializeMessage {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for DeserializeMessage {}
 
 /// Entry point invoked by the main thread.
 #[wasm_bindgen]

@@ -1,8 +1,7 @@
 //! HTTP client.
 
-use std::fmt::{Display, Formatter};
-
 use async_trait::async_trait;
+use thiserror::Error;
 
 use crate::{coords::WorldTileCoords, style::source::TileAddressingScheme};
 
@@ -31,16 +30,9 @@ where
     inner_client: HC,
 }
 
-#[derive(Debug)]
-pub struct SourceFetchError(pub Box<dyn std::error::Error>);
-
-impl Display for SourceFetchError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for SourceFetchError {}
+#[derive(Error, Debug)]
+#[error("failed to fetch from source")]
+pub struct SourceFetchError(#[source] pub Box<dyn std::error::Error>);
 
 /// Defines the different types of HTTP clients such as basic HTTP and Mbtiles.
 /// More types might be coming such as S3 and other cloud http clients.

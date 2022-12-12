@@ -1,23 +1,17 @@
 //! Scheduling.
 
 use std::{
-    fmt::{Display, Formatter},
     future::Future,
 };
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum ScheduleError {
+    #[error("scheduling work failed")]
     Scheduling(Box<dyn std::error::Error>),
+    #[error("scheduler is not implemented on this platform")]
     NotImplemented,
 }
-
-impl Display for ScheduleError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl std::error::Error for ScheduleError {}
 
 /// Async/await scheduler.
 /// Can schedule a task from a future factory and a shared state.
