@@ -1,16 +1,19 @@
 use std::rc::Rc;
 
+use thiserror::Error;
+
 use crate::{
     context::MapContext,
     coords::{LatLon, Zoom},
     environment::Environment,
-    error::Error,
     kernel::Kernel,
     render::{
         builder::{
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
         },
-        create_default_render_graph, register_default_render_stages,
+        create_default_render_graph,
+        graph::RenderGraphError,
+        register_default_render_stages,
     },
     schedule::{Schedule, Stage},
     stages::register_stages,
@@ -19,9 +22,23 @@ use crate::{
     world::World,
 };
 
+#[derive(Error, Debug)]
+pub enum MapError {
+    /// No need to set renderer again
+    #[error("renderer was already set for this map")]
+    RendererAlreadySet,
+    #[error("initializing render graph failed")]
+    RenderGraphInit(RenderGraphError),
+    #[error("initializing device failed")]
+    DeviceInit,
+}
+
 pub enum MapContextState {
     Ready(MapContext),
-    Pending { style: Style },
+    Pending {
+        style: Style,
+        renderer_builder: RendererBuilder,
+    },
 }
 
 pub struct Map<E: Environment> {
@@ -35,7 +52,11 @@ impl<E: Environment> Map<E>
 where
     <<E as Environment>::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow,
 {
-    pub fn new(style: Style, kernel: Kernel<E>) -> Result<Self, Error> {
+    pub fn new(
+        style: Style,
+        kernel: Kernel<E>,
+        renderer_builder: RendererBuilder,
+    ) -> Result<Self, MapError> {
         let mut schedule = Schedule::default();
 
         let graph = create_default_render_graph().unwrap(); // TODO: Remove unwrap
@@ -49,26 +70,30 @@ where
 
         let map = Self {
             kernel,
-            map_context: MapContextState::Pending { style },
+            map_context: MapContextState::Pending {
+                style,
+                renderer_builder,
+            },
             schedule,
             window,
         };
         Ok(map)
     }
 
-    pub async fn initialize_renderer(
-        &mut self,
-        render_builder: RendererBuilder,
-    ) -> Result<(), Error> {
-        let result = render_builder
-            .build()
-            .initialize_renderer::<E::MapWindowConfig>(&self.window)
-            .await
-            .expect("Failed to initialize renderer");
-
+    pub async fn initialize_renderer(&mut self) -> Result<(), MapError> {
         match &mut self.map_context {
-            MapContextState::Ready(_) => Err(Error::Generic("Renderer is already set".into())),
-            MapContextState::Pending { style } => {
+            MapContextState::Ready(_) => Err(MapError::RendererAlreadySet),
+            MapContextState::Pending {
+                style,
+                renderer_builder,
+            } => {
+                let init_result = renderer_builder
+                    .clone() // Cloning because we want to be able to build multiple times maybe
+                    .build()
+                    .initialize_renderer::<E::MapWindowConfig>(&self.window)
+                    .await
+                    .map_err(|e| MapError::DeviceInit)?;
+
                 let window_size = self.window.size();
 
                 let center = style.center.unwrap_or_default();
@@ -80,7 +105,7 @@ where
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
                 );
 
-                match result {
+                match init_result {
                     InitializationResult::Initialized(InitializedRenderer { renderer, .. }) => {
                         self.map_context = MapContextState::Ready(MapContext {
                             world,
@@ -111,33 +136,27 @@ where
     }
 
     #[tracing::instrument(name = "update_and_redraw", skip_all)]
-    pub fn run_schedule(&mut self) -> Result<(), Error> {
+    pub fn run_schedule(&mut self) -> Result<(), MapError> {
         match &mut self.map_context {
             MapContextState::Ready(map_context) => {
                 self.schedule.run(map_context);
                 Ok(())
             }
-            MapContextState::Pending { .. } => {
-                Err(Error::Generic("Renderer is already set".into()))
-            }
+            MapContextState::Pending { .. } => Err(MapError::RendererAlreadySet),
         }
     }
 
-    pub fn context(&self) -> Result<&MapContext, Error> {
+    pub fn context(&self) -> Result<&MapContext, MapError> {
         match &self.map_context {
             MapContextState::Ready(map_context) => Ok(map_context),
-            MapContextState::Pending { .. } => {
-                Err(Error::Generic("Renderer is already set".into()))
-            }
+            MapContextState::Pending { .. } => Err(MapError::RendererAlreadySet),
         }
     }
 
-    pub fn context_mut(&mut self) -> Result<&mut MapContext, Error> {
+    pub fn context_mut(&mut self) -> Result<&mut MapContext, MapError> {
         match &mut self.map_context {
             MapContextState::Ready(map_context) => Ok(map_context),
-            MapContextState::Pending { .. } => {
-                Err(Error::Generic("Renderer is already set".into()))
-            }
+            MapContextState::Pending { .. } => Err(MapError::RendererAlreadySet),
         }
     }
 

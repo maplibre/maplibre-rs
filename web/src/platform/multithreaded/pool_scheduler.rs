@@ -1,30 +1,29 @@
 use std::future::Future;
 
-use maplibre::{error::Error, io::scheduler::Scheduler};
+use maplibre::{benchmarking::io::scheduler::ScheduleError, io::scheduler::Scheduler};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Worker;
 
 use super::pool::WorkerPool;
+use crate::error::WebError;
 
 pub struct WebWorkerPoolScheduler {
     pool: WorkerPool,
 }
 
 impl WebWorkerPoolScheduler {
-    pub fn new(new_worker: js_sys::Function) -> Self {
-        // TODO: Are expects here oke?
+    pub fn new(new_worker: js_sys::Function) -> Result<Self, WebError> {
         let pool = WorkerPool::new(
             1,
             Box::new(move || {
                 new_worker
                     .call0(&JsValue::undefined())
-                    .expect("Unable to call new_worker function")
+                    .map_err(WebError::from)?
                     .dyn_into::<Worker>()
-                    .expect("new_worker function did not return a Worker")
+                    .map_err(|_e| WebError::TypeError("Unable to cast to Worker".into()))
             }),
-        )
-        .expect("Unable to create WorkerPool");
-        Self { pool }
+        )?;
+        Ok(Self { pool })
     }
 }
 
@@ -32,7 +31,7 @@ impl Scheduler for WebWorkerPoolScheduler {
     fn schedule<T>(
         &self,
         future_factory: impl (FnOnce() -> T) + Send + 'static,
-    ) -> Result<(), Error>
+    ) -> Result<(), ScheduleError>
     where
         T: Future<Output = ()> + 'static,
     {
@@ -43,6 +42,6 @@ impl Scheduler for WebWorkerPoolScheduler {
                     Ok(JsValue::undefined())
                 })
             })
-            .map_err(|e| Error::Scheduler)
+            .map_err(|e| ScheduleError::Scheduling(Box::new(e)))
     }
 }

@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use tokio::{runtime::Handle, task};
-
 use crate::{
     context::MapContext,
     render::{
@@ -13,9 +11,18 @@ use crate::{
 
 /// Stage which writes the current contents of the GPU/CPU buffer in [`BufferedTextureHead`]
 /// to disk as PNG.
-#[derive(Default)]
 pub struct WriteSurfaceBufferStage {
     frame: u64,
+    write_to_disk: bool,
+}
+
+impl WriteSurfaceBufferStage {
+    pub fn new(write_to_disk: bool) -> Self {
+        Self {
+            frame: 0,
+            write_to_disk,
+        }
+    }
 }
 
 impl Stage for WriteSurfaceBufferStage {
@@ -35,13 +42,20 @@ impl Stage for WriteSurfaceBufferStage {
                 let device = device.clone();
                 let current_frame = self.frame;
 
-                task::block_in_place(|| {
-                    Handle::current().block_on(async {
-                        buffered_texture
-                            .create_png(&device, format!("frame_{}.png", current_frame).as_str())
-                            .await;
-                    })
-                });
+                let buffer_slice = buffered_texture.map_async(&device);
+                let padded_buffer = buffer_slice.get_mapped_range();
+
+                if self.write_to_disk {
+                    buffered_texture.write_png(
+                        &padded_buffer,
+                        format!("frame_{}.png", current_frame).as_str(),
+                    );
+                }
+
+                // With the current interface, we have to make sure all mapped views are
+                // dropped before we unmap the buffer.
+                drop(padded_buffer);
+                buffered_texture.unmap();
 
                 self.frame += 1;
             }

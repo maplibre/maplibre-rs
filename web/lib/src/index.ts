@@ -46,11 +46,16 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
             }) : PoolWorker();
 
             worker.onmessage = (message: MessageEvent) => {
-                let tag = message.data[0];
-                let data = new Uint8Array(message.data[1]);
+                // WARNING: Do not modify data passed from Rust!
+                let in_transfer = message.data;
 
-                // @ts-ignore TODO singlethreaded_main_entry may not be defined
-                maplibre.singlethreaded_main_entry(ptr, tag, data)
+                const main_entry = maplibre["singlethreaded_main_entry"];
+
+                if (!main_entry) {
+                    throw Error("singlethreaded_main_entry is not defined. Maybe the Rust build used the wrong build configuration.")
+                }
+
+                main_entry(ptr, in_transfer)
             }
 
             return worker;

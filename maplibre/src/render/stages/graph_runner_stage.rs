@@ -51,6 +51,8 @@ impl Stage for GraphRunnerStage {
                 }
             }
 
+            // TODO: Replace panic with a graceful exit in the event loop
+            // if e.should_exit() { *control_flow = ControlFlow::Exit; }
             panic!("Error running render graph: {:?}", e);
         }
 

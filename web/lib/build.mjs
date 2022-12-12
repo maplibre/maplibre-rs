@@ -72,7 +72,7 @@ let baseConfig = {
 
 let config = {
     ...baseConfig,
-    entryPoints:['src/index.ts'],
+    entryPoints: ['src/index.ts'],
     incremental: argv.watch,
     plugins: [
         inlineWorker({
@@ -108,21 +108,26 @@ const getLibDirectory = () => {
 const emitTypeScript = () => {
     let outDirectory = `${getLibDirectory()}/dist/ts`;
 
-    let child = spawnSync('npm', ["exec",
+    let child = spawnTool('npm', ["exec",
         "tsc",
         "--",
         "-m", "es2022",
         "-outDir", outDirectory,
         "--declaration",
         "--emitDeclarationOnly"
-    ], {
-        cwd: '.',
-        stdio: 'inherit',
-    });
+    ]);
 
     if (child.status !== 0) {
         throw new Error("Failed to execute tsc")
     }
+}
+
+const spawnTool = (program, args) => {
+    console.debug(`Executing: ${program} ${args.join(" ")}`)
+    return spawnSync(program, args, {
+        cwd: '.',
+        stdio: 'inherit',
+    })
 }
 
 // TODO: Do not continue if one step fails
@@ -140,7 +145,7 @@ const wasmPack = () => {
         "-C", "link-args=--shared-memory --import-memory --max-memory=209715200"
     ]`
 
-    let cargo = spawnSync('cargo', [
+    let cargo = spawnTool('cargo', [
         ...(multithreaded ? ["--config", multithreaded_config] : []),
         "build",
         "-p", "web", "--lib",
@@ -148,26 +153,20 @@ const wasmPack = () => {
         "--profile", profile,
         "--features", `${webgl ? "web-webgl," : ""}`,
         ...(multithreaded ? ["-Z", "build-std=std,panic_abort"] : []),
-    ], {
-        cwd: '.',
-        stdio: 'inherit',
-    });
+    ]);
 
     if (cargo.status !== 0) {
         throw new Error("Failed to execute cargo build")
     }
 
-    let wasmbindgen = spawnSync('wasm-bindgen', [
+    let wasmbindgen = spawnTool('wasm-bindgen', [
         `${getProjectDirectory()}/target/wasm32-unknown-unknown/${profile}/web.wasm`,
         "--out-name", "maplibre",
         "--out-dir", outDirectory,
         "--typescript",
         "--target", "web",
         "--debug",
-    ], {
-        cwd: '.',
-        stdio: 'inherit',
-    });
+    ]);
 
     if (wasmbindgen.status !== 0) {
         throw new Error("Failed to execute wasm-bindgen")
@@ -175,15 +174,12 @@ const wasmPack = () => {
 
     if (release) {
         console.log("Running wasm-opt")
-        let wasmOpt = spawnSync('npm', ["exec",
+        let wasmOpt = spawnTool('npm', ["exec",
             "wasm-opt", "--",
             `${outDirectory}/maplibre_bg.wasm`,
             "-o", `${outDirectory}/maplibre_bg.wasm`,
             "-O"
-        ], {
-            cwd: '.',
-            stdio: 'inherit',
-        });
+        ]);
 
         if (wasmOpt.status !== 0) {
             throw new Error("Failed to execute wasm-opt")
@@ -238,26 +234,26 @@ const esbuild = async (name, globalName = undefined) => {
 
 const start = async () => {
     try {
-    console.log("Creating WASM...")
-    wasmPack();
+        console.log("Creating WASM...")
+        wasmPack();
 
-    if (esm) {
-        console.log("Building esm bundle...")
-        await esbuild("esm")
-    }
+        if (esm) {
+            console.log("Building esm bundle...")
+            await esbuild("esm")
+        }
 
-    if (cjs) {
-        console.log("Building cjs bundle...")
-        await esbuild("cjs")
-    }
+        if (cjs) {
+            console.log("Building cjs bundle...")
+            await esbuild("cjs")
+        }
 
-    if (iife) {
-        console.log("Building iife bundle...")
-        await esbuild("iife", "maplibre")
-    }
+        if (iife) {
+            console.log("Building iife bundle...")
+            await esbuild("iife", "maplibre")
+        }
 
-    console.log("Emitting TypeScript types...")
-    emitTypeScript();
+        console.log("Emitting TypeScript types...")
+        emitTypeScript();
     } catch (e) {
         console.error("Failed to start building: " + e.message)
         process.exit(1)

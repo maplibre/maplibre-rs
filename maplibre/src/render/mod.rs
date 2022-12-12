@@ -20,8 +20,6 @@
 
 use std::sync::Arc;
 
-use log::info;
-
 use crate::{
     render::{
         eventually::Eventually,
@@ -249,10 +247,9 @@ impl Renderer {
         let adapter = instance
             .request_adapter(request_adapter_options)
             .await
-            .expect("Unable to find a GPU! Make sure you have installed required drivers!");
+            .ok_or_else(|| wgpu::RequestDeviceError)?;
 
         let adapter_info = adapter.get_info();
-        info!("{:?}", adapter_info);
 
         #[cfg(not(target_arch = "wasm32"))]
         let trace_path = if settings.record_trace {

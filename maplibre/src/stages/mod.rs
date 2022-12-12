@@ -10,13 +10,14 @@ use crate::io::transferables::RasterLayer;
 use crate::{
     coords::WorldTileCoords,
     environment::Environment,
-    error::Error,
     io::{
         apc::{Context, Message},
         geometry_index::{IndexedGeometry, TileIndex},
-        pipeline::PipelineProcessor,
+        pipeline::{PipelineError, PipelineProcessor},
         source_client::HttpClient,
-        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
+        transferables::{
+            LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
+        },
     },
     kernel::Kernel,
     render::ShaderVertex,
@@ -43,21 +44,25 @@ pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<
 impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
     for HeadedPipelineProcessor<T, HC, C>
 {
-    fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), Error> {
+    fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), PipelineError> {
         self.context
-            .send(Message::TileTessellated(T::TileTessellated::new(*coords)))
+            .send(Message::TileTessellated(T::TileTessellated::build_from(
+                *coords,
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     fn layer_unavailable(
         &mut self,
         coords: &WorldTileCoords,
         layer_name: &str,
-    ) -> Result<(), Error> {
+    ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::LayerUnavailable(T::LayerUnavailable::new(
+            .send(Message::LayerUnavailable(T::LayerUnavailable::build_from(
                 *coords,
                 layer_name.to_owned(),
             )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     fn layer_tesselation_finished(
@@ -66,14 +71,15 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
-    ) -> Result<(), Error> {
+    ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::LayerTessellated(T::LayerTessellated::new(
+            .send(Message::LayerTessellated(T::LayerTessellated::build_from(
                 *coords,
                 buffer,
                 feature_indices,
                 layer_data,
             )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     fn layer_raster_finished(
@@ -91,11 +97,12 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         &mut self,
         coords: &WorldTileCoords,
         geometries: Vec<IndexedGeometry<f64>>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::LayerIndexed(T::LayerIndexed::from((
+            .send(Message::LayerIndexed(T::LayerIndexed::build_from(
                 *coords,
                 TileIndex::Linear { list: geometries },
-            ))))
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 }

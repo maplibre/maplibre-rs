@@ -2,6 +2,7 @@
 name = "web"
 version = "0.1.0"
 publish = false
+build = "build.rs"
 
 description.workspace = true
 edition.workspace = true
@@ -29,6 +30,8 @@ maplibre-winit = { path = "../maplibre-winit", version = "0.1.0"  }
 log = "0.4.17"
 rand = { version = "0.7", features = ["wasm-bindgen"] }
 
+thiserror = "1.0"
+
 console_error_panic_hook = "0.1.7"
 # Exact version requirement can be removed as soon as https://github.com/gfx-rs/wgpu/pull/2954 is merged
 web-sys = { version = "0.3.58", features = [
@@ -41,9 +44,13 @@ js-sys = "0.3.58"
 wasm-bindgen = "0.2.81"
 wasm-bindgen-futures = "0.4.31"
 console_log = { version = "0.2.0", features = ["color"] }
-tracing-wasm = { version = "0.2.1", optional = true } # TODO: Low quality dependency
+tracing-wasm = { version = "0.2.1", optional = true } # TODO: Low quality dependency (remove in a separate PR!)
 # For passing Inputs in AsyncProcedureCalls
 serde_json = "1.0.85"
+flatbuffers = "22.10.26"
+
+[build-dependencies]
+flatc-rust = "0.2.0"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.31"

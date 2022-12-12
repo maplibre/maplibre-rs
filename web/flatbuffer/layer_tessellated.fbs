@@ -1,0 +1,18 @@
+include "basic.fbs";
+
+struct FlatShaderVertex {
+    position: [float:2];
+    normal: [float:2];
+}
+
+table FlatLayerTessellated {
+    coords: FlatWorldTileCoords;
+    layer_name: string;
+    vertices: [FlatShaderVertex];
+    indices: [uint];
+    usable_indices: uint;
+    // Holds for each feature the count of indices.
+    feature_indices: [uint];
+}
+
+root_type FlatLayerTessellated;

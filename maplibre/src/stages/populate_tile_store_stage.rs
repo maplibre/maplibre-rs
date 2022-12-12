@@ -8,9 +8,7 @@ use crate::{
     io::{
         apc::{AsyncProcedureCall, Message},
         tile_repository::StoredLayer,
-        transferables::{
-            IndexedLayer, RasterLayer, TessellatedLayer, TileTessellated, UnavailableLayer,
-        },
+        transferables::{LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated},
     },
     kernel::Kernel,
     schedule::Stage,
@@ -48,7 +46,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                     tracing::trace!("Tile at {} finished loading", coords);
                     log::warn!("Tile at {} finished loading", coords);
 
-                    tile_repository.mark_tile_succeeded(coords);
+                    tile_repository.mark_tile_succeeded(&coords);
                 }
                 // FIXME: deduplicate
                 Message::LayerUnavailable(message) => {
@@ -79,7 +77,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                     tile_repository.put_layer(layer);
                 }
                 Message::LayerIndexed(message) => {
-                    let coords = *message.coords();
+                    let coords = message.coords();
 
                     log::warn!("Layer index at {} reached main thread", coords);
 

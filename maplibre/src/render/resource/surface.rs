@@ -67,13 +67,7 @@ pub struct BufferedTextureHead {
 
 #[cfg(feature = "headless")]
 impl BufferedTextureHead {
-    pub async fn create_png<'a>(
-        &self,
-        device: &wgpu::Device,
-        png_output_path: &str,
-        // device: &wgpu::Device,
-    ) {
-        use std::{fs::File, io::Write};
+    pub fn map_async<'a>(&self, device: &wgpu::Device) -> wgpu::BufferSlice {
         // Note that we're not calling `.await` here.
         let buffer_slice = self.output_buffer.slice(..);
         buffer_slice.map_async(wgpu::MapMode::Read, |_| ());
@@ -82,8 +76,15 @@ impl BufferedTextureHead {
         // In an actual application, `device.poll(...)` should
         // be called in an event loop or on another thread.
         device.poll(wgpu::Maintain::Wait);
-        let padded_buffer = buffer_slice.get_mapped_range();
+        buffer_slice
+    }
 
+    pub fn unmap(&self) {
+        self.output_buffer.unmap();
+    }
+
+    pub fn write_png<'a>(&self, padded_buffer: &wgpu::BufferView<'a>, png_output_path: &str) {
+        use std::{fs::File, io::Write};
         let mut png_encoder = png::Encoder::new(
             File::create(png_output_path).unwrap(), // TODO: Remove unwrap
             self.buffer_dimensions.width as u32,
@@ -104,12 +105,6 @@ impl BufferedTextureHead {
                 .unwrap(); // TODO: Remove unwrap
         }
         png_writer.finish().unwrap(); // TODO: Remove unwrap
-
-        // With the current interface, we have to make sure all mapped views are
-        // dropped before we unmap the buffer.
-        drop(padded_buffer);
-
-        self.output_buffer.unmap();
     }
 }
 

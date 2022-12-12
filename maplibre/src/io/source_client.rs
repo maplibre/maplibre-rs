@@ -1,9 +1,12 @@
 //! HTTP client.
 
 use async_trait::async_trait;
+use thiserror::Error;
 
-use crate::io::source_type::SourceType;
-use crate::{coords::WorldTileCoords, error::Error};
+use crate::{
+    coords::WorldTileCoords, error::Error, io::source_type::SourceType,
+    style::source::TileAddressingScheme,
+};
 
 /// A closure that returns a HTTP client.
 pub type HTTPClientFactory<HC> = dyn Fn() -> HC;
@@ -17,7 +20,7 @@ pub type HTTPClientFactory<HC> = dyn Fn() -> HC;
 #[cfg_attr(not(feature = "thread-safe-futures"), async_trait(?Send))]
 #[cfg_attr(feature = "thread-safe-futures", async_trait)]
 pub trait HttpClient: Clone + Sync + Send + 'static {
-    async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error>;
+    async fn fetch(&self, url: &str) -> Result<Vec<u8>, SourceFetchError>;
 }
 
 /// Gives access to the HTTP client which can be of multiple types,
@@ -29,6 +32,10 @@ where
 {
     inner_client: HC,
 }
+
+#[derive(Error, Debug)]
+#[error("failed to fetch from source")]
+pub struct SourceFetchError(#[source] pub Box<dyn std::error::Error>);
 
 /// Defines the different types of HTTP clients such as basic HTTP and Mbtiles.
 /// More types might be coming such as S3 and other cloud http clients.
@@ -52,7 +59,7 @@ where
         &self,
         coords: &WorldTileCoords,
         source_type: &SourceType,
-    ) -> Result<Vec<u8>, Error> {
+    ) -> Result<Vec<u8>, SourceFetchError> {
         self.http.fetch(coords, source_type).await
     }
 }
@@ -71,7 +78,7 @@ where
         &self,
         coords: &WorldTileCoords,
         source_type: &SourceType,
-    ) -> Result<Vec<u8>, Error> {
+    ) -> Result<Vec<u8>, SourceFetchError> {
         self.inner_client
             .fetch(&source_type.format(&coords).as_str())
             .await
