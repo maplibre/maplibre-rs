@@ -1,6 +1,7 @@
 //! Scheduling.
 
 use std::future::Future;
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]

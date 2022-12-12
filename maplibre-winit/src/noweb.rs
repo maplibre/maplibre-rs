@@ -5,14 +5,13 @@
 
 use std::marker::PhantomData;
 
-use maplibre::render::builder::RendererBuilder;
-use maplibre::render::settings::WgpuSettings;
 use maplibre::{
     event_loop::EventLoop,
     io::apc::SchedulerAsyncProcedureCall,
     kernel::{Kernel, KernelBuilder},
     map::Map,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
+    render::{builder::RendererBuilder, settings::WgpuSettings},
     style::Style,
     window::{MapWindow, MapWindowConfig, WindowSize},
 };
