@@ -29,6 +29,7 @@ impl Stage for UploadStage {
                 World {
                     tile_repository,
                     view_state,
+                    ..
                 },
             style,
             renderer: Renderer { queue, state, .. },

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{Deg, Zero};
-use maplibre::world::ViewState;
+use maplibre::{context::MapContext, world::World};
 
 use super::UpdateState;
 
@@ -13,11 +13,21 @@ pub struct TiltHandler {
 }
 
 impl UpdateState for TiltHandler {
-    fn update_state(&mut self, state: &mut ViewState, dt: Duration) {
+    fn update_state(
+        &mut self,
+        MapContext {
+            world: World {
+                view_state: _view_state,
+                ..
+            },
+            ..
+        }: &mut MapContext,
+        dt: Duration,
+    ) {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.delta_pitch * dt;
-        state.camera_mut().pitch_self(delta);
+        _view_state.camera_mut().pitch_self(delta);
         self.delta_pitch -= delta;
     }
 }

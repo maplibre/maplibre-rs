@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
-use maplibre::world::ViewState;
+use maplibre::context::MapContext;
 use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
 use crate::input::{
@@ -126,16 +126,16 @@ impl InputController {
 }
 
 pub trait UpdateState {
-    fn update_state(&mut self, state: &mut ViewState, dt: Duration);
+    fn update_state(&mut self, state: &mut MapContext, dt: Duration);
 }
 
 impl UpdateState for InputController {
-    fn update_state(&mut self, state: &mut ViewState, dt: Duration) {
-        self.pan_handler.update_state(state, dt);
-        self.pinch_handler.update_state(state, dt);
-        self.zoom_handler.update_state(state, dt);
-        self.tilt_handler.update_state(state, dt);
-        self.shift_handler.update_state(state, dt);
-        self.query_handler.update_state(state, dt);
+    fn update_state(&mut self, map_context: &mut MapContext, dt: Duration) {
+        self.pan_handler.update_state(map_context, dt);
+        self.pinch_handler.update_state(map_context, dt);
+        self.zoom_handler.update_state(map_context, dt);
+        self.tilt_handler.update_state(map_context, dt);
+        self.shift_handler.update_state(map_context, dt);
+        self.query_handler.update_state(map_context, dt);
     }
 }

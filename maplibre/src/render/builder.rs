@@ -1,12 +1,13 @@
 use crate::{
-    error::Error,
     render::{
+        error::RenderError,
         settings::{RendererSettings, WgpuSettings},
         Renderer,
     },
     window::{HeadedMapWindow, MapWindowConfig},
 };
 
+#[derive(Clone)]
 pub struct RendererBuilder {
     wgpu_settings: Option<WgpuSettings>,
     renderer_settings: Option<RendererSettings>,
@@ -87,7 +88,7 @@ impl UninitializedRenderer {
     pub async fn initialize_renderer<MWC>(
         self,
         existing_window: &MWC::MapWindow,
-    ) -> Result<InitializationResult, Error>
+    ) -> Result<InitializationResult, RenderError>
     where
         MWC: MapWindowConfig,
         <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
@@ -109,7 +110,7 @@ impl UninitializedRenderer {
     pub(crate) async fn initialize_headless<MWC>(
         self,
         existing_window: &MWC::MapWindow,
-    ) -> Result<Renderer, Error>
+    ) -> Result<Renderer, RenderError>
     where
         MWC: MapWindowConfig,
     {

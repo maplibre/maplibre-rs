@@ -3,9 +3,6 @@ name: Build apple library
 on:
   workflow_call:
 
-
-
-
 jobs:
   library-apple:
     runs-on: macos-12
@@ -37,6 +34,8 @@ jobs:
         uses: ./.github/actions/setup
         with:
           targets: ${{ matrix.target }} ${{ matrix.fat-target }}
+      - name: Install Dependencies
+        uses: ./.github/actions/install-system-dependencies
       - name: Swift Version
         shell: bash
         run: swift --version

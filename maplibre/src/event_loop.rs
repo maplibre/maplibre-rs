@@ -1,3 +1,5 @@
+use thiserror::Error;
+
 use crate::{
     environment::Environment,
     map::Map,
@@ -11,8 +13,16 @@ pub trait EventLoopConfig {
     fn create_proxy() -> Self::EventLoopProxy;
 }
 
+/// When sending events to an event loop errors can occur.
+#[derive(Error, Debug)]
+pub enum SendEventError {
+    /// The event loop was already closed
+    #[error("event loop is closed")]
+    Closed,
+}
+
 pub trait EventLoopProxy<T: 'static> {
-    fn send_event(&self, event: T);
+    fn send_event(&self, event: T) -> Result<(), SendEventError>;
 }
 
 pub trait EventLoop<ET: 'static + PartialEq> {
