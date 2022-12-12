@@ -1,7 +1,8 @@
 //! Tile cache.
 
-use image::RgbaImage;
 use std::collections::{btree_map, BTreeMap};
+
+use image::RgbaImage;
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},

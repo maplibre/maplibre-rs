@@ -8,7 +8,7 @@ use maplibre::{
         geometry_index::TileIndex,
         tile_repository::StoredLayer,
         transferables::{
-            IndexedLayer, LayerIndexed, LayerTessellated, LayerUnavailable, RasterLayer,
+            IndexedLayer, LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable,
             TessellatedLayer, TileTessellated, Transferables, UnavailableLayer,
         },
     },

@@ -52,7 +52,7 @@ pub trait LayerIndexed: Send {
     fn to_tile_index(self) -> TileIndex;
 }
 
-pub trait RasterLayer: Send {
+pub trait LayerRaster: Send {
     fn new(coords: WorldTileCoords, layer_name: String, image_data: RgbaImage) -> Self;
 
     fn to_stored_layer(self) -> StoredLayer;
@@ -161,7 +161,7 @@ pub struct DefaultRasterLayer {
     pub image_data: RgbaImage,
 }
 
-impl RasterLayer for DefaultRasterLayer {
+impl LayerRaster for DefaultRasterLayer {
     fn new(coords: WorldTileCoords, layer_name: String, image_data: RgbaImage) -> Self {
         Self {
             coords,
@@ -184,7 +184,7 @@ pub trait Transferables: 'static {
     type LayerUnavailable: LayerUnavailable;
     type LayerTessellated: LayerTessellated;
     type LayerIndexed: LayerIndexed;
-    type LayerRaster: RasterLayer;
+    type LayerRaster: LayerRaster;
 }
 
 #[derive(Copy, Clone)]

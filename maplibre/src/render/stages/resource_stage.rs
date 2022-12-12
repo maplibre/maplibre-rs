@@ -2,13 +2,13 @@
 
 use std::mem::size_of;
 
-use crate::render::settings::Msaa;
 use crate::{
     context::MapContext,
     render::{
         resource::{
             BackingBufferDescriptor, BufferPool, Globals, RasterResources, RenderPipeline, Texture,
         },
+        settings::Msaa,
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,

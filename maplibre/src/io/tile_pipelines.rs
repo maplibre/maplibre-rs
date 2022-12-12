@@ -14,20 +14,9 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub enum TileType {
+pub enum PipelineTile {
     Vector(geozero::mvt::Tile),
     Raster(RgbaImage),
-}
-
-impl TryFrom<TileType> for geozero::mvt::Tile {
-    type Error = error::Error;
-
-    fn try_from(tile_type: TileType) -> Result<Self, Self::Error> {
-        match tile_type {
-            TileType::Vector(tile) => Ok(tile),
-            TileType::Raster(_) => Err(error::Error::InvalidTileType),
-        }
-    }
 }
 
 #[derive(Default)]
@@ -52,13 +41,13 @@ impl Processable for ParseTile {
 pub struct IndexLayer;
 
 impl Processable for IndexLayer {
-    type Input = (TileRequest, TileType);
-    type Output = (TileRequest, geozero::mvt::Tile);
+    type Input = (TileRequest, geozero::mvt::Tile);
+    type Output = (TileRequest, PipelineTile);
 
     // TODO (perf): Maybe force inline
     fn process(
         &self,
-        (tile_request, tile): Self::Input,
+        (tile_request, mut tile): Self::Input,
         context: &mut PipelineContext,
     ) -> Result<Self::Output, PipelineError> {
         let mut index = IndexProcessor::new();
@@ -70,7 +59,7 @@ impl Processable for IndexLayer {
         context
             .processor_mut()
             .layer_indexing_finished(&tile_request.coords, index.get_geometries())?;
-        Ok((tile_request, tile.try_into()?))
+        Ok((tile_request, PipelineTile::Vector(tile)))
     }
 }
 
@@ -79,7 +68,7 @@ pub struct TessellateLayer;
 
 impl Processable for TessellateLayer {
     type Input = (TileRequest, geozero::mvt::Tile);
-    type Output = (TileRequest, TileType);
+    type Output = (TileRequest, geozero::mvt::Tile);
 
     // TODO (perf): Maybe force inline
     fn process(
@@ -120,7 +109,7 @@ impl Processable for TessellateLayer {
             }
         }
 
-        Ok((tile_request, TileType::Vector(tile)))
+        Ok((tile_request, tile))
     }
 }
 
@@ -128,19 +117,18 @@ impl Processable for TessellateLayer {
 pub struct TessellateLayerUnavailable;
 
 impl Processable for TessellateLayerUnavailable {
-    type Input = (TileRequest, TileType);
-    type Output = (TileRequest, TileType);
+    type Input = (TileRequest, geozero::mvt::Tile);
+    type Output = (TileRequest, geozero::mvt::Tile);
 
     // TODO (perf): Maybe force inline
     fn process(
         &self,
         (tile_request, tile): Self::Input,
         context: &mut PipelineContext,
-    ) -> Result<Self::Output, error::Error> {
+    ) -> Result<Self::Output, PipelineError> {
         let coords = &tile_request.coords;
 
-        let vector_tile: geozero::mvt::Tile = tile.try_into()?;
-        let available_layers: HashSet<_> = vector_tile
+        let available_layers: HashSet<_> = tile
             .layers
             .iter()
             .map(|layer| layer.name.clone())
@@ -157,7 +145,7 @@ impl Processable for TessellateLayerUnavailable {
                 &coords
             );
         }
-        Ok((tile_request, TileType::Vector(vector_tile)))
+        Ok((tile_request, tile))
     }
 }
 
@@ -165,14 +153,14 @@ impl Processable for TessellateLayerUnavailable {
 pub struct TileFinished;
 
 impl Processable for TileFinished {
-    type Input = (TileRequest, TileType);
-    type Output = (TileRequest, TileType);
+    type Input = (TileRequest, PipelineTile);
+    type Output = (TileRequest, PipelineTile);
 
     fn process(
         &self,
         (tile_request, tile): Self::Input,
         context: &mut PipelineContext,
-    ) -> Result<Self::Output, error::Error> {
+    ) -> Result<Self::Output, PipelineError> {
         tracing::info!("tile tessellated at {} finished", &tile_request.coords);
 
         context
@@ -191,8 +179,8 @@ pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Pr
             DataPipeline::new(
                 TessellateLayerUnavailable,
                 DataPipeline::new(
-                    TileFinished,
-                    DataPipeline::new(IndexLayer, PipelineEnd::default()),
+                    IndexLayer,
+                    DataPipeline::new(TileFinished, PipelineEnd::default()),
                 ),
             ),
         ),
@@ -204,13 +192,13 @@ pub struct RasterLayer;
 
 impl Processable for RasterLayer {
     type Input = (TileRequest, Box<[u8]>);
-    type Output = (TileRequest, TileType);
+    type Output = (TileRequest, PipelineTile);
 
     fn process(
         &self,
         (tile_request, data): Self::Input,
         context: &mut PipelineContext,
-    ) -> Result<Self::Output, error::Error> {
+    ) -> Result<Self::Output, PipelineError> {
         let coords = &tile_request.coords;
         let data = data.to_vec();
         let img = image::load_from_memory(&data).unwrap();
@@ -222,7 +210,7 @@ impl Processable for RasterLayer {
             rgba.clone(),
         )?;
 
-        Ok((tile_request, TileType::Raster(rgba)))
+        Ok((tile_request, PipelineTile::Raster(rgba)))
     }
 }
 

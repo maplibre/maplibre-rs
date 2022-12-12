@@ -55,11 +55,11 @@ pub mod settings;
 pub use shaders::ShaderVertex;
 pub use stages::register_default_render_stages;
 
-use crate::render::resource::RasterResources;
 use crate::{
     render::{
         graph::{EmptyNode, RenderGraph, RenderGraphError},
         main_pass::{MainPassDriverNode, MainPassNode},
+        resource::RasterResources,
     },
     window::{HeadedMapWindow, MapWindow},
 };

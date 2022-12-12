@@ -94,17 +94,6 @@ impl HeadlessMap {
 
     pub async fn fetch_tile(&self, coords: WorldTileCoords) -> Result<Box<[u8]>, SourceFetchError> {
         let source_client = self.kernel.source_client();
-
-        Ok(source_client.fetch(&coords).await?.into_boxed_slice())
-    }
-
-    pub async fn process_tile(
-        &self,
-        tile_data: Box<[u8]>,
-        source_layers: &[&str],
-    ) -> Result<StoredTile, PipelineError> {
-        let source_client = self.kernel.source_client();
-
         let data = source_client
             .fetch(
                 &coords,
@@ -112,7 +101,14 @@ impl HeadlessMap {
             )
             .await?
             .into_boxed_slice();
+        Ok(data)
+    }
 
+    pub async fn process_tile(
+        &self,
+        tile_data: Box<[u8]>,
+        source_layers: &[&str],
+    ) -> Result<StoredTile, PipelineError> {
         let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
         let pipeline = build_vector_tile_pipeline();
 

@@ -8,7 +8,9 @@ use crate::{
     io::{
         apc::{AsyncProcedureCall, Message},
         tile_repository::StoredLayer,
-        transferables::{LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated},
+        transferables::{
+            LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable, TileTessellated,
+        },
     },
     kernel::Kernel,
     schedule::Stage,
@@ -83,8 +85,8 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
 
                     geometry_index.index_tile(&coords, message.to_tile_index());
                 }
-                Message::LayerRaster(data) => {
-                    let layer: StoredLayer = data.to_stored_layer();
+                Message::LayerRaster(message) => {
+                    let layer: StoredLayer = message.to_stored_layer();
                     tracing::debug!(
                         "Layer {} at {} reached main thread",
                         layer.layer_name(),

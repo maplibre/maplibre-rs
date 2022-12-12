@@ -6,7 +6,6 @@ use geozero::mvt::tile;
 use image::RgbaImage;
 use request_stage::RequestStage;
 
-use crate::io::transferables::RasterLayer;
 use crate::{
     coords::WorldTileCoords,
     environment::Environment,
@@ -16,7 +15,8 @@ use crate::{
         pipeline::{PipelineError, PipelineProcessor},
         source_client::HttpClient,
         transferables::{
-            LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
+            LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable, TileTessellated,
+            Transferables,
         },
     },
     kernel::Kernel,
@@ -87,10 +87,12 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         coords: &WorldTileCoords,
         layer_name: String,
         image_data: RgbaImage,
-    ) -> Result<(), Error> {
-        self.context.send(Message::LayerRaster(T::LayerRaster::new(
-            *coords, layer_name, image_data,
-        )))
+    ) -> Result<(), PipelineError> {
+        self.context
+            .send(Message::LayerRaster(T::LayerRaster::new(
+                *coords, layer_name, image_data,
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     fn layer_indexing_finished(
