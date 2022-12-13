@@ -72,8 +72,9 @@ const MAX_PITCH: Rad<f64> = Rad(0.5);
 #[derive(Debug, Clone)]
 pub struct Camera {
     position: Point3<f64>, // The z axis never changes, the zoom is used instead
-    yaw: Rad<f64>,
-    pitch: Rad<f64>,
+    yaw: cgmath::Rad<f64>,
+    pitch: cgmath::Rad<f64>,
+
     width: f64,
     height: f64,
 }
@@ -113,11 +114,11 @@ impl Camera {
         }
     }
 
-    pub fn move_position(&mut self, delta: Vector3<f64>) {
+    pub fn move_relative(&mut self, delta: Vector3<f64>) {
         self.position += delta;
     }
 
-    pub fn set_position(&mut self, new_position: Point3<f64>) {
+    pub fn move_to(&mut self, new_position: Point3<f64>) {
         self.position = new_position;
     }
 
@@ -163,8 +164,8 @@ impl Camera {
         let oz = min_depth;
         let pz = max_depth - min_depth;
         Matrix4::from_cols(
-            Vector4::new(self.width as f64 / 2.0, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, -self.height as f64 / 2.0, 0.0, 0.0),
+            Vector4::new(self.width / 2.0, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, -self.height / 2.0, 0.0, 0.0),
             Vector4::new(0.0, 0.0, pz, 0.0),
             Vector4::new(ox, oy, oz, 1.0),
         )
@@ -203,11 +204,11 @@ impl Camera {
 
         let x = 0.0;
         let y = 0.0;
-        let ox = x + self.width as f64 / 2.0;
-        let oy = y + self.height as f64 / 2.0;
+        let ox = x + self.width / 2.0;
+        let oy = y + self.height / 2.0;
         let oz = min_depth;
-        let px = self.width as f64;
-        let py = self.height as f64;
+        let px = self.width;
+        let py = self.height;
         let pz = max_depth - min_depth;
         let xd = ndc.x;
         let yd = ndc.y;
@@ -376,6 +377,26 @@ impl Camera {
             Point2::new(min_x, min_y),
             Point2::new(max_x, max_y),
         ))
+    }
+
+    pub fn position(&self) -> Point3<f64> {
+        self.position
+    }
+
+    pub fn yaw(&self) -> cgmath::Rad<f64> {
+        self.yaw
+    }
+
+    pub fn yaw_self<P: Into<Rad<f64>>>(&mut self, delta: P) {
+        self.yaw += delta.into();
+    }
+
+    pub fn pitch(&self) -> cgmath::Rad<f64> {
+        self.pitch
+    }
+
+    pub fn pitch_self<P: Into<Rad<f64>>>(&mut self, delta: P) {
+        self.pitch += delta.into();
     }
 }
 

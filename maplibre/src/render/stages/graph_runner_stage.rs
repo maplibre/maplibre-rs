@@ -6,9 +6,9 @@ use crate::{
     context::MapContext,
     render::{
         eventually::Eventually::Initialized, graph::RenderGraph, graph_runner::RenderGraphRunner,
+        Renderer,
     },
     schedule::Stage,
-    Renderer,
 };
 
 /// Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame.
@@ -51,6 +51,8 @@ impl Stage for GraphRunnerStage {
                 }
             }
 
+            // TODO: Replace panic with a graceful exit in the event loop
+            // if e.should_exit() { *control_flow = ControlFlow::Exit; }
             panic!("Error running render graph: {:?}", e);
         }
 

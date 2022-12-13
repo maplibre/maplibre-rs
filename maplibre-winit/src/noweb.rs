@@ -3,18 +3,39 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
+use std::marker::PhantomData;
+
 use maplibre::{
+    event_loop::EventLoop,
     io::apc::SchedulerAsyncProcedureCall,
+    kernel::{Kernel, KernelBuilder},
+    map::Map,
     platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
-    window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowSize},
-    MapBuilder,
+    render::{builder::RendererBuilder, settings::WgpuSettings},
+    style::Style,
+    window::{MapWindow, MapWindowConfig, WindowSize},
 };
 use winit::window::WindowBuilder;
 
-use super::{WinitEventLoop, WinitMapWindow, WinitMapWindowConfig, WinitWindow};
-use crate::winit::WinitEnvironment;
+use super::WinitMapWindow;
+use crate::{WinitEnvironment, WinitEventLoop};
 
-impl MapWindow for WinitMapWindow {
+pub struct WinitMapWindowConfig<ET> {
+    title: String,
+
+    phantom_et: PhantomData<ET>,
+}
+
+impl<ET> WinitMapWindowConfig<ET> {
+    pub fn new(title: String) -> Self {
+        Self {
+            title,
+            phantom_et: Default::default(),
+        }
+    }
+}
+
+impl<ET> MapWindow for WinitMapWindow<ET> {
     fn size(&self) -> WindowSize {
         let size = self.window.inner_size();
         #[cfg(target_os = "android")]
@@ -29,27 +50,22 @@ impl MapWindow for WinitMapWindow {
         window_size
     }
 }
-impl HeadedMapWindow for WinitMapWindow {
-    type RawWindow = WinitWindow;
 
-    fn inner(&self) -> &Self::RawWindow {
-        &self.window
-    }
-}
-
-impl MapWindowConfig for WinitMapWindowConfig {
-    type MapWindow = WinitMapWindow;
+impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
+    type MapWindow = WinitMapWindow<ET>;
 
     fn create(&self) -> Self::MapWindow {
-        let event_loop = WinitEventLoop::new();
+        let raw_event_loop = winit::event_loop::EventLoopBuilder::<ET>::with_user_event().build();
         let window = WindowBuilder::new()
             .with_title(&self.title)
-            .build(&event_loop)
+            .build(&raw_event_loop)
             .unwrap();
 
         Self::MapWindow {
             window,
-            event_loop: Some(event_loop),
+            event_loop: Some(WinitEventLoop {
+                event_loop: raw_event_loop,
+            }),
         }
     }
 }
@@ -57,7 +73,7 @@ impl MapWindowConfig for WinitMapWindowConfig {
 pub fn run_headed_map(cache_path: Option<String>) {
     run_multithreaded(async {
         let client = ReqwestHttpClient::new(cache_path);
-        MapBuilder::<WinitEnvironment<_, _, _, SchedulerAsyncProcedureCall<_, _>>>::new()
+        let kernel: Kernel<WinitEnvironment<_, _, _, ()>> = KernelBuilder::new()
             .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
             .with_http_client(client.clone())
             .with_apc(SchedulerAsyncProcedureCall::new(
@@ -65,9 +81,23 @@ pub fn run_headed_map(cache_path: Option<String>) {
                 TokioScheduler::new(),
             ))
             .with_scheduler(TokioScheduler::new())
-            .build()
-            .initialize()
-            .await
-            .run()
+            .build();
+
+        let renderer_builder = RendererBuilder::new().with_wgpu_settings(WgpuSettings {
+            backends: Some(maplibre::render::settings::Backends::all()),
+            ..WgpuSettings::default()
+        });
+
+        let mut map = Map::new(Style::default(), kernel, renderer_builder).unwrap();
+
+        #[cfg(not(target_os = "android"))]
+        {
+            map.initialize_renderer().await.unwrap();
+        }
+
+        map.window_mut()
+            .take_event_loop()
+            .expect("Event loop is not available")
+            .run(map, None)
     })
 }

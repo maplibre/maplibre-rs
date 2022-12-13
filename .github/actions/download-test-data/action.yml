@@ -6,4 +6,4 @@ runs:
   steps:
     - name: Download
       shell: bash
-      run: wget -O test-data/munich-15.mbtiles https://maplibre-rs-test-data.pages.dev/munich-15.mbtiles
+      run: wget -O test-data/munich-15.mbtiles https://data.maxammann.org/munich-15.mbtiles

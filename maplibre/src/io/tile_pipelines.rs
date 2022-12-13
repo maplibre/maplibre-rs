@@ -6,7 +6,7 @@ use prost::Message;
 use crate::{
     io::{
         geometry_index::IndexProcessor,
-        pipeline::{DataPipeline, PipelineContext, PipelineEnd, Processable},
+        pipeline::{DataPipeline, PipelineContext, PipelineEnd, PipelineError, Processable},
         TileRequest,
     },
     tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
@@ -19,14 +19,13 @@ impl Processable for ParseTile {
     type Input = (TileRequest, Box<[u8]>);
     type Output = (TileRequest, geozero::mvt::Tile);
 
-    // TODO (perf): Maybe force inline
     fn process(
         &self,
         (tile_request, data): Self::Input,
         _context: &mut PipelineContext,
-    ) -> Self::Output {
+    ) -> Result<Self::Output, PipelineError> {
         let tile = geozero::mvt::Tile::decode(data.as_ref()).expect("failed to load tile");
-        (tile_request, tile)
+        Ok((tile_request, tile))
     }
 }
 
@@ -37,18 +36,25 @@ impl Processable for IndexLayer {
     type Input = (TileRequest, geozero::mvt::Tile);
     type Output = (TileRequest, geozero::mvt::Tile);
 
-    // TODO (perf): Maybe force inline
     fn process(
         &self,
-        (tile_request, tile): Self::Input,
+        (tile_request, mut tile): Self::Input,
         context: &mut PipelineContext,
-    ) -> Self::Output {
-        let index = IndexProcessor::new();
+    ) -> Result<Self::Output, PipelineError> {
+        let mut index = IndexProcessor::new();
+
+        for layer in &mut tile.layers {
+            layer.process(&mut index).unwrap();
+        }
+
+        for layer in &mut tile.layers {
+            layer.process(&mut index).unwrap();
+        }
 
         context
             .processor_mut()
-            .layer_indexing_finished(&tile_request.coords, index.get_geometries());
-        (tile_request, tile)
+            .layer_indexing_finished(&tile_request.coords, index.get_geometries())?;
+        Ok((tile_request, tile))
     }
 }
 
@@ -59,12 +65,11 @@ impl Processable for TessellateLayer {
     type Input = (TileRequest, geozero::mvt::Tile);
     type Output = (TileRequest, geozero::mvt::Tile);
 
-    // TODO (perf): Maybe force inline
     fn process(
         &self,
         (tile_request, mut tile): Self::Input,
         context: &mut PipelineContext,
-    ) -> Self::Output {
+    ) -> Result<Self::Output, PipelineError> {
         let coords = &tile_request.coords;
 
         for layer in &mut tile.layers {
@@ -80,7 +85,7 @@ impl Processable for TessellateLayer {
             if let Err(e) = layer.process(&mut tessellator) {
                 context
                     .processor_mut()
-                    .layer_unavailable(coords, layer_name);
+                    .layer_unavailable(coords, layer_name)?;
 
                 tracing::error!(
                     "layer {} at {} tesselation failed {:?}",
@@ -94,7 +99,7 @@ impl Processable for TessellateLayer {
                     tessellator.buffer.into(),
                     tessellator.feature_indices,
                     cloned_layer,
-                )
+                )?;
             }
         }
 
@@ -107,7 +112,7 @@ impl Processable for TessellateLayer {
         for missing_layer in tile_request.layers.difference(&available_layers) {
             context
                 .processor_mut()
-                .layer_unavailable(coords, missing_layer);
+                .layer_unavailable(coords, missing_layer)?;
 
             tracing::info!(
                 "requested layer {} at {} not found in tile",
@@ -118,16 +123,21 @@ impl Processable for TessellateLayer {
 
         tracing::info!("tile tessellated at {} finished", &tile_request.coords);
 
-        context.processor_mut().tile_finished(&tile_request.coords);
+        context
+            .processor_mut()
+            .tile_finished(&tile_request.coords)?;
 
-        (tile_request, tile)
+        Ok((tile_request, tile))
     }
 }
 
 pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Processable>::Input> {
     DataPipeline::new(
         ParseTile,
-        DataPipeline::new(TessellateLayer, PipelineEnd::default()),
+        DataPipeline::new(
+            TessellateLayer,
+            DataPipeline::new(IndexLayer, PipelineEnd::default()),
+        ),
     )
 }
 
@@ -145,7 +155,7 @@ mod tests {
 
     impl PipelineProcessor for DummyPipelineProcessor {}
 
-    #[test] // TODO: Add proper tile byte array
+    #[test]
     #[ignore]
     fn test() {
         let mut context = PipelineContext::new(DummyPipelineProcessor);
@@ -157,7 +167,7 @@ mod tests {
                     coords: (0, 0, ZoomLevel::default()).into(),
                     layers: Default::default(),
                 },
-                Box::new([0]),
+                Box::new([0]), // TODO: Add proper tile byte array
             ),
             &mut context,
         );

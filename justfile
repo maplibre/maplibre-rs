@@ -4,8 +4,8 @@
 
 set shell := ["bash", "-c"]
 
-export NIGHTLY_TOOLCHAIN := "nightly-2022-10-23"
-export STABLE_TOOLCHAIN := "1.64"
+export NIGHTLY_TOOLCHAIN := "nightly-2022-11-12" #  Also change the version in android/gradle/lib/build.gradle
+export STABLE_TOOLCHAIN := "1.65"
 
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
@@ -14,47 +14,51 @@ export RUST_BACKTRACE := "1"
 stable-toolchain:
   rustup toolchain install $STABLE_TOOLCHAIN
 
-stable-override-toolchain:
+stable-override-toolchain: stable-toolchain
   rustup override set $STABLE_TOOLCHAIN
 
-stable-targets *FLAGS:
+stable-targets *FLAGS: stable-toolchain
   rustup toolchain install $STABLE_TOOLCHAIN --target {{FLAGS}}
 
-stable-install-clippy:
+stable-install-clippy: stable-toolchain
   rustup component add clippy --toolchain $STABLE_TOOLCHAIN
 
 
 nightly-toolchain:
   rustup toolchain install $NIGHTLY_TOOLCHAIN
 
-nightly-override-toolchain:
+nightly-override-toolchain: nightly-toolchain
   rustup override set $NIGHTLY_TOOLCHAIN
 
-nightly-targets *FLAGS:
+nightly-targets *FLAGS: nightly-toolchain
   rustup toolchain install $NIGHTLY_TOOLCHAIN --target {{FLAGS}}
+  # We sometimes build the stdlib with nightly
+  rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
 
 nightly-install-rustfmt: nightly-toolchain
   rustup component add rustfmt --toolchain $NIGHTLY_TOOLCHAIN
 
-nightly-install-src: nightly-toolchain
-  rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
-
-nightly-install-clippy:
+nightly-install-clippy: stable-toolchain
   rustup component add clippy --toolchain $NIGHTLY_TOOLCHAIN
 
 
-fixup:
-  cargo clippy --no-deps -p maplibre --fix
+fixup: nightly-toolchain
+  cargo clippy --allow-dirty --no-deps -p maplibre --fix
   cargo clippy --allow-dirty --no-deps -p maplibre-winit --fix
   cargo clippy --allow-dirty --no-deps -p maplibre-demo --fix
   cargo clippy --allow-dirty --no-deps -p benchmarks --fix
   # Web
-  cargo clippy --allow-dirty --no-deps -p web --target wasm32-unknown-unknown --fix
-  cargo clippy --allow-dirty --no-deps -p maplibre --target wasm32-unknown-unknown --fix
-  cargo clippy --allow-dirty --no-deps -p maplibre-winit --target wasm32-unknown-unknown --fix
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p web --target wasm32-unknown-unknown --fix
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN RUSTFLAGS='-C target-feature=+atomics,+bulk-memory,+mutable-globals --cfg=web_sys_unstable_apis' cargo clippy --allow-dirty --no-deps -p web --target wasm32-unknown-unknown --fix -Z build-std=std,panic_abort
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre --target wasm32-unknown-unknown --fix
+  RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-winit --target wasm32-unknown-unknown --fix
   # Android
-  cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
-  cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
+  env "AR_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" "CC_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang" RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre --target x86_64-linux-android --fix
+  env "AR_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" "CC_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang" RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-winit --target x86_64-linux-android --fix
+  env "AR_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" "CC_x86_64-linux-android=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang" RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN cargo clippy --allow-dirty --no-deps -p maplibre-android --target x86_64-linux-android --fix
+  # macOS/iOS
+  RUSTFLAGS="--cfg no_pendantic_os_check" cargo clippy --allow-dirty --no-deps -p apple --fix
+  # TODO check maplibre and maplibre-winit for apple targets
 
 check PROJECT ARCH: stable-install-clippy
   cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
@@ -83,7 +87,7 @@ web-install PROJECT:
 # Example: just web-lib build-webgl
 # Example: just web-lib watch
 # Example: just web-lib watch-webgl
-web-lib TARGET *FLAGS: nightly-toolchain (web-install "lib")
+web-lib TARGET *FLAGS: nightly-toolchain (nightly-targets "wasm32-unknown-unknown") (web-install "lib")
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{TARGET}} -- {{FLAGS}}
 
 # Example: just web-demo start
@@ -91,14 +95,24 @@ web-lib TARGET *FLAGS: nightly-toolchain (web-install "lib")
 web-demo TARGET *FLAGS: (web-install "demo")
   cd web/demo && npm run {{TARGET}} -- {{FLAGS}}
 
-web-test FEATURES: nightly-toolchain
+web-test FEATURES: nightly-toolchain (nightly-targets "wasm32-unknown-unknown")
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown
 
 #profile-bench:
 # cargo flamegraph --bench render -- --bench
 
-build-android: nightly-toolchain print-android-env
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd android/gradle && ./gradlew assembleDebug
+build-android: build-android-lib build-android-demo
+
+ensure-android-toolchain: nightly-toolchain (nightly-targets "x86_64-linux-android" "aarch64-linux-android" "i686-linux-android")
+
+build-android-lib: ensure-android-toolchain print-android-env
+  cd android/gradle && ./gradlew :lib:assembleDebug
+
+build-android-demo: ensure-android-toolchain print-android-env
+  cd android/gradle && ./gradlew :demo:assembleDebug
+
+install-android-demo: ensure-android-toolchain print-android-env
+  cd android/gradle && ./gradlew :demo:installDebug
 
 test-android TARGET: nightly-toolchain print-android-env
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p maplibre-android --target {{TARGET}} -Z build-std=std,panic_abort
@@ -118,7 +132,9 @@ PROJECT_DIR := "./apple/xcode/maplibre-rs.xcodeproj"
 BINARY_NAME := "maplibre_rs"
 BUILD_DIR := "./apple/build"
 
-xcodebuild-archive ARCH PLATFORM:
+ensure-apple-toolchain: stable-toolchain (stable-targets "aarch64-apple-darwin" "x86_64-apple-darwin" "aarch64-apple-ios" "aarch64-apple-ios-sim")
+
+xcodebuild-archive ARCH PLATFORM: ensure-apple-toolchain
   xcodebuild ARCHS="{{ARCH}}" archive -project "{{PROJECT_DIR}}" \
                                     -scheme "maplibre-rs" \
                                     -destination "generic/platform={{PLATFORM}}" \
@@ -150,7 +166,7 @@ xcodebuild-clean:
   rm -rf {{XC_FRAMEWORK_DIRECTORY}}/*.xcframework
 
 # language=bash
-xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (xcodebuild-archive  "arm64" "macOS") (xcodebuild-archive  "arm64" "iOS Simulator") (xcodebuild-archive-fat "arm64" "macOS" "x86_64")
+xcodebuild-xcframework:
   #!/usr/bin/env bash
   set -euxo pipefail
   tuples=(
@@ -163,9 +179,6 @@ xcodebuild-xcframework: xcodebuild-clean (xcodebuild-archive  "arm64" "iOS") (xc
   echo "XC_FRAMEWORK_PATH: $XC_FRAMEWORK_PATH"
   echo "$framework_args" | xargs xcodebuild -create-xcframework -output "$XC_FRAMEWORK_PATH"
   cat "$XC_FRAMEWORK_PATH/Info.plist"
-
-book-serve:
-  mdbook serve docs
 
 # language=bash
 extract-tiles:

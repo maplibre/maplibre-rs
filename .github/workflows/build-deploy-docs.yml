@@ -11,7 +11,7 @@ on:
 jobs:
   build-docs:
     name: Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Setup
@@ -21,12 +21,13 @@ jobs:
         with:
           name: mdbook
       - name: Install Dependencies
-        shell: bash
-        run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
+        uses: ./.github/actions/install-system-dependencies
       - name: Build
         working-directory: docs
         shell: bash
-        run: mdbook build
+        run: |
+          ./generate-summary.sh
+          mdbook build
       - name: API Documentation
         shell: bash
         run: cargo doc -p maplibre --no-deps --lib --document-private-items
@@ -42,7 +43,7 @@ jobs:
     needs: build-docs
     if: inputs.deploy
     name: Deploy
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Download api-docs

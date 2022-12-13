@@ -1,9 +1,9 @@
-use std::{collections::HashSet, io::Cursor};
+use std::collections::HashSet;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
-    benchmarking::{io::static_tile_fetcher::StaticTileFetcher, tessellation::Tessellated},
-    coords::{TileCoords, WorldTileCoords, ZoomLevel},
+    benchmarking::io::static_tile_fetcher::StaticTileFetcher,
+    coords::{TileCoords, ZoomLevel},
     io::{
         pipeline::{PipelineContext, PipelineProcessor, Processable},
         tile_pipelines::{ParseTile, TessellateLayer},
@@ -37,10 +37,12 @@ fn parse_tile(c: &mut Criterion) {
                 .sync_fetch_tile(&MUNICH_COORDS)
                 .unwrap()
                 .into_boxed_slice();
-            ParseTile::default().process(
-                (request, data),
-                &mut PipelineContext::new(DummyPipelineProcessor),
-            );
+            ParseTile::default()
+                .process(
+                    (request, data),
+                    &mut PipelineContext::new(DummyPipelineProcessor),
+                )
+                .unwrap();
         })
     });
 }
@@ -57,17 +59,21 @@ fn tessellate_tile(c: &mut Criterion) {
         .sync_fetch_tile(&MUNICH_COORDS)
         .unwrap()
         .into_boxed_slice();
-    let parsed = ParseTile::default().process(
-        (request, data),
-        &mut PipelineContext::new(DummyPipelineProcessor),
-    );
+    let parsed = ParseTile::default()
+        .process(
+            (request, data),
+            &mut PipelineContext::new(DummyPipelineProcessor),
+        )
+        .unwrap();
 
     c.bench_function("tessselate", |b| {
         b.iter(|| {
-            TessellateLayer::default().process(
-                parsed.clone(),
-                &mut PipelineContext::new(DummyPipelineProcessor),
-            );
+            TessellateLayer::default()
+                .process(
+                    parsed.clone(),
+                    &mut PipelineContext::new(DummyPipelineProcessor),
+                )
+                .unwrap();
         })
     });
 }

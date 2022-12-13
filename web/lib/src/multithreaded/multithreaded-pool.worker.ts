@@ -13,7 +13,13 @@ onmessage = async message => {
     self.onmessage = async message => {
         // This will queue further commands up until the module is fully initialised:
         await initialised;
-        // @ts-ignore TODO may not exist
-        await maplibre.multithreaded_worker_entry(message.data);
+
+        const worker_entry = maplibre["multithreaded_worker_entry"]
+
+        if (!worker_entry) {
+            throw Error("multithreaded_worker_entry is not defined. Maybe the Rust build used the wrong build configuration.")
+        }
+
+        await worker_entry(message.data);
     };
 }

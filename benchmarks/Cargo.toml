@@ -1,12 +1,17 @@
 [package]
 name = "benchmarks"
 version = "0.1.0"
-description = ""
-categories = []
-edition = "2021"
+publish = false
+
+description.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
 
 [dependencies]
-maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles"] }
+maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles", "thread-safe-futures"] }
 
 [dev-dependencies]
 criterion = { version = "0.3.6", features = ["async_tokio"] }

@@ -2,11 +2,13 @@
 name = "maplibre-build-tools"
 version = "0.1.0"
 description = "A library with build tools for maplibre-rs"
-categories = []
-edition = "2021"
-authors = ["Maximilian Ammann <max@maxammann.org>"]
-license = "MIT OR Apache-2.0"
 readme = "../README.md"
+
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
 
 [features]
 sqlite = ["rusqlite"]

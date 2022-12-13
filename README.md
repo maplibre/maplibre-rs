@@ -132,7 +132,7 @@ Install [rustup](https://rustup.rs/) because this is the recommended way of sett
 The toolchain will be automatically downloaded when building this project.
 See [./rust-toolchain.toml](./rust-toolchain.toml) for more details about the toolchain.
 
-## Documentation
+## API Documentation
 
 This generates the documentation for this crate and opens the browser. This also includes the documentation of every
 dependency.
@@ -142,6 +142,16 @@ cargo doc --open
 ```
 
 You can also view the up-to-date documentation [here](https://maplibre.org/maplibre-rs/docs/api/maplibre/).
+
+## Book
+
+The maplibre-rs [book](https://maplibre.org/maplibre-rs/docs/book/) features a high-level overview over the project from a user and development perspective.
+
+## RFCs
+
+We established an RFC process which must be used to describe major changes to maplibre-rs.
+Current RFCs can be browsed in the [book](https://maplibre.org/maplibre-rs/docs/book/rfc/0001-rfc-process.html).
+
 
 ## Citing
 

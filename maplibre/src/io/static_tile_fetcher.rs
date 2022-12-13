@@ -1,16 +1,31 @@
 //! Static tile fetcher
 
-use std::{concat, env};
+use std::{
+    concat, env,
+    fmt::{Display, Formatter},
+};
 
 #[cfg(static_tiles_found)]
 use include_dir::include_dir;
 use include_dir::Dir;
 
-use crate::{coords::TileCoords, error::Error};
+use crate::coords::TileCoords;
 #[cfg(static_tiles_found)]
 static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 #[cfg(not(static_tiles_found))]
 static TILES: Dir = Dir::new("/path", &[]);
+
+#[derive(Debug)]
+pub enum StaticFetchError {
+    /// Tile was not found in the static content
+    NotFound,
+}
+
+impl Display for StaticFetchError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 /// Load PBF files which were statically embedded in the `build.rs`
 #[derive(Default)]
@@ -25,15 +40,15 @@ impl StaticTileFetcher {
         Self {}
     }
 
-    /// Fetch the tile static file asynchrounously and returns a vector of bytes or a network error if the file
+    /// Fetch the tile static file asynchronously and returns a vector of bytes or a network error if the file
     /// could not be fetched.
-    pub async fn fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
+    pub async fn fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, StaticFetchError> {
         self.sync_fetch_tile(coords)
     }
 
     /// Fetch the tile static file and returns a vector of bytes or a network error if the file
     /// could not be fetched.
-    pub fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, Error> {
+    pub fn sync_fetch_tile(&self, coords: &TileCoords) -> Result<Vec<u8>, StaticFetchError> {
         if TILES.entries().is_empty() {
             panic!(
                 "There are not tiles statically embedded in this binary! StaticTileFetcher will \
@@ -43,9 +58,7 @@ impl StaticTileFetcher {
 
         let tile = TILES
             .get_file(format!("{}/{}/{}.{}", coords.z, coords.x, coords.y, "pbf"))
-            .ok_or_else(|| {
-                Error::Network("Failed to load tile from within the binary".to_string())
-            })?;
+            .ok_or_else(|| StaticFetchError::NotFound)?;
         Ok(Vec::from(tile.contents()))
     }
 }
