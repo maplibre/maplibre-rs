@@ -1,8 +1,8 @@
 include "basic.fbs";
 
 struct FlatShaderVertex {
-    position: [float:2];
-    normal: [float:2];
+    position: [float:3];
+    normal: [float:3];
 }
 
 table FlatLayerTessellated {
