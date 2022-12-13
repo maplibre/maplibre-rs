@@ -641,7 +641,6 @@ impl RingIndex {
 #[cfg(test)]
 mod tests {
     use lyon::tessellation::VertexBuffers;
-    use wgpu::{Extent3d, ImageCopyTexture, ImageDataLayout};
 
     use crate::{
         coords::ZoomLevel,
@@ -662,16 +661,6 @@ mod tests {
             if offset + data.len() as wgpu::BufferAddress > buffer.size {
                 panic!("write out of bounds");
             }
-        }
-
-        fn write_texture(
-            &self,
-            texture: ImageCopyTexture,
-            data: &[u8],
-            data_layout: ImageDataLayout,
-            size: Extent3d,
-        ) {
-            todo!()
         }
     }
 
