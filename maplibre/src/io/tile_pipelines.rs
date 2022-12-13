@@ -268,6 +268,7 @@ mod tests {
                 TileRequest {
                     coords: (0, 0, ZoomLevel::default()).into(),
                     layers: Default::default(),
+                    style: Default::default(),
                 },
                 Box::new([0]), // TODO: Add proper tile byte array
             ),
