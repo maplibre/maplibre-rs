@@ -114,6 +114,7 @@ impl HeadlessMap {
                         .iter()
                         .map(|layer| layer.to_string())
                         .collect::<HashSet<String>>(),
+                    style: Default::default(),
                 },
                 tile_data,
             ),

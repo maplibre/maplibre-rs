@@ -233,10 +233,7 @@ pub struct ShaderLight {
 
 impl ShaderLight {
     pub fn new(direction: Vec4f32, color: Vec4f32) -> Self {
-        Self {
-            direction,
-            color,
-        }
+        Self { direction, color }
     }
 }
 
@@ -244,7 +241,7 @@ impl Default for ShaderLight {
     fn default() -> Self {
         Self {
             direction: [-0.3, -0.4, 1.0, 0.0], // Sun orientation
-            color: [1.0, 1.0, 1.0, 1.0], // Sun color and intensity
+            color: [1.0, 1.0, 1.0, 1.0],       // Sun color and intensity
         }
     }
 }

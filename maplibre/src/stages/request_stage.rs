@@ -137,7 +137,7 @@ impl<E: Environment> RequestStage<E> {
         tile_repository: &mut TileRepository,
         coords: WorldTileCoords,
         layers: &HashSet<String>,
-        style: &Style
+        style: &Style,
     ) {
         /* TODO: is this still required?
         if !tile_repository.is_layers_missing(coords, layers) {
@@ -153,13 +153,12 @@ impl<E: Environment> RequestStage<E> {
                 .call(
                     Input::TileRequest(TileRequest {
                         coords,
-                    layers: layers.clone(),
-                    style: style.clone()
-                }),
-                schedule::<
-                    E,
-                    <E::AsyncProcedureCall as AsyncProcedureCall<
-                        E::HttpClient>>::Context,
+                        layers: layers.clone(),
+                        style: style.clone(),
+                    }),
+                    schedule::<
+                        E,
+                        <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Context,
                     >,
                 )
                 .unwrap(); // TODO: Remove unwrap
