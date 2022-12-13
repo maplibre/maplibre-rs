@@ -216,7 +216,7 @@ impl Renderer {
         )
         .await?;
 
-        let surface = Surface::from_image(&device, window, &settings)?;
+        let surface = Surface::from_image(&device, window, &settings);
 
         Ok(Self {
             instance,

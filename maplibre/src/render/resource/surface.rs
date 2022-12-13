@@ -4,7 +4,6 @@
 use std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
 use log::debug;
-use thiserror::Error;
 
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
@@ -19,18 +18,20 @@ pub struct BufferDimensions {
 }
 
 impl BufferDimensions {
-    fn new(width: u32, height: u32) -> Option<Self> {
+    fn new(size: WindowSize) -> Self {
         let bytes_per_pixel = size_of::<u32>() as u32;
-        let unpadded_bytes_per_row = width * bytes_per_pixel;
+        let unpadded_bytes_per_row = size.width() * bytes_per_pixel;
+
         let align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
         let padded_bytes_per_row_padding = (align - unpadded_bytes_per_row % align) % align;
         let padded_bytes_per_row = unpadded_bytes_per_row + padded_bytes_per_row_padding;
-        Some(Self {
-            width,
-            height,
-            unpadded_bytes_per_row: NonZeroU32::new(unpadded_bytes_per_row)?,
-            padded_bytes_per_row: NonZeroU32::new(padded_bytes_per_row)?,
-        })
+        Self {
+            width: size.width(),
+            height: size.height(),
+            unpadded_bytes_per_row: NonZeroU32::new(unpadded_bytes_per_row)
+                .expect("can not be zero"), // expect is fine because this can never happen
+            padded_bytes_per_row: NonZeroU32::new(padded_bytes_per_row).expect("can not be zero"),
+        }
     }
 }
 
@@ -143,12 +144,6 @@ pub enum Head {
     Headless(Arc<BufferedTextureHead>),
 }
 
-#[derive(Error, Debug)]
-pub enum SurfaceInitError {
-    #[error("surface with either a width or height of zero is not supported")]
-    EmptySurface,
-}
-
 pub struct Surface {
     size: WindowSize,
     head: Head,
@@ -188,11 +183,7 @@ impl Surface {
     }
 
     // TODO: Give better name
-    pub fn from_image<MW>(
-        device: &wgpu::Device,
-        window: &MW,
-        settings: &RendererSettings,
-    ) -> Result<Self, SurfaceInitError>
+    pub fn from_image<MW>(device: &wgpu::Device, window: &MW, settings: &RendererSettings) -> Self
     where
         MW: MapWindow,
     {
@@ -202,8 +193,7 @@ impl Surface {
         // So we calculate padded_bytes_per_row by rounding unpadded_bytes_per_row
         // up to the next multiple of wgpu::COPY_BYTES_PER_ROW_ALIGNMENT.
         // https://en.wikipedia.org/wiki/Data_structure_alignment#Computing_padding
-        let buffer_dimensions = BufferDimensions::new(size.width(), size.height())
-            .ok_or_else(|| SurfaceInitError::EmptySurface)?;
+        let buffer_dimensions = BufferDimensions::new(size);
 
         // The output buffer lets us retrieve the data as an array
         let output_buffer = device.create_buffer(&wgpu::BufferDescriptor {
@@ -233,7 +223,7 @@ impl Surface {
         };
         let texture = device.create_texture(&texture_descriptor);
 
-        Ok(Self {
+        Self {
             size,
             head: Head::Headless(Arc::new(BufferedTextureHead {
                 texture,
@@ -241,7 +231,7 @@ impl Surface {
                 output_buffer,
                 buffer_dimensions,
             })),
-        })
+        }
     }
 
     pub fn surface_format(&self) -> wgpu::TextureFormat {

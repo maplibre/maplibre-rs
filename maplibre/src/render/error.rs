@@ -1,11 +1,9 @@
 use thiserror::Error;
 
-use crate::render::{graph::RenderGraphError, resource::SurfaceInitError};
+use crate::render::graph::RenderGraphError;
 
 #[derive(Error, Debug)]
 pub enum RenderError {
-    #[error("error while initializing surface")]
-    SurfaceInit(#[from] SurfaceInitError),
     #[error("error in surface")]
     Surface(#[from] wgpu::SurfaceError),
     #[error("error in render graph")]
