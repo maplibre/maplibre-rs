@@ -1,6 +1,6 @@
 //! Main camera
 
-use cgmath::{prelude::*, AbsDiffEq, Deg, Matrix4, Point2, Point3, Rad, Vector2, Vector3, Vector4};
+use cgmath::{prelude::*, AbsDiffEq, Matrix4, Point2, Point3, Rad, Vector2, Vector3, Vector4};
 
 use crate::util::{
     math::{bounds_from_points, Aabb2, Aabb3, Plane},
@@ -104,34 +104,6 @@ impl Camera {
             width: width as f64,
             height: height as f64,
         }
-    }
-
-    pub fn tilt<P: Into<Rad<f64>>>(&mut self, delta: P) {
-        let new_pitch = self.pitch + delta.into();
-
-        if new_pitch <= MAX_PITCH && new_pitch >= MIN_PITCH {
-            self.pitch = new_pitch;
-        }
-    }
-
-    pub fn move_relative(&mut self, delta: Vector3<f64>) {
-        self.position += delta;
-    }
-
-    pub fn move_to(&mut self, new_position: Point3<f64>) {
-        self.position = new_position;
-    }
-
-    pub fn position(&self) -> &Point3<f64> {
-        &self.position
-    }
-
-    pub fn position_vector(&self) -> Vector3<f64> {
-        self.position.to_vec()
-    }
-
-    pub fn homogenous_position(&self) -> Vector4<f64> {
-        self.position.to_homogeneous()
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
@@ -387,7 +359,7 @@ impl Camera {
         self.yaw
     }
 
-    pub fn yaw_self<P: Into<Rad<f64>>>(&mut self, delta: P) {
+    pub fn rotate<P: Into<Rad<f64>>>(&mut self, delta: P) {
         self.yaw += delta.into();
     }
 
@@ -395,8 +367,28 @@ impl Camera {
         self.pitch
     }
 
-    pub fn pitch_self<P: Into<Rad<f64>>>(&mut self, delta: P) {
-        self.pitch += delta.into();
+    pub fn tilt<P: Into<Rad<f64>>>(&mut self, delta: P) {
+        let new_pitch = self.pitch + delta.into();
+
+        if new_pitch <= MAX_PITCH && new_pitch >= MIN_PITCH {
+            self.pitch = new_pitch;
+        }
+    }
+
+    pub fn move_relative(&mut self, delta: Vector3<f64>) {
+        self.position += delta;
+    }
+
+    pub fn move_to(&mut self, new_position: Point3<f64>) {
+        self.position = new_position;
+    }
+
+    pub fn position_vector(&self) -> Vector3<f64> {
+        self.position.to_vec()
+    }
+
+    pub fn homogenous_position(&self) -> Vector4<f64> {
+        self.position.to_homogeneous()
     }
 }
 

@@ -16,10 +16,7 @@ impl UpdateState for TiltHandler {
     fn update_state(
         &mut self,
         MapContext {
-            world: World {
-                view_state: view_state,
-                ..
-            },
+            world: World { view_state, .. },
             ..
         }: &mut MapContext,
         dt: Duration,
