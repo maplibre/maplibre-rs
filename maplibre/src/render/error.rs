@@ -6,7 +6,7 @@ use crate::render::graph::RenderGraphError;
 pub enum RenderError {
     Surface(wgpu::SurfaceError),
     Graph(RenderGraphError),
-    Device(wgpu::RequestDeviceError),
+    RequestDevice(wgpu::RequestDeviceError),
 }
 
 impl fmt::Display for RenderError {
@@ -14,7 +14,7 @@ impl fmt::Display for RenderError {
         match self {
             RenderError::Surface(e) => write!(f, "{}", e),
             RenderError::Graph(e) => write!(f, "{:?}", e),
-            RenderError::Device(e) => write!(f, "{}", e),
+            RenderError::RequestDevice(e) => write!(f, "{}", e),
         }
     }
 }
@@ -45,6 +45,6 @@ impl From<wgpu::SurfaceError> for RenderError {
 
 impl From<wgpu::RequestDeviceError> for RenderError {
     fn from(e: wgpu::RequestDeviceError) -> Self {
-        RenderError::Device(e)
+        RenderError::RequestDevice(e)
     }
 }

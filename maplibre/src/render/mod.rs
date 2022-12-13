@@ -161,17 +161,22 @@ impl Renderer {
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        let (instance, adapter, device, queue) = Self::request_device(
+        let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+
+        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw()) };
+
+        let (adapter, device, queue) = Self::request_device(
+            &instance,
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
                 power_preference: wgpu_settings.power_preference,
                 force_fallback_adapter: false,
-                compatible_surface: None, // TODO: We do not select based on surface, we adjust our surface based on the adapter. Is that fine?
+                compatible_surface: Some(&surface),
             },
         )
         .await?;
 
-        let surface = Surface::from_window(&instance, &adapter, window, &settings);
+        let surface = Surface::from_surface(surface, &adapter, window, &settings);
 
         match surface.head() {
             Head::Headed(window) => window.configure(&device),
@@ -199,7 +204,8 @@ impl Renderer {
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        let (instance, adapter, device, queue) = Self::request_device(
+        let (adapter, device, queue) = Self::request_device(
+            &instance,
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
                 power_preference: wgpu_settings.power_preference,
@@ -228,12 +234,10 @@ impl Renderer {
 
     /// Requests a device
     async fn request_device(
+        instance: &wgpu::Instance,
         settings: &WgpuSettings,
         request_adapter_options: &wgpu::RequestAdapterOptions<'_>,
-    ) -> Result<(wgpu::Instance, wgpu::Adapter, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError>
-    {
-        let instance = wgpu::Instance::new(settings.backends.unwrap_or(wgpu::Backends::all()));
-
+    ) -> Result<(wgpu::Adapter, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError> {
         let adapter = instance
             .request_adapter(request_adapter_options)
             .await
@@ -377,7 +381,7 @@ impl Renderer {
                 trace_path,
             )
             .await?;
-        Ok((instance, adapter, device, queue))
+        Ok((adapter, device, queue))
     }
 
     pub fn instance(&self) -> &wgpu::Instance {

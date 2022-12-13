@@ -3,6 +3,7 @@
 
 use std::{mem::size_of, sync::Arc};
 
+use log::debug;
 use wgpu::{CompositeAlphaMode, TextureFormat};
 
 use crate::{
@@ -35,17 +36,28 @@ impl BufferDimensions {
 
 pub struct WindowHead {
     surface: wgpu::Surface,
-    surface_config: wgpu::SurfaceConfiguration,
+    size: WindowSize,
+    format: TextureFormat,
+    present_mode: wgpu::PresentMode,
 }
 
 impl WindowHead {
     pub fn resize_and_configure(&mut self, width: u32, height: u32, device: &wgpu::Device) {
-        self.surface_config.height = width;
-        self.surface_config.width = height;
-        self.surface.configure(device, &self.surface_config);
+        self.size = WindowSize::new(width, height).unwrap();
+        self.configure(device);
     }
+
     pub fn configure(&self, device: &wgpu::Device) {
-        self.surface.configure(device, &self.surface_config);
+        let surface_config = wgpu::SurfaceConfiguration {
+            alpha_mode: CompositeAlphaMode::Auto,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: self.format,
+            width: self.size.width(),
+            height: self.size.height(),
+            present_mode: self.present_mode,
+        };
+
+        self.surface.configure(device, &surface_config);
     }
 
     pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
@@ -120,8 +132,8 @@ pub struct Surface {
 }
 
 impl Surface {
-    pub fn from_window<MW>(
-        instance: &wgpu::Instance,
+    pub fn from_surface<MW>(
+        surface: wgpu::Surface,
         adapter: &wgpu::Adapter,
         window: &MW,
         settings: &RendererSettings,
@@ -131,27 +143,23 @@ impl Surface {
     {
         let size = window.size();
 
-        let surface = unsafe { instance.create_surface(window.raw()) };
+        debug!(
+            "supported formats by adapter: {:?}",
+            surface.get_supported_formats(adapter)
+        );
 
         let format = settings
             .texture_format
-            .and_then(|_| surface.get_supported_formats(adapter).first().cloned())
+            .or_else(|| surface.get_supported_formats(adapter).first().cloned())
             .unwrap_or(TextureFormat::Bgra8Unorm);
-
-        let surface_config = wgpu::SurfaceConfiguration {
-            alpha_mode: CompositeAlphaMode::Auto,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format,
-            width: size.width(),
-            height: size.height(),
-            present_mode: settings.present_mode,
-        };
 
         Self {
             size,
             head: Head::Headed(WindowHead {
                 surface,
-                surface_config,
+                size,
+                format,
+                present_mode: settings.present_mode,
             }),
         }
     }
@@ -207,7 +215,7 @@ impl Surface {
     }
     pub fn surface_format(&self) -> TextureFormat {
         match &self.head {
-            Head::Headed(headed) => headed.surface_config.format,
+            Head::Headed(headed) => headed.format,
             Head::Headless(headless) => headless.texture_format,
         }
     }
@@ -280,9 +288,10 @@ impl Surface {
 }
 
 impl HasChanged for WindowHead {
+    /// Tuple of width and height
     type Criteria = (u32, u32);
 
     fn has_changed(&self, criteria: &Self::Criteria) -> bool {
-        self.surface_config.width != criteria.0 || self.surface_config.height != criteria.1
+        self.size.width() != criteria.0 || self.size.height() != criteria.1
     }
 }
