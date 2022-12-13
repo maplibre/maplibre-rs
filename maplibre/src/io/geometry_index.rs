@@ -9,6 +9,7 @@ use geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
 };
+use log::warn;
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
 use crate::{
@@ -59,6 +60,12 @@ impl GeometryIndex {
         } else {
             None
         }
+    }
+}
+
+impl Default for GeometryIndex {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -198,12 +205,21 @@ impl IndexProcessor {
     }
 }
 
+impl Default for IndexProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GeomProcessor for IndexProcessor {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.xy(x, y, idx)
     }
     fn point_begin(&mut self, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.point_begin(idx)
+    }
+    fn point_end(&mut self, idx: usize) -> Result<(), GeozeroError> {
+        self.geo_writer.point_end(idx)
     }
     fn multipoint_begin(&mut self, size: usize, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.multipoint_begin(size, idx)
@@ -233,6 +249,9 @@ impl GeomProcessor for IndexProcessor {
     }
     fn multipolygon_begin(&mut self, size: usize, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.multipolygon_begin(size, idx)
+    }
+    fn multipolygon_end(&mut self, idx: usize) -> Result<(), GeozeroError> {
+        self.geo_writer.multipolygon_end(idx)
     }
 }
 
@@ -283,17 +302,19 @@ impl FeatureProcessor for IndexProcessor {
     }
     /// End of feature geometry processing.
     fn geometry_end(&mut self) -> Result<(), GeozeroError> {
-        let geometry = self.geo_writer.take_geometry().unwrap();
+        let geometry = self.geo_writer.take_geometry();
 
         match geometry {
-            Geometry::Polygon(polygon) => self.geometries.push(
+            Some(Geometry::Polygon(polygon)) => self.geometries.push(
                 IndexedGeometry::from_polygon(polygon, self.properties.take().unwrap()).unwrap(),
             ),
-            Geometry::LineString(linestring) => self.geometries.push(
+            Some(Geometry::LineString(linestring)) => self.geometries.push(
                 IndexedGeometry::from_linestring(linestring, self.properties.take().unwrap())
                     .unwrap(),
             ),
-            _ => {}
+            _ => {
+                warn!("Unknown geometry in index")
+            }
         };
 
         Ok(())

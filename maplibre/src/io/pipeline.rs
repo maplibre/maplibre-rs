@@ -1,32 +1,53 @@
 use std::marker::PhantomData;
 
-use downcast_rs::{impl_downcast, Downcast};
+use downcast_rs::Downcast;
 use geozero::mvt::tile;
+use thiserror::Error;
 
 use crate::{
     coords::WorldTileCoords,
-    io::geometry_index::IndexedGeometry,
+    io::{apc::SendError, geometry_index::IndexedGeometry},
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
+#[derive(Error, Debug)]
+pub enum PipelineError {
+    /// Sending of results failed
+    #[error("sending data back from pipeline failed")]
+    SendError(SendError),
+    /// Error during processing of the pipeline
+    #[error("processing data in pipeline failed")]
+    Processing(Box<dyn std::error::Error>),
+}
+
 /// Processes events which happen during the pipeline execution
 pub trait PipelineProcessor: Downcast {
-    fn tile_finished(&mut self, _coords: &WorldTileCoords) {}
-    fn layer_unavailable(&mut self, _coords: &WorldTileCoords, _layer_name: &str) {}
+    fn tile_finished(&mut self, _coords: &WorldTileCoords) -> Result<(), PipelineError> {
+        Ok(())
+    }
+    fn layer_unavailable(
+        &mut self,
+        _coords: &WorldTileCoords,
+        _layer_name: &str,
+    ) -> Result<(), PipelineError> {
+        Ok(())
+    }
     fn layer_tesselation_finished(
         &mut self,
         _coords: &WorldTileCoords,
         _buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         _feature_indices: Vec<u32>,
         _layer_data: tile::Layer,
-    ) {
+    ) -> Result<(), PipelineError> {
+        Ok(())
     }
     fn layer_indexing_finished(
         &mut self,
         _coords: &WorldTileCoords,
         _geometries: Vec<IndexedGeometry<f64>>,
-    ) {
+    ) -> Result<(), PipelineError> {
+        Ok(())
     }
 }
 
@@ -61,7 +82,11 @@ pub trait Processable {
     type Input;
     type Output;
 
-    fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output;
+    fn process(
+        &self,
+        input: Self::Input,
+        context: &mut PipelineContext,
+    ) -> Result<Self::Output, PipelineError>;
 }
 
 /// A pipeline which consists of multiple steps. Steps are [`Processable`] workloads. Later steps
@@ -93,8 +118,12 @@ where
     type Input = P::Input;
     type Output = N::Output;
 
-    fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output {
-        let output = self.step.process(input, context);
+    fn process(
+        &self,
+        input: Self::Input,
+        context: &mut PipelineContext,
+    ) -> Result<Self::Output, PipelineError> {
+        let output = self.step.process(input, context)?;
         self.next_step.process(output, context)
     }
 }
@@ -116,8 +145,12 @@ impl<I> Processable for PipelineEnd<I> {
     type Input = I;
     type Output = I;
 
-    fn process(&self, input: Self::Input, _context: &mut PipelineContext) -> Self::Output {
-        input
+    fn process(
+        &self,
+        input: Self::Input,
+        _context: &mut PipelineContext,
+    ) -> Result<Self::Output, PipelineError> {
+        Ok(input)
     }
 }
 
@@ -125,8 +158,12 @@ impl<I, O> Processable for &fn(input: I, context: &mut PipelineContext) -> O {
     type Input = I;
     type Output = O;
 
-    fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output {
-        (self)(input, context)
+    fn process(
+        &self,
+        input: Self::Input,
+        context: &mut PipelineContext,
+    ) -> Result<Self::Output, PipelineError> {
+        Ok((self)(input, context))
     }
 }
 
@@ -134,8 +171,12 @@ impl<I, O> Processable for fn(input: I, context: &mut PipelineContext) -> O {
     type Input = I;
     type Output = O;
 
-    fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output {
-        (self)(input, context)
+    fn process(
+        &self,
+        input: Self::Input,
+        context: &mut PipelineContext,
+    ) -> Result<Self::Output, PipelineError> {
+        Ok((self)(input, context))
     }
 }
 
@@ -168,8 +209,12 @@ where
     type Input = I;
     type Output = O;
 
-    fn process(&self, input: Self::Input, context: &mut PipelineContext) -> Self::Output {
-        (self.func)(input, context)
+    fn process(
+        &self,
+        input: Self::Input,
+        context: &mut PipelineContext,
+    ) -> Result<Self::Output, PipelineError> {
+        Ok((self.func)(input, context))
     }
 }
 
@@ -199,7 +244,8 @@ mod tests {
             add_two as fn(u8, &mut PipelineContext) -> u32,
             PipelineEnd::default(),
         )
-        .process(5u8, &mut context);
+        .process(5u8, &mut context)
+        .unwrap();
         assert_eq!(output, 7);
 
         let output: u32 = DataPipeline::new(
@@ -209,7 +255,8 @@ mod tests {
                 PipelineEnd::default(),
             ),
         )
-        .process(5u32, &mut context);
+        .process(5u32, &mut context)
+        .unwrap();
         assert_eq!(output, 8);
     }
 
@@ -223,8 +270,9 @@ mod tests {
             ClosureProcessable::from(|input: u8, _context: &mut PipelineContext| -> u32 {
                 input as u32 + 2 + outer_value
             });
-        let output: u32 =
-            DataPipeline::new(closure, PipelineEnd::default()).process(5u8, &mut context);
+        let output: u32 = DataPipeline::new(closure, PipelineEnd::default())
+            .process(5u8, &mut context)
+            .unwrap();
         assert_eq!(output, 10);
 
         // with into()
@@ -233,7 +281,8 @@ mod tests {
                 .into(),
             PipelineEnd::<u32>::default(),
         )
-        .process(5u8, &mut context);
+        .process(5u8, &mut context)
+        .unwrap();
         assert_eq!(output, 10);
     }
 }

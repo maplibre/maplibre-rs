@@ -41,7 +41,7 @@ impl TileShape {
             coords,
             zoom_factor: zoom.scale_to_tile(&coords),
             transform: coords.transform_for_zoom(zoom),
-            buffer_range: index as u64 * STRIDE..(index as u64 + 1) * STRIDE,
+            buffer_range: index * STRIDE..(index + 1) * STRIDE,
         }
     }
 }

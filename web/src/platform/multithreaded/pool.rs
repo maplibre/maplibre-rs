@@ -2,13 +2,14 @@
 //! web workers which can be used to execute work.
 //! Adopted from [wasm-bindgen example](https://github.com/rustwasm/wasm-bindgen/blob/0eba2efe45801b71f8873bc368c58a8ed8e894ff/examples/raytrace-parallel/src/pool.rs)
 
-use std::{borrow::BorrowMut, cell::RefCell, future::Future, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 use js_sys::Promise;
 use rand::prelude::*;
-use wasm_bindgen::{prelude::*, JsCast};
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{DedicatedWorkerGlobalScope, ErrorEvent, Event, MessageEvent, Worker};
+use wasm_bindgen::prelude::*;
+use web_sys::Worker;
+
+use crate::error::WebError;
 
 #[wasm_bindgen()]
 extern "C" {
@@ -16,8 +17,11 @@ extern "C" {
     fn new_worker() -> JsValue;
 }
 
+type NewWorker = Box<dyn Fn() -> Result<Worker, WebError>>;
+type Execute = Box<dyn (FnOnce() -> Promise) + Send>;
+
 pub struct WorkerPool {
-    new_worker: Box<dyn Fn() -> Worker>,
+    new_worker: NewWorker,
     state: Rc<PoolState>,
 }
 
@@ -25,8 +29,24 @@ struct PoolState {
     workers: RefCell<Vec<Worker>>,
 }
 
-struct Work {
-    func: Box<dyn (FnOnce() -> Promise) + Send>,
+impl PoolState {
+    fn push(&self, worker: Worker) {
+        let mut workers = self.workers.borrow_mut();
+        for existing_worker in workers.iter() {
+            assert_ne!(existing_worker as &JsValue, &worker as &JsValue);
+        }
+        workers.push(worker);
+    }
+}
+
+pub struct Work {
+    func: Execute,
+}
+
+impl Work {
+    pub fn execute(self) -> Promise {
+        (self.func)()
+    }
 }
 
 impl WorkerPool {
@@ -40,7 +60,7 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    pub fn new(initial: usize, new_worker: Box<dyn Fn() -> Worker>) -> Result<WorkerPool, JsValue> {
+    pub fn new(initial: usize, new_worker: NewWorker) -> Result<WorkerPool, WebError> {
         let pool = WorkerPool {
             new_worker,
             state: Rc::new(PoolState {
@@ -63,9 +83,9 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    fn spawn(&self) -> Result<(), JsValue> {
+    fn spawn(&self) -> Result<(), WebError> {
         log::info!("spawning new worker");
-        let worker = (self.new_worker)();
+        let worker = (self.new_worker)()?;
 
         // With a worker spun up send it the module/memory so it can start
         // instantiating the wasm module. Later it might receive further
@@ -89,12 +109,9 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    fn worker(&self) -> Result<Worker, JsValue> {
+    fn worker(&self) -> Result<Worker, WebError> {
         let workers = self.state.workers.borrow();
-        let result = match workers.choose(&mut thread_rng()) {
-            Some(worker) => Some(worker),
-            None => None,
-        };
+        let result = workers.choose(&mut thread_rng());
 
         if result.is_none() {
             self.spawn()?;
@@ -118,7 +135,7 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    pub fn execute(&self, f: impl (FnOnce() -> Promise) + Send + 'static) -> Result<(), JsValue> {
+    pub fn execute(&self, f: impl (FnOnce() -> Promise) + Send + 'static) -> Result<(), WebError> {
         let worker = self.worker()?;
         let work = Work { func: Box::new(f) };
         let work_ptr = Box::into_raw(Box::new(work));
@@ -128,26 +145,8 @@ impl WorkerPool {
                 unsafe {
                     drop(Box::from_raw(work_ptr));
                 }
-                Err(e)
+                Err(e.into())
             }
         }
     }
-}
-
-impl PoolState {
-    fn push(&self, worker: Worker) {
-        let mut workers = self.workers.borrow_mut();
-        for existing_worker in workers.iter() {
-            assert_ne!(existing_worker as &JsValue, &worker as &JsValue);
-        }
-        workers.push(worker);
-    }
-}
-
-/// Entry point invoked by the worker.
-#[wasm_bindgen]
-pub async fn multithreaded_worker_entry(ptr: u32) -> Result<(), JsValue> {
-    let ptr = unsafe { Box::from_raw(ptr as *mut Work) };
-    JsFuture::from((ptr.func)()).await?;
-    Ok(())
 }

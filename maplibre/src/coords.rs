@@ -7,7 +7,7 @@ use std::{
 };
 
 use bytemuck_derive::{Pod, Zeroable};
-use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
+use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -32,7 +32,7 @@ const fn create_zoom_bounds<const DIM: usize>() -> [u32; DIM] {
     let mut result: [u32; DIM] = [0; DIM];
     let mut i = 0;
     while i < DIM {
-        result[i as usize] = 2u32.pow(i as u32);
+        result[i] = 2u32.pow(i as u32);
         i += 1;
     }
     result
@@ -127,9 +127,9 @@ impl From<u8> for ZoomLevel {
     }
 }
 
-impl Into<u8> for ZoomLevel {
-    fn into(self) -> u8 {
-        self.0
+impl From<ZoomLevel> for u8 {
+    fn from(val: ZoomLevel) -> Self {
+        val.0
     }
 }
 
@@ -519,10 +519,6 @@ impl AlignedWorldTileCoords {
 pub struct WorldCoords {
     pub x: f64,
     pub y: f64,
-}
-
-fn tiles_with_z(z: u8) -> f64 {
-    2.0.pow(z)
 }
 
 impl WorldCoords {

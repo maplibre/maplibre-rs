@@ -1,49 +1,33 @@
 //! Requests tiles which are currently in view
 
-use std::{
-    borrow::Borrow,
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    future::Future,
-    ops::Deref,
-    pin::Pin,
-    process::Output,
-    rc::Rc,
-    str::FromStr,
-};
+use std::{collections::HashSet, rc::Rc};
 
 use crate::{
     context::MapContext,
-    coords::{ViewRegion, WorldTileCoords, ZoomLevel},
-    error::Error,
+    coords::{ViewRegion, WorldTileCoords},
+    environment::Environment,
     io::{
-        apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message},
+        apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message, ProcedureError},
         pipeline::{PipelineContext, Processable},
-        source_client::{HttpSourceClient, SourceClient},
         tile_pipelines::build_vector_tile_pipeline,
         tile_repository::TileRepository,
-        transferables::{Transferables, UnavailableLayer},
+        transferables::{LayerUnavailable, Transferables},
         TileRequest,
     },
+    kernel::Kernel,
     schedule::Stage,
     stages::HeadedPipelineProcessor,
-    Environment, HttpClient, Scheduler, Style,
+    style::Style,
+    world::World,
 };
 
 pub struct RequestStage<E: Environment> {
-    apc: Rc<RefCell<E::AsyncProcedureCall>>,
-    http_source_client: HttpSourceClient<E::HttpClient>,
+    kernel: Rc<Kernel<E>>,
 }
 
 impl<E: Environment> RequestStage<E> {
-    pub fn new(
-        http_source_client: HttpSourceClient<E::HttpClient>,
-        apc: Rc<RefCell<E::AsyncProcedureCall>>,
-    ) -> Self {
-        Self {
-            apc,
-            http_source_client,
-        }
+    pub fn new(kernel: Rc<Kernel<E>>) -> Self {
+        Self { kernel }
     }
 }
 
@@ -51,38 +35,44 @@ impl<E: Environment> Stage for RequestStage<E> {
     fn run(
         &mut self,
         MapContext {
-            view_state,
+            world:
+                World {
+                    tile_repository,
+                    view_state,
+                    ..
+                },
             style,
-            tile_repository,
             ..
         }: &mut MapContext,
     ) {
         let view_region = view_state.create_view_region();
 
-        if view_state.camera.did_change(0.05) || view_state.zoom.did_change(0.05) {
+        if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
                 // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
                 self.request_tiles_in_view(tile_repository, style, view_region);
             }
         }
 
-        view_state.camera.update_reference();
-        view_state.zoom.update_reference();
+        view_state.update_references();
     }
 }
 
-pub fn schedule<E: Environment, C: Context<E::Transferables, E::HttpClient>>(
+pub fn schedule<
+    E: Environment,
+    C: Context<
+        <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Transferables,
+        E::HttpClient,
+    >,
+>(
     input: Input,
     context: C,
 ) -> AsyncProcedureFuture {
-    // FIXME: improve input handling
-    let input = match input {
-        Input::TileRequest(input) => Some(input),
-        _ => None,
-    }
-    .unwrap(); // FIXME (wasm-executor): Remove unwrap
-
     Box::pin(async move {
+        let Input::TileRequest(input) = input else {
+            return Err(ProcedureError::IncompatibleInput)
+        };
+
         let coords = input.coords;
         let client = context.source_client();
 
@@ -96,21 +86,26 @@ pub fn schedule<E: Environment, C: Context<E::Transferables, E::HttpClient>>(
                     phantom_hc: Default::default(),
                 });
                 let pipeline = build_vector_tile_pipeline();
-                pipeline.process((input, data), &mut pipeline_context);
+                pipeline
+                    .process((input, data), &mut pipeline_context)
+                    .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
             }
             Err(e) => {
                 log::error!("{:?}", &e);
                 for to_load in &input.layers {
                     tracing::warn!("layer {} at {} unavailable", to_load, coords);
-                    context.send(Message::UnavailableLayer(
-                        <E::Transferables as Transferables>::UnavailableLayer::new(
+                    context.send(
+                        Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
+                            E::HttpClient,
+                        >>::Transferables as Transferables>::LayerUnavailable::build_from(
                             input.coords,
                             to_load.to_string(),
-                        ),
-                    ));
+                        )),
+                    ).map_err(ProcedureError::Send)?;
                 }
             }
         }
+        Ok(())
     })
 }
 
@@ -132,8 +127,7 @@ impl<E: Environment> RequestStage<E> {
         for coords in view_region.iter() {
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
-                self.request_tile(tile_repository, &coords, &source_layers, style)
-                    .unwrap(); // TODO: Remove unwrap
+                self.request_tile(tile_repository, coords, &source_layers, style);
             }
         }
     }
@@ -141,34 +135,34 @@ impl<E: Environment> RequestStage<E> {
     fn request_tile(
         &self,
         tile_repository: &mut TileRepository,
-        coords: &WorldTileCoords,
+        coords: WorldTileCoords,
         layers: &HashSet<String>,
         style: &Style
-    ) -> Result<(), Error> {
-        /*        if !tile_repository.is_layers_missing(coords, layers) {
+    ) {
+        /* TODO: is this still required?
+        if !tile_repository.is_layers_missing(coords, layers) {
             return Ok(false);
         }*/
 
-        if tile_repository.needs_fetching(&coords) {
+        if tile_repository.has_tile(&coords) {
             tile_repository.create_tile(coords);
 
             tracing::info!("new tile request: {}", &coords);
-            self.apc.deref().borrow().schedule(
-                Input::TileRequest(TileRequest {
-                    coords: *coords,
+            self.kernel
+                .apc()
+                .call(
+                    Input::TileRequest(TileRequest {
+                        coords,
                     layers: layers.clone(),
                     style: style.clone()
                 }),
                 schedule::<
                     E,
                     <E::AsyncProcedureCall as AsyncProcedureCall<
-                        E::Transferables,
-                        E::HttpClient,
-                    >>::Context,
-                >,
-            );
+                        E::HttpClient>>::Context,
+                    >,
+                )
+                .unwrap(); // TODO: Remove unwrap
         }
-
-        Ok(())
     }
 }

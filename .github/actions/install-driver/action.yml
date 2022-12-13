@@ -4,17 +4,20 @@ description: Install drivers
 runs:
   using: "composite"
   steps:
+    # lavapipe in Ubuntu 20.04 SEGVs. We can fix that with this PPA.
+    # On Ubuntu 22.04 (currently used) using the PPA introduces SEGVs.
+    #- name: Use oibaf PPA for drivers
+    #  shell: bash
+    #  run: |
+    #    sudo apt-get update -y -qq
+    #    sudo add-apt-repository ppa:oibaf/graphics-drivers -y
     - name: Install Mesa Dependencies
       shell: bash
-      run: |
-        sudo apt-get update -y -qq
-        
-        # Get latest drivers. The lavapipe in Ubuntu 20.04 SEGVs.
-        sudo add-apt-repository ppa:oibaf/graphics-drivers -y
-
-        sudo apt install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers
-    - name: wgpu info
+      run: sudo apt-get install -y libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers
+    - name: Install wgpu-info
       shell: bash
-      run: |
-        cargo install --git "https://github.com/gfx-rs/wgpu" wgpu-info
-        wgpu-info
+      # Rev is for 0.14.1: https://github.com/gfx-rs/wgpu/tree/v0.14.1
+      run: cargo install --force --debug --git "https://github.com/gfx-rs/wgpu" --rev 77b9a99cf4c7ca2b6d46124f9e48e510c04b605d wgpu-info
+    - name: wgpu-info
+      shell: bash
+      run: wgpu-info

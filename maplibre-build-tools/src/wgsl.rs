@@ -80,7 +80,7 @@ pub fn validate_project_wgsl() {
                                         {
                                             format!(":{}:{} {}", line_number, line_position, error)
                                         } else {
-                                            format!("{}", error)
+                                            error
                                         },
                                     WgslError::IoErr(error) => format!(": {:?}", error),
                                 }

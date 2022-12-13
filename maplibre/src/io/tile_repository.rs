@@ -1,8 +1,6 @@
 //! Tile cache.
 
-use std::collections::{btree_map, BTreeMap, HashSet};
-
-use geozero::mvt::tile;
+use std::collections::{btree_map, BTreeMap};
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
@@ -11,6 +9,7 @@ use crate::{
 };
 
 /// A layer which is stored for future use.
+#[derive(Clone)]
 pub enum StoredLayer {
     UnavailableLayer {
         coords: WorldTileCoords,
@@ -41,7 +40,7 @@ impl StoredLayer {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub enum TileStatus {
     Pending,
     Failed,
@@ -49,16 +48,35 @@ pub enum TileStatus {
 }
 
 /// Stores multiple [StoredLayers](StoredLayer).
+#[derive(Clone)]
 pub struct StoredTile {
+    coords: WorldTileCoords,
     layers: Vec<StoredLayer>,
     status: TileStatus,
 }
 
 impl StoredTile {
-    pub fn new() -> Self {
+    pub fn pending(coords: WorldTileCoords) -> Self {
         Self {
+            coords,
             layers: vec![],
             status: TileStatus::Pending,
+        }
+    }
+
+    pub fn success(coords: WorldTileCoords, layers: Vec<StoredLayer>) -> Self {
+        Self {
+            coords,
+            layers,
+            status: TileStatus::Success,
+        }
+    }
+
+    pub fn failed(coords: WorldTileCoords) -> Self {
+        Self {
+            coords,
+            layers: vec![],
+            status: TileStatus::Failed,
         }
     }
 }
@@ -82,18 +100,19 @@ impl TileRepository {
 
     /// Inserts a tessellated layer into the quad tree at its world tile coords.
     /// If the space is vacant, the tessellated layer is inserted into a new
-    /// [crate::io::tile_repository::CachedTile].
+    /// [crate::io::tile_repository::StoredLayer].
     /// If the space is occupied, the tessellated layer is added to the current
-    /// [crate::io::tile_repository::CachedTile].
-    pub fn put_tessellated_layer(&mut self, layer: StoredLayer) {
+    /// [crate::io::tile_repository::StoredLayer].
+    pub fn put_layer(&mut self, layer: StoredLayer) {
         if let Some(entry) = layer
             .get_coords()
             .build_quad_key()
             .map(|key| self.tree.entry(key))
         {
             match entry {
-                btree_map::Entry::Vacant(entry) => {
-                    panic!("Can not add a tessellated layer if no request has been started before.")
+                btree_map::Entry::Vacant(_entry) => {
+                    panic!("Can not add a tessellated layer at {} if no request has been started before. \
+                    We might received a tile which was not requested.", layer.get_coords())
                 }
                 btree_map::Entry::Occupied(mut entry) => {
                     entry.get_mut().layers.push(layer);
@@ -102,9 +121,15 @@ impl TileRepository {
         }
     }
 
+    pub fn put_tile(&mut self, tile: StoredTile) {
+        if let Some(key) = tile.coords.build_quad_key() {
+            self.tree.insert(key, tile);
+        }
+    }
+
     /// Returns the list of tessellated layers at the given world tile coords. None if tile is
     /// missing from the cache.
-    pub fn iter_tessellated_layers_at(
+    pub fn iter_layers_at(
         &self,
         coords: &WorldTileCoords,
     ) -> Option<impl Iterator<Item = &StoredLayer> + '_> {
@@ -115,27 +140,28 @@ impl TileRepository {
     }
 
     /// Create a new tile.
-    pub fn create_tile(&mut self, coords: &WorldTileCoords) -> bool {
-        if let Some(entry) = coords.build_quad_key().map(|key| self.tree.entry(key)) {
-            match entry {
-                btree_map::Entry::Vacant(entry) => {
-                    entry.insert(StoredTile::new());
-                }
-                _ => {}
-            }
+    pub fn create_tile(&mut self, coords: WorldTileCoords) -> bool {
+        if let Some(btree_map::Entry::Vacant(entry)) =
+            coords.build_quad_key().map(|key| self.tree.entry(key))
+        {
+            entry.insert(StoredTile::pending(coords));
         }
         true
     }
 
     /// Checks if a layer has been fetched.
-    pub fn needs_fetching(&self, coords: &WorldTileCoords) -> bool {
-        if let Some(_) = coords.build_quad_key().and_then(|key| self.tree.get(&key)) {
+    pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
+        if coords
+            .build_quad_key()
+            .and_then(|key| self.tree.get(&key))
+            .is_some()
+        {
             return false;
         }
         true
     }
 
-    pub fn success(&mut self, coords: &WorldTileCoords) {
+    pub fn mark_tile_succeeded(&mut self, coords: &WorldTileCoords) {
         if let Some(cached_tile) = coords
             .build_quad_key()
             .and_then(|key| self.tree.get_mut(&key))
@@ -145,50 +171,12 @@ impl TileRepository {
     }
 
     /// Checks if a layer has been fetched.
-    pub fn fail(&mut self, coords: &WorldTileCoords) {
+    pub fn mark_tile_failed(&mut self, coords: &WorldTileCoords) {
         if let Some(cached_tile) = coords
             .build_quad_key()
             .and_then(|key| self.tree.get_mut(&key))
         {
             cached_tile.status = TileStatus::Failed;
         }
-    }
-
-    /// Removes all the cached tessellate layers that are not contained within the given
-    /// layers hashset.
-    pub fn retain_missing_layer_names(
-        &self,
-        coords: &WorldTileCoords,
-        layers: &mut HashSet<String>,
-    ) {
-        if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.tree.get(&key)) {
-            let tessellated_set: HashSet<String> = cached_tile
-                .layers
-                .iter()
-                .map(|tessellated_layer| tessellated_layer.layer_name().to_string())
-                .collect();
-
-            layers.retain(|layer| !tessellated_set.contains(layer));
-        }
-    }
-
-    /// Checks if a layer is missing from the given layers set at the given coords.
-    pub fn is_layers_missing(&self, coords: &WorldTileCoords, layers: &HashSet<String>) -> bool {
-        if let Some(cached_tile) = coords.build_quad_key().and_then(|key| self.tree.get(&key)) {
-            let tessellated_set: HashSet<&str> = cached_tile
-                .layers
-                .iter()
-                .map(|tessellated_layer| tessellated_layer.layer_name())
-                .collect();
-
-            for layer in layers {
-                if !tessellated_set.contains(layer.as_str()) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-        true
     }
 }

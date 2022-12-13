@@ -2,6 +2,7 @@
 
 use std::borrow::Cow;
 
+use wgpu::PresentMode;
 pub use wgpu::{Backends, Features, Limits, PowerPreference, TextureFormat};
 
 /// Provides configuration for renderer initialization. Use [`Device::features`](crate::renderer::Device::features),
@@ -52,9 +53,7 @@ impl Default for WgpuSettings {
             }
         };
 
-        let mut features = Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
-
-        features |= Features::DEPTH32FLOAT_STENCIL8;
+        let features = Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
 
         Self {
             device_label: Default::default(),
@@ -106,6 +105,8 @@ pub struct RendererSettings {
     pub msaa: Msaa,
     pub texture_format: TextureFormat,
     pub depth_texture_format: TextureFormat,
+    /// Present mode for surfaces if a surface is used.
+    pub present_mode: PresentMode,
 }
 
 impl Default for RendererSettings {
@@ -133,7 +134,8 @@ impl Default for RendererSettings {
             )))]
             texture_format: TextureFormat::Bgra8UnormSrgb,
 
-            depth_texture_format: TextureFormat::Depth32FloatStencil8,
+            depth_texture_format: TextureFormat::Depth24PlusStencil8,
+            present_mode: PresentMode::AutoVsync,
         }
     }
 }

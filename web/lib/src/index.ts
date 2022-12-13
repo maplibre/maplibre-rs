@@ -31,39 +31,34 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
         const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY / PAGES, shared: true})
         await maplibre.default(wasmPath, memory)
 
-        maplibre.run(await maplibre.create_map(() => {
+        await maplibre.run_maplibre(() => {
             return workerPath ? new Worker(workerPath, {
                 type: 'module'
             }) : MultithreadedPoolWorker();
-        }))
+        });
     } else {
         const memory = new WebAssembly.Memory({initial: 1024, shared: false})
         await maplibre.default(wasmPath, memory);
 
-        let callbacks: {worker_callback?: (message: MessageEvent) => void} = {}
-
-        let map = await maplibre.create_map(() => {
+        await maplibre.run_maplibre((ptr) => {
             let worker: Worker = workerPath ? new Worker(workerPath, {
                 type: 'module'
             }) : PoolWorker();
 
             worker.onmessage = (message: MessageEvent) => {
-                callbacks.worker_callback(message)
+                // WARNING: Do not modify data passed from Rust!
+                let in_transfer = message.data;
+
+                const main_entry = maplibre["singlethreaded_main_entry"];
+
+                if (!main_entry) {
+                    throw Error("singlethreaded_main_entry is not defined. Maybe the Rust build used the wrong build configuration.")
+                }
+
+                main_entry(ptr, in_transfer)
             }
 
             return worker;
-        })
-
-        let clonedMap = maplibre.clone_map(map)
-
-        callbacks.worker_callback = (message) => {
-            let tag = message.data[0];
-            let data = new Uint8Array(message.data[1]);
-
-            // @ts-ignore TODO unsync_main_entry may not be defined
-            maplibre.singlethreaded_main_entry(clonedMap, tag, data)
-        }
-
-        maplibre.run(map)
+        });
     }
 }

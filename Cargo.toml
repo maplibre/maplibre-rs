@@ -15,6 +15,15 @@ members = [
     "benchmarks",
 ]
 
+[workspace.package]
+description = "Maps for Desktop, Mobile and Web"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.65"
+license = "MIT OR Apache-2.0"
+keywords = ["graphics"]
+authors = ["Maximilian Ammann <max@maxammann.org>"]
+
 [profile.release]
 lto = true
 codegen-units = 1
