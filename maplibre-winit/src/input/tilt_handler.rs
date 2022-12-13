@@ -16,10 +16,7 @@ impl UpdateState for TiltHandler {
     fn update_state(
         &mut self,
         MapContext {
-            world: World {
-                view_state: _view_state,
-                ..
-            },
+            world: World { view_state, .. },
             ..
         }: &mut MapContext,
         dt: Duration,
@@ -27,7 +24,7 @@ impl UpdateState for TiltHandler {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.delta_pitch * dt;
-        _view_state.camera_mut().pitch_self(delta);
+        view_state.camera_mut().tilt(delta);
         self.delta_pitch -= delta;
     }
 }
