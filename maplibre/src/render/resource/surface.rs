@@ -3,7 +3,7 @@
 
 use std::{mem::size_of, sync::Arc};
 
-use wgpu::CompositeAlphaMode;
+use wgpu::{CompositeAlphaMode, TextureFormat};
 
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
@@ -61,6 +61,7 @@ impl WindowHead {
 
 pub struct BufferedTextureHead {
     pub texture: wgpu::Texture,
+    pub texture_format: TextureFormat,
     pub output_buffer: wgpu::Buffer,
     pub buffer_dimensions: BufferDimensions,
 }
@@ -121,6 +122,7 @@ pub struct Surface {
 impl Surface {
     pub fn from_window<MW>(
         instance: &wgpu::Instance,
+        adapter: &wgpu::Adapter,
         window: &MW,
         settings: &RendererSettings,
     ) -> Self
@@ -128,16 +130,22 @@ impl Surface {
         MW: MapWindow + HeadedMapWindow,
     {
         let size = window.size();
+
+        let surface = unsafe { instance.create_surface(window.raw()) };
+
+        let format = settings
+            .texture_format
+            .and_then(|_| surface.get_supported_formats(adapter).first().cloned())
+            .unwrap_or(TextureFormat::Bgra8Unorm);
+
         let surface_config = wgpu::SurfaceConfiguration {
             alpha_mode: CompositeAlphaMode::Auto,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: settings.texture_format,
+            format,
             width: size.width(),
             height: size.height(),
             present_mode: settings.present_mode,
         };
-
-        let surface = unsafe { instance.create_surface(window.raw()) };
 
         Self {
             size,
@@ -169,7 +177,10 @@ impl Surface {
             mapped_at_creation: false,
         });
 
-        let texture = device.create_texture(&wgpu::TextureDescriptor {
+        // FIXME: Is this a sane default?
+        let format = settings.texture_format.unwrap_or(TextureFormat::Bgra8Unorm);
+
+        let texture_descriptor = wgpu::TextureDescriptor {
             label: Some("Surface texture"),
             size: wgpu::Extent3d {
                 width: size.width(),
@@ -179,17 +190,25 @@ impl Surface {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: settings.texture_format,
+            format,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        });
+        };
+        let texture = device.create_texture(&texture_descriptor);
 
         Self {
             size,
             head: Head::Headless(Arc::new(BufferedTextureHead {
                 texture,
+                texture_format: format,
                 output_buffer,
                 buffer_dimensions,
             })),
+        }
+    }
+    pub fn surface_format(&self) -> TextureFormat {
+        match &self.head {
+            Head::Headed(headed) => headed.surface_config.format,
+            Head::Headless(headless) => headless.texture_format,
         }
     }
 

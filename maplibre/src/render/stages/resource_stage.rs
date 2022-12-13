@@ -63,7 +63,7 @@ impl Stage for ResourceStage {
                     Some(Texture::new(
                         Some("multisampling texture"),
                         device,
-                        settings.texture_format,
+                        surface.surface_format(),
                         size.width(),
                         size.height(),
                         settings.msaa,
@@ -96,7 +96,7 @@ impl Stage for ResourceStage {
 
         state.tile_pipeline.initialize(|| {
             let tile_shader = shaders::TileShader {
-                format: settings.texture_format,
+                format: surface.surface_format(),
             };
 
             let pipeline = TilePipeline::new(
@@ -120,7 +120,7 @@ impl Stage for ResourceStage {
 
         state.mask_pipeline.initialize(|| {
             let mask_shader = shaders::TileMaskShader {
-                format: settings.texture_format,
+                format: surface.surface_format(),
                 draw_colors: false,
             };
 
