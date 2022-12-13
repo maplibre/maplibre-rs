@@ -15,9 +15,17 @@ onmessage = async message => {
     self.onmessage = async message => {
         // This will queue further commands up until the module is fully initialised:
         await initialised;
-        let procedure_ptr = message.data[0];
-        let input = message.data[1];
-        // @ts-ignore TODO
-        await maplibre.singlethreaded_worker_entry(procedure_ptr, input);
+
+        // WARNING: Do not modify data passed from Rust!
+        const procedure_ptr = message.data[0];
+        const input = message.data[1];
+
+        const worker_entry = maplibre["singlethreaded_worker_entry"];
+
+        if (!worker_entry) {
+            throw Error("singlethreaded_worker_entry is not defined. Maybe the Rust build used the wrong build configuration.")
+        }
+
+        await worker_entry(procedure_ptr, input);
     };
 }

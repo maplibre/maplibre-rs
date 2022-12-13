@@ -1,0 +1,10 @@
+include "basic.fbs";
+
+//namespace transferables;
+
+table FlatLayerUnavailable {
+    coords: FlatWorldTileCoords;
+    layer_name: string;
+}
+
+root_type FlatLayerUnavailable;

@@ -8,15 +8,13 @@ use std::{
 };
 
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
-use crate::{
-    error::Error,
-    io::{
-        scheduler::Scheduler,
-        source_client::{HttpClient, HttpSourceClient, SourceClient},
-        transferables::{DefaultTransferables, Transferables},
-        TileRequest,
-    },
+use crate::io::{
+    scheduler::Scheduler,
+    source_client::{HttpClient, HttpSourceClient, SourceClient},
+    transferables::{DefaultTransferables, Transferables},
+    TileRequest,
 };
 
 /// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
@@ -28,29 +26,60 @@ use crate::{
 #[derive(Clone)]
 pub enum Message<T: Transferables> {
     TileTessellated(T::TileTessellated),
-    UnavailableLayer(T::UnavailableLayer),
-    TessellatedLayer(T::TessellatedLayer),
+    LayerUnavailable(T::LayerUnavailable),
+    LayerTessellated(T::LayerTessellated),
+
+    LayerIndexed(T::LayerIndexed),
 }
 
 /// Inputs for an [`AsyncProcedure`]
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Input {
     TileRequest(TileRequest),
+    NotYetImplemented, // TODO: Placeholder, should be removed when second input is added
+}
+
+#[derive(Error, Debug)]
+pub enum SendError {
+    #[error("could not transmit data")]
+    Transmission,
 }
 
 /// Allows sending messages from workers to back to the caller.
 pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
     /// Send a message back to the caller.
-    // FIXME (wasm-executor): handle results send() calls
-    fn send(&self, data: Message<T>) -> Result<(), Error>;
+    fn send(&self, data: Message<T>) -> Result<(), SendError>;
 
     fn source_client(&self) -> &SourceClient<HC>;
 }
 
+#[derive(Error, Debug)]
+pub enum ProcedureError {
+    /// The [`Input`] is not compatible with the procedure
+    #[error("provided input is not compatible with procedure")]
+    IncompatibleInput,
+    #[error("execution of procedure failed")]
+    Execution(Box<dyn std::error::Error>),
+    #[error("sending data failed")]
+    Send(SendError),
+}
+
 #[cfg(feature = "thread-safe-futures")]
-pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + Send + 'static)>>;
+pub type AsyncProcedureFuture =
+    Pin<Box<(dyn Future<Output = Result<(), ProcedureError>> + Send + 'static)>>;
 #[cfg(not(feature = "thread-safe-futures"))]
-pub type AsyncProcedureFuture = Pin<Box<(dyn Future<Output = ()> + 'static)>>;
+pub type AsyncProcedureFuture =
+    Pin<Box<(dyn Future<Output = Result<(), ProcedureError>> + 'static)>>;
+
+#[derive(Error, Debug)]
+pub enum CallError {
+    #[error("scheduling work failed")]
+    Schedule,
+    #[error("serializing data failed")]
+    Serialize(Box<dyn std::error::Error>),
+    #[error("deserializing failed")]
+    Deserialize(Box<dyn std::error::Error>),
+}
 
 /// Type definitions for asynchronous procedure calls. These functions can be called in an
 /// [`AsyncProcedureCall`]. Functions of this type are required to be statically available at
@@ -107,7 +136,8 @@ pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
 
     /// Call an [`AsyncProcedure`] using some [`Input`]. This function is non-blocking and
     /// returns immediately.
-    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>);
+    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>)
+        -> Result<(), CallError>;
 }
 
 #[derive(Clone)]
@@ -117,8 +147,8 @@ pub struct SchedulerContext<T: Transferables, HC: HttpClient> {
 }
 
 impl<T: Transferables, HC: HttpClient> Context<T, HC> for SchedulerContext<T, HC> {
-    fn send(&self, data: Message<T>) -> Result<(), Error> {
-        self.sender.send(data).map_err(|_e| Error::APC)
+    fn send(&self, data: Message<T>) -> Result<(), SendError> {
+        self.sender.send(data).map_err(|_e| SendError::Transmission)
     }
 
     fn source_client(&self) -> &SourceClient<HC> {
@@ -154,21 +184,26 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
         Some(transferred)
     }
 
-    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
+    fn call(
+        &self,
+        input: Input,
+        procedure: AsyncProcedure<Self::Context>,
+    ) -> Result<(), CallError> {
         let sender = self.channel.0.clone();
         let client = self.http_client.clone(); // TODO (perf): do not clone each time
 
         self.scheduler
             .schedule(move || async move {
-                (procedure)(
+                procedure(
                     input,
                     SchedulerContext {
                         sender,
                         source_client: SourceClient::new(HttpSourceClient::new(client)),
                     },
                 )
-                .await;
+                .await
+                .unwrap();
             })
-            .unwrap();
+            .map_err(|_e| CallError::Schedule)
     }
 }

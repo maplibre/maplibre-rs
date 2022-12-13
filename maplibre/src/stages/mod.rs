@@ -8,13 +8,14 @@ use request_stage::RequestStage;
 use crate::{
     coords::WorldTileCoords,
     environment::Environment,
-    error::Error,
     io::{
         apc::{Context, Message},
-        geometry_index::IndexedGeometry,
-        pipeline::PipelineProcessor,
+        geometry_index::{IndexedGeometry, TileIndex},
+        pipeline::{PipelineError, PipelineProcessor},
         source_client::HttpClient,
-        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
+        transferables::{
+            LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
+        },
     },
     kernel::Kernel,
     render::ShaderVertex,
@@ -41,21 +42,25 @@ pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<
 impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
     for HeadedPipelineProcessor<T, HC, C>
 {
-    fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), Error> {
+    fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), PipelineError> {
         self.context
-            .send(Message::TileTessellated(T::TileTessellated::new(*coords)))
+            .send(Message::TileTessellated(T::TileTessellated::build_from(
+                *coords,
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     fn layer_unavailable(
         &mut self,
         coords: &WorldTileCoords,
         layer_name: &str,
-    ) -> Result<(), Error> {
+    ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::UnavailableLayer(T::UnavailableLayer::new(
+            .send(Message::LayerUnavailable(T::LayerUnavailable::build_from(
                 *coords,
                 layer_name.to_owned(),
             )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     fn layer_tesselation_finished(
@@ -64,48 +69,27 @@ impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
         layer_data: tile::Layer,
-    ) -> Result<(), Error> {
+    ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::TessellatedLayer(T::TessellatedLayer::new(
+            .send(Message::LayerTessellated(T::LayerTessellated::build_from(
                 *coords,
                 buffer,
                 feature_indices,
                 layer_data,
             )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
     fn layer_indexing_finished(
         &mut self,
-        _coords: &WorldTileCoords,
-        _geometries: Vec<IndexedGeometry<f64>>,
-    ) -> Result<(), Error> {
-        // FIXME (wasm-executor): Readd
-        /*        if let Ok(mut geometry_index) = self.state.geometry_index.lock() {
-            geometry_index.index_tile(coords, TileIndex::Linear { list: geometries })
-        }*/
-        Ok(())
+        coords: &WorldTileCoords,
+        geometries: Vec<IndexedGeometry<f64>>,
+    ) -> Result<(), PipelineError> {
+        self.context
+            .send(Message::LayerIndexed(T::LayerIndexed::build_from(
+                *coords,
+                TileIndex::Linear { list: geometries },
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 }
-
-// FIXME (wasm-executor): Readd
-/*pub fn query_point(
-    &self,
-    world_coords: &WorldCoords,
-    z: ZoomLevel,
-    zoom: Zoom,
-) -> Option<Vec<IndexedGeometry<f64>>> {
-    if let Ok(geometry_index) = self.geometry_index.lock() {
-        geometry_index
-            .query_point(world_coords, z, zoom)
-            .map(|geometries| {
-                geometries
-                    .iter()
-                    .cloned()
-                    .cloned()
-                    .collect::<Vec<IndexedGeometry<f64>>>()
-            })
-    } else {
-        unimplemented!()
-    }
-}*/
-//}

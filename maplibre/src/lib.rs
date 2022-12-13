@@ -23,7 +23,6 @@ pub(crate) mod tessellation;
 
 pub mod context;
 pub mod coords;
-pub mod error;
 #[cfg(feature = "headless")]
 pub mod headless;
 pub mod io;

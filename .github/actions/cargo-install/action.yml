@@ -47,7 +47,7 @@ runs:
           INSTALL_PATH="~/.binstall/"
           mkdir -p "$INSTALL_PATH"
           if [[ $FILE == *"zip"* ]]; then
-            unzip /tmp/binstall.bin -d "$INSTALL_PATH"
+            unzip -o /tmp/binstall.bin -d "$INSTALL_PATH"
           elif [[ $FILE == *"tgz"* ]]; then
             tar xf /tmp/binstall.bin -C "$INSTALL_PATH"
           else

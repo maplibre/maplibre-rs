@@ -1,227 +1,249 @@
-use bytemuck::{TransparentWrapper, Zeroable};
-use bytemuck_derive::{Pod, Zeroable};
-use log::warn;
+use flatbuffers::FlatBufferBuilder;
+use js_sys::{ArrayBuffer, Uint8Array};
 use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::WorldTileCoords,
     io::{
+        apc::Message,
+        geometry_index::TileIndex,
         tile_repository::StoredLayer,
-        transferables::{TessellatedLayer, TileTessellated, Transferables, UnavailableLayer},
+        transferables::{
+            LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
+        },
     },
     render::ShaderVertex,
     tile::Layer,
 };
 
-// FIXME (wasm-executor): properly do this!, fix this whole file
-#[derive(Copy, Clone, Debug)]
-#[repr(transparent)]
-pub struct WrapperWorldTileCoords(WorldTileCoords);
-unsafe impl TransparentWrapper<WorldTileCoords> for WrapperWorldTileCoords {}
-unsafe impl bytemuck::Zeroable for WrapperWorldTileCoords {}
-unsafe impl bytemuck::Pod for WrapperWorldTileCoords {}
+use crate::platform::singlethreaded::{
+    transferables::{
+        basic_generated::*, layer_indexed_generated::*, layer_tessellated_generated::*,
+        layer_unavailable_generated::*, tile_tessellated_generated::*,
+    },
+    UsedTransferables,
+};
 
-#[derive(Copy, Clone)]
-#[repr(transparent)]
-pub struct LongVertexShader([ShaderVertex; 15000]);
-unsafe impl TransparentWrapper<[ShaderVertex; 15000]> for LongVertexShader {}
-unsafe impl bytemuck::Zeroable for LongVertexShader {}
-unsafe impl bytemuck::Pod for LongVertexShader {}
+pub mod basic_generated {
+    #![allow(unused, unused_imports, clippy::all)]
 
-#[derive(Copy, Clone)]
-#[repr(transparent)]
-pub struct LongIndices([IndexDataType; 40000]);
-unsafe impl TransparentWrapper<[IndexDataType; 40000]> for LongIndices {}
-unsafe impl bytemuck::Zeroable for LongIndices {}
-unsafe impl bytemuck::Pod for LongIndices {}
+    use maplibre::coords::{WorldTileCoords, ZoomLevel};
 
-#[derive(Copy, Clone, Pod, Zeroable)]
-#[repr(C)]
-pub struct LinearTileTessellated {
-    pub coords: WrapperWorldTileCoords,
+    include!(concat!(env!("OUT_DIR"), "/basic_generated.rs"));
+
+    impl Into<WorldTileCoords> for &FlatWorldTileCoords {
+        fn into(self) -> WorldTileCoords {
+            WorldTileCoords {
+                x: self.x(),
+                y: self.y(),
+                z: ZoomLevel::new(self.z()),
+            }
+        }
+    }
+}
+pub mod layer_indexed_generated {
+    #![allow(unused, unused_imports, clippy::all)]
+    include!(concat!(env!("OUT_DIR"), "/layer_indexed_generated.rs"));
+}
+pub mod layer_tessellated_generated {
+    #![allow(unused, unused_imports, clippy::all)]
+    include!(concat!(env!("OUT_DIR"), "/layer_tessellated_generated.rs"));
+}
+pub mod layer_unavailable_generated {
+    #![allow(unused, unused_imports, clippy::all)]
+    include!(concat!(env!("OUT_DIR"), "/layer_unavailable_generated.rs"));
+}
+pub mod tile_tessellated_generated {
+    #![allow(unused, unused_imports, clippy::all)]
+    include!(concat!(env!("OUT_DIR"), "/tile_tessellated_generated.rs"));
 }
 
-impl TileTessellated for LinearTileTessellated {
-    fn new(coords: WorldTileCoords) -> Self {
-        Self {
-            coords: WrapperWorldTileCoords::wrap(coords),
+pub struct FlatBufferTransferable {
+    data: Vec<u8>,
+    start: usize,
+}
+
+impl FlatBufferTransferable {
+    pub fn from_array_buffer(buffer: ArrayBuffer) -> Self {
+        let buffer = Uint8Array::new(&buffer);
+
+        FlatBufferTransferable {
+            data: buffer.to_vec(),
+            start: 0,
         }
     }
 
-    fn coords(&self) -> &WorldTileCoords {
-        WrapperWorldTileCoords::peel_ref(&self.coords)
+    pub fn data(&self) -> &[u8] {
+        &self.data[self.start..]
+    }
+
+    pub fn from_message(message: Message<UsedTransferables>) -> Self {
+        match message {
+            Message::TileTessellated(transferable) => transferable,
+            Message::LayerUnavailable(transferable) => transferable,
+            Message::LayerTessellated(transferable) => transferable,
+            Message::LayerIndexed(transferable) => transferable,
+        }
     }
 }
 
-#[derive(Copy, Clone, Pod, Zeroable)]
-#[repr(C)]
-pub struct LinearUnavailableLayer {
-    pub coords: WrapperWorldTileCoords,
-    pub layer_name: [u8; 32],
+impl TileTessellated for FlatBufferTransferable {
+    fn build_from(coords: WorldTileCoords) -> Self {
+        let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
+        let mut builder = FlatTileTessellatedBuilder::new(&mut inner_builder);
+
+        builder.add_coords(&FlatWorldTileCoords::new(
+            coords.x,
+            coords.y,
+            coords.z.into(),
+        ));
+        let root = builder.finish();
+        inner_builder.finish(root, None);
+        let (data, start) = inner_builder.collapse();
+        FlatBufferTransferable { data, start }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        let data = unsafe { root_as_flat_tile_tessellated_unchecked(&self.data[self.start..]) };
+        data.coords().unwrap().into()
+    }
 }
 
-impl UnavailableLayer for LinearUnavailableLayer {
-    fn new(coords: WorldTileCoords, layer_name: String) -> Self {
-        let mut new_layer_name = [0; 32];
-        new_layer_name[0..layer_name.len()].clone_from_slice(layer_name.as_bytes());
-        Self {
-            coords: WrapperWorldTileCoords::wrap(coords),
-            layer_name: new_layer_name,
-        }
+impl LayerUnavailable for FlatBufferTransferable {
+    fn build_from(coords: WorldTileCoords, layer_name: String) -> Self {
+        let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
+        let layer_name = inner_builder.create_string(&layer_name);
+
+        let mut builder = FlatLayerUnavailableBuilder::new(&mut inner_builder);
+        builder.add_coords(&FlatWorldTileCoords::new(
+            coords.x,
+            coords.y,
+            coords.z.into(),
+        ));
+        builder.add_layer_name(layer_name);
+        let root = builder.finish();
+
+        inner_builder.finish(root, None);
+        let (data, start) = inner_builder.collapse();
+        FlatBufferTransferable { data, start }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        let data = unsafe { root_as_flat_layer_unavailable_unchecked(&self.data[self.start..]) };
+        data.coords().unwrap().into()
+    }
+
+    fn layer_name(&self) -> &str {
+        let data = unsafe { root_as_flat_layer_unavailable_unchecked(&self.data[self.start..]) };
+        data.layer_name().expect("property must be set")
     }
 
     fn to_stored_layer(self) -> StoredLayer {
         StoredLayer::UnavailableLayer {
-            coords: WrapperWorldTileCoords::peel(self.coords),
-            layer_name: String::from_utf8(Vec::from(self.layer_name)).unwrap(), // FIXME (wasm-executor): Remove unwrap
+            layer_name: self.layer_name().to_owned(),
+            coords: LayerUnavailable::coords(&self),
         }
     }
 }
 
-#[derive(Copy, Clone, Pod, Zeroable)]
-#[repr(C)]
-pub struct InnerData {
-    pub coords: WrapperWorldTileCoords,
-    pub layer_name: [u8; 32],
-    pub layer_name_len: usize,
-    pub vertices: LongVertexShader,
-    pub vertices_len: usize,
-    pub indices: LongIndices,
-    pub indices_len: usize,
-    pub usable_indices: u32,
-    /// Holds for each feature the count of indices.
-    pub feature_indices: [u32; 2048],
-    pub feature_indices_len: usize,
-}
-
-#[derive(Clone)]
-pub struct LinearTessellatedLayer {
-    pub data: Box<InnerData>,
-}
-
-impl TessellatedLayer for LinearTessellatedLayer {
-    fn new(
+impl LayerTessellated for FlatBufferTransferable {
+    fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
         layer_data: Layer,
     ) -> Self {
-        let mut data = Box::new(InnerData {
-            coords: WrapperWorldTileCoords::wrap(coords),
+        let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
 
-            layer_name: [0; 32],
-            layer_name_len: layer_data.name.len(),
+        let vertices = inner_builder.create_vector(
+            &buffer
+                .buffer
+                .vertices
+                .iter()
+                .map(|vertex| FlatShaderVertex::new(&vertex.position, &vertex.normal))
+                .collect::<Vec<_>>(),
+        );
+        let indices = inner_builder.create_vector(&buffer.buffer.indices);
+        let feature_indices = inner_builder.create_vector(&feature_indices);
+        let layer_name = inner_builder.create_string(&layer_data.name);
 
-            vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
-            vertices_len: buffer.buffer.vertices.len(),
+        let mut builder = FlatLayerTessellatedBuilder::new(&mut inner_builder);
 
-            indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
-            indices_len: buffer.buffer.indices.len(),
+        builder.add_coords(&FlatWorldTileCoords::new(
+            coords.x,
+            coords.y,
+            coords.z.into(),
+        ));
+        builder.add_layer_name(layer_name);
+        builder.add_vertices(vertices);
+        builder.add_indices(indices);
+        builder.add_feature_indices(feature_indices);
+        builder.add_usable_indices(buffer.usable_indices);
+        let root = builder.finish();
 
-            usable_indices: buffer.usable_indices,
+        inner_builder.finish(root, None);
+        let (data, start) = inner_builder.collapse();
+        FlatBufferTransferable { data, start }
+    }
 
-            feature_indices: [0u32; 2048],
-            feature_indices_len: feature_indices.len(),
-        });
-
-        if buffer.buffer.vertices.len() > 15000 {
-            warn!("vertices too large");
-            return Self {
-                data: Box::new(InnerData {
-                    coords: WrapperWorldTileCoords::wrap(coords),
-
-                    layer_name: [0; 32],
-                    layer_name_len: 0,
-
-                    vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
-                    vertices_len: 0,
-
-                    indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
-                    indices_len: 0,
-
-                    usable_indices: 0,
-
-                    feature_indices: [0u32; 2048],
-                    feature_indices_len: 0,
-                }),
-            };
-        }
-
-        if buffer.buffer.indices.len() > 40000 {
-            warn!("indices too large");
-            return Self {
-                data: Box::new(InnerData {
-                    coords: WrapperWorldTileCoords::wrap(coords),
-
-                    layer_name: [0; 32],
-                    layer_name_len: 0,
-
-                    vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
-                    vertices_len: 0,
-
-                    indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
-                    indices_len: 0,
-
-                    usable_indices: 0,
-
-                    feature_indices: [0u32; 2048],
-                    feature_indices_len: 0,
-                }),
-            };
-        }
-
-        if feature_indices.len() > 2048 {
-            warn!("feature_indices too large");
-            return Self {
-                data: Box::new(InnerData {
-                    coords: WrapperWorldTileCoords::wrap(coords),
-
-                    layer_name: [0; 32],
-                    layer_name_len: 0,
-
-                    vertices: LongVertexShader::wrap([ShaderVertex::zeroed(); 15000]),
-                    vertices_len: 0,
-
-                    indices: LongIndices::wrap([IndexDataType::zeroed(); 40000]),
-                    indices_len: 0,
-
-                    usable_indices: 0,
-
-                    feature_indices: [0u32; 2048],
-                    feature_indices_len: 0,
-                }),
-            };
-        }
-
-        data.vertices.0[0..buffer.buffer.vertices.len()].clone_from_slice(&buffer.buffer.vertices);
-        data.indices.0[0..buffer.buffer.indices.len()].clone_from_slice(&buffer.buffer.indices);
-        data.feature_indices[0..feature_indices.len()].clone_from_slice(&feature_indices);
-        data.layer_name[0..layer_data.name.len()].clone_from_slice(layer_data.name.as_bytes());
-
-        Self { data }
+    fn coords(&self) -> WorldTileCoords {
+        let data = unsafe { root_as_flat_layer_tessellated_unchecked(&self.data[self.start..]) };
+        data.coords().unwrap().into()
     }
 
     fn to_stored_layer(self) -> StoredLayer {
-        // TODO: Avoid copies here
+        let data = unsafe { root_as_flat_layer_tessellated_unchecked(&self.data[self.start..]) };
+        let vertices = data
+            .vertices()
+            .unwrap()
+            .iter()
+            .map(|vertex| ShaderVertex::new(vertex.position().into(), vertex.normal().into()));
+
+        let indices = data.indices().unwrap();
+        let feature_indices: Vec<u32> = data.feature_indices().unwrap().iter().collect();
+        let usable_indices = data.usable_indices();
         StoredLayer::TessellatedLayer {
-            coords: WrapperWorldTileCoords::peel(self.data.coords),
-            layer_name: String::from_utf8(Vec::from(
-                &self.data.layer_name[..self.data.layer_name_len],
-            ))
-            .unwrap(), // FIXME (wasm-executor): Remove unwrap
-            buffer: OverAlignedVertexBuffer::from_slices(
-                &self.data.vertices.0[..self.data.vertices_len],
-                &self.data.indices.0[..self.data.indices_len],
-                self.data.usable_indices,
-            ),
-            feature_indices: Vec::from(&self.data.feature_indices[..self.data.feature_indices_len]),
+            coords: LayerTessellated::coords(&self),
+            layer_name: data.layer_name().unwrap().to_owned(),
+            buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
+            feature_indices,
         }
     }
 }
 
-pub struct LinearTransferables;
+impl LayerIndexed for FlatBufferTransferable {
+    fn build_from(coords: WorldTileCoords, _index: TileIndex) -> Self {
+        let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
+        let mut builder = FlatLayerIndexedBuilder::new(&mut inner_builder);
 
-impl Transferables for LinearTransferables {
-    type TileTessellated = LinearTileTessellated;
-    type UnavailableLayer = LinearUnavailableLayer;
-    type TessellatedLayer = LinearTessellatedLayer;
+        // TODO index
+
+        builder.add_coords(&FlatWorldTileCoords::new(
+            coords.x,
+            coords.y,
+            coords.z.into(),
+        ));
+        let root = builder.finish();
+        inner_builder.finish(root, None);
+        let (data, start) = inner_builder.collapse();
+        FlatBufferTransferable { data, start }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        let data = unsafe { root_as_flat_layer_indexed_unchecked(&self.data[self.start..]) };
+        data.coords().unwrap().into()
+    }
+
+    fn to_tile_index(self) -> TileIndex {
+        TileIndex::Linear { list: vec![] } // TODO index
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct FlatTransferables;
+
+impl Transferables for FlatTransferables {
+    type TileTessellated = FlatBufferTransferable;
+    type LayerUnavailable = FlatBufferTransferable;
+    type LayerTessellated = FlatBufferTransferable;
+    type LayerIndexed = FlatBufferTransferable;
 }

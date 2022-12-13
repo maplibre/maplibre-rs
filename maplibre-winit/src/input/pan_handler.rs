@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
-use maplibre::{render::camera::Camera, world::ViewState};
+use maplibre::{context::MapContext, render::camera::Camera, world::World};
 use winit::event::{ElementState, MouseButton};
 
 use super::UpdateState;
@@ -15,7 +15,14 @@ pub struct PanHandler {
 }
 
 impl UpdateState for PanHandler {
-    fn update_state(&mut self, state: &mut ViewState, _dt: Duration) {
+    fn update_state(
+        &mut self,
+        MapContext {
+            world: World { view_state, .. },
+            ..
+        }: &mut MapContext,
+        _dt: Duration,
+    ) {
         if !self.is_panning {
             return;
         }
@@ -24,7 +31,7 @@ impl UpdateState for PanHandler {
             if let (Some(window_position), Some(start_window_position)) =
                 (self.window_position, self.start_window_position)
             {
-                let view_proj = state.view_projection();
+                let view_proj = view_state.view_projection();
                 let inverted_view_proj = view_proj.invert();
 
                 let delta = if let (Some(start), Some(current)) = (
@@ -45,17 +52,17 @@ impl UpdateState for PanHandler {
                 };
 
                 if self.start_camera_position.is_none() {
-                    self.start_camera_position = Some(state.camera().position().to_vec());
+                    self.start_camera_position = Some(view_state.camera().position().to_vec());
                 }
 
                 if let Some(start_camera_position) = self.start_camera_position {
-                    state.camera_mut().move_to(Point3::from_vec(
+                    view_state.camera_mut().move_to(Point3::from_vec(
                         start_camera_position + Vector3::new(delta.x, delta.y, 0.0),
                     ));
                 }
             }
         } else {
-            self.reference_camera = Some(state.camera().clone());
+            self.reference_camera = Some(view_state.camera().clone());
         }
     }
 }

@@ -1,7 +1,9 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
-use maplibre::world::ViewState;
+use maplibre::{
+    context::MapContext, coords::WorldCoords, io::geometry_index::IndexedGeometry, world::World,
+};
 use winit::event::{ElementState, MouseButton};
 
 use crate::input::UpdateState;
@@ -10,10 +12,6 @@ pub struct QueryHandler {
     window_position: Option<Vector2<f64>>,
     clicking: bool,
 }
-
-/*impl UpdateState for QueryHandler {
-
-}*/
 
 impl QueryHandler {
     pub fn new() -> Self {
@@ -57,42 +55,59 @@ impl QueryHandler {
 }
 
 impl UpdateState for QueryHandler {
-    fn update_state(&mut self, state: &mut ViewState, _dt: Duration) {
+    fn update_state(
+        &mut self,
+        MapContext {
+            world:
+                World {
+                    view_state,
+                    geometry_index,
+                    ..
+                },
+            ..
+        }: &mut MapContext,
+        _dt: Duration,
+    ) {
         if self.clicking {
             if let Some(window_position) = self.window_position {
-                let view_proj = state.view_projection();
+                let view_proj = view_state.view_projection();
                 let inverted_view_proj = view_proj.invert();
 
-                let _z = state.visible_level(); // FIXME: can be wrong, if tiles of different z are visible
-                let _zoom = state.zoom();
+                let z = view_state.visible_level(); // FIXME: can be wrong, if tiles of different z are visible
+                let zoom = view_state.zoom();
 
-                if let Some(_coordinates) = state.camera().window_to_world_at_ground(
+                if let Some(coordinates) = view_state.camera().window_to_world_at_ground(
                     &window_position,
                     &inverted_view_proj,
                     false,
                 ) {
-                    // TODO reenable
-                    /*state
-                    .scheduler()
-                    .schedule(state.scheduler(), move |thread_local| async move {
-                        if let Some(geometries) = thread_local.query_point(
+                    if let Some(geometries) = geometry_index
+                        .query_point(
                             &WorldCoords {
                                 x: coordinates.x,
                                 y: coordinates.y,
                             },
                             z,
                             zoom,
-                        ) {
-                            log::info!(
-                                "{:?}",
-                                geometries
-                                    .iter()
-                                    .map(|geometry| &geometry.properties)
-                                    .collect::<Vec<_>>()
-                            );
-                        }
-                    })
-                    .unwrap();*/
+                        )
+                        .map(|geometries| {
+                            geometries
+                                .iter()
+                                .cloned()
+                                .cloned()
+                                .collect::<Vec<IndexedGeometry<f64>>>()
+                        })
+                    {
+                        log::info!(
+                            "Clicked on geometry: {:?}",
+                            geometries
+                                .iter()
+                                .map(|geometry| &geometry.properties)
+                                .collect::<Vec<_>>()
+                        );
+                    } else {
+                        log::info!("No geometry found.",);
+                    }
                 }
             }
             self.clicking = false;
