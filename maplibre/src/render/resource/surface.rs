@@ -5,7 +5,6 @@ use std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
 use log::debug;
 use thiserror::Error;
-use wgpu::{CompositeAlphaMode, ImageCopyTexture, TextureFormat};
 
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
@@ -38,7 +37,7 @@ impl BufferDimensions {
 pub struct WindowHead {
     surface: wgpu::Surface,
     size: WindowSize,
-    format: TextureFormat,
+    format: wgpu::TextureFormat,
     present_mode: wgpu::PresentMode,
 }
 
@@ -50,7 +49,7 @@ impl WindowHead {
 
     pub fn configure(&self, device: &wgpu::Device) {
         let surface_config = wgpu::SurfaceConfiguration {
-            alpha_mode: CompositeAlphaMode::Auto,
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: self.format,
             width: self.size.width(),
@@ -75,7 +74,7 @@ impl WindowHead {
 
 pub struct BufferedTextureHead {
     texture: wgpu::Texture,
-    texture_format: TextureFormat,
+    texture_format: wgpu::TextureFormat,
     output_buffer: wgpu::Buffer,
     buffer_dimensions: BufferDimensions,
 }
@@ -126,7 +125,7 @@ impl BufferedTextureHead {
         png_writer.finish().unwrap(); // TODO: Remove unwrap
     }
 
-    pub fn copy_texture(&self) -> ImageCopyTexture<'_> {
+    pub fn copy_texture(&self) -> wgpu::ImageCopyTexture<'_> {
         self.texture.as_image_copy()
     }
 
@@ -175,7 +174,7 @@ impl Surface {
         let format = settings
             .texture_format
             .or_else(|| surface.get_supported_formats(adapter).first().cloned())
-            .unwrap_or(TextureFormat::Bgra8Unorm);
+            .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
 
         Self {
             size,
@@ -215,7 +214,9 @@ impl Surface {
         });
 
         // FIXME: Is this a sane default?
-        let format = settings.texture_format.unwrap_or(TextureFormat::Bgra8Unorm);
+        let format = settings
+            .texture_format
+            .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
 
         let texture_descriptor = wgpu::TextureDescriptor {
             label: Some("Surface texture"),
@@ -243,7 +244,7 @@ impl Surface {
         })
     }
 
-    pub fn surface_format(&self) -> TextureFormat {
+    pub fn surface_format(&self) -> wgpu::TextureFormat {
         match &self.head {
             Head::Headed(headed) => headed.format,
             Head::Headless(headless) => headless.texture_format,
