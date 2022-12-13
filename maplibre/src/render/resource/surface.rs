@@ -1,10 +1,11 @@
 //! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
-use std::{mem::size_of, sync::Arc};
+use std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
 use log::debug;
-use wgpu::{CompositeAlphaMode, TextureFormat};
+use thiserror::Error;
+use wgpu::{CompositeAlphaMode, ImageCopyTexture, TextureFormat};
 
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
@@ -12,25 +13,25 @@ use crate::{
 };
 
 pub struct BufferDimensions {
-    pub width: usize,
-    pub height: usize,
-    pub unpadded_bytes_per_row: usize,
-    pub padded_bytes_per_row: usize,
+    pub width: u32,
+    pub height: u32,
+    pub unpadded_bytes_per_row: NonZeroU32,
+    pub padded_bytes_per_row: NonZeroU32,
 }
 
 impl BufferDimensions {
-    fn new(width: usize, height: usize) -> Self {
-        let bytes_per_pixel = size_of::<u32>();
+    fn new(width: u32, height: u32) -> Option<Self> {
+        let bytes_per_pixel = size_of::<u32>() as u32;
         let unpadded_bytes_per_row = width * bytes_per_pixel;
-        let align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT as usize;
+        let align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
         let padded_bytes_per_row_padding = (align - unpadded_bytes_per_row % align) % align;
         let padded_bytes_per_row = unpadded_bytes_per_row + padded_bytes_per_row_padding;
-        Self {
+        Some(Self {
             width,
             height,
-            unpadded_bytes_per_row,
-            padded_bytes_per_row,
-        }
+            unpadded_bytes_per_row: NonZeroU32::new(unpadded_bytes_per_row)?,
+            padded_bytes_per_row: NonZeroU32::new(padded_bytes_per_row)?,
+        })
     }
 }
 
@@ -66,16 +67,17 @@ impl WindowHead {
     {
         self.surface = unsafe { instance.create_surface(window.raw()) };
     }
+
     pub fn surface(&self) -> &wgpu::Surface {
         &self.surface
     }
 }
 
 pub struct BufferedTextureHead {
-    pub texture: wgpu::Texture,
-    pub texture_format: TextureFormat,
-    pub output_buffer: wgpu::Buffer,
-    pub buffer_dimensions: BufferDimensions,
+    texture: wgpu::Texture,
+    texture_format: TextureFormat,
+    output_buffer: wgpu::Buffer,
+    buffer_dimensions: BufferDimensions,
 }
 
 #[cfg(feature = "headless")]
@@ -108,22 +110,44 @@ impl BufferedTextureHead {
         let mut png_writer = png_encoder
             .write_header()
             .unwrap() // TODO: Remove unwrap
-            .into_stream_writer_with_size(self.buffer_dimensions.unpadded_bytes_per_row)
+            .into_stream_writer_with_size(
+                self.buffer_dimensions.unpadded_bytes_per_row.get() as usize
+            )
             .unwrap(); // TODO: Remove unwrap
 
         // from the padded_buffer we write just the unpadded bytes into the image
-        for chunk in padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row) {
+        for chunk in
+            padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row.get() as usize)
+        {
             png_writer
-                .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row])
+                .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row.get() as usize])
                 .unwrap(); // TODO: Remove unwrap
         }
         png_writer.finish().unwrap(); // TODO: Remove unwrap
+    }
+
+    pub fn copy_texture(&self) -> ImageCopyTexture<'_> {
+        self.texture.as_image_copy()
+    }
+
+    pub fn buffer(&self) -> &wgpu::Buffer {
+        &self.output_buffer
+    }
+
+    pub fn bytes_per_row(&self) -> NonZeroU32 {
+        self.buffer_dimensions.padded_bytes_per_row
     }
 }
 
 pub enum Head {
     Headed(WindowHead),
     Headless(Arc<BufferedTextureHead>),
+}
+
+#[derive(Error, Debug)]
+pub enum SurfaceInitError {
+    #[error("surface with either a width or height of zero is not supported")]
+    EmptySurface,
 }
 
 pub struct Surface {
@@ -165,7 +189,11 @@ impl Surface {
     }
 
     // TODO: Give better name
-    pub fn from_image<MW>(device: &wgpu::Device, window: &MW, settings: &RendererSettings) -> Self
+    pub fn from_image<MW>(
+        device: &wgpu::Device,
+        window: &MW,
+        settings: &RendererSettings,
+    ) -> Result<Self, SurfaceInitError>
     where
         MW: MapWindow,
     {
@@ -175,12 +203,13 @@ impl Surface {
         // So we calculate padded_bytes_per_row by rounding unpadded_bytes_per_row
         // up to the next multiple of wgpu::COPY_BYTES_PER_ROW_ALIGNMENT.
         // https://en.wikipedia.org/wiki/Data_structure_alignment#Computing_padding
-        let buffer_dimensions =
-            BufferDimensions::new(size.width() as usize, size.height() as usize);
+        let buffer_dimensions = BufferDimensions::new(size.width(), size.height())
+            .ok_or_else(|| SurfaceInitError::EmptySurface)?;
+
         // The output buffer lets us retrieve the data as an array
         let output_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("BufferedTextureHead buffer"),
-            size: (buffer_dimensions.padded_bytes_per_row * buffer_dimensions.height) as u64,
+            size: (buffer_dimensions.padded_bytes_per_row.get() * buffer_dimensions.height) as u64,
             usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -203,7 +232,7 @@ impl Surface {
         };
         let texture = device.create_texture(&texture_descriptor);
 
-        Self {
+        Ok(Self {
             size,
             head: Head::Headless(Arc::new(BufferedTextureHead {
                 texture,
@@ -211,8 +240,9 @@ impl Surface {
                 output_buffer,
                 buffer_dimensions,
             })),
-        }
+        })
     }
+
     pub fn surface_format(&self) -> TextureFormat {
         match &self.head {
             Head::Headed(headed) => headed.format,

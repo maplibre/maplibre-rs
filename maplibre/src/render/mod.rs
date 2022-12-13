@@ -57,6 +57,7 @@ pub use stages::register_default_render_stages;
 
 use crate::{
     render::{
+        error::RenderError,
         graph::{EmptyNode, RenderGraph, RenderGraphError},
         main_pass::{MainPassDriverNode, MainPassNode},
     },
@@ -157,7 +158,7 @@ impl Renderer {
         window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -> Result<Self, wgpu::RequestDeviceError>
+    ) -> Result<Self, RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
@@ -198,7 +199,7 @@ impl Renderer {
         window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -> Result<Self, wgpu::RequestDeviceError>
+    ) -> Result<Self, RenderError>
     where
         MW: MapWindow,
     {
@@ -215,7 +216,7 @@ impl Renderer {
         )
         .await?;
 
-        let surface = Surface::from_image(&device, window, &settings);
+        let surface = Surface::from_image(&device, window, &settings)?;
 
         Ok(Self {
             instance,

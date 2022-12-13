@@ -50,9 +50,9 @@ impl From<JsValue> for WebError {
 /// functions called from JS-land as return error type.
 #[derive(Debug)]
 pub enum WrappedError {
-    ProcedureError(ProcedureError),
-    CallError(CallError),
-    WebError(WebError),
+    ProcedureError(#[from] ProcedureError),
+    CallError(#[from] CallError),
+    WebError(#[from] WebError),
 }
 
 impl Display for WrappedError {
@@ -66,23 +66,5 @@ impl Error for WrappedError {}
 impl From<WrappedError> for JsValue {
     fn from(val: WrappedError) -> Self {
         JsValue::from_str(&val.to_string())
-    }
-}
-
-impl From<CallError> for WrappedError {
-    fn from(e: CallError) -> Self {
-        WrappedError::CallError(e)
-    }
-}
-
-impl From<ProcedureError> for WrappedError {
-    fn from(e: ProcedureError) -> Self {
-        WrappedError::ProcedureError(e)
-    }
-}
-
-impl From<WebError> for WrappedError {
-    fn from(e: WebError) -> Self {
-        WrappedError::WebError(e)
     }
 }
