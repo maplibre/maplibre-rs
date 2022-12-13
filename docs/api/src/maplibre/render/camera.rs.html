@@ -515,6 +515,15 @@
 <span id="515">515</span>
 <span id="516">516</span>
 <span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Main camera
 
 </span><span class="kw">use </span>cgmath::{prelude::<span class="kw-2">*</span>, AbsDiffEq, Matrix4, Point2, Point3, Rad, Vector2, Vector3, Vector4};
@@ -583,6 +592,9 @@
     }
 }
 
+<span class="kw">const </span>MIN_PITCH: Rad&lt;f64&gt; = Rad(-<span class="number">0.5</span>);
+<span class="kw">const </span>MAX_PITCH: Rad&lt;f64&gt; = Rad(<span class="number">0.5</span>);
+
 <span class="attribute">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Camera {
     position: Point3&lt;f64&gt;, <span class="comment">// The z axis never changes, the zoom is used instead
@@ -604,7 +616,7 @@
 }
 
 <span class="kw">impl </span>Camera {
-    <span class="kw">pub fn </span>new&lt;V: Into&lt;Point3&lt;f64&gt;&gt;, Y: Into&lt;cgmath::Rad&lt;f64&gt;&gt;, P: Into&lt;cgmath::Rad&lt;f64&gt;&gt;&gt;(
+    <span class="kw">pub fn </span>new&lt;V: Into&lt;Point3&lt;f64&gt;&gt;, Y: Into&lt;Rad&lt;f64&gt;&gt;, P: Into&lt;Rad&lt;f64&gt;&gt;&gt;(
         position: V,
         yaw: Y,
         pitch: P,
@@ -618,14 +630,6 @@
             width: width <span class="kw">as </span>f64,
             height: height <span class="kw">as </span>f64,
         }
-    }
-
-    <span class="kw">pub fn </span>move_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, point: Point3&lt;f64&gt;) {
-        <span class="self">self</span>.position = point;
-    }
-
-    <span class="kw">pub fn </span>move_relative(<span class="kw-2">&amp;mut </span><span class="self">self</span>, delta: Vector3&lt;f64&gt;) {
-        <span class="self">self</span>.position += delta;
     }
 
     <span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32) {
@@ -881,7 +885,7 @@
         <span class="self">self</span>.yaw
     }
 
-    <span class="kw">pub fn </span>yaw_self&lt;P: Into&lt;Rad&lt;f64&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, delta: P) {
+    <span class="kw">pub fn </span>rotate&lt;P: Into&lt;Rad&lt;f64&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, delta: P) {
         <span class="self">self</span>.yaw += delta.into();
     }
 
@@ -889,13 +893,33 @@
         <span class="self">self</span>.pitch
     }
 
-    <span class="kw">pub fn </span>pitch_self&lt;P: Into&lt;Rad&lt;f64&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, delta: P) {
-        <span class="self">self</span>.pitch += delta.into();
+    <span class="kw">pub fn </span>tilt&lt;P: Into&lt;Rad&lt;f64&gt;&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, delta: P) {
+        <span class="kw">let </span>new_pitch = <span class="self">self</span>.pitch + delta.into();
+
+        <span class="kw">if </span>new_pitch &lt;= MAX_PITCH &amp;&amp; new_pitch &gt;= MIN_PITCH {
+            <span class="self">self</span>.pitch = new_pitch;
+        }
+    }
+
+    <span class="kw">pub fn </span>move_relative(<span class="kw-2">&amp;mut </span><span class="self">self</span>, delta: Vector3&lt;f64&gt;) {
+        <span class="self">self</span>.position += delta;
+    }
+
+    <span class="kw">pub fn </span>move_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_position: Point3&lt;f64&gt;) {
+        <span class="self">self</span>.position = new_position;
+    }
+
+    <span class="kw">pub fn </span>position_vector(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vector3&lt;f64&gt; {
+        <span class="self">self</span>.position.to_vec()
+    }
+
+    <span class="kw">pub fn </span>homogenous_position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vector4&lt;f64&gt; {
+        <span class="self">self</span>.position.to_homogeneous()
     }
 }
 
 <span class="kw">pub struct </span>Perspective {
-    fovy: cgmath::Rad&lt;f64&gt;,
+    fovy: Rad&lt;f64&gt;,
     znear: f64,
     zfar: f64,
 
@@ -903,13 +927,7 @@
 }
 
 <span class="kw">impl </span>Perspective {
-    <span class="kw">pub fn </span>new&lt;F: Into&lt;cgmath::Rad&lt;f64&gt;&gt;&gt;(
-        width: u32,
-        height: u32,
-        fovy: F,
-        znear: f64,
-        zfar: f64,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new&lt;F: Into&lt;Rad&lt;f64&gt;&gt;&gt;(width: u32, height: u32, fovy: F, znear: f64, zfar: f64) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>rad = fovy.into();
         <span class="self">Self </span>{
             current_projection: <span class="self">Self</span>::calc_matrix(width <span class="kw">as </span>f64 / height <span class="kw">as </span>f64, rad, znear, zfar),
@@ -928,7 +946,7 @@
         );
     }
 
-    <span class="kw">fn </span>calc_matrix(aspect: f64, fovy: cgmath::Rad&lt;f64&gt;, znear: f64, zfar: f64) -&gt; Matrix4&lt;f64&gt; {
+    <span class="kw">fn </span>calc_matrix(aspect: f64, fovy: Rad&lt;f64&gt;, znear: f64, zfar: f64) -&gt; Matrix4&lt;f64&gt; {
         OPENGL_TO_WGPU_MATRIX * cgmath::perspective(fovy, aspect, znear, zfar)
     }
 }

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["FLIP_Y",""],["OPENGL_TO_WGPU_MATRIX",""]],"struct":[["Camera",""],["InvertedViewProjection",""],["ModelViewProjection",""],["Perspective",""],["ViewProjection",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["FLIP_Y",""],["MAX_PITCH",""],["MIN_PITCH",""],["OPENGL_TO_WGPU_MATRIX",""]],"struct":[["Camera",""],["InvertedViewProjection",""],["ModelViewProjection",""],["Perspective",""],["ViewProjection",""]]};
