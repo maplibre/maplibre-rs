@@ -16,13 +16,7 @@ use crate::{
 };
 
 pub const DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = 32 * 4;
-
-/// The tile mask pattern assigns each tile a value which can be used for stencil testing.
-pub struct TileViewPattern<Q, B> {
-    in_view: Vec<ViewTile>,
-    buffer: BackingBuffer<B>,
-    phantom_q: PhantomData<Q>,
-}
+pub const CHILDREN_SEARCH_DEPTH: usize = 4;
 
 #[derive(Clone)]
 pub struct TileShape {
@@ -36,7 +30,6 @@ pub struct TileShape {
 
 impl TileShape {
     fn new(coords: WorldTileCoords, zoom: Zoom) -> Self {
-        const STRIDE: u64 = size_of::<ShaderTileMetadata>() as u64;
         Self {
             coords,
             zoom_factor: zoom.scale_to_tile(&coords),
@@ -62,43 +55,43 @@ pub enum SourceShapes {
     /// Children are the source
     Children(Vec<TileShape>),
     /// Source and Target are equal, so no need to differentiate
-    SourceEqTarget,
+    SourceEqTarget(TileShape),
     /// No data available so nothing to render
     None,
 }
 
 #[derive(Clone)]
 pub struct ViewTile {
-    target_shape: TileShape,
-    source_shapes: SourceShapes,
+    target: WorldTileCoords,
+    source: SourceShapes,
 }
 
 impl ViewTile {
     pub fn coords(&self) -> WorldTileCoords {
-        self.target_shape.coords
+        self.target
     }
 
     pub fn source_available(&self) -> bool {
-        match &self.source_shapes {
+        match &self.source {
             SourceShapes::Parent(_) => true,
             SourceShapes::Children(_) => true,
-            SourceShapes::SourceEqTarget => true,
+            SourceShapes::SourceEqTarget(_) => true,
             SourceShapes::None => false,
         }
     }
 
     pub fn render<F>(&self, mut callback: F)
     where
-        F: FnMut(&TileShape, &TileShape),
+        F: FnMut(&TileShape),
     {
-        match &self.source_shapes {
-            SourceShapes::Parent(source_shape) => callback(&self.target_shape, source_shape),
+        match &self.source {
+            SourceShapes::Parent(source_shape) => callback(source_shape),
             SourceShapes::Children(source_shapes) => {
                 for shape in source_shapes {
-                    callback(&self.target_shape, shape)
+                    callback(shape)
                 }
             }
-            SourceShapes::SourceEqTarget => callback(&self.target_shape, &self.target_shape),
+            SourceShapes::SourceEqTarget(source_shape) => callback(source_shape),
             SourceShapes::None => {}
         }
     }
@@ -116,6 +109,13 @@ impl<B> BackingBuffer<B> {
     fn new(inner: B, inner_size: wgpu::BufferAddress) -> Self {
         Self { inner, inner_size }
     }
+}
+
+/// The tile mask pattern assigns each tile a value which can be used for stencil testing.
+pub struct TileViewPattern<Q, B> {
+    in_view: Vec<ViewTile>,
+    buffer: BackingBuffer<B>,
+    phantom_q: PhantomData<Q>,
 }
 
 impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
@@ -152,12 +152,14 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
 
             let source_shapes = {
                 if pool_index.has_tile(&coords) {
-                    SourceShapes::SourceEqTarget
-                } else if let Some(parent_coords) = pool_index.get_available_parent_tile(&coords) {
+                    SourceShapes::SourceEqTarget(TileShape::new(coords, zoom))
+                } else if let Some(parent_coords) = pool_index.get_available_parent(&coords) {
                     log::info!("Could not find data at {coords}. Falling back to {parent_coords}");
 
                     SourceShapes::Parent(TileShape::new(parent_coords, zoom))
-                } else if let Some(children_coords) = pool_index.get_available_children(&coords) {
+                } else if let Some(children_coords) =
+                    pool_index.get_available_children(&coords, CHILDREN_SEARCH_DEPTH)
+                {
                     log::info!(
                         "Could not find data at {coords}. Falling back children: {children_coords:?}"
                     );
@@ -174,8 +176,8 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             };
 
             self.in_view.push(ViewTile {
-                target_shape: TileShape::new(coords, zoom),
-                source_shapes,
+                target: coords,
+                source: source_shapes,
             });
         }
     }
@@ -206,9 +208,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         };
 
         for view_tile in &mut self.in_view {
-            add_to_buffer(&mut view_tile.target_shape);
-
-            match &mut view_tile.source_shapes {
+            match &mut view_tile.source {
                 SourceShapes::Parent(source_shape) => {
                     add_to_buffer(source_shape);
                 }
@@ -217,7 +217,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                         add_to_buffer(source_shape);
                     }
                 }
-                SourceShapes::SourceEqTarget => {}
+                SourceShapes::SourceEqTarget(source_shape) => add_to_buffer(source_shape),
                 SourceShapes::None => {}
             }
         }
@@ -232,7 +232,6 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     pub fn stencil_reference_value_2d(&self, world_coords: &WorldTileCoords) -> u8 {
-        // FIXME (THIS_PR): Take into account z
         match (world_coords.x, world_coords.y) {
             (x, y) if x % 2 == 0 && y % 2 == 0 => 2,
             (x, y) if x % 2 == 0 && y % 2 != 0 => 1,

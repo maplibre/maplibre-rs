@@ -47,7 +47,7 @@ impl Stage for QueueStage {
             }
 
             // draw tile normal or the source e.g. parent`
-            view_tile.render(|_target_shape, source_shape| {
+            view_tile.render(|source_shape| {
                 let Some(entries) = index.get_layers(&source_shape.coords) else {
                     tracing::trace!("No layers found at {}", &source_shape.coords);
                     return;

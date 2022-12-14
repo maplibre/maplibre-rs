@@ -85,7 +85,7 @@ impl RenderCommand<ViewTile> for DrawMask {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
         tracing::trace!("Drawing mask {}", &view_tile.coords());
 
-        view_tile.render(|target_shape, source_shape| {
+        view_tile.render(|source_shape| {
             // Draw mask with stencil value of e.g. parent
             let reference =
                 tile_view_pattern.stencil_reference_value_3d(&source_shape.coords) as u32;
@@ -116,7 +116,7 @@ impl RenderCommand<ViewTile> for DrawDebugMask {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
         tracing::trace!("Drawing mask {}", &view_tile.coords());
 
-        view_tile.render(|target_shape, source_shape| {
+        view_tile.render(|source_shape| {
             pass.set_vertex_buffer(
                 0,
                 tile_view_pattern
