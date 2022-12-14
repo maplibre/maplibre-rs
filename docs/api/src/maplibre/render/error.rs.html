@@ -23,50 +23,18 @@
 <span id="23">23</span>
 <span id="24">24</span>
 <span id="25">25</span>
-<span id="26">26</span>
-<span id="27">27</span>
-<span id="28">28</span>
-<span id="29">29</span>
-<span id="30">30</span>
-<span id="31">31</span>
-<span id="32">32</span>
-<span id="33">33</span>
-<span id="34">34</span>
-<span id="35">35</span>
-<span id="36">36</span>
-<span id="37">37</span>
-<span id="38">38</span>
-<span id="39">39</span>
-<span id="40">40</span>
-<span id="41">41</span>
-<span id="42">42</span>
-<span id="43">43</span>
-<span id="44">44</span>
-<span id="45">45</span>
-<span id="46">46</span>
-<span id="47">47</span>
-<span id="48">48</span>
-<span id="49">49</span>
-<span id="50">50</span>
-</pre><pre class="rust"><code><span class="kw">use </span>std::fmt;
+</pre><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use </span><span class="kw">crate</span>::render::graph::RenderGraphError;
 
-<span class="attribute">#[derive(Debug)]
+<span class="attribute">#[derive(Error, Debug)]
 </span><span class="kw">pub enum </span>RenderError {
-    Surface(wgpu::SurfaceError),
-    Graph(RenderGraphError),
-    Device(wgpu::RequestDeviceError),
-}
-
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>RenderError {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        <span class="kw">match </span><span class="self">self </span>{
-            RenderError::Surface(e) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, e),
-            RenderError::Graph(e) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{:?}&quot;</span>, e),
-            RenderError::Device(e) =&gt; <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, e),
-        }
-    }
+    <span class="attribute">#[error(<span class="string">&quot;error in surface&quot;</span>)]
+    </span>Surface(<span class="attribute">#[from] </span>wgpu::SurfaceError),
+    <span class="attribute">#[error(<span class="string">&quot;error in render graph&quot;</span>)]
+    </span>Graph(<span class="attribute">#[from] </span>RenderGraphError),
+    <span class="attribute">#[error(<span class="string">&quot;error while requesting device&quot;</span>)]
+    </span>RequestDevice(<span class="attribute">#[from] </span>wgpu::RequestDeviceError),
 }
 
 <span class="kw">impl </span>RenderError {
@@ -78,24 +46,6 @@
             },
             <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>,
         }
-    }
-}
-
-<span class="kw">impl </span>From&lt;RenderGraphError&gt; <span class="kw">for </span>RenderError {
-    <span class="kw">fn </span>from(e: RenderGraphError) -&gt; <span class="self">Self </span>{
-        RenderError::Graph(e)
-    }
-}
-
-<span class="kw">impl </span>From&lt;wgpu::SurfaceError&gt; <span class="kw">for </span>RenderError {
-    <span class="kw">fn </span>from(e: wgpu::SurfaceError) -&gt; <span class="self">Self </span>{
-        RenderError::Surface(e)
-    }
-}
-
-<span class="kw">impl </span>From&lt;wgpu::RequestDeviceError&gt; <span class="kw">for </span>RenderError {
-    <span class="kw">fn </span>from(e: wgpu::RequestDeviceError) -&gt; <span class="self">Self </span>{
-        RenderError::Device(e)
     }
 }
 </code></pre></div>

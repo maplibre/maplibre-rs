@@ -520,8 +520,6 @@
 <span id="520">520</span>
 <span id="521">521</span>
 <span id="522">522</span>
-<span id="523">523</span>
-<span id="524">524</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -581,6 +579,7 @@
 
 <span class="kw">use crate</span>::{
     render::{
+        error::RenderError,
         graph::{EmptyNode, RenderGraph, RenderGraphError},
         main_pass::{MainPassDriverNode, MainPassNode},
     },
@@ -666,7 +665,7 @@
     <span class="kw">pub </span>instance: wgpu::Instance,
     <span class="kw">pub </span>device: Arc&lt;wgpu::Device&gt;, <span class="comment">// TODO: Arc is needed for headless rendering. Is there a simpler solution?
     </span><span class="kw">pub </span>queue: wgpu::Queue,
-    <span class="kw">pub </span>adapter_info: wgpu::AdapterInfo,
+    <span class="kw">pub </span>adapter: wgpu::Adapter,
 
     <span class="kw">pub </span>wgpu_settings: WgpuSettings,
     <span class="kw">pub </span>settings: RendererSettings,
@@ -681,29 +680,26 @@
         window: <span class="kw-2">&amp;</span>MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, wgpu::RequestDeviceError&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RenderError&gt;
     <span class="kw">where
         </span>MW: MapWindow + HeadedMapWindow,
     {
         <span class="kw">let </span>instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        <span class="kw">let </span>surface = Surface::from_window(<span class="kw-2">&amp;</span>instance, window, <span class="kw-2">&amp;</span>settings);
+        <span class="kw">let </span>surface: wgpu::Surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw()) };
 
-        <span class="kw">let </span>compatible_surface = <span class="kw">match </span><span class="kw-2">&amp;</span>surface.head() {
-            Head::Headed(window_head) =&gt; <span class="prelude-val">Some</span>(window_head.surface()),
-            Head::Headless(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-        };
-
-        <span class="kw">let </span>(device, queue, adapter_info) = <span class="self">Self</span>::request_device(
+        <span class="kw">let </span>(adapter, device, queue) = <span class="self">Self</span>::request_device(
             <span class="kw-2">&amp;</span>instance,
             <span class="kw-2">&amp;</span>wgpu_settings,
             <span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
                 power_preference: wgpu_settings.power_preference,
                 force_fallback_adapter: <span class="bool-val">false</span>,
-                compatible_surface,
+                compatible_surface: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>surface),
             },
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">let </span>surface = Surface::from_surface(surface, <span class="kw-2">&amp;</span>adapter, window, <span class="kw-2">&amp;</span>settings);
 
         <span class="kw">match </span>surface.head() {
             Head::Headed(window) =&gt; window.configure(<span class="kw-2">&amp;</span>device),
@@ -714,7 +710,7 @@
             instance,
             device: Arc::new(device),
             queue,
-            adapter_info,
+            adapter,
             wgpu_settings,
             settings,
             state: RenderState::new(surface),
@@ -725,13 +721,13 @@
         window: <span class="kw-2">&amp;</span>MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, wgpu::RequestDeviceError&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, RenderError&gt;
     <span class="kw">where
         </span>MW: MapWindow,
     {
         <span class="kw">let </span>instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        <span class="kw">let </span>(device, queue, adapter_info) = <span class="self">Self</span>::request_device(
+        <span class="kw">let </span>(adapter, device, queue) = <span class="self">Self</span>::request_device(
             <span class="kw-2">&amp;</span>instance,
             <span class="kw-2">&amp;</span>wgpu_settings,
             <span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
@@ -748,7 +744,7 @@
             instance,
             device: Arc::new(device),
             queue,
-            adapter_info,
+            adapter,
             wgpu_settings,
             settings,
             state: RenderState::new(surface),
@@ -764,7 +760,7 @@
         instance: <span class="kw-2">&amp;</span>wgpu::Instance,
         settings: <span class="kw-2">&amp;</span>WgpuSettings,
         request_adapter_options: <span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions&lt;<span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(wgpu::Device, wgpu::Queue, wgpu::AdapterInfo), wgpu::RequestDeviceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(wgpu::Adapter, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError&gt; {
         <span class="kw">let </span>adapter = instance
             .request_adapter(request_adapter_options)
             .<span class="kw">await
@@ -908,7 +904,7 @@
                 trace_path,
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((device, queue, adapter_info))
+        <span class="prelude-val">Ok</span>((adapter, device, queue))
     }
 
     <span class="kw">pub fn </span>instance(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Instance {

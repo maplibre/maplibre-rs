@@ -51,9 +51,21 @@
 <span id="51">51</span>
 <span id="52">52</span>
 <span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for the window system.
 
-</span><span class="kw">use </span>raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
+</span><span class="kw">use </span>std::num::NonZeroU32;
+
+<span class="kw">use </span>raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 
 <span class="doccomment">/// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.
 </span><span class="kw">pub trait </span>MapWindow {
@@ -84,23 +96,31 @@
 <span class="doccomment">/// Window size with a width and an height in pixels.
 </span><span class="attribute">#[derive(Clone, Copy, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>WindowSize {
-    width: u32,
-    height: u32,
+    width: NonZeroU32,
+    height: NonZeroU32,
 }
 
 <span class="kw">impl </span>WindowSize {
     <span class="kw">pub fn </span>new(width: u32, height: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">if </span>width == <span class="number">0 </span>|| height == <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">None</span>;
-        }
-
-        <span class="prelude-val">Some</span>(<span class="self">Self </span>{ width, height })
+        <span class="prelude-val">Some</span>(<span class="self">Self </span>{
+            width: NonZeroU32::new(width)<span class="question-mark">?</span>,
+            height: NonZeroU32::new(height)<span class="question-mark">?</span>,
+        })
     }
 
     <span class="kw">pub fn </span>width(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.width.get()
+    }
+
+    <span class="kw">pub fn </span>width_non_zero(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NonZeroU32 {
         <span class="self">self</span>.width
     }
+
     <span class="kw">pub fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.height.get()
+    }
+
+    <span class="kw">pub fn </span>height_non_zero(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NonZeroU32 {
         <span class="self">self</span>.height
     }
 }

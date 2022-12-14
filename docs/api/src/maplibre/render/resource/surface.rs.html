@@ -267,12 +267,61 @@
 <span id="267">267</span>
 <span id="268">268</span>
 <span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
-</span><span class="kw">use </span>std::{mem::size_of, sync::Arc};
+</span><span class="kw">use </span>std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
-<span class="kw">use </span>wgpu::CompositeAlphaMode;
+<span class="kw">use </span>log::debug;
 
 <span class="kw">use crate</span>::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
@@ -280,41 +329,54 @@
 };
 
 <span class="kw">pub struct </span>BufferDimensions {
-    <span class="kw">pub </span>width: usize,
-    <span class="kw">pub </span>height: usize,
-    <span class="kw">pub </span>unpadded_bytes_per_row: usize,
-    <span class="kw">pub </span>padded_bytes_per_row: usize,
+    <span class="kw">pub </span>width: u32,
+    <span class="kw">pub </span>height: u32,
+    <span class="kw">pub </span>unpadded_bytes_per_row: NonZeroU32,
+    <span class="kw">pub </span>padded_bytes_per_row: NonZeroU32,
 }
 
 <span class="kw">impl </span>BufferDimensions {
-    <span class="kw">fn </span>new(width: usize, height: usize) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>bytes_per_pixel = size_of::&lt;u32&gt;();
-        <span class="kw">let </span>unpadded_bytes_per_row = width * bytes_per_pixel;
-        <span class="kw">let </span>align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT <span class="kw">as </span>usize;
+    <span class="kw">fn </span>new(size: WindowSize) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>bytes_per_pixel = size_of::&lt;u32&gt;() <span class="kw">as </span>u32;
+        <span class="kw">let </span>unpadded_bytes_per_row = size.width() * bytes_per_pixel;
+
+        <span class="kw">let </span>align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
         <span class="kw">let </span>padded_bytes_per_row_padding = (align - unpadded_bytes_per_row % align) % align;
         <span class="kw">let </span>padded_bytes_per_row = unpadded_bytes_per_row + padded_bytes_per_row_padding;
         <span class="self">Self </span>{
-            width,
-            height,
-            unpadded_bytes_per_row,
-            padded_bytes_per_row,
+            width: size.width(),
+            height: size.height(),
+            unpadded_bytes_per_row: NonZeroU32::new(unpadded_bytes_per_row)
+                .expect(<span class="string">&quot;can not be zero&quot;</span>), <span class="comment">// expect is fine because this can never happen
+            </span>padded_bytes_per_row: NonZeroU32::new(padded_bytes_per_row).expect(<span class="string">&quot;can not be zero&quot;</span>),
         }
     }
 }
 
 <span class="kw">pub struct </span>WindowHead {
     surface: wgpu::Surface,
-    surface_config: wgpu::SurfaceConfiguration,
+    size: WindowSize,
+    format: wgpu::TextureFormat,
+    present_mode: wgpu::PresentMode,
 }
 
 <span class="kw">impl </span>WindowHead {
     <span class="kw">pub fn </span>resize_and_configure(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32, device: <span class="kw-2">&amp;</span>wgpu::Device) {
-        <span class="self">self</span>.surface_config.height = width;
-        <span class="self">self</span>.surface_config.width = height;
-        <span class="self">self</span>.surface.configure(device, <span class="kw-2">&amp;</span><span class="self">self</span>.surface_config);
+        <span class="self">self</span>.size = WindowSize::new(width, height).unwrap();
+        <span class="self">self</span>.configure(device);
     }
+
     <span class="kw">pub fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>wgpu::Device) {
-        <span class="self">self</span>.surface.configure(device, <span class="kw-2">&amp;</span><span class="self">self</span>.surface_config);
+        <span class="kw">let </span>surface_config = wgpu::SurfaceConfiguration {
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: <span class="self">self</span>.format,
+            width: <span class="self">self</span>.size.width(),
+            height: <span class="self">self</span>.size.height(),
+            present_mode: <span class="self">self</span>.present_mode,
+        };
+
+        <span class="self">self</span>.surface.configure(device, <span class="kw-2">&amp;</span>surface_config);
     }
 
     <span class="kw">pub fn </span>recreate_surface&lt;MW&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;</span>MW, instance: <span class="kw-2">&amp;</span>wgpu::Instance)
@@ -323,15 +385,17 @@
     {
         <span class="self">self</span>.surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw()) };
     }
+
     <span class="kw">pub fn </span>surface(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Surface {
         <span class="kw-2">&amp;</span><span class="self">self</span>.surface
     }
 }
 
 <span class="kw">pub struct </span>BufferedTextureHead {
-    <span class="kw">pub </span>texture: wgpu::Texture,
-    <span class="kw">pub </span>output_buffer: wgpu::Buffer,
-    <span class="kw">pub </span>buffer_dimensions: BufferDimensions,
+    texture: wgpu::Texture,
+    texture_format: wgpu::TextureFormat,
+    output_buffer: wgpu::Buffer,
+    buffer_dimensions: BufferDimensions,
 }
 
 <span class="attribute">#[cfg(feature = <span class="string">&quot;headless&quot;</span>)]
@@ -364,17 +428,33 @@
         <span class="kw">let </span><span class="kw-2">mut </span>png_writer = png_encoder
             .write_header()
             .unwrap() <span class="comment">// TODO: Remove unwrap
-            </span>.into_stream_writer_with_size(<span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row)
+            </span>.into_stream_writer_with_size(
+                <span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row.get() <span class="kw">as </span>usize
+            )
             .unwrap(); <span class="comment">// TODO: Remove unwrap
 
         // from the padded_buffer we write just the unpadded bytes into the image
-        </span><span class="kw">for </span>chunk <span class="kw">in </span>padded_buffer.chunks(<span class="self">self</span>.buffer_dimensions.padded_bytes_per_row) {
+        </span><span class="kw">for </span>chunk <span class="kw">in
+            </span>padded_buffer.chunks(<span class="self">self</span>.buffer_dimensions.padded_bytes_per_row.get() <span class="kw">as </span>usize)
+        {
             png_writer
-                .write_all(<span class="kw-2">&amp;</span>chunk[..<span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row])
+                .write_all(<span class="kw-2">&amp;</span>chunk[..<span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row.get() <span class="kw">as </span>usize])
                 .unwrap(); <span class="comment">// TODO: Remove unwrap
         </span>}
         png_writer.finish().unwrap(); <span class="comment">// TODO: Remove unwrap
     </span>}
+
+    <span class="kw">pub fn </span>copy_texture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::ImageCopyTexture&lt;<span class="lifetime">&#39;_</span>&gt; {
+        <span class="self">self</span>.texture.as_image_copy()
+    }
+
+    <span class="kw">pub fn </span>buffer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Buffer {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.output_buffer
+    }
+
+    <span class="kw">pub fn </span>bytes_per_row(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NonZeroU32 {
+        <span class="self">self</span>.buffer_dimensions.padded_bytes_per_row
+    }
 }
 
 <span class="kw">pub enum </span>Head {
@@ -388,8 +468,9 @@
 }
 
 <span class="kw">impl </span>Surface {
-    <span class="kw">pub fn </span>from_window&lt;MW&gt;(
-        instance: <span class="kw-2">&amp;</span>wgpu::Instance,
+    <span class="kw">pub fn </span>from_surface&lt;MW&gt;(
+        surface: wgpu::Surface,
+        adapter: <span class="kw-2">&amp;</span>wgpu::Adapter,
         window: <span class="kw-2">&amp;</span>MW,
         settings: <span class="kw-2">&amp;</span>RendererSettings,
     ) -&gt; <span class="self">Self
@@ -397,22 +478,24 @@
         </span>MW: MapWindow + HeadedMapWindow,
     {
         <span class="kw">let </span>size = window.size();
-        <span class="kw">let </span>surface_config = wgpu::SurfaceConfiguration {
-            alpha_mode: CompositeAlphaMode::Auto,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: settings.texture_format,
-            width: size.width(),
-            height: size.height(),
-            present_mode: settings.present_mode,
-        };
 
-        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw()) };
+        <span class="macro">debug!</span>(
+            <span class="string">&quot;supported formats by adapter: {:?}&quot;</span>,
+            surface.get_supported_formats(adapter)
+        );
+
+        <span class="kw">let </span>format = settings
+            .texture_format
+            .or_else(|| surface.get_supported_formats(adapter).first().cloned())
+            .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
 
         <span class="self">Self </span>{
             size,
             head: Head::Headed(WindowHead {
                 surface,
-                surface_config,
+                size,
+                format,
+                present_mode: settings.present_mode,
             }),
         }
     }
@@ -428,17 +511,22 @@
         // So we calculate padded_bytes_per_row by rounding unpadded_bytes_per_row
         // up to the next multiple of wgpu::COPY_BYTES_PER_ROW_ALIGNMENT.
         // https://en.wikipedia.org/wiki/Data_structure_alignment#Computing_padding
-        </span><span class="kw">let </span>buffer_dimensions =
-            BufferDimensions::new(size.width() <span class="kw">as </span>usize, size.height() <span class="kw">as </span>usize);
+        </span><span class="kw">let </span>buffer_dimensions = BufferDimensions::new(size);
+
         <span class="comment">// The output buffer lets us retrieve the data as an array
         </span><span class="kw">let </span>output_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
             label: <span class="prelude-val">Some</span>(<span class="string">&quot;BufferedTextureHead buffer&quot;</span>),
-            size: (buffer_dimensions.padded_bytes_per_row * buffer_dimensions.height) <span class="kw">as </span>u64,
+            size: (buffer_dimensions.padded_bytes_per_row.get() * buffer_dimensions.height) <span class="kw">as </span>u64,
             usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: <span class="bool-val">false</span>,
         });
 
-        <span class="kw">let </span>texture = device.create_texture(<span class="kw-2">&amp;</span>wgpu::TextureDescriptor {
+        <span class="comment">// FIXME: Is this a sane default?
+        </span><span class="kw">let </span>format = settings
+            .texture_format
+            .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
+
+        <span class="kw">let </span>texture_descriptor = wgpu::TextureDescriptor {
             label: <span class="prelude-val">Some</span>(<span class="string">&quot;Surface texture&quot;</span>),
             size: wgpu::Extent3d {
                 width: size.width(),
@@ -448,17 +536,26 @@
             mip_level_count: <span class="number">1</span>,
             sample_count: <span class="number">1</span>,
             dimension: wgpu::TextureDimension::D2,
-            format: settings.texture_format,
+            format,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        });
+        };
+        <span class="kw">let </span>texture = device.create_texture(<span class="kw-2">&amp;</span>texture_descriptor);
 
         <span class="self">Self </span>{
             size,
             head: Head::Headless(Arc::new(BufferedTextureHead {
                 texture,
+                texture_format: format,
                 output_buffer,
                 buffer_dimensions,
             })),
+        }
+    }
+
+    <span class="kw">pub fn </span>surface_format(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::TextureFormat {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.head {
+            Head::Headed(headed) =&gt; headed.format,
+            Head::Headless(headless) =&gt; headless.texture_format,
         }
     }
 
@@ -530,10 +627,11 @@
 }
 
 <span class="kw">impl </span>HasChanged <span class="kw">for </span>WindowHead {
-    <span class="kw">type </span>Criteria = (u32, u32);
+    <span class="doccomment">/// Tuple of width and height
+    </span><span class="kw">type </span>Criteria = (u32, u32);
 
     <span class="kw">fn </span>has_changed(<span class="kw-2">&amp;</span><span class="self">self</span>, criteria: <span class="kw-2">&amp;</span><span class="self">Self</span>::Criteria) -&gt; bool {
-        <span class="self">self</span>.surface_config.width != criteria.<span class="number">0 </span>|| <span class="self">self</span>.surface_config.height != criteria.<span class="number">1
+        <span class="self">self</span>.size.width() != criteria.<span class="number">0 </span>|| <span class="self">self</span>.size.height() != criteria.<span class="number">1
     </span>}
 }
 </code></pre></div>

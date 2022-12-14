@@ -164,6 +164,7 @@
 <span id="164">164</span>
 <span id="165">165</span>
 <span id="166">166</span>
+<span id="167">167</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::rc::Rc;
 
 <span class="kw">use </span>thiserror::Error;
@@ -178,6 +179,7 @@
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
         },
         create_default_render_graph,
+        error::RenderError,
         graph::RenderGraphError,
         register_default_render_stages,
     },
@@ -196,7 +198,7 @@
     <span class="attribute">#[error(<span class="string">&quot;initializing render graph failed&quot;</span>)]
     </span>RenderGraphInit(RenderGraphError),
     <span class="attribute">#[error(<span class="string">&quot;initializing device failed&quot;</span>)]
-    </span>DeviceInit,
+    </span>DeviceInit(RenderError),
 }
 
 <span class="kw">pub enum </span>MapContextState {
@@ -258,7 +260,7 @@
                     </span>.build()
                     .initialize_renderer::&lt;E::MapWindowConfig&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.window)
                     .<span class="kw">await
-                    </span>.map_err(|e| MapError::DeviceInit)<span class="question-mark">?</span>;
+                    </span>.map_err(|e| MapError::DeviceInit(e))<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>window_size = <span class="self">self</span>.window.size();
 

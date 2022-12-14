@@ -121,24 +121,6 @@
 <span id="121">121</span>
 <span id="122">122</span>
 <span id="123">123</span>
-<span id="124">124</span>
-<span id="125">125</span>
-<span id="126">126</span>
-<span id="127">127</span>
-<span id="128">128</span>
-<span id="129">129</span>
-<span id="130">130</span>
-<span id="131">131</span>
-<span id="132">132</span>
-<span id="133">133</span>
-<span id="134">134</span>
-<span id="135">135</span>
-<span id="136">136</span>
-<span id="137">137</span>
-<span id="138">138</span>
-<span id="139">139</span>
-<span id="140">140</span>
-<span id="141">141</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Settings for the renderer
 
 </span><span class="kw">use </span>std::borrow::Cow;
@@ -244,7 +226,8 @@
 <span class="attribute">#[derive(Clone, Copy)]
 </span><span class="kw">pub struct </span>RendererSettings {
     <span class="kw">pub </span>msaa: Msaa,
-    <span class="kw">pub </span>texture_format: TextureFormat,
+    <span class="doccomment">/// Explicitly set a texture format or let the renderer automatically choose one
+    </span><span class="kw">pub </span>texture_format: <span class="prelude-ty">Option</span>&lt;TextureFormat&gt;,
     <span class="kw">pub </span>depth_texture_format: TextureFormat,
     <span class="doccomment">/// Present mode for surfaces if a surface is used.
     </span><span class="kw">pub </span>present_mode: PresentMode,
@@ -254,26 +237,7 @@
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             msaa: Msaa::default(),
-            <span class="comment">// WebGPU
-            </span><span class="attribute">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;web-webgl&quot;</span>)))]
-            </span>texture_format: wgpu::TextureFormat::Bgra8Unorm,
-            <span class="comment">// WebGL
-            </span><span class="attribute">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, feature = <span class="string">&quot;web-webgl&quot;</span>))]
-            </span>texture_format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            <span class="comment">// Vulkan Android
-            </span><span class="attribute">#[cfg(target_os = <span class="string">&quot;android&quot;</span>)]
-            </span>texture_format: wgpu::TextureFormat::Rgba8Unorm,
-            <span class="doccomment">/// MacOS and iOS (Metal).
-            </span><span class="attribute">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>))]
-            </span>texture_format: wgpu::TextureFormat::Bgra8UnormSrgb,
-            <span class="doccomment">/// For Vulkan/OpenGL
-            </span><span class="attribute">#[cfg(not(any(
-                target_os = <span class="string">&quot;android&quot;</span>,
-                target_os = <span class="string">&quot;macos&quot;</span>,
-                any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>),
-                target_arch = <span class="string">&quot;wasm32&quot;
-            </span>)))]
-            </span>texture_format: TextureFormat::Bgra8UnormSrgb,
+            texture_format: <span class="prelude-val">None</span>,
 
             depth_texture_format: TextureFormat::Depth24PlusStencil8,
             present_mode: PresentMode::AutoVsync,

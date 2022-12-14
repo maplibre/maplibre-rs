@@ -203,7 +203,7 @@
                     <span class="prelude-val">Some</span>(Texture::new(
                         <span class="prelude-val">Some</span>(<span class="string">&quot;multisampling texture&quot;</span>),
                         device,
-                        settings.texture_format,
+                        surface.surface_format(),
                         size.width(),
                         size.height(),
                         settings.msaa,
@@ -236,7 +236,7 @@
 
         state.tile_pipeline.initialize(|| {
             <span class="kw">let </span>tile_shader = shaders::TileShader {
-                format: settings.texture_format,
+                format: surface.surface_format(),
             };
 
             <span class="kw">let </span>pipeline = TilePipeline::new(
@@ -260,7 +260,7 @@
 
         state.mask_pipeline.initialize(|| {
             <span class="kw">let </span>mask_shader = shaders::TileMaskShader {
-                format: settings.texture_format,
+                format: surface.surface_format(),
                 draw_colors: <span class="bool-val">false</span>,
             };
 
