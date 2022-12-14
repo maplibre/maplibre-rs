@@ -17,11 +17,12 @@ use crate::{
     tessellation::OverAlignedVertexBuffer,
 };
 
-pub const VERTEX_SIZE: wgpu::BufferAddress = 1_000_000;
-pub const INDICES_SIZE: wgpu::BufferAddress = 1_000_000;
+// FIXME: Too low values can cause a back-and-forth between unloading and loading layers
+pub const VERTEX_SIZE: wgpu::BufferAddress = 10 * 1_000_000;
+pub const INDICES_SIZE: wgpu::BufferAddress = 10 * 1_000_000;
 
-pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 1024 * 1000;
-pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 1024;
+pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 10 * 1024 * 1000;
+pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 10 * 1024;
 
 /// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
@@ -561,21 +562,26 @@ impl RingIndex {
     }
 
     pub fn get_available_children(&self, coords: &WorldTileCoords) -> Option<Vec<WorldTileCoords>> {
-        let mut current = *coords;
-        //let children = [WorldTileCoords::default(); 4];
-        loop {
-            if self.has_tile(&current) {
-                return Some(vec![current]);
-            } else {
-                let children = current.get_children();
+        let mut children = coords.get_children().to_vec();
 
-                /*                if children.iter().all(|child| self.has_tile(&child)) {
-                                    return Some(children.to_vec());
-                                }
-                */
-                return Some(children.to_vec());
+        let mut output = vec![];
+
+        for i in 0..4 {
+            // FIXME: Improve depth
+            let mut new_children = vec![];
+
+            for child in children {
+                if self.has_tile(&child) {
+                    output.push(child);
+                } else {
+                    new_children.extend(child.get_children())
+                }
             }
+
+            children = new_children;
         }
+
+        return Some(output.to_vec());
     }
 
     pub fn iter(&self) -> impl Iterator<Item = impl Iterator<Item = &IndexEntry>> + '_ {
