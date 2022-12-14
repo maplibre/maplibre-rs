@@ -133,7 +133,7 @@ impl UploadStage {
                             })
                             .collect::<Vec<_>>();
 
-                        buffer_pool.update_feature_metadata(&queue, entry, &feature_metadata);
+                        buffer_pool.update_feature_metadata(queue, entry, &feature_metadata);
                     }
                 }
             }
@@ -167,7 +167,7 @@ impl UploadStage {
         // Upload all tessellated layers which are in view
         for coords in view_region.iter() {
             let Some(available_layers) =
-                    tile_repository.iter_loaded_layers_at(&buffer_pool, &coords) else { continue; };
+                    tile_repository.iter_loaded_layers_at(buffer_pool, &coords) else { continue; };
 
             for style_layer in &style.layers {
                 let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap

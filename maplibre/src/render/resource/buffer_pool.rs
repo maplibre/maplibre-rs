@@ -521,7 +521,7 @@ impl RingIndex {
         coords
             .build_quad_key()
             .and_then(|key| self.tree_index.get(&key))
-            .and_then(|entry| Some(&entry.layers))
+            .map(|entry| &entry.layers)
     }
 
     pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
@@ -564,7 +564,7 @@ impl RingIndex {
             children = new_children;
         }
 
-        return Some(output);
+        Some(output)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = impl Iterator<Item = &IndexEntry>> + '_ {
