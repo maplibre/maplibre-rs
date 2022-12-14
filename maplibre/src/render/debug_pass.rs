@@ -40,6 +40,7 @@ impl Node for DebugPassNode {
         let color_attachment = wgpu::RenderPassColorAttachment {
             view: render_target.deref(),
             ops: wgpu::Operations {
+                // Draws on-top of previously rendered data
                 load: wgpu::LoadOp::Load,
                 store: true,
             },
