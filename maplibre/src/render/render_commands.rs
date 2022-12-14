@@ -85,15 +85,17 @@ impl RenderCommand<ViewTile> for DrawMask {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
         tracing::trace!("Drawing mask {}", &view_tile.coords());
 
-        view_tile.render(|mask_shape, shape| {
-            let reference = tile_view_pattern.stencil_reference_value(&shape.coords) as u32;
+        view_tile.render(|target_shape, source_shape| {
+            // Draw mask with stencil value of e.g. parent
+            let reference = tile_view_pattern.stencil_reference_value(&source_shape.coords) as u32;
 
             pass.set_stencil_reference(reference);
             pass.set_vertex_buffer(
                 0,
+                // Mask is of the requested shape
                 tile_view_pattern
                     .buffer()
-                    .slice(mask_shape.buffer_range.clone()),
+                    .slice(target_shape.buffer_range()),
             );
             const TILE_MASK_SHADER_VERTICES: u32 = 6;
             pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
@@ -115,9 +117,7 @@ impl RenderCommand<ViewTile> for DrawDebugMask {
         view_tile.render(|mask_shape, shape| {
             pass.set_vertex_buffer(
                 0,
-                tile_view_pattern
-                    .buffer()
-                    .slice(mask_shape.buffer_range.clone()),
+                tile_view_pattern.buffer().slice(mask_shape.buffer_range()),
             );
             const TILE_MASK_SHADER_VERTICES: u32 = 24;
             pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
@@ -137,6 +137,7 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
         let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
             (&state.buffer_pool, &state.tile_view_pattern) else { return RenderCommandResult::Failure; };
 
+        // Uses stencil value of requested tile and the shape of the requested tile
         let reference = tile_view_pattern.stencil_reference_value(&shape.coords) as u32;
 
         tracing::trace!(
@@ -154,10 +155,7 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
             0,
             buffer_pool.vertices().slice(entry.vertices_buffer_range()),
         );
-        pass.set_vertex_buffer(
-            1,
-            tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-        );
+        pass.set_vertex_buffer(1, tile_view_pattern.buffer().slice(shape.buffer_range()));
         pass.set_vertex_buffer(
             2,
             buffer_pool

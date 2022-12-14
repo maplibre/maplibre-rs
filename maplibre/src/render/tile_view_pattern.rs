@@ -31,57 +31,75 @@ pub struct TileShape {
     pub coords: WorldTileCoords,
 
     pub transform: Matrix4<f64>,
-    pub buffer_range: Range<wgpu::BufferAddress>,
+    pub buffer_range: Option<Range<wgpu::BufferAddress>>,
 }
 
 impl TileShape {
-    fn new(coords: WorldTileCoords, zoom: Zoom, index: u64) -> Self {
+    fn new(coords: WorldTileCoords, zoom: Zoom) -> Self {
         const STRIDE: u64 = size_of::<ShaderTileMetadata>() as u64;
         Self {
             coords,
             zoom_factor: zoom.scale_to_tile(&coords),
             transform: coords.transform_for_zoom(zoom),
-            buffer_range: index * STRIDE..(index + 1) * STRIDE,
+            buffer_range: None,
         }
+    }
+
+    fn set_buffer_range(&mut self, index: u64) {
+        const STRIDE: u64 = size_of::<ShaderTileMetadata>() as u64;
+        self.buffer_range = Some(index * STRIDE..(index + 1) * STRIDE);
+    }
+
+    pub fn buffer_range(&self) -> Range<wgpu::BufferAddress> {
+        self.buffer_range.as_ref().unwrap().clone()
     }
 }
 
 #[derive(Clone)]
-pub enum ViewTileFallbacks {
+pub enum SourceShapes {
+    /// Parent tile is the source
     Parent(TileShape),
+    /// Children are the source
     Children(Vec<TileShape>),
-    Available,
+    /// Source and Target are equal, so no need to differentiate
+    SourceEqTarget,
+    /// No data available so nothing to render
     None,
 }
 
 #[derive(Clone)]
 pub struct ViewTile {
-    shape: TileShape,
-    fallback: ViewTileFallbacks,
+    target_shape: TileShape,
+    source_shapes: SourceShapes,
 }
 
 impl ViewTile {
     pub fn coords(&self) -> WorldTileCoords {
-        self.shape.coords
+        self.target_shape.coords
     }
 
-    pub fn shape(&self) -> &TileShape {
-        &self.shape
+    pub fn source_available(&self) -> bool {
+        match &self.source_shapes {
+            SourceShapes::Parent(_) => true,
+            SourceShapes::Children(_) => true,
+            SourceShapes::SourceEqTarget => true,
+            SourceShapes::None => false,
+        }
     }
 
     pub fn render<F>(&self, mut callback: F)
     where
         F: FnMut(&TileShape, &TileShape),
     {
-        match &self.fallback {
-            ViewTileFallbacks::Parent(shape) => callback(&self.shape, shape),
-            ViewTileFallbacks::Children(shapes) => {
+        match &self.source_shapes {
+            SourceShapes::Parent(shape) => callback(&self.target_shape, shape),
+            SourceShapes::Children(shapes) => {
                 for shape in shapes {
-                    callback(&self.shape, shape)
+                    callback(&self.target_shape, shape)
                 }
             }
-            ViewTileFallbacks::Available => callback(&self.shape, &self.shape),
-            ViewTileFallbacks::None => callback(&self.shape, &self.shape),
+            SourceShapes::SourceEqTarget => callback(&self.target_shape, &self.target_shape),
+            SourceShapes::None => {}
         }
     }
 }
@@ -125,8 +143,6 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     ) {
         self.in_view.clear();
 
-        let mut index = 0;
-
         let pool_index = buffer_pool.index();
 
         for coords in view_region.iter() {
@@ -134,28 +150,24 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 continue;
             }
 
-            let shape = TileShape::new(coords, zoom, index);
-
-            index += 1;
-
-            let fallback = {
+            let source_shapes = {
                 if pool_index.has_tile(&coords) {
-                    ViewTileFallbacks::Available
+                    SourceShapes::SourceEqTarget
                 } else if let Some(fallback_coords) = pool_index.get_tile_coords_fallback(&coords) {
                     tracing::trace!(
                         "Could not find data at {coords}. Falling back to {fallback_coords}"
                     );
 
-                    let shape = TileShape::new(fallback_coords, zoom, index);
-
-                    index += 1;
-                    ViewTileFallbacks::Parent(shape)
+                    SourceShapes::Parent(TileShape::new(fallback_coords, zoom))
                 } else {
-                    ViewTileFallbacks::None
+                    SourceShapes::None
                 }
             };
 
-            self.in_view.push(ViewTile { shape, fallback });
+            self.in_view.push(ViewTile {
+                target_shape: TileShape::new(coords, zoom),
+                source_shapes,
+            });
         }
     }
 
@@ -168,36 +180,39 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn upload_pattern(&self, queue: &Q, view_proj: &ViewProjection) {
+    pub fn upload_pattern(&mut self, queue: &Q, view_proj: &ViewProjection) {
         let mut buffer = Vec::with_capacity(self.in_view.len());
 
-        for view_tile in &self.in_view {
+        for view_tile in &mut self.in_view {
+            view_tile.target_shape.set_buffer_range(buffer.len() as u64);
             buffer.push(ShaderTileMetadata {
                 // We are casting here from 64bit to 32bit, because 32bit is more performant and is
                 // better supported.
                 transform: view_proj
-                    .to_model_view_projection(view_tile.shape.transform)
+                    .to_model_view_projection(view_tile.target_shape.transform)
                     .downcast()
                     .into(),
-                zoom_factor: view_tile.shape.zoom_factor as f32,
+                zoom_factor: view_tile.target_shape.zoom_factor as f32,
             });
 
-            match &view_tile.fallback {
-                ViewTileFallbacks::Parent(inner) => {
+            match &mut view_tile.source_shapes {
+                SourceShapes::Parent(target_shape) => {
+                    target_shape.set_buffer_range(buffer.len() as u64);
                     buffer.push(ShaderTileMetadata {
                         // We are casting here from 64bit to 32bit, because 32bit is more performant and is
                         // better supported.
                         transform: view_proj
-                            .to_model_view_projection(inner.transform)
+                            .to_model_view_projection(target_shape.transform)
                             .downcast()
                             .into(),
-                        zoom_factor: inner.zoom_factor as f32,
+                        zoom_factor: target_shape.zoom_factor as f32,
                     });
                 }
-                ViewTileFallbacks::Children(_) => {
+                SourceShapes::Children(_) => {
                     unimplemented!()
                 }
-                _ => {}
+                SourceShapes::SourceEqTarget => {}
+                SourceShapes::None => {}
             }
         }
 
