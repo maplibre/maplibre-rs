@@ -87,7 +87,8 @@ impl RenderCommand<ViewTile> for DrawMask {
 
         view_tile.render(|target_shape, source_shape| {
             // Draw mask with stencil value of e.g. parent
-            let reference = tile_view_pattern.stencil_reference_value(&source_shape.coords) as u32;
+            let reference =
+                tile_view_pattern.stencil_reference_value_3d(&source_shape.coords) as u32;
 
             pass.set_stencil_reference(reference);
             pass.set_vertex_buffer(
@@ -141,7 +142,7 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
             (&state.buffer_pool, &state.tile_view_pattern) else { return RenderCommandResult::Failure; };
 
         // Uses stencil value of requested tile and the shape of the requested tile
-        let reference = tile_view_pattern.stencil_reference_value(&shape.coords) as u32;
+        let reference = tile_view_pattern.stencil_reference_value_3d(&shape.coords) as u32;
 
         tracing::trace!(
             "Drawing layer {:?} at {}",
