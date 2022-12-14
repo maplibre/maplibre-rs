@@ -20,47 +20,47 @@ fn main(
     let target_width = 1.0;
     let target_height = 1.0;
 
-    let S = 4.0;
-    let E = EXTENT;
+    let WIDTH = EXTENT / 1024.0;
 
     var VERTICES: array<vec3<f32>, 24> = array<vec3<f32>, 24>(
         // Debug lines vertices
         // left
         vec3<f32>(0.0, 0.0, z),
-        vec3<f32>(0.0, E, z),
-        vec3<f32>(S, E, z),
+        vec3<f32>(0.0, EXTENT, z),
+        vec3<f32>(WIDTH, EXTENT, z),
 
         vec3<f32>(0.0, 0.0, z),
-        vec3<f32>(S, E, z),
-        vec3<f32>(S, 0.0, z),
+        vec3<f32>(WIDTH, EXTENT, z),
+        vec3<f32>(WIDTH, 0.0, z),
 
         // right
-        vec3<f32>(E - S, 0.0, z),
-        vec3<f32>(E - S, E, z),
-        vec3<f32>(E, E, z),
+        vec3<f32>(EXTENT - WIDTH, 0.0, z),
+        vec3<f32>(EXTENT - WIDTH, EXTENT, z),
+        vec3<f32>(EXTENT, EXTENT, z),
 
-        vec3<f32>(E - S, 0.0, z),
-        vec3<f32>(E, E, z),
-        vec3<f32>(E, 0.0, z),
+        vec3<f32>(EXTENT - WIDTH, 0.0, z),
+        vec3<f32>(EXTENT, EXTENT, z),
+        vec3<f32>(EXTENT, 0.0, z),
 
         // top
         vec3<f32>(0.0, 0.0, z),
-        vec3<f32>(0.0, S, z),
-        vec3<f32>(E, S, z),
+        vec3<f32>(0.0, WIDTH, z),
+        vec3<f32>(EXTENT, WIDTH, z),
 
         vec3<f32>(0.0, 0.0, z),
-        vec3<f32>(E, S, z),
-        vec3<f32>(E, 0.0, z),
+        vec3<f32>(EXTENT, WIDTH, z),
+        vec3<f32>(EXTENT, 0.0, z),
 
         // bottom
-        vec3<f32>(0.0, E - S, z),
-        vec3<f32>(0.0, E, z),
-        vec3<f32>(E, E, z),
+        vec3<f32>(0.0, EXTENT - WIDTH, z),
+        vec3<f32>(0.0, EXTENT, z),
+        vec3<f32>(EXTENT, EXTENT, z),
 
-        vec3<f32>(0.0, E - S, z),
-        vec3<f32>(E, E, z),
-        vec3<f32>(E, E - S, z)
+        vec3<f32>(0.0, EXTENT - WIDTH, z),
+        vec3<f32>(EXTENT, EXTENT, z),
+        vec3<f32>(EXTENT, EXTENT - WIDTH, z)
     );
+
     let a_position = VERTICES[vertex_idx];
 
     let scaling: mat3x3<f32> = mat3x3<f32>(

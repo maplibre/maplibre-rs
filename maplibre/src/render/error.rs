@@ -14,12 +14,6 @@ pub enum RenderError {
 
 impl RenderError {
     pub fn should_exit(&self) -> bool {
-        match self {
-            RenderError::Surface(e) => match e {
-                wgpu::SurfaceError::OutOfMemory => true,
-                _ => false,
-            },
-            _ => true,
-        }
+        matches!(e, wgpu::SurfaceError::OutOfMemory)
     }
 }

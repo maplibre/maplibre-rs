@@ -20,10 +20,6 @@ fn main(
     let target_width = 1.0;
     let target_height = 1.0;
 
-
-    let S = 4.0;
-    let E = EXTENT;
-
     var VERTICES: array<vec3<f32>, 6> = array<vec3<f32>, 6>(
         // Tile vertices
         vec3<f32>(0.0, 0.0, z),

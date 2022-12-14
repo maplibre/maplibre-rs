@@ -246,7 +246,7 @@ impl Renderer {
         let adapter = instance
             .request_adapter(request_adapter_options)
             .await
-            .ok_or_else(|| wgpu::RequestDeviceError)?;
+            .ok_or(wgpu::RequestDeviceError)?;
 
         let adapter_info = adapter.get_info();
 

@@ -522,33 +522,13 @@ impl RingIndex {
             .build_quad_key()
             .and_then(|key| self.tree_index.get(&key))
             .and_then(|entry| Some(&entry.layers))
-        /*            .and_then(|entry| {
-            if entry.done {
-                Some(&entry.layers)
-            } else {
-                None
-            }
-        })*/
     }
-
-    /*pub fn get_layers_fallback(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
-        let mut current = *coords;
-        loop {
-            if let Some(entries) = self.get_layers(&current) {
-                return Some(entries);
-            } else if let Some(parent) = current.get_parent() {
-                current = parent
-            } else {
-                return None;
-            }
-        }
-    }*/
 
     pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
         self.get_layers(coords).is_some()
     }
 
-    pub fn get_available_parent_tile(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
+    pub fn get_available_parent(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
         let mut current = *coords;
         loop {
             if self.has_tile(&current) {
@@ -561,14 +541,17 @@ impl RingIndex {
         }
     }
 
-    pub fn get_available_children(&self, coords: &WorldTileCoords) -> Option<Vec<WorldTileCoords>> {
+    pub fn get_available_children(
+        &self,
+        coords: &WorldTileCoords,
+        search_depth: usize,
+    ) -> Option<Vec<WorldTileCoords>> {
         let mut children = coords.get_children().to_vec();
 
-        let mut output = vec![];
+        let mut output = Vec::new();
 
-        for i in 0..4 {
-            // FIXME: Improve depth
-            let mut new_children = vec![];
+        for _ in 0..search_depth {
+            let mut new_children = Vec::with_capacity(children.len() * 4);
 
             for child in children {
                 if self.has_tile(&child) {
@@ -581,7 +564,7 @@ impl RingIndex {
             children = new_children;
         }
 
-        return Some(output.to_vec());
+        return Some(output);
     }
 
     pub fn iter(&self) -> impl Iterator<Item = impl Iterator<Item = &IndexEntry>> + '_ {
@@ -602,13 +585,6 @@ impl RingIndex {
         }
     }
 
-    /*    fn mark_done(&mut self, coords: &WorldTileCoords) {
-            let Some(entry) = coords
-                .build_quad_key()
-                .and_then(|key| self.tree_index.get_mut(&key)) else { return; };
-            entry.done = true;
-        }
-    */
     fn push_back(&mut self, entry: IndexEntry) {
         if let Some(key) = entry.coords.build_quad_key() {
             match self.tree_index.entry(key) {

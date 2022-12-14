@@ -168,7 +168,7 @@ impl TileRepository {
     }
 
     /// Checks fetching of a tile has been started
-    pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
+    pub fn is_tile_pending_or_done(&self, coords: &WorldTileCoords) -> bool {
         if coords
             .build_quad_key()
             .and_then(|key| self.tree.get(&key))

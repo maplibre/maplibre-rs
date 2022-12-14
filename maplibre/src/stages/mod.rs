@@ -39,7 +39,7 @@ pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<
     phantom_hc: PhantomData<HC>,
 }
 
-impl<'c, T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
+impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
     for HeadedPipelineProcessor<T, HC, C>
 {
     fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), PipelineError> {

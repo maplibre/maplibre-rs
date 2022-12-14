@@ -138,12 +138,7 @@ impl<E: Environment> RequestStage<E> {
         coords: WorldTileCoords,
         layers: &HashSet<String>,
     ) {
-        /* TODO: is this still required?
-        if !tile_repository.is_layers_missing(coords, layers) {
-            return Ok(false);
-        }*/
-
-        if tile_repository.has_tile(&coords) {
+        if tile_repository.is_tile_pending_or_done(&coords) {
             tile_repository.create_tile(coords);
 
             tracing::info!("new tile request: {}", &coords);
