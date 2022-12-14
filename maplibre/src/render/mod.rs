@@ -57,6 +57,7 @@ pub use stages::register_default_render_stages;
 
 use crate::{
     render::{
+        error::RenderError,
         graph::{EmptyNode, RenderGraph, RenderGraphError},
         main_pass::{MainPassDriverNode, MainPassNode},
     },
@@ -142,7 +143,7 @@ pub struct Renderer {
     pub instance: wgpu::Instance,
     pub device: Arc<wgpu::Device>, // TODO: Arc is needed for headless rendering. Is there a simpler solution?
     pub queue: wgpu::Queue,
-    pub adapter_info: wgpu::AdapterInfo,
+    pub adapter: wgpu::Adapter,
 
     pub wgpu_settings: WgpuSettings,
     pub settings: RendererSettings,
@@ -157,29 +158,26 @@ impl Renderer {
         window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -> Result<Self, wgpu::RequestDeviceError>
+    ) -> Result<Self, RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        let surface = Surface::from_window(&instance, window, &settings);
+        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw()) };
 
-        let compatible_surface = match &surface.head() {
-            Head::Headed(window_head) => Some(window_head.surface()),
-            Head::Headless(_) => None,
-        };
-
-        let (device, queue, adapter_info) = Self::request_device(
+        let (adapter, device, queue) = Self::request_device(
             &instance,
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
                 power_preference: wgpu_settings.power_preference,
                 force_fallback_adapter: false,
-                compatible_surface,
+                compatible_surface: Some(&surface),
             },
         )
         .await?;
+
+        let surface = Surface::from_surface(surface, &adapter, window, &settings);
 
         match surface.head() {
             Head::Headed(window) => window.configure(&device),
@@ -190,7 +188,7 @@ impl Renderer {
             instance,
             device: Arc::new(device),
             queue,
-            adapter_info,
+            adapter,
             wgpu_settings,
             settings,
             state: RenderState::new(surface),
@@ -201,13 +199,13 @@ impl Renderer {
         window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -> Result<Self, wgpu::RequestDeviceError>
+    ) -> Result<Self, RenderError>
     where
         MW: MapWindow,
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        let (device, queue, adapter_info) = Self::request_device(
+        let (adapter, device, queue) = Self::request_device(
             &instance,
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
@@ -224,7 +222,7 @@ impl Renderer {
             instance,
             device: Arc::new(device),
             queue,
-            adapter_info,
+            adapter,
             wgpu_settings,
             settings,
             state: RenderState::new(surface),
@@ -240,7 +238,7 @@ impl Renderer {
         instance: &wgpu::Instance,
         settings: &WgpuSettings,
         request_adapter_options: &wgpu::RequestAdapterOptions<'_>,
-    ) -> Result<(wgpu::Device, wgpu::Queue, wgpu::AdapterInfo), wgpu::RequestDeviceError> {
+    ) -> Result<(wgpu::Adapter, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError> {
         let adapter = instance
             .request_adapter(request_adapter_options)
             .await
@@ -384,7 +382,7 @@ impl Renderer {
                 trace_path,
             )
             .await?;
-        Ok((device, queue, adapter_info))
+        Ok((adapter, device, queue))
     }
 
     pub fn instance(&self) -> &wgpu::Instance {
