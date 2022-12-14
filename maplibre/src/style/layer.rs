@@ -59,7 +59,7 @@ impl LayerPaint {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct StyleLayer {
     #[serde(skip)]
-    pub index: u32,
+    pub index: u32, // FIXME: How is this initialized?
     pub id: String,
     #[serde(rename = "type")]
     pub typ: String,

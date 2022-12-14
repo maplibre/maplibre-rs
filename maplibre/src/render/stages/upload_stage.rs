@@ -61,7 +61,7 @@ impl Stage for UploadStage {
         if let Some(view_region) = &view_region {
             self.upload_tile_geometry(state, queue, tile_repository, style, view_region);
             self.upload_tile_view_pattern(state, queue, &view_proj);
-            self.update_metadata(state, tile_repository, queue);
+            //self.update_metadata(state, tile_repository, queue);
         }
     }
 }
@@ -74,6 +74,8 @@ impl UploadStage {
         tile_repository: &TileRepository,
         queue: &wgpu::Queue,
     ) {
+        let Initialized(buffer_pool) = buffer_pool else { return; };
+
         let animated_one = 0.5
             * (1.0
                 + ((std::time::SystemTime::now()
@@ -82,64 +84,56 @@ impl UploadStage {
                     .as_secs_f64())
                 .sin()));
 
-        // Factor which determines how much we need to adjust the width of lines for example.
-        // If zoom == z -> zoom_factor == 1
-        if let Initialized(buffer_pool) = buffer_pool {
-            for entries in buffer_pool.index().iter() {
-                for entry in entries {
-                    let world_coords = entry.coords;
+        for entries in buffer_pool.index().iter() {
+            for entry in entries {
+                let world_coords = entry.coords;
 
-                    let source_layer = entry.style_layer.source_layer.as_ref().unwrap();
+                let source_layer = entry.style_layer.source_layer.as_ref().unwrap();
 
-                    if let Some(stored_layer) = tile_repository
+                let Some(stored_layer) =
+                    tile_repository
                         .iter_layers_at(&world_coords)
                         .and_then(|mut layers| {
                             layers.find(|layer| source_layer.as_str() == layer.layer_name())
+                        })  else { continue; };
+
+                let color: Option<Vec4f32> = entry
+                    .style_layer
+                    .paint
+                    .as_ref()
+                    .and_then(|paint| paint.get_color())
+                    .map(|mut color| {
+                        color.color.b = animated_one as f32;
+                        color.into()
+                    });
+
+                match stored_layer {
+                    StoredLayer::UnavailableLayer { .. } => {}
+                    StoredLayer::TessellatedLayer {
+                        feature_indices, ..
+                    } => {
+                        /* let feature_metadata = layer_data
+                        .features()
+                        .iter()
+                        .enumerate()
+                        .flat_map(|(i, _feature)| {
+                            iter::repeat(ShaderFeatureStyle {
+                                color: color.unwrap(),
+                            })
+                            .take(feature_indices[i] as usize)
                         })
-                    {
-                        let color: Option<Vec4f32> = entry
-                            .style_layer
-                            .paint
-                            .as_ref()
-                            .and_then(|paint| paint.get_color())
-                            .map(|mut color| {
-                                color.color.b = animated_one as f32;
-                                color.into()
-                            });
+                        .collect::<Vec<_>>();*/
 
-                        match stored_layer {
-                            StoredLayer::UnavailableLayer { .. } => {}
-                            StoredLayer::TessellatedLayer {
-                                feature_indices, ..
-                            } => {
-                                /* let feature_metadata = layer_data
-                                .features()
-                                .iter()
-                                .enumerate()
-                                .flat_map(|(i, _feature)| {
-                                    iter::repeat(ShaderFeatureStyle {
-                                        color: color.unwrap(),
-                                    })
-                                    .take(feature_indices[i] as usize)
+                        let feature_metadata = (0..feature_indices.len())
+                            .flat_map(|i| {
+                                iter::repeat(ShaderFeatureStyle {
+                                    color: color.unwrap(),
                                 })
-                                .collect::<Vec<_>>();*/
+                                .take(feature_indices[i] as usize)
+                            })
+                            .collect::<Vec<_>>();
 
-                                let feature_metadata = (0..feature_indices.len())
-                                    .flat_map(|i| {
-                                        iter::repeat(ShaderFeatureStyle {
-                                            color: color.unwrap(),
-                                        })
-                                        .take(feature_indices[i] as usize)
-                                    })
-                                    .collect::<Vec<_>>();
-
-                                buffer_pool.update_feature_metadata(
-                                    &queue,
-                                    entry,
-                                    &feature_metadata,
-                                );
-                            }
-                        }
+                        buffer_pool.update_feature_metadata(&queue, entry, &feature_metadata);
                     }
                 }
             }
@@ -155,9 +149,8 @@ impl UploadStage {
         queue: &wgpu::Queue,
         view_proj: &ViewProjection,
     ) {
-        if let Initialized(tile_view_pattern) = tile_view_pattern {
-            tile_view_pattern.upload_pattern(queue, view_proj);
-        }
+        let Initialized(tile_view_pattern) = tile_view_pattern else { return; };
+        tile_view_pattern.upload_pattern(queue, view_proj);
     }
 
     #[tracing::instrument(skip_all)]
@@ -169,72 +162,57 @@ impl UploadStage {
         style: &Style,
         view_region: &ViewRegion,
     ) {
-        if let Initialized(buffer_pool) = buffer_pool {
-            // Upload all tessellated layers which are in view
-            for world_coords in view_region.iter() {
-                let loaded_layers = buffer_pool
-                    .get_loaded_layers_at(&world_coords)
-                    .unwrap_or_default();
-                if let Some(available_layers) =
-                    tile_repository.iter_layers_at(&world_coords).map(|layers| {
-                        layers
-                            .filter(|result| !loaded_layers.contains(&result.layer_name()))
-                            .collect::<Vec<_>>()
-                    })
-                {
-                    for style_layer in &style.layers {
-                        let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
+        let Initialized(buffer_pool) = buffer_pool else { return; };
+        // Upload all tessellated layers which are in view
+        for coords in view_region.iter() {
+            let Some(available_layers) =
+                    tile_repository.iter_loaded_layers_at(&buffer_pool, &coords) else { continue; };
 
-                        if let Some(message) = available_layers
-                            .iter()
-                            .find(|layer| source_layer.as_str() == layer.layer_name())
-                        {
-                            let color: Option<Vec4f32> = style_layer
-                                .paint
-                                .as_ref()
-                                .and_then(|paint| paint.get_color())
-                                .map(|color| color.into());
+            for style_layer in &style.layers {
+                let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
 
-                            match message {
-                                StoredLayer::UnavailableLayer { coords: _, .. } => {
-                                    /*self.buffer_pool.mark_layer_unavailable(*coords);*/
-                                }
-                                StoredLayer::TessellatedLayer {
-                                    coords,
-                                    feature_indices,
-                                    buffer,
-                                    ..
-                                } => {
-                                    let allocate_feature_metadata = tracing::span!(
-                                        tracing::Level::TRACE,
-                                        "allocate_feature_metadata"
-                                    );
+                let Some(message) = available_layers
+                        .iter()
+                        .find(|layer| source_layer.as_str() == layer.layer_name()) else { continue; };
 
-                                    let guard = allocate_feature_metadata.enter();
-                                    let feature_metadata =
-                                        (0..feature_indices.len()) // FIXME: Iterate over actual featrues
-                                            .enumerate()
-                                            .flat_map(|(i, _feature)| {
-                                                iter::repeat(ShaderFeatureStyle {
-                                                    color: color.unwrap(),
-                                                })
-                                                .take(feature_indices[i] as usize)
-                                            })
-                                            .collect::<Vec<_>>();
-                                    drop(guard);
+                let color: Option<Vec4f32> = style_layer
+                    .paint
+                    .as_ref()
+                    .and_then(|paint| paint.get_color())
+                    .map(|color| color.into());
 
-                                    tracing::trace!("Allocating geometry at {}", &coords);
-                                    buffer_pool.allocate_layer_geometry(
-                                        queue,
-                                        *coords,
-                                        style_layer.clone(),
-                                        buffer,
-                                        ShaderLayerMetadata::new(style_layer.index as f32),
-                                        &feature_metadata,
-                                    );
-                                }
-                            }
-                        }
+                match message {
+                    StoredLayer::UnavailableLayer { .. } => {}
+                    StoredLayer::TessellatedLayer {
+                        coords,
+                        feature_indices,
+                        buffer,
+                        ..
+                    } => {
+                        let allocate_feature_metadata =
+                            tracing::span!(tracing::Level::TRACE, "allocate_layer_geometry");
+
+                        let guard = allocate_feature_metadata.enter();
+                        let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual featrues
+                            .enumerate()
+                            .flat_map(|(i, _feature)| {
+                                iter::repeat(ShaderFeatureStyle {
+                                    color: color.unwrap(),
+                                })
+                                .take(feature_indices[i] as usize)
+                            })
+                            .collect::<Vec<_>>();
+                        drop(guard);
+
+                        tracing::trace!("Allocating geometry at {}", &coords);
+                        buffer_pool.allocate_layer_geometry(
+                            queue,
+                            *coords,
+                            style_layer.clone(),
+                            buffer,
+                            ShaderLayerMetadata::new(style_layer.index as f32),
+                            &feature_metadata,
+                        );
                     }
                 }
             }
