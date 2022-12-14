@@ -518,6 +518,7 @@ pub fn create_default_render_graph() -> Result<RenderGraph, RenderGraphError> {
     let input_node_id = draw_graph.set_input(vec![]);
     // Edges
     draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
+    // TODO: Enable debug pass via runtime flag
     draw_graph.add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::DEBUG_PASS)?;
 
     graph.add_sub_graph(draw_graph::NAME, draw_graph);

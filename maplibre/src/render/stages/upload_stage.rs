@@ -163,6 +163,7 @@ impl UploadStage {
         view_region: &ViewRegion,
     ) {
         let Initialized(buffer_pool) = buffer_pool else { return; };
+
         // Upload all tessellated layers which are in view
         for coords in view_region.iter() {
             let Some(available_layers) =
@@ -190,7 +191,7 @@ impl UploadStage {
                         ..
                     } => {
                         let allocate_feature_metadata =
-                            tracing::span!(tracing::Level::TRACE, "allocate_layer_geometry");
+                            tracing::span!(tracing::Level::TRACE, "allocate_feature_metadata");
 
                         let guard = allocate_feature_metadata.enter();
                         let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual featrues
