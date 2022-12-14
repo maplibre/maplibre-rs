@@ -192,43 +192,29 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     pub fn upload_pattern(&mut self, queue: &Q, view_proj: &ViewProjection) {
         let mut buffer = Vec::with_capacity(self.in_view.len());
 
-        for view_tile in &mut self.in_view {
-            view_tile.target_shape.set_buffer_range(buffer.len() as u64);
+        let mut add_to_buffer = |shape: &mut TileShape| {
+            shape.set_buffer_range(buffer.len() as u64);
             buffer.push(ShaderTileMetadata {
                 // We are casting here from 64bit to 32bit, because 32bit is more performant and is
                 // better supported.
                 transform: view_proj
-                    .to_model_view_projection(view_tile.target_shape.transform)
+                    .to_model_view_projection(shape.transform)
                     .downcast()
                     .into(),
-                zoom_factor: view_tile.target_shape.zoom_factor as f32,
+                zoom_factor: shape.zoom_factor as f32,
             });
+        };
+
+        for view_tile in &mut self.in_view {
+            add_to_buffer(&mut view_tile.target_shape);
 
             match &mut view_tile.source_shapes {
                 SourceShapes::Parent(source_shape) => {
-                    source_shape.set_buffer_range(buffer.len() as u64);
-                    buffer.push(ShaderTileMetadata {
-                        // We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                        // better supported.
-                        transform: view_proj
-                            .to_model_view_projection(source_shape.transform)
-                            .downcast()
-                            .into(),
-                        zoom_factor: source_shape.zoom_factor as f32,
-                    });
+                    add_to_buffer(source_shape);
                 }
                 SourceShapes::Children(source_shapes) => {
                     for source_shape in source_shapes {
-                        source_shape.set_buffer_range(buffer.len() as u64);
-                        buffer.push(ShaderTileMetadata {
-                            // We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                            // better supported.
-                            transform: view_proj
-                                .to_model_view_projection(source_shape.transform)
-                                .downcast()
-                                .into(),
-                            zoom_factor: source_shape.zoom_factor as f32,
-                        });
+                        add_to_buffer(source_shape);
                     }
                 }
                 SourceShapes::SourceEqTarget => {}
@@ -245,13 +231,27 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         queue.write_buffer(&self.buffer.inner, 0, raw_buffer);
     }
 
-    pub fn stencil_reference_value(&self, world_coords: &WorldTileCoords) -> u8 {
+    pub fn stencil_reference_value_2d(&self, world_coords: &WorldTileCoords) -> u8 {
         // FIXME (THIS_PR): Take into account z
         match (world_coords.x, world_coords.y) {
             (x, y) if x % 2 == 0 && y % 2 == 0 => 2,
             (x, y) if x % 2 == 0 && y % 2 != 0 => 1,
             (x, y) if x % 2 != 0 && y % 2 == 0 => 4,
             (x, y) if x % 2 != 0 && y % 2 != 0 => 3,
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn stencil_reference_value_3d(&self, world_coords: &WorldTileCoords) -> u8 {
+        match (world_coords.x, world_coords.y, u8::from(world_coords.z)) {
+            (x, y, z) if x % 2 == 0 && y % 2 == 0 && z % 2 != 0 => 1,
+            (x, y, z) if x % 2 == 0 && y % 2 != 0 && z % 2 != 0 => 2,
+            (x, y, z) if x % 2 != 0 && y % 2 == 0 && z % 2 != 0 => 3,
+            (x, y, z) if x % 2 != 0 && y % 2 != 0 && z % 2 != 0 => 4,
+            (x, y, z) if x % 2 == 0 && y % 2 == 0 && z % 2 == 0 => 5,
+            (x, y, z) if x % 2 == 0 && y % 2 != 0 && z % 2 == 0 => 6,
+            (x, y, z) if x % 2 != 0 && y % 2 == 0 && z % 2 == 0 => 7,
+            (x, y, z) if x % 2 != 0 && y % 2 != 0 && z % 2 == 0 => 8,
             _ => unreachable!(),
         }
     }
