@@ -20,18 +20,46 @@ fn main(
     let target_width = 1.0;
     let target_height = 1.0;
 
-
     let S = 4.0;
     let E = EXTENT;
 
-    var VERTICES: array<vec3<f32>, 6> = array<vec3<f32>, 6>(
-        // Tile vertices
+    var VERTICES: array<vec3<f32>, 24> = array<vec3<f32>, 24>(
+        // Debug lines vertices
+        // left
         vec3<f32>(0.0, 0.0, z),
-        vec3<f32>(0.0, EXTENT, z),
-        vec3<f32>(EXTENT, 0.0, z),
-        vec3<f32>(EXTENT, 0.0, z),
-        vec3<f32>(0.0, EXTENT, z),
-        vec3<f32>(EXTENT, EXTENT, z),
+        vec3<f32>(0.0, E, z),
+        vec3<f32>(S, E, z),
+
+        vec3<f32>(0.0, 0.0, z),
+        vec3<f32>(S, E, z),
+        vec3<f32>(S, 0.0, z),
+
+        // right
+        vec3<f32>(E - S, 0.0, z),
+        vec3<f32>(E - S, E, z),
+        vec3<f32>(E, E, z),
+
+        vec3<f32>(E - S, 0.0, z),
+        vec3<f32>(E, E, z),
+        vec3<f32>(E, 0.0, z),
+
+        // top
+        vec3<f32>(0.0, 0.0, z),
+        vec3<f32>(0.0, S, z),
+        vec3<f32>(E, S, z),
+
+        vec3<f32>(0.0, 0.0, z),
+        vec3<f32>(E, S, z),
+        vec3<f32>(E, 0.0, z),
+
+        // bottom
+        vec3<f32>(0.0, E - S, z),
+        vec3<f32>(0.0, E, z),
+        vec3<f32>(E, E, z),
+
+        vec3<f32>(0.0, E - S, z),
+        vec3<f32>(E, E, z),
+        vec3<f32>(E, E - S, z)
     );
     let a_position = VERTICES[vertex_idx];
 
@@ -42,8 +70,6 @@ fn main(
     );
 
     var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>((scaling * a_position), 1.0);
-    // FIXME: how to fix z-fighting?
     position.z = 1.0;
-
     return VertexOutput(DEBUG_COLOR, position);
 }

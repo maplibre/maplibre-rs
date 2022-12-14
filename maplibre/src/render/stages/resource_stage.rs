@@ -9,7 +9,7 @@ use crate::{
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
-        tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE},
+        tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
         Renderer,
     },
     schedule::Stage,
@@ -83,7 +83,7 @@ impl Stage for ResourceStage {
             let tile_view_buffer_desc = wgpu::BufferDescriptor {
                 label: Some("tile view buffer"),
                 size: size_of::<ShaderTileMetadata>() as wgpu::BufferAddress
-                    * DEFAULT_TILE_VIEW_SIZE,
+                    * DEFAULT_TILE_VIEW_PATTERN_SIZE,
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
                 mapped_at_creation: false,
             };
@@ -104,9 +104,11 @@ impl Stage for ResourceStage {
                 tile_shader.describe_vertex(),
                 tile_shader.describe_fragment(),
                 true,
+                true,
                 false,
                 false,
                 false,
+                true,
             )
             .describe_render_pipeline()
             .initialize(device);
@@ -122,12 +124,37 @@ impl Stage for ResourceStage {
             let mask_shader = shaders::TileMaskShader {
                 format: surface.surface_format(),
                 draw_colors: false,
+                debug_lines: false,
             };
 
             TilePipeline::new(
                 *settings,
                 mask_shader.describe_vertex(),
                 mask_shader.describe_fragment(),
+                false,
+                true,
+                true,
+                false,
+                false,
+                true,
+            )
+            .describe_render_pipeline()
+            .initialize(device)
+        });
+
+        state.debug_mask_pipeline.initialize(|| {
+            let mask_shader = shaders::TileMaskShader {
+                format: surface.surface_format(),
+                draw_colors: true,
+                debug_lines: true,
+            };
+
+            TilePipeline::new(
+                *settings,
+                mask_shader.describe_vertex(),
+                mask_shader.describe_fragment(),
+                false,
+                false,
                 false,
                 true,
                 false,

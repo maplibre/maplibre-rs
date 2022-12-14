@@ -98,6 +98,7 @@ impl Node for MainPassNode {
         for item in &state.tile_phase.items {
             DrawTiles::render(state, item, &mut tracked_pass);
         }
+
         Ok(())
     }
 }

@@ -15,7 +15,7 @@ use crate::{
     tessellation::IndexDataType,
 };
 
-pub const DEFAULT_TILE_VIEW_SIZE: wgpu::BufferAddress = 32 * 4;
+pub const DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = 32 * 4;
 
 /// The tile mask pattern assigns each tile a value which can be used for stencil testing.
 pub struct TileViewPattern<Q, B> {
@@ -106,21 +106,21 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             index += 1;
 
             let fallback = {
-                if !pool_index.has_tile(&coords) {
-                    if let Some(fallback_coords) = pool_index.get_tile_coords_fallback(&coords) {
-                        tracing::trace!(
+                if pool_index.has_tile(&coords) {
+                    None
+                } else {
+                    pool_index
+                        .get_tile_coords_fallback(&coords)
+                        .and_then(|fallback_coords| {
+                            tracing::trace!(
                             "Could not find data at {coords}. Falling back to {fallback_coords}"
                         );
 
-                        let shape = TileShape::new(fallback_coords, zoom, index);
+                            let shape = TileShape::new(fallback_coords, zoom, index);
 
-                        index += 1;
-                        Some(shape)
-                    } else {
-                        None
-                    }
-                } else {
-                    None
+                            index += 1;
+                            Some(shape)
+                        })
                 }
             };
 

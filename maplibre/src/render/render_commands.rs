@@ -49,6 +49,19 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
     }
 }
 
+pub struct SetDebugMasksPipeline;
+impl<P: PhaseItem> RenderCommand<P> for SetDebugMasksPipeline {
+    fn render<'w>(
+        state: &'w RenderState,
+        _item: &P,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        let Initialized(pipeline) = &state.debug_mask_pipeline  else { return RenderCommandResult::Failure; };
+        pass.set_render_pipeline(pipeline);
+        RenderCommandResult::Success
+    }
+}
+
 pub struct SetTilePipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetTilePipeline {
     fn render<'w>(
@@ -81,7 +94,28 @@ impl RenderCommand<TileInView> for DrawMask {
             0,
             tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
         );
-        pass.draw(0..6, 0..1);
+        const TILE_MASK_SHADER_VERTICES: u32 = 6;
+        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+        RenderCommandResult::Success
+    }
+}
+
+pub struct DrawDebugMask;
+impl RenderCommand<TileInView> for DrawDebugMask {
+    fn render<'w>(
+        state: &'w RenderState,
+        TileInView { shape, fallback }: &TileInView,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
+        tracing::trace!("Drawing mask {}", &shape.coords);
+
+        pass.set_vertex_buffer(
+            0,
+            tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
+        );
+        const TILE_MASK_SHADER_VERTICES: u32 = 24;
+        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
         RenderCommandResult::Success
     }
 }
@@ -137,3 +171,4 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
 pub type DrawTiles = (SetTilePipeline, SetViewBindGroup<0>, DrawTile);
 
 pub type DrawMasks = (SetMaskPipeline, DrawMask);
+pub type DrawDebugMasks = (SetDebugMasksPipeline, DrawDebugMask);

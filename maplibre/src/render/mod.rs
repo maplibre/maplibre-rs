@@ -37,6 +37,7 @@ pub mod resource;
 pub mod stages;
 
 // Rendering internals
+mod debug_pass;
 mod graph_runner;
 mod main_pass;
 mod render_commands;
@@ -57,6 +58,7 @@ pub use stages::register_default_render_stages;
 
 use crate::{
     render::{
+        debug_pass::DebugPassNode,
         error::RenderError,
         graph::{EmptyNode, RenderGraph, RenderGraphError},
         main_pass::{MainPassDriverNode, MainPassNode},
@@ -83,6 +85,7 @@ pub struct RenderState {
 
     tile_pipeline: Eventually<wgpu::RenderPipeline>,
     mask_pipeline: Eventually<wgpu::RenderPipeline>,
+    debug_mask_pipeline: Eventually<wgpu::RenderPipeline>,
 
     globals_bind_group: Eventually<Globals>,
 
@@ -103,6 +106,7 @@ impl RenderState {
             tile_view_pattern: Default::default(),
             tile_pipeline: Default::default(),
             mask_pipeline: Default::default(),
+            debug_mask_pipeline: Default::default(),
             globals_bind_group: Default::default(),
             depth_texture: Default::default(),
             multisampling_texture: Default::default(),
@@ -497,6 +501,7 @@ pub mod draw_graph {
     // Labels for non-input nodes
     pub mod node {
         pub const MAIN_PASS: &str = "main_pass";
+        pub const DEBUG_PASS: &str = "debug_pass";
         #[cfg(feature = "headless")]
         pub const COPY: &str = "copy";
     }
@@ -506,9 +511,14 @@ pub fn create_default_render_graph() -> Result<RenderGraph, RenderGraphError> {
     let mut graph = RenderGraph::default();
 
     let mut draw_graph = RenderGraph::default();
+    // Draw nodes
     draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+    draw_graph.add_node(draw_graph::node::DEBUG_PASS, DebugPassNode::new());
+    // Input node
     let input_node_id = draw_graph.set_input(vec![]);
+    // Edges
     draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
+    draw_graph.add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::DEBUG_PASS)?;
 
     graph.add_sub_graph(draw_graph::NAME, draw_graph);
     graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
