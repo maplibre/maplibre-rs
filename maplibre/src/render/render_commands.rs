@@ -93,9 +93,10 @@ impl RenderCommand<ViewTile> for DrawMask {
             pass.set_vertex_buffer(
                 0,
                 // Mask is of the requested shape
+                // FIXME (THIS_PR): Use here target or source?
                 tile_view_pattern
                     .buffer()
-                    .slice(target_shape.buffer_range()),
+                    .slice(source_shape.buffer_range()),
             );
             const TILE_MASK_SHADER_VERTICES: u32 = 6;
             pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
@@ -114,10 +115,12 @@ impl RenderCommand<ViewTile> for DrawDebugMask {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
         tracing::trace!("Drawing mask {}", &view_tile.coords());
 
-        view_tile.render(|mask_shape, shape| {
+        view_tile.render(|target_shape, source_shape| {
             pass.set_vertex_buffer(
                 0,
-                tile_view_pattern.buffer().slice(mask_shape.buffer_range()),
+                tile_view_pattern
+                    .buffer()
+                    .slice(source_shape.buffer_range()),
             );
             const TILE_MASK_SHADER_VERTICES: u32 = 24;
             pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);

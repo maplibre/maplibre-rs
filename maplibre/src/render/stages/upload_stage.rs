@@ -171,7 +171,7 @@ impl UploadStage {
             for style_layer in &style.layers {
                 let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
 
-                let Some(message) = available_layers
+                let Some(stored_layer) = available_layers
                         .iter()
                         .find(|layer| source_layer.as_str() == layer.layer_name()) else { continue; };
 
@@ -181,7 +181,7 @@ impl UploadStage {
                     .and_then(|paint| paint.get_color())
                     .map(|color| color.into());
 
-                match message {
+                match stored_layer {
                     StoredLayer::UnavailableLayer { .. } => {}
                     StoredLayer::TessellatedLayer {
                         coords,

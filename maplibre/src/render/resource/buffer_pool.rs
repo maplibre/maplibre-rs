@@ -477,8 +477,13 @@ impl IndexEntry {
 }
 
 #[derive(Debug)]
+pub struct RingIndexEntry {
+    layers: VecDeque<IndexEntry>,
+}
+
+#[derive(Debug)]
 pub struct RingIndex {
-    tree_index: BTreeMap<Quadkey, VecDeque<IndexEntry>>,
+    tree_index: BTreeMap<Quadkey, RingIndexEntry>,
     linear_index: VecDeque<Quadkey>,
 }
 
@@ -496,24 +501,36 @@ impl RingIndex {
     }
 
     pub fn front(&self) -> Option<&IndexEntry> {
-        self.linear_index
-            .front()
-            .and_then(|key| self.tree_index.get(key).and_then(|entries| entries.front()))
+        self.linear_index.front().and_then(|key| {
+            self.tree_index
+                .get(key)
+                .and_then(|entry| entry.layers.front())
+        })
     }
 
     pub fn back(&self) -> Option<&IndexEntry> {
-        self.linear_index
-            .back()
-            .and_then(|key| self.tree_index.get(key).and_then(|entries| entries.back()))
+        self.linear_index.back().and_then(|key| {
+            self.tree_index
+                .get(key)
+                .and_then(|entry| entry.layers.back())
+        })
     }
 
     pub fn get_layers(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
         coords
             .build_quad_key()
             .and_then(|key| self.tree_index.get(&key))
+            .and_then(|entry| Some(&entry.layers))
+        /*            .and_then(|entry| {
+            if entry.done {
+                Some(&entry.layers)
+            } else {
+                None
+            }
+        })*/
     }
 
-    pub fn get_layers_fallback(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
+    /*pub fn get_layers_fallback(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
         let mut current = *coords;
         loop {
             if let Some(entries) = self.get_layers(&current) {
@@ -524,16 +541,13 @@ impl RingIndex {
                 return None;
             }
         }
-    }
+    }*/
 
     pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
-        coords
-            .build_quad_key()
-            .and_then(|key| self.tree_index.get(&key))
-            .is_some()
+        self.get_layers(coords).is_some()
     }
 
-    pub fn get_tile_coords_fallback(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
+    pub fn get_available_parent_tile(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
         let mut current = *coords;
         loop {
             if self.has_tile(&current) {
@@ -546,32 +560,59 @@ impl RingIndex {
         }
     }
 
+    pub fn get_available_children(&self, coords: &WorldTileCoords) -> Option<Vec<WorldTileCoords>> {
+        let mut current = *coords;
+        //let children = [WorldTileCoords::default(); 4];
+        loop {
+            if self.has_tile(&current) {
+                return Some(vec![current]);
+            } else {
+                let children = current.get_children();
+
+                /*                if children.iter().all(|child| self.has_tile(&child)) {
+                                    return Some(children.to_vec());
+                                }
+                */
+                return Some(children.to_vec());
+            }
+        }
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = impl Iterator<Item = &IndexEntry>> + '_ {
         self.linear_index
             .iter()
-            .flat_map(|key| self.tree_index.get(key).map(|entries| entries.iter()))
+            .flat_map(|key| self.tree_index.get(key).map(|entry| entry.layers.iter()))
     }
 
     fn pop_front(&mut self) -> Option<IndexEntry> {
-        if let Some(entries) = self
+        if let Some(entry) = self
             .linear_index
             .pop_front()
             .and_then(|key| self.tree_index.get_mut(&key))
         {
-            entries.pop_front()
+            entry.layers.pop_front()
         } else {
             None
         }
     }
 
+    /*    fn mark_done(&mut self, coords: &WorldTileCoords) {
+            let Some(entry) = coords
+                .build_quad_key()
+                .and_then(|key| self.tree_index.get_mut(&key)) else { return; };
+            entry.done = true;
+        }
+    */
     fn push_back(&mut self, entry: IndexEntry) {
         if let Some(key) = entry.coords.build_quad_key() {
             match self.tree_index.entry(key) {
                 btree_map::Entry::Vacant(index_entry) => {
-                    index_entry.insert(VecDeque::from([entry]));
+                    index_entry.insert(RingIndexEntry {
+                        layers: VecDeque::from([entry]),
+                    });
                 }
                 btree_map::Entry::Occupied(mut index_entry) => {
-                    index_entry.get_mut().push_back(entry);
+                    index_entry.get_mut().layers.push_back(entry);
                 }
             }
 

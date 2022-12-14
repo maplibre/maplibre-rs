@@ -92,9 +92,9 @@ impl ViewTile {
         F: FnMut(&TileShape, &TileShape),
     {
         match &self.source_shapes {
-            SourceShapes::Parent(shape) => callback(&self.target_shape, shape),
-            SourceShapes::Children(shapes) => {
-                for shape in shapes {
+            SourceShapes::Parent(source_shape) => callback(&self.target_shape, source_shape),
+            SourceShapes::Children(source_shapes) => {
+                for shape in source_shapes {
                     callback(&self.target_shape, shape)
                 }
             }
@@ -153,12 +153,21 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             let source_shapes = {
                 if pool_index.has_tile(&coords) {
                     SourceShapes::SourceEqTarget
-                } else if let Some(fallback_coords) = pool_index.get_tile_coords_fallback(&coords) {
-                    tracing::trace!(
-                        "Could not find data at {coords}. Falling back to {fallback_coords}"
+                } else if let Some(parent_coords) = pool_index.get_available_parent_tile(&coords) {
+                    log::info!("Could not find data at {coords}. Falling back to {parent_coords}");
+
+                    SourceShapes::Parent(TileShape::new(parent_coords, zoom))
+                } else if let Some(children_coords) = pool_index.get_available_children(&coords) {
+                    log::info!(
+                        "Could not find data at {coords}. Falling back children: {children_coords:?}"
                     );
 
-                    SourceShapes::Parent(TileShape::new(fallback_coords, zoom))
+                    SourceShapes::Children(
+                        children_coords
+                            .iter()
+                            .map(|child_coord| TileShape::new(*child_coord, zoom))
+                            .collect(),
+                    )
                 } else {
                     SourceShapes::None
                 }
@@ -196,20 +205,31 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             });
 
             match &mut view_tile.source_shapes {
-                SourceShapes::Parent(target_shape) => {
-                    target_shape.set_buffer_range(buffer.len() as u64);
+                SourceShapes::Parent(source_shape) => {
+                    source_shape.set_buffer_range(buffer.len() as u64);
                     buffer.push(ShaderTileMetadata {
                         // We are casting here from 64bit to 32bit, because 32bit is more performant and is
                         // better supported.
                         transform: view_proj
-                            .to_model_view_projection(target_shape.transform)
+                            .to_model_view_projection(source_shape.transform)
                             .downcast()
                             .into(),
-                        zoom_factor: target_shape.zoom_factor as f32,
+                        zoom_factor: source_shape.zoom_factor as f32,
                     });
                 }
-                SourceShapes::Children(_) => {
-                    unimplemented!()
+                SourceShapes::Children(source_shapes) => {
+                    for source_shape in source_shapes {
+                        source_shape.set_buffer_range(buffer.len() as u64);
+                        buffer.push(ShaderTileMetadata {
+                            // We are casting here from 64bit to 32bit, because 32bit is more performant and is
+                            // better supported.
+                            transform: view_proj
+                                .to_model_view_projection(source_shape.transform)
+                                .downcast()
+                                .into(),
+                            zoom_factor: source_shape.zoom_factor as f32,
+                        });
+                    }
                 }
                 SourceShapes::SourceEqTarget => {}
                 SourceShapes::None => {}
@@ -226,6 +246,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     pub fn stencil_reference_value(&self, world_coords: &WorldTileCoords) -> u8 {
+        // FIXME (THIS_PR): Take into account z
         match (world_coords.x, world_coords.y) {
             (x, y) if x % 2 == 0 && y % 2 == 0 => 2,
             (x, y) if x % 2 == 0 && y % 2 != 0 => 1,

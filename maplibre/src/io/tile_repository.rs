@@ -141,7 +141,14 @@ impl TileRepository {
         coords
             .build_quad_key()
             .and_then(|key| self.tree.get(&key))
-            .map(|results| results.layers.iter())
+            .and_then(|tile| {
+                if tile.status == TileStatus::Success {
+                    Some(tile)
+                } else {
+                    None
+                }
+            })
+            .map(|tile| tile.layers.iter())
     }
 
     /// Returns the list of tessellated layers at the given world tile coords, which are loaded in
@@ -160,17 +167,7 @@ impl TileRepository {
         })
     }
 
-    /// Create a new tile.
-    pub fn create_tile(&mut self, coords: WorldTileCoords) -> bool {
-        if let Some(btree_map::Entry::Vacant(entry)) =
-            coords.build_quad_key().map(|key| self.tree.entry(key))
-        {
-            entry.insert(StoredTile::pending(coords));
-        }
-        true
-    }
-
-    /// Checks if a layer has been fetched.
+    /// Checks fetching of a tile has been started
     pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
         if coords
             .build_quad_key()
@@ -178,6 +175,16 @@ impl TileRepository {
             .is_some()
         {
             return false;
+        }
+        true
+    }
+
+    /// Create a new tile.
+    pub fn create_tile(&mut self, coords: WorldTileCoords) -> bool {
+        if let Some(btree_map::Entry::Vacant(entry)) =
+            coords.build_quad_key().map(|key| self.tree.entry(key))
+        {
+            entry.insert(StoredTile::pending(coords));
         }
         true
     }
