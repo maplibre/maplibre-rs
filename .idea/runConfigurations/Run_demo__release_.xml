@@ -1,12 +1,13 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run demo (release)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run -p maplibre-demo --release" />
+    <option name="command" value="run -p maplibre-demo --release -- headed" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />
     <option name="allFeatures" value="false" />
     <option name="emulateTerminal" value="false" />
     <option name="withSudo" value="false" />
+    <option name="buildTarget" value="REMOTE" />
     <option name="backtrace" value="SHORT" />
     <envs />
     <option name="isRedirectInput" value="false" />

@@ -2,9 +2,14 @@
 
 use std::collections::{btree_map, BTreeMap};
 
+use bytemuck::Pod;
+
 use crate::{
     coords::{Quadkey, WorldTileCoords},
-    render::ShaderVertex,
+    render::{
+        resource::{BufferPool, Queue},
+        ShaderVertex,
+    },
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
@@ -137,6 +142,22 @@ impl TileRepository {
             .build_quad_key()
             .and_then(|key| self.tree.get(&key))
             .map(|results| results.layers.iter())
+    }
+
+    /// Returns the list of tessellated layers at the given world tile coords, which are loaded in
+    /// the BufferPool
+    pub fn iter_loaded_layers_at<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod>(
+        &self,
+        buffer_pool: &BufferPool<Q, B, V, I, TM, FM>,
+        coords: &WorldTileCoords,
+    ) -> Option<Vec<&StoredLayer>> {
+        let loaded_layers = buffer_pool.get_loaded_layers_at(coords).unwrap_or_default();
+
+        self.iter_layers_at(coords).map(|layers| {
+            layers
+                .filter(|result| !loaded_layers.contains(&result.layer_name()))
+                .collect::<Vec<_>>()
+        })
     }
 
     /// Create a new tile.

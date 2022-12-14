@@ -35,32 +35,32 @@ impl Stage for QueueStage {
         mask_phase.items.clear();
         tile_phase.items.clear();
 
-        if let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (tile_view_pattern, &buffer_pool)
-        {
-            let index = buffer_pool.index();
+        let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
+            (tile_view_pattern, &buffer_pool) else { return; };
 
-            for tile_in_view in tile_view_pattern.iter() {
-                let TileInView { shape, fallback } = &tile_in_view;
-                let coords = shape.coords;
-                tracing::trace!("Drawing tile at {coords}");
+        let index = buffer_pool.index();
 
-                let shape_to_render = fallback.as_ref().unwrap_or(shape);
+        for tile_in_view in tile_view_pattern.iter() {
+            let TileInView { shape, fallback } = &tile_in_view;
+            let coords = shape.coords;
+            tracing::trace!("Drawing tile at {coords}");
 
-                // Draw mask
-                mask_phase.add(tile_in_view.clone());
+            let shape_to_render = fallback.as_ref().unwrap_or(shape);
 
-                if let Some(entries) = index.get_layers(&shape_to_render.coords) {
-                    let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
-                    layers_to_render.sort_by_key(|entry| entry.style_layer.index);
+            // Draw mask
+            mask_phase.add(tile_in_view.clone());
 
-                    for entry in layers_to_render {
-                        // Draw tile
-                        tile_phase.add((entry.clone(), shape_to_render.clone()))
-                    }
-                } else {
+            let Some(entries) = index.get_layers(&shape_to_render.coords) else {
                     tracing::trace!("No layers found at {}", &shape_to_render.coords);
-                }
+                    continue;
+                };
+
+            let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
+            layers_to_render.sort_by_key(|entry| entry.style_layer.index);
+
+            for entry in layers_to_render {
+                // Draw tile
+                tile_phase.add((entry.clone(), shape_to_render.clone()))
             }
         }
     }
