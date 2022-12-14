@@ -102,32 +102,32 @@
         mask_phase.items.clear();
         tile_phase.items.clear();
 
-        <span class="kw">if let </span>(Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (tile_view_pattern, <span class="kw-2">&amp;</span>buffer_pool)
-        {
-            <span class="kw">let </span>index = buffer_pool.index();
+        <span class="kw">let </span>(Initialized(tile_view_pattern), Initialized(buffer_pool)) =
+            (tile_view_pattern, <span class="kw-2">&amp;</span>buffer_pool) <span class="kw">else </span>{ <span class="kw">return</span>; };
 
-            <span class="kw">for </span>tile_in_view <span class="kw">in </span>tile_view_pattern.iter() {
-                <span class="kw">let </span>TileInView { shape, fallback } = <span class="kw-2">&amp;</span>tile_in_view;
-                <span class="kw">let </span>coords = shape.coords;
-                <span class="macro">tracing::trace!</span>(<span class="string">&quot;Drawing tile at {coords}&quot;</span>);
+        <span class="kw">let </span>index = buffer_pool.index();
 
-                <span class="kw">let </span>shape_to_render = fallback.as_ref().unwrap_or(shape);
+        <span class="kw">for </span>tile_in_view <span class="kw">in </span>tile_view_pattern.iter() {
+            <span class="kw">let </span>TileInView { shape, fallback } = <span class="kw-2">&amp;</span>tile_in_view;
+            <span class="kw">let </span>coords = shape.coords;
+            <span class="macro">tracing::trace!</span>(<span class="string">&quot;Drawing tile at {coords}&quot;</span>);
 
-                <span class="comment">// Draw mask
-                </span>mask_phase.add(tile_in_view.clone());
+            <span class="kw">let </span>shape_to_render = fallback.as_ref().unwrap_or(shape);
 
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(entries) = index.get_layers(<span class="kw-2">&amp;</span>shape_to_render.coords) {
-                    <span class="kw">let </span><span class="kw-2">mut </span>layers_to_render: Vec&lt;<span class="kw-2">&amp;</span>IndexEntry&gt; = Vec::from_iter(entries);
-                    layers_to_render.sort_by_key(|entry| entry.style_layer.index);
+            <span class="comment">// Draw mask
+            </span>mask_phase.add(tile_in_view.clone());
 
-                    <span class="kw">for </span>entry <span class="kw">in </span>layers_to_render {
-                        <span class="comment">// Draw tile
-                        </span>tile_phase.add((entry.clone(), shape_to_render.clone()))
-                    }
-                } <span class="kw">else </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(entries) = index.get_layers(<span class="kw-2">&amp;</span>shape_to_render.coords) <span class="kw">else </span>{
                     <span class="macro">tracing::trace!</span>(<span class="string">&quot;No layers found at {}&quot;</span>, <span class="kw-2">&amp;</span>shape_to_render.coords);
-                }
+                    <span class="kw">continue</span>;
+                };
+
+            <span class="kw">let </span><span class="kw-2">mut </span>layers_to_render: Vec&lt;<span class="kw-2">&amp;</span>IndexEntry&gt; = Vec::from_iter(entries);
+            layers_to_render.sort_by_key(|entry| entry.style_layer.index);
+
+            <span class="kw">for </span>entry <span class="kw">in </span>layers_to_render {
+                <span class="comment">// Draw tile
+                </span>tile_phase.add((entry.clone(), shape_to_render.clone()))
             }
         }
     }

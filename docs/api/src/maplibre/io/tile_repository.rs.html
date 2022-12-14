@@ -180,13 +180,39 @@
 <span id="180">180</span>
 <span id="181">181</span>
 <span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Tile cache.
 
 </span><span class="kw">use </span>std::collections::{btree_map, BTreeMap};
 
+<span class="kw">use </span>bytemuck::Pod;
+
 <span class="kw">use crate</span>::{
     coords::{Quadkey, WorldTileCoords},
-    render::ShaderVertex,
+    render::{
+        resource::{BufferPool, Queue},
+        ShaderVertex,
+    },
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
@@ -319,6 +345,22 @@
             .build_quad_key()
             .and_then(|key| <span class="self">self</span>.tree.get(<span class="kw-2">&amp;</span>key))
             .map(|results| results.layers.iter())
+    }
+
+    <span class="doccomment">/// Returns the list of tessellated layers at the given world tile coords, which are loaded in
+    /// the BufferPool
+    </span><span class="kw">pub fn </span>iter_loaded_layers_at&lt;Q: Queue&lt;B&gt;, B, V: Pod, I: Pod, TM: Pod, FM: Pod&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        buffer_pool: <span class="kw-2">&amp;</span>BufferPool&lt;Q, B, V, I, TM, FM&gt;,
+        coords: <span class="kw-2">&amp;</span>WorldTileCoords,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;<span class="kw-2">&amp;</span>StoredLayer&gt;&gt; {
+        <span class="kw">let </span>loaded_layers = buffer_pool.get_loaded_layers_at(coords).unwrap_or_default();
+
+        <span class="self">self</span>.iter_layers_at(coords).map(|layers| {
+            layers
+                .filter(|result| !loaded_layers.contains(<span class="kw-2">&amp;</span>result.layer_name()))
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+        })
     }
 
     <span class="doccomment">/// Create a new tile.

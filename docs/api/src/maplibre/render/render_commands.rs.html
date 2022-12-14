@@ -137,22 +137,6 @@
 <span id="137">137</span>
 <span id="138">138</span>
 <span id="139">139</span>
-<span id="140">140</span>
-<span id="141">141</span>
-<span id="142">142</span>
-<span id="143">143</span>
-<span id="144">144</span>
-<span id="145">145</span>
-<span id="146">146</span>
-<span id="147">147</span>
-<span id="148">148</span>
-<span id="149">149</span>
-<span id="150">150</span>
-<span id="151">151</span>
-<span id="152">152</span>
-<span id="153">153</span>
-<span id="154">154</span>
-<span id="155">155</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Specifies the instructions which are going to be sent to the GPU. Render commands can be concatenated
 //! into a new render command which executes multiple instruction sets.
 
@@ -185,12 +169,9 @@
         _item: <span class="kw-2">&amp;</span>P,
         pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;,
     ) -&gt; RenderCommandResult {
-        <span class="kw">if let </span>Initialized(Globals { bind_group, .. }) = <span class="kw-2">&amp;</span>state.globals_bind_group {
-            pass.set_bind_group(<span class="number">0</span>, bind_group, <span class="kw-2">&amp;</span>[]);
-            RenderCommandResult::Success
-        } <span class="kw">else </span>{
-            RenderCommandResult::Failure
-        }
+        <span class="kw">let </span>Initialized(Globals { bind_group, .. }) = <span class="kw-2">&amp;</span>state.globals_bind_group  <span class="kw">else </span>{ <span class="kw">return </span>RenderCommandResult::Failure; };
+        pass.set_bind_group(<span class="number">0</span>, bind_group, <span class="kw-2">&amp;</span>[]);
+        RenderCommandResult::Success
     }
 }
 
@@ -201,12 +182,9 @@
         _item: <span class="kw-2">&amp;</span>P,
         pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;,
     ) -&gt; RenderCommandResult {
-        <span class="kw">if let </span>Initialized(pipeline) = <span class="kw-2">&amp;</span>state.mask_pipeline {
-            pass.set_render_pipeline(pipeline);
-            RenderCommandResult::Success
-        } <span class="kw">else </span>{
-            RenderCommandResult::Failure
-        }
+        <span class="kw">let </span>Initialized(pipeline) = <span class="kw-2">&amp;</span>state.mask_pipeline  <span class="kw">else </span>{ <span class="kw">return </span>RenderCommandResult::Failure; };
+        pass.set_render_pipeline(pipeline);
+        RenderCommandResult::Success
     }
 }
 
@@ -217,12 +195,9 @@
         _item: <span class="kw-2">&amp;</span>P,
         pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;,
     ) -&gt; RenderCommandResult {
-        <span class="kw">if let </span>Initialized(pipeline) = <span class="kw-2">&amp;</span>state.tile_pipeline {
-            pass.set_render_pipeline(pipeline);
-            RenderCommandResult::Success
-        } <span class="kw">else </span>{
-            RenderCommandResult::Failure
-        }
+        <span class="kw">let </span>Initialized(pipeline) = <span class="kw-2">&amp;</span>state.tile_pipeline  <span class="kw">else </span>{ <span class="kw">return </span>RenderCommandResult::Failure; };
+        pass.set_render_pipeline(pipeline);
+        RenderCommandResult::Success
     }
 }
 
@@ -233,24 +208,20 @@
         TileInView { shape, fallback }: <span class="kw-2">&amp;</span>TileInView,
         pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;,
     ) -&gt; RenderCommandResult {
-        <span class="kw">if let </span>Initialized(tile_view_pattern) = <span class="kw-2">&amp;</span>state.tile_view_pattern {
-            <span class="macro">tracing::trace!</span>(<span class="string">&quot;Drawing mask {}&quot;</span>, <span class="kw-2">&amp;</span>shape.coords);
+        <span class="kw">let </span>Initialized(tile_view_pattern) = <span class="kw-2">&amp;</span>state.tile_view_pattern  <span class="kw">else </span>{ <span class="kw">return </span>RenderCommandResult::Failure; };
+        <span class="macro">tracing::trace!</span>(<span class="string">&quot;Drawing mask {}&quot;</span>, <span class="kw-2">&amp;</span>shape.coords);
 
-            <span class="kw">let </span>shape_to_render = fallback.as_ref().unwrap_or(shape);
+        <span class="kw">let </span>shape_to_render = fallback.as_ref().unwrap_or(shape);
 
-            <span class="kw">let </span>reference =
-                tile_view_pattern.stencil_reference_value(<span class="kw-2">&amp;</span>shape_to_render.coords) <span class="kw">as </span>u32;
+        <span class="kw">let </span>reference = tile_view_pattern.stencil_reference_value(<span class="kw-2">&amp;</span>shape_to_render.coords) <span class="kw">as </span>u32;
 
-            pass.set_stencil_reference(reference);
-            pass.set_vertex_buffer(
-                <span class="number">0</span>,
-                tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-            );
-            pass.draw(<span class="number">0</span>..<span class="number">6</span>, <span class="number">0</span>..<span class="number">1</span>);
-            RenderCommandResult::Success
-        } <span class="kw">else </span>{
-            RenderCommandResult::Failure
-        }
+        pass.set_stencil_reference(reference);
+        pass.set_vertex_buffer(
+            <span class="number">0</span>,
+            tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
+        );
+        pass.draw(<span class="number">0</span>..<span class="number">6</span>, <span class="number">0</span>..<span class="number">1</span>);
+        RenderCommandResult::Success
     }
 }
 
@@ -261,47 +232,44 @@
         (entry, shape): <span class="kw-2">&amp;</span>(IndexEntry, TileShape),
         pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;,
     ) -&gt; RenderCommandResult {
-        <span class="kw">if let </span>(Initialized(buffer_pool), Initialized(tile_view_pattern)) =
-            (<span class="kw-2">&amp;</span>state.buffer_pool, <span class="kw-2">&amp;</span>state.tile_view_pattern)
-        {
-            <span class="kw">let </span>reference = tile_view_pattern.stencil_reference_value(<span class="kw-2">&amp;</span>shape.coords) <span class="kw">as </span>u32;
+        <span class="kw">let </span>(Initialized(buffer_pool), Initialized(tile_view_pattern)) =
+            (<span class="kw-2">&amp;</span>state.buffer_pool, <span class="kw-2">&amp;</span>state.tile_view_pattern) <span class="kw">else </span>{ <span class="kw">return </span>RenderCommandResult::Failure; };
 
-            <span class="macro">tracing::trace!</span>(
-                <span class="string">&quot;Drawing layer {:?} at {}&quot;</span>,
-                entry.style_layer.source_layer,
-                <span class="kw-2">&amp;</span>entry.coords
-            );
+        <span class="kw">let </span>reference = tile_view_pattern.stencil_reference_value(<span class="kw-2">&amp;</span>shape.coords) <span class="kw">as </span>u32;
 
-            pass.set_stencil_reference(reference);
-            pass.set_index_buffer(
-                buffer_pool.indices().slice(entry.indices_buffer_range()),
-                INDEX_FORMAT,
-            );
-            pass.set_vertex_buffer(
-                <span class="number">0</span>,
-                buffer_pool.vertices().slice(entry.vertices_buffer_range()),
-            );
-            pass.set_vertex_buffer(
-                <span class="number">1</span>,
-                tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-            );
-            pass.set_vertex_buffer(
-                <span class="number">2</span>,
-                buffer_pool
-                    .metadata()
-                    .slice(entry.layer_metadata_buffer_range()),
-            );
-            pass.set_vertex_buffer(
-                <span class="number">3</span>,
-                buffer_pool
-                    .feature_metadata()
-                    .slice(entry.feature_metadata_buffer_range()),
-            );
-            pass.draw_indexed(entry.indices_range(), <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
-            RenderCommandResult::Success
-        } <span class="kw">else </span>{
-            RenderCommandResult::Failure
-        }
+        <span class="macro">tracing::trace!</span>(
+            <span class="string">&quot;Drawing layer {:?} at {}&quot;</span>,
+            entry.style_layer.source_layer,
+            <span class="kw-2">&amp;</span>entry.coords
+        );
+
+        pass.set_stencil_reference(reference);
+        pass.set_index_buffer(
+            buffer_pool.indices().slice(entry.indices_buffer_range()),
+            INDEX_FORMAT,
+        );
+        pass.set_vertex_buffer(
+            <span class="number">0</span>,
+            buffer_pool.vertices().slice(entry.vertices_buffer_range()),
+        );
+        pass.set_vertex_buffer(
+            <span class="number">1</span>,
+            tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
+        );
+        pass.set_vertex_buffer(
+            <span class="number">2</span>,
+            buffer_pool
+                .metadata()
+                .slice(entry.layer_metadata_buffer_range()),
+        );
+        pass.set_vertex_buffer(
+            <span class="number">3</span>,
+            buffer_pool
+                .feature_metadata()
+                .slice(entry.feature_metadata_buffer_range()),
+        );
+        pass.draw_indexed(entry.indices_range(), <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
+        RenderCommandResult::Success
     }
 }
 

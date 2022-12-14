@@ -41,7 +41,6 @@
 <span id="41">41</span>
 <span id="42">42</span>
 <span id="43">43</span>
-<span id="44">44</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Extracts data from the current state.
 
 </span><span class="kw">use crate</span>::{
@@ -74,15 +73,14 @@
             ..
         }: <span class="kw-2">&amp;mut </span>MapContext,
     ) {
-        <span class="kw">if let </span>(Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (tile_view_pattern, <span class="kw-2">&amp;</span>buffer_pool)
-        {
-            <span class="kw">let </span>view_region = view_state.create_view_region();
+        <span class="kw">let </span>(Initialized(tile_view_pattern), Initialized(buffer_pool)) =
+            (tile_view_pattern, <span class="kw-2">&amp;</span>buffer_pool) <span class="kw">else </span>{ <span class="kw">return</span>; };
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(view_region) = <span class="kw-2">&amp;</span>view_region {
-                <span class="kw">let </span>zoom = view_state.zoom();
-                tile_view_pattern.update_pattern(view_region, buffer_pool, zoom);
-            }
+        <span class="kw">let </span>view_region = view_state.create_view_region();
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(view_region) = <span class="kw-2">&amp;</span>view_region {
+            <span class="kw">let </span>zoom = view_state.zoom();
+            tile_view_pattern.update_pattern(view_region, buffer_pool, zoom);
         }
     }
 }

@@ -156,8 +156,8 @@
 </span><span class="attribute">#[derive(Serialize, Deserialize, Debug, Clone)]
 </span><span class="kw">pub struct </span>StyleLayer {
     <span class="attribute">#[serde(skip)]
-    </span><span class="kw">pub </span>index: u32,
-    <span class="kw">pub </span>id: String,
+    </span><span class="kw">pub </span>index: u32, <span class="comment">// FIXME: How is this initialized?
+    </span><span class="kw">pub </span>id: String,
     <span class="attribute">#[serde(rename = <span class="string">&quot;type&quot;</span>)]
     </span><span class="kw">pub </span>typ: String,
     <span class="comment">// TODO filter
