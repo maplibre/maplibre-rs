@@ -2,10 +2,7 @@
 
 use crate::{
     context::MapContext,
-    render::{
-        eventually::Eventually::Initialized, resource::IndexEntry, tile_view_pattern::TileInView,
-        RenderState, Renderer,
-    },
+    render::{eventually::Eventually::Initialized, resource::IndexEntry, RenderState, Renderer},
     schedule::Stage,
 };
 
@@ -40,28 +37,27 @@ impl Stage for QueueStage {
 
         let index = buffer_pool.index();
 
-        for tile_in_view in tile_view_pattern.iter() {
-            let TileInView { shape, fallback } = &tile_in_view;
-            let coords = shape.coords;
+        for view_tile in tile_view_pattern.iter() {
+            let coords = &view_tile.coords();
             tracing::trace!("Drawing tile at {coords}");
 
-            let shape_to_render = fallback.as_ref().unwrap_or(shape);
-
             // Draw mask
-            mask_phase.add(tile_in_view.clone());
+            mask_phase.add(view_tile.clone());
 
-            let Some(entries) = index.get_layers(&shape_to_render.coords) else {
-                    tracing::trace!("No layers found at {}", &shape_to_render.coords);
-                    continue;
+            view_tile.render(|_mask_shape, shape| {
+                let Some(entries) = index.get_layers(&shape.coords) else {
+                    tracing::trace!("No layers found at {}", &shape.coords);
+                    return;
                 };
 
-            let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
-            layers_to_render.sort_by_key(|entry| entry.style_layer.index);
+                let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
+                layers_to_render.sort_by_key(|entry| entry.style_layer.index);
 
-            for entry in layers_to_render {
-                // Draw tile
-                tile_phase.add((entry.clone(), shape_to_render.clone()))
-            }
+                for entry in layers_to_render {
+                    // Draw tile
+                    tile_phase.add((entry.clone(), shape.clone()))
+                }
+            });
         }
     }
 }

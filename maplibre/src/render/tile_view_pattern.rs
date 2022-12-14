@@ -19,7 +19,7 @@ pub const DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = 32 * 4;
 
 /// The tile mask pattern assigns each tile a value which can be used for stencil testing.
 pub struct TileViewPattern<Q, B> {
-    in_view: Vec<TileInView>,
+    in_view: Vec<ViewTile>,
     buffer: BackingBuffer<B>,
     phantom_q: PhantomData<Q>,
 }
@@ -47,10 +47,43 @@ impl TileShape {
 }
 
 #[derive(Clone)]
-pub struct TileInView {
-    pub shape: TileShape,
+pub enum ViewTileFallbacks {
+    Parent(TileShape),
+    Children(Vec<TileShape>),
+    Available,
+    None,
+}
 
-    pub fallback: Option<TileShape>,
+#[derive(Clone)]
+pub struct ViewTile {
+    shape: TileShape,
+    fallback: ViewTileFallbacks,
+}
+
+impl ViewTile {
+    pub fn coords(&self) -> WorldTileCoords {
+        self.shape.coords
+    }
+
+    pub fn shape(&self) -> &TileShape {
+        &self.shape
+    }
+
+    pub fn render<F>(&self, mut callback: F)
+    where
+        F: FnMut(&TileShape, &TileShape),
+    {
+        match &self.fallback {
+            ViewTileFallbacks::Parent(shape) => callback(&self.shape, shape),
+            ViewTileFallbacks::Children(shapes) => {
+                for shape in shapes {
+                    callback(&self.shape, shape)
+                }
+            }
+            ViewTileFallbacks::Available => callback(&self.shape, &self.shape),
+            ViewTileFallbacks::None => callback(&self.shape, &self.shape),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -107,28 +140,26 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
 
             let fallback = {
                 if pool_index.has_tile(&coords) {
-                    None
+                    ViewTileFallbacks::Available
+                } else if let Some(fallback_coords) = pool_index.get_tile_coords_fallback(&coords) {
+                    tracing::trace!(
+                        "Could not find data at {coords}. Falling back to {fallback_coords}"
+                    );
+
+                    let shape = TileShape::new(fallback_coords, zoom, index);
+
+                    index += 1;
+                    ViewTileFallbacks::Parent(shape)
                 } else {
-                    pool_index
-                        .get_tile_coords_fallback(&coords)
-                        .and_then(|fallback_coords| {
-                            tracing::trace!(
-                            "Could not find data at {coords}. Falling back to {fallback_coords}"
-                        );
-
-                            let shape = TileShape::new(fallback_coords, zoom, index);
-
-                            index += 1;
-                            Some(shape)
-                        })
+                    ViewTileFallbacks::None
                 }
             };
 
-            self.in_view.push(TileInView { shape, fallback });
+            self.in_view.push(ViewTile { shape, fallback });
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &TileInView> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = &ViewTile> + '_ {
         self.in_view.iter()
     }
 
@@ -140,27 +171,33 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     pub fn upload_pattern(&self, queue: &Q, view_proj: &ViewProjection) {
         let mut buffer = Vec::with_capacity(self.in_view.len());
 
-        for tile in &self.in_view {
+        for view_tile in &self.in_view {
             buffer.push(ShaderTileMetadata {
                 // We are casting here from 64bit to 32bit, because 32bit is more performant and is
                 // better supported.
                 transform: view_proj
-                    .to_model_view_projection(tile.shape.transform)
+                    .to_model_view_projection(view_tile.shape.transform)
                     .downcast()
                     .into(),
-                zoom_factor: tile.shape.zoom_factor as f32,
+                zoom_factor: view_tile.shape.zoom_factor as f32,
             });
 
-            if let Some(fallback_shape) = &tile.fallback {
-                buffer.push(ShaderTileMetadata {
-                    // We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                    // better supported.
-                    transform: view_proj
-                        .to_model_view_projection(fallback_shape.transform)
-                        .downcast()
-                        .into(),
-                    zoom_factor: fallback_shape.zoom_factor as f32,
-                });
+            match &view_tile.fallback {
+                ViewTileFallbacks::Parent(inner) => {
+                    buffer.push(ShaderTileMetadata {
+                        // We are casting here from 64bit to 32bit, because 32bit is more performant and is
+                        // better supported.
+                        transform: view_proj
+                            .to_model_view_projection(inner.transform)
+                            .downcast()
+                            .into(),
+                        zoom_factor: inner.zoom_factor as f32,
+                    });
+                }
+                ViewTileFallbacks::Children(_) => {
+                    unimplemented!()
+                }
+                _ => {}
             }
         }
 

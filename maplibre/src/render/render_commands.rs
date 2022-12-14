@@ -5,11 +5,11 @@ use crate::render::{
     eventually::Eventually::Initialized,
     render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
     resource::{Globals, IndexEntry, TrackedRenderPass},
-    tile_view_pattern::{TileInView, TileShape},
+    tile_view_pattern::{TileShape, ViewTile},
     RenderState, INDEX_FORMAT,
 };
 
-impl PhaseItem for TileInView {
+impl PhaseItem for ViewTile {
     type SortKey = ();
 
     fn sort_key(&self) -> Self::SortKey {}
@@ -76,46 +76,53 @@ impl<P: PhaseItem> RenderCommand<P> for SetTilePipeline {
 }
 
 pub struct DrawMask;
-impl RenderCommand<TileInView> for DrawMask {
+impl RenderCommand<ViewTile> for DrawMask {
     fn render<'w>(
         state: &'w RenderState,
-        TileInView { shape, fallback }: &TileInView,
+        view_tile: &ViewTile,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
-        tracing::trace!("Drawing mask {}", &shape.coords);
+        tracing::trace!("Drawing mask {}", &view_tile.coords());
 
-        let shape_to_render = fallback.as_ref().unwrap_or(shape);
+        view_tile.render(|mask_shape, shape| {
+            let reference = tile_view_pattern.stencil_reference_value(&shape.coords) as u32;
 
-        let reference = tile_view_pattern.stencil_reference_value(&shape_to_render.coords) as u32;
-
-        pass.set_stencil_reference(reference);
-        pass.set_vertex_buffer(
-            0,
-            tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-        );
-        const TILE_MASK_SHADER_VERTICES: u32 = 6;
-        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+            pass.set_stencil_reference(reference);
+            pass.set_vertex_buffer(
+                0,
+                tile_view_pattern
+                    .buffer()
+                    .slice(mask_shape.buffer_range.clone()),
+            );
+            const TILE_MASK_SHADER_VERTICES: u32 = 6;
+            pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+        });
         RenderCommandResult::Success
     }
 }
 
 pub struct DrawDebugMask;
-impl RenderCommand<TileInView> for DrawDebugMask {
+impl RenderCommand<ViewTile> for DrawDebugMask {
     fn render<'w>(
         state: &'w RenderState,
-        TileInView { shape, fallback }: &TileInView,
+        view_tile: &ViewTile,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
-        tracing::trace!("Drawing mask {}", &shape.coords);
+        tracing::trace!("Drawing mask {}", &view_tile.coords());
 
-        pass.set_vertex_buffer(
-            0,
-            tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-        );
-        const TILE_MASK_SHADER_VERTICES: u32 = 24;
-        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+        view_tile.render(|mask_shape, shape| {
+            pass.set_vertex_buffer(
+                0,
+                tile_view_pattern
+                    .buffer()
+                    .slice(mask_shape.buffer_range.clone()),
+            );
+            const TILE_MASK_SHADER_VERTICES: u32 = 24;
+            pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+        });
+
         RenderCommandResult::Success
     }
 }

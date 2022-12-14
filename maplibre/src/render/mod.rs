@@ -27,7 +27,7 @@ use crate::{
         resource::{BufferPool, Globals, Head, IndexEntry, Surface, Texture, TextureView},
         settings::{RendererSettings, WgpuSettings},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        tile_view_pattern::{TileInView, TileShape, TileViewPattern},
+        tile_view_pattern::{TileShape, TileViewPattern, ViewTile},
     },
     tessellation::IndexDataType,
 };
@@ -94,7 +94,7 @@ pub struct RenderState {
 
     surface: Surface,
 
-    mask_phase: RenderPhase<TileInView>,
+    mask_phase: RenderPhase<ViewTile>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
 }
 
