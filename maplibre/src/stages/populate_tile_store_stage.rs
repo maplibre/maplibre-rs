@@ -38,10 +38,13 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
             ..
         }: &mut MapContext,
     ) {
-        if let Some(result) = self.kernel.apc().receive() {
+        // TODO: (optimize) Using while instead of if means that we are processing all that is
+        // available this might cause frame drops.
+        while let Some(result) = self.kernel.apc().receive() {
             match result {
                 Message::TileTessellated(message) => {
                     let coords = message.coords();
+                    tracing::event!(tracing::Level::ERROR, %coords, "tile request done: {}", &coords);
 
                     tracing::trace!("Tile at {} finished loading", coords);
                     log::warn!("Tile at {} finished loading", coords);

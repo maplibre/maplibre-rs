@@ -2,6 +2,8 @@
 
 use std::{collections::HashSet, rc::Rc};
 
+use log::info;
+
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
@@ -69,6 +71,8 @@ pub fn schedule<
     context: C,
 ) -> AsyncProcedureFuture {
     Box::pin(async move {
+        info!("Processing thread: {:?}", std::thread::current().name());
+
         let Input::TileRequest(input) = input else {
             return Err(ProcedureError::IncompatibleInput)
         };
@@ -146,7 +150,8 @@ impl<E: Environment> RequestStage<E> {
         if tile_repository.has_tile(&coords) {
             tile_repository.create_tile(coords);
 
-            tracing::info!("new tile request: {}", &coords);
+            tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);
+
             self.kernel
                 .apc()
                 .call(

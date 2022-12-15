@@ -10,6 +10,8 @@ use crate::{
     window::WindowSize,
 };
 
+const VIEW_REGION_PADDING: i32 = 1;
+
 pub struct World {
     pub view_state: ViewState,
     pub tile_repository: TileRepository,
@@ -121,7 +123,13 @@ impl ViewState {
         self.camera
             .view_region_bounding_box(&self.view_projection().invert())
             .map(|bounding_box| {
-                ViewRegion::new(bounding_box, 0, 32, *self.zoom, self.visible_level())
+                ViewRegion::new(
+                    bounding_box,
+                    VIEW_REGION_PADDING,
+                    32,
+                    *self.zoom,
+                    self.visible_level(),
+                )
             })
     }
 
