@@ -128,7 +128,7 @@ impl Stage for ResourceStage {
 
         state.raster_resources.initialize(|| {
             let shader = shaders::RasterTileShader {
-                format: settings.texture_format,
+                format: surface.surface_format(),
             };
 
             let mut raster_resources = RasterResources::default();
@@ -156,6 +156,7 @@ impl Stage for ResourceStage {
                 false,
                 false,
                 true,
+                false,
             )
             .describe_render_pipeline()
             .initialize(device)

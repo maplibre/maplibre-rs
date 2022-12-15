@@ -223,7 +223,7 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawRasterTile {
             &state.tile_view_pattern,
             &state.raster_resources,
         ) {
-            let reference = tile_view_pattern.stencil_reference_value(&shape.coords) as u32;
+            let reference = tile_view_pattern.stencil_reference_value_3d(&shape.coords()) as u32;
 
             tracing::trace!("Drawing raster layer");
 
@@ -238,10 +238,7 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawRasterTile {
                 buffer_pool.vertices().slice(entry.vertices_buffer_range()),
             );
 
-            pass.set_vertex_buffer(
-                1,
-                tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-            );
+            pass.set_vertex_buffer(1, tile_view_pattern.buffer().slice(shape.buffer_range()));
             pass.draw_indexed(0..render::resource::INDICES.len() as u32, 0, 0..1);
             RenderCommandResult::Success
         } else {

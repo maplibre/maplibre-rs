@@ -3,9 +3,8 @@
 use std::collections::{btree_map, btree_map::Entry, BTreeMap};
 
 use bytemuck::Pod;
-use thiserror::Error;
-
 use image::RgbaImage;
+use thiserror::Error;
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
@@ -141,7 +140,7 @@ impl TileRepository {
 
     /// Returns the list of tessellated layers at the given world tile coords. None if tile is
     /// missing from the cache.
-    pub fn iter_tesselated_layers_at(
+    pub fn iter_layers_at(
         &self,
         coords: &WorldTileCoords,
     ) -> Option<impl Iterator<Item = &StoredLayer> + '_> {

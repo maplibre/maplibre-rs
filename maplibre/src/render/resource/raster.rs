@@ -95,9 +95,11 @@ impl RasterResources {
                 shader.describe_vertex(),
                 shader.describe_fragment(),
                 false,
+                true,
                 false,
                 false,
                 false,
+                true,
                 true,
             )
             .describe_render_pipeline()

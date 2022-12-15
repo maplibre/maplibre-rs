@@ -141,6 +141,8 @@ impl UploadStage {
 
                         buffer_pool.update_feature_metadata(queue, entry, &feature_metadata);
                     }
+
+                    StoredLayer::RasterLayer { .. } => {}
                 }
             }
         }
