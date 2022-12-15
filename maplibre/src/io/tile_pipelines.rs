@@ -19,6 +19,7 @@ impl Processable for ParseTile {
     type Input = (TileRequest, Box<[u8]>);
     type Output = (TileRequest, geozero::mvt::Tile);
 
+    #[tracing::instrument(skip_all)]
     fn process(
         &self,
         (tile_request, data): Self::Input,
@@ -36,6 +37,7 @@ impl Processable for IndexLayer {
     type Input = (TileRequest, geozero::mvt::Tile);
     type Output = (TileRequest, geozero::mvt::Tile);
 
+    #[tracing::instrument(skip_all)]
     fn process(
         &self,
         (tile_request, mut tile): Self::Input,
@@ -65,6 +67,7 @@ impl Processable for TessellateLayer {
     type Input = (TileRequest, geozero::mvt::Tile);
     type Output = (TileRequest, geozero::mvt::Tile);
 
+    #[tracing::instrument(skip_all)]
     fn process(
         &self,
         (tile_request, mut tile): Self::Input,
