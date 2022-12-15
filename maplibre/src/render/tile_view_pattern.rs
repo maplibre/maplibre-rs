@@ -20,12 +20,13 @@ pub const CHILDREN_SEARCH_DEPTH: usize = 4;
 
 #[derive(Clone)]
 pub struct TileShape {
-    pub zoom_factor: f64,
+    coords: WorldTileCoords,
 
-    pub coords: WorldTileCoords,
+    // TODO: optimization, `zoom_factor` and `transform` are no longer required if `buffer_range` is Some()
+    zoom_factor: f64,
+    transform: Matrix4<f64>,
 
-    pub transform: Matrix4<f64>,
-    pub buffer_range: Option<Range<wgpu::BufferAddress>>,
+    buffer_range: Option<Range<wgpu::BufferAddress>>,
 }
 
 impl TileShape {
@@ -45,6 +46,18 @@ impl TileShape {
 
     pub fn buffer_range(&self) -> Range<wgpu::BufferAddress> {
         self.buffer_range.as_ref().unwrap().clone()
+    }
+
+    pub fn zoom_factor(&self) -> f64 {
+        self.zoom_factor
+    }
+
+    pub fn coords(&self) -> WorldTileCoords {
+        self.coords
+    }
+
+    pub fn transform(&self) -> Matrix4<f64> {
+        self.transform
     }
 }
 

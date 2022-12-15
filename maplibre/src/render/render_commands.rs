@@ -5,11 +5,11 @@ use crate::render::{
     eventually::Eventually::Initialized,
     render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
     resource::{Globals, IndexEntry, TrackedRenderPass},
-    tile_view_pattern::{TileShape, ViewTile},
+    tile_view_pattern::TileShape,
     RenderState, INDEX_FORMAT,
 };
 
-impl PhaseItem for ViewTile {
+impl PhaseItem for TileShape {
     type SortKey = ();
 
     fn sort_key(&self) -> Self::SortKey {}
@@ -76,56 +76,52 @@ impl<P: PhaseItem> RenderCommand<P> for SetTilePipeline {
 }
 
 pub struct DrawMask;
-impl RenderCommand<ViewTile> for DrawMask {
+impl RenderCommand<TileShape> for DrawMask {
     fn render<'w>(
         state: &'w RenderState,
-        view_tile: &ViewTile,
+        source_shape: &TileShape,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
-        tracing::trace!("Drawing mask {}", &view_tile.coords());
+        tracing::trace!("Drawing mask {}", &source_shape.coords());
 
-        view_tile.render(|source_shape| {
-            // Draw mask with stencil value of e.g. parent
-            let reference =
-                tile_view_pattern.stencil_reference_value_3d(&source_shape.coords) as u32;
+        // Draw mask with stencil value of e.g. parent
+        let reference = tile_view_pattern.stencil_reference_value_3d(&source_shape.coords()) as u32;
 
-            pass.set_stencil_reference(reference);
-            pass.set_vertex_buffer(
-                0,
-                // Mask is of the requested shape
-                // FIXME (THIS_PR): Use here target or source?
-                tile_view_pattern
-                    .buffer()
-                    .slice(source_shape.buffer_range()),
-            );
-            const TILE_MASK_SHADER_VERTICES: u32 = 6;
-            pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
-        });
+        pass.set_stencil_reference(reference);
+        pass.set_vertex_buffer(
+            0,
+            // Mask is of the requested shape
+            // FIXME (THIS_PR): Use here target or source?
+            tile_view_pattern
+                .buffer()
+                .slice(source_shape.buffer_range()),
+        );
+        const TILE_MASK_SHADER_VERTICES: u32 = 6;
+        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+
         RenderCommandResult::Success
     }
 }
 
 pub struct DrawDebugMask;
-impl RenderCommand<ViewTile> for DrawDebugMask {
+impl RenderCommand<TileShape> for DrawDebugMask {
     fn render<'w>(
         state: &'w RenderState,
-        view_tile: &ViewTile,
+        source_shape: &TileShape,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
-        tracing::trace!("Drawing mask {}", &view_tile.coords());
+        tracing::trace!("Drawing mask {}", &source_shape.coords());
 
-        view_tile.render(|source_shape| {
-            pass.set_vertex_buffer(
-                0,
-                tile_view_pattern
-                    .buffer()
-                    .slice(source_shape.buffer_range()),
-            );
-            const TILE_MASK_SHADER_VERTICES: u32 = 24;
-            pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
-        });
+        pass.set_vertex_buffer(
+            0,
+            tile_view_pattern
+                .buffer()
+                .slice(source_shape.buffer_range()),
+        );
+        const TILE_MASK_SHADER_VERTICES: u32 = 24;
+        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
 
         RenderCommandResult::Success
     }
@@ -142,7 +138,7 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
             (&state.buffer_pool, &state.tile_view_pattern) else { return RenderCommandResult::Failure; };
 
         // Uses stencil value of requested tile and the shape of the requested tile
-        let reference = tile_view_pattern.stencil_reference_value_3d(&shape.coords) as u32;
+        let reference = tile_view_pattern.stencil_reference_value_3d(&shape.coords()) as u32;
 
         tracing::trace!(
             "Drawing layer {:?} at {}",

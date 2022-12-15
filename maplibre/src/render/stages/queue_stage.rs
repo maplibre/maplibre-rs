@@ -41,15 +41,13 @@ impl Stage for QueueStage {
             let coords = &view_tile.coords();
             tracing::trace!("Drawing tile at {coords}");
 
-            // Draw masks for all source_shapes for the target_shape
-            if view_tile.source_available() {
-                mask_phase.add(view_tile.clone());
-            }
-
-            // draw tile normal or the source e.g. parent`
+            // draw tile normal or the source e.g. parent or children
             view_tile.render(|source_shape| {
-                let Some(entries) = index.get_layers(&source_shape.coords) else {
-                    tracing::trace!("No layers found at {}", &source_shape.coords);
+                // Draw masks for all source_shapes
+                mask_phase.add(source_shape.clone());
+
+                let Some(entries) = index.get_layers(&source_shape.coords()) else {
+                    tracing::trace!("No layers found at {}", &source_shape.coords());
                     return;
                 };
 
