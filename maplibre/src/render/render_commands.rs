@@ -5,11 +5,11 @@ use crate::render::{
     eventually::Eventually::Initialized,
     render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
     resource::{Globals, IndexEntry, TrackedRenderPass},
-    tile_view_pattern::{TileInView, TileShape},
+    tile_view_pattern::TileShape,
     RenderState, INDEX_FORMAT,
 };
 
-impl PhaseItem for TileInView {
+impl PhaseItem for TileShape {
     type SortKey = ();
 
     fn sort_key(&self) -> Self::SortKey {}
@@ -30,12 +30,9 @@ impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetViewBindGroup<I> {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let Initialized(Globals { bind_group, .. }) = &state.globals_bind_group {
-            pass.set_bind_group(0, bind_group, &[]);
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
+        let Initialized(Globals { bind_group, .. }) = &state.globals_bind_group  else { return RenderCommandResult::Failure; };
+        pass.set_bind_group(0, bind_group, &[]);
+        RenderCommandResult::Success
     }
 }
 
@@ -46,12 +43,22 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let Initialized(pipeline) = &state.mask_pipeline {
-            pass.set_render_pipeline(pipeline);
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
+        let Initialized(pipeline) = &state.mask_pipeline  else { return RenderCommandResult::Failure; };
+        pass.set_render_pipeline(pipeline);
+        RenderCommandResult::Success
+    }
+}
+
+pub struct SetDebugPipeline;
+impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
+    fn render<'w>(
+        state: &'w RenderState,
+        _item: &P,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        let Initialized(pipeline) = &state.debug_pipeline  else { return RenderCommandResult::Failure; };
+        pass.set_render_pipeline(pipeline);
+        RenderCommandResult::Success
     }
 }
 
@@ -62,40 +69,58 @@ impl<P: PhaseItem> RenderCommand<P> for SetTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let Initialized(pipeline) = &state.tile_pipeline {
-            pass.set_render_pipeline(pipeline);
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
+        let Initialized(pipeline) = &state.tile_pipeline  else { return RenderCommandResult::Failure; };
+        pass.set_render_pipeline(pipeline);
+        RenderCommandResult::Success
     }
 }
 
 pub struct DrawMask;
-impl RenderCommand<TileInView> for DrawMask {
+impl RenderCommand<TileShape> for DrawMask {
     fn render<'w>(
         state: &'w RenderState,
-        TileInView { shape, fallback }: &TileInView,
+        source_shape: &TileShape,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let Initialized(tile_view_pattern) = &state.tile_view_pattern {
-            tracing::trace!("Drawing mask {}", &shape.coords);
+        let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
+        tracing::trace!("Drawing mask {}", &source_shape.coords());
 
-            let shape_to_render = fallback.as_ref().unwrap_or(shape);
+        // Draw mask with stencil value of e.g. parent
+        let reference = tile_view_pattern.stencil_reference_value_3d(&source_shape.coords()) as u32;
 
-            let reference =
-                tile_view_pattern.stencil_reference_value(&shape_to_render.coords) as u32;
+        pass.set_stencil_reference(reference);
+        pass.set_vertex_buffer(
+            0,
+            // Mask is of the requested shape
+            tile_view_pattern
+                .buffer()
+                .slice(source_shape.buffer_range()),
+        );
+        const TILE_MASK_SHADER_VERTICES: u32 = 6;
+        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
 
-            pass.set_stencil_reference(reference);
-            pass.set_vertex_buffer(
-                0,
-                tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-            );
-            pass.draw(0..6, 0..1);
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
+        RenderCommandResult::Success
+    }
+}
+
+pub struct DrawDebugOutline;
+impl RenderCommand<TileShape> for DrawDebugOutline {
+    fn render<'w>(
+        state: &'w RenderState,
+        source_shape: &TileShape,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
+        pass.set_vertex_buffer(
+            0,
+            tile_view_pattern
+                .buffer()
+                .slice(source_shape.buffer_range()),
+        );
+        const TILE_MASK_SHADER_VERTICES: u32 = 24;
+        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+
+        RenderCommandResult::Success
     }
 }
 
@@ -106,50 +131,47 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
         (entry, shape): &(IndexEntry, TileShape),
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
-            (&state.buffer_pool, &state.tile_view_pattern)
-        {
-            let reference = tile_view_pattern.stencil_reference_value(&shape.coords) as u32;
+        let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
+            (&state.buffer_pool, &state.tile_view_pattern) else { return RenderCommandResult::Failure; };
 
-            tracing::trace!(
-                "Drawing layer {:?} at {}",
-                entry.style_layer.source_layer,
-                &entry.coords
-            );
+        // Uses stencil value of requested tile and the shape of the requested tile
+        let reference = tile_view_pattern.stencil_reference_value_3d(&shape.coords()) as u32;
 
-            pass.set_stencil_reference(reference);
-            pass.set_index_buffer(
-                buffer_pool.indices().slice(entry.indices_buffer_range()),
-                INDEX_FORMAT,
-            );
-            pass.set_vertex_buffer(
-                0,
-                buffer_pool.vertices().slice(entry.vertices_buffer_range()),
-            );
-            pass.set_vertex_buffer(
-                1,
-                tile_view_pattern.buffer().slice(shape.buffer_range.clone()),
-            );
-            pass.set_vertex_buffer(
-                2,
-                buffer_pool
-                    .metadata()
-                    .slice(entry.layer_metadata_buffer_range()),
-            );
-            pass.set_vertex_buffer(
-                3,
-                buffer_pool
-                    .feature_metadata()
-                    .slice(entry.feature_metadata_buffer_range()),
-            );
-            pass.draw_indexed(entry.indices_range(), 0, 0..1);
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
+        tracing::trace!(
+            "Drawing layer {:?} at {}",
+            entry.style_layer.source_layer,
+            &entry.coords
+        );
+
+        pass.set_stencil_reference(reference);
+        pass.set_index_buffer(
+            buffer_pool.indices().slice(entry.indices_buffer_range()),
+            INDEX_FORMAT,
+        );
+        pass.set_vertex_buffer(
+            0,
+            buffer_pool.vertices().slice(entry.vertices_buffer_range()),
+        );
+        pass.set_vertex_buffer(1, tile_view_pattern.buffer().slice(shape.buffer_range()));
+        pass.set_vertex_buffer(
+            2,
+            buffer_pool
+                .metadata()
+                .slice(entry.layer_metadata_buffer_range()),
+        );
+        pass.set_vertex_buffer(
+            3,
+            buffer_pool
+                .feature_metadata()
+                .slice(entry.feature_metadata_buffer_range()),
+        );
+        pass.draw_indexed(entry.indices_range(), 0, 0..1);
+        RenderCommandResult::Success
     }
 }
 
 pub type DrawTiles = (SetTilePipeline, SetViewBindGroup<0>, DrawTile);
 
 pub type DrawMasks = (SetMaskPipeline, DrawMask);
+
+pub type DrawDebugOutlines = (SetDebugPipeline, DrawDebugOutline);

@@ -103,14 +103,7 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
     }
 }
 
-type NewWorker = Box<dyn Fn() -> Result<Worker, WebError>>;
 pub type ReceivedType = RefCell<Vec<Message<UsedTransferables>>>;
-
-#[derive(Error, Debug)]
-pub enum PassingAPCError {
-    #[error("creating a worker failed")]
-    Worker,
-}
 
 pub struct PassingAsyncProcedureCall {
     workers: Vec<Worker>,

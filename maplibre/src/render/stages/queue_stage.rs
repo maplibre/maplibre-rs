@@ -2,10 +2,7 @@
 
 use crate::{
     context::MapContext,
-    render::{
-        eventually::Eventually::Initialized, resource::IndexEntry, tile_view_pattern::TileInView,
-        RenderState, Renderer,
-    },
+    render::{eventually::Eventually::Initialized, resource::IndexEntry, RenderState, Renderer},
     schedule::Stage,
 };
 
@@ -35,33 +32,33 @@ impl Stage for QueueStage {
         mask_phase.items.clear();
         tile_phase.items.clear();
 
-        if let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (tile_view_pattern, &buffer_pool)
-        {
-            let index = buffer_pool.index();
+        let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
+            (tile_view_pattern, &buffer_pool) else { return; };
 
-            for tile_in_view in tile_view_pattern.iter() {
-                let TileInView { shape, fallback } = &tile_in_view;
-                let coords = shape.coords;
-                tracing::trace!("Drawing tile at {coords}");
+        let index = buffer_pool.index();
 
-                let shape_to_render = fallback.as_ref().unwrap_or(shape);
+        for view_tile in tile_view_pattern.iter() {
+            let coords = &view_tile.coords();
+            tracing::trace!("Drawing tile at {coords}");
 
-                // Draw mask
-                mask_phase.add(tile_in_view.clone());
+            // draw tile normal or the source e.g. parent or children
+            view_tile.render(|source_shape| {
+                // Draw masks for all source_shapes
+                mask_phase.add(source_shape.clone());
 
-                if let Some(entries) = index.get_layers(&shape_to_render.coords) {
-                    let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
-                    layers_to_render.sort_by_key(|entry| entry.style_layer.index);
+                let Some(entries) = index.get_layers(&source_shape.coords()) else {
+                    tracing::trace!("No layers found at {}", &source_shape.coords());
+                    return;
+                };
 
-                    for entry in layers_to_render {
-                        // Draw tile
-                        tile_phase.add((entry.clone(), shape_to_render.clone()))
-                    }
-                } else {
-                    tracing::trace!("No layers found at {}", &shape_to_render.coords);
+                let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
+                layers_to_render.sort_by_key(|entry| entry.style_layer.index);
+
+                for entry in layers_to_render {
+                    // Draw tile
+                    tile_phase.add((entry.clone(), source_shape.clone()))
                 }
-            }
+            });
         }
     }
 }

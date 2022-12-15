@@ -27,7 +27,7 @@ use crate::{
         resource::{BufferPool, Globals, Head, IndexEntry, Surface, Texture, TextureView},
         settings::{RendererSettings, WgpuSettings},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        tile_view_pattern::{TileInView, TileShape, TileViewPattern},
+        tile_view_pattern::{TileShape, TileViewPattern},
     },
     tessellation::IndexDataType,
 };
@@ -37,6 +37,7 @@ pub mod resource;
 pub mod stages;
 
 // Rendering internals
+mod debug_pass;
 mod graph_runner;
 mod main_pass;
 mod render_commands;
@@ -57,6 +58,8 @@ pub use stages::register_default_render_stages;
 
 use crate::{
     render::{
+        debug_pass::DebugPassNode,
+        error::RenderError,
         graph::{EmptyNode, RenderGraph, RenderGraphError},
         main_pass::{MainPassDriverNode, MainPassNode},
     },
@@ -82,6 +85,7 @@ pub struct RenderState {
 
     tile_pipeline: Eventually<wgpu::RenderPipeline>,
     mask_pipeline: Eventually<wgpu::RenderPipeline>,
+    debug_pipeline: Eventually<wgpu::RenderPipeline>,
 
     globals_bind_group: Eventually<Globals>,
 
@@ -90,7 +94,7 @@ pub struct RenderState {
 
     surface: Surface,
 
-    mask_phase: RenderPhase<TileInView>,
+    mask_phase: RenderPhase<TileShape>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
 }
 
@@ -102,6 +106,7 @@ impl RenderState {
             tile_view_pattern: Default::default(),
             tile_pipeline: Default::default(),
             mask_pipeline: Default::default(),
+            debug_pipeline: Default::default(),
             globals_bind_group: Default::default(),
             depth_texture: Default::default(),
             multisampling_texture: Default::default(),
@@ -142,7 +147,7 @@ pub struct Renderer {
     pub instance: wgpu::Instance,
     pub device: Arc<wgpu::Device>, // TODO: Arc is needed for headless rendering. Is there a simpler solution?
     pub queue: wgpu::Queue,
-    pub adapter_info: wgpu::AdapterInfo,
+    pub adapter: wgpu::Adapter,
 
     pub wgpu_settings: WgpuSettings,
     pub settings: RendererSettings,
@@ -157,29 +162,26 @@ impl Renderer {
         window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -> Result<Self, wgpu::RequestDeviceError>
+    ) -> Result<Self, RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        let surface = Surface::from_window(&instance, window, &settings);
+        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw()) };
 
-        let compatible_surface = match &surface.head() {
-            Head::Headed(window_head) => Some(window_head.surface()),
-            Head::Headless(_) => None,
-        };
-
-        let (device, queue, adapter_info) = Self::request_device(
+        let (adapter, device, queue) = Self::request_device(
             &instance,
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
                 power_preference: wgpu_settings.power_preference,
                 force_fallback_adapter: false,
-                compatible_surface,
+                compatible_surface: Some(&surface),
             },
         )
         .await?;
+
+        let surface = Surface::from_surface(surface, &adapter, window, &settings);
 
         match surface.head() {
             Head::Headed(window) => window.configure(&device),
@@ -190,7 +192,7 @@ impl Renderer {
             instance,
             device: Arc::new(device),
             queue,
-            adapter_info,
+            adapter,
             wgpu_settings,
             settings,
             state: RenderState::new(surface),
@@ -201,13 +203,13 @@ impl Renderer {
         window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -> Result<Self, wgpu::RequestDeviceError>
+    ) -> Result<Self, RenderError>
     where
         MW: MapWindow,
     {
         let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
 
-        let (device, queue, adapter_info) = Self::request_device(
+        let (adapter, device, queue) = Self::request_device(
             &instance,
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
@@ -224,7 +226,7 @@ impl Renderer {
             instance,
             device: Arc::new(device),
             queue,
-            adapter_info,
+            adapter,
             wgpu_settings,
             settings,
             state: RenderState::new(surface),
@@ -240,11 +242,11 @@ impl Renderer {
         instance: &wgpu::Instance,
         settings: &WgpuSettings,
         request_adapter_options: &wgpu::RequestAdapterOptions<'_>,
-    ) -> Result<(wgpu::Device, wgpu::Queue, wgpu::AdapterInfo), wgpu::RequestDeviceError> {
+    ) -> Result<(wgpu::Adapter, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError> {
         let adapter = instance
             .request_adapter(request_adapter_options)
             .await
-            .ok_or_else(|| wgpu::RequestDeviceError)?;
+            .ok_or(wgpu::RequestDeviceError)?;
 
         let adapter_info = adapter.get_info();
 
@@ -384,7 +386,7 @@ impl Renderer {
                 trace_path,
             )
             .await?;
-        Ok((device, queue, adapter_info))
+        Ok((adapter, device, queue))
     }
 
     pub fn instance(&self) -> &wgpu::Instance {
@@ -499,6 +501,7 @@ pub mod draw_graph {
     // Labels for non-input nodes
     pub mod node {
         pub const MAIN_PASS: &str = "main_pass";
+        pub const DEBUG_PASS: &str = "debug_pass";
         #[cfg(feature = "headless")]
         pub const COPY: &str = "copy";
     }
@@ -508,9 +511,15 @@ pub fn create_default_render_graph() -> Result<RenderGraph, RenderGraphError> {
     let mut graph = RenderGraph::default();
 
     let mut draw_graph = RenderGraph::default();
+    // Draw nodes
     draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+    draw_graph.add_node(draw_graph::node::DEBUG_PASS, DebugPassNode::new());
+    // Input node
     let input_node_id = draw_graph.set_input(vec![]);
+    // Edges
     draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
+    // TODO: Enable debug pass via runtime flag
+    draw_graph.add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::DEBUG_PASS)?;
 
     graph.add_sub_graph(draw_graph::NAME, draw_graph);
     graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);

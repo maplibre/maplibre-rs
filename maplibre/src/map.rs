@@ -12,6 +12,7 @@ use crate::{
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
         },
         create_default_render_graph,
+        error::RenderError,
         graph::RenderGraphError,
         register_default_render_stages,
     },
@@ -30,7 +31,7 @@ pub enum MapError {
     #[error("initializing render graph failed")]
     RenderGraphInit(RenderGraphError),
     #[error("initializing device failed")]
-    DeviceInit,
+    DeviceInit(RenderError),
 }
 
 pub enum MapContextState {
@@ -92,7 +93,7 @@ where
                     .build()
                     .initialize_renderer::<E::MapWindowConfig>(&self.window)
                     .await
-                    .map_err(|e| MapError::DeviceInit)?;
+                    .map_err(MapError::DeviceInit)?;
 
                 let window_size = self.window.size();
 
