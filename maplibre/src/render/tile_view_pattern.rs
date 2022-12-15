@@ -252,15 +252,12 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
     /// different levels based on availability.
     pub fn stencil_reference_value_3d(&self, world_coords: &WorldTileCoords) -> u8 {
+        const CASES: u8 = 4;
         match (world_coords.x, world_coords.y, u8::from(world_coords.z)) {
-            (x, y, z) if x % 2 == 0 && y % 2 == 0 && z % 2 != 0 => 1,
-            (x, y, z) if x % 2 == 0 && y % 2 != 0 && z % 2 != 0 => 2,
-            (x, y, z) if x % 2 != 0 && y % 2 == 0 && z % 2 != 0 => 3,
-            (x, y, z) if x % 2 != 0 && y % 2 != 0 && z % 2 != 0 => 4,
-            (x, y, z) if x % 2 == 0 && y % 2 == 0 && z % 2 == 0 => 5,
-            (x, y, z) if x % 2 == 0 && y % 2 != 0 && z % 2 == 0 => 6,
-            (x, y, z) if x % 2 != 0 && y % 2 == 0 && z % 2 == 0 => 7,
-            (x, y, z) if x % 2 != 0 && y % 2 != 0 && z % 2 == 0 => 8,
+            (x, y, z) if x % 2 == 0 && y % 2 == 0 => 0 + z * CASES,
+            (x, y, z) if x % 2 == 0 && y % 2 != 0 => 1 + z * CASES,
+            (x, y, z) if x % 2 != 0 && y % 2 == 0 => 2 + z * CASES,
+            (x, y, z) if x % 2 != 0 && y % 2 != 0 => 3 + z * CASES,
             _ => unreachable!(),
         }
     }
