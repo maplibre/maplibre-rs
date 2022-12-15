@@ -19,9 +19,21 @@
 <span id="19">19</span>
 <span id="20">20</span>
 <span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Module which is used target platform is not web related.
 
-</span><span class="kw">use </span>std::future::Future;
+</span><span class="kw">use </span>std::{
+    future::Future,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
 <span class="kw">pub mod </span>http_client;
 <span class="kw">pub mod </span>scheduler;
@@ -29,12 +41,18 @@
 
 <span class="kw">pub fn </span>run_multithreaded&lt;F: Future&gt;(future: F) -&gt; F::Output {
     tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(<span class="number">4</span>)
         .enable_io()
         .enable_time()
+        .thread_name_fn(|| {
+            <span class="kw">static </span>ATOMIC_ID: AtomicUsize = AtomicUsize::new(<span class="number">0</span>);
+            <span class="kw">let </span>id = ATOMIC_ID.fetch_add(<span class="number">1</span>, Ordering::SeqCst);
+            <span class="macro">format!</span>(<span class="string">&quot;maplibre-rs-pool-{}&quot;</span>, id)
+        })
         .on_thread_start(|| {
             <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="macro">tracing_tracy::client::set_thread_name!</span>(<span class="string">&quot;tokio-runtime-worker&quot;</span>);
+
+            <span class="macro">log::info!</span>(<span class="string">&quot;Worker thread started&quot;</span>)
         })
         .build()
         .unwrap()

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["ViewState","Stores the camera configuration."],["World",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["VIEW_REGION_PADDING",""]],"struct":[["ViewState","Stores the camera configuration."],["World",""]]};

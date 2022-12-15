@@ -173,6 +173,9 @@
 <span id="173">173</span>
 <span id="174">174</span>
 <span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashSet;
 
 <span class="kw">use </span>geozero::GeozeroDatasource;
@@ -194,7 +197,8 @@
     <span class="kw">type </span>Input = (TileRequest, Box&lt;[u8]&gt;);
     <span class="kw">type </span>Output = (TileRequest, geozero::mvt::Tile);
 
-    <span class="kw">fn </span>process(
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">fn </span>process(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         (tile_request, data): <span class="self">Self</span>::Input,
         _context: <span class="kw-2">&amp;mut </span>PipelineContext,
@@ -211,7 +215,8 @@
     <span class="kw">type </span>Input = (TileRequest, geozero::mvt::Tile);
     <span class="kw">type </span>Output = (TileRequest, geozero::mvt::Tile);
 
-    <span class="kw">fn </span>process(
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">fn </span>process(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         (tile_request, <span class="kw-2">mut </span>tile): <span class="self">Self</span>::Input,
         context: <span class="kw-2">&amp;mut </span>PipelineContext,
@@ -240,7 +245,8 @@
     <span class="kw">type </span>Input = (TileRequest, geozero::mvt::Tile);
     <span class="kw">type </span>Output = (TileRequest, geozero::mvt::Tile);
 
-    <span class="kw">fn </span>process(
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">fn </span>process(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         (tile_request, <span class="kw-2">mut </span>tile): <span class="self">Self</span>::Input,
         context: <span class="kw-2">&amp;mut </span>PipelineContext,

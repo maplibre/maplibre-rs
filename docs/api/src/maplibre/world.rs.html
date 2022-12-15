@@ -163,6 +163,14 @@
 <span id="163">163</span>
 <span id="164">164</span>
 <span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::ops::{Deref, DerefMut};
 
 <span class="kw">use </span>cgmath::Angle;
@@ -174,6 +182,8 @@
     util::ChangeObserver,
     window::WindowSize,
 };
+
+<span class="kw">const </span>VIEW_REGION_PADDING: i32 = <span class="number">1</span>;
 
 <span class="kw">pub struct </span>World {
     <span class="kw">pub </span>view_state: ViewState,
@@ -286,7 +296,13 @@
         <span class="self">self</span>.camera
             .view_region_bounding_box(<span class="kw-2">&amp;</span><span class="self">self</span>.view_projection().invert())
             .map(|bounding_box| {
-                ViewRegion::new(bounding_box, <span class="number">0</span>, <span class="number">32</span>, <span class="kw-2">*</span><span class="self">self</span>.zoom, <span class="self">self</span>.visible_level())
+                ViewRegion::new(
+                    bounding_box,
+                    VIEW_REGION_PADDING,
+                    <span class="number">32</span>,
+                    <span class="kw-2">*</span><span class="self">self</span>.zoom,
+                    <span class="self">self</span>.visible_level(),
+                )
             })
     }
 
