@@ -139,7 +139,7 @@ impl<E: Environment> RequestStage<E> {
         layers: &HashSet<String>,
     ) {
         if tile_repository.is_tile_pending_or_done(&coords) {
-            tile_repository.create_tile(coords);
+            tile_repository.mark_tile_pending(coords).unwrap(); // TODO: Remove unwrap
 
             tracing::info!("new tile request: {}", &coords);
             self.kernel

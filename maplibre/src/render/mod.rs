@@ -85,7 +85,7 @@ pub struct RenderState {
 
     tile_pipeline: Eventually<wgpu::RenderPipeline>,
     mask_pipeline: Eventually<wgpu::RenderPipeline>,
-    debug_mask_pipeline: Eventually<wgpu::RenderPipeline>,
+    debug_pipeline: Eventually<wgpu::RenderPipeline>,
 
     globals_bind_group: Eventually<Globals>,
 
@@ -106,7 +106,7 @@ impl RenderState {
             tile_view_pattern: Default::default(),
             tile_pipeline: Default::default(),
             mask_pipeline: Default::default(),
-            debug_mask_pipeline: Default::default(),
+            debug_pipeline: Default::default(),
             globals_bind_group: Default::default(),
             depth_texture: Default::default(),
             multisampling_texture: Default::default(),

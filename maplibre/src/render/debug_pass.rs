@@ -2,13 +2,14 @@ use std::ops::Deref;
 
 use crate::render::{
     graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-    render_commands::DrawDebugMasks,
+    render_commands::DrawDebugOutlines,
     render_phase::RenderCommand,
     resource::TrackedRenderPass,
     Eventually::Initialized,
     RenderState,
 };
 
+/// Pass which renders debug information on top of the map.
 pub struct DebugPassNode {}
 
 impl DebugPassNode {
@@ -56,7 +57,7 @@ impl Node for DebugPassNode {
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
         for item in &state.mask_phase.items {
-            DrawDebugMasks::render(state, item, &mut tracked_pass);
+            DrawDebugOutlines::render(state, item, &mut tracked_pass);
         }
 
         Ok(())

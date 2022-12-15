@@ -1,8 +1,9 @@
 //! Tile cache.
 
-use std::collections::{btree_map, BTreeMap};
+use std::collections::{btree_map, btree_map::Entry, BTreeMap};
 
 use bytemuck::Pod;
+use thiserror::Error;
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
@@ -85,6 +86,13 @@ impl StoredTile {
         }
     }
 }
+#[derive(Error, Debug)]
+pub enum MarkError {
+    #[error("no pending tile at coords")]
+    NoPendingTile,
+    #[error("unable to construct quadkey")]
+    QuadKey,
+}
 
 /// Stores and provides access to a quad tree of cached tiles with world tile coords.
 #[derive(Default)]
@@ -97,10 +105,6 @@ impl TileRepository {
         Self {
             tree: BTreeMap::new(),
         }
-    }
-
-    pub fn clear(&mut self) {
-        self.tree.clear();
     }
 
     /// Inserts a tessellated layer into the quad tree at its world tile coords.
@@ -123,12 +127,6 @@ impl TileRepository {
                     entry.get_mut().layers.push(layer);
                 }
             }
-        }
-    }
-
-    pub fn put_tile(&mut self, tile: StoredTile) {
-        if let Some(key) = tile.coords.build_quad_key() {
-            self.tree.insert(key, tile);
         }
     }
 
@@ -179,32 +177,52 @@ impl TileRepository {
         true
     }
 
-    /// Create a new tile.
-    pub fn create_tile(&mut self, coords: WorldTileCoords) -> bool {
-        if let Some(btree_map::Entry::Vacant(entry)) =
-            coords.build_quad_key().map(|key| self.tree.entry(key))
-        {
-            entry.insert(StoredTile::pending(coords));
+    /// Mark the tile at `coords` pending in this tile repository.
+    pub fn mark_tile_pending(&mut self, coords: WorldTileCoords) -> Result<(), MarkError> {
+        let Some(key) = coords.build_quad_key() else { return Err(MarkError::QuadKey); };
+
+        match self.tree.entry(key) {
+            Entry::Vacant(entry) => {
+                entry.insert(StoredTile::pending(coords));
+            }
+            Entry::Occupied(mut entry) => {
+                entry.get_mut().status = TileStatus::Pending;
+            }
         }
-        true
+
+        Ok(())
     }
 
-    pub fn mark_tile_succeeded(&mut self, coords: &WorldTileCoords) {
-        if let Some(cached_tile) = coords
-            .build_quad_key()
-            .and_then(|key| self.tree.get_mut(&key))
-        {
-            cached_tile.status = TileStatus::Success;
+    /// Mark the tile at `coords` succeeded in this tile repository. Only succeeds if there is a
+    /// pending tile at `coords`.
+    pub fn mark_tile_succeeded(&mut self, coords: &WorldTileCoords) -> Result<(), MarkError> {
+        self.mark_tile(coords, TileStatus::Success)
+    }
+
+    /// Mark the tile at `coords` failed in this tile repository. Only succeeds if there is a
+    /// pending tile at `coords`.
+    pub fn mark_tile_failed(&mut self, coords: &WorldTileCoords) -> Result<(), MarkError> {
+        self.mark_tile(coords, TileStatus::Failed)
+    }
+
+    fn mark_tile(&mut self, coords: &WorldTileCoords, status: TileStatus) -> Result<(), MarkError> {
+        let Some(key) = coords.build_quad_key() else { return Err(MarkError::QuadKey); };
+
+        if let Entry::Occupied(mut entry) = self.tree.entry(key) {
+            entry.get_mut().status = status;
+            Ok(())
+        } else {
+            Err(MarkError::NoPendingTile)
         }
     }
 
-    /// Checks if a layer has been fetched.
-    pub fn mark_tile_failed(&mut self, coords: &WorldTileCoords) {
-        if let Some(cached_tile) = coords
-            .build_quad_key()
-            .and_then(|key| self.tree.get_mut(&key))
-        {
-            cached_tile.status = TileStatus::Failed;
+    pub fn put_tile(&mut self, tile: StoredTile) {
+        if let Some(key) = tile.coords.build_quad_key() {
+            self.tree.insert(key, tile);
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.tree.clear();
     }
 }

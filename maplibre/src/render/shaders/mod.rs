@@ -34,7 +34,7 @@ impl Shader for TileMaskShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
             source: if self.debug_lines {
-                include_str!("tile_debug_lines.vertex.wgsl")
+                include_str!("tile_debug.vertex.wgsl")
             } else {
                 include_str!("tile_mask.vertex.wgsl")
             },

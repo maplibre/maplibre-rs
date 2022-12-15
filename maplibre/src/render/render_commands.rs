@@ -49,14 +49,14 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
     }
 }
 
-pub struct SetDebugMasksPipeline;
-impl<P: PhaseItem> RenderCommand<P> for SetDebugMasksPipeline {
+pub struct SetDebugPipeline;
+impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
     fn render<'w>(
         state: &'w RenderState,
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = &state.debug_mask_pipeline  else { return RenderCommandResult::Failure; };
+        let Initialized(pipeline) = &state.debug_pipeline  else { return RenderCommandResult::Failure; };
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -92,7 +92,6 @@ impl RenderCommand<TileShape> for DrawMask {
         pass.set_vertex_buffer(
             0,
             // Mask is of the requested shape
-            // FIXME (THIS_PR): Use here target or source?
             tile_view_pattern
                 .buffer()
                 .slice(source_shape.buffer_range()),
@@ -104,16 +103,14 @@ impl RenderCommand<TileShape> for DrawMask {
     }
 }
 
-pub struct DrawDebugMask;
-impl RenderCommand<TileShape> for DrawDebugMask {
+pub struct DrawDebugOutline;
+impl RenderCommand<TileShape> for DrawDebugOutline {
     fn render<'w>(
         state: &'w RenderState,
         source_shape: &TileShape,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern  else { return RenderCommandResult::Failure; };
-        tracing::trace!("Drawing mask {}", &source_shape.coords());
-
         pass.set_vertex_buffer(
             0,
             tile_view_pattern
@@ -176,4 +173,5 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
 pub type DrawTiles = (SetTilePipeline, SetViewBindGroup<0>, DrawTile);
 
 pub type DrawMasks = (SetMaskPipeline, DrawMask);
-pub type DrawDebugMasks = (SetDebugMasksPipeline, DrawDebugMask);
+
+pub type DrawDebugOutlines = (SetDebugPipeline, DrawDebugOutline);

@@ -18,6 +18,8 @@ use crate::{
 pub const DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = 32 * 4;
 pub const CHILDREN_SEARCH_DEPTH: usize = 4;
 
+/// Defines the exact location where a specific tile on the map is rendered. It defines the shape
+/// of the tile with its location for the current zoom factor.
 #[derive(Clone)]
 pub struct TileShape {
     coords: WorldTileCoords,
@@ -48,31 +50,30 @@ impl TileShape {
         self.buffer_range.as_ref().unwrap().clone()
     }
 
-    pub fn zoom_factor(&self) -> f64 {
-        self.zoom_factor
-    }
-
     pub fn coords(&self) -> WorldTileCoords {
         self.coords
     }
-
-    pub fn transform(&self) -> Matrix4<f64> {
-        self.transform
-    }
 }
 
+/// This defines the source tile shaped from which the content for the `target` is taken.
+/// For example if the target is `(0, 0, 1)` (of [`ViewTile`]) , we might use
+/// `SourceShapes::Parent((0, 0, 0))` as source.
+/// Similarly if we have the target `(0, 0, 0)` we might use
+/// `SourceShapes::Children((0, 0, 1), (0, 1, 1), (1, 0, 1), (1, 1, 1))` as sources.
 #[derive(Clone)]
 pub enum SourceShapes {
-    /// Parent tile is the source
+    /// Parent tile is the source. We construct the `target` from parts of a parent.
     Parent(TileShape),
-    /// Children are the source
+    /// Children are the source. We construct the `target` from multiple children.
     Children(Vec<TileShape>),
-    /// Source and Target are equal, so no need to differentiate
+    /// Source and target are equal, so no need to differentiate. We render the `source` shape
+    /// exactly at the `target`.
     SourceEqTarget(TileShape),
     /// No data available so nothing to render
     None,
 }
 
+/// Defines the `target` tile and its `source` from which data tile data comes.
 #[derive(Clone)]
 pub struct ViewTile {
     target: WorldTileCoords,
@@ -82,15 +83,6 @@ pub struct ViewTile {
 impl ViewTile {
     pub fn coords(&self) -> WorldTileCoords {
         self.target
-    }
-
-    pub fn source_available(&self) -> bool {
-        match &self.source {
-            SourceShapes::Parent(_) => true,
-            SourceShapes::Children(_) => true,
-            SourceShapes::SourceEqTarget(_) => true,
-            SourceShapes::None => false,
-        }
     }
 
     pub fn render<F>(&self, mut callback: F)
@@ -244,6 +236,8 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         queue.write_buffer(&self.buffer.inner, 0, raw_buffer);
     }
 
+    /// 2D version of [`TileViewPattern::stencil_reference_value_3d`]. This is kept for reference.
+    /// For the 2D case we do not take into account the Z value, so only 4 cases exist.
     pub fn stencil_reference_value_2d(&self, world_coords: &WorldTileCoords) -> u8 {
         match (world_coords.x, world_coords.y) {
             (x, y) if x % 2 == 0 && y % 2 == 0 => 2,
@@ -254,6 +248,9 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         }
     }
 
+    /// Returns unique stencil reference values for WorldTileCoords which are 3D.
+    /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
+    /// different levels based on availability.
     pub fn stencil_reference_value_3d(&self, world_coords: &WorldTileCoords) -> u8 {
         match (world_coords.x, world_coords.y, u8::from(world_coords.z)) {
             (x, y, z) if x % 2 == 0 && y % 2 == 0 && z % 2 != 0 => 1,

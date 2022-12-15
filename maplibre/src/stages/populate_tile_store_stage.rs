@@ -40,15 +40,15 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
     ) {
         if let Some(result) = self.kernel.apc().receive() {
             match result {
+                // TODO: deduplicate
                 Message::TileTessellated(message) => {
                     let coords = message.coords();
 
                     tracing::trace!("Tile at {} finished loading", coords);
                     log::warn!("Tile at {} finished loading", coords);
 
-                    tile_repository.mark_tile_succeeded(&coords);
+                    tile_repository.mark_tile_succeeded(&coords).unwrap(); // TODO: unwrap
                 }
-                // FIXME: deduplicate
                 Message::LayerUnavailable(message) => {
                     let layer: StoredLayer = message.to_stored_layer();
 

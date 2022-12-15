@@ -142,7 +142,7 @@ impl Stage for ResourceStage {
             .initialize(device)
         });
 
-        state.debug_mask_pipeline.initialize(|| {
+        state.debug_pipeline.initialize(|| {
             let mask_shader = shaders::TileMaskShader {
                 format: surface.surface_format(),
                 draw_colors: true,
