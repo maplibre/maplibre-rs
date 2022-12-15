@@ -11,7 +11,7 @@ use maplibre::{
 use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 
-use crate::{error::WrappedError, platform::http_client::WHATWGFetchHttpClient};
+use crate::{error::JSError, platform::http_client::WHATWGFetchHttpClient};
 
 mod error;
 mod platform;
@@ -65,7 +65,7 @@ type CurrentEnvironment = WinitEnvironment<
 pub type MapType = Map<CurrentEnvironment>;
 
 #[wasm_bindgen]
-pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), WrappedError> {
+pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
     let mut kernel_builder = KernelBuilder::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
         .with_http_client(WHATWGFetchHttpClient::new());

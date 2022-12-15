@@ -13,7 +13,7 @@ use thiserror::Error;
 use wasm_bindgen::{prelude::*, JsCast};
 
 use crate::{
-    error::WrappedError,
+    error::JSError,
     platform::singlethreaded::{
         apc::{MessageTag, ReceivedType},
         transferables::FlatBufferTransferable,
@@ -24,10 +24,7 @@ use crate::{
 
 /// Entry point invoked by the worker.
 #[wasm_bindgen]
-pub async fn singlethreaded_worker_entry(
-    procedure_ptr: u32,
-    input: String,
-) -> Result<(), WrappedError> {
+pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> Result<(), JSError> {
     let procedure: AsyncProcedure<UsedContext> = unsafe { mem::transmute(procedure_ptr) };
 
     let input =
@@ -51,7 +48,7 @@ pub struct DeserializeMessage;
 pub unsafe fn singlethreaded_main_entry(
     received_ptr: *const ReceivedType,
     in_transfer: js_sys::Array,
-) -> Result<(), WrappedError> {
+) -> Result<(), JSError> {
     let tag = in_transfer
         .get(0)
         .as_f64()

@@ -103,7 +103,8 @@ impl Default for Msaa {
 #[derive(Clone, Copy)]
 pub struct RendererSettings {
     pub msaa: Msaa,
-    pub texture_format: TextureFormat,
+    /// Explicitly set a texture format or let the renderer automatically choose one
+    pub texture_format: Option<TextureFormat>,
     pub depth_texture_format: TextureFormat,
     /// Present mode for surfaces if a surface is used.
     pub present_mode: PresentMode,
@@ -113,26 +114,7 @@ impl Default for RendererSettings {
     fn default() -> Self {
         Self {
             msaa: Msaa::default(),
-            // WebGPU
-            #[cfg(all(target_arch = "wasm32", not(feature = "web-webgl")))]
-            texture_format: wgpu::TextureFormat::Bgra8Unorm,
-            // WebGL
-            #[cfg(all(target_arch = "wasm32", feature = "web-webgl"))]
-            texture_format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            // Vulkan Android
-            #[cfg(target_os = "android")]
-            texture_format: wgpu::TextureFormat::Rgba8Unorm,
-            /// MacOS and iOS (Metal).
-            #[cfg(any(target_os = "macos", target_os = "ios"))]
-            texture_format: wgpu::TextureFormat::Bgra8UnormSrgb,
-            /// For Vulkan/OpenGL
-            #[cfg(not(any(
-                target_os = "android",
-                target_os = "macos",
-                any(target_os = "macos", target_os = "ios"),
-                target_arch = "wasm32"
-            )))]
-            texture_format: TextureFormat::Bgra8UnormSrgb,
+            texture_format: None,
 
             depth_texture_format: TextureFormat::Depth24PlusStencil8,
             present_mode: PresentMode::AutoVsync,

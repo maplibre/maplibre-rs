@@ -37,23 +37,18 @@ impl Node for CopySurfaceBufferNode {
             Head::Headless(buffered_texture) => {
                 let size = surface.size();
                 command_encoder.copy_texture_to_buffer(
-                    buffered_texture.texture.as_image_copy(),
+                    buffered_texture.copy_texture(),
                     wgpu::ImageCopyBuffer {
-                        buffer: &buffered_texture.output_buffer,
+                        buffer: &buffered_texture.buffer(),
                         layout: wgpu::ImageDataLayout {
                             offset: 0,
-                            bytes_per_row: Some(
-                                std::num::NonZeroU32::new(
-                                    buffered_texture.buffer_dimensions.padded_bytes_per_row as u32,
-                                )
-                                .unwrap(), // TODO: remove unwrap
-                            ),
+                            bytes_per_row: Some(buffered_texture.bytes_per_row()),
                             rows_per_image: None,
                         },
                     },
                     wgpu::Extent3d {
-                        width: size.width() as u32,
-                        height: size.height() as u32,
+                        width: size.width(),
+                        height: size.height(),
                         depth_or_array_layers: 1,
                     },
                 );

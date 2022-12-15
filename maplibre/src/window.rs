@@ -1,5 +1,7 @@
 //! Utilities for the window system.
 
+use std::num::NonZeroU32;
+
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 
 /// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.
@@ -31,23 +33,31 @@ pub trait MapWindowConfig: 'static {
 /// Window size with a width and an height in pixels.
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct WindowSize {
-    width: u32,
-    height: u32,
+    width: NonZeroU32,
+    height: NonZeroU32,
 }
 
 impl WindowSize {
     pub fn new(width: u32, height: u32) -> Option<Self> {
-        if width == 0 || height == 0 {
-            return None;
-        }
-
-        Some(Self { width, height })
+        Some(Self {
+            width: NonZeroU32::new(width)?,
+            height: NonZeroU32::new(height)?,
+        })
     }
 
     pub fn width(&self) -> u32 {
+        self.width.get()
+    }
+
+    pub fn width_non_zero(&self) -> NonZeroU32 {
         self.width
     }
+
     pub fn height(&self) -> u32 {
+        self.height.get()
+    }
+
+    pub fn height_non_zero(&self) -> NonZeroU32 {
         self.height
     }
 }

@@ -30,15 +30,14 @@ impl Stage for ExtractStage {
             ..
         }: &mut MapContext,
     ) {
-        if let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (tile_view_pattern, &buffer_pool)
-        {
-            let view_region = view_state.create_view_region();
+        let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
+            (tile_view_pattern, &buffer_pool) else { return; };
 
-            if let Some(view_region) = &view_region {
-                let zoom = view_state.zoom();
-                tile_view_pattern.update_pattern(view_region, buffer_pool, zoom);
-            }
+        let view_region = view_state.create_view_region();
+
+        if let Some(view_region) = &view_region {
+            let zoom = view_state.zoom();
+            tile_view_pattern.update_pattern(view_region, buffer_pool, zoom);
         }
     }
 }
