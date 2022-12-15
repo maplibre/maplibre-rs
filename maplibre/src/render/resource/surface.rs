@@ -278,7 +278,7 @@ impl Surface {
         match &mut self.head {
             Head::Headed(window) => {
                 if window.has_changed(&(self.size.width(), self.size.height())) {
-                    window.resize_and_configure(self.size.height(), self.size.width(), device);
+                    window.resize_and_configure(self.size.width(), self.size.height(), device);
                 }
             }
             Head::Headless(_) => {}

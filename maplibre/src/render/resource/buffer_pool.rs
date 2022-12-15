@@ -17,11 +17,12 @@ use crate::{
     tessellation::OverAlignedVertexBuffer,
 };
 
-pub const VERTEX_SIZE: wgpu::BufferAddress = 1_000_000;
-pub const INDICES_SIZE: wgpu::BufferAddress = 1_000_000;
+// FIXME: Too low values can cause a back-and-forth between unloading and loading layers
+pub const VERTEX_SIZE: wgpu::BufferAddress = 10 * 1_000_000;
+pub const INDICES_SIZE: wgpu::BufferAddress = 10 * 1_000_000;
 
-pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 1024 * 1000;
-pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 1024;
+pub const FEATURE_METADATA_SIZE: wgpu::BufferAddress = 10 * 1024 * 1000;
+pub const LAYER_METADATA_SIZE: wgpu::BufferAddress = 10 * 1024;
 
 /// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
@@ -477,8 +478,13 @@ impl IndexEntry {
 }
 
 #[derive(Debug)]
+pub struct RingIndexEntry {
+    layers: VecDeque<IndexEntry>,
+}
+
+#[derive(Debug)]
 pub struct RingIndex {
-    tree_index: BTreeMap<Quadkey, VecDeque<IndexEntry>>,
+    tree_index: BTreeMap<Quadkey, RingIndexEntry>,
     linear_index: VecDeque<Quadkey>,
 }
 
@@ -496,44 +502,33 @@ impl RingIndex {
     }
 
     pub fn front(&self) -> Option<&IndexEntry> {
-        self.linear_index
-            .front()
-            .and_then(|key| self.tree_index.get(key).and_then(|entries| entries.front()))
+        self.linear_index.front().and_then(|key| {
+            self.tree_index
+                .get(key)
+                .and_then(|entry| entry.layers.front())
+        })
     }
 
     pub fn back(&self) -> Option<&IndexEntry> {
-        self.linear_index
-            .back()
-            .and_then(|key| self.tree_index.get(key).and_then(|entries| entries.back()))
+        self.linear_index.back().and_then(|key| {
+            self.tree_index
+                .get(key)
+                .and_then(|entry| entry.layers.back())
+        })
     }
 
     pub fn get_layers(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
         coords
             .build_quad_key()
             .and_then(|key| self.tree_index.get(&key))
-    }
-
-    pub fn get_layers_fallback(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
-        let mut current = *coords;
-        loop {
-            if let Some(entries) = self.get_layers(&current) {
-                return Some(entries);
-            } else if let Some(parent) = current.get_parent() {
-                current = parent
-            } else {
-                return None;
-            }
-        }
+            .map(|entry| &entry.layers)
     }
 
     pub fn has_tile(&self, coords: &WorldTileCoords) -> bool {
-        coords
-            .build_quad_key()
-            .and_then(|key| self.tree_index.get(&key))
-            .is_some()
+        self.get_layers(coords).is_some()
     }
 
-    pub fn get_tile_coords_fallback(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
+    pub fn get_available_parent(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
         let mut current = *coords;
         loop {
             if self.has_tile(&current) {
@@ -546,19 +541,45 @@ impl RingIndex {
         }
     }
 
+    pub fn get_available_children(
+        &self,
+        coords: &WorldTileCoords,
+        search_depth: usize,
+    ) -> Option<Vec<WorldTileCoords>> {
+        let mut children = coords.get_children().to_vec();
+
+        let mut output = Vec::new();
+
+        for _ in 0..search_depth {
+            let mut new_children = Vec::with_capacity(children.len() * 4);
+
+            for child in children {
+                if self.has_tile(&child) {
+                    output.push(child);
+                } else {
+                    new_children.extend(child.get_children())
+                }
+            }
+
+            children = new_children;
+        }
+
+        Some(output)
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = impl Iterator<Item = &IndexEntry>> + '_ {
         self.linear_index
             .iter()
-            .flat_map(|key| self.tree_index.get(key).map(|entries| entries.iter()))
+            .flat_map(|key| self.tree_index.get(key).map(|entry| entry.layers.iter()))
     }
 
     fn pop_front(&mut self) -> Option<IndexEntry> {
-        if let Some(entries) = self
+        if let Some(entry) = self
             .linear_index
             .pop_front()
             .and_then(|key| self.tree_index.get_mut(&key))
         {
-            entries.pop_front()
+            entry.layers.pop_front()
         } else {
             None
         }
@@ -568,10 +589,12 @@ impl RingIndex {
         if let Some(key) = entry.coords.build_quad_key() {
             match self.tree_index.entry(key) {
                 btree_map::Entry::Vacant(index_entry) => {
-                    index_entry.insert(VecDeque::from([entry]));
+                    index_entry.insert(RingIndexEntry {
+                        layers: VecDeque::from([entry]),
+                    });
                 }
                 btree_map::Entry::Occupied(mut index_entry) => {
-                    index_entry.get_mut().push_back(entry);
+                    index_entry.get_mut().layers.push_back(entry);
                 }
             }
 

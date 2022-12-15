@@ -133,7 +133,7 @@ impl UploadStage {
                             })
                             .collect::<Vec<_>>();
 
-                        buffer_pool.update_feature_metadata(&queue, entry, &feature_metadata);
+                        buffer_pool.update_feature_metadata(queue, entry, &feature_metadata);
                     }
                 }
             }
@@ -163,15 +163,16 @@ impl UploadStage {
         view_region: &ViewRegion,
     ) {
         let Initialized(buffer_pool) = buffer_pool else { return; };
+
         // Upload all tessellated layers which are in view
         for coords in view_region.iter() {
             let Some(available_layers) =
-                    tile_repository.iter_loaded_layers_at(&buffer_pool, &coords) else { continue; };
+                    tile_repository.iter_loaded_layers_at(buffer_pool, &coords) else { continue; };
 
             for style_layer in &style.layers {
                 let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
 
-                let Some(message) = available_layers
+                let Some(stored_layer) = available_layers
                         .iter()
                         .find(|layer| source_layer.as_str() == layer.layer_name()) else { continue; };
 
@@ -181,7 +182,7 @@ impl UploadStage {
                     .and_then(|paint| paint.get_color())
                     .map(|color| color.into());
 
-                match message {
+                match stored_layer {
                     StoredLayer::UnavailableLayer { .. } => {}
                     StoredLayer::TessellatedLayer {
                         coords,
@@ -190,7 +191,7 @@ impl UploadStage {
                         ..
                     } => {
                         let allocate_feature_metadata =
-                            tracing::span!(tracing::Level::TRACE, "allocate_layer_geometry");
+                            tracing::span!(tracing::Level::TRACE, "allocate_feature_metadata");
 
                         let guard = allocate_feature_metadata.enter();
                         let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual featrues

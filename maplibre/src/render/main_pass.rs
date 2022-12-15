@@ -36,17 +36,13 @@ impl Node for MainPassNode {
         render_context: &mut RenderContext,
         state: &RenderState,
     ) -> Result<(), NodeRunError> {
-        let (render_target, multisampling_texture, depth_texture) = if let (
-            Initialized(render_target),
-            Initialized(multisampling_texture),
-            Initialized(depth_texture),
-        ) = (
-            &state.render_target,
-            &state.multisampling_texture,
-            &state.depth_texture,
-        ) {
-            (render_target, multisampling_texture, depth_texture)
-        } else {
+        let Initialized(render_target) = &state.render_target else {
+            return Ok(());
+        };
+        let Initialized(multisampling_texture) = &state.multisampling_texture else {
+            return Ok(());
+        };
+        let Initialized(depth_texture) = &state.depth_texture else {
             return Ok(());
         };
 
@@ -98,6 +94,7 @@ impl Node for MainPassNode {
         for item in &state.tile_phase.items {
             DrawTiles::render(state, item, &mut tracked_pass);
         }
+
         Ok(())
     }
 }

@@ -27,12 +27,17 @@ pub trait Shader {
 pub struct TileMaskShader {
     pub format: wgpu::TextureFormat,
     pub draw_colors: bool,
+    pub debug_lines: bool,
 }
 
 impl Shader for TileMaskShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
-            source: include_str!("tile_mask.vertex.wgsl"),
+            source: if self.debug_lines {
+                include_str!("tile_debug.vertex.wgsl")
+            } else {
+                include_str!("tile_mask.vertex.wgsl")
+            },
             entry_point: "main",
             buffers: vec![VertexBufferLayout {
                 array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
@@ -66,7 +71,7 @@ impl Shader for TileMaskShader {
 
     fn describe_fragment(&self) -> FragmentState {
         FragmentState {
-            source: include_str!("tile_mask.fragment.wgsl"),
+            source: include_str!("basic.fragment.wgsl"),
             entry_point: "main",
             targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
@@ -176,22 +181,10 @@ impl Shader for TileShader {
 
     fn describe_fragment(&self) -> FragmentState {
         FragmentState {
-            source: include_str!("tile.fragment.wgsl"),
+            source: include_str!("basic.fragment.wgsl"),
             entry_point: "main",
             targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
-                /*blend: Some(wgpu::BlendState {
-                    color: wgpu::BlendComponent {
-                        src_factor: wgpu::BlendFactor::SrcAlpha,
-                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                        operation: wgpu::BlendOperation::Add,
-                    },
-                    alpha: wgpu::BlendComponent {
-                        src_factor: wgpu::BlendFactor::SrcAlpha,
-                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                        operation: wgpu::BlendOperation::Add,
-                    },
-                }),*/
                 blend: None,
                 write_mask: wgpu::ColorWrites::ALL,
             })],

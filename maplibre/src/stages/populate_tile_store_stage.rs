@@ -42,6 +42,7 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
         // available this might cause frame drops.
         while let Some(result) = self.kernel.apc().receive() {
             match result {
+                // TODO: deduplicate
                 Message::TileTessellated(message) => {
                     let coords = message.coords();
                     tracing::event!(tracing::Level::ERROR, %coords, "tile request done: {}", &coords);
@@ -49,9 +50,8 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                     tracing::trace!("Tile at {} finished loading", coords);
                     log::warn!("Tile at {} finished loading", coords);
 
-                    tile_repository.mark_tile_succeeded(&coords);
+                    tile_repository.mark_tile_succeeded(&coords).unwrap(); // TODO: unwrap
                 }
-                // FIXME: deduplicate
                 Message::LayerUnavailable(message) => {
                     let layer: StoredLayer = message.to_stored_layer();
 

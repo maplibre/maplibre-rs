@@ -15,42 +15,91 @@ use crate::{
     tessellation::IndexDataType,
 };
 
-pub const DEFAULT_TILE_VIEW_SIZE: wgpu::BufferAddress = 32 * 4;
+pub const DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = 32 * 4;
+pub const CHILDREN_SEARCH_DEPTH: usize = 4;
 
-/// The tile mask pattern assigns each tile a value which can be used for stencil testing.
-pub struct TileViewPattern<Q, B> {
-    in_view: Vec<TileInView>,
-    buffer: BackingBuffer<B>,
-    phantom_q: PhantomData<Q>,
-}
-
+/// Defines the exact location where a specific tile on the map is rendered. It defines the shape
+/// of the tile with its location for the current zoom factor.
 #[derive(Clone)]
 pub struct TileShape {
-    pub zoom_factor: f64,
+    coords: WorldTileCoords,
 
-    pub coords: WorldTileCoords,
+    // TODO: optimization, `zoom_factor` and `transform` are no longer required if `buffer_range` is Some()
+    zoom_factor: f64,
+    transform: Matrix4<f64>,
 
-    pub transform: Matrix4<f64>,
-    pub buffer_range: Range<wgpu::BufferAddress>,
+    buffer_range: Option<Range<wgpu::BufferAddress>>,
 }
 
 impl TileShape {
-    fn new(coords: WorldTileCoords, zoom: Zoom, index: u64) -> Self {
-        const STRIDE: u64 = size_of::<ShaderTileMetadata>() as u64;
+    fn new(coords: WorldTileCoords, zoom: Zoom) -> Self {
         Self {
             coords,
             zoom_factor: zoom.scale_to_tile(&coords),
             transform: coords.transform_for_zoom(zoom),
-            buffer_range: index * STRIDE..(index + 1) * STRIDE,
+            buffer_range: None,
         }
+    }
+
+    fn set_buffer_range(&mut self, index: u64) {
+        const STRIDE: u64 = size_of::<ShaderTileMetadata>() as u64;
+        self.buffer_range = Some(index * STRIDE..(index + 1) * STRIDE);
+    }
+
+    pub fn buffer_range(&self) -> Range<wgpu::BufferAddress> {
+        self.buffer_range.as_ref().unwrap().clone()
+    }
+
+    pub fn coords(&self) -> WorldTileCoords {
+        self.coords
     }
 }
 
+/// This defines the source tile shaped from which the content for the `target` is taken.
+/// For example if the target is `(0, 0, 1)` (of [`ViewTile`]) , we might use
+/// `SourceShapes::Parent((0, 0, 0))` as source.
+/// Similarly if we have the target `(0, 0, 0)` we might use
+/// `SourceShapes::Children((0, 0, 1), (0, 1, 1), (1, 0, 1), (1, 1, 1))` as sources.
 #[derive(Clone)]
-pub struct TileInView {
-    pub shape: TileShape,
+pub enum SourceShapes {
+    /// Parent tile is the source. We construct the `target` from parts of a parent.
+    Parent(TileShape),
+    /// Children are the source. We construct the `target` from multiple children.
+    Children(Vec<TileShape>),
+    /// Source and target are equal, so no need to differentiate. We render the `source` shape
+    /// exactly at the `target`.
+    SourceEqTarget(TileShape),
+    /// No data available so nothing to render
+    None,
+}
 
-    pub fallback: Option<TileShape>,
+/// Defines the `target` tile and its `source` from which data tile data comes.
+#[derive(Clone)]
+pub struct ViewTile {
+    target: WorldTileCoords,
+    source: SourceShapes,
+}
+
+impl ViewTile {
+    pub fn coords(&self) -> WorldTileCoords {
+        self.target
+    }
+
+    pub fn render<F>(&self, mut callback: F)
+    where
+        F: FnMut(&TileShape),
+    {
+        match &self.source {
+            SourceShapes::Parent(source_shape) => callback(source_shape),
+            SourceShapes::Children(source_shapes) => {
+                for shape in source_shapes {
+                    callback(shape)
+                }
+            }
+            SourceShapes::SourceEqTarget(source_shape) => callback(source_shape),
+            SourceShapes::None => {}
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -65,6 +114,13 @@ impl<B> BackingBuffer<B> {
     fn new(inner: B, inner_size: wgpu::BufferAddress) -> Self {
         Self { inner, inner_size }
     }
+}
+
+/// The tile mask pattern assigns each tile a value which can be used for stencil testing.
+pub struct TileViewPattern<Q, B> {
+    in_view: Vec<ViewTile>,
+    buffer: BackingBuffer<B>,
+    phantom_q: PhantomData<Q>,
 }
 
 impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
@@ -92,8 +148,6 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     ) {
         self.in_view.clear();
 
-        let mut index = 0;
-
         let pool_index = buffer_pool.index();
 
         for coords in view_region.iter() {
@@ -101,34 +155,39 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 continue;
             }
 
-            let shape = TileShape::new(coords, zoom, index);
+            let source_shapes = {
+                if pool_index.has_tile(&coords) {
+                    SourceShapes::SourceEqTarget(TileShape::new(coords, zoom))
+                } else if let Some(parent_coords) = pool_index.get_available_parent(&coords) {
+                    log::info!("Could not find data at {coords}. Falling back to {parent_coords}");
 
-            index += 1;
+                    SourceShapes::Parent(TileShape::new(parent_coords, zoom))
+                } else if let Some(children_coords) =
+                    pool_index.get_available_children(&coords, CHILDREN_SEARCH_DEPTH)
+                {
+                    log::info!(
+                        "Could not find data at {coords}. Falling back children: {children_coords:?}"
+                    );
 
-            let fallback = {
-                if !pool_index.has_tile(&coords) {
-                    if let Some(fallback_coords) = pool_index.get_tile_coords_fallback(&coords) {
-                        tracing::trace!(
-                            "Could not find data at {coords}. Falling back to {fallback_coords}"
-                        );
-
-                        let shape = TileShape::new(fallback_coords, zoom, index);
-
-                        index += 1;
-                        Some(shape)
-                    } else {
-                        None
-                    }
+                    SourceShapes::Children(
+                        children_coords
+                            .iter()
+                            .map(|child_coord| TileShape::new(*child_coord, zoom))
+                            .collect(),
+                    )
                 } else {
-                    None
+                    SourceShapes::None
                 }
             };
 
-            self.in_view.push(TileInView { shape, fallback });
+            self.in_view.push(ViewTile {
+                target: coords,
+                source: source_shapes,
+            });
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &TileInView> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = &ViewTile> + '_ {
         self.in_view.iter()
     }
 
@@ -137,30 +196,34 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn upload_pattern(&self, queue: &Q, view_proj: &ViewProjection) {
+    pub fn upload_pattern(&mut self, queue: &Q, view_proj: &ViewProjection) {
         let mut buffer = Vec::with_capacity(self.in_view.len());
 
-        for tile in &self.in_view {
+        let mut add_to_buffer = |shape: &mut TileShape| {
+            shape.set_buffer_range(buffer.len() as u64);
             buffer.push(ShaderTileMetadata {
                 // We are casting here from 64bit to 32bit, because 32bit is more performant and is
                 // better supported.
                 transform: view_proj
-                    .to_model_view_projection(tile.shape.transform)
+                    .to_model_view_projection(shape.transform)
                     .downcast()
                     .into(),
-                zoom_factor: tile.shape.zoom_factor as f32,
+                zoom_factor: shape.zoom_factor as f32,
             });
+        };
 
-            if let Some(fallback_shape) = &tile.fallback {
-                buffer.push(ShaderTileMetadata {
-                    // We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                    // better supported.
-                    transform: view_proj
-                        .to_model_view_projection(fallback_shape.transform)
-                        .downcast()
-                        .into(),
-                    zoom_factor: fallback_shape.zoom_factor as f32,
-                });
+        for view_tile in &mut self.in_view {
+            match &mut view_tile.source {
+                SourceShapes::Parent(source_shape) => {
+                    add_to_buffer(source_shape);
+                }
+                SourceShapes::Children(source_shapes) => {
+                    for source_shape in source_shapes {
+                        add_to_buffer(source_shape);
+                    }
+                }
+                SourceShapes::SourceEqTarget(source_shape) => add_to_buffer(source_shape),
+                SourceShapes::None => {}
             }
         }
 
@@ -173,12 +236,28 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         queue.write_buffer(&self.buffer.inner, 0, raw_buffer);
     }
 
-    pub fn stencil_reference_value(&self, world_coords: &WorldTileCoords) -> u8 {
+    /// 2D version of [`TileViewPattern::stencil_reference_value_3d`]. This is kept for reference.
+    /// For the 2D case we do not take into account the Z value, so only 4 cases exist.
+    pub fn stencil_reference_value_2d(&self, world_coords: &WorldTileCoords) -> u8 {
         match (world_coords.x, world_coords.y) {
             (x, y) if x % 2 == 0 && y % 2 == 0 => 2,
             (x, y) if x % 2 == 0 && y % 2 != 0 => 1,
             (x, y) if x % 2 != 0 && y % 2 == 0 => 4,
             (x, y) if x % 2 != 0 && y % 2 != 0 => 3,
+            _ => unreachable!(),
+        }
+    }
+
+    /// Returns unique stencil reference values for WorldTileCoords which are 3D.
+    /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
+    /// different levels based on availability.
+    pub fn stencil_reference_value_3d(&self, world_coords: &WorldTileCoords) -> u8 {
+        const CASES: u8 = 4;
+        match (world_coords.x, world_coords.y, u8::from(world_coords.z)) {
+            (x, y, z) if x % 2 == 0 && y % 2 == 0 => 0 + z * CASES,
+            (x, y, z) if x % 2 == 0 && y % 2 != 0 => 1 + z * CASES,
+            (x, y, z) if x % 2 != 0 && y % 2 == 0 => 2 + z * CASES,
+            (x, y, z) if x % 2 != 0 && y % 2 != 0 => 3 + z * CASES,
             _ => unreachable!(),
         }
     }

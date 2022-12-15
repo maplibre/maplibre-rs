@@ -27,7 +27,7 @@ where
     }
 }
 
-impl<'a, T> Eventually<T>
+impl<T> Eventually<T>
 where
     T: HasChanged,
 {

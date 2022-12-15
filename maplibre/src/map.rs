@@ -93,7 +93,7 @@ where
                     .build()
                     .initialize_renderer::<E::MapWindowConfig>(&self.window)
                     .await
-                    .map_err(|e| MapError::DeviceInit(e))?;
+                    .map_err(MapError::DeviceInit)?;
 
                 let window_size = self.window.size();
 

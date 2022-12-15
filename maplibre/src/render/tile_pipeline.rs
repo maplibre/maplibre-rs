@@ -13,9 +13,14 @@ use crate::{
 
 pub struct TilePipeline {
     bind_globals: bool,
+    /// Is the depth stencil used?
+    depth_stencil_enabled: bool,
+    /// This pipeline updates the stenctil
     update_stencil: bool,
+    /// Force a write and ignore stencil
     debug_stencil: bool,
     wireframe: bool,
+    multisampling: bool,
     settings: RendererSettings,
 
     vertex_state: VertexState,
@@ -28,15 +33,19 @@ impl TilePipeline {
         vertex_state: VertexState,
         fragment_state: FragmentState,
         bind_globals: bool,
+        depth_stencil_enabled: bool,
         update_stencil: bool,
         debug_stencil: bool,
         wireframe: bool,
+        multisampling: bool,
     ) -> Self {
         TilePipeline {
             bind_globals,
+            depth_stencil_enabled,
             update_stencil,
             debug_stencil,
             wireframe,
+            multisampling,
             settings,
             vertex_state,
             fragment_state,
@@ -104,20 +113,28 @@ impl RenderPipeline for TilePipeline {
                 conservative: false,
                 unclipped_depth: false,
             },
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: self.settings.depth_texture_format,
-                depth_write_enabled: !self.update_stencil,
-                depth_compare: wgpu::CompareFunction::Greater,
-                stencil: wgpu::StencilState {
-                    front: stencil_state,
-                    back: stencil_state,
-                    read_mask: 0xff, // Applied to stencil values being read from the stencil buffer
-                    write_mask: 0xff, // Applied to fragment stencil values before being written to  the stencil buffer
-                },
-                bias: wgpu::DepthBiasState::default(),
-            }),
+            depth_stencil: if !self.depth_stencil_enabled {
+                None
+            } else {
+                Some(wgpu::DepthStencilState {
+                    format: self.settings.depth_texture_format,
+                    depth_write_enabled: !self.update_stencil,
+                    depth_compare: wgpu::CompareFunction::Greater,
+                    stencil: wgpu::StencilState {
+                        front: stencil_state,
+                        back: stencil_state,
+                        read_mask: 0xff, // Applied to stencil values being read from the stencil buffer
+                        write_mask: 0xff, // Applied to fragment stencil values before being written to  the stencil buffer
+                    },
+                    bias: wgpu::DepthBiasState::default(),
+                })
+            },
             multisample: wgpu::MultisampleState {
-                count: self.settings.msaa.samples,
+                count: if self.multisampling {
+                    self.settings.msaa.samples
+                } else {
+                    1
+                },
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
