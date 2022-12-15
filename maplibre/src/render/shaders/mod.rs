@@ -181,7 +181,7 @@ impl Shader for TileShader {
 
     fn describe_fragment(&self) -> FragmentState {
         FragmentState {
-            source: include_str!("basic.fragment.wgsl"),
+            source: include_str!("light.fragment.wgsl"),
             entry_point: "main",
             targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
