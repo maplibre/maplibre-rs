@@ -219,6 +219,7 @@
 <span id="219">219</span>
 <span id="220">220</span>
 <span id="221">221</span>
+<span id="222">222</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Uploads data to the GPU which is needed for rendering.
 
 </span><span class="kw">use </span>std::iter;
@@ -354,7 +355,7 @@
                             })
                             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-                        buffer_pool.update_feature_metadata(<span class="kw-2">&amp;</span>queue, entry, <span class="kw-2">&amp;</span>feature_metadata);
+                        buffer_pool.update_feature_metadata(queue, entry, <span class="kw-2">&amp;</span>feature_metadata);
                     }
                 }
             }
@@ -384,15 +385,16 @@
         view_region: <span class="kw-2">&amp;</span>ViewRegion,
     ) {
         <span class="kw">let </span>Initialized(buffer_pool) = buffer_pool <span class="kw">else </span>{ <span class="kw">return</span>; };
+
         <span class="comment">// Upload all tessellated layers which are in view
         </span><span class="kw">for </span>coords <span class="kw">in </span>view_region.iter() {
             <span class="kw">let </span><span class="prelude-val">Some</span>(available_layers) =
-                    tile_repository.iter_loaded_layers_at(<span class="kw-2">&amp;</span>buffer_pool, <span class="kw-2">&amp;</span>coords) <span class="kw">else </span>{ <span class="kw">continue</span>; };
+                    tile_repository.iter_loaded_layers_at(buffer_pool, <span class="kw-2">&amp;</span>coords) <span class="kw">else </span>{ <span class="kw">continue</span>; };
 
             <span class="kw">for </span>style_layer <span class="kw">in </span><span class="kw-2">&amp;</span>style.layers {
                 <span class="kw">let </span>source_layer = style_layer.source_layer.as_ref().unwrap(); <span class="comment">// TODO: Remove unwrap
 
-                </span><span class="kw">let </span><span class="prelude-val">Some</span>(message) = available_layers
+                </span><span class="kw">let </span><span class="prelude-val">Some</span>(stored_layer) = available_layers
                         .iter()
                         .find(|layer| source_layer.as_str() == layer.layer_name()) <span class="kw">else </span>{ <span class="kw">continue</span>; };
 
@@ -402,7 +404,7 @@
                     .and_then(|paint| paint.get_color())
                     .map(|color| color.into());
 
-                <span class="kw">match </span>message {
+                <span class="kw">match </span>stored_layer {
                     StoredLayer::UnavailableLayer { .. } =&gt; {}
                     StoredLayer::TessellatedLayer {
                         coords,
@@ -411,7 +413,7 @@
                         ..
                     } =&gt; {
                         <span class="kw">let </span>allocate_feature_metadata =
-                            <span class="macro">tracing::span!</span>(tracing::Level::TRACE, <span class="string">&quot;allocate_layer_geometry&quot;</span>);
+                            <span class="macro">tracing::span!</span>(tracing::Level::TRACE, <span class="string">&quot;allocate_feature_metadata&quot;</span>);
 
                         <span class="kw">let </span>guard = allocate_feature_metadata.enter();
                         <span class="kw">let </span>feature_metadata = (<span class="number">0</span>..feature_indices.len()) <span class="comment">// FIXME: Iterate over actual featrues

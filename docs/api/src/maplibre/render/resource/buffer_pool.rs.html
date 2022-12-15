@@ -726,6 +726,29 @@
 <span id="726">726</span>
 <span id="727">727</span>
 <span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A ring-buffer like pool of [buffers](wgpu::Buffer).
 
 </span><span class="kw">use </span>std::{
@@ -745,11 +768,12 @@
     tessellation::OverAlignedVertexBuffer,
 };
 
-<span class="kw">pub const </span>VERTEX_SIZE: wgpu::BufferAddress = <span class="number">1_000_000</span>;
-<span class="kw">pub const </span>INDICES_SIZE: wgpu::BufferAddress = <span class="number">1_000_000</span>;
+<span class="comment">// FIXME: Too low values can cause a back-and-forth between unloading and loading layers
+</span><span class="kw">pub const </span>VERTEX_SIZE: wgpu::BufferAddress = <span class="number">10 </span>* <span class="number">1_000_000</span>;
+<span class="kw">pub const </span>INDICES_SIZE: wgpu::BufferAddress = <span class="number">10 </span>* <span class="number">1_000_000</span>;
 
-<span class="kw">pub const </span>FEATURE_METADATA_SIZE: wgpu::BufferAddress = <span class="number">1024 </span>* <span class="number">1000</span>;
-<span class="kw">pub const </span>LAYER_METADATA_SIZE: wgpu::BufferAddress = <span class="number">1024</span>;
+<span class="kw">pub const </span>FEATURE_METADATA_SIZE: wgpu::BufferAddress = <span class="number">10 </span>* <span class="number">1024 </span>* <span class="number">1000</span>;
+<span class="kw">pub const </span>LAYER_METADATA_SIZE: wgpu::BufferAddress = <span class="number">10 </span>* <span class="number">1024</span>;
 
 <span class="doccomment">/// This is inspired by the memory pool in Vulkan documented
 /// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
@@ -1205,8 +1229,13 @@
 }
 
 <span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>RingIndexEntry {
+    layers: VecDeque&lt;IndexEntry&gt;,
+}
+
+<span class="attribute">#[derive(Debug)]
 </span><span class="kw">pub struct </span>RingIndex {
-    tree_index: BTreeMap&lt;Quadkey, VecDeque&lt;IndexEntry&gt;&gt;,
+    tree_index: BTreeMap&lt;Quadkey, RingIndexEntry&gt;,
     linear_index: VecDeque&lt;Quadkey&gt;,
 }
 
@@ -1224,44 +1253,33 @@
     }
 
     <span class="kw">pub fn </span>front(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>IndexEntry&gt; {
-        <span class="self">self</span>.linear_index
-            .front()
-            .and_then(|key| <span class="self">self</span>.tree_index.get(key).and_then(|entries| entries.front()))
+        <span class="self">self</span>.linear_index.front().and_then(|key| {
+            <span class="self">self</span>.tree_index
+                .get(key)
+                .and_then(|entry| entry.layers.front())
+        })
     }
 
     <span class="kw">pub fn </span>back(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>IndexEntry&gt; {
-        <span class="self">self</span>.linear_index
-            .back()
-            .and_then(|key| <span class="self">self</span>.tree_index.get(key).and_then(|entries| entries.back()))
+        <span class="self">self</span>.linear_index.back().and_then(|key| {
+            <span class="self">self</span>.tree_index
+                .get(key)
+                .and_then(|entry| entry.layers.back())
+        })
     }
 
     <span class="kw">pub fn </span>get_layers(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>VecDeque&lt;IndexEntry&gt;&gt; {
         coords
             .build_quad_key()
             .and_then(|key| <span class="self">self</span>.tree_index.get(<span class="kw-2">&amp;</span>key))
-    }
-
-    <span class="kw">pub fn </span>get_layers_fallback(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>VecDeque&lt;IndexEntry&gt;&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>current = <span class="kw-2">*</span>coords;
-        <span class="kw">loop </span>{
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(entries) = <span class="self">self</span>.get_layers(<span class="kw-2">&amp;</span>current) {
-                <span class="kw">return </span><span class="prelude-val">Some</span>(entries);
-            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(parent) = current.get_parent() {
-                current = parent
-            } <span class="kw">else </span>{
-                <span class="kw">return </span><span class="prelude-val">None</span>;
-            }
-        }
+            .map(|entry| <span class="kw-2">&amp;</span>entry.layers)
     }
 
     <span class="kw">pub fn </span>has_tile(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; bool {
-        coords
-            .build_quad_key()
-            .and_then(|key| <span class="self">self</span>.tree_index.get(<span class="kw-2">&amp;</span>key))
-            .is_some()
+        <span class="self">self</span>.get_layers(coords).is_some()
     }
 
-    <span class="kw">pub fn </span>get_tile_coords_fallback(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;WorldTileCoords&gt; {
+    <span class="kw">pub fn </span>get_available_parent(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;WorldTileCoords&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>current = <span class="kw-2">*</span>coords;
         <span class="kw">loop </span>{
             <span class="kw">if </span><span class="self">self</span>.has_tile(<span class="kw-2">&amp;</span>current) {
@@ -1274,19 +1292,45 @@
         }
     }
 
+    <span class="kw">pub fn </span>get_available_children(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        coords: <span class="kw-2">&amp;</span>WorldTileCoords,
+        search_depth: usize,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;WorldTileCoords&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>children = coords.get_children().to_vec();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>output = Vec::new();
+
+        <span class="kw">for _ in </span><span class="number">0</span>..search_depth {
+            <span class="kw">let </span><span class="kw-2">mut </span>new_children = Vec::with_capacity(children.len() * <span class="number">4</span>);
+
+            <span class="kw">for </span>child <span class="kw">in </span>children {
+                <span class="kw">if </span><span class="self">self</span>.has_tile(<span class="kw-2">&amp;</span>child) {
+                    output.push(child);
+                } <span class="kw">else </span>{
+                    new_children.extend(child.get_children())
+                }
+            }
+
+            children = new_children;
+        }
+
+        <span class="prelude-val">Some</span>(output)
+    }
+
     <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>IndexEntry&gt;&gt; + <span class="lifetime">&#39;_ </span>{
         <span class="self">self</span>.linear_index
             .iter()
-            .flat_map(|key| <span class="self">self</span>.tree_index.get(key).map(|entries| entries.iter()))
+            .flat_map(|key| <span class="self">self</span>.tree_index.get(key).map(|entry| entry.layers.iter()))
     }
 
     <span class="kw">fn </span>pop_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;IndexEntry&gt; {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(entries) = <span class="self">self
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = <span class="self">self
             </span>.linear_index
             .pop_front()
             .and_then(|key| <span class="self">self</span>.tree_index.get_mut(<span class="kw-2">&amp;</span>key))
         {
-            entries.pop_front()
+            entry.layers.pop_front()
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>}
@@ -1296,10 +1340,12 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(key) = entry.coords.build_quad_key() {
             <span class="kw">match </span><span class="self">self</span>.tree_index.entry(key) {
                 btree_map::Entry::Vacant(index_entry) =&gt; {
-                    index_entry.insert(VecDeque::from([entry]));
+                    index_entry.insert(RingIndexEntry {
+                        layers: VecDeque::from([entry]),
+                    });
                 }
                 btree_map::Entry::Occupied(<span class="kw-2">mut </span>index_entry) =&gt; {
-                    index_entry.get_mut().push_back(entry);
+                    index_entry.get_mut().layers.push_back(entry);
                 }
             }
 

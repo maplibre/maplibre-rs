@@ -283,13 +283,6 @@
 <span id="283">283</span>
 <span id="284">284</span>
 <span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
 </pre><pre class="rust"><code><span class="attribute">#![allow(clippy::identity_op)]
 
 </span><span class="kw">use </span>bytemuck_derive::{Pod, Zeroable};
@@ -319,12 +312,17 @@
 <span class="kw">pub struct </span>TileMaskShader {
     <span class="kw">pub </span>format: wgpu::TextureFormat,
     <span class="kw">pub </span>draw_colors: bool,
+    <span class="kw">pub </span>debug_lines: bool,
 }
 
 <span class="kw">impl </span>Shader <span class="kw">for </span>TileMaskShader {
     <span class="kw">fn </span>describe_vertex(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VertexState {
         VertexState {
-            source: <span class="macro">include_str!</span>(<span class="string">&quot;tile_mask.vertex.wgsl&quot;</span>),
+            source: <span class="kw">if </span><span class="self">self</span>.debug_lines {
+                <span class="macro">include_str!</span>(<span class="string">&quot;tile_debug.vertex.wgsl&quot;</span>)
+            } <span class="kw">else </span>{
+                <span class="macro">include_str!</span>(<span class="string">&quot;tile_mask.vertex.wgsl&quot;</span>)
+            },
             entry_point: <span class="string">&quot;main&quot;</span>,
             buffers: <span class="macro">vec!</span>[VertexBufferLayout {
                 array_stride: std::mem::size_of::&lt;ShaderTileMetadata&gt;() <span class="kw">as </span>u64,
@@ -358,7 +356,7 @@
 
     <span class="kw">fn </span>describe_fragment(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FragmentState {
         FragmentState {
-            source: <span class="macro">include_str!</span>(<span class="string">&quot;tile_mask.fragment.wgsl&quot;</span>),
+            source: <span class="macro">include_str!</span>(<span class="string">&quot;basic.fragment.wgsl&quot;</span>),
             entry_point: <span class="string">&quot;main&quot;</span>,
             targets: <span class="macro">vec!</span>[<span class="prelude-val">Some</span>(wgpu::ColorTargetState {
                 format: <span class="self">self</span>.format,
@@ -468,23 +466,11 @@
 
     <span class="kw">fn </span>describe_fragment(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FragmentState {
         FragmentState {
-            source: <span class="macro">include_str!</span>(<span class="string">&quot;tile.fragment.wgsl&quot;</span>),
+            source: <span class="macro">include_str!</span>(<span class="string">&quot;basic.fragment.wgsl&quot;</span>),
             entry_point: <span class="string">&quot;main&quot;</span>,
             targets: <span class="macro">vec!</span>[<span class="prelude-val">Some</span>(wgpu::ColorTargetState {
                 format: <span class="self">self</span>.format,
-                <span class="comment">/*blend: Some(wgpu::BlendState {
-                    color: wgpu::BlendComponent {
-                        src_factor: wgpu::BlendFactor::SrcAlpha,
-                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                        operation: wgpu::BlendOperation::Add,
-                    },
-                    alpha: wgpu::BlendComponent {
-                        src_factor: wgpu::BlendFactor::SrcAlpha,
-                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                        operation: wgpu::BlendOperation::Add,
-                    },
-                }),*/
-                </span>blend: <span class="prelude-val">None</span>,
+                blend: <span class="prelude-val">None</span>,
                 write_mask: wgpu::ColorWrites::ALL,
             })],
         }

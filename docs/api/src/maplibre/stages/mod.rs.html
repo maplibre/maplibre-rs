@@ -134,7 +134,7 @@
     phantom_hc: PhantomData&lt;HC&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;c</span>, T: Transferables, HC: HttpClient, C: Context&lt;T, HC&gt;&gt; PipelineProcessor
+<span class="kw">impl</span>&lt;T: Transferables, HC: HttpClient, C: Context&lt;T, HC&gt;&gt; PipelineProcessor
     <span class="kw">for </span>HeadedPipelineProcessor&lt;T, HC, C&gt;
 {
     <span class="kw">fn </span>tile_finished(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;(), PipelineError&gt; {

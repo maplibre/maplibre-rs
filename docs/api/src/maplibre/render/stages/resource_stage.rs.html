@@ -138,6 +138,33 @@
 <span id="138">138</span>
 <span id="139">139</span>
 <span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.
 
 </span><span class="kw">use </span>std::mem::size_of;
@@ -149,7 +176,7 @@
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
-        tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_SIZE},
+        tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
         Renderer,
     },
     schedule::Stage,
@@ -223,7 +250,7 @@
             <span class="kw">let </span>tile_view_buffer_desc = wgpu::BufferDescriptor {
                 label: <span class="prelude-val">Some</span>(<span class="string">&quot;tile view buffer&quot;</span>),
                 size: size_of::&lt;ShaderTileMetadata&gt;() <span class="kw">as </span>wgpu::BufferAddress
-                    * DEFAULT_TILE_VIEW_SIZE,
+                    * DEFAULT_TILE_VIEW_PATTERN_SIZE,
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
                 mapped_at_creation: <span class="bool-val">false</span>,
             };
@@ -244,9 +271,11 @@
                 tile_shader.describe_vertex(),
                 tile_shader.describe_fragment(),
                 <span class="bool-val">true</span>,
+                <span class="bool-val">true</span>,
                 <span class="bool-val">false</span>,
                 <span class="bool-val">false</span>,
                 <span class="bool-val">false</span>,
+                <span class="bool-val">true</span>,
             )
             .describe_render_pipeline()
             .initialize(device);
@@ -262,12 +291,37 @@
             <span class="kw">let </span>mask_shader = shaders::TileMaskShader {
                 format: surface.surface_format(),
                 draw_colors: <span class="bool-val">false</span>,
+                debug_lines: <span class="bool-val">false</span>,
             };
 
             TilePipeline::new(
                 <span class="kw-2">*</span>settings,
                 mask_shader.describe_vertex(),
                 mask_shader.describe_fragment(),
+                <span class="bool-val">false</span>,
+                <span class="bool-val">true</span>,
+                <span class="bool-val">true</span>,
+                <span class="bool-val">false</span>,
+                <span class="bool-val">false</span>,
+                <span class="bool-val">true</span>,
+            )
+            .describe_render_pipeline()
+            .initialize(device)
+        });
+
+        state.debug_pipeline.initialize(|| {
+            <span class="kw">let </span>mask_shader = shaders::TileMaskShader {
+                format: surface.surface_format(),
+                draw_colors: <span class="bool-val">true</span>,
+                debug_lines: <span class="bool-val">true</span>,
+            };
+
+            TilePipeline::new(
+                <span class="kw-2">*</span>settings,
+                mask_shader.describe_vertex(),
+                mask_shader.describe_fragment(),
+                <span class="bool-val">false</span>,
+                <span class="bool-val">false</span>,
                 <span class="bool-val">false</span>,
                 <span class="bool-val">true</span>,
                 <span class="bool-val">false</span>,

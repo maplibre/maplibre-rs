@@ -134,17 +134,17 @@
         // available this might cause frame drops.
         </span><span class="kw">while let </span><span class="prelude-val">Some</span>(result) = <span class="self">self</span>.kernel.apc().receive() {
             <span class="kw">match </span>result {
-                Message::TileTessellated(message) =&gt; {
+                <span class="comment">// TODO: deduplicate
+                </span>Message::TileTessellated(message) =&gt; {
                     <span class="kw">let </span>coords = message.coords();
                     <span class="macro">tracing::event!</span>(tracing::Level::ERROR, %coords, <span class="string">&quot;tile request done: {}&quot;</span>, <span class="kw-2">&amp;</span>coords);
 
                     <span class="macro">tracing::trace!</span>(<span class="string">&quot;Tile at {} finished loading&quot;</span>, coords);
                     <span class="macro">log::warn!</span>(<span class="string">&quot;Tile at {} finished loading&quot;</span>, coords);
 
-                    tile_repository.mark_tile_succeeded(<span class="kw-2">&amp;</span>coords);
-                }
-                <span class="comment">// FIXME: deduplicate
-                </span>Message::LayerUnavailable(message) =&gt; {
+                    tile_repository.mark_tile_succeeded(<span class="kw-2">&amp;</span>coords).unwrap(); <span class="comment">// TODO: unwrap
+                </span>}
+                Message::LayerUnavailable(message) =&gt; {
                     <span class="kw">let </span>layer: StoredLayer = message.to_stored_layer();
 
                     <span class="macro">tracing::debug!</span>(

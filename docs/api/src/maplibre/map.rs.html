@@ -260,7 +260,7 @@
                     </span>.build()
                     .initialize_renderer::&lt;E::MapWindowConfig&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.window)
                     .<span class="kw">await
-                    </span>.map_err(|e| MapError::DeviceInit(e))<span class="question-mark">?</span>;
+                    </span>.map_err(MapError::DeviceInit)<span class="question-mark">?</span>;
 
                 <span class="kw">let </span>window_size = <span class="self">self</span>.window.size();
 

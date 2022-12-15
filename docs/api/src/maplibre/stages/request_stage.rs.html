@@ -163,11 +163,6 @@
 <span id="163">163</span>
 <span id="164">164</span>
 <span id="165">165</span>
-<span id="166">166</span>
-<span id="167">167</span>
-<span id="168">168</span>
-<span id="169">169</span>
-<span id="170">170</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view
 
 </span><span class="kw">use </span>std::{collections::HashSet, rc::Rc};
@@ -312,15 +307,10 @@
         coords: WorldTileCoords,
         layers: <span class="kw-2">&amp;</span>HashSet&lt;String&gt;,
     ) {
-        <span class="comment">/* TODO: is this still required?
-        if !tile_repository.is_layers_missing(coords, layers) {
-            return Ok(false);
-        }*/
+        <span class="kw">if </span>tile_repository.is_tile_pending_or_done(<span class="kw-2">&amp;</span>coords) {
+            tile_repository.mark_tile_pending(coords).unwrap(); <span class="comment">// TODO: Remove unwrap
 
-        </span><span class="kw">if </span>tile_repository.has_tile(<span class="kw-2">&amp;</span>coords) {
-            tile_repository.create_tile(coords);
-
-            <span class="macro">tracing::event!</span>(tracing::Level::ERROR, %coords, <span class="string">&quot;tile request started: {}&quot;</span>, <span class="kw-2">&amp;</span>coords);
+            </span><span class="macro">tracing::event!</span>(tracing::Level::ERROR, %coords, <span class="string">&quot;tile request started: {}&quot;</span>, <span class="kw-2">&amp;</span>coords);
 
             <span class="self">self</span>.kernel
                 .apc()

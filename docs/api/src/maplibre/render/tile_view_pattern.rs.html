@@ -183,6 +183,85 @@
 <span id="183">183</span>
 <span id="184">184</span>
 <span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility for generating a tile pattern which can be used for masking.
 
 </span><span class="kw">use </span>std::{marker::PhantomData, mem::size_of, ops::Range};
@@ -200,42 +279,91 @@
     tessellation::IndexDataType,
 };
 
-<span class="kw">pub const </span>DEFAULT_TILE_VIEW_SIZE: wgpu::BufferAddress = <span class="number">32 </span>* <span class="number">4</span>;
+<span class="kw">pub const </span>DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = <span class="number">32 </span>* <span class="number">4</span>;
+<span class="kw">pub const </span>CHILDREN_SEARCH_DEPTH: usize = <span class="number">4</span>;
 
-<span class="doccomment">/// The tile mask pattern assigns each tile a value which can be used for stencil testing.
-</span><span class="kw">pub struct </span>TileViewPattern&lt;Q, B&gt; {
-    in_view: Vec&lt;TileInView&gt;,
-    buffer: BackingBuffer&lt;B&gt;,
-    phantom_q: PhantomData&lt;Q&gt;,
-}
-
-<span class="attribute">#[derive(Clone)]
+<span class="doccomment">/// Defines the exact location where a specific tile on the map is rendered. It defines the shape
+/// of the tile with its location for the current zoom factor.
+</span><span class="attribute">#[derive(Clone)]
 </span><span class="kw">pub struct </span>TileShape {
-    <span class="kw">pub </span>zoom_factor: f64,
+    coords: WorldTileCoords,
 
-    <span class="kw">pub </span>coords: WorldTileCoords,
+    <span class="comment">// TODO: optimization, `zoom_factor` and `transform` are no longer required if `buffer_range` is Some()
+    </span>zoom_factor: f64,
+    transform: Matrix4&lt;f64&gt;,
 
-    <span class="kw">pub </span>transform: Matrix4&lt;f64&gt;,
-    <span class="kw">pub </span>buffer_range: Range&lt;wgpu::BufferAddress&gt;,
+    buffer_range: <span class="prelude-ty">Option</span>&lt;Range&lt;wgpu::BufferAddress&gt;&gt;,
 }
 
 <span class="kw">impl </span>TileShape {
-    <span class="kw">fn </span>new(coords: WorldTileCoords, zoom: Zoom, index: u64) -&gt; <span class="self">Self </span>{
-        <span class="kw">const </span>STRIDE: u64 = size_of::&lt;ShaderTileMetadata&gt;() <span class="kw">as </span>u64;
+    <span class="kw">fn </span>new(coords: WorldTileCoords, zoom: Zoom) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             coords,
             zoom_factor: zoom.scale_to_tile(<span class="kw-2">&amp;</span>coords),
             transform: coords.transform_for_zoom(zoom),
-            buffer_range: index * STRIDE..(index + <span class="number">1</span>) * STRIDE,
+            buffer_range: <span class="prelude-val">None</span>,
         }
+    }
+
+    <span class="kw">fn </span>set_buffer_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: u64) {
+        <span class="kw">const </span>STRIDE: u64 = size_of::&lt;ShaderTileMetadata&gt;() <span class="kw">as </span>u64;
+        <span class="self">self</span>.buffer_range = <span class="prelude-val">Some</span>(index * STRIDE..(index + <span class="number">1</span>) * STRIDE);
+    }
+
+    <span class="kw">pub fn </span>buffer_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="self">self</span>.buffer_range.as_ref().unwrap().clone()
+    }
+
+    <span class="kw">pub fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords {
+        <span class="self">self</span>.coords
     }
 }
 
-<span class="attribute">#[derive(Clone)]
-</span><span class="kw">pub struct </span>TileInView {
-    <span class="kw">pub </span>shape: TileShape,
+<span class="doccomment">/// This defines the source tile shaped from which the content for the `target` is taken.
+/// For example if the target is `(0, 0, 1)` (of [`ViewTile`]) , we might use
+/// `SourceShapes::Parent((0, 0, 0))` as source.
+/// Similarly if we have the target `(0, 0, 0)` we might use
+/// `SourceShapes::Children((0, 0, 1), (0, 1, 1), (1, 0, 1), (1, 1, 1))` as sources.
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub enum </span>SourceShapes {
+    <span class="doccomment">/// Parent tile is the source. We construct the `target` from parts of a parent.
+    </span>Parent(TileShape),
+    <span class="doccomment">/// Children are the source. We construct the `target` from multiple children.
+    </span>Children(Vec&lt;TileShape&gt;),
+    <span class="doccomment">/// Source and target are equal, so no need to differentiate. We render the `source` shape
+    /// exactly at the `target`.
+    </span>SourceEqTarget(TileShape),
+    <span class="doccomment">/// No data available so nothing to render
+    </span><span class="prelude-val">None</span>,
+}
 
-    <span class="kw">pub </span>fallback: <span class="prelude-ty">Option</span>&lt;TileShape&gt;,
+<span class="doccomment">/// Defines the `target` tile and its `source` from which data tile data comes.
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>ViewTile {
+    target: WorldTileCoords,
+    source: SourceShapes,
+}
+
+<span class="kw">impl </span>ViewTile {
+    <span class="kw">pub fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords {
+        <span class="self">self</span>.target
+    }
+
+    <span class="kw">pub fn </span>render&lt;F&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>callback: F)
+    <span class="kw">where
+        </span>F: FnMut(<span class="kw-2">&amp;</span>TileShape),
+    {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.source {
+            SourceShapes::Parent(source_shape) =&gt; callback(source_shape),
+            SourceShapes::Children(source_shapes) =&gt; {
+                <span class="kw">for </span>shape <span class="kw">in </span>source_shapes {
+                    callback(shape)
+                }
+            }
+            SourceShapes::SourceEqTarget(source_shape) =&gt; callback(source_shape),
+            SourceShapes::None =&gt; {}
+        }
+    }
 }
 
 <span class="attribute">#[derive(Debug)]
@@ -250,6 +378,13 @@
     <span class="kw">fn </span>new(inner: B, inner_size: wgpu::BufferAddress) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ inner, inner_size }
     }
+}
+
+<span class="doccomment">/// The tile mask pattern assigns each tile a value which can be used for stencil testing.
+</span><span class="kw">pub struct </span>TileViewPattern&lt;Q, B&gt; {
+    in_view: Vec&lt;ViewTile&gt;,
+    buffer: BackingBuffer&lt;B&gt;,
+    phantom_q: PhantomData&lt;Q&gt;,
 }
 
 <span class="kw">impl</span>&lt;Q: Queue&lt;B&gt;, B&gt; TileViewPattern&lt;Q, B&gt; {
@@ -277,8 +412,6 @@
     ) {
         <span class="self">self</span>.in_view.clear();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
-
         <span class="kw">let </span>pool_index = buffer_pool.index();
 
         <span class="kw">for </span>coords <span class="kw">in </span>view_region.iter() {
@@ -286,34 +419,39 @@
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">let </span>shape = TileShape::new(coords, zoom, index);
+            <span class="kw">let </span>source_shapes = {
+                <span class="kw">if </span>pool_index.has_tile(<span class="kw-2">&amp;</span>coords) {
+                    SourceShapes::SourceEqTarget(TileShape::new(coords, zoom))
+                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(parent_coords) = pool_index.get_available_parent(<span class="kw-2">&amp;</span>coords) {
+                    <span class="macro">log::info!</span>(<span class="string">&quot;Could not find data at {coords}. Falling back to {parent_coords}&quot;</span>);
 
-            index += <span class="number">1</span>;
+                    SourceShapes::Parent(TileShape::new(parent_coords, zoom))
+                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(children_coords) =
+                    pool_index.get_available_children(<span class="kw-2">&amp;</span>coords, CHILDREN_SEARCH_DEPTH)
+                {
+                    <span class="macro">log::info!</span>(
+                        <span class="string">&quot;Could not find data at {coords}. Falling back children: {children_coords:?}&quot;
+                    </span>);
 
-            <span class="kw">let </span>fallback = {
-                <span class="kw">if </span>!pool_index.has_tile(<span class="kw-2">&amp;</span>coords) {
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(fallback_coords) = pool_index.get_tile_coords_fallback(<span class="kw-2">&amp;</span>coords) {
-                        <span class="macro">tracing::trace!</span>(
-                            <span class="string">&quot;Could not find data at {coords}. Falling back to {fallback_coords}&quot;
-                        </span>);
-
-                        <span class="kw">let </span>shape = TileShape::new(fallback_coords, zoom, index);
-
-                        index += <span class="number">1</span>;
-                        <span class="prelude-val">Some</span>(shape)
-                    } <span class="kw">else </span>{
-                        <span class="prelude-val">None
-                    </span>}
+                    SourceShapes::Children(
+                        children_coords
+                            .iter()
+                            .map(|child_coord| TileShape::new(<span class="kw-2">*</span>child_coord, zoom))
+                            .collect(),
+                    )
                 } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>}
+                    SourceShapes::None
+                }
             };
 
-            <span class="self">self</span>.in_view.push(TileInView { shape, fallback });
+            <span class="self">self</span>.in_view.push(ViewTile {
+                target: coords,
+                source: source_shapes,
+            });
         }
     }
 
-    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>TileInView&gt; + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>ViewTile&gt; + <span class="lifetime">&#39;_ </span>{
         <span class="self">self</span>.in_view.iter()
     }
 
@@ -322,30 +460,34 @@
     }
 
     <span class="attribute">#[tracing::instrument(skip_all)]
-    </span><span class="kw">pub fn </span>upload_pattern(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>Q, view_proj: <span class="kw-2">&amp;</span>ViewProjection) {
+    </span><span class="kw">pub fn </span>upload_pattern(<span class="kw-2">&amp;mut </span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>Q, view_proj: <span class="kw-2">&amp;</span>ViewProjection) {
         <span class="kw">let </span><span class="kw-2">mut </span>buffer = Vec::with_capacity(<span class="self">self</span>.in_view.len());
 
-        <span class="kw">for </span>tile <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.in_view {
+        <span class="kw">let </span><span class="kw-2">mut </span>add_to_buffer = |shape: <span class="kw-2">&amp;mut </span>TileShape| {
+            shape.set_buffer_range(buffer.len() <span class="kw">as </span>u64);
             buffer.push(ShaderTileMetadata {
                 <span class="comment">// We are casting here from 64bit to 32bit, because 32bit is more performant and is
                 // better supported.
                 </span>transform: view_proj
-                    .to_model_view_projection(tile.shape.transform)
+                    .to_model_view_projection(shape.transform)
                     .downcast()
                     .into(),
-                zoom_factor: tile.shape.zoom_factor <span class="kw">as </span>f32,
+                zoom_factor: shape.zoom_factor <span class="kw">as </span>f32,
             });
+        };
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(fallback_shape) = <span class="kw-2">&amp;</span>tile.fallback {
-                buffer.push(ShaderTileMetadata {
-                    <span class="comment">// We are casting here from 64bit to 32bit, because 32bit is more performant and is
-                    // better supported.
-                    </span>transform: view_proj
-                        .to_model_view_projection(fallback_shape.transform)
-                        .downcast()
-                        .into(),
-                    zoom_factor: fallback_shape.zoom_factor <span class="kw">as </span>f32,
-                });
+        <span class="kw">for </span>view_tile <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.in_view {
+            <span class="kw">match </span><span class="kw-2">&amp;mut </span>view_tile.source {
+                SourceShapes::Parent(source_shape) =&gt; {
+                    add_to_buffer(source_shape);
+                }
+                SourceShapes::Children(source_shapes) =&gt; {
+                    <span class="kw">for </span>source_shape <span class="kw">in </span>source_shapes {
+                        add_to_buffer(source_shape);
+                    }
+                }
+                SourceShapes::SourceEqTarget(source_shape) =&gt; add_to_buffer(source_shape),
+                SourceShapes::None =&gt; {}
             }
         }
 
@@ -358,12 +500,28 @@
         queue.write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer.inner, <span class="number">0</span>, raw_buffer);
     }
 
-    <span class="kw">pub fn </span>stencil_reference_value(<span class="kw-2">&amp;</span><span class="self">self</span>, world_coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; u8 {
+    <span class="doccomment">/// 2D version of [`TileViewPattern::stencil_reference_value_3d`]. This is kept for reference.
+    /// For the 2D case we do not take into account the Z value, so only 4 cases exist.
+    </span><span class="kw">pub fn </span>stencil_reference_value_2d(<span class="kw-2">&amp;</span><span class="self">self</span>, world_coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; u8 {
         <span class="kw">match </span>(world_coords.x, world_coords.y) {
             (x, y) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">2</span>,
             (x, y) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">1</span>,
             (x, y) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">4</span>,
             (x, y) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">3</span>,
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+        }
+    }
+
+    <span class="doccomment">/// Returns unique stencil reference values for WorldTileCoords which are 3D.
+    /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
+    /// different levels based on availability.
+    </span><span class="kw">pub fn </span>stencil_reference_value_3d(<span class="kw-2">&amp;</span><span class="self">self</span>, world_coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; u8 {
+        <span class="kw">const </span>CASES: u8 = <span class="number">4</span>;
+        <span class="kw">match </span>(world_coords.x, world_coords.y, u8::from(world_coords.z)) {
+            (x, y, z) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">0 </span>+ z * CASES,
+            (x, y, z) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">1 </span>+ z * CASES,
+            (x, y, z) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">2 </span>+ z * CASES,
+            (x, y, z) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">3 </span>+ z * CASES,
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
     }

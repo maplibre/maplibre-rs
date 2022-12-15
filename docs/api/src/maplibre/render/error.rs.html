@@ -17,12 +17,6 @@
 <span id="17">17</span>
 <span id="18">18</span>
 <span id="19">19</span>
-<span id="20">20</span>
-<span id="21">21</span>
-<span id="22">22</span>
-<span id="23">23</span>
-<span id="24">24</span>
-<span id="25">25</span>
 </pre><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use </span><span class="kw">crate</span>::render::graph::RenderGraphError;
@@ -39,13 +33,7 @@
 
 <span class="kw">impl </span>RenderError {
     <span class="kw">pub fn </span>should_exit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">match </span><span class="self">self </span>{
-            RenderError::Surface(e) =&gt; <span class="kw">match </span>e {
-                wgpu::SurfaceError::OutOfMemory =&gt; <span class="bool-val">true</span>,
-                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-            },
-            <span class="kw">_ </span>=&gt; <span class="bool-val">true</span>,
-        }
+        <span class="macro">matches!</span>(<span class="self">self</span>, RenderError::Surface(wgpu::SurfaceError::OutOfMemory))
     }
 }
 </code></pre></div>

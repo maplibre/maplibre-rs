@@ -113,9 +113,6 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The main render pass for this application.
 //!
 //! Right now there is only one render graph. A use case for multiple render passes would be
@@ -154,17 +151,13 @@
         render_context: <span class="kw-2">&amp;mut </span>RenderContext,
         state: <span class="kw-2">&amp;</span>RenderState,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
-        <span class="kw">let </span>(render_target, multisampling_texture, depth_texture) = <span class="kw">if let </span>(
-            Initialized(render_target),
-            Initialized(multisampling_texture),
-            Initialized(depth_texture),
-        ) = (
-            <span class="kw-2">&amp;</span>state.render_target,
-            <span class="kw-2">&amp;</span>state.multisampling_texture,
-            <span class="kw-2">&amp;</span>state.depth_texture,
-        ) {
-            (render_target, multisampling_texture, depth_texture)
-        } <span class="kw">else </span>{
+        <span class="kw">let </span>Initialized(render_target) = <span class="kw-2">&amp;</span>state.render_target <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        };
+        <span class="kw">let </span>Initialized(multisampling_texture) = <span class="kw-2">&amp;</span>state.multisampling_texture <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        };
+        <span class="kw">let </span>Initialized(depth_texture) = <span class="kw-2">&amp;</span>state.depth_texture <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         };
 
@@ -216,6 +209,7 @@
         <span class="kw">for </span>item <span class="kw">in </span><span class="kw-2">&amp;</span>state.tile_phase.items {
             DrawTiles::render(state, item, <span class="kw-2">&amp;mut </span>tracked_pass);
         }
+
         <span class="prelude-val">Ok</span>(())
     }
 }

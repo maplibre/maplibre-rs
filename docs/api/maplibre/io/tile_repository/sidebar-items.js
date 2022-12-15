@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["StoredLayer","A layer which is stored for future use."],["TileStatus",""]],"struct":[["StoredTile","Stores multiple StoredLayers."],["TileRepository","Stores and provides access to a quad tree of cached tiles with world tile coords."]]};
+window.SIDEBAR_ITEMS = {"enum":[["MarkError",""],["StoredLayer","A layer which is stored for future use."],["TileStatus",""]],"struct":[["StoredTile","Stores multiple StoredLayers."],["TileRepository","Stores and provides access to a quad tree of cached tiles with world tile coords."]]};

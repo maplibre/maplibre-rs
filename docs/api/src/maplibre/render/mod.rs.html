@@ -520,6 +520,17 @@
 <span id="520">520</span>
 <span id="521">521</span>
 <span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -549,7 +560,7 @@
         resource::{BufferPool, Globals, Head, IndexEntry, Surface, Texture, TextureView},
         settings::{RendererSettings, WgpuSettings},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        tile_view_pattern::{TileInView, TileShape, TileViewPattern},
+        tile_view_pattern::{TileShape, TileViewPattern},
     },
     tessellation::IndexDataType,
 };
@@ -559,7 +570,8 @@
 <span class="kw">pub mod </span>stages;
 
 <span class="comment">// Rendering internals
-</span><span class="kw">mod </span>graph_runner;
+</span><span class="kw">mod </span>debug_pass;
+<span class="kw">mod </span>graph_runner;
 <span class="kw">mod </span>main_pass;
 <span class="kw">mod </span>render_commands;
 <span class="kw">mod </span>render_phase;
@@ -579,6 +591,7 @@
 
 <span class="kw">use crate</span>::{
     render::{
+        debug_pass::DebugPassNode,
         error::RenderError,
         graph::{EmptyNode, RenderGraph, RenderGraphError},
         main_pass::{MainPassDriverNode, MainPassNode},
@@ -605,6 +618,7 @@
 
     tile_pipeline: Eventually&lt;wgpu::RenderPipeline&gt;,
     mask_pipeline: Eventually&lt;wgpu::RenderPipeline&gt;,
+    debug_pipeline: Eventually&lt;wgpu::RenderPipeline&gt;,
 
     globals_bind_group: Eventually&lt;Globals&gt;,
 
@@ -613,7 +627,7 @@
 
     surface: Surface,
 
-    mask_phase: RenderPhase&lt;TileInView&gt;,
+    mask_phase: RenderPhase&lt;TileShape&gt;,
     tile_phase: RenderPhase&lt;(IndexEntry, TileShape)&gt;,
 }
 
@@ -625,6 +639,7 @@
             tile_view_pattern: Default::default(),
             tile_pipeline: Default::default(),
             mask_pipeline: Default::default(),
+            debug_pipeline: Default::default(),
             globals_bind_group: Default::default(),
             depth_texture: Default::default(),
             multisampling_texture: Default::default(),
@@ -764,7 +779,7 @@
         <span class="kw">let </span>adapter = instance
             .request_adapter(request_adapter_options)
             .<span class="kw">await
-            </span>.ok_or_else(|| wgpu::RequestDeviceError)<span class="question-mark">?</span>;
+            </span>.ok_or(wgpu::RequestDeviceError)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>adapter_info = adapter.get_info();
 
@@ -1019,6 +1034,7 @@
     <span class="comment">// Labels for non-input nodes
     </span><span class="kw">pub mod </span>node {
         <span class="kw">pub const </span>MAIN_PASS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass&quot;</span>;
+        <span class="kw">pub const </span>DEBUG_PASS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;debug_pass&quot;</span>;
         <span class="attribute">#[cfg(feature = <span class="string">&quot;headless&quot;</span>)]
         </span><span class="kw">pub const </span>COPY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;copy&quot;</span>;
     }
@@ -1028,9 +1044,15 @@
     <span class="kw">let </span><span class="kw-2">mut </span>graph = RenderGraph::default();
 
     <span class="kw">let </span><span class="kw-2">mut </span>draw_graph = RenderGraph::default();
-    draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
-    <span class="kw">let </span>input_node_id = draw_graph.set_input(<span class="macro">vec!</span>[]);
-    draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)<span class="question-mark">?</span>;
+    <span class="comment">// Draw nodes
+    </span>draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+    draw_graph.add_node(draw_graph::node::DEBUG_PASS, DebugPassNode::new());
+    <span class="comment">// Input node
+    </span><span class="kw">let </span>input_node_id = draw_graph.set_input(<span class="macro">vec!</span>[]);
+    <span class="comment">// Edges
+    </span>draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)<span class="question-mark">?</span>;
+    <span class="comment">// TODO: Enable debug pass via runtime flag
+    </span>draw_graph.add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::DEBUG_PASS)<span class="question-mark">?</span>;
 
     graph.add_sub_graph(draw_graph::NAME, draw_graph);
     graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);

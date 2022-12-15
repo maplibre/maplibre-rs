@@ -124,6 +124,23 @@
 <span id="124">124</span>
 <span id="125">125</span>
 <span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility for declaring pipelines.
 
 </span><span class="kw">use </span>std::cmp;
@@ -139,9 +156,14 @@
 
 <span class="kw">pub struct </span>TilePipeline {
     bind_globals: bool,
-    update_stencil: bool,
-    debug_stencil: bool,
+    <span class="doccomment">/// Is the depth stencil used?
+    </span>depth_stencil_enabled: bool,
+    <span class="doccomment">/// This pipeline updates the stenctil
+    </span>update_stencil: bool,
+    <span class="doccomment">/// Force a write and ignore stencil
+    </span>debug_stencil: bool,
     wireframe: bool,
+    multisampling: bool,
     settings: RendererSettings,
 
     vertex_state: VertexState,
@@ -154,15 +176,19 @@
         vertex_state: VertexState,
         fragment_state: FragmentState,
         bind_globals: bool,
+        depth_stencil_enabled: bool,
         update_stencil: bool,
         debug_stencil: bool,
         wireframe: bool,
+        multisampling: bool,
     ) -&gt; <span class="self">Self </span>{
         TilePipeline {
             bind_globals,
+            depth_stencil_enabled,
             update_stencil,
             debug_stencil,
             wireframe,
+            multisampling,
             settings,
             vertex_state,
             fragment_state,
@@ -230,20 +256,28 @@
                 </span>conservative: <span class="bool-val">false</span>,
                 unclipped_depth: <span class="bool-val">false</span>,
             },
-            depth_stencil: <span class="prelude-val">Some</span>(wgpu::DepthStencilState {
-                format: <span class="self">self</span>.settings.depth_texture_format,
-                depth_write_enabled: !<span class="self">self</span>.update_stencil,
-                depth_compare: wgpu::CompareFunction::Greater,
-                stencil: wgpu::StencilState {
-                    front: stencil_state,
-                    back: stencil_state,
-                    read_mask: <span class="number">0xff</span>, <span class="comment">// Applied to stencil values being read from the stencil buffer
-                    </span>write_mask: <span class="number">0xff</span>, <span class="comment">// Applied to fragment stencil values before being written to  the stencil buffer
-                </span>},
-                bias: wgpu::DepthBiasState::default(),
-            }),
+            depth_stencil: <span class="kw">if </span>!<span class="self">self</span>.depth_stencil_enabled {
+                <span class="prelude-val">None
+            </span>} <span class="kw">else </span>{
+                <span class="prelude-val">Some</span>(wgpu::DepthStencilState {
+                    format: <span class="self">self</span>.settings.depth_texture_format,
+                    depth_write_enabled: !<span class="self">self</span>.update_stencil,
+                    depth_compare: wgpu::CompareFunction::Greater,
+                    stencil: wgpu::StencilState {
+                        front: stencil_state,
+                        back: stencil_state,
+                        read_mask: <span class="number">0xff</span>, <span class="comment">// Applied to stencil values being read from the stencil buffer
+                        </span>write_mask: <span class="number">0xff</span>, <span class="comment">// Applied to fragment stencil values before being written to  the stencil buffer
+                    </span>},
+                    bias: wgpu::DepthBiasState::default(),
+                })
+            },
             multisample: wgpu::MultisampleState {
-                count: <span class="self">self</span>.settings.msaa.samples,
+                count: <span class="kw">if </span><span class="self">self</span>.multisampling {
+                    <span class="self">self</span>.settings.msaa.samples
+                } <span class="kw">else </span>{
+                    <span class="number">1
+                </span>},
                 mask: !<span class="number">0</span>,
                 alpha_to_coverage_enabled: <span class="bool-val">false</span>,
             },
