@@ -629,9 +629,13 @@ impl ViewRegion {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = WorldTileCoords> + '_ {
-        (self.min_tile.x - self.padding..self.max_tile.x + 1 + self.padding)
+        let i_min = self.min_tile.x - self.padding;
+        let i_max = self.max_tile.x + 1 + self.padding;
+        (i_min..i_max)
             .flat_map(move |x| {
-                (self.min_tile.y - self.padding..self.max_tile.y + 1 + self.padding).map(move |y| {
+                let j_min = self.min_tile.y - self.padding;
+                let j_max = self.max_tile.y + 1 + self.padding;
+                (j_min..j_max).map(move |y| {
                     let tile_coord: WorldTileCoords = (x, y, self.zoom_level).into();
                     tile_coord
                 })
@@ -671,6 +675,8 @@ impl fmt::Display for WorldCoords {
 
 #[cfg(test)]
 mod tests {
+    use std::cmp::max;
+
     use cgmath::{Point2, Vector4};
 
     use crate::{
@@ -764,5 +770,200 @@ mod tests {
         {
             println!("{}", tile_coords);
         }
+    }
+
+    #[test]
+    fn test_spiral_alt() {
+        struct Spiral {
+            x: i32,
+            y: i32,
+            dx: i32,
+            dy: i32,
+            X: i32,
+            Y: i32,
+            count: i32,
+        }
+
+        impl Spiral {
+            fn new(X: i32, Y: i32) -> Spiral {
+                Spiral {
+                    x: 0,
+                    y: 0,
+                    dx: 0,
+                    dy: -1,
+                    X,
+                    Y,
+                    count: 0,
+                }
+            }
+        }
+
+        impl Iterator for Spiral {
+            type Item = (i32, i32);
+
+            fn next(&mut self) -> Option<Self::Item> {
+                let mut result = None;
+
+                loop {
+                    if self.count >= max(self.X, self.Y).pow(2) {
+                        // return None when all elements have been visited
+                        return None;
+                    }
+                    self.count += 1;
+
+                    if (-self.X / 2 <= self.x)
+                        && (self.x <= self.X / 2)
+                        && (-self.Y / 2 <= self.y)
+                        && (self.y <= self.Y / 2)
+                    {
+                        result = Some((self.x, self.y));
+                    }
+
+                    if self.x == self.y
+                        || (self.x < 0 && self.x == -self.y)
+                        || (self.x > 0 && self.x == 1 - self.y)
+                    {
+                        let t = self.dx;
+                        self.dx = -self.dy;
+                        self.dy = t;
+                    }
+
+                    self.x += self.dx;
+                    self.y += self.dy;
+
+                    if result.is_some() {
+                        break;
+                    }
+                }
+
+                return result;
+            }
+        }
+        for i in 0..5 {
+            for j in 0..5 {
+                print!("{},", i * 5 + j);
+            }
+
+            println!()
+        }
+
+        let mut out = "".to_owned();
+
+        let mut out = "".to_owned();
+        let mut iterator = Spiral::new(5, 5);
+        let mut index = 0;
+        while let Some((x, y)) = iterator.next() {
+            if index % 5 == 0 {
+                out += "\n";
+            }
+
+            out += format!("{},", (x + 2) + (y + 2) * 5).as_str();
+
+            index += 1;
+        }
+        println!("{}", out);
+    }
+    #[test]
+    fn test_spiral() {
+        struct SpiralIterator {
+            // define the size of the 2D array
+            n: isize,
+            // define the starting coordinates
+            x: isize,
+            y: isize,
+            // define the directions for the spiral
+            directions: [(isize, isize); 4],
+            // define the starting direction
+            dir_index: usize,
+            // define the maximum number of steps in each direction
+            steps: [usize; 4],
+            // define the starting value
+            count: isize,
+            next_spiral_width: usize,
+        }
+
+        impl SpiralIterator {
+            fn new(n: isize) -> Self {
+                Self {
+                    n,
+                    x: n / 2,
+                    y: n / 2,
+                    directions: [(0, 1), (1, 0), (0, -1), (-1, 0)],
+                    dir_index: 0,
+                    steps: [1; 4],
+                    next_spiral_width: 2,
+                    count: 0,
+                }
+            }
+        }
+
+        impl Iterator for SpiralIterator {
+            type Item = isize;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                if self.count > self.n * self.n {
+                    // return None when all elements have been visited
+                    return None;
+                }
+
+                let y = self.y * self.n;
+                let result = self.x + y;
+
+                // move to the next position in the spiral
+                let (dx, dy) = self.directions[self.dir_index];
+
+                self.x = self.x as isize + dx;
+                self.y = self.y as isize + dy;
+                self.count += 1;
+
+                //println!("{:?}", self.directions[self.dir_index]);
+                //println!("{:?}", self.steps);
+                // update the number of steps taken in the current direction
+                self.steps[self.dir_index] -= 1;
+                // change direction if the current direction is complete
+                if self.steps[self.dir_index] == 0 {
+                    // starting a new spiral
+                    if self.dir_index == 0 {
+                        self.next_spiral_width += 1;
+                        // escape from spiral
+                        self.steps[self.steps.len() - 2] += 1;
+                        self.steps[self.steps.len() - 1] += 1;
+                    }
+
+                    // Set step count for next spiral of this direction
+                    // self.steps[self.dir_index] is 0 or 1 for self.steps[3]
+                    self.steps[self.dir_index] += self.next_spiral_width;
+
+                    // Goto next direction
+                    self.dir_index = (self.dir_index + 1) % 4;
+                }
+                // return the next value in the spiral
+                Some(result)
+            }
+        }
+
+        for i in 0..5 {
+            for j in 0..5 {
+                print!("{},", i * 5 + j);
+            }
+
+            println!()
+        }
+
+        let mut out = "".to_owned();
+
+        let mut iterator = SpiralIterator::new(5);
+        let mut index = 0;
+        while let Some(value) = iterator.next() {
+            if index % 4 == 0 {
+                out += "\n";
+            }
+
+            out += format!("{},", value).as_str();
+
+            index += 1;
+        }
+
+        println!("{}", out)
     }
 }
