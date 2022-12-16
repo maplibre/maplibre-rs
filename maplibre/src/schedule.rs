@@ -12,7 +12,7 @@ impl Stage for NopStage {
 
 #[macro_export]
 macro_rules! multi_stage {
-    ($multi_stage:ident, $($stage:ident: $stage_ty:ty),*) => {
+    ($multi_stage:ident, $($stage:ident: $stage_ty:ty,)*) => {
         pub struct $multi_stage {
             $($stage: $stage_ty),*
         }

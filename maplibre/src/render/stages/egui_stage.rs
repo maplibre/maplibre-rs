@@ -10,7 +10,7 @@ use crate::{
 pub struct EguiStage;
 
 impl Stage for EguiStage {
-    #[tracing::instrument(name = "egui stage", skip_all)]
+    #[tracing::instrument(name = "EguiStage", skip_all)]
     fn run(
         &mut self,
         MapContext {
@@ -29,6 +29,7 @@ impl Stage for EguiStage {
                             egui_app,
                             egui_context,
                             egui_paint_jobs,
+                            egui_textures,
                             ..
                         },
                     ..
@@ -54,13 +55,19 @@ impl Stage for EguiStage {
         let paint_jobs = egui_context.tessellate(full_output.shapes);
 
         {
-            let mut command_encoder =
-                device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
-
+            egui_textures.clear();
             for (id, image_delta) in &full_output.textures_delta.set {
                 egui_renderer.update_texture(&device, &queue, *id, image_delta);
-                // FIXME: egui_renderer.free_texture()
             }
+
+            for id in &full_output.textures_delta.free {
+                egui_textures.push(*id);
+            }
+        }
+
+        {
+            let mut command_encoder =
+                device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
             egui_renderer.update_buffers(
                 &device,
@@ -69,10 +76,11 @@ impl Stage for EguiStage {
                 &paint_jobs,
                 &screen_descriptor,
             );
-            //command_encoder.finish();
-        }
 
-        egui_paint_jobs.clear();
-        egui_paint_jobs.extend(paint_jobs);
+            queue.submit(vec![command_encoder.finish()]);
+
+            egui_paint_jobs.clear();
+            egui_paint_jobs.extend(paint_jobs);
+        }
     }
 }

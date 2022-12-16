@@ -10,13 +10,14 @@ use crate::{
     render::{
         graph::RenderGraph,
         stages::{
-            egui_stage::EguiStage, extract_stage::ExtractStage, phase_sort_stage::PhaseSortStage,
-            queue_stage::QueueStage,
+            egui_cleanup_stage::EguiCleanupStage, egui_stage::EguiStage,
+            extract_stage::ExtractStage, phase_sort_stage::PhaseSortStage, queue_stage::QueueStage,
         },
     },
     schedule::{Schedule, Stage, StageLabel},
 };
 
+mod egui_cleanup_stage;
 mod egui_stage;
 mod extract_stage;
 mod graph_runner_stage;
@@ -59,12 +60,15 @@ multi_stage!(
     resource: ResourceStage,
     extract: ExtractStage,
     upload: UploadStage,
-    egui: EguiStage
+    egui: EguiStage,
 );
+
+multi_stage!(CleanupStage, egui: EguiCleanupStage,);
 
 pub fn register_default_render_stages(graph: RenderGraph, schedule: &mut Schedule) {
     schedule.add_stage(RenderStageLabel::Prepare, PrepareStage::default());
     schedule.add_stage(RenderStageLabel::Queue, QueueStage::default());
     schedule.add_stage(RenderStageLabel::PhaseSort, PhaseSortStage::default());
     schedule.add_stage(RenderStageLabel::Render, GraphRunnerStage::new(graph));
+    schedule.add_stage(RenderStageLabel::Cleanup, CleanupStage::default());
 }

@@ -20,9 +20,6 @@
 
 use std::sync::Arc;
 
-use egui::ClippedPrimitive;
-use egui_demo_lib::DemoWindows;
-
 use crate::{
     render::{
         eventually::Eventually,
@@ -101,9 +98,10 @@ pub struct RenderState {
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
 
     // egui
-    egui_paint_jobs: Vec<ClippedPrimitive>,
+    egui_paint_jobs: Vec<egui::ClippedPrimitive>,
+    egui_textures: Vec<egui::TextureId>,
     egui_renderer: Eventually<egui_wgpu::Renderer>,
-    egui_app: DemoWindows,
+    egui_app: egui_demo_lib::DemoWindows,
     egui_context: egui::Context,
 }
 
@@ -123,6 +121,7 @@ impl RenderState {
             mask_phase: Default::default(),
             tile_phase: Default::default(),
             egui_paint_jobs: Default::default(),
+            egui_textures: Default::default(),
             egui_renderer: Default::default(),
             egui_app: Default::default(),
             egui_context: Default::default(),
