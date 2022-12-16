@@ -10,12 +10,14 @@ use crate::{
     render::{
         graph::RenderGraph,
         stages::{
-            extract_stage::ExtractStage, phase_sort_stage::PhaseSortStage, queue_stage::QueueStage,
+            egui_stage::EguiStage, extract_stage::ExtractStage, phase_sort_stage::PhaseSortStage,
+            queue_stage::QueueStage,
         },
     },
     schedule::{Schedule, Stage, StageLabel},
 };
 
+mod egui_stage;
 mod extract_stage;
 mod graph_runner_stage;
 mod phase_sort_stage;
@@ -56,7 +58,8 @@ multi_stage!(
     PrepareStage,
     resource: ResourceStage,
     extract: ExtractStage,
-    upload: UploadStage
+    upload: UploadStage,
+    egui: EguiStage
 );
 
 pub fn register_default_render_stages(graph: RenderGraph, schedule: &mut Schedule) {
