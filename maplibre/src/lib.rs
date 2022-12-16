@@ -46,6 +46,7 @@ pub mod benchmarking;
 pub mod event_loop;
 pub mod kernel;
 pub mod map;
+pub mod text;
 pub mod world;
 
 // Export tile format

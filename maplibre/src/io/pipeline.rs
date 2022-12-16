@@ -7,7 +7,7 @@ use thiserror::Error;
 use crate::{
     coords::WorldTileCoords,
     io::{apc::SendError, geometry_index::IndexedGeometry},
-    render::ShaderVertex,
+    render::{ShaderVertex, SymbolVertex},
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
@@ -37,6 +37,15 @@ pub trait PipelineProcessor: Downcast {
         &mut self,
         _coords: &WorldTileCoords,
         _buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+        _feature_indices: Vec<u32>,
+        _layer_data: tile::Layer,
+    ) -> Result<(), PipelineError> {
+        Ok(())
+    }
+    fn symbol_layer_tesselation_finished(
+        &mut self,
+        _coords: &WorldTileCoords,
+        _buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
         _feature_indices: Vec<u32>,
         _layer_data: tile::Layer,
     ) -> Result<(), PipelineError> {

@@ -283,3 +283,18 @@ impl ShaderTileMetadata {
         }
     }
 }
+
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct SymbolVertex {
+    // 4 bytes * 3 = 12 bytes
+    pub position: [f32; 3],
+    // 4 bytes * 3 = 12 bytes
+    pub origin: [f32; 3],
+    // 4 bytes * 2 = 8 bytes
+    pub tex_coords: [f32; 2],
+    // 1 byte * 4 = 4 bytes
+    pub color: [u8; 4],
+    // 1 byte
+    pub is_glyph: u32,
+}

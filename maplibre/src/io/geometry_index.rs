@@ -9,7 +9,6 @@ use geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
 };
-use log::warn;
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
 use crate::{
@@ -313,7 +312,7 @@ impl FeatureProcessor for IndexProcessor {
                     .unwrap(),
             ),
             _ => {
-                warn!("Unknown geometry in index")
+                log::trace!("Unknown geometry in index")
             }
         };
 

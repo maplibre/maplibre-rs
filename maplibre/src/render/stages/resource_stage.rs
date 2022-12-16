@@ -79,6 +79,10 @@ impl Stage for ResourceStage {
             .buffer_pool
             .initialize(|| BufferPool::from_device(device));
 
+        state
+            .symbol_buffer_pool
+            .initialize(|| BufferPool::from_device(device));
+
         state.tile_view_pattern.initialize(|| {
             let tile_view_buffer_desc = wgpu::BufferDescriptor {
                 label: Some("tile view buffer"),

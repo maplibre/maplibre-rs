@@ -229,7 +229,7 @@ pub(crate) fn max<S: PartialOrd + Copy>(lhs: S, rhs: S) -> S {
 }
 
 /// A two-dimensional AABB, aka a rectangle.
-pub struct Aabb2<S> {
+pub struct Aabb2<S = f32> {
     /// Minimum point of the AABB
     pub min: Point2<S>,
     /// Maximum point of the AABB
@@ -256,6 +256,29 @@ impl<S: BaseNum> Aabb2<S> {
             self.max,
         ]
     }
+
+    /*    /// Returns true if the size is zero, negative or NaN.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        !(self.max.x > self.min.x && self.max.y > self.min.y)
+    }
+
+    /// Computes the union of two boxes.
+    ///
+    /// If either of the boxes is empty, the other one is returned.
+    pub fn union(&self, other: &Aabb2<f32>) -> Aabb2<f32> {
+        if other.is_empty() {
+            return *self;
+        }
+        if self.is_empty() {
+            return *other;
+        }
+
+        Aabb2 {
+            min: Point2::new(min(self.min.x, other.min.x), min(self.min.y, other.min.y)),
+            max: Point2::new(max(self.max.x, other.max.x), max(self.max.y, other.max.y)),
+        }
+    }*/
 }
 
 impl<S: BaseNum> fmt::Debug for Aabb2<S> {

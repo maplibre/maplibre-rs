@@ -135,6 +135,7 @@ impl UploadStage {
 
                         buffer_pool.update_feature_metadata(queue, entry, &feature_metadata);
                     }
+                    _ => {}
                 }
             }
         }
@@ -156,18 +157,23 @@ impl UploadStage {
     #[tracing::instrument(skip_all)]
     pub fn upload_tile_geometry(
         &self,
-        RenderState { buffer_pool, .. }: &mut RenderState,
+        RenderState {
+            buffer_pool,
+            symbol_buffer_pool,
+            ..
+        }: &mut RenderState,
         queue: &wgpu::Queue,
         tile_repository: &TileRepository,
         style: &Style,
         view_region: &ViewRegion,
     ) {
         let Initialized(buffer_pool) = buffer_pool else { return; };
+        let Initialized(symbol_buffer_pool) = symbol_buffer_pool else { return; };
 
         // Upload all tessellated layers which are in view
         for coords in view_region.iter() {
             let Some(available_layers) =
-                    tile_repository.iter_loaded_layers_at(buffer_pool, &coords) else { continue; };
+                    tile_repository.loaded_layers_at(buffer_pool, symbol_buffer_pool, &coords) else { continue; };
 
             for style_layer in &style.layers {
                 let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
@@ -213,6 +219,22 @@ impl UploadStage {
                             buffer,
                             ShaderLayerMetadata::new(style_layer.index as f32),
                             &feature_metadata,
+                        );
+                    }
+                    StoredLayer::TessellatedSymbolLayer {
+                        coords,
+                        feature_indices,
+                        buffer,
+                        ..
+                    } => {
+                        log::info!("uploading {:?}", &coords);
+                        symbol_buffer_pool.allocate_layer_geometry(
+                            queue,
+                            *coords,
+                            style_layer.clone(),
+                            buffer,
+                            ShaderLayerMetadata::new(style_layer.index as f32),
+                            &[],
                         );
                     }
                 }

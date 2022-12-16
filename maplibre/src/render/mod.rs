@@ -53,7 +53,7 @@ pub mod error;
 pub mod eventually;
 pub mod settings;
 
-pub use shaders::ShaderVertex;
+pub use shaders::{ShaderVertex, SymbolVertex};
 pub use stages::register_default_render_stages;
 
 use crate::{
@@ -81,6 +81,16 @@ pub struct RenderState {
             ShaderFeatureStyle,
         >,
     >,
+    symbol_buffer_pool: Eventually<
+        BufferPool<
+            wgpu::Queue,
+            wgpu::Buffer,
+            SymbolVertex,
+            IndexDataType,
+            ShaderLayerMetadata,
+            ShaderFeatureStyle,
+        >,
+    >,
     tile_view_pattern: Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
 
     tile_pipeline: Eventually<wgpu::RenderPipeline>,
@@ -96,6 +106,7 @@ pub struct RenderState {
 
     mask_phase: RenderPhase<TileShape>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
+    symbol_tile_phase: RenderPhase<(IndexEntry, TileShape)>,
 }
 
 impl RenderState {
@@ -103,6 +114,7 @@ impl RenderState {
         Self {
             render_target: Default::default(),
             buffer_pool: Default::default(),
+            symbol_buffer_pool: Default::default(),
             tile_view_pattern: Default::default(),
             tile_pipeline: Default::default(),
             mask_pipeline: Default::default(),
@@ -113,6 +125,7 @@ impl RenderState {
             surface,
             mask_phase: Default::default(),
             tile_phase: Default::default(),
+            symbol_tile_phase: Default::default(),
         }
     }
 

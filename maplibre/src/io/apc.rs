@@ -28,6 +28,7 @@ pub enum Message<T: Transferables> {
     TileTessellated(T::TileTessellated),
     LayerUnavailable(T::LayerUnavailable),
     LayerTessellated(T::LayerTessellated),
+    SymbolLayerTessellated(T::SymbolLayerTessellated),
 
     LayerIndexed(T::LayerIndexed),
 }

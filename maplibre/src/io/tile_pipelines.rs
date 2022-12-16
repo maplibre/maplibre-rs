@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use geozero::GeozeroDatasource;
+use geozero::{mvt::tile::Layer, GeozeroDatasource};
 use prost::Message;
 
 use crate::{
@@ -9,7 +9,9 @@ use crate::{
         pipeline::{DataPipeline, PipelineContext, PipelineEnd, PipelineError, Processable},
         TileRequest,
     },
-    tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
+    tessellation::{
+        text_tesselator::TextTessellator, zero_tessellator::ZeroTessellator, IndexDataType,
+    },
 };
 
 #[derive(Default)]
@@ -134,12 +136,48 @@ impl Processable for TessellateLayer {
     }
 }
 
+#[derive(Default)]
+pub struct TessellateGlyphQuads;
+
+impl Processable for TessellateGlyphQuads {
+    type Input = (TileRequest, geozero::mvt::Tile);
+    type Output = (TileRequest, geozero::mvt::Tile);
+
+    #[tracing::instrument(skip_all)]
+    fn process(
+        &self,
+        (tile_request, mut tile): Self::Input,
+        context: &mut PipelineContext,
+    ) -> Result<Self::Output, PipelineError> {
+        let coords = &tile_request.coords;
+
+        let mut tessellator = TextTessellator::<IndexDataType>::default();
+        for layer in &mut tile.layers {
+            layer.process(&mut tessellator).unwrap();
+        }
+
+        let mut layer1 = Layer::default();
+        layer1.name = "text".to_string(); // FIXME
+        context.processor_mut().symbol_layer_tesselation_finished(
+            coords,
+            tessellator.quad_buffer.into(),
+            tessellator.feature_indices,
+            layer1,
+        )?;
+
+        Ok((tile_request, tile))
+    }
+}
+
 pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Processable>::Input> {
     DataPipeline::new(
         ParseTile,
         DataPipeline::new(
-            TessellateLayer,
-            DataPipeline::new(IndexLayer, PipelineEnd::default()),
+            TessellateGlyphQuads::default(),
+            DataPipeline::new(
+                TessellateLayer,
+                DataPipeline::new(IndexLayer, PipelineEnd::default()),
+            ),
         ),
     )
 }

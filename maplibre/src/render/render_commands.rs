@@ -159,12 +159,10 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
                 .metadata()
                 .slice(entry.layer_metadata_buffer_range()),
         );
-        pass.set_vertex_buffer(
-            3,
-            buffer_pool
-                .feature_metadata()
-                .slice(entry.feature_metadata_buffer_range()),
-        );
+        let range = entry.feature_metadata_buffer_range();
+        if !range.is_empty() {
+            pass.set_vertex_buffer(3, buffer_pool.feature_metadata().slice(range));
+        }
         pass.draw_indexed(entry.indices_range(), 0, 0..1);
         RenderCommandResult::Success
     }
