@@ -62,6 +62,19 @@ impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
     }
 }
 
+pub struct SetSymbolPipeline;
+impl<P: PhaseItem> RenderCommand<P> for SetSymbolPipeline {
+    fn render<'w>(
+        state: &'w RenderState,
+        _item: &P,
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        let Initialized(pipeline) = &state.symbol_pipeline  else { return RenderCommandResult::Failure; };
+        pass.set_render_pipeline(pipeline);
+        RenderCommandResult::Success
+    }
+}
+
 pub struct SetTilePipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetTilePipeline {
     fn render<'w>(
@@ -168,8 +181,45 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
     }
 }
 
+pub struct DrawSymbol;
+impl RenderCommand<(IndexEntry, TileShape)> for DrawSymbol {
+    fn render<'w>(
+        state: &'w RenderState,
+        (entry, shape): &(IndexEntry, TileShape),
+        pass: &mut TrackedRenderPass<'w>,
+    ) -> RenderCommandResult {
+        let (Initialized(symbol_buffer_pool), Initialized(tile_view_pattern)) =
+            (&state.symbol_buffer_pool, &state.tile_view_pattern) else { return RenderCommandResult::Failure; };
+
+        pass.set_index_buffer(
+            symbol_buffer_pool
+                .indices()
+                .slice(entry.indices_buffer_range()),
+            INDEX_FORMAT,
+        );
+        pass.set_vertex_buffer(
+            0,
+            symbol_buffer_pool
+                .vertices()
+                .slice(entry.vertices_buffer_range()),
+        );
+        pass.set_vertex_buffer(1, tile_view_pattern.buffer().slice(shape.buffer_range()));
+        pass.set_vertex_buffer(
+            2,
+            symbol_buffer_pool
+                .metadata()
+                .slice(entry.layer_metadata_buffer_range()),
+        );
+
+        pass.draw_indexed(entry.indices_range(), 0, 0..1);
+        RenderCommandResult::Success
+    }
+}
+
 pub type DrawTiles = (SetTilePipeline, SetViewBindGroup<0>, DrawTile);
 
 pub type DrawMasks = (SetMaskPipeline, DrawMask);
 
 pub type DrawDebugOutlines = (SetDebugPipeline, DrawDebugOutline);
+
+pub type DrawSymbols = (SetSymbolPipeline, DrawSymbol);

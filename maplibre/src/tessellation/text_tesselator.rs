@@ -56,6 +56,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
 
         let font_scale = font_size / 24.;
         let m_p_px = meters_per_pixel(zoom.floor()) * font_scale;
+        let m_p_px = 6.0;
 
         let mut next_glyph_origin = origin;
 
@@ -85,8 +86,10 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
 
             let glyph_rect = Box2D::new(
                 (anchor[0], anchor[1]).into(),
-                (meter_width, meter_height).into(),
+                (anchor[0] + meter_width, anchor[1] + meter_height).into(),
             );
+            //let glyph_rect = Box2D::new((0.0, 0.0).into(), (100.0, 100.0).into());
+
             bbox = bbox.map_or_else(
                 || Some(glyph_rect),
                 |bbox: Box2D<_>| Some(bbox.union(&glyph_rect)),

@@ -167,5 +167,25 @@ impl Stage for ResourceStage {
             .describe_render_pipeline()
             .initialize(device)
         });
+
+        state.symbol_pipeline.initialize(|| {
+            let mask_shader = shaders::SymbolTileShader {
+                format: surface.surface_format(),
+            };
+
+            TilePipeline::new(
+                *settings,
+                mask_shader.describe_vertex(),
+                mask_shader.describe_fragment(),
+                false,
+                true,
+                false,
+                true,
+                false,
+                true,
+            )
+            .describe_render_pipeline()
+            .initialize(device)
+        });
     }
 }

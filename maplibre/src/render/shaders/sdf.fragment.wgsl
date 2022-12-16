@@ -37,7 +37,7 @@ fn main(in: VertexOutput) -> Output {
         // - outline
         // - blur
 
-        let alpha: f32 = smoothstep(0.10, 0, glyphDist);
+        let alpha: f32 = smoothstep(0.10, 0.0, glyphDist);
         return Output(vec4(in.color.bgr, in.color.a * alpha));
     }
 }

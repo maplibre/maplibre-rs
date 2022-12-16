@@ -298,3 +298,96 @@ pub struct SymbolVertex {
     // 1 byte
     pub is_glyph: u32,
 }
+
+pub struct SymbolTileShader {
+    pub format: wgpu::TextureFormat,
+}
+
+impl Shader for SymbolTileShader {
+    fn describe_vertex(&self) -> VertexState {
+        VertexState {
+            source: include_str!("sdf.vertex.wgsl"),
+            entry_point: "main",
+            buffers: vec![
+                // vertex data
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<SymbolVertex>() as u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: vec![
+                        // position
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32x3,
+                            shader_location: 0,
+                        },
+                        /*                        // normal
+                        wgpu::VertexAttribute {
+                            offset: wgpu::VertexFormat::Float32x2.size(),
+                            format: wgpu::VertexFormat::Float32x2,
+                            shader_location: 1,
+                        },*/
+                    ],
+                },
+                // tile metadata
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: vec![
+                        // translate
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 4,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 1 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 5,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 2 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 6,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 3 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 7,
+                        },
+                        // zoom_factor
+                        wgpu::VertexAttribute {
+                            offset: 4 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 9,
+                        },
+                    ],
+                },
+                // layer metadata
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: vec![
+                        // z_index
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 10,
+                        },
+                    ],
+                },
+            ],
+        }
+    }
+
+    fn describe_fragment(&self) -> FragmentState {
+        FragmentState {
+            source: include_str!("basic.fragment.wgsl"),
+            entry_point: "main",
+            targets: vec![Some(wgpu::ColorTargetState {
+                format: self.format,
+                blend: None,
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
+        }
+    }
+}

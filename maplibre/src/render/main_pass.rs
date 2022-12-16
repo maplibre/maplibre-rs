@@ -8,7 +8,7 @@ use std::ops::Deref;
 use crate::render::{
     draw_graph,
     graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-    render_commands::{DrawMasks, DrawTiles},
+    render_commands::{DrawMasks, DrawSymbols, DrawTiles},
     render_phase::RenderCommand,
     resource::TrackedRenderPass,
     Eventually::Initialized,
@@ -96,7 +96,7 @@ impl Node for MainPassNode {
         }
 
         for item in &state.symbol_tile_phase.items {
-            DrawTiles::render(state, item, &mut tracked_pass);
+            DrawSymbols::render(state, item, &mut tracked_pass);
         }
 
         Ok(())
