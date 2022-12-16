@@ -1,45 +1,43 @@
 struct VertexOutput {
-    @location(0) tex_coords: vec2<f32>,
+    @location(0) is_glyph: i32,
+    @location(1) tex_coords: vec2<f32>,
+    @location(2) color: vec4<f32>,
     @builtin(position) position: vec4<f32>,
 };
 
+struct Output {
+    @location(0) out_color: vec4<f32>,
+};
+
 @group(0) @binding(0)
-var t_diffuse: texture_2d<f32>;
+var t_sprites: texture_2d<f32>;
 @group(0) @binding(1)
-var s_diffuse: sampler;
+var s_sprites: sampler;
 
-
-//layout(set = 1, binding = 0) uniform texture2D t_sprites;
-  //layout(set = 1, binding = 1) uniform sampler s_sprites;
-  //
-  //layout(set = 2, binding = 0) uniform texture2D t_glyphs;
-  //layout(set = 2, binding = 1) uniform sampler s_glyphs;
+@group(1) @binding(0)
+var t_glyphs: texture_2d<f32>;
+@group(1) @binding(1)
+var s_glyphs: sampler;
 
 @fragment
-//layout(location=0) flat in uint f_glyph;
-  //layout(location=1) in vec2 f_tex_coords;
-  //layout(location=2) in vec4 color;
-fn main(in: VertexOutput) -> @location(0) vec4<f32> {
-
+fn main(in: VertexOutput) -> Output {
     // Note: we access both textures to ensure uniform control flow:
     // https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Non-uniform_flow_control
 
-    vec4 tex_color = texture(sampler2D(t_sprites, s_sprites), f_tex_coords);
+    let tex_color = textureSample(t_sprites, s_sprites, in.tex_coords);
 
     // 0 => border, < 0 => inside, > 0 => outside
     // dist(ance) is scaled to [0.75, -0.25]
-    float glyphDist = 0.75 - texture(sampler2D(t_glyphs, s_glyphs), f_tex_coords).r;
+    let glyphDist = 0.75 - textureSample(t_glyphs, s_glyphs, in.tex_coords).r;
 
-    if (f_glyph == 0) {
-        f_color = tex_color.bgra;
+    if (in.is_glyph == 0) {
+        return Output(tex_color);
     } else {
         // TODO: support:
         // - outline
         // - blur
 
-        float alpha = smoothstep(0.10, 0, glyphDist);
-        f_color = vec4(color.bgr, color.a * alpha);
+        let alpha: f32 = smoothstep(0.10, 0, glyphDist);
+        return Output(vec4(in.color.bgr, in.color.a * alpha));
     }
-
-    //return textureSample(t_diffuse, s_diffuse, in.tex_coords);
 }
