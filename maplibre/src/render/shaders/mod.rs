@@ -290,7 +290,7 @@ pub struct SymbolVertex {
     // 4 bytes * 3 = 12 bytes
     pub position: [f32; 3],
     // 4 bytes * 3 = 12 bytes
-    pub origin: [f32; 3],
+    pub text_anchor: [f32; 3],
     // 4 bytes * 2 = 8 bytes
     pub tex_coords: [f32; 2],
     // 1 byte * 4 = 4 bytes
@@ -320,12 +320,18 @@ impl Shader for SymbolTileShader {
                             format: wgpu::VertexFormat::Float32x3,
                             shader_location: 0,
                         },
-                        /*                        // normal
+                        // text_anchor
                         wgpu::VertexAttribute {
-                            offset: wgpu::VertexFormat::Float32x2.size(),
-                            format: wgpu::VertexFormat::Float32x2,
+                            offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                             shader_location: 1,
-                        },*/
+                            format: wgpu::VertexFormat::Float32x3,
+                        },
+                        // tex coords
+                        wgpu::VertexAttribute {
+                            offset: (std::mem::size_of::<[f32; 3]>() * 2) as wgpu::BufferAddress,
+                            shader_location: 11,
+                            format: wgpu::VertexFormat::Float32x2,
+                        },
                     ],
                 },
                 // tile metadata
@@ -381,12 +387,23 @@ impl Shader for SymbolTileShader {
 
     fn describe_fragment(&self) -> FragmentState {
         FragmentState {
-            source: include_str!("basic.fragment.wgsl"),
+            source: include_str!("sdf.fragment.wgsl"),
             entry_point: "main",
             targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
-                blend: None,
                 write_mask: wgpu::ColorWrites::ALL,
+                blend: Some(wgpu::BlendState {
+                    color: wgpu::BlendComponent {
+                        src_factor: wgpu::BlendFactor::SrcAlpha,
+                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
+                        operation: wgpu::BlendOperation::Add,
+                    },
+                    alpha: wgpu::BlendComponent {
+                        src_factor: wgpu::BlendFactor::One,
+                        dst_factor: wgpu::BlendFactor::Zero,
+                        operation: wgpu::BlendOperation::Add,
+                    },
+                }),
             })],
         }
     }

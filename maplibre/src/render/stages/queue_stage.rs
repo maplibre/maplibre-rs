@@ -61,8 +61,6 @@ impl Stage for QueueStage {
                 };
 
                 if let Some(entries) = symbol_pool_index.get_layers(&source_shape.coords()) {
-                    log::info!("queueing {:?}", &source_shape.coords());
-
                     let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
                     layers_to_render.sort_by_key(|entry| entry.style_layer.index);
 

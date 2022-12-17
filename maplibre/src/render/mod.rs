@@ -20,6 +20,8 @@
 
 use std::sync::Arc;
 
+use wgpu::Sampler;
+
 use crate::{
     render::{
         eventually::Eventually,
@@ -62,6 +64,7 @@ use crate::{
         error::RenderError,
         graph::{EmptyNode, RenderGraph, RenderGraphError},
         main_pass::{MainPassDriverNode, MainPassNode},
+        resource::GlyphTexture,
     },
     window::{HeadedMapWindow, MapWindow},
 };
@@ -98,10 +101,12 @@ pub struct RenderState {
     debug_pipeline: Eventually<wgpu::RenderPipeline>,
     symbol_pipeline: Eventually<wgpu::RenderPipeline>,
 
+    glyph_texture_bind_group: Eventually<GlyphTexture>,
     globals_bind_group: Eventually<Globals>,
 
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
+    glyph_texture_sampler: Eventually<(wgpu::Texture, Sampler)>,
 
     surface: Surface,
 
@@ -121,9 +126,11 @@ impl RenderState {
             mask_pipeline: Default::default(),
             debug_pipeline: Default::default(),
             symbol_pipeline: Default::default(),
+            glyph_texture_bind_group: Default::default(),
             globals_bind_group: Default::default(),
             depth_texture: Default::default(),
             multisampling_texture: Default::default(),
+            glyph_texture_sampler: Default::default(),
             surface,
             mask_phase: Default::default(),
             tile_phase: Default::default(),

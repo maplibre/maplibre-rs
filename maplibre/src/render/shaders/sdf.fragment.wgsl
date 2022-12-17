@@ -10,34 +10,32 @@ struct Output {
 };
 
 @group(0) @binding(0)
-var t_sprites: texture_2d<f32>;
-@group(0) @binding(1)
-var s_sprites: sampler;
-
-@group(1) @binding(0)
 var t_glyphs: texture_2d<f32>;
-@group(1) @binding(1)
+@group(0) @binding(1)
 var s_glyphs: sampler;
 
 @fragment
 fn main(in: VertexOutput) -> Output {
-    // Note: we access both textures to ensure uniform control flow:
+    // Note: Ensure uniform control flow!
     // https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Non-uniform_flow_control
-
-    let tex_color = textureSample(t_sprites, s_sprites, in.tex_coords);
 
     // 0 => border, < 0 => inside, > 0 => outside
     // dist(ance) is scaled to [0.75, -0.25]
     let glyphDist = 0.75 - textureSample(t_glyphs, s_glyphs, in.tex_coords).r;
 
-    if (in.is_glyph == 0) {
-        return Output(tex_color);
-    } else {
-        // TODO: support:
-        // - outline
-        // - blur
+    // TODO: support:
+    // - outline
+    // - blur
 
-        let alpha: f32 = smoothstep(0.10, 0.0, glyphDist);
-        return Output(vec4(in.color.bgr, in.color.a * alpha));
+    let alpha: f32 = smoothstep(0.10, 0.0, glyphDist);
+
+    // "Another Good Trick" from https://www.sjbaker.org/steve/omniv/alpha_sorting.html
+    // Using discard is an alternative for GL_ALPHA_TEST.
+    // https://stackoverflow.com/questions/53024693/opengl-is-discard-the-only-replacement-for-deprecated-gl-alpha-test
+    // Alternative is to disable the depth buffer for the RenderPass using sdf.fragment.wgsl
+    if (alpha == 0.0) {
+        discard;
     }
+
+    return Output(vec4(in.color.rgb, in.color.a * alpha));
 }

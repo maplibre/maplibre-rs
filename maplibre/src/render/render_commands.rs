@@ -4,7 +4,7 @@
 use crate::render::{
     eventually::Eventually::Initialized,
     render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
-    resource::{Globals, IndexEntry, TrackedRenderPass},
+    resource::{Globals, GlyphTexture, IndexEntry, TrackedRenderPass},
     tile_view_pattern::TileShape,
     RenderState, INDEX_FORMAT,
 };
@@ -69,6 +69,9 @@ impl<P: PhaseItem> RenderCommand<P> for SetSymbolPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
+        let Initialized(GlyphTexture { bind_group, .. }) = &state.glyph_texture_bind_group  else { return RenderCommandResult::Failure; };
+        pass.set_bind_group(0, bind_group, &[]);
+
         let Initialized(pipeline) = &state.symbol_pipeline  else { return RenderCommandResult::Failure; };
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
