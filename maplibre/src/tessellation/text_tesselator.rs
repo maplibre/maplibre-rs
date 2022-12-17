@@ -57,15 +57,10 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
     ) -> Option<Box2D<f32>> {
         let mut tessellator = FillTessellator::new();
 
-        let font_scale = 3.0;
-
         let mut next_origin = origin;
 
         let texture_dimensions = self.glyphs.get_texture_dimensions();
-        let texture_dimensions = (
-            texture_dimensions.0 as f32 * font_scale,
-            texture_dimensions.1 as f32 * font_scale,
-        );
+        let texture_dimensions = (texture_dimensions.0 as f32, texture_dimensions.1 as f32);
 
         // TODO: silently drops unknown characters
         // TODO: handle line wrapping / line height
@@ -76,12 +71,12 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
             .collect::<Vec<_>>()
         {
             let glyph_dims = glyph.buffered_dimensions();
-            let width = glyph_dims.0 as f32 * font_scale;
-            let height = glyph_dims.1 as f32 * font_scale;
+            let width = glyph_dims.0 as f32;
+            let height = glyph_dims.1 as f32;
 
             let glyph_anchor = [
-                next_origin[0] + glyph.left_bearing as f32 * font_scale,
-                next_origin[1] - glyph.top_bearing as f32 * font_scale,
+                next_origin[0] + glyph.left_bearing as f32,
+                next_origin[1] - glyph.top_bearing as f32,
                 0.,
             ];
 
@@ -107,8 +102,8 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
                             texture_dimensions,
                             sprite_dimensions: (width, height),
                             sprite_offset: (
-                                glyph.origin_offset().0 as f32 * font_scale,
-                                glyph.origin_offset().1 as f32 * font_scale,
+                                glyph.origin_offset().0 as f32,
+                                glyph.origin_offset().1 as f32,
                             ),
                             color: color.to_rgba8(), // TODO: is this conversion oke?
                             glyph: true,             // Set here to true to use SDF rendering
@@ -117,7 +112,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
                 )
                 .ok()?;
 
-            next_origin[0] += glyph.advance() as f32 * font_scale;
+            next_origin[0] += glyph.advance() as f32;
         }
 
         bbox
