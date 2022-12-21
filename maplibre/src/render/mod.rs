@@ -197,7 +197,7 @@ impl Renderer {
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
                 power_preference: wgpu_settings.power_preference,
-                force_fallback_adapter: false,
+                force_fallback_adapter: wgpu_settings.force_fallback_adapter,
                 compatible_surface: Some(&surface),
             },
         )
@@ -236,7 +236,7 @@ impl Renderer {
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
                 power_preference: wgpu_settings.power_preference,
-                force_fallback_adapter: false,
+                force_fallback_adapter: wgpu_settings.force_fallback_adapter,
                 compatible_surface: None,
             },
         )
