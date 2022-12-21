@@ -29,5 +29,7 @@ fn main(
     var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>((scaling * (position - text_anchor) + text_anchor), 1.0);
     position.z = z_index;
 
-    return VertexOutput(1, tex_coords, vec4<f32>(0.0, 0.0, 0.0, 1.0), position);
+    let white = vec4<f32>(1.0, 1.0, 1.0, 1.0);
+    let black = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+    return VertexOutput(1, tex_coords, white, position);
 }
