@@ -8,15 +8,17 @@ use crate::{
     coords::{ViewRegion, WorldTileCoords, Zoom},
     render::{
         camera::ViewProjection,
-        resource::{BackingBufferDescriptor, BufferPool, Queue},
-        shaders::{ShaderFeatureStyle, ShaderLayerMetadata, ShaderTileMetadata},
-        ShaderVertex,
+        resource::{BackingBufferDescriptor, Queue},
+        shaders::ShaderTileMetadata,
     },
-    tessellation::IndexDataType,
 };
 
 pub const DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = 32 * 4;
 pub const CHILDREN_SEARCH_DEPTH: usize = 4;
+
+pub trait HasTile {
+    fn has_tile(&self, coords: &WorldTileCoords) -> bool;
+}
 
 /// Defines the exact location where a specific tile on the map is rendered. It defines the shape
 /// of the tile with its location for the current zoom factor.
@@ -133,22 +135,13 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     #[tracing::instrument(skip_all)]
-    pub fn update_pattern(
+    pub fn update_pattern<T: HasTile>(
         &mut self,
         view_region: &ViewRegion,
-        buffer_pool: &BufferPool<
-            wgpu::Queue,
-            wgpu::Buffer,
-            ShaderVertex,
-            IndexDataType,
-            ShaderLayerMetadata,
-            ShaderFeatureStyle,
-        >,
+        container: &T,
         zoom: Zoom,
     ) {
         self.in_view.clear();
-
-        let pool_index = buffer_pool.index();
 
         for coords in view_region.iter() {
             if coords.build_quad_key().is_none() {
@@ -156,14 +149,14 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             }
 
             let source_shapes = {
-                if pool_index.has_tile(&coords) {
+                if container.has_tile(&coords) {
                     SourceShapes::SourceEqTarget(TileShape::new(coords, zoom))
-                } else if let Some(parent_coords) = pool_index.get_available_parent(&coords) {
+                } else if let Some(parent_coords) = Self::get_available_parent(container, &coords) {
                     log::info!("Could not find data at {coords}. Falling back to {parent_coords}");
 
                     SourceShapes::Parent(TileShape::new(parent_coords, zoom))
                 } else if let Some(children_coords) =
-                    pool_index.get_available_children(&coords, CHILDREN_SEARCH_DEPTH)
+                    Self::get_available_children(container, &coords, CHILDREN_SEARCH_DEPTH)
                 {
                     log::info!(
                         "Could not find data at {coords}. Falling back children: {children_coords:?}"
@@ -185,6 +178,48 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 source: source_shapes,
             });
         }
+    }
+
+    pub fn get_available_parent<T: HasTile>(
+        container: &T,
+        coords: &WorldTileCoords,
+    ) -> Option<WorldTileCoords> {
+        let mut current = *coords;
+        loop {
+            if container.has_tile(&current) {
+                return Some(current);
+            } else if let Some(parent) = current.get_parent() {
+                current = parent
+            } else {
+                return None;
+            }
+        }
+    }
+
+    pub fn get_available_children<T: HasTile>(
+        container: &T,
+        coords: &WorldTileCoords,
+        search_depth: usize,
+    ) -> Option<Vec<WorldTileCoords>> {
+        let mut children = coords.get_children().to_vec();
+
+        let mut output = Vec::new();
+
+        for _ in 0..search_depth {
+            let mut new_children = Vec::with_capacity(children.len() * 4);
+
+            for child in children {
+                if container.has_tile(&child) {
+                    output.push(child);
+                } else {
+                    new_children.extend(child.get_children())
+                }
+            }
+
+            children = new_children;
+        }
+
+        Some(output)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &ViewTile> + '_ {

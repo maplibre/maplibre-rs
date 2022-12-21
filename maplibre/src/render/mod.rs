@@ -97,7 +97,8 @@ pub struct RenderState {
     surface: Surface,
 
     mask_phase: RenderPhase<TileShape>,
-    tile_phase: RenderPhase<(IndexEntry, TileShape)>,
+    vector_tile_phase: RenderPhase<(IndexEntry, TileShape)>,
+    raster_tile_phase: RenderPhase<TileShape>,
 }
 
 impl RenderState {
@@ -115,7 +116,8 @@ impl RenderState {
             multisampling_texture: Default::default(),
             surface,
             mask_phase: Default::default(),
-            tile_phase: Default::default(),
+            vector_tile_phase: Default::default(),
+            raster_tile_phase: Default::default(),
         }
     }
 

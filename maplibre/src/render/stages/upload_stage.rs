@@ -178,6 +178,7 @@ impl UploadStage {
         let Initialized(buffer_pool) = buffer_pool else { return; };
 
         // Upload all tessellated layers which are in view
+        // FIXME: Take into account raster layers
         for coords in view_region.iter() {
             let Some(available_layers) =
                     tile_repository.iter_loaded_layers_at(buffer_pool, &coords) else { continue; };
@@ -236,12 +237,6 @@ impl UploadStage {
                         #[cfg(feature = "raster")]
                         {
                             if let Initialized(raster_resources) = raster_resources {
-                                buffer_pool.allocate_layer_raster(
-                                    queue,
-                                    *coords,
-                                    style_layer.clone(),
-                                );
-
                                 let (width, height) = image.dimensions();
 
                                 raster_resources.set_texture(

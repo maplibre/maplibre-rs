@@ -2,7 +2,6 @@
 //! into a new render command which executes multiple instruction sets.
 
 use crate::render::{
-    self,
     eventually::Eventually::Initialized,
     render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
     resource::{Globals, IndexEntry, TrackedRenderPass},
@@ -38,16 +37,16 @@ impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetVectorViewBindGroup<I
 }
 
 pub struct SetRasterViewBindGroup<const I: usize>;
-impl<const I: usize> RenderCommand<(IndexEntry, TileShape)> for SetRasterViewBindGroup<I> {
+impl<const I: usize> RenderCommand<TileShape> for SetRasterViewBindGroup<I> {
     fn render<'w>(
         state: &'w RenderState,
-        (entry, _shape): &(IndexEntry, TileShape),
+        shape: &TileShape,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         if let Initialized(raster_resources) = &state.raster_resources {
             pass.set_bind_group(
                 0,
-                raster_resources.bind_groups.get(&entry.coords).unwrap(),
+                raster_resources.bind_groups.get(&shape.coords()).unwrap(),
                 &[],
             );
             RenderCommandResult::Success
@@ -208,42 +207,32 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawVectorTile {
 }
 
 pub struct DrawRasterTile;
-impl RenderCommand<(IndexEntry, TileShape)> for DrawRasterTile {
+impl RenderCommand<TileShape> for DrawRasterTile {
     fn render<'w>(
         state: &'w RenderState,
-        (entry, shape): &(IndexEntry, TileShape),
+        source_shape: &TileShape,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let (
-            Initialized(buffer_pool),
-            Initialized(tile_view_pattern),
-            Initialized(raster_resources),
-        ) = (
-            &state.buffer_pool,
-            &state.tile_view_pattern,
-            &state.raster_resources,
-        ) {
-            let reference = tile_view_pattern.stencil_reference_value_3d(&shape.coords()) as u32;
+        let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
+            (&state.buffer_pool, &state.tile_view_pattern) else { return RenderCommandResult::Failure; };
 
-            tracing::trace!("Drawing raster layer");
+        let reference = tile_view_pattern.stencil_reference_value_3d(&source_shape.coords()) as u32;
 
-            pass.set_stencil_reference(reference);
-            pass.set_index_buffer(
-                buffer_pool.indices().slice(entry.indices_buffer_range()),
-                INDEX_FORMAT,
-            );
+        tracing::trace!("Drawing raster layer");
 
-            pass.set_vertex_buffer(
-                0,
-                buffer_pool.vertices().slice(entry.vertices_buffer_range()),
-            );
+        pass.set_stencil_reference(reference);
 
-            pass.set_vertex_buffer(1, tile_view_pattern.buffer().slice(shape.buffer_range()));
-            pass.draw_indexed(0..render::resource::INDICES.len() as u32, 0, 0..1);
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
+        pass.set_vertex_buffer(
+            0,
+            tile_view_pattern
+                .buffer()
+                .slice(source_shape.buffer_range()),
+        );
+
+        const TILE_MASK_SHADER_VERTICES: u32 = 6;
+        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
+
+        RenderCommandResult::Success
     }
 }
 

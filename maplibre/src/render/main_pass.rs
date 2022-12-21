@@ -91,13 +91,12 @@ impl Node for MainPassNode {
             DrawMasks::render(state, item, &mut tracked_pass);
         }
 
-        for item in &state.tile_phase.items {
-            let (index_entry, _) = item;
-            if !index_entry.is_raster() {
-                DrawVectorTiles::render(state, item, &mut tracked_pass);
-            } else {
-                DrawRasterTiles::render(state, item, &mut tracked_pass);
-            }
+        for item in &state.vector_tile_phase.items {
+            DrawVectorTiles::render(state, item, &mut tracked_pass);
+        }
+
+        for item in &state.raster_tile_phase.items {
+            DrawRasterTiles::render(state, item, &mut tracked_pass);
         }
 
         Ok(())

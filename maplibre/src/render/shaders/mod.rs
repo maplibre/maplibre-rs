@@ -316,31 +316,6 @@ impl Shader for RasterTileShader {
             source: include_str!("tile_raster.vertex.wgsl"),
             entry_point: "main",
             buffers: vec![
-                // vertex data
-                VertexBufferLayout {
-                    array_stride: std::mem::size_of::<ShaderVertex>() as u64,
-                    step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: vec![
-                        // position
-                        wgpu::VertexAttribute {
-                            offset: 0,
-                            format: wgpu::VertexFormat::Float32x2,
-                            shader_location: 0,
-                        },
-                        // texture coordinate
-                        wgpu::VertexAttribute {
-                            offset: wgpu::VertexFormat::Float32x2.size(),
-                            format: wgpu::VertexFormat::Float32x2,
-                            shader_location: 1,
-                        },
-                        // normal
-                        wgpu::VertexAttribute {
-                            offset: 2 * wgpu::VertexFormat::Float32x2.size(),
-                            format: wgpu::VertexFormat::Float32x2,
-                            shader_location: 2,
-                        },
-                    ],
-                },
                 // tile metadata
                 VertexBufferLayout {
                     array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,

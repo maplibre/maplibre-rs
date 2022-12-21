@@ -19,7 +19,8 @@ impl Stage for QueueStage {
                     state:
                         RenderState {
                             mask_phase,
-                            tile_phase,
+                            vector_tile_phase,
+                            raster_tile_phase,
                             tile_view_pattern,
                             buffer_pool,
                             ..
@@ -30,12 +31,13 @@ impl Stage for QueueStage {
         }: &mut MapContext,
     ) {
         mask_phase.items.clear();
-        tile_phase.items.clear();
+        vector_tile_phase.items.clear();
+        raster_tile_phase.items.clear();
 
         let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
             (tile_view_pattern, &buffer_pool) else { return; };
 
-        let index = buffer_pool.index();
+        let buffer_pool_index = buffer_pool.index();
 
         for view_tile in tile_view_pattern.iter() {
             let coords = &view_tile.coords();
@@ -46,18 +48,17 @@ impl Stage for QueueStage {
                 // Draw masks for all source_shapes
                 mask_phase.add(source_shape.clone());
 
-                let Some(entries) = index.get_layers(&source_shape.coords()) else {
-                    tracing::trace!("No layers found at {}", &source_shape.coords());
-                    return;
+                if let Some(entries) = buffer_pool_index.get_layers(&source_shape.coords()) {
+                    let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
+                    layers_to_render.sort_by_key(|entry| entry.style_layer.index);
+
+                    for entry in layers_to_render {
+                        // Draw tile
+                        vector_tile_phase.add((entry.clone(), source_shape.clone()));
+                    }
                 };
 
-                let mut layers_to_render: Vec<&IndexEntry> = Vec::from_iter(entries);
-                layers_to_render.sort_by_key(|entry| entry.style_layer.index);
-
-                for entry in layers_to_render {
-                    // Draw tile
-                    tile_phase.add((entry.clone(), source_shape.clone()))
-                }
+                raster_tile_phase.add(source_shape.clone())
             });
         }
     }

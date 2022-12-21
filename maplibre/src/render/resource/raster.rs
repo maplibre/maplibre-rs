@@ -5,33 +5,11 @@ use crate::{
     render::{
         resource::{RenderPipeline, Texture},
         settings::{Msaa, RendererSettings},
-        shaders::{RasterTileShader, Shader, ShaderTextureVertex},
+        shaders::{RasterTileShader, Shader},
         tile_pipeline::TilePipeline,
+        tile_view_pattern::HasTile,
     },
 };
-
-/// Defines the indices of two triangles which represents one rectangle.   
-pub const INDICES: &[u32] = &[0, 1, 3, 1, 2, 3];
-
-/// Defines the vertices of a the tile.
-pub const ROOT: &[ShaderTextureVertex] = &[
-    ShaderTextureVertex {
-        position: [0.0, 0.0],
-        tex_coords: [0.0, 0.0], // A
-    }, // A
-    ShaderTextureVertex {
-        position: [0.0, 4096.0],
-        tex_coords: [0.0, 1.0], // B
-    }, // B
-    ShaderTextureVertex {
-        position: [4096.0, 4096.0],
-        tex_coords: [1.0, 1.0], // C
-    }, // C
-    ShaderTextureVertex {
-        position: [4096.0, 0.0],
-        tex_coords: [1.0, 0.0], // D
-    }, // D
-];
 
 /// Holds the resources necessary for the raster tiles such as the
 /// * sampler
@@ -110,7 +88,7 @@ impl RasterResources {
     /// Creates a bind group for each fetched raster tile and store it inside a hashmap.
     pub fn set_raster_bind_group(&mut self, device: &wgpu::Device, coords: &WorldTileCoords) {
         self.bind_groups.insert(
-            coords.clone(),
+            *coords,
             device.create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &self.pipeline.as_ref().unwrap().get_bind_group_layout(0),
                 entries: &[
@@ -128,6 +106,12 @@ impl RasterResources {
                 label: None,
             }),
         );
+    }
+}
+
+impl HasTile for RasterResources {
+    fn has_tile(&self, coords: &WorldTileCoords) -> bool {
+        self.bind_groups.contains_key(coords)
     }
 }
 

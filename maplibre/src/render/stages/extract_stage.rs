@@ -19,10 +19,9 @@ impl Stage for ExtractStage {
                 Renderer {
                     state:
                         RenderState {
-                            mask_phase: _,
-                            tile_phase: _,
                             tile_view_pattern,
                             buffer_pool,
+                            raster_resources,
                             ..
                         },
                     ..
@@ -30,14 +29,15 @@ impl Stage for ExtractStage {
             ..
         }: &mut MapContext,
     ) {
-        let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (tile_view_pattern, &buffer_pool) else { return; };
+        let (Initialized(tile_view_pattern), Initialized(buffer_pool), Initialized(raster_resources)) =
+            (tile_view_pattern, buffer_pool, raster_resources) else { return; };
 
         let view_region = view_state.create_view_region();
 
         if let Some(view_region) = &view_region {
             let zoom = view_state.zoom();
-            tile_view_pattern.update_pattern(view_region, buffer_pool, zoom);
+            //tile_view_pattern.update_pattern(view_region, buffer_pool.index(), zoom);
+            tile_view_pattern.update_pattern(view_region, raster_resources, zoom);
         }
     }
 }

@@ -19,7 +19,9 @@ impl Stage for PhaseSortStage {
     ) {
         let mask_phase: &mut RenderPhase<_> = &mut state.mask_phase;
         mask_phase.sort();
-        let file_phase = &mut state.tile_phase;
+        let file_phase = &mut state.vector_tile_phase;
         file_phase.sort();
+        let raster_phase = &mut state.raster_tile_phase;
+        raster_phase.sort();
     }
 }
