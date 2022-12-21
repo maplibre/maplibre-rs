@@ -63,7 +63,7 @@ impl ViewState {
         self.camera.resize(width, height);
     }
 
-    pub fn create_view_region(&self) -> Option<ViewRegion> {
+    pub fn create_view_region(&self, visible_level: ZoomLevel) -> Option<ViewRegion> {
         self.camera
             .view_region_bounding_box(&self.view_projection().invert())
             .map(|bounding_box| {
@@ -72,17 +72,13 @@ impl ViewState {
                     VIEW_REGION_PADDING,
                     32,
                     *self.zoom,
-                    self.visible_level(),
+                    visible_level,
                 )
             })
     }
 
     pub fn view_projection(&self) -> ViewProjection {
         self.camera.calc_view_proj(&self.perspective)
-    }
-
-    pub fn visible_level(&self) -> ZoomLevel {
-        self.zoom.level()
     }
 
     pub fn zoom(&self) -> Zoom {

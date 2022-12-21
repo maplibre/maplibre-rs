@@ -221,8 +221,10 @@ impl Zoom {
         2.0_f64.powf(zoom.0 - self.0)
     }
 
-    pub fn level(&self) -> ZoomLevel {
-        ZoomLevel::from(self.0.floor() as u8)
+    pub fn zoom_level(&self, tile_size: f64) -> ZoomLevel {
+        // TODO: Also support round() instead of floor() here
+        let z = (self.0 as f64 + (TILE_SIZE / tile_size).ln() / 2.0_f64.ln()).floor() as u8;
+        return ZoomLevel(z.max(0));
     }
 }
 
@@ -704,7 +706,7 @@ mod tests {
         println!("{:?}\n{:?}", p1, p2);
 
         assert_eq!(
-            WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.level(), zoom),
+            WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.zoom_level(), zoom),
             tile
         );
     }

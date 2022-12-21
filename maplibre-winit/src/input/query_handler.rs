@@ -1,7 +1,11 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
-use maplibre::{context::MapContext, coords::WorldCoords, io::geometry_index::IndexedGeometry};
+use maplibre::{
+    context::MapContext,
+    coords::{WorldCoords, TILE_SIZE},
+    io::geometry_index::IndexedGeometry,
+};
 use winit::event::{ElementState, MouseButton};
 
 use crate::input::UpdateState;
@@ -65,7 +69,7 @@ impl UpdateState for QueryHandler {
                 let view_proj = view_state.view_projection();
                 let inverted_view_proj = view_proj.invert();
 
-                let z = view_state.visible_level(); // FIXME: can be wrong, if tiles of different z are visible
+                let z = view_state.zoom().zoom_level(TILE_SIZE); // FIXME: can be wrong, if tiles of different z are visible
                 let zoom = view_state.zoom();
 
                 if let Some(coordinates) = view_state.camera().window_to_world_at_ground(
