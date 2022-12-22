@@ -238,7 +238,7 @@ impl UploadStage {
                         if let Initialized(raster_resources) = raster_resources {
                             let (width, height) = image.dimensions();
 
-                            raster_resources.set_texture(
+                            let texture = raster_resources.create_texture(
                                 None,
                                 device,
                                 wgpu::TextureFormat::Rgba8UnormSrgb,
@@ -251,7 +251,7 @@ impl UploadStage {
                             queue.write_texture(
                                 wgpu::ImageCopyTexture {
                                     aspect: wgpu::TextureAspect::All,
-                                    texture: &raster_resources.texture.as_ref().unwrap().texture,
+                                    texture: &texture.texture,
                                     mip_level: 0,
                                     origin: wgpu::Origin3d::ZERO,
                                 },
@@ -261,10 +261,10 @@ impl UploadStage {
                                     bytes_per_row: std::num::NonZeroU32::new(4 * width),
                                     rows_per_image: std::num::NonZeroU32::new(height),
                                 },
-                                raster_resources.texture.as_ref().unwrap().size.clone(),
+                                texture.size.clone(),
                             );
 
-                            raster_resources.set_raster_bind_group(device, &coords);
+                            raster_resources.bind_texture(device, &coords, texture);
                         }
                     }
                 }

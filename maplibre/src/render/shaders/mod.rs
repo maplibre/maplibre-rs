@@ -350,6 +350,19 @@ impl Shader for RasterTileShader {
                         },
                     ],
                 },
+                // layer metadata
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: vec![
+                        // z_index
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 10,
+                        },
+                    ],
+                },
             ],
         }
     }

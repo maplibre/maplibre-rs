@@ -126,16 +126,19 @@ impl<B> BackingBuffer<B> {
 
 /// The tile mask pattern assigns each tile a value which can be used for stencil testing.
 pub struct TileViewPattern<Q, B> {
-    in_view: Vec<ViewTile>,
-    buffer: BackingBuffer<B>,
+    view_tiles: Vec<ViewTile>,
+    view_tiles_buffer: BackingBuffer<B>,
     phantom_q: PhantomData<Q>,
 }
 
 impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
-    pub fn new(buffer: BackingBufferDescriptor<B>) -> Self {
+    pub fn new(view_tiles_buffer: BackingBufferDescriptor<B>) -> Self {
         Self {
-            in_view: Vec::with_capacity(64),
-            buffer: BackingBuffer::new(buffer.buffer, buffer.inner_size),
+            view_tiles: Vec::with_capacity(64),
+            view_tiles_buffer: BackingBuffer::new(
+                view_tiles_buffer.buffer,
+                view_tiles_buffer.inner_size,
+            ),
             phantom_q: Default::default(),
         }
     }
@@ -147,7 +150,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         container: &T,
         zoom: Zoom,
     ) {
-        self.in_view.clear();
+        self.view_tiles.clear();
 
         for coords in view_region.iter() {
             if coords.build_quad_key().is_none() {
@@ -179,7 +182,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 }
             };
 
-            self.in_view.push(ViewTile {
+            self.view_tiles.push(ViewTile {
                 target: coords,
                 source: source_shapes,
             });
@@ -229,16 +232,16 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &ViewTile> + '_ {
-        self.in_view.iter()
+        self.view_tiles.iter()
     }
 
     pub fn buffer(&self) -> &B {
-        &self.buffer.inner
+        &self.view_tiles_buffer.inner
     }
 
     #[tracing::instrument(skip_all)]
     pub fn upload_pattern(&mut self, queue: &Q, view_proj: &ViewProjection) {
-        let mut buffer = Vec::with_capacity(self.in_view.len());
+        let mut buffer = Vec::with_capacity(self.view_tiles.len());
 
         let mut add_to_buffer = |shape: &mut TileShape| {
             shape.set_buffer_range(buffer.len() as u64);
@@ -253,7 +256,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             });
         };
 
-        for view_tile in &mut self.in_view {
+        for view_tile in &mut self.view_tiles {
             match &mut view_tile.source {
                 SourceShapes::Parent(source_shape) => {
                     add_to_buffer(source_shape);
@@ -269,12 +272,12 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         }
 
         let raw_buffer = bytemuck::cast_slice(buffer.as_slice());
-        if raw_buffer.len() as wgpu::BufferAddress > self.buffer.inner_size {
+        if raw_buffer.len() as wgpu::BufferAddress > self.view_tiles_buffer.inner_size {
             /* TODO: We need to avoid this case by either choosing a proper size
             TODO: (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */
             panic!("Buffer is too small to store the tile pattern!");
         }
-        queue.write_buffer(&self.buffer.inner, 0, raw_buffer);
+        queue.write_buffer(&self.view_tiles_buffer.inner, 0, raw_buffer);
     }
 
     /// 2D version of [`TileViewPattern::stencil_reference_value_3d`]. This is kept for reference.

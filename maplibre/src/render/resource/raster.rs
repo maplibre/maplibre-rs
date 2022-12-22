@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use wgpu::BindGroup;
+
 use crate::{
     coords::WorldTileCoords,
     render::{
@@ -17,40 +19,15 @@ use crate::{
 /// * pipeline
 /// * bindgroups
 pub struct RasterResources {
-    pub sampler: Option<wgpu::Sampler>,
-    pub msaa: Option<Msaa>,
-    pub texture: Option<Texture>,
-    pub pipeline: Option<wgpu::RenderPipeline>,
-    pub bind_groups: HashMap<WorldTileCoords, wgpu::BindGroup>,
+    sampler: wgpu::Sampler,
+    msaa: Msaa,
+    pipeline: Option<wgpu::RenderPipeline>,
+    bind_groups: HashMap<WorldTileCoords, wgpu::BindGroup>,
 }
 
 impl RasterResources {
-    pub fn set_msaa(&mut self, msaa: Msaa) {
-        self.msaa = Some(msaa);
-    }
-
-    pub fn set_texture(
-        &mut self,
-        label: wgpu::Label,
-        device: &wgpu::Device,
-        format: wgpu::TextureFormat,
-        width: u32,
-        height: u32,
-        usage: wgpu::TextureUsages,
-    ) {
-        self.texture = Some(Texture::new(
-            label,
-            device,
-            format,
-            width,
-            height,
-            self.msaa.unwrap().clone(),
-            usage,
-        ));
-    }
-
-    pub fn set_sampler(&mut self, device: &wgpu::Device) {
-        self.sampler = Some(device.create_sampler(&wgpu::SamplerDescriptor {
+    pub fn new(msaa: Msaa, device: &wgpu::Device) -> Self {
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::ClampToEdge,
             address_mode_v: wgpu::AddressMode::ClampToEdge,
             address_mode_w: wgpu::AddressMode::ClampToEdge,
@@ -58,7 +35,33 @@ impl RasterResources {
             min_filter: wgpu::FilterMode::Nearest,
             mipmap_filter: wgpu::FilterMode::Nearest,
             ..Default::default()
-        }));
+        });
+        Self {
+            sampler,
+            msaa,
+            pipeline: None,
+            bind_groups: Default::default(),
+        }
+    }
+
+    pub fn create_texture(
+        &mut self,
+        label: wgpu::Label,
+        device: &wgpu::Device,
+        format: wgpu::TextureFormat,
+        width: u32,
+        height: u32,
+        usage: wgpu::TextureUsages,
+    ) -> Texture {
+        Texture::new(
+            label,
+            device,
+            format,
+            width,
+            height,
+            self.msaa.clone(),
+            usage,
+        )
     }
 
     pub fn set_raster_pipeline(
@@ -85,8 +88,17 @@ impl RasterResources {
         );
     }
 
+    pub fn get_bind_group(&self, coords: &WorldTileCoords) -> Option<&BindGroup> {
+        self.bind_groups.get(coords)
+    }
+
     /// Creates a bind group for each fetched raster tile and store it inside a hashmap.
-    pub fn set_raster_bind_group(&mut self, device: &wgpu::Device, coords: &WorldTileCoords) {
+    pub fn bind_texture(
+        &mut self,
+        device: &wgpu::Device,
+        coords: &WorldTileCoords,
+        texture: Texture,
+    ) {
         self.bind_groups.insert(
             *coords,
             device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -94,35 +106,25 @@ impl RasterResources {
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
-                        resource: wgpu::BindingResource::TextureView(
-                            &self.texture.as_ref().unwrap().view,
-                        ),
+                        resource: wgpu::BindingResource::TextureView(&texture.view),
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::Sampler(self.sampler.as_ref().unwrap()),
+                        resource: wgpu::BindingResource::Sampler(&self.sampler),
                     },
                 ],
                 label: None,
             }),
         );
     }
+
+    pub fn pipeline(&self) -> &Option<wgpu::RenderPipeline> {
+        &self.pipeline
+    }
 }
 
 impl HasTile for RasterResources {
     fn has_tile(&self, coords: &WorldTileCoords) -> bool {
         self.bind_groups.contains_key(coords)
-    }
-}
-
-impl Default for RasterResources {
-    fn default() -> Self {
-        RasterResources {
-            sampler: None,
-            msaa: None,
-            texture: None,
-            pipeline: None,
-            bind_groups: HashMap::new(),
-        }
     }
 }

@@ -179,7 +179,7 @@ impl LayerRaster for DefaultRasterLayer {
     }
 }
 
-pub trait Transferables: 'static {
+pub trait Transferables: Copy + Clone + 'static {
     type TileTessellated: TileTessellated;
     type LayerUnavailable: LayerUnavailable;
     type LayerTessellated: LayerTessellated;

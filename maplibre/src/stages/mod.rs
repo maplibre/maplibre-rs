@@ -41,6 +41,16 @@ pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<
     phantom_hc: PhantomData<HC>,
 }
 
+impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> HeadedPipelineProcessor<T, HC, C> {
+    pub fn new(context: C) -> Self {
+        Self {
+            context,
+            phantom_t: Default::default(),
+            phantom_hc: Default::default(),
+        }
+    }
+}
+
 impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
     for HeadedPipelineProcessor<T, HC, C>
 {

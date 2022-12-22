@@ -131,9 +131,7 @@ impl Stage for ResourceStage {
                 format: surface.surface_format(),
             };
 
-            let mut raster_resources = RasterResources::default();
-            raster_resources.set_msaa(Msaa { samples: 1 });
-            raster_resources.set_sampler(device);
+            let mut raster_resources = RasterResources::new(Msaa { samples: 1 }, device);
             raster_resources.set_raster_pipeline(device, &settings, &shader);
 
             raster_resources

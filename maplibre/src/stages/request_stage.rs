@@ -76,58 +76,104 @@ pub fn schedule<
     Box::pin(async move {
         info!("Processing thread: {:?}", std::thread::current().name());
 
-        let Input::TileRequest{coords, layers} = input else {
+        let Input::TileRequest {coords, style} = input else {
             return Err(ProcedureError::IncompatibleInput)
         };
 
+        let fill_layers: HashSet<String> = style
+            .layers
+            .iter()
+            .filter_map(|layer| {
+                if layer.typ == "fill" || layer.typ == "line" {
+                    layer.source_layer.clone()
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let raster_layers: HashSet<String> = style
+            .layers
+            .iter()
+            .filter_map(|layer| {
+                if layer.typ == "raster" {
+                    layer.source_layer.clone()
+                } else {
+                    None
+                }
+            })
+            .collect();
+
         let client = context.source_client();
 
-        let source = if false {
-            SourceType::Raster(RasterSource::default())
-        } else {
-            SourceType::Tessellate(TessellateSource::default())
-        };
+        if !fill_layers.is_empty() {
+            let context = context.clone();
+            let source = SourceType::Tessellate(TessellateSource::default());
+            match client.fetch(&coords, &source).await {
+                Ok(data) => {
+                    let data = data.into_boxed_slice();
 
-        match client.fetch(&coords, &source).await {
-            Ok(data) => {
-                let data = data.into_boxed_slice();
-
-                let mut pipeline_context = PipelineContext::new(HeadedPipelineProcessor {
-                    context,
-                    phantom_t: Default::default(),
-                    phantom_hc: Default::default(),
-                });
-
-                match source {
-                    SourceType::Raster(_) => {
-                        build_raster_tile_pipeline()
-                            .process((RasterTileRequest { coords }, data), &mut pipeline_context)
-                            .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
-                    }
-                    SourceType::Tessellate(_) => {
-                        build_vector_tile_pipeline()
-                            .process(
-                                (VectorTileRequest { coords, layers }, data),
-                                &mut pipeline_context,
-                            )
-                            .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
-                    }
+                    let mut pipeline_context =
+                        PipelineContext::new(HeadedPipelineProcessor::new(context));
+                    build_vector_tile_pipeline()
+                        .process(
+                            (
+                                VectorTileRequest {
+                                    coords,
+                                    layers: fill_layers,
+                                },
+                                data,
+                            ),
+                            &mut pipeline_context,
+                        )
+                        .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
                 }
-            }
-            Err(e) => {
-                log::error!("{:?}", &e);
-                for to_load in &layers {
-                    context.send(
-                        Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
-                            E::HttpClient,
-                        >>::Transferables as Transferables>::LayerUnavailable::build_from(
-                            coords,
-                            to_load.to_string(),
-                        )),
-                    ).map_err(ProcedureError::Send)?;
+                Err(e) => {
+                    log::error!("{:?}", &e);
+                    for to_load in &fill_layers {
+                        context.send(
+                            Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
+                                E::HttpClient,
+                            >>::Transferables as Transferables>::LayerUnavailable::build_from(
+                                coords,
+                                to_load.to_string(),
+                            )),
+                        ).map_err(ProcedureError::Send)?;
+                    }
                 }
             }
         }
+
+        if !raster_layers.is_empty() {
+            let context = context.clone();
+            let source = SourceType::Raster(RasterSource::default());
+
+            match client.fetch(&coords, &source).await {
+                Ok(data) => {
+                    let data = data.into_boxed_slice();
+
+                    let mut pipeline_context =
+                        PipelineContext::new(HeadedPipelineProcessor::new(context));
+
+                    build_raster_tile_pipeline()
+                        .process((RasterTileRequest { coords }, data), &mut pipeline_context)
+                        .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
+                }
+                Err(e) => {
+                    log::error!("{:?}", &e);
+
+                    context.send(
+                            Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
+                                E::HttpClient,
+                            >>::Transferables as Transferables>::LayerUnavailable::build_from(
+                                coords,
+                                "raster".to_string(),
+                            )),
+                        ).map_err(ProcedureError::Send)?;
+                }
+            }
+        }
+
         Ok(())
     })
 }
@@ -141,16 +187,10 @@ impl<E: Environment> RequestStage<E> {
         style: &Style,
         view_region: &ViewRegion,
     ) {
-        let source_layers: HashSet<String> = style
-            .layers
-            .iter()
-            .filter_map(|layer| layer.source_layer.clone())
-            .collect();
-
         for coords in view_region.iter() {
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
-                self.request_tile(tile_repository, coords, &source_layers);
+                self.request_tile(tile_repository, coords, &style);
             }
         }
     }
@@ -159,7 +199,7 @@ impl<E: Environment> RequestStage<E> {
         &self,
         tile_repository: &mut TileRepository,
         coords: WorldTileCoords,
-        layers: &HashSet<String>,
+        style: &Style,
     ) {
         if tile_repository.is_tile_pending_or_done(&coords) {
             tile_repository.mark_tile_pending(coords).unwrap(); // TODO: Remove unwrap
@@ -171,7 +211,7 @@ impl<E: Environment> RequestStage<E> {
                 .call(
                     Input::TileRequest {
                         coords,
-                        layers: layers.clone(),
+                        style: style.clone(), // TODO: Avoid cloning whole style
                     },
                     schedule::<
                         E,

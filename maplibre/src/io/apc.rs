@@ -1,5 +1,4 @@
 use std::{
-    collections::HashSet,
     future::Future,
     pin::Pin,
     sync::{
@@ -18,6 +17,7 @@ use crate::{
         source_client::{HttpClient, HttpSourceClient, SourceClient},
         transferables::{DefaultTransferables, Transferables},
     },
+    style::Style,
 };
 
 /// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
@@ -40,7 +40,7 @@ pub enum Message<T: Transferables> {
 pub enum Input {
     TileRequest {
         coords: WorldTileCoords,
-        layers: HashSet<String>, // TODO
+        style: Style, // TODO
     },
     NotYetImplemented, // TODO: Placeholder, should be removed when second input is added
 }
@@ -52,7 +52,7 @@ pub enum SendError {
 }
 
 /// Allows sending messages from workers to back to the caller.
-pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
+pub trait Context<T: Transferables, HC: HttpClient>: Send + Clone + 'static {
     /// Send a message back to the caller.
     fn send(&self, data: Message<T>) -> Result<(), SendError>;
 

@@ -13,6 +13,8 @@ fn main(
     @location(7) translate4: vec4<f32>,
     @location(9) zoom_factor: f32,
 
+    @location(10) z_index: f32, // TODO: not bound yet
+
     @builtin(vertex_index) vertex_idx: u32,
 ) -> VertexOutput {
     let z = 0.0;
@@ -40,7 +42,7 @@ fn main(
     let tex_coords = TEX_COORDS[vertex_idx];
 
     var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(position, 1.0);
-    position.z = 1.0;
+    position.z = z_index;
 
     return VertexOutput(tex_coords, position);
 }
