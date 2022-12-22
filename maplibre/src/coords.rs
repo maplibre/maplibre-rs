@@ -221,6 +221,8 @@ impl Zoom {
         2.0_f64.powf(zoom.0 - self.0)
     }
 
+    /// Adopted from
+    /// [Transform::coveringZoomLevel](https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L279-L288)
     pub fn zoom_level(&self, tile_size: f64) -> ZoomLevel {
         // TODO: Also support round() instead of floor() here
         let z = (self.0 as f64 + (TILE_SIZE / tile_size).ln() / 2.0_f64.ln()).floor() as u8;
@@ -358,6 +360,8 @@ impl WorldTileCoords {
         })
     }
 
+    /// Adopted from
+    /// [Transform::calculatePosMatrix](https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L719-L731)
     #[tracing::instrument(skip_all)]
     pub fn transform_for_zoom(&self, zoom: Zoom) -> Matrix4<f64> {
         /*

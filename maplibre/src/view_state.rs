@@ -31,7 +31,7 @@ impl ViewState {
         let height = tile_center / (fovy / 2.0).tan();
 
         let camera = Camera::new(
-            (position.x, position.y, height),
+            (position.x, position.y, 0.0),
             cgmath::Deg(-90.0),
             pitch.into(),
             window_size.width(),
