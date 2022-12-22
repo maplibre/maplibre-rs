@@ -18,6 +18,45 @@ pub const CHILDREN_SEARCH_DEPTH: usize = 4;
 
 pub trait HasTile {
     fn has_tile(&self, coords: &WorldTileCoords) -> bool;
+
+    fn get_available_parent(&self, coords: &WorldTileCoords) -> Option<WorldTileCoords> {
+        let mut current = *coords;
+        loop {
+            if self.has_tile(&current) {
+                return Some(current);
+            } else if let Some(parent) = current.get_parent() {
+                current = parent
+            } else {
+                return None;
+            }
+        }
+    }
+
+    fn get_available_children(
+        &self,
+        coords: &WorldTileCoords,
+        search_depth: usize,
+    ) -> Option<Vec<WorldTileCoords>> {
+        let mut children = coords.get_children().to_vec();
+
+        let mut output = Vec::new();
+
+        for _ in 0..search_depth {
+            let mut new_children = Vec::with_capacity(children.len() * 4);
+
+            for child in children {
+                if self.has_tile(&child) {
+                    output.push(child);
+                } else {
+                    new_children.extend(child.get_children())
+                }
+            }
+
+            children = new_children;
+        }
+
+        Some(output)
+    }
 }
 
 impl<A: HasTile, B: HasTile> HasTile for (&A, &B) {
@@ -160,12 +199,12 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             let source_shapes = {
                 if container.has_tile(&coords) {
                     SourceShapes::SourceEqTarget(TileShape::new(coords, zoom))
-                } else if let Some(parent_coords) = Self::get_available_parent(container, &coords) {
+                } else if let Some(parent_coords) = container.get_available_parent(&coords) {
                     log::info!("Could not find data at {coords}. Falling back to {parent_coords}");
 
                     SourceShapes::Parent(TileShape::new(parent_coords, zoom))
                 } else if let Some(children_coords) =
-                    Self::get_available_children(container, &coords, CHILDREN_SEARCH_DEPTH)
+                    container.get_available_children(&coords, CHILDREN_SEARCH_DEPTH)
                 {
                     log::info!(
                         "Could not find data at {coords}. Falling back children: {children_coords:?}"
@@ -187,48 +226,6 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 source: source_shapes,
             });
         }
-    }
-
-    pub fn get_available_parent<T: HasTile>(
-        container: &T,
-        coords: &WorldTileCoords,
-    ) -> Option<WorldTileCoords> {
-        let mut current = *coords;
-        loop {
-            if container.has_tile(&current) {
-                return Some(current);
-            } else if let Some(parent) = current.get_parent() {
-                current = parent
-            } else {
-                return None;
-            }
-        }
-    }
-
-    pub fn get_available_children<T: HasTile>(
-        container: &T,
-        coords: &WorldTileCoords,
-        search_depth: usize,
-    ) -> Option<Vec<WorldTileCoords>> {
-        let mut children = coords.get_children().to_vec();
-
-        let mut output = Vec::new();
-
-        for _ in 0..search_depth {
-            let mut new_children = Vec::with_capacity(children.len() * 4);
-
-            for child in children {
-                if container.has_tile(&child) {
-                    output.push(child);
-                } else {
-                    new_children.extend(child.get_children())
-                }
-            }
-
-            children = new_children;
-        }
-
-        Some(output)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &ViewTile> + '_ {
