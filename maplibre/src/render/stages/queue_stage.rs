@@ -2,7 +2,10 @@
 
 use crate::{
     context::MapContext,
-    render::{eventually::Eventually::Initialized, resource::IndexEntry, RenderState, Renderer},
+    render::{
+        eventually::Eventually::Initialized, resource::IndexEntry, tile_view_pattern::HasTile,
+        RenderState, Renderer,
+    },
     schedule::Stage,
 };
 
@@ -22,6 +25,7 @@ impl Stage for QueueStage {
                             vector_tile_phase,
                             raster_tile_phase,
                             tile_view_pattern,
+                            raster_resources,
                             buffer_pool,
                             ..
                         },
@@ -34,8 +38,8 @@ impl Stage for QueueStage {
         vector_tile_phase.items.clear();
         raster_tile_phase.items.clear();
 
-        let (Initialized(tile_view_pattern), Initialized(buffer_pool)) =
-            (tile_view_pattern, &buffer_pool) else { return; };
+        let (Initialized(tile_view_pattern), Initialized(buffer_pool), Initialized(raster_resources)) =
+            (tile_view_pattern, &buffer_pool, raster_resources) else { return; };
 
         let buffer_pool_index = buffer_pool.index();
 
@@ -58,7 +62,9 @@ impl Stage for QueueStage {
                     }
                 };
 
-                raster_tile_phase.add(source_shape.clone())
+                if raster_resources.has_tile(&source_shape.coords()) {
+                    raster_tile_phase.add(source_shape.clone())
+                }
             });
         }
     }

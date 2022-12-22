@@ -20,6 +20,12 @@ pub trait HasTile {
     fn has_tile(&self, coords: &WorldTileCoords) -> bool;
 }
 
+impl<A: HasTile, B: HasTile> HasTile for (&A, &B) {
+    fn has_tile(&self, coords: &WorldTileCoords) -> bool {
+        self.0.has_tile(coords) || self.1.has_tile(coords)
+    }
+}
+
 /// Defines the exact location where a specific tile on the map is rendered. It defines the shape
 /// of the tile with its location for the current zoom factor.
 #[derive(Clone)]

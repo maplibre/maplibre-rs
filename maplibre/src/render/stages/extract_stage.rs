@@ -1,5 +1,7 @@
 //! Extracts data from the current state.
 
+use std::ops::Deref;
+
 use crate::{
     context::MapContext,
     render::{eventually::Eventually::Initialized, RenderState, Renderer},
@@ -37,7 +39,11 @@ impl Stage for ExtractStage {
         if let Some(view_region) = &view_region {
             let zoom = view_state.zoom();
             //tile_view_pattern.update_pattern(view_region, buffer_pool.index(), zoom);
-            tile_view_pattern.update_pattern(view_region, raster_resources, zoom);
+            tile_view_pattern.update_pattern(
+                view_region,
+                &(raster_resources.deref(), buffer_pool.index()),
+                zoom,
+            );
         }
     }
 }

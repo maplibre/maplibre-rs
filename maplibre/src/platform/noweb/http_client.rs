@@ -54,9 +54,8 @@ impl HttpClient for ReqwestHttpClient {
                     log::info!("Using data from cache");
                 }
 
-                info!("fetching done {}", url);
-
                 let body = response.bytes().await?;
+
                 Ok(Vec::from(body.as_ref()))
             }
             Err(e) => Err(SourceFetchError(Box::new(e))),

@@ -220,6 +220,7 @@ impl UploadStage {
                         drop(guard);
 
                         tracing::trace!("Allocating geometry at {}", &coords);
+                        log::info!("Allocating geometry at {}", &coords);
                         buffer_pool.allocate_layer_geometry(
                             queue,
                             *coords,
