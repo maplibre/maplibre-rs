@@ -2,12 +2,8 @@
 
 use std::{collections::HashSet, rc::Rc};
 
-use log::{error, info};
+use log::info;
 
-#[cfg(feature = "raster")]
-use crate::io::{source_type::RasterSource, tile_pipelines::build_raster_tile_pipeline};
-#[cfg(not(feature = "raster"))]
-use crate::io::{source_type::TessellateSource, tile_pipelines::build_vector_tile_pipeline};
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
@@ -15,10 +11,13 @@ use crate::{
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message, ProcedureError},
         pipeline::{PipelineContext, Processable},
-        source_type::SourceType,
+        source_type::{RasterSource, SourceType, TessellateSource},
+        tile_pipelines::{
+            build_raster_tile_pipeline, build_vector_tile_pipeline, RasterTileRequest,
+            VectorTileRequest,
+        },
         tile_repository::TileRepository,
         transferables::{LayerUnavailable, Transferables},
-        TileRequest,
     },
     kernel::Kernel,
     schedule::Stage,
@@ -77,17 +76,17 @@ pub fn schedule<
     Box::pin(async move {
         info!("Processing thread: {:?}", std::thread::current().name());
 
-        let Input::TileRequest(input) = input else {
+        let Input::TileRequest{coords, layers} = input else {
             return Err(ProcedureError::IncompatibleInput)
         };
 
-        let coords = input.coords;
         let client = context.source_client();
 
-        #[cfg(feature = "raster")]
-        let source = SourceType::Raster(RasterSource::default());
-        #[cfg(not(feature = "raster"))]
-        let source = SourceType::Tessellate(TessellateSource::default());
+        let source = if false {
+            SourceType::Raster(RasterSource::default())
+        } else {
+            SourceType::Tessellate(TessellateSource::default())
+        };
 
         match client.fetch(&coords, &source).await {
             Ok(data) => {
@@ -99,26 +98,30 @@ pub fn schedule<
                     phantom_hc: Default::default(),
                 });
 
-                #[cfg(feature = "raster")]
-                let pipeline = build_raster_tile_pipeline();
-                #[cfg(not(feature = "raster"))]
-                let pipeline = build_vector_tile_pipeline();
-
-                error!("Pipeline is processing");
-
-                pipeline
-                    .process((input, data), &mut pipeline_context)
-                    .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
+                match source {
+                    SourceType::Raster(_) => {
+                        build_raster_tile_pipeline()
+                            .process((RasterTileRequest { coords }, data), &mut pipeline_context)
+                            .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
+                    }
+                    SourceType::Tessellate(_) => {
+                        build_vector_tile_pipeline()
+                            .process(
+                                (VectorTileRequest { coords, layers }, data),
+                                &mut pipeline_context,
+                            )
+                            .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
+                    }
+                }
             }
             Err(e) => {
                 log::error!("{:?}", &e);
-                for to_load in &input.layers {
-                    tracing::warn!("layer {} at {} unavailable", to_load, coords);
+                for to_load in &layers {
                     context.send(
                         Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
                             E::HttpClient,
                         >>::Transferables as Transferables>::LayerUnavailable::build_from(
-                            input.coords,
+                            coords,
                             to_load.to_string(),
                         )),
                     ).map_err(ProcedureError::Send)?;
@@ -166,10 +169,10 @@ impl<E: Environment> RequestStage<E> {
             self.kernel
                 .apc()
                 .call(
-                    Input::TileRequest(TileRequest {
+                    Input::TileRequest {
                         coords,
                         layers: layers.clone(),
-                    }),
+                    },
                     schedule::<
                         E,
                         <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Context,

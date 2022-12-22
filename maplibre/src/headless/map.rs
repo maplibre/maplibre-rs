@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
@@ -11,9 +9,9 @@ use crate::{
         pipeline::{PipelineContext, PipelineError, PipelineProcessor, Processable},
         source_client::SourceFetchError,
         source_type::{SourceType, TessellateSource},
-        tile_pipelines::build_vector_tile_pipeline,
+        tile_pipelines::{build_vector_tile_pipeline, VectorTileRequest},
         tile_repository::{StoredLayer, StoredTile},
-        RawLayer, TileRequest,
+        RawLayer,
     },
     kernel::Kernel,
     map::MapError,
@@ -115,12 +113,12 @@ impl HeadlessMap {
         let target_coords = WorldTileCoords::default(); // load to 0,0,0
         pipeline.process(
             (
-                TileRequest {
+                VectorTileRequest {
                     coords: target_coords,
                     layers: source_layers
                         .iter()
                         .map(|layer| layer.to_string())
-                        .collect::<HashSet<String>>(),
+                        .collect(),
                 },
                 tile_data,
             ),

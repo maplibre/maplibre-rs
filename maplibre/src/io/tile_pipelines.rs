@@ -6,13 +6,19 @@ use log::error;
 use prost::Message;
 
 use crate::{
+    coords::WorldTileCoords,
     io::{
         geometry_index::IndexProcessor,
         pipeline::{DataPipeline, PipelineContext, PipelineEnd, PipelineError, Processable},
-        TileRequest,
     },
     tessellation::{zero_tessellator::ZeroTessellator, IndexDataType},
 };
+
+/// A request for a tile at the given coordinates and in the given layers.
+pub struct VectorTileRequest {
+    pub coords: WorldTileCoords,
+    pub layers: HashSet<String>,
+}
 
 #[derive(Clone)]
 pub enum PipelineTile {
@@ -24,8 +30,8 @@ pub enum PipelineTile {
 pub struct ParseTile;
 
 impl Processable for ParseTile {
-    type Input = (TileRequest, Box<[u8]>);
-    type Output = (TileRequest, geozero::mvt::Tile);
+    type Input = (VectorTileRequest, Box<[u8]>);
+    type Output = (VectorTileRequest, geozero::mvt::Tile);
 
     #[tracing::instrument(skip_all)]
     fn process(
@@ -42,8 +48,8 @@ impl Processable for ParseTile {
 pub struct IndexLayer;
 
 impl Processable for IndexLayer {
-    type Input = (TileRequest, geozero::mvt::Tile);
-    type Output = (TileRequest, PipelineTile);
+    type Input = (VectorTileRequest, geozero::mvt::Tile);
+    type Output = WorldTileCoords;
 
     #[tracing::instrument(skip_all)]
     fn process(
@@ -60,7 +66,7 @@ impl Processable for IndexLayer {
         context
             .processor_mut()
             .layer_indexing_finished(&tile_request.coords, index.get_geometries())?;
-        Ok((tile_request, PipelineTile::Vector(tile)))
+        Ok(tile_request.coords)
     }
 }
 
@@ -68,8 +74,8 @@ impl Processable for IndexLayer {
 pub struct TessellateLayer;
 
 impl Processable for TessellateLayer {
-    type Input = (TileRequest, geozero::mvt::Tile);
-    type Output = (TileRequest, geozero::mvt::Tile);
+    type Input = (VectorTileRequest, geozero::mvt::Tile);
+    type Output = (VectorTileRequest, geozero::mvt::Tile);
 
     #[tracing::instrument(skip_all)]
     fn process(
@@ -118,8 +124,8 @@ impl Processable for TessellateLayer {
 pub struct TessellateLayerUnavailable;
 
 impl Processable for TessellateLayerUnavailable {
-    type Input = (TileRequest, geozero::mvt::Tile);
-    type Output = (TileRequest, geozero::mvt::Tile);
+    type Input = (VectorTileRequest, geozero::mvt::Tile);
+    type Output = (VectorTileRequest, geozero::mvt::Tile);
 
     // TODO (perf): Maybe force inline
     fn process(
@@ -154,21 +160,19 @@ impl Processable for TessellateLayerUnavailable {
 pub struct TileFinished;
 
 impl Processable for TileFinished {
-    type Input = (TileRequest, PipelineTile);
-    type Output = (TileRequest, PipelineTile);
+    type Input = WorldTileCoords;
+    type Output = ();
 
     fn process(
         &self,
-        (tile_request, tile): Self::Input,
+        coords: Self::Input,
         context: &mut PipelineContext,
     ) -> Result<Self::Output, PipelineError> {
-        tracing::info!("tile tessellated at {} finished", &tile_request.coords);
+        tracing::info!("tile tessellated at {} finished", &coords);
 
-        context
-            .processor_mut()
-            .tile_finished(&tile_request.coords)?;
+        context.processor_mut().tile_finished(&coords)?;
 
-        Ok((tile_request, tile))
+        Ok(())
     }
 }
 
@@ -188,12 +192,16 @@ pub fn build_vector_tile_pipeline() -> impl Processable<Input = <ParseTile as Pr
     )
 }
 
+pub struct RasterTileRequest {
+    pub coords: WorldTileCoords,
+}
+
 #[derive(Default)]
 pub struct RasterLayer;
 
 impl Processable for RasterLayer {
-    type Input = (TileRequest, Box<[u8]>);
-    type Output = (TileRequest, PipelineTile);
+    type Input = (RasterTileRequest, Box<[u8]>);
+    type Output = WorldTileCoords;
 
     fn process(
         &self,
@@ -212,7 +220,7 @@ impl Processable for RasterLayer {
             rgba.clone(),
         )?;
 
-        Ok((tile_request, PipelineTile::Raster(rgba)))
+        Ok(tile_request.coords)
     }
 }
 

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use log::info;
 use reqwest::{Client, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use reqwest_middleware_cache::{managers::CACacheManager, Cache, CacheMode};
@@ -45,12 +46,15 @@ impl ReqwestHttpClient {
 #[cfg_attr(feature = "thread-safe-futures", async_trait)]
 impl HttpClient for ReqwestHttpClient {
     async fn fetch(&self, url: &str) -> Result<Vec<u8>, SourceFetchError> {
+        info!("fetching {}", url);
         let response = self.client.get(url).send().await?;
         match response.error_for_status() {
             Ok(response) => {
                 if response.status() == StatusCode::NOT_MODIFIED {
                     log::info!("Using data from cache");
                 }
+
+                info!("fetching done {}", url);
 
                 let body = response.bytes().await?;
                 Ok(Vec::from(body.as_ref()))

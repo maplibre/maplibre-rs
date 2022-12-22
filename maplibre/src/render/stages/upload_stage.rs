@@ -234,43 +234,36 @@ impl UploadStage {
                         layer_name,
                         image,
                     } => {
-                        #[cfg(feature = "raster")]
-                        {
-                            if let Initialized(raster_resources) = raster_resources {
-                                let (width, height) = image.dimensions();
+                        if let Initialized(raster_resources) = raster_resources {
+                            let (width, height) = image.dimensions();
 
-                                raster_resources.set_texture(
-                                    None,
-                                    device,
-                                    wgpu::TextureFormat::Rgba8UnormSrgb,
-                                    width,
-                                    height,
-                                    wgpu::TextureUsages::TEXTURE_BINDING
-                                        | wgpu::TextureUsages::COPY_DST,
-                                );
+                            raster_resources.set_texture(
+                                None,
+                                device,
+                                wgpu::TextureFormat::Rgba8UnormSrgb,
+                                width,
+                                height,
+                                wgpu::TextureUsages::TEXTURE_BINDING
+                                    | wgpu::TextureUsages::COPY_DST,
+                            );
 
-                                queue.write_texture(
-                                    wgpu::ImageCopyTexture {
-                                        aspect: wgpu::TextureAspect::All,
-                                        texture: &raster_resources
-                                            .texture
-                                            .as_ref()
-                                            .unwrap()
-                                            .texture,
-                                        mip_level: 0,
-                                        origin: wgpu::Origin3d::ZERO,
-                                    },
-                                    &image,
-                                    wgpu::ImageDataLayout {
-                                        offset: 0,
-                                        bytes_per_row: std::num::NonZeroU32::new(4 * width),
-                                        rows_per_image: std::num::NonZeroU32::new(height),
-                                    },
-                                    raster_resources.texture.as_ref().unwrap().size.clone(),
-                                );
+                            queue.write_texture(
+                                wgpu::ImageCopyTexture {
+                                    aspect: wgpu::TextureAspect::All,
+                                    texture: &raster_resources.texture.as_ref().unwrap().texture,
+                                    mip_level: 0,
+                                    origin: wgpu::Origin3d::ZERO,
+                                },
+                                &image,
+                                wgpu::ImageDataLayout {
+                                    offset: 0,
+                                    bytes_per_row: std::num::NonZeroU32::new(4 * width),
+                                    rows_per_image: std::num::NonZeroU32::new(height),
+                                },
+                                raster_resources.texture.as_ref().unwrap().size.clone(),
+                            );
 
-                                raster_resources.set_raster_bind_group(device, &coords);
-                            }
+                            raster_resources.set_raster_bind_group(device, &coords);
                         }
                     }
                 }

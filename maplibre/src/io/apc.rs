@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     future::Future,
     pin::Pin,
     sync::{
@@ -10,11 +11,13 @@ use std::{
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::io::{
-    scheduler::Scheduler,
-    source_client::{HttpClient, HttpSourceClient, SourceClient},
-    transferables::{DefaultTransferables, Transferables},
-    TileRequest,
+use crate::{
+    coords::WorldTileCoords,
+    io::{
+        scheduler::Scheduler,
+        source_client::{HttpClient, HttpSourceClient, SourceClient},
+        transferables::{DefaultTransferables, Transferables},
+    },
 };
 
 /// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
@@ -35,7 +38,10 @@ pub enum Message<T: Transferables> {
 /// Inputs for an [`AsyncProcedure`]
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Input {
-    TileRequest(TileRequest),
+    TileRequest {
+        coords: WorldTileCoords,
+        layers: HashSet<String>, // TODO
+    },
     NotYetImplemented, // TODO: Placeholder, should be removed when second input is added
 }
 
