@@ -62,4 +62,6 @@ pub enum Source {
     Vector(VectorSource),
     #[serde(rename = "raster")]
     Raster(VectorSource), // FIXME: Does it make sense that a raster have a VectorSource?
+    #[serde(rename = "raster-dem")]
+    RasterDem(VectorSource), // FIXME
 }

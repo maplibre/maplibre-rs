@@ -10,7 +10,7 @@ use serde_json::Map;
 use serde_json::Value;
 
 use crate::style::{
-    layer::{LayerPaint, LinePaint, StyleLayer},
+    layerdraft::{LayerPaint, LinePaint, StyleLayer},
     sourcedraft::Source,
 };
 
@@ -20,20 +20,26 @@ pub struct Style {
     pub version: u16,
     pub name: String,
     pub metadata: Map<String, Value>,
+    pub center: Option<[f64; 2]>,
+    // pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
+    pub zoom: Option<f64>,
+    pub bearing: Option<f64>,
+    pub pitch: Option<f64>,
+    pub sources: HashMap<String, Source>,
+    pub sprite: Option<String>,
+    pub glyphs: Option<String>,
+    pub projection: Option<Map<String, Value>>,
+    pub layers: Vec<StyleLayer>,
+    pub created: Option<String>,
+    pub modified: Option<String>,
+    pub id: Option<String>,
+    pub owner: Option<String>,
+    pub visibility: Option<String>,
+    pub protected: Option<bool>,
+    pub draft: Option<bool>,
 
     #[serde(flatten)]
     pub extra: Map<String, Value>,
-
-    pub sources: HashMap<String, Source>,
-    pub layers: Vec<StyleLayer>,
-    pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
-    pub zoom: Option<f64>,
-    pub pitch: Option<f64>,
-    pub bearing: Option<f64>,
-    pub created: Option<String>,
-    pub draft: Option<bool>,
-    pub glyphs: Option<String>,
-    pub id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -57,6 +63,12 @@ impl Default for Style {
             draft: Some(false),
             glyphs: Some("genericmap://fonts/genericmap/{fontstack}/{range}.pbf".to_string()),
             id: Some("genericmap".to_string()),
+            sprite: Some("genericmap://sprites/genericmap".to_string()),
+            projection: Default::default(),
+            visibility: Some("public".to_string()),
+            protected: Some(false),
+            modified: Some("2021-03-01T00:00:00Z".to_string()),
+            owner: Default::default(),
             layers: vec![
                 StyleLayer {
                     index: 0,
@@ -246,13 +258,215 @@ mod tests {
     }
 
     #[test]
-    fn load_sample_data() {
+    fn load_test() {
         // let dir = env::current_dir().unwrap();
         // println!("{:#?}", dir);
         let reader = load_model("./src/style/test-data/cl4.json").unwrap();
-        // println!("{:#?}", reader);
         let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
         println!("{:#?}", style);
-        println!("helloooo");
+        println!("test works");
+    }
+
+    #[test]
+    fn load_sample_data_one() {
+        let reader = load_model("./src/style/map-styles/test-cj3kbeq.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_two() {
+        let reader = load_model("./src/style/map-styles/test-cj7t3i5.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_three() {
+        let reader = load_model("./src/style/map-styles/test-cj44mfr.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_four() {
+        let reader = load_model("./src/style/map-styles/test-cjcunv5.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_five() {
+        let reader = load_model("./src/style/map-styles/test-cjerxnq.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_six() {
+        let reader = load_model("./src/style/map-styles/test-cjtep62.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_seven() {
+        let reader = load_model("./src/style/map-styles/test-ck4014y.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_eight() {
+        let reader = load_model("./src/style/map-styles/test-ckr0svm.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_nine() {
+        let reader = load_model("./src/style/map-styles/test-cks9iem.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_ten() {
+        let reader = load_model("./src/style/map-styles/test-cks97e1.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_eleven() {
+        let reader = load_model("./src/style/map-styles/test-ckshxkp.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twelve() {
+        let reader = load_model("./src/style/map-styles/test-cksjc2n.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_thirteen() {
+        let reader = load_model("./src/style/map-styles/test-ckt20wg.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_fourteen() {
+        let reader = load_model("./src/style/map-styles/test-cl4bxa8.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_fifteen() {
+        let reader = load_model("./src/style/map-styles/test-cl4fnpo.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_sixteen() {
+        let reader = load_model("./src/style/map-styles/test-cl4fotj.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_seventeen() {
+        let reader = load_model("./src/style/map-styles/test-cl4gxqw.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_eighteen() {
+        let reader = load_model("./src/style/map-styles/test-cl4orrp.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_nineteen() {
+        let reader = load_model("./src/style/map-styles/test-cl4whef.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twenty() {
+        let reader = load_model("./src/style/map-styles/test-cl4whev.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twentyone() {
+        let reader = load_model("./src/style/map-styles/test-cl4wxue.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twentytwo() {
+        let reader = load_model("./src/style/map-styles/test-dark-v10.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twentythree() {
+        let reader = load_model("./src/style/map-styles/test-light-v10.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twentyfour() {
+        let reader = load_model("./src/style/map-styles/test-navigation-guidan.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twentyfive() {
+        let reader = load_model("./src/style/map-styles/test-navigation-guidance.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twentysix() {
+        let reader = load_model("./src/style/map-styles/test-outdoors-v11.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twentyseven() {
+        let reader = load_model("./src/style/map-styles/test-satellite-st.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twentyeight() {
+        let reader = load_model("./src/style/map-styles/test-satellite-v9.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
+    }
+
+    #[test]
+    fn load_sample_data_twentynine() {
+        let reader = load_model("./src/style/map-styles/test-streets-v11.json").unwrap();
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
+        println!("{:#?}", style);
     }
 }
