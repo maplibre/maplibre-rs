@@ -68,7 +68,7 @@ where
     }
 
     pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, SourceFetchError> {
-        let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
+        let tile_coords = coords.into_tile(TileAddressingScheme::XYZ).unwrap();
         self.inner_client
             .fetch(
                 format!(
