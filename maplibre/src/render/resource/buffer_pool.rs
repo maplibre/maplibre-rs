@@ -41,7 +41,7 @@ pub struct BufferPool<Q, B, V, I, TM, FM> {
     phantom_fm: PhantomData<FM>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum BackingBufferType {
     Vertices,
     Indices,
@@ -142,13 +142,16 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
 
     #[cfg(test)]
     fn available_space(&self, typ: BackingBufferType) -> wgpu::BufferAddress {
-        let gap = match typ {
-            BackingBufferType::Vertices => &self.vertices,
-            BackingBufferType::Indices => &self.indices,
-            BackingBufferType::Metadata => &self.layer_metadata,
-            BackingBufferType::FeatureMetadata => &self.feature_metadata,
-        }
-        .find_largest_gap(&self.index);
+        let gap = self.index.find_largest_gap(
+            typ,
+            match typ {
+                BackingBufferType::Vertices => &self.vertices,
+                BackingBufferType::Indices => &self.indices,
+                BackingBufferType::Metadata => &self.layer_metadata,
+                BackingBufferType::FeatureMetadata => &self.feature_metadata,
+            }
+            .inner_size,
+        );
 
         gap.end - gap.start
     }
@@ -246,15 +249,27 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         let maybe_entry = IndexEntry {
             coords,
             style_layer,
-            buffer_vertices: self.vertices.make_room(vertices_bytes, &mut self.index),
-            buffer_indices: self.indices.make_room(indices_bytes, &mut self.index),
+            buffer_vertices: self.index.make_room(
+                vertices_bytes,
+                self.vertices.typ,
+                self.vertices.inner_size,
+            ),
+            buffer_indices: self.index.make_room(
+                indices_bytes,
+                self.indices.typ,
+                self.indices.inner_size,
+            ),
             usable_indices: geometry.usable_indices,
-            buffer_layer_metadata: self
-                .layer_metadata
-                .make_room(layer_metadata_bytes, &mut self.index),
-            buffer_feature_metadata: self
-                .feature_metadata
-                .make_room(feature_metadata_bytes, &mut self.index),
+            buffer_layer_metadata: self.index.make_room(
+                layer_metadata_bytes,
+                self.layer_metadata.typ,
+                self.layer_metadata.inner_size,
+            ),
+            buffer_feature_metadata: self.index.make_room(
+                feature_metadata_bytes,
+                self.feature_metadata.typ,
+                self.feature_metadata.inner_size,
+            ),
         };
 
         // write_buffer() is the preferred method for WASM: https://toji.github.io/webgpu-best-practices/buffer-uploads.html#when-in-doubt-writebuffer
@@ -369,79 +384,12 @@ impl<B> BackingBuffer<B> {
             typ,
         }
     }
-
-    fn make_room(
-        &mut self,
-        new_data: wgpu::BufferAddress,
-        index: &mut RingIndex,
-    ) -> Range<wgpu::BufferAddress> {
-        if new_data > self.inner_size {
-            panic!(
-                "can not allocate because backing buffer {:?} are too small",
-                self.typ
-            )
-        }
-
-        let mut available_gap = self.find_largest_gap(index);
-
-        while new_data > available_gap.end - available_gap.start {
-            // no more space, we need to evict items
-            if index.pop_front().is_some() {
-                available_gap = self.find_largest_gap(index);
-            } else {
-                panic!("evicted even though index is empty")
-            }
-        }
-
-        available_gap.start..available_gap.start + new_data
-    }
-
-    fn find_largest_gap(&self, index: &RingIndex) -> Range<wgpu::BufferAddress> {
-        let start = index.front().map(|first| match self.typ {
-            BackingBufferType::Vertices => first.buffer_vertices.start,
-            BackingBufferType::Indices => first.buffer_indices.start,
-            BackingBufferType::Metadata => first.buffer_layer_metadata.start,
-            BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.start,
-        });
-        let end = index.back().map(|first| match self.typ {
-            BackingBufferType::Vertices => first.buffer_vertices.end,
-            BackingBufferType::Indices => first.buffer_indices.end,
-            BackingBufferType::Metadata => first.buffer_layer_metadata.end,
-            BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.end,
-        });
-
-        if let Some(start) = start {
-            if let Some(end) = end {
-                if end > start {
-                    // we haven't wrapped yet in the ring buffer
-
-                    let gap_from_start = 0..start; // gap from beginning to first entry
-                    let gap_to_end = end..self.inner_size;
-
-                    if gap_to_end.end - gap_to_end.start > gap_from_start.end - gap_from_start.start
-                    {
-                        gap_to_end
-                    } else {
-                        gap_from_start
-                    }
-                } else {
-                    // we already wrapped in the ring buffer
-                    // we choose the gab between the two
-                    end..start
-                }
-            } else {
-                unreachable!()
-            }
-        } else {
-            0..self.inner_size
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
 pub struct IndexEntry {
-    pub coords: WorldTileCoords,
-    pub style_layer: StyleLayer,
+    pub coords: WorldTileCoords, // TODO: replace with generic key
+    pub style_layer: StyleLayer, // TODO: remove
     // Range of bytes within the backing buffer for vertices
     buffer_vertices: Range<wgpu::BufferAddress>,
     // Range of bytes within the backing buffer for indices
@@ -558,6 +506,78 @@ impl RingIndex {
             self.linear_index.push_back(key)
         } else {
             unreachable!() // TODO handle
+        }
+    }
+
+    fn make_room(
+        &mut self,
+        new_data: wgpu::BufferAddress,
+        typ: BackingBufferType,
+        inner_size: wgpu::BufferAddress,
+    ) -> Range<wgpu::BufferAddress> {
+        if new_data > inner_size {
+            panic!(
+                "can not allocate because backing buffer {:?} are too small",
+                typ
+            )
+        }
+
+        let mut available_gap = self.find_largest_gap(typ, inner_size);
+
+        while new_data > available_gap.end - available_gap.start {
+            // no more space, we need to evict items
+            if self.pop_front().is_some() {
+                available_gap = self.find_largest_gap(typ, inner_size);
+            } else {
+                panic!("evicted even though index is empty")
+            }
+        }
+
+        available_gap.start..available_gap.start + new_data
+    }
+
+    fn find_largest_gap(
+        &self,
+        typ: BackingBufferType,
+        inner_size: wgpu::BufferAddress,
+    ) -> Range<wgpu::BufferAddress> {
+        let start = self.front().map(|first| match typ {
+            BackingBufferType::Vertices => first.buffer_vertices.start,
+            BackingBufferType::Indices => first.buffer_indices.start,
+            BackingBufferType::Metadata => first.buffer_layer_metadata.start,
+            BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.start,
+        });
+        let end = self.back().map(|first| match typ {
+            BackingBufferType::Vertices => first.buffer_vertices.end,
+            BackingBufferType::Indices => first.buffer_indices.end,
+            BackingBufferType::Metadata => first.buffer_layer_metadata.end,
+            BackingBufferType::FeatureMetadata => first.buffer_feature_metadata.end,
+        });
+
+        if let Some(start) = start {
+            if let Some(end) = end {
+                if end > start {
+                    // we haven't wrapped yet in the ring buffer
+
+                    let gap_from_start = 0..start; // gap from beginning to first entry
+                    let gap_to_end = end..inner_size;
+
+                    if gap_to_end.end - gap_to_end.start > gap_from_start.end - gap_from_start.start
+                    {
+                        gap_to_end
+                    } else {
+                        gap_from_start
+                    }
+                } else {
+                    // we already wrapped in the ring buffer
+                    // we choose the gab between the two
+                    end..start
+                }
+            } else {
+                unreachable!()
+            }
+        } else {
+            0..inner_size
         }
     }
 }

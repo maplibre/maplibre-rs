@@ -242,13 +242,14 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
 
         let mut add_to_buffer = |shape: &mut TileShape| {
             shape.set_buffer_range(buffer.len() as u64);
+            // TODO: Name `ShaderTileMetadata` is unfortunate here, because for raster rendering it actually is a layer
             buffer.push(ShaderTileMetadata {
                 // We are casting here from 64bit to 32bit, because 32bit is more performant and is
                 // better supported.
                 transform: view_proj
                     .to_model_view_projection(shape.transform)
                     .downcast()
-                    .into(),
+                    .into(), // TODO: move this calculation to update() fn above
                 zoom_factor: shape.zoom_factor as f32,
             });
         };

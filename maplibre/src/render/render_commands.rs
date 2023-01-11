@@ -46,7 +46,7 @@ impl<const I: usize> RenderCommand<TileShape> for SetRasterViewBindGroup<I> {
         if let Initialized(raster_resources) = &state.raster_resources {
             pass.set_bind_group(
                 0,
-                raster_resources.get_bind_group(&shape.coords()).unwrap(), // TODO Remove unwrap
+                raster_resources.get_bound_texture(&shape.coords()).unwrap(), // TODO Remove unwrap
                 &[],
             );
             RenderCommandResult::Success
@@ -103,7 +103,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         if let Initialized(raster_resources) = &state.raster_resources {
-            pass.set_render_pipeline(raster_resources.pipeline().as_ref().unwrap()); // TODO Remove unwrap
+            pass.set_render_pipeline(raster_resources.pipeline());
             RenderCommandResult::Success
         } else {
             RenderCommandResult::Failure

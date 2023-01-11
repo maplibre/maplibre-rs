@@ -131,8 +131,24 @@ impl Stage for ResourceStage {
                 format: surface.surface_format(),
             };
 
-            let mut raster_resources = RasterResources::new(Msaa { samples: 1 }, device);
-            raster_resources.set_raster_pipeline(device, &settings, &shader);
+            let mut raster_resources = RasterResources::new(
+                Msaa { samples: 1 },
+                device,
+                TilePipeline::new(
+                    *settings,
+                    shader.describe_vertex(),
+                    shader.describe_fragment(),
+                    false,
+                    true,
+                    false,
+                    false,
+                    false,
+                    true,
+                    true,
+                )
+                .describe_render_pipeline()
+                .initialize(device),
+            );
 
             raster_resources
         });

@@ -1,16 +1,8 @@
 use std::collections::HashMap;
 
-use wgpu::BindGroup;
-
 use crate::{
     coords::WorldTileCoords,
-    render::{
-        resource::{RenderPipeline, Texture},
-        settings::{Msaa, RendererSettings},
-        shaders::{RasterTileShader, Shader},
-        tile_pipeline::TilePipeline,
-        tile_view_pattern::HasTile,
-    },
+    render::{resource::Texture, settings::Msaa, tile_view_pattern::HasTile},
 };
 
 /// Holds the resources necessary for the raster tiles such as the
@@ -21,12 +13,12 @@ use crate::{
 pub struct RasterResources {
     sampler: wgpu::Sampler,
     msaa: Msaa,
-    pipeline: Option<wgpu::RenderPipeline>,
-    bind_groups: HashMap<WorldTileCoords, wgpu::BindGroup>,
+    pipeline: wgpu::RenderPipeline,
+    bound_textures: HashMap<WorldTileCoords, wgpu::BindGroup>,
 }
 
 impl RasterResources {
-    pub fn new(msaa: Msaa, device: &wgpu::Device) -> Self {
+    pub fn new(msaa: Msaa, device: &wgpu::Device, pipeline: wgpu::RenderPipeline) -> Self {
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             address_mode_u: wgpu::AddressMode::ClampToEdge,
             address_mode_v: wgpu::AddressMode::ClampToEdge,
@@ -39,8 +31,8 @@ impl RasterResources {
         Self {
             sampler,
             msaa,
-            pipeline: None,
-            bind_groups: Default::default(),
+            pipeline,
+            bound_textures: Default::default(),
         }
     }
 
@@ -64,32 +56,8 @@ impl RasterResources {
         )
     }
 
-    pub fn set_raster_pipeline(
-        &mut self,
-        device: &wgpu::Device,
-        settings: &RendererSettings,
-        shader: &RasterTileShader,
-    ) {
-        self.pipeline = Some(
-            TilePipeline::new(
-                *settings,
-                shader.describe_vertex(),
-                shader.describe_fragment(),
-                false,
-                true,
-                false,
-                false,
-                false,
-                true,
-                true,
-            )
-            .describe_render_pipeline()
-            .initialize(device),
-        );
-    }
-
-    pub fn get_bind_group(&self, coords: &WorldTileCoords) -> Option<&BindGroup> {
-        self.bind_groups.get(coords)
+    pub fn get_bound_texture(&self, coords: &WorldTileCoords) -> Option<&wgpu::BindGroup> {
+        self.bound_textures.get(coords)
     }
 
     /// Creates a bind group for each fetched raster tile and store it inside a hashmap.
@@ -99,10 +67,10 @@ impl RasterResources {
         coords: &WorldTileCoords,
         texture: Texture,
     ) {
-        self.bind_groups.insert(
+        self.bound_textures.insert(
             *coords,
             device.create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &self.pipeline.as_ref().unwrap().get_bind_group_layout(0),
+                layout: &self.pipeline.get_bind_group_layout(0),
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
@@ -118,13 +86,13 @@ impl RasterResources {
         );
     }
 
-    pub fn pipeline(&self) -> &Option<wgpu::RenderPipeline> {
+    pub fn pipeline(&self) -> &wgpu::RenderPipeline {
         &self.pipeline
     }
 }
 
 impl HasTile for RasterResources {
     fn has_tile(&self, coords: &WorldTileCoords) -> bool {
-        self.bind_groups.contains_key(coords)
+        self.bound_textures.contains_key(coords)
     }
 }
