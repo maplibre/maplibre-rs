@@ -143,11 +143,16 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawTile {
             &entry.coords
         );
 
+        let index_range = entry.indices_buffer_range();
+
+        if index_range.is_empty() {
+            tracing::error!("Tried to draw a vector tile without any vertices");
+            return RenderCommandResult::Failure;
+        }
+
         pass.set_stencil_reference(reference);
-        pass.set_index_buffer(
-            buffer_pool.indices().slice(entry.indices_buffer_range()),
-            INDEX_FORMAT,
-        );
+
+        pass.set_index_buffer(buffer_pool.indices().slice(index_range), INDEX_FORMAT);
         pass.set_vertex_buffer(
             0,
             buffer_pool.vertices().slice(entry.vertices_buffer_range()),

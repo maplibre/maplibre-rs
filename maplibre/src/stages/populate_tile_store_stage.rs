@@ -64,6 +64,11 @@ impl<E: Environment> Stage for PopulateTileStore<E> {
                     tile_repository.put_layer(layer);
                 }
                 Message::LayerTessellated(message) => {
+                    // TODO: Is it fine to ignore layers without any vertices?
+                    if message.is_empty() {
+                        continue;
+                    }
+
                     let layer: StoredLayer = message.to_stored_layer();
 
                     tracing::debug!(

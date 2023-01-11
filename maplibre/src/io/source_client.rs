@@ -68,11 +68,11 @@ where
     }
 
     pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, SourceFetchError> {
-        let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
+        let tile_coords = coords.into_tile(TileAddressingScheme::XYZ).unwrap();
         self.inner_client
             .fetch(
                 format!(
-                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
+                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}",
                     x = tile_coords.x,
                     y = tile_coords.y,
                     z = tile_coords.z
