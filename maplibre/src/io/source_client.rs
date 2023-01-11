@@ -72,7 +72,7 @@ where
         self.inner_client
             .fetch(
                 format!(
-                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
+                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}",
                     x = tile_coords.x,
                     y = tile_coords.y,
                     z = tile_coords.z
