@@ -164,6 +164,12 @@
 <span id="164">164</span>
 <span id="165">165</span>
 <span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
 </pre><pre class="rust"><code><span class="kw">use </span>geozero::mvt::tile::Layer;
 
 <span class="kw">use crate</span>::{
@@ -203,6 +209,8 @@
         </span><span class="self">Self</span>: Sized;
 
     <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords;
+
+    <span class="kw">fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
 
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer;
 }
@@ -284,6 +292,10 @@
     <span class="kw">fn </span>coords(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WorldTileCoords {
         <span class="self">self</span>.coords
     }
+
+    <span class="kw">fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.buffer.usable_indices == <span class="number">0
+    </span>}
 
     <span class="kw">fn </span>to_stored_layer(<span class="self">self</span>) -&gt; StoredLayer {
         StoredLayer::TessellatedLayer {

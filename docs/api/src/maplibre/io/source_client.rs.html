@@ -152,11 +152,11 @@
     }
 
     <span class="kw">pub async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, SourceFetchError&gt; {
-        <span class="kw">let </span>tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
+        <span class="kw">let </span>tile_coords = coords.into_tile(TileAddressingScheme::XYZ).unwrap();
         <span class="self">self</span>.inner_client
             .fetch(
                 <span class="macro">format!</span>(
-                    <span class="string">&quot;https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf&quot;</span>,
+                    <span class="string">&quot;https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}&quot;</span>,
                     x = tile_coords.x,
                     y = tile_coords.y,
                     z = tile_coords.z

@@ -90,6 +90,11 @@
 <span id="90">90</span>
 <span id="91">91</span>
 <span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].
 
 </span><span class="kw">use </span>std::rc::Rc;
@@ -156,6 +161,11 @@
                     tile_repository.put_layer(layer);
                 }
                 Message::LayerTessellated(message) =&gt; {
+                    <span class="comment">// TODO: Is it fine to ignore layers without any vertices?
+                    </span><span class="kw">if </span>message.is_empty() {
+                        <span class="kw">continue</span>;
+                    }
+
                     <span class="kw">let </span>layer: StoredLayer = message.to_stored_layer();
 
                     <span class="macro">tracing::debug!</span>(
