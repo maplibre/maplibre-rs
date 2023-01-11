@@ -190,6 +190,11 @@ impl LayerTessellated for FlatBufferTransferable {
         data.coords().unwrap().into()
     }
 
+    fn is_empty(&self) -> bool {
+        let data = unsafe { root_as_flat_layer_tessellated_unchecked(&self.data[self.start..]) };
+        data.usable_indices() == 0
+    }
+
     fn to_stored_layer(self) -> StoredLayer {
         let data = unsafe { root_as_flat_layer_tessellated_unchecked(&self.data[self.start..]) };
         let vertices = data
