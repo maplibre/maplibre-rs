@@ -7,12 +7,9 @@ use cgmath::{
     Vector4,
 };
 
-use crate::{
-    coords::TILE_SIZE,
-    util::{
-        math::{bounds_from_points, Aabb2, Aabb3, Plane},
-        SignificantlyDifferent,
-    },
+use crate::util::{
+    math::{bounds_from_points, Aabb2, Aabb3, Plane},
+    SignificantlyDifferent,
 };
 
 #[rustfmt::skip]
@@ -402,14 +399,12 @@ impl Camera {
 
 pub struct Perspective {
     fovy: Rad<f64>,
-    znear: f64,
-    zfar: f64,
 
     current_projection: Matrix4<f64>,
 }
 
 impl Perspective {
-    pub fn new<F: Into<Rad<f64>>>(width: u32, height: u32, fovy: F, znear: f64, zfar: f64) -> Self {
+    pub fn new<F: Into<Rad<f64>>>(width: u32, height: u32, fovy: F) -> Self {
         let rad = fovy.into();
         Self {
             current_projection: Self::calc_matrix(
@@ -417,12 +412,8 @@ impl Perspective {
                 width as f64,
                 height as f64,
                 rad,
-                znear,
-                zfar,
             ),
             fovy: rad,
-            znear,
-            zfar,
         }
     }
 
@@ -432,29 +423,17 @@ impl Perspective {
             width as f64,
             height as f64,
             self.fovy,
-            self.znear,
-            self.zfar,
         );
     }
 
-    fn calc_matrix(
-        aspect: f64,
-        width: f64,
-        height: f64,
-        fovy: Rad<f64>,
-        znear: f64,
-        zfar: f64,
-    ) -> Matrix4<f64> {
-        // Adopted from https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L827-L879
-        let _fov: f64 = 0.6435011087932844;
-        let _pitch = 0.0; // TODO
+    // Adopted from https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L827-L879
+    fn calc_matrix(aspect: f64, width: f64, height: f64, fovy: Rad<f64>) -> Matrix4<f64> {
+        let pitch = 0.0; // FIXME: We need pitch to calculate `furthest_distance`
 
-        let center_point = Point2::new(width / 2.0, height / 2.0); // TODO: honor insets
-        let center_offset_x = center_point.x - width / 2.0;
+        let center_point = Point2::new(width / 2.0, height / 2.0);
         let center_offset_y = center_point.y - height / 2.0;
 
-        let half_fov = _fov / 2.0;
-        let offset_x = center_offset_x;
+        let half_fov = fovy / 2.0;
         let offset_y = center_offset_y;
         let camera_to_center_distance = 0.5 / half_fov.tan() * height;
 
@@ -462,36 +441,40 @@ impl Perspective {
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
-        let ground_angle = PI / 2.0 + _pitch;
-        let fov_above_center = _fov * (0.5 + offset_y / height);
+        let ground_angle = PI / 2.0 + pitch;
+        let fov_above_center = fovy.0 * (0.5 + offset_y / height);
         let top_half_surface_distance = fov_above_center.sin() * camera_to_center_distance
             / clamp(PI - ground_angle - fov_above_center, 0.01, PI - 0.01).sin();
-        /*let point = this.point;
-        let x = point.x;
-        let y = point.y;*/
 
         // Calculate z distance of the farthest fragment that should be rendered.
         let furthest_distance =
-            (PI / 2.0 - _pitch).cos() * top_half_surface_distance + camera_to_center_distance;
+            (PI / 2.0 - pitch).cos() * top_half_surface_distance + camera_to_center_distance;
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
         let far_z = furthest_distance * 1.01;
 
-        // The larger the value of nearZ is
+        // The larger the value of near_z is
         // - the more depth precision is available for features (good)
         // - clipping starts appearing sooner when the camera is close to 3d features (bad)
         //
         // Smaller values worked well for mapbox-gl-js but deckgl was encountering precision issues
         // when rendering it's layers using custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
-        let nearZ = height / 50.0;
+        //
+        // in tile.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
+        // This means that regardless of the `znear` value all layers will be rendered as part
+        // of the near plane.
+        // These values have been selected experimentally:
+        // https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
+        let near_z = height / 50.0;
 
-        let mut perspective = cgmath::perspective(Rad(_fov), aspect, nearZ, far_z);
+        let mut perspective = cgmath::perspective(fovy, aspect, near_z, far_z);
 
-        // TODO: Does nothing?
-        //Apply center of perspective offset
-        perspective.z[0] = -offset_x * 2.0 / width;
-        perspective.z[1] = offset_y * 2.0 / height;
+        // TODO: https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L881-L883
+        // Apply center of perspective offset
+        // perspective.z[0] = -offset_x * 2.0 / width;
+        // perspective.z[1] = offset_y * 2.0 / height;
 
+        // TODO: https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L885-L889
         //perspective = perspective * Matrix4::from_nonuniform_scale(1.0, -1.0, 1.0);
         perspective = perspective
             * Matrix4::from_translation(Vector3::new(0.0, 0.0, -camera_to_center_distance));
@@ -499,25 +482,7 @@ impl Perspective {
         //mat4.rotateZ(m, m, this.angle);
         //mat4.translate(m, m, [-x, -y, 0]);
 
-        fn circumference_at_latitude(latitude: f64) -> f64 {
-            let earth_radius = 6371008.8;
-            let earth_circumfrence = 2.0 * PI * earth_radius;
-            return earth_circumfrence * (latitude * PI / 180.0).cos();
-        }
-        fn mercator_zfrom_altitude(altitude: f64, lat: f64) -> f64 {
-            return altitude / circumference_at_latitude(lat);
-        }
-
-        // TODO: Does nothing?
-        // scale vertically to meters per pixel (inverse of ground resolution):
-        let world_size = TILE_SIZE * 2_u32.pow(13) as f64;
-        let center_lat = 46.51993;
-        perspective = perspective
-            * Matrix4::from_nonuniform_scale(
-                1.0,
-                1.0,
-                mercator_zfrom_altitude(1.0, center_lat) * world_size,
-            );
+        // TODO Missing: https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L895-L902
 
         OPENGL_TO_WGPU_MATRIX * perspective
     }
@@ -542,13 +507,7 @@ mod tests {
             height as u32,
         );
         // 4732.561319582916
-        let perspective = Perspective::new(
-            width as u32,
-            height as u32,
-            cgmath::Deg(45.0),
-            0.1,
-            100000.0,
-        );
+        let perspective = Perspective::new(width as u32, height as u32, cgmath::Deg(45.0));
         let view_proj: ViewProjection = camera.calc_view_proj(&perspective);
         let inverted_view_proj: InvertedViewProjection = view_proj.invert();
 
