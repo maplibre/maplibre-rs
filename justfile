@@ -70,7 +70,7 @@ test PROJECT ARCH:
   cargo test -p {{PROJECT}} --target {{ARCH}}
 
 benchmark:
-  cargo bench -p benchmarks
+  cargo criterion -p benchmarks
 
 fmt: nightly-install-rustfmt
   export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo fmt
