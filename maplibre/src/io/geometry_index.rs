@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use cgmath::{num_traits::Signed, Bounded};
 use geo::prelude::*;
-use geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
+use geo_types::{Coord, CoordFloat, Geometry, LineString, Point, Polygon};
 use geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
@@ -82,7 +82,7 @@ pub enum TileIndex {
 impl TileIndex {
     pub fn point_query(&self, inner_coords: InnerCoords) -> Vec<&IndexedGeometry<f64>> {
         let point = geo_types::Point::new(inner_coords.x, inner_coords.y);
-        let coordinate: Coordinate<_> = point.into();
+        let coordinate: Coord<_> = point.into();
 
         // FIXME: Respect layer order of style
         match self {
