@@ -48,7 +48,7 @@ impl HeadlessMap {
             cgmath::Deg(0.0),
         );
 
-        let mut graph = create_default_render_graph().map_err(|e| MapError::RenderGraphInit(e))?;
+        let mut graph = create_default_render_graph().map_err(MapError::RenderGraphInit)?;
         let draw_graph = graph
             .get_sub_graph_mut(draw_graph::NAME)
             .expect("Subgraph does not exist");
