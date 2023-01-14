@@ -400,7 +400,7 @@
 
 <span class="attribute">#[cfg(feature = <span class="string">&quot;headless&quot;</span>)]
 </span><span class="kw">impl </span>BufferedTextureHead {
-    <span class="kw">pub fn </span>map_async&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; wgpu::BufferSlice {
+    <span class="kw">pub fn </span>map_async(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; wgpu::BufferSlice {
         <span class="comment">// Note that we&#39;re not calling `.await` here.
         </span><span class="kw">let </span>buffer_slice = <span class="self">self</span>.output_buffer.slice(..);
         buffer_slice.map_async(wgpu::MapMode::Read, |<span class="kw">_</span>| ());

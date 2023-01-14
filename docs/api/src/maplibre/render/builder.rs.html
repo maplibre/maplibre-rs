@@ -242,13 +242,13 @@
     <span class="kw">where
         </span>MWC: MapWindowConfig,
     {
-        <span class="prelude-val">Ok</span>(Renderer::initialize_headless(
+        Renderer::initialize_headless(
             existing_window,
             <span class="self">self</span>.wgpu_settings.clone(),
             <span class="self">self</span>.renderer_settings,
         )
-        .<span class="kw">await</span><span class="question-mark">?</span>)
-    }
+        .<span class="kw">await
+    </span>}
 }
 
 <span class="kw">pub struct </span>InitializedRenderer {
