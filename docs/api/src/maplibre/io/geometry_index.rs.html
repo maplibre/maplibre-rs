@@ -326,7 +326,7 @@
 
 <span class="kw">use </span>cgmath::{num_traits::Signed, Bounded};
 <span class="kw">use </span>geo::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
+<span class="kw">use </span>geo_types::{Coord, CoordFloat, Geometry, LineString, Point, Polygon};
 <span class="kw">use </span>geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
@@ -404,7 +404,7 @@
 <span class="kw">impl </span>TileIndex {
     <span class="kw">pub fn </span>point_query(<span class="kw-2">&amp;</span><span class="self">self</span>, inner_coords: InnerCoords) -&gt; Vec&lt;<span class="kw-2">&amp;</span>IndexedGeometry&lt;f64&gt;&gt; {
         <span class="kw">let </span>point = geo_types::Point::new(inner_coords.x, inner_coords.y);
-        <span class="kw">let </span>coordinate: Coordinate&lt;<span class="kw">_</span>&gt; = point.into();
+        <span class="kw">let </span>coordinate: Coord&lt;<span class="kw">_</span>&gt; = point.into();
 
         <span class="comment">// FIXME: Respect layer order of style
         </span><span class="kw">match </span><span class="self">self </span>{
