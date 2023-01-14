@@ -24,7 +24,7 @@ headless = ["png"]
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
 tokio = { version = "1.20.1", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
 tokio-util = { version = "0.7.1", features = ["rt"] }
-env_logger = "0.9.0"
+env_logger = "0.10.0"
 reqwest = { version = "0.11.11", default-features = false, features = ["rustls-tls", "gzip"] }
 reqwest-middleware-cache = "0.1.1" # FIXME: Untrusted dependency
 reqwest-middleware = "0.1.6" # FIXME: Untrusted dependency
@@ -46,7 +46,7 @@ tracing-subscriber = { version = "0.3.15", optional = true }
 cgmath = "0.18.0"
 
 # Geo
-geo = "0.22.1"
+geo = "0.23.1"
 geo-types = { version = "0.7.6", features = ["use-rstar_0_9"] }
 rstar = "0.9.3"
 prost = "0.11.5"
