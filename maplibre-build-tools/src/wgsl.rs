@@ -32,7 +32,7 @@ impl WgslError {
 }
 
 fn validate_wgsl(validator: &mut Validator, path: &Path) -> Result<(), WgslError> {
-    let shader = std::fs::read_to_string(&path).map_err(WgslError::from)?;
+    let shader = std::fs::read_to_string(path).map_err(WgslError::from)?;
     let module = wgsl::parse_str(&shader).map_err(|err| WgslError::from_parse_err(err, &shader))?;
 
     if let Err(err) = validator.validate(&module) {
@@ -51,7 +51,7 @@ pub fn validate_project_wgsl() {
         let path = e.path();
 
         if !path.is_dir() {
-            path.extension().map(|ext| &*ext == "wgsl").unwrap_or(false)
+            path.extension().map(|ext| ext == "wgsl").unwrap_or(false)
         } else {
             true
         }

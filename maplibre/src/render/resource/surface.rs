@@ -82,7 +82,7 @@ pub struct BufferedTextureHead {
 
 #[cfg(feature = "headless")]
 impl BufferedTextureHead {
-    pub fn map_async<'a>(&self, device: &wgpu::Device) -> wgpu::BufferSlice {
+    pub fn map_async(&self, device: &wgpu::Device) -> wgpu::BufferSlice {
         // Note that we're not calling `.await` here.
         let buffer_slice = self.output_buffer.slice(..);
         buffer_slice.map_async(wgpu::MapMode::Read, |_| ());

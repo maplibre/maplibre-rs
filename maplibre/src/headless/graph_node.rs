@@ -39,7 +39,7 @@ impl Node for CopySurfaceBufferNode {
                 command_encoder.copy_texture_to_buffer(
                     buffered_texture.copy_texture(),
                     wgpu::ImageCopyBuffer {
-                        buffer: &buffered_texture.buffer(),
+                        buffer: buffered_texture.buffer(),
                         layout: wgpu::ImageDataLayout {
                             offset: 0,
                             bytes_per_row: Some(buffered_texture.bytes_per_row()),
