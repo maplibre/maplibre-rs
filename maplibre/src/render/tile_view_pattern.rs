@@ -235,30 +235,4 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         }
         queue.write_buffer(&self.buffer.inner, 0, raw_buffer);
     }
-
-    /// 2D version of [`TileViewPattern::stencil_reference_value_3d`]. This is kept for reference.
-    /// For the 2D case we do not take into account the Z value, so only 4 cases exist.
-    pub fn stencil_reference_value_2d(&self, world_coords: &WorldTileCoords) -> u8 {
-        match (world_coords.x, world_coords.y) {
-            (x, y) if x % 2 == 0 && y % 2 == 0 => 2,
-            (x, y) if x % 2 == 0 && y % 2 != 0 => 1,
-            (x, y) if x % 2 != 0 && y % 2 == 0 => 4,
-            (x, y) if x % 2 != 0 && y % 2 != 0 => 3,
-            _ => unreachable!(),
-        }
-    }
-
-    /// Returns unique stencil reference values for WorldTileCoords which are 3D.
-    /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
-    /// different levels based on availability.
-    pub fn stencil_reference_value_3d(&self, world_coords: &WorldTileCoords) -> u8 {
-        const CASES: u8 = 4;
-        match (world_coords.x, world_coords.y, u8::from(world_coords.z)) {
-            (x, y, z) if x % 2 == 0 && y % 2 == 0 => 0 + z * CASES,
-            (x, y, z) if x % 2 == 0 && y % 2 != 0 => 1 + z * CASES,
-            (x, y, z) if x % 2 != 0 && y % 2 == 0 => 2 + z * CASES,
-            (x, y, z) if x % 2 != 0 && y % 2 != 0 => 3 + z * CASES,
-            _ => unreachable!(),
-        }
-    }
 }
