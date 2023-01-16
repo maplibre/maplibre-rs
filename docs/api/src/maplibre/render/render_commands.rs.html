@@ -268,7 +268,7 @@
         <span class="macro">tracing::trace!</span>(<span class="string">&quot;Drawing mask {}&quot;</span>, <span class="kw-2">&amp;</span>source_shape.coords());
 
         <span class="comment">// Draw mask with stencil value of e.g. parent
-        </span><span class="kw">let </span>reference = tile_view_pattern.stencil_reference_value_3d(<span class="kw-2">&amp;</span>source_shape.coords()) <span class="kw">as </span>u32;
+        </span><span class="kw">let </span>reference = source_shape.coords().stencil_reference_value_3d() <span class="kw">as </span>u32;
 
         pass.set_stencil_reference(reference);
         pass.set_vertex_buffer(
@@ -317,7 +317,7 @@
             (<span class="kw-2">&amp;</span>state.buffer_pool, <span class="kw-2">&amp;</span>state.tile_view_pattern) <span class="kw">else </span>{ <span class="kw">return </span>RenderCommandResult::Failure; };
 
         <span class="comment">// Uses stencil value of requested tile and the shape of the requested tile
-        </span><span class="kw">let </span>reference = tile_view_pattern.stencil_reference_value_3d(<span class="kw-2">&amp;</span>shape.coords()) <span class="kw">as </span>u32;
+        </span><span class="kw">let </span>reference = shape.coords().stencil_reference_value_3d() <span class="kw">as </span>u32;
 
         <span class="macro">tracing::trace!</span>(
             <span class="string">&quot;Drawing layer {:?} at {}&quot;</span>,

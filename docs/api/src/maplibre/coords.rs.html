@@ -766,6 +766,20 @@
 <span id="766">766</span>
 <span id="767">767</span>
 <span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Provides utilities related to coordinates.
 
 </span><span class="kw">use </span>std::{
@@ -1223,6 +1237,20 @@
             y: <span class="self">self</span>.y &gt;&gt; <span class="number">1</span>,
             z: <span class="self">self</span>.z - <span class="number">1</span>,
         })
+    }
+
+    <span class="doccomment">/// Returns unique stencil reference values for WorldTileCoords which are 3D.
+    /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
+    /// different levels based on availability.
+    </span><span class="kw">pub fn </span>stencil_reference_value_3d(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u8 {
+        <span class="kw">const </span>CASES: u8 = <span class="number">4</span>;
+        <span class="kw">let </span>z = u8::from(<span class="self">self</span>.z);
+        <span class="kw">match </span>(<span class="self">self</span>.x % <span class="number">2 </span>== <span class="number">0</span>, <span class="self">self</span>.y % <span class="number">2 </span>== <span class="number">0</span>) {
+            (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; <span class="number">0 </span>+ z * CASES,
+            (<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; <span class="number">1 </span>+ z * CASES,
+            (<span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; <span class="number">2 </span>+ z * CASES,
+            (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="number">3 </span>+ z * CASES,
+        }
     }
 }
 

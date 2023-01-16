@@ -236,32 +236,6 @@
 <span id="236">236</span>
 <span id="237">237</span>
 <span id="238">238</span>
-<span id="239">239</span>
-<span id="240">240</span>
-<span id="241">241</span>
-<span id="242">242</span>
-<span id="243">243</span>
-<span id="244">244</span>
-<span id="245">245</span>
-<span id="246">246</span>
-<span id="247">247</span>
-<span id="248">248</span>
-<span id="249">249</span>
-<span id="250">250</span>
-<span id="251">251</span>
-<span id="252">252</span>
-<span id="253">253</span>
-<span id="254">254</span>
-<span id="255">255</span>
-<span id="256">256</span>
-<span id="257">257</span>
-<span id="258">258</span>
-<span id="259">259</span>
-<span id="260">260</span>
-<span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility for generating a tile pattern which can be used for masking.
 
 </span><span class="kw">use </span>std::{marker::PhantomData, mem::size_of, ops::Range};
@@ -498,32 +472,6 @@
             </span><span class="macro">panic!</span>(<span class="string">&quot;Buffer is too small to store the tile pattern!&quot;</span>);
         }
         queue.write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer.inner, <span class="number">0</span>, raw_buffer);
-    }
-
-    <span class="doccomment">/// 2D version of [`TileViewPattern::stencil_reference_value_3d`]. This is kept for reference.
-    /// For the 2D case we do not take into account the Z value, so only 4 cases exist.
-    </span><span class="kw">pub fn </span>stencil_reference_value_2d(<span class="kw-2">&amp;</span><span class="self">self</span>, world_coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; u8 {
-        <span class="kw">match </span>(world_coords.x, world_coords.y) {
-            (x, y) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">2</span>,
-            (x, y) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">1</span>,
-            (x, y) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">4</span>,
-            (x, y) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">3</span>,
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-        }
-    }
-
-    <span class="doccomment">/// Returns unique stencil reference values for WorldTileCoords which are 3D.
-    /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
-    /// different levels based on availability.
-    </span><span class="kw">pub fn </span>stencil_reference_value_3d(<span class="kw-2">&amp;</span><span class="self">self</span>, world_coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; u8 {
-        <span class="kw">const </span>CASES: u8 = <span class="number">4</span>;
-        <span class="kw">match </span>(world_coords.x, world_coords.y, u8::from(world_coords.z)) {
-            (x, y, z) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">0 </span>+ z * CASES,
-            (x, y, z) <span class="kw">if </span>x % <span class="number">2 </span>== <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">1 </span>+ z * CASES,
-            (x, y, z) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>== <span class="number">0 </span>=&gt; <span class="number">2 </span>+ z * CASES,
-            (x, y, z) <span class="kw">if </span>x % <span class="number">2 </span>!= <span class="number">0 </span>&amp;&amp; y % <span class="number">2 </span>!= <span class="number">0 </span>=&gt; <span class="number">3 </span>+ z * CASES,
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-        }
     }
 }
 </code></pre></div>
