@@ -457,17 +457,6 @@ impl WorldTileCoords {
         })
     }
 
-    /// 2D version of [`TileViewPattern::stencil_reference_value_3d`]. This is kept for reference.
-    /// For the 2D case we do not take into account the Z value, so only 4 cases exist.
-    pub fn stencil_reference_value_2d(&self) -> u8 {
-        match (self.x % 2 == 0, self.y % 2 == 0) {
-            (true, true) => 2,
-            (true, false) => 1,
-            (false, true) => 4,
-            (false, false) => 3,
-        }
-    }
-
     /// Returns unique stencil reference values for WorldTileCoords which are 3D.
     /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
     /// different levels based on availability.
