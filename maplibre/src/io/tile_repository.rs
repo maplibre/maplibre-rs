@@ -9,7 +9,7 @@ use crate::{
     coords::{Quadkey, WorldTileCoords},
     render::{
         resource::{BufferPool, Queue},
-        ShaderVertex,
+        ShaderVertex, SymbolVertex,
     },
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
@@ -28,6 +28,13 @@ pub enum StoredLayer {
         /// Holds for each feature the count of indices.
         feature_indices: Vec<u32>,
     },
+    TessellatedSymbolLayer {
+        coords: WorldTileCoords,
+        layer_name: String,
+        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
+        /// Holds for each feature the count of indices.
+        feature_indices: Vec<u32>,
+    },
 }
 
 impl StoredLayer {
@@ -35,6 +42,7 @@ impl StoredLayer {
         match self {
             StoredLayer::UnavailableLayer { coords, .. } => *coords,
             StoredLayer::TessellatedLayer { coords, .. } => *coords,
+            StoredLayer::TessellatedSymbolLayer { coords, .. } => *coords,
         }
     }
 
@@ -42,6 +50,7 @@ impl StoredLayer {
         match self {
             StoredLayer::UnavailableLayer { layer_name, .. } => layer_name.as_str(),
             StoredLayer::TessellatedLayer { layer_name, .. } => layer_name.as_str(),
+            StoredLayer::TessellatedSymbolLayer { layer_name, .. } => layer_name.as_str(),
         }
     }
 }
@@ -151,16 +160,25 @@ impl TileRepository {
 
     /// Returns the list of tessellated layers at the given world tile coords, which are loaded in
     /// the BufferPool
-    pub fn iter_loaded_layers_at<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod>(
+    pub fn loaded_layers_at<Q: Queue<B>, B, V1: Pod, V2: Pod, I: Pod, TM: Pod, FM: Pod>(
         &self,
-        buffer_pool: &BufferPool<Q, B, V, I, TM, FM>,
+        buffer_pool1: &BufferPool<Q, B, V1, I, TM, FM>,
+        buffer_pool2: &BufferPool<Q, B, V2, I, TM, FM>,
         coords: &WorldTileCoords,
     ) -> Option<Vec<&StoredLayer>> {
-        let loaded_layers = buffer_pool.get_loaded_layers_at(coords).unwrap_or_default();
+        let loaded_layers1 = buffer_pool1
+            .get_loaded_layers_at(coords)
+            .unwrap_or_default();
+        let loaded_layers2 = buffer_pool2
+            .get_loaded_layers_at(coords)
+            .unwrap_or_default();
 
         self.iter_layers_at(coords).map(|layers| {
             layers
-                .filter(|result| !loaded_layers.contains(&result.layer_name()))
+                .filter(|result| {
+                    !loaded_layers1.contains(&result.layer_name())
+                        && !loaded_layers2.contains(&result.layer_name())
+                })
                 .collect::<Vec<_>>()
         })
     }

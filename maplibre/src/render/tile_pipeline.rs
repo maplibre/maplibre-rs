@@ -21,6 +21,7 @@ pub struct TilePipeline {
     debug_stencil: bool,
     wireframe: bool,
     multisampling: bool,
+    glyph_rendering: bool,
     settings: RendererSettings,
 
     vertex_state: VertexState,
@@ -38,6 +39,7 @@ impl TilePipeline {
         debug_stencil: bool,
         wireframe: bool,
         multisampling: bool,
+        glyph_rendering: bool,
     ) -> Self {
         TilePipeline {
             bind_globals,
@@ -46,6 +48,7 @@ impl TilePipeline {
             debug_stencil,
             wireframe,
             multisampling,
+            glyph_rendering,
             settings,
             vertex_state,
             fragment_state,
@@ -93,6 +96,25 @@ impl RenderPipeline for TilePipeline {
                     },
                     count: None,
                 }]])
+            } else if self.glyph_rendering {
+                Some(vec![vec![
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            multisampled: false,
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ]])
             } else {
                 None
             },

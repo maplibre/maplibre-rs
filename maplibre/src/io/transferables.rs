@@ -3,7 +3,7 @@ use geozero::mvt::tile::Layer;
 use crate::{
     coords::WorldTileCoords,
     io::{geometry_index::TileIndex, tile_repository::StoredLayer},
-    render::ShaderVertex,
+    render::{ShaderVertex, SymbolVertex},
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
@@ -39,6 +39,21 @@ pub trait LayerTessellated: Send {
     fn coords(&self) -> WorldTileCoords;
 
     fn is_empty(&self) -> bool;
+
+    fn to_stored_layer(self) -> StoredLayer;
+}
+
+pub trait SymbolLayerTessellated: Send {
+    fn build_from(
+        coords: WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
+        feature_indices: Vec<u32>,
+        layer_data: Layer,
+    ) -> Self
+    where
+        Self: Sized;
+
+    fn coords(&self) -> WorldTileCoords;
 
     fn to_stored_layer(self) -> StoredLayer;
 }
@@ -135,6 +150,44 @@ impl LayerTessellated for DefaultLayerTesselated {
     }
 }
 
+#[derive(Clone)]
+pub struct DefaultSymbolLayerTesselated {
+    pub coords: WorldTileCoords,
+    pub buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
+    /// Holds for each feature the count of indices.
+    pub feature_indices: Vec<u32>,
+    pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
+}
+
+impl SymbolLayerTessellated for DefaultSymbolLayerTesselated {
+    fn build_from(
+        coords: WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
+        feature_indices: Vec<u32>,
+        layer_data: Layer,
+    ) -> Self {
+        Self {
+            coords,
+            buffer,
+            feature_indices,
+            layer_data,
+        }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
+    }
+
+    fn to_stored_layer(self) -> StoredLayer {
+        StoredLayer::TessellatedSymbolLayer {
+            coords: self.coords,
+            layer_name: self.layer_data.name,
+            buffer: self.buffer,
+            feature_indices: self.feature_indices,
+        }
+    }
+}
+
 pub struct DefaultLayerIndexed {
     coords: WorldTileCoords,
     index: TileIndex,
@@ -158,6 +211,7 @@ pub trait Transferables: 'static {
     type TileTessellated: TileTessellated;
     type LayerUnavailable: LayerUnavailable;
     type LayerTessellated: LayerTessellated;
+    type SymbolLayerTessellated: SymbolLayerTessellated;
     type LayerIndexed: LayerIndexed;
 }
 
@@ -168,5 +222,6 @@ impl Transferables for DefaultTransferables {
     type TileTessellated = DefaultTileTessellated;
     type LayerUnavailable = DefaultLayerUnavailable;
     type LayerTessellated = DefaultLayerTesselated;
+    type SymbolLayerTessellated = DefaultSymbolLayerTesselated;
     type LayerIndexed = DefaultLayerIndexed;
 }

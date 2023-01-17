@@ -3,6 +3,7 @@
 
 mod buffer_pool;
 mod globals;
+mod glyph_texture;
 mod pipeline;
 mod shader;
 mod surface;
@@ -11,6 +12,7 @@ mod tracked_render_pass;
 
 pub use buffer_pool::*;
 pub use globals::*;
+pub use glyph_texture::*;
 pub use pipeline::*;
 pub use shader::*;
 pub use surface::*;

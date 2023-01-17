@@ -2,10 +2,15 @@
 
 use std::mem::size_of;
 
+use prost::Message;
+use wgpu::util::DeviceExt;
+
 use crate::{
     context::MapContext,
     render::{
-        resource::{BackingBufferDescriptor, BufferPool, Globals, RenderPipeline, Texture},
+        resource::{
+            BackingBufferDescriptor, BufferPool, Globals, GlyphTexture, RenderPipeline, Texture,
+        },
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
@@ -28,6 +33,7 @@ impl Stage for ResourceStage {
                     settings,
                     device,
                     state,
+                    queue,
                     ..
                 },
             ..
@@ -79,6 +85,10 @@ impl Stage for ResourceStage {
             .buffer_pool
             .initialize(|| BufferPool::from_device(device));
 
+        state
+            .symbol_buffer_pool
+            .initialize(|| BufferPool::from_device(device));
+
         state.tile_view_pattern.initialize(|| {
             let tile_view_buffer_desc = wgpu::BufferDescriptor {
                 label: Some("tile view buffer"),
@@ -109,6 +119,7 @@ impl Stage for ResourceStage {
                 false,
                 false,
                 true,
+                false,
             )
             .describe_render_pipeline()
             .initialize(device);
@@ -137,6 +148,7 @@ impl Stage for ResourceStage {
                 false,
                 false,
                 true,
+                false,
             )
             .describe_render_pipeline()
             .initialize(device)
@@ -159,9 +171,77 @@ impl Stage for ResourceStage {
                 true,
                 false,
                 false,
+                false,
             )
             .describe_render_pipeline()
             .initialize(device)
+        });
+
+        state.symbol_pipeline.initialize(|| {
+            let mask_shader = shaders::SymbolTileShader {
+                format: surface.surface_format(),
+            };
+
+            let pipeline = TilePipeline::new(
+                *settings,
+                mask_shader.describe_vertex(),
+                mask_shader.describe_fragment(),
+                false,
+                true,
+                false,
+                true,
+                false,
+                true,
+                true,
+            )
+            .describe_render_pipeline()
+            .initialize(device);
+
+            let (texture, sampler) = state.glyph_texture_sampler.initialize(|| {
+                let data = std::fs::read("./data/0-255.pbf").unwrap();
+                let glyphs = crate::text::glyph::GlyphSet::from(
+                    crate::text::sdf_glyphs::Glyphs::decode(data.as_slice()).unwrap(),
+                );
+
+                let (width, height) = glyphs.get_texture_dimensions();
+
+                let texture = device.create_texture_with_data(
+                    &queue,
+                    &wgpu::TextureDescriptor {
+                        label: Some("Glyph Texture"),
+                        size: wgpu::Extent3d {
+                            width: width as _,
+                            height: height as _,
+                            depth_or_array_layers: 1,
+                        },
+                        mip_level_count: 1,
+                        sample_count: 1,
+                        dimension: wgpu::TextureDimension::D2,
+                        format: wgpu::TextureFormat::R8Unorm,
+                        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                    },
+                    glyphs.get_texture_bytes(),
+                );
+
+                let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+                    // SDF rendering requires linear interpolation
+                    mag_filter: wgpu::FilterMode::Linear,
+                    min_filter: wgpu::FilterMode::Linear,
+                    ..Default::default()
+                });
+
+                (texture, sampler)
+            });
+
+            state.glyph_texture_bind_group.initialize(|| {
+                GlyphTexture::from_device(
+                    device,
+                    texture,
+                    sampler,
+                    &pipeline.get_bind_group_layout(0),
+                )
+            });
+            pipeline
         });
     }
 }

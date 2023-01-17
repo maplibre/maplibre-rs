@@ -7,6 +7,7 @@ use lyon::tessellation::{
 
 use crate::render::ShaderVertex;
 
+pub mod text_tesselator;
 pub mod zero_tessellator;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;

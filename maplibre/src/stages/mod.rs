@@ -2,7 +2,7 @@
 
 use std::{marker::PhantomData, rc::Rc};
 
-use geozero::mvt::tile;
+use geozero::mvt::{tile, tile::Layer};
 use request_stage::RequestStage;
 
 use crate::{
@@ -14,11 +14,12 @@ use crate::{
         pipeline::{PipelineError, PipelineProcessor},
         source_client::HttpClient,
         transferables::{
-            LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
+            LayerIndexed, LayerTessellated, LayerUnavailable, SymbolLayerTessellated,
+            TileTessellated, Transferables,
         },
     },
     kernel::Kernel,
-    render::ShaderVertex,
+    render::{ShaderVertex, SymbolVertex},
     schedule::Schedule,
     stages::populate_tile_store_stage::PopulateTileStore,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
@@ -77,6 +78,20 @@ impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
                 feature_indices,
                 layer_data,
             )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
+    }
+
+    fn symbol_layer_tesselation_finished(
+        &mut self,
+        coords: &WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
+        feature_indices: Vec<u32>,
+        layer_data: Layer,
+    ) -> Result<(), PipelineError> {
+        self.context
+            .send(Message::SymbolLayerTessellated(
+                T::SymbolLayerTessellated::build_from(*coords, buffer, feature_indices, layer_data),
+            ))
             .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 

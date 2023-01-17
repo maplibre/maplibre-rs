@@ -138,6 +138,19 @@ impl Default for Style {
                     source: None,
                     source_layer: Some("boundary".to_string()),
                 },
+                StyleLayer {
+                    index: 8,
+                    id: "text".to_string(),
+                    typ: "symbol".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("black").unwrap()),
+                    })),
+                    source: None,
+                    source_layer: Some("text".to_string()),
+                },
             ],
         }
     }

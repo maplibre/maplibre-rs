@@ -13,6 +13,7 @@ pub struct WgpuSettings {
     pub device_label: Option<Cow<'static, str>>,
     pub backends: Option<Backends>,
     pub power_preference: PowerPreference,
+    pub force_fallback_adapter: bool,
     /// The features to ensure are enabled regardless of what the adapter/backend supports.
     /// Setting these explicitly may cause renderer initialization to fail.
     pub features: Features,
@@ -59,6 +60,7 @@ impl Default for WgpuSettings {
             device_label: Default::default(),
             backends,
             power_preference: PowerPreference::HighPerformance,
+            force_fallback_adapter: false,
             features,
             disabled_features: None,
             limits,
