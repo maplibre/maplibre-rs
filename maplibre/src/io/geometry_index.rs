@@ -312,9 +312,19 @@ impl FeatureProcessor for IndexProcessor {
                 IndexedGeometry::from_linestring(linestring, self.properties.take().unwrap())
                     .unwrap(),
             ),
-            _ => {
-                warn!("Unknown geometry in index")
+            Some(Geometry::Point(_)) => warn!("Unsupported Point geometry in index"),
+            Some(Geometry::Line(_)) => warn!("Unsupported Line geometry in index"),
+            Some(Geometry::MultiPoint(_)) => warn!("Unsupported MultiPoint geometry in index"),
+            Some(Geometry::MultiLineString(_)) => {
+                warn!("Unsupported MultiLineString geometry in index")
             }
+            Some(Geometry::MultiPolygon(_)) => warn!("Unsupported MultiPolygon geometry in index"),
+            Some(Geometry::GeometryCollection(_)) => {
+                warn!("Unsupported GeometryCollection geometry in index")
+            }
+            Some(Geometry::Rect(_)) => warn!("Unsupported Rect geometry in index"),
+            Some(Geometry::Triangle(_)) => warn!("Unsupported Triangle geometry in index"),
+            None => warn!("No geometry in index"),
         };
 
         Ok(())
