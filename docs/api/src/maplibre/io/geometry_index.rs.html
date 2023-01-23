@@ -320,6 +320,16 @@
 <span id="320">320</span>
 <span id="321">321</span>
 <span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Geometry index.
 
 </span><span class="kw">use </span>std::collections::{BTreeMap, HashMap};
@@ -634,9 +644,19 @@
                 IndexedGeometry::from_linestring(linestring, <span class="self">self</span>.properties.take().unwrap())
                     .unwrap(),
             ),
-            <span class="kw">_ </span>=&gt; {
-                <span class="macro">warn!</span>(<span class="string">&quot;Unknown geometry in index&quot;</span>)
+            <span class="prelude-val">Some</span>(Geometry::Point(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported Point geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::Line(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported Line geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::MultiPoint(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported MultiPoint geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::MultiLineString(<span class="kw">_</span>)) =&gt; {
+                <span class="macro">warn!</span>(<span class="string">&quot;Unsupported MultiLineString geometry in index&quot;</span>)
             }
+            <span class="prelude-val">Some</span>(Geometry::MultiPolygon(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported MultiPolygon geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::GeometryCollection(<span class="kw">_</span>)) =&gt; {
+                <span class="macro">warn!</span>(<span class="string">&quot;Unsupported GeometryCollection geometry in index&quot;</span>)
+            }
+            <span class="prelude-val">Some</span>(Geometry::Rect(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported Rect geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::Triangle(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported Triangle geometry in index&quot;</span>),
+            <span class="prelude-val">None </span>=&gt; <span class="macro">warn!</span>(<span class="string">&quot;No geometry in index&quot;</span>),
         };
 
         <span class="prelude-val">Ok</span>(())
