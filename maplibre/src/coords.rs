@@ -377,8 +377,11 @@ impl WorldTileCoords {
 
         // Divide by EXTENT to normalize tile
         // Scale tiles where zoom level = self.z to 512x512
-        let normalize_and_scale =
-            Matrix4::from_nonuniform_scale(tile_scale / EXTENT, tile_scale / EXTENT, 1.0);
+        let normalize_and_scale = Matrix4::from_nonuniform_scale(
+            tile_scale / EXTENT,
+            tile_scale / EXTENT,
+            tile_scale / EXTENT,
+        );
         translate * normalize_and_scale
     }
 

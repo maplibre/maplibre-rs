@@ -104,13 +104,13 @@ impl Shader for TileShader {
                         // position
                         wgpu::VertexAttribute {
                             offset: 0,
-                            format: wgpu::VertexFormat::Float32x2,
+                            format: wgpu::VertexFormat::Float32x3,
                             shader_location: 0,
                         },
                         // normal
                         wgpu::VertexAttribute {
-                            offset: wgpu::VertexFormat::Float32x2.size(),
-                            format: wgpu::VertexFormat::Float32x2,
+                            offset: wgpu::VertexFormat::Float32x3.size(),
+                            format: wgpu::VertexFormat::Float32x3,
                             shader_location: 1,
                         },
                     ],
@@ -181,7 +181,7 @@ impl Shader for TileShader {
 
     fn describe_fragment(&self) -> FragmentState {
         FragmentState {
-            source: include_str!("basic.fragment.wgsl"),
+            source: include_str!("light.fragment.wgsl"),
             entry_point: "main",
             targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
@@ -219,14 +219,38 @@ impl Default for ShaderCamera {
 
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
+pub struct ShaderLight {
+    direction: Vec4f32,
+    color: Vec4f32,
+}
+
+impl ShaderLight {
+    pub fn new(direction: Vec4f32, color: Vec4f32) -> Self {
+        Self { direction, color }
+    }
+}
+
+impl Default for ShaderLight {
+    fn default() -> Self {
+        Self {
+            direction: [-0.3, -0.4, 1.0, 0.0], // Sun orientation
+            color: [1.0, 1.0, 1.0, 1.0],       // Sun color and intensity
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderGlobals {
     camera: ShaderCamera,
+    light: ShaderLight,
 }
 
 impl ShaderGlobals {
-    pub fn new(camera_uniform: ShaderCamera) -> Self {
+    pub fn new(camera_uniform: ShaderCamera, light_uniform: ShaderLight) -> Self {
         Self {
             camera: camera_uniform,
+            light: light_uniform,
         }
     }
 }
@@ -234,19 +258,19 @@ impl ShaderGlobals {
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderVertex {
-    pub position: Vec2f32,
-    pub normal: Vec2f32,
+    pub position: Vec3f32,
+    pub normal: Vec3f32,
 }
 
 impl ShaderVertex {
-    pub fn new(position: Vec2f32, normal: Vec2f32) -> Self {
+    pub fn new(position: Vec3f32, normal: Vec3f32) -> Self {
         Self { position, normal }
     }
 }
 
 impl Default for ShaderVertex {
     fn default() -> Self {
-        ShaderVertex::new([0.0, 0.0], [0.0, 0.0])
+        ShaderVertex::new([0.0, 0.0, 0.0], [0.0, 0.0, 0.0])
     }
 }
 

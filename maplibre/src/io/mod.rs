@@ -19,11 +19,14 @@ pub mod transferables;
 
 pub use geozero::mvt::tile::Layer as RawLayer;
 
+use crate::style::Style;
+
 /// A request for a tile at the given coordinates and in the given layers.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TileRequest {
     pub coords: WorldTileCoords,
     pub layers: HashSet<String>,
+    pub style: Style,
 }
 
 impl fmt::Debug for TileRequest {

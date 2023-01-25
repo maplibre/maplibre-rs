@@ -32,6 +32,7 @@ fn parse_tile(c: &mut Criterion) {
                     .into_world_tile(TileAddressingScheme::XYZ)
                     .unwrap(),
                 layers: HashSet::from(["boundary".to_owned(), "water".to_owned()]),
+                style: Default::default(),
             };
             let data = fetcher
                 .sync_fetch_tile(&MUNICH_COORDS)
@@ -54,6 +55,7 @@ fn tessellate_tile(c: &mut Criterion) {
             .into_world_tile(TileAddressingScheme::XYZ)
             .unwrap(),
         layers: HashSet::from(["boundary".to_owned(), "water".to_owned()]),
+        style: Default::default(),
     };
     let data = fetcher
         .sync_fetch_tile(&MUNICH_COORDS)

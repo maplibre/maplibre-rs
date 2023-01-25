@@ -78,6 +78,12 @@ pub struct StyleLayer {
     pub source: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_layer: Option<String>,
+    #[serde(default = "default_extrusion")]
+    pub extrusion: bool,
+}
+
+fn default_extrusion() -> bool {
+    false
 }
 
 impl Default for StyleLayer {
@@ -92,6 +98,7 @@ impl Default for StyleLayer {
             paint: None,
             source: None,
             source_layer: Some("does not exist".to_string()),
+            extrusion: false,
         }
     }
 }

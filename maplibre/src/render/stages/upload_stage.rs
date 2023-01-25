@@ -9,7 +9,10 @@ use crate::{
     render::{
         camera::ViewProjection,
         eventually::Eventually::Initialized,
-        shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
+        shaders::{
+            ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, ShaderLight,
+            Vec4f32,
+        },
         RenderState, Renderer,
     },
     schedule::Stage,
@@ -43,16 +46,19 @@ impl Stage for UploadStage {
             queue.write_buffer(
                 &globals_bind_group.uniform_buffer,
                 0,
-                bytemuck::cast_slice(&[ShaderGlobals::new(ShaderCamera::new(
-                    view_proj.downcast().into(),
-                    view_state
-                        .camera()
-                        .position()
-                        .to_homogeneous()
-                        .cast::<f32>()
-                        .unwrap() // TODO: Remove unwrap
-                        .into(),
-                ))]),
+                bytemuck::cast_slice(&[ShaderGlobals::new(
+                    ShaderCamera::new(
+                        view_proj.downcast().into(),
+                        view_state
+                            .camera()
+                            .position()
+                            .to_homogeneous()
+                            .cast::<f32>()
+                            .unwrap() // TODO: Remove unwrap
+                            .into(),
+                    ),
+                    ShaderLight::default(),
+                )]),
             );
         }
 

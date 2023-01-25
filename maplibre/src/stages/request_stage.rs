@@ -131,7 +131,7 @@ impl<E: Environment> RequestStage<E> {
         for coords in view_region.iter() {
             if coords.build_quad_key().is_some() {
                 // TODO: Make tesselation depend on style?
-                self.request_tile(tile_repository, coords, &source_layers);
+                self.request_tile(tile_repository, coords, &source_layers, style);
             }
         }
     }
@@ -141,6 +141,7 @@ impl<E: Environment> RequestStage<E> {
         tile_repository: &mut TileRepository,
         coords: WorldTileCoords,
         layers: &HashSet<String>,
+        style: &Style,
     ) {
         if tile_repository.is_tile_pending_or_done(&coords) {
             tile_repository.mark_tile_pending(coords).unwrap(); // TODO: Remove unwrap
@@ -153,6 +154,7 @@ impl<E: Environment> RequestStage<E> {
                     Input::TileRequest(TileRequest {
                         coords,
                         layers: layers.clone(),
+                        style: style.clone(),
                     }),
                     schedule::<
                         E,
