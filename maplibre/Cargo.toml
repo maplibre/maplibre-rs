@@ -49,8 +49,7 @@ cgmath = "0.18.0"
 geo = "0.23.1"
 geo-types = { version = "0.7.6", features = ["use-rstar_0_9"] }
 rstar = "0.9.3"
-prost = "0.11.5"
-geozero = { version = "0.9.5", default-features = false, features = ["with-mvt", "with-geo"] }
+geozero = { version = "0.9.7", default-features = false, features = ["with-mvt", "with-geo"] }
 tile-grid = "0.3.0"
 
 # Rendering
