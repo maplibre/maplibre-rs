@@ -96,6 +96,13 @@ pub struct RenderState {
 
     mask_phase: RenderPhase<TileShape>,
     tile_phase: RenderPhase<(IndexEntry, TileShape)>,
+
+    // egui
+    egui_paint_jobs: Vec<egui::ClippedPrimitive>,
+    egui_textures: Vec<egui::TextureId>,
+    egui_renderer: Eventually<egui_wgpu::Renderer>,
+    egui_app: egui_demo_lib::DemoWindows,
+    egui_context: egui::Context,
 }
 
 impl RenderState {
@@ -113,6 +120,11 @@ impl RenderState {
             surface,
             mask_phase: Default::default(),
             tile_phase: Default::default(),
+            egui_paint_jobs: Default::default(),
+            egui_textures: Default::default(),
+            egui_renderer: Default::default(),
+            egui_app: Default::default(),
+            egui_context: Default::default(),
         }
     }
 

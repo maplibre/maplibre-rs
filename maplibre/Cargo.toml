@@ -82,6 +82,11 @@ cint = "0.3.1"
 downcast-rs = "1.2.0"
 smallvec = "1.9.0"
 
+# egui
+egui = "0.20.1"
+egui-wgpu = "0.20.0"
+egui_demo_lib = "0.20"
+
 # Headless
 png = { version = "0.17.5", optional = true }
 

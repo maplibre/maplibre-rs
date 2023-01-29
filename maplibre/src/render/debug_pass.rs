@@ -28,10 +28,21 @@ impl Node for DebugPassNode {
     fn run(
         &self,
         _graph: &mut RenderGraphContext,
-        render_context: &mut RenderContext,
+        RenderContext {
+            command_encoder, ..
+        }: &mut RenderContext,
         state: &RenderState,
     ) -> Result<(), NodeRunError> {
-        let Initialized(render_target) = &state.render_target else {
+        let RenderState {
+            surface,
+            mask_phase,
+            render_target,
+            egui_renderer,
+            egui_paint_jobs,
+            ..
+        } = state;
+
+        let Initialized(render_target) = &render_target else {
             return Ok(());
         };
 
@@ -45,19 +56,37 @@ impl Node for DebugPassNode {
             resolve_target: None,
         };
 
-        let render_pass =
-            render_context
-                .command_encoder
-                .begin_render_pass(&wgpu::RenderPassDescriptor {
-                    label: None,
-                    color_attachments: &[Some(color_attachment)],
-                    depth_stencil_attachment: None,
-                });
+        {
+            let mut render_pass = command_encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: None,
+                color_attachments: &[Some(color_attachment.clone())],
+                depth_stencil_attachment: None,
+            });
 
-        let mut tracked_pass = TrackedRenderPass::new(render_pass);
+            // Debug outlines
+            let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        for item in &state.mask_phase.items {
-            DrawDebugOutlines::render(state, item, &mut tracked_pass);
+            for item in &mask_phase.items {
+                DrawDebugOutlines::render(state, item, &mut tracked_pass);
+            }
+        }
+
+        {
+            let Initialized(egui_renderer) = egui_renderer else { return Ok(()); };
+
+            let mut render_pass = command_encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: None,
+                color_attachments: &[Some(color_attachment)],
+                depth_stencil_attachment: None,
+            });
+
+            let screen_descriptor = egui_wgpu::renderer::ScreenDescriptor {
+                size_in_pixels: [surface.size().width(), surface.size().height()],
+                pixels_per_point: 1.0,
+            };
+
+            // Record all render passes
+            egui_renderer.render(&mut render_pass, &egui_paint_jobs, &screen_descriptor);
         }
 
         Ok(())
