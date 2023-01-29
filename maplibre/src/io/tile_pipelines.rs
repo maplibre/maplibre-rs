@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
-use geozero::GeozeroDatasource;
-use prost::Message;
+use geozero::{mvt::Message, GeozeroDatasource};
 
 use crate::{
     io::{
