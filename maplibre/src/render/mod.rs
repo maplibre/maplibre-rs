@@ -160,9 +160,12 @@ impl Renderer {
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            dx12_shader_compiler: Default::default(),
+        });
 
-        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw()) };
+        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw()).unwrap() };
 
         let (adapter, device, queue) = Self::request_device(
             &instance,
@@ -202,7 +205,10 @@ impl Renderer {
     where
         MW: MapWindow,
     {
-        let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            dx12_shader_compiler: Default::default(),
+        });
 
         let (adapter, device, queue) = Self::request_device(
             &instance,
@@ -300,6 +306,9 @@ impl Renderer {
                 max_bind_groups: limits
                     .max_bind_groups
                     .min(constrained_limits.max_bind_groups),
+                max_bindings_per_bind_group: limits
+                    .max_bindings_per_bind_group
+                    .min(constrained_limits.max_bindings_per_bind_group),
                 max_dynamic_uniform_buffers_per_pipeline_layout: limits
                     .max_dynamic_uniform_buffers_per_pipeline_layout
                     .min(constrained_limits.max_dynamic_uniform_buffers_per_pipeline_layout),

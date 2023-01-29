@@ -3,8 +3,6 @@
 
 use std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
-use log::debug;
-
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
     window::{HeadedMapWindow, MapWindow, WindowSize},
@@ -56,6 +54,7 @@ impl WindowHead {
             width: self.size.width(),
             height: self.size.height(),
             present_mode: self.present_mode,
+            view_formats: vec![self.format],
         };
 
         self.surface.configure(device, &surface_config);
@@ -65,7 +64,7 @@ impl WindowHead {
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        self.surface = unsafe { instance.create_surface(window.raw()) };
+        self.surface = unsafe { instance.create_surface(window.raw()).unwrap() };
     }
 
     pub fn surface(&self) -> &wgpu::Surface {
@@ -170,14 +169,12 @@ impl Surface {
     {
         let size = window.size();
 
-        debug!(
-            "supported formats by adapter: {:?}",
-            surface.get_supported_formats(adapter)
-        );
+        let capabilities = surface.get_capabilities(adapter);
+        log::info!("adapter capabilities on surface: {:?}", capabilities);
 
         let format = settings
             .texture_format
-            .or_else(|| surface.get_supported_formats(adapter).first().cloned())
+            .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
 
         Self {
@@ -229,6 +226,7 @@ impl Surface {
             dimension: wgpu::TextureDimension::D2,
             format,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[format],
         };
         let texture = device.create_texture(&texture_descriptor);
 
