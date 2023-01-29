@@ -9,7 +9,7 @@ use thiserror::Error;
 use crate::{
     coords::{Quadkey, WorldTileCoords},
     render::{
-        resource::{BufferPool, Queue},
+        resource::{BufferPool, Queue, RasterResources},
         ShaderVertex,
     },
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
@@ -157,9 +157,9 @@ impl TileRepository {
             .map(|tile| tile.layers.iter())
     }
 
-    /// Returns the list of tessellated layers at the given world tile coords, which are loaded in
+    /// Returns the list of tessellated layers at the given world tile coords, which are not loaded in
     /// the BufferPool
-    pub fn iter_loaded_layers_at<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod>(
+    pub fn iter_missing_tesselated_layers_at<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod>(
         &self,
         buffer_pool: &BufferPool<Q, B, V, I, TM, FM>,
         coords: &WorldTileCoords,
@@ -169,6 +169,26 @@ impl TileRepository {
         self.iter_layers_at(coords).map(|layers| {
             layers
                 .filter(|result| !loaded_layers.contains(&result.layer_name()))
+                .collect::<Vec<_>>()
+        })
+    }
+
+    /// Returns the list of tessellated layers at the given world tile coords, which are not loaded in
+    /// the raster resource
+    pub fn iter_missing_raster_layers_at(
+        &self,
+        raster_resources: &RasterResources,
+        coords: &WorldTileCoords,
+    ) -> Option<Vec<&StoredLayer>> {
+        let is_loaded = raster_resources.get_bound_texture(coords).is_some();
+
+        if is_loaded {
+            return None;
+        }
+
+        self.iter_layers_at(coords).map(|layers| {
+            layers
+                .filter(|result| matches!(result, StoredLayer::RasterLayer { .. }))
                 .collect::<Vec<_>>()
         })
     }
