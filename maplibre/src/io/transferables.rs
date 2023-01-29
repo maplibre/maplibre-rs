@@ -39,6 +39,8 @@ pub trait LayerTessellated: Send {
 
     fn coords(&self) -> WorldTileCoords;
 
+    fn is_empty(&self) -> bool;
+
     fn to_stored_layer(self) -> StoredLayer;
 }
 
@@ -124,6 +126,10 @@ impl LayerTessellated for DefaultLayerTesselated {
 
     fn coords(&self) -> WorldTileCoords {
         self.coords
+    }
+
+    fn is_empty(&self) -> bool {
+        self.buffer.usable_indices == 0
     }
 
     fn to_stored_layer(self) -> StoredLayer {

@@ -78,6 +78,8 @@ jobs:
         uses: ./.github/actions/setup
         with:
           targets: aarch64-apple-ios
+      - name: Install Dependencies
+        uses: ./.github/actions/install-system-dependencies
       - name: Build Example (iOS)
         shell: bash
         run: cd apple/xcode && xcodebuild -scheme "example (iOS)" -arch arm64 -sdk iphoneos build CODE_SIGNING_ALLOWED=NO

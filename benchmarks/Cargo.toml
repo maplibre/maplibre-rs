@@ -14,7 +14,7 @@ authors.workspace = true
 maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles", "thread-safe-futures"] }
 
 [dev-dependencies]
-criterion = { version = "0.3.6", features = ["async_tokio"] }
+criterion = { version = "0.4.0", features = ["async_tokio"] }
 tokio = "1.19.2"
 
 [[bench]]

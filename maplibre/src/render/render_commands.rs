@@ -122,7 +122,7 @@ impl RenderCommand<TileShape> for DrawMask {
         tracing::trace!("Drawing mask {}", &source_shape.coords());
 
         // Draw mask with stencil value of e.g. parent
-        let reference = tile_view_pattern.stencil_reference_value_3d(&source_shape.coords()) as u32;
+        let reference = source_shape.coords().stencil_reference_value_3d() as u32;
 
         pass.set_stencil_reference(reference);
         pass.set_vertex_buffer(
@@ -171,7 +171,7 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawVectorTile {
             (&state.buffer_pool, &state.tile_view_pattern) else { return RenderCommandResult::Failure; };
 
         // Uses stencil value of requested tile and the shape of the requested tile
-        let reference = tile_view_pattern.stencil_reference_value_3d(&shape.coords()) as u32;
+        let reference = shape.coords().stencil_reference_value_3d() as u32;
 
         tracing::trace!(
             "Drawing layer {:?} at {}",
@@ -179,11 +179,16 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawVectorTile {
             &entry.coords
         );
 
+        let index_range = entry.indices_buffer_range();
+
+        if index_range.is_empty() {
+            tracing::error!("Tried to draw a vector tile without any vertices");
+            return RenderCommandResult::Failure;
+        }
+
         pass.set_stencil_reference(reference);
-        pass.set_index_buffer(
-            buffer_pool.indices().slice(entry.indices_buffer_range()),
-            INDEX_FORMAT,
-        );
+
+        pass.set_index_buffer(buffer_pool.indices().slice(index_range), INDEX_FORMAT);
         pass.set_vertex_buffer(
             0,
             buffer_pool.vertices().slice(entry.vertices_buffer_range()),
@@ -215,7 +220,7 @@ impl RenderCommand<TileShape> for DrawRasterTile {
     ) -> RenderCommandResult {
         let Initialized(tile_view_pattern) = &state.tile_view_pattern else { return RenderCommandResult::Failure; };
 
-        let reference = tile_view_pattern.stencil_reference_value_3d(&source_shape.coords()) as u32;
+        let reference = source_shape.coords().stencil_reference_value_3d() as u32;
 
         tracing::trace!("Drawing raster layer");
 

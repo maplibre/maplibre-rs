@@ -456,6 +456,20 @@ impl WorldTileCoords {
             z: self.z - 1,
         })
     }
+
+    /// Returns unique stencil reference values for WorldTileCoords which are 3D.
+    /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
+    /// different levels based on availability.
+    pub fn stencil_reference_value_3d(&self) -> u8 {
+        const CASES: u8 = 4;
+        let z = u8::from(self.z);
+        match (self.x % 2 == 0, self.y % 2 == 0) {
+            (true, true) => 0 + z * CASES,
+            (true, false) => 1 + z * CASES,
+            (false, true) => 2 + z * CASES,
+            (false, false) => 3 + z * CASES,
+        }
+    }
 }
 
 impl From<(i32, i32, ZoomLevel)> for WorldTileCoords {
