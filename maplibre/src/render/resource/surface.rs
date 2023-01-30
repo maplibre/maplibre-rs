@@ -342,7 +342,11 @@ impl Surface {
                         1
                     }
                 };
-                msaa.samples <= max_sample_count
+                let is_supported = msaa.samples <= max_sample_count;
+                if !is_supported {
+                    log::debug!("Multisampling is not supported on surface");
+                }
+                is_supported
             }
             Head::Headless(_) => false, // TODO: support multisampling on headless
         }

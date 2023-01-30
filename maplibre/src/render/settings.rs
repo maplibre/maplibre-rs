@@ -96,8 +96,8 @@ impl Msaa {
 
 impl Default for Msaa {
     fn default() -> Self {
-        // By default we are not multisampling
-        Self { samples: 1 }
+        // By default we are trying to multisample
+        Self { samples: 4 }
     }
 }
 
