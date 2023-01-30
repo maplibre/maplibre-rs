@@ -3,8 +3,14 @@
 
 use std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
+use wgpu::TextureFormatFeatures;
+
 use crate::{
-    render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
+    render::{
+        eventually::HasChanged,
+        resource::texture::TextureView,
+        settings::{Msaa, RendererSettings},
+    },
     window::{HeadedMapWindow, MapWindow, WindowSize},
 };
 
@@ -36,8 +42,10 @@ impl BufferDimensions {
 pub struct WindowHead {
     surface: wgpu::Surface,
     size: WindowSize,
-    format: wgpu::TextureFormat,
+
+    texture_format: wgpu::TextureFormat,
     present_mode: wgpu::PresentMode,
+    texture_format_features: TextureFormatFeatures,
 }
 
 impl WindowHead {
@@ -50,11 +58,11 @@ impl WindowHead {
         let surface_config = wgpu::SurfaceConfiguration {
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: self.format,
+            format: self.texture_format,
             width: self.size.width(),
             height: self.size.height(),
             present_mode: self.present_mode,
-            view_formats: vec![self.format],
+            view_formats: vec![self.texture_format],
         };
 
         self.surface.configure(device, &surface_config);
@@ -172,17 +180,22 @@ impl Surface {
         let capabilities = surface.get_capabilities(adapter);
         log::info!("adapter capabilities on surface: {:?}", capabilities);
 
-        let format = settings
+        let texture_format = settings
             .texture_format
             .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
+        log::info!("format description: {:?}", texture_format.describe());
+
+        let texture_format_features = adapter.get_texture_format_features(texture_format);
+        log::info!("format features: {:?}", texture_format_features);
 
         Self {
             size,
             head: Head::Headed(WindowHead {
                 surface,
                 size,
-                format,
+                texture_format,
+                texture_format_features,
                 present_mode: settings.present_mode,
             }),
         }
@@ -243,7 +256,7 @@ impl Surface {
 
     pub fn surface_format(&self) -> wgpu::TextureFormat {
         match &self.head {
-            Head::Headed(headed) => headed.format,
+            Head::Headed(headed) => headed.texture_format,
             Head::Headless(headless) => headless.texture_format,
         }
     }
@@ -312,6 +325,27 @@ impl Surface {
 
     pub fn head_mut(&mut self) -> &mut Head {
         &mut self.head
+    }
+
+    pub fn is_multisampling_supported(&self, msaa: Msaa) -> bool {
+        match &self.head {
+            Head::Headed(headed) => {
+                let max_sample_count = {
+                    let flags = headed.texture_format_features.flags;
+                    if flags.contains(wgpu::TextureFormatFeatureFlags::MULTISAMPLE_X8) {
+                        8
+                    } else if flags.contains(wgpu::TextureFormatFeatureFlags::MULTISAMPLE_X4) {
+                        4
+                    } else if flags.contains(wgpu::TextureFormatFeatureFlags::MULTISAMPLE_X2) {
+                        2
+                    } else {
+                        1
+                    }
+                };
+                msaa.samples <= max_sample_count
+            }
+            Head::Headless(_) => false, // TODO: support multisampling on headless
+        }
     }
 }
 

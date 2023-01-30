@@ -72,7 +72,9 @@ impl System for ResourceSystem {
 
         state.multisampling_texture.reinitialize(
             || {
-                if settings.msaa.is_active() {
+                if settings.msaa.is_multisampling()
+                    && surface.is_multisampling_supported(settings.msaa)
+                {
                     Some(Texture::new(
                         Some("multisampling texture"),
                         device,
