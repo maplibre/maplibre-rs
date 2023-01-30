@@ -457,7 +457,10 @@ mod tests {
         let graph = RenderGraph::default();
 
         let backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all());
-        let instance = wgpu::Instance::new(backends);
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends,
+            dx12_shader_compiler: Default::default(),
+        });
         let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
             .await
             .expect("Unable to initialize adapter");
