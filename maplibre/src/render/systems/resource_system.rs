@@ -7,6 +7,7 @@ use crate::{
     render::{
         eventually::Eventually,
         resource::{BackingBufferDescriptor, RenderPipeline, Texture, TilePipeline},
+        settings::Msaa,
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_view_pattern::{TileViewPattern, WgpuTileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
@@ -63,7 +64,11 @@ impl System for ResourceSystem {
                     settings.depth_texture_format,
                     size.width(),
                     size.height(),
-                    settings.msaa,
+                    if surface.is_multisampling_supported(settings.msaa) {
+                        settings.msaa
+                    } else {
+                        Msaa { samples: 1 }
+                    },
                     wgpu::TextureUsages::RENDER_ATTACHMENT,
                 )
             },
