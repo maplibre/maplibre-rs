@@ -4,6 +4,7 @@ use std::rc::Rc;
 
 use crate::{
     context::MapContext,
+    ecs::world::World,
     environment::Environment,
     io::{
         apc::{AsyncProcedureCall, Message},
@@ -14,7 +15,6 @@ use crate::{
     },
     kernel::Kernel,
     schedule::Stage,
-    world::World,
 };
 
 pub struct PopulateTileStore<E: Environment> {

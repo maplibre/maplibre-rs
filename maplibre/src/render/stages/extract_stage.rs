@@ -4,9 +4,9 @@ use std::ops::Deref;
 
 use crate::{
     context::MapContext,
+    ecs::world::World,
     render::{eventually::Eventually::Initialized, RenderState, Renderer},
     schedule::Stage,
-    world::World,
 };
 
 #[derive(Default)]

@@ -28,7 +28,7 @@ fn main(
         vec3<f32>(0.0, EXTENT, z),
         vec3<f32>(EXTENT, EXTENT, z),
     );
-    let position = VERTICES[vertex_idx];
+    let vertex = VERTICES[vertex_idx];
 
 
     var TEX_COORDS: array<vec2<f32>, 6> = array<vec2<f32>, 6>(
@@ -41,7 +41,7 @@ fn main(
     );
     let tex_coords = TEX_COORDS[vertex_idx];
 
-    var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(position, 1.0);
+    var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(vertex, 1.0);
     position.z = z_index;
 
     return VertexOutput(tex_coords, position);

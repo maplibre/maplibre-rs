@@ -5,6 +5,7 @@ use std::iter;
 use crate::{
     context::MapContext,
     coords::ViewRegion,
+    ecs::world::World,
     io::tile_repository::{StoredLayer, TileRepository},
     render::{
         camera::ViewProjection,
@@ -14,7 +15,6 @@ use crate::{
     },
     schedule::Stage,
     style::Style,
-    world::World,
 };
 
 #[derive(Default)]

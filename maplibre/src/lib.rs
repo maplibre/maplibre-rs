@@ -43,10 +43,11 @@ pub mod environment;
 // Used for benchmarking
 pub mod benchmarking;
 
+pub mod ecs;
 pub mod event_loop;
 pub mod kernel;
 pub mod map;
-pub mod world;
+pub mod view_state;
 
 // Export tile format
 pub use geozero::mvt::tile;

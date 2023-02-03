@@ -238,9 +238,10 @@ mod tests {
         coords::ZoomLevel,
         io::{
             pipeline::{PipelineContext, PipelineProcessor, Processable},
-            TileRequest,
+            tile_pipelines::VectorTileRequest,
         },
     };
+
     pub struct DummyPipelineProcessor;
 
     impl PipelineProcessor for DummyPipelineProcessor {}
@@ -253,7 +254,7 @@ mod tests {
         let pipeline = build_vector_tile_pipeline();
         let _output = pipeline.process(
             (
-                TileRequest {
+                VectorTileRequest {
                     coords: (0, 0, ZoomLevel::default()).into(),
                     layers: Default::default(),
                 },

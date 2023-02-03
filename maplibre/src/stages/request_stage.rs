@@ -7,6 +7,7 @@ use log::info;
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
+    ecs::world::World,
     environment::Environment,
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message, ProcedureError},
@@ -23,7 +24,6 @@ use crate::{
     schedule::Stage,
     stages::HeadedPipelineProcessor,
     style::Style,
-    world::World,
 };
 
 pub struct RequestStage<E: Environment> {

@@ -22,7 +22,7 @@ use crate::{
     schedule::{Schedule, Stage},
     style::Style,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    world::World,
+    view_state::World,
 };
 
 pub struct HeadlessMap {

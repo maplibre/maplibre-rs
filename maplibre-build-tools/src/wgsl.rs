@@ -26,7 +26,7 @@ impl From<std::io::Error> for WgslError {
 impl WgslError {
     pub fn from_parse_err(err: ParseError, src: &str) -> Self {
         let location = err.location(src);
-        let error = err.emit_to_string(src);
+        let error = err.message().to_string();
         Self::ParserErr { error, location }
     }
 }

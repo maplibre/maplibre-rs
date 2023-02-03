@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{Vector2, Vector3};
-use maplibre::{context::MapContext, coords::Zoom, world::World};
+use maplibre::{context::MapContext, coords::Zoom, view_state::World};
 
 use super::UpdateState;
 

@@ -5,6 +5,7 @@ use thiserror::Error;
 use crate::{
     context::MapContext,
     coords::{LatLon, Zoom},
+    ecs::world::World,
     environment::Environment,
     kernel::Kernel,
     render::{
@@ -20,7 +21,6 @@ use crate::{
     stages::register_stages,
     style::Style,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
-    world::World,
 };
 
 #[derive(Error, Debug)]

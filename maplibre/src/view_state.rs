@@ -3,69 +3,13 @@ use std::ops::{Deref, DerefMut};
 use cgmath::Angle;
 
 use crate::{
-    coords::{LatLon, ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
-    io::{geometry_index::GeometryIndex, tile_repository::TileRepository},
+    coords::{ViewRegion, WorldCoords, Zoom, ZoomLevel, TILE_SIZE},
     render::camera::{Camera, Perspective, ViewProjection},
     util::ChangeObserver,
     window::WindowSize,
 };
 
 const VIEW_REGION_PADDING: i32 = 1;
-
-pub struct World {
-    pub view_state: ViewState,
-    pub tile_repository: TileRepository,
-    pub geometry_index: GeometryIndex,
-}
-
-impl World {
-    pub fn new_at<P: Into<cgmath::Deg<f64>>>(
-        window_size: WindowSize,
-        initial_center: LatLon,
-        initial_zoom: Zoom,
-        pitch: P,
-    ) -> Self {
-        Self::new(
-            window_size,
-            WorldCoords::from_lat_lon(initial_center, initial_zoom),
-            initial_zoom,
-            pitch,
-        )
-    }
-
-    pub fn new<P: Into<cgmath::Deg<f64>>>(
-        window_size: WindowSize,
-        initial_center: WorldCoords,
-        initial_zoom: Zoom,
-        pitch: P,
-    ) -> Self {
-        let position = initial_center;
-        let view_state = ViewState::new(
-            window_size,
-            position,
-            initial_zoom,
-            pitch,
-            cgmath::Deg(110.0),
-        );
-
-        let tile_repository = TileRepository::new();
-        let geometry_index = GeometryIndex::new();
-
-        World {
-            view_state,
-            tile_repository,
-            geometry_index,
-        }
-    }
-
-    pub fn view_state(&self) -> &ViewState {
-        &self.view_state
-    }
-
-    pub fn view_state_mut(&mut self) -> &mut ViewState {
-        &mut self.view_state
-    }
-}
 
 /// Stores the camera configuration.
 pub struct ViewState {

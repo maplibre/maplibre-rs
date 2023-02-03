@@ -1,4 +1,4 @@
-use crate::{render::Renderer, style::Style, world::World};
+use crate::{ecs::world::World, render::Renderer, style::Style};
 
 /// Stores the context of the map.
 pub struct MapContext {
