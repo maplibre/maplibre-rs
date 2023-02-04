@@ -10,7 +10,7 @@ use crate::{
     render::{
         camera::ViewProjection,
         eventually::{Eventually, Eventually::Initialized},
-        resource::{Globals, RasterResources},
+        resource::RasterResources,
         shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
         tile_view_pattern::TileViewPattern,
         Renderer,
@@ -38,24 +38,6 @@ fn upload_system(
     let view_state = &world.view_state;
     let tile_repository = &world.tile_repository;
     let view_proj = view_state.view_projection();
-
-    if let Initialized(globals_bind_group) = &world.get_resource_mut::<Eventually<Globals>>() {
-        // Update globals
-        queue.write_buffer(
-            &globals_bind_group.uniform_buffer,
-            0,
-            bytemuck::cast_slice(&[ShaderGlobals::new(ShaderCamera::new(
-                view_proj.downcast().into(),
-                view_state
-                    .camera()
-                    .position()
-                    .to_homogeneous()
-                    .cast::<f32>()
-                    .unwrap() // TODO: Remove unwrap
-                    .into(),
-            ))]),
-        );
-    }
 
     let view_region = view_state.create_view_region();
 

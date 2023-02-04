@@ -8,7 +8,7 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
-        resource::{Globals, IndexEntry, RasterResources, TrackedRenderPass},
+        resource::{IndexEntry, RasterResources, TrackedRenderPass},
         tile_view_pattern::{TileShape, TileViewPattern},
         RenderState, INDEX_FORMAT,
     },
@@ -26,20 +26,6 @@ impl PhaseItem for (IndexEntry, TileShape) {
 
     fn sort_key(&self) -> Self::SortKey {
         self.0.style_layer.index
-    }
-}
-
-pub struct SetVectorViewBindGroup<const I: usize>;
-impl<const I: usize, P: PhaseItem> RenderCommand<P> for SetVectorViewBindGroup<I> {
-    fn render<'w>(
-        state: &'w RenderState,
-        world: &'w World,
-        _item: &P,
-        pass: &mut TrackedRenderPass<'w>,
-    ) -> RenderCommandResult {
-        let Initialized(Globals { bind_group, .. }) = world.get_resource::<Eventually<Globals>>()  else { return RenderCommandResult::Failure; };
-        pass.set_bind_group(0, bind_group, &[]);
-        RenderCommandResult::Success
     }
 }
 
@@ -265,11 +251,7 @@ pub type DrawRasterTiles = (
     DrawRasterTile,
 );
 
-pub type DrawVectorTiles = (
-    SetVectorTilePipeline,
-    SetVectorViewBindGroup<0>,
-    DrawVectorTile,
-);
+pub type DrawVectorTiles = (SetVectorTilePipeline, DrawVectorTile);
 
 pub type DrawMasks = (SetMaskPipeline, DrawMask);
 

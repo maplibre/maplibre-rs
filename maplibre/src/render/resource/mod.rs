@@ -2,7 +2,6 @@
 //! buffers or textures simpler.
 
 mod buffer_pool;
-mod globals;
 mod pipeline;
 mod raster;
 mod shader;
@@ -11,7 +10,6 @@ mod texture;
 mod tracked_render_pass;
 
 pub use buffer_pool::*;
-pub use globals::*;
 pub use pipeline::*;
 pub use raster::*;
 pub use shader::*;

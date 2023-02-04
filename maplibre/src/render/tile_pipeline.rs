@@ -12,7 +12,6 @@ use crate::{
 };
 
 pub struct TilePipeline {
-    bind_globals: bool,
     /// Is the depth stencil used?
     depth_stencil_enabled: bool,
     /// This pipeline updates the stenctil
@@ -33,7 +32,6 @@ impl TilePipeline {
         settings: RendererSettings,
         vertex_state: VertexState,
         fragment_state: FragmentState,
-        bind_globals: bool,
         depth_stencil_enabled: bool,
         update_stencil: bool,
         debug_stencil: bool,
@@ -42,7 +40,6 @@ impl TilePipeline {
         raster: bool,
     ) -> Self {
         TilePipeline {
-            bind_globals,
             depth_stencil_enabled,
             update_stencil,
             debug_stencil,
@@ -78,25 +75,9 @@ impl RenderPipeline for TilePipeline {
             }
         };
 
-        let globals_buffer_byte_size = cmp::max(
-            MIN_WEBGL_BUFFER_SIZE,
-            std::mem::size_of::<ShaderGlobals>() as u64,
-        );
-
         RenderPipelineDescriptor {
             label: None,
-            layout: if self.bind_globals {
-                Some(vec![vec![wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(globals_buffer_byte_size),
-                    },
-                    count: None,
-                }]])
-            } else if self.raster {
+            layout: if self.raster {
                 Some(vec![vec![
                     wgpu::BindGroupLayoutEntry {
                         binding: 0,

@@ -20,16 +20,10 @@
 
 use std::sync::Arc;
 
-use crate::{
-    render::{
-        eventually::Eventually,
-        render_phase::RenderPhase,
-        resource::{BufferPool, Globals, Head, IndexEntry, Surface, Texture, TextureView},
-        settings::{RendererSettings, WgpuSettings},
-        shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        tile_view_pattern::{TileShape, TileViewPattern},
-    },
-    tessellation::IndexDataType,
+use crate::render::{
+    eventually::Eventually,
+    resource::{Head, Surface, Texture, TextureView},
+    settings::{RendererSettings, WgpuSettings},
 };
 
 pub mod graph;
@@ -62,7 +56,6 @@ use crate::{
         error::RenderError,
         graph::{EmptyNode, RenderGraph, RenderGraphError},
         main_pass::{MainPassDriverNode, MainPassNode},
-        resource::RasterResources,
     },
     window::{HeadedMapWindow, MapWindow},
 };

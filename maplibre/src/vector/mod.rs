@@ -16,7 +16,7 @@ use crate::{
     render::{
         eventually::Eventually,
         render_phase::RenderPhase,
-        resource::{BufferPool, Globals, IndexEntry, RasterResources},
+        resource::{BufferPool, IndexEntry, RasterResources},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
         tile_view_pattern::{TileShape, TileViewPattern},
         ShaderVertex,
@@ -112,9 +112,6 @@ pub struct VectorPlugin;
 impl<E: Environment> Plugin<E> for VectorPlugin {
     fn build(&self, kernel: &mut Kernel<E>, world: &mut World) {
         // FIXME: Split into several plugins
-
-        // globals_bind_group
-        world.insert_resource(Eventually::<Globals>::Uninitialized);
 
         // buffer_pool
         world.insert_resource(Eventually::<VectorBufferPool>::Uninitialized);

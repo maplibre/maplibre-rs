@@ -7,9 +7,7 @@ use crate::{
     ecs::world::World,
     render::{
         eventually::Eventually,
-        resource::{
-            BackingBufferDescriptor, BufferPool, Globals, RasterResources, RenderPipeline, Texture,
-        },
+        resource::{BackingBufferDescriptor, BufferPool, RasterResources, RenderPipeline, Texture},
         settings::Msaa,
         shaders,
         shaders::{Shader, ShaderTileMetadata},
@@ -75,10 +73,6 @@ pub fn resource_system(
             )
             .describe_render_pipeline()
             .initialize(device);
-
-            world
-                .get_resource_mut::<Eventually<Globals>>()
-                .initialize(|| Globals::from_device(device, &pipeline.get_bind_group_layout(0)));
 
             VectorPipeline(pipeline)
         });
