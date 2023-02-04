@@ -16,7 +16,7 @@
 //! maplibre = "0.0.2"
 //! ```
 
-#![deny(unused_imports)]
+// FIXME reenable #![deny(unused_imports)]
 
 // Internal modules
 pub(crate) mod tessellation;
@@ -35,8 +35,6 @@ pub mod util;
 pub mod window;
 // Exposed because of doc-strings
 pub mod schedule;
-// Exposed because of SharedThreadState
-pub mod stages;
 
 pub mod environment;
 
@@ -47,7 +45,12 @@ pub mod ecs;
 pub mod event_loop;
 pub mod kernel;
 pub mod map;
+pub mod plugin;
+
 pub mod view_state;
+
+// Plugins
+pub mod vector;
 
 // Export tile format
 pub use geozero::mvt::tile;

@@ -18,7 +18,7 @@ macro_rules! multi_stage {
         }
 
         impl Stage for $multi_stage {
-            fn run(&mut self, context: &mut MapContext) {
+            fn run(&mut self, context: &mut crate::context::MapContext) {
                  $(self.$stage.run(context);)*
             }
         }

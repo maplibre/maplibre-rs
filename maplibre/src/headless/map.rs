@@ -1,6 +1,7 @@
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
+    ecs::world::World,
     headless::{
         environment::HeadlessEnvironment, graph_node::CopySurfaceBufferNode,
         stage::WriteSurfaceBufferStage,
@@ -22,7 +23,6 @@ use crate::{
     schedule::{Schedule, Stage},
     style::Style,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    view_state::World,
 };
 
 pub struct HeadlessMap {

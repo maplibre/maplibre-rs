@@ -1,12 +1,16 @@
 use std::ops::Deref;
 
-use crate::render::{
-    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-    render_commands::DrawDebugOutlines,
-    render_phase::RenderCommand,
-    resource::TrackedRenderPass,
-    Eventually::Initialized,
-    RenderState,
+use crate::{
+    ecs::world::World,
+    render::{
+        graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        render_commands::DrawDebugOutlines,
+        render_phase::RenderCommand,
+        resource::TrackedRenderPass,
+        Eventually::Initialized,
+        RenderState,
+    },
+    vector::MaskRenderPhase,
 };
 
 /// Pass which renders debug information on top of the map.
@@ -30,6 +34,7 @@ impl Node for DebugPassNode {
         _graph: &mut RenderGraphContext,
         render_context: &mut RenderContext,
         state: &RenderState,
+        world: &World,
     ) -> Result<(), NodeRunError> {
         let Initialized(render_target) = &state.render_target else {
             return Ok(());
@@ -56,8 +61,10 @@ impl Node for DebugPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        for item in &state.mask_phase.items {
-            DrawDebugOutlines::render(state, item, &mut tracked_pass);
+        // FIXME: Move these to vector plugin, or make render phases core
+
+        for item in &world.get_resource::<MaskRenderPhase>().items {
+            DrawDebugOutlines::render(state, world, item, &mut tracked_pass);
         }
 
         Ok(())

@@ -1,16 +1,19 @@
 //! Requests tiles which are currently in view
 
-use std::{collections::HashSet, rc::Rc};
+use std::{borrow::Cow, collections::HashSet, rc::Rc};
 
 use log::info;
 
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
-    ecs::world::World,
+    ecs::{system::System, world::World},
     environment::Environment,
     io::{
-        apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, Message, ProcedureError},
+        apc::{
+            AsyncProcedureCall, AsyncProcedureFuture, Context, HeadedPipelineProcessor, Input,
+            Message, ProcedureError,
+        },
         pipeline::{PipelineContext, Processable},
         source_type::{RasterSource, SourceType, TessellateSource},
         tile_pipelines::{
@@ -21,41 +24,34 @@ use crate::{
         transferables::{LayerUnavailable, Transferables},
     },
     kernel::Kernel,
-    schedule::Stage,
-    stages::HeadedPipelineProcessor,
     style::Style,
 };
 
-pub struct RequestStage<E: Environment> {
+pub struct RequestSystem<E: Environment> {
     kernel: Rc<Kernel<E>>,
 }
 
-impl<E: Environment> RequestStage<E> {
-    pub fn new(kernel: Rc<Kernel<E>>) -> Self {
-        Self { kernel }
+impl<E: Environment> System for RequestSystem<E> {
+    fn name(&self) -> Cow<'static, str> {
+        "populate_world_system".into()
     }
-}
 
-impl<E: Environment> Stage for RequestStage<E> {
     fn run(
         &mut self,
         MapContext {
-            world:
-                World {
-                    tile_repository,
-                    view_state,
-                    ..
-                },
             style,
+            world,
+            renderer,
             ..
         }: &mut MapContext,
     ) {
+        let view_state = &mut world.view_state;
         let view_region = view_state.create_view_region();
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
                 // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
-                self.request_tiles_in_view(tile_repository, style, view_region);
+                self.request_tiles_in_view(&mut world.tile_repository, style, view_region);
             }
         }
 
@@ -63,7 +59,44 @@ impl<E: Environment> Stage for RequestStage<E> {
     }
 }
 
-pub fn schedule<
+impl<E: Environment> RequestSystem<E> {
+    /// Request tiles which are currently in view.
+    fn request_tiles_in_view(
+        &self,
+        tile_repository: &mut TileRepository,
+        style: &Style,
+        view_region: &ViewRegion,
+    ) {
+        for coords in view_region.iter() {
+            if !coords.build_quad_key().is_some() {
+                continue;
+            }
+            // TODO: Make tesselation depend on style?
+            if !tile_repository.is_tile_pending_or_done(&coords) {
+                continue;
+            }
+            tile_repository.mark_tile_pending(coords).unwrap(); // TODO: Remove unwrap
+
+            tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);
+
+            self.kernel
+                .apc()
+                .call(
+                    Input::TileRequest {
+                        coords,
+                        style: style.clone(), // TODO: Avoid cloning whole style
+                    },
+                    schedule_tile_request::<
+                        E,
+                        <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Context,
+                    >,
+                )
+                .unwrap(); // TODO: Remove unwrap
+        }
+    }
+}
+
+pub fn schedule_tile_request<
     E: Environment,
     C: Context<
         <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Transferables,
@@ -163,62 +196,17 @@ pub fn schedule<
                     log::error!("{:?}", &e);
 
                     context.send(
-                            Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
-                                E::HttpClient,
-                            >>::Transferables as Transferables>::LayerUnavailable::build_from(
-                                coords,
-                                "raster".to_string(),
-                            )),
-                        ).map_err(ProcedureError::Send)?;
+                        Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
+                            E::HttpClient,
+                        >>::Transferables as Transferables>::LayerUnavailable::build_from(
+                            coords,
+                            "raster".to_string(),
+                        )),
+                    ).map_err(ProcedureError::Send)?;
                 }
             }
         }
 
         Ok(())
     })
-}
-
-impl<E: Environment> RequestStage<E> {
-    /// Request tiles which are currently in view.
-    #[tracing::instrument(skip_all)]
-    fn request_tiles_in_view(
-        &self,
-        tile_repository: &mut TileRepository,
-        style: &Style,
-        view_region: &ViewRegion,
-    ) {
-        for coords in view_region.iter() {
-            if coords.build_quad_key().is_some() {
-                // TODO: Make tesselation depend on style?
-                self.request_tile(tile_repository, coords, &style);
-            }
-        }
-    }
-
-    fn request_tile(
-        &self,
-        tile_repository: &mut TileRepository,
-        coords: WorldTileCoords,
-        style: &Style,
-    ) {
-        if tile_repository.is_tile_pending_or_done(&coords) {
-            tile_repository.mark_tile_pending(coords).unwrap(); // TODO: Remove unwrap
-
-            tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);
-
-            self.kernel
-                .apc()
-                .call(
-                    Input::TileRequest {
-                        coords,
-                        style: style.clone(), // TODO: Avoid cloning whole style
-                    },
-                    schedule::<
-                        E,
-                        <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Context,
-                    >,
-                )
-                .unwrap(); // TODO: Remove unwrap
-        }
-    }
 }

@@ -195,14 +195,10 @@ impl TileRepository {
 
     /// Checks fetching of a tile has been started
     pub fn is_tile_pending_or_done(&self, coords: &WorldTileCoords) -> bool {
-        if coords
+        coords
             .build_quad_key()
             .and_then(|key| self.tree.get(&key))
             .is_some()
-        {
-            return false;
-        }
-        true
     }
 
     /// Mark the tile at `coords` pending in this tile repository.

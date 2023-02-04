@@ -26,4 +26,8 @@ impl<I: PhaseItem> RenderPhase<I> {
     pub fn sort(&mut self) {
         self.items.sort_by_key(|d| d.sort_key());
     }
+
+    pub fn clear(&mut self) {
+        self.items.clear();
+    }
 }

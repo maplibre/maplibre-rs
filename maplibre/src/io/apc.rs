@@ -1,5 +1,6 @@
 use std::{
     future::Future,
+    marker::PhantomData,
     pin::Pin,
     sync::{
         mpsc,
@@ -7,17 +8,26 @@ use std::{
     },
 };
 
+use geozero::mvt::tile;
+use image::RgbaImage;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
     coords::WorldTileCoords,
     io::{
+        geometry_index::{IndexedGeometry, TileIndex},
+        pipeline::{PipelineError, PipelineProcessor},
         scheduler::Scheduler,
         source_client::{HttpClient, HttpSourceClient, SourceClient},
-        transferables::{DefaultTransferables, Transferables},
+        transferables::{
+            DefaultTransferables, LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable,
+            TileTessellated, Transferables,
+        },
     },
+    render::ShaderVertex,
     style::Style,
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
 /// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
@@ -211,5 +221,89 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
                 .unwrap();
             })
             .map_err(|_e| CallError::Schedule)
+    }
+}
+
+pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<T, HC>> {
+    context: C,
+    phantom_t: PhantomData<T>,
+    phantom_hc: PhantomData<HC>,
+}
+
+impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> HeadedPipelineProcessor<T, HC, C> {
+    pub fn new(context: C) -> Self {
+        Self {
+            context,
+            phantom_t: Default::default(),
+            phantom_hc: Default::default(),
+        }
+    }
+}
+
+impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
+    for HeadedPipelineProcessor<T, HC, C>
+{
+    fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), PipelineError> {
+        self.context
+            .send(Message::TileTessellated(T::TileTessellated::build_from(
+                *coords,
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
+    }
+
+    fn layer_unavailable(
+        &mut self,
+        coords: &WorldTileCoords,
+        layer_name: &str,
+    ) -> Result<(), PipelineError> {
+        self.context
+            .send(Message::LayerUnavailable(T::LayerUnavailable::build_from(
+                *coords,
+                layer_name.to_owned(),
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
+    }
+
+    fn layer_tesselation_finished(
+        &mut self,
+        coords: &WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+        feature_indices: Vec<u32>,
+        layer_data: tile::Layer,
+    ) -> Result<(), PipelineError> {
+        self.context
+            .send(Message::LayerTessellated(T::LayerTessellated::build_from(
+                *coords,
+                buffer,
+                feature_indices,
+                layer_data,
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
+    }
+
+    fn layer_raster_finished(
+        &mut self,
+        coords: &WorldTileCoords,
+        layer_name: String,
+        image_data: RgbaImage,
+    ) -> Result<(), PipelineError> {
+        self.context
+            .send(Message::LayerRaster(T::LayerRaster::build_from(
+                *coords, layer_name, image_data,
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
+    }
+
+    fn layer_indexing_finished(
+        &mut self,
+        coords: &WorldTileCoords,
+        geometries: Vec<IndexedGeometry<f64>>,
+    ) -> Result<(), PipelineError> {
+        self.context
+            .send(Message::LayerIndexed(T::LayerIndexed::build_from(
+                *coords,
+                TileIndex::Linear { list: geometries },
+            )))
+            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 }

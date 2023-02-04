@@ -7,7 +7,7 @@ use super::{
     Edge, InputSlotError, OutputSlotError, RenderGraphContext, RenderGraphError, RunSubGraphError,
     SlotInfo, SlotInfos,
 };
-use crate::render::RenderState;
+use crate::{ecs::world::World, render::RenderState};
 
 /// The context with all information required to interact with the GPU.
 ///
@@ -68,6 +68,7 @@ pub trait Node: Downcast + Send + Sync + 'static {
         graph: &mut RenderGraphContext,
         render_context: &mut RenderContext,
         state: &RenderState,
+        world: &World,
     ) -> Result<(), NodeRunError>;
 }
 
@@ -330,6 +331,7 @@ impl Node for EmptyNode {
         _graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
         _state: &RenderState,
+        _world: &World,
     ) -> Result<(), NodeRunError> {
         Ok(())
     }

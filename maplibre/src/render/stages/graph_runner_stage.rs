@@ -12,33 +12,28 @@ use crate::{
 };
 
 /// Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame.
-pub struct GraphRunnerStage {
-    graph: RenderGraph,
-}
-
-impl GraphRunnerStage {
-    pub fn new(graph: RenderGraph) -> Self {
-        Self { graph }
-    }
-}
+#[derive(Default)]
+pub struct GraphRunnerStage;
 
 impl Stage for GraphRunnerStage {
     fn run(
         &mut self,
         MapContext {
+            world,
             renderer:
                 Renderer {
                     device,
                     queue,
                     state,
+                    render_graph,
                     ..
                 },
             ..
         }: &mut MapContext,
     ) {
-        self.graph.update(state);
+        render_graph.update(state);
 
-        if let Err(e) = RenderGraphRunner::run(&self.graph, device, queue, state) {
+        if let Err(e) = RenderGraphRunner::run(&render_graph, device, queue, state, world) {
             error!("Error running render graph:");
             {
                 let mut src: &dyn std::error::Error = &e;

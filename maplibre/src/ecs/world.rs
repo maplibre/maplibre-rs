@@ -1,27 +1,13 @@
-use std::{
-    any::{Any, TypeId},
-    collections::HashMap,
-};
-
-use downcast_rs::Downcast;
-
 use crate::{
     coords::{LatLon, WorldCoords, Zoom},
-    ecs::component::Component,
+    ecs::{
+        component::EntityComponent,
+        resource::{Resource, Resources},
+    },
     io::{geometry_index::GeometryIndex, tile_repository::TileRepository},
     view_state::ViewState,
     window::WindowSize,
 };
-
-#[derive(Default)]
-struct Resources {
-    resources: Vec<Box<dyn Resource>>,
-    index: HashMap<TypeId, usize>,
-}
-
-pub trait Resource: Send + Sync + 'static {}
-
-impl<T> Resource for T where T: Send + Sync + 'static {}
 
 pub struct Entity {
     id: u64,
@@ -33,7 +19,7 @@ pub struct EntityMut<'w> {
 }
 
 impl<'w> EntityMut<'w> {
-    pub fn insert<T: Component>(&mut self, value: T) -> &mut Self {
+    pub fn insert<T: EntityComponent>(&mut self, component: T) -> &mut Self {
         unimplemented!()
     }
 }
@@ -94,42 +80,24 @@ impl World {
         &mut self.view_state
     }
 
-    pub fn insert_resource<R: Resource>(&mut self, value: R) {
-        self.resources.resources.push(Box::new(value))
+    pub fn insert_resource<R: Resource>(&mut self, resource: R) {
+        self.resources.insert(resource);
     }
 
     pub fn remove_resource<R: Resource>(&mut self) {
-        if let Some(index) = self.resources.index.get(&TypeId::of::<R>()) {
-            self.resources.resources.swap_remove(*index);
-            let moved = &self.resources.resources[*index];
-            self.resources.index.insert(moved.type_id(), *index);
-        }
+        self.resources.remove::<R>()
     }
 
-    pub fn get_resource<R: Resource>(&self) -> Option<&R> {
-        if let Some(index) = self.resources.index.get(&TypeId::of::<R>()) {
-            return Some(
-                self.resources.resources[*index]
-                    .as_any()
-                    .downcast_ref()
-                    .unwrap(),
-            );
-        }
-        return None;
+    /// Gets a reference to the resource of the given type if it exists
+    pub fn get_resource<R: Resource>(&self) -> &R {
+        self.resources.get::<R>().expect("Resource does not exist")
     }
 
     /// Gets a mutable reference to the resource of the given type if it exists
-    #[inline]
-    pub fn get_resource_mut<R: Resource>(&mut self) -> Option<&mut R> {
-        if let Some(index) = self.resources.index.get(&TypeId::of::<R>()) {
-            return Some(
-                self.resources.resources[*index]
-                    .as_any_mut()
-                    .downcast_mut()
-                    .unwrap(),
-            );
-        }
-        return None;
+    pub fn get_resource_mut<R: Resource>(&mut self) -> &mut R {
+        self.resources
+            .get_mut::<R>()
+            .expect("Resource does not exist")
     }
 
     pub fn spawn(&mut self) -> EntityMut {

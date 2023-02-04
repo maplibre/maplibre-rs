@@ -1,4 +1,7 @@
-use crate::render::{resource::TrackedRenderPass, RenderState};
+use crate::{
+    ecs::world::World,
+    render::{resource::TrackedRenderPass, RenderState},
+};
 
 /// A draw function which is used to draw a specific [`PhaseItem`].
 ///
@@ -6,7 +9,13 @@ use crate::render::{resource::TrackedRenderPass, RenderState};
 /// are more modular.
 pub trait Draw<P: PhaseItem>: 'static {
     /// Draws the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
-    fn draw<'w>(&mut self, pass: &mut TrackedRenderPass<'w>, state: &'w RenderState, item: &P);
+    fn draw<'w>(
+        &mut self,
+        pass: &mut TrackedRenderPass<'w>,
+        state: &'w RenderState,
+        wold: &'w World,
+        item: &P,
+    );
 }
 
 /// An item which will be drawn to the screen. A phase item should be queued up for rendering
@@ -19,6 +28,8 @@ pub trait PhaseItem {
     type SortKey: Ord;
     /// Determines the order in which the items are drawn during the corresponding [`RenderPhase`](super::RenderPhase).
     fn sort_key(&self) -> Self::SortKey;
+
+    // TODO     fn draw_function(&self) -> DrawFunctionId;
 }
 
 /// [`RenderCommand`] is a trait that runs an ECS query and produces one or more
@@ -44,6 +55,7 @@ pub trait RenderCommand<P: PhaseItem> {
     /// Renders the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
     fn render<'w>(
         state: &'w RenderState,
+        world: &'w World,
         item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult;
@@ -59,11 +71,12 @@ macro_rules! render_command_tuple_impl {
         impl<P: PhaseItem, $($name: RenderCommand<P>),*> RenderCommand<P> for ($($name,)*) {
             #[allow(non_snake_case)]
             fn render<'w>(
-                _state: &'w RenderState,
-                _item: &P,
-                _pass: &mut TrackedRenderPass<'w>,
+                state: &'w RenderState,
+                world: &'w World,
+                item: &P,
+                pass: &mut TrackedRenderPass<'w>,
             ) -> RenderCommandResult{
-                $(if let RenderCommandResult::Failure = $name::render(_state, _item, _pass) {
+                $(if let RenderCommandResult::Failure = $name::render(state, world, item, pass) {
                     return RenderCommandResult::Failure;
                 })*
                 RenderCommandResult::Success
@@ -84,7 +97,13 @@ where
     C: RenderCommand<P>,
 {
     /// Prepares data for the wrapped [`RenderCommand`] and then renders it.
-    fn draw<'w>(&mut self, pass: &mut TrackedRenderPass<'w>, state: &'w RenderState, item: &P) {
-        C::render(state, item, pass);
+    fn draw<'w>(
+        &mut self,
+        pass: &mut TrackedRenderPass<'w>,
+        state: &'w RenderState,
+        world: &'w World,
+        item: &P,
+    ) {
+        C::render(state, world, item, pass);
     }
 }

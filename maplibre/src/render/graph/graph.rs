@@ -4,7 +4,10 @@ use super::{
     Edge, EdgeExistence, Node, NodeId, NodeLabel, NodeRunError, NodeState, RenderGraphContext,
     RenderGraphError, SlotInfo, SlotLabel,
 };
-use crate::render::{graph::RenderContext, RenderState};
+use crate::{
+    ecs::world::World,
+    render::{graph::RenderContext, RenderState},
+};
 
 /// The render graph configures the modular, parallel and re-usable render logic.
 /// It is a retained and stateless (nodes itself my have their internal state) structure,
@@ -557,6 +560,7 @@ impl Node for GraphInputNode {
         graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
         _state: &RenderState,
+        world: &World,
     ) -> Result<(), NodeRunError> {
         for i in 0..graph.inputs().len() {
             let input = graph.inputs()[i].clone();

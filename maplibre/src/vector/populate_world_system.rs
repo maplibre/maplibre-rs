@@ -1,10 +1,8 @@
-//! Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`].
-
-use std::rc::Rc;
+use std::{borrow::Cow, rc::Rc};
 
 use crate::{
     context::MapContext,
-    ecs::world::World,
+    ecs::{system::System, world::World},
     environment::Environment,
     io::{
         apc::{AsyncProcedureCall, Message},
@@ -14,32 +12,26 @@ use crate::{
         },
     },
     kernel::Kernel,
-    schedule::Stage,
 };
 
-pub struct PopulateTileStore<E: Environment> {
+pub struct PopulateWorldSystem<E: Environment> {
     kernel: Rc<Kernel<E>>,
 }
 
-impl<E: Environment> PopulateTileStore<E> {
-    pub fn new(kernel: Rc<Kernel<E>>) -> Self {
-        Self { kernel }
+impl<E: Environment> System for PopulateWorldSystem<E> {
+    fn name(&self) -> Cow<'static, str> {
+        "populate_world_system".into()
     }
-}
 
-impl<E: Environment> Stage for PopulateTileStore<E> {
     fn run(
         &mut self,
         MapContext {
-            world:
-                World {
-                    tile_repository,
-                    geometry_index,
-                    ..
-                },
-            ..
+            world, renderer, ..
         }: &mut MapContext,
     ) {
+        let tile_repository = &mut world.tile_repository;
+        let geometry_index = &mut world.geometry_index;
+
         // TODO: (optimize) Using while instead of if means that we are processing all that is
         // available this might cause frame drops.
         while let Some(result) = self.kernel.apc().receive() {

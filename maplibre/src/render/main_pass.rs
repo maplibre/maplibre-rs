@@ -5,14 +5,18 @@
 
 use std::ops::Deref;
 
-use crate::render::{
-    draw_graph,
-    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-    render_commands::{DrawMasks, DrawRasterTiles, DrawVectorTiles},
-    render_phase::RenderCommand,
-    resource::TrackedRenderPass,
-    Eventually::Initialized,
-    RenderState,
+use crate::{
+    ecs::world::World,
+    render::{
+        draw_graph,
+        graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        render_commands::{DrawMasks, DrawRasterTiles, DrawVectorTiles},
+        render_phase::RenderCommand,
+        resource::TrackedRenderPass,
+        Eventually::Initialized,
+        RenderState,
+    },
+    vector::{MaskRenderPhase, RasterTilePhase, VectorTilePhase},
 };
 
 pub struct MainPassNode {}
@@ -35,6 +39,7 @@ impl Node for MainPassNode {
         _graph: &mut RenderGraphContext,
         render_context: &mut RenderContext,
         state: &RenderState,
+        world: &World,
     ) -> Result<(), NodeRunError> {
         let Initialized(render_target) = &state.render_target else {
             return Ok(());
@@ -87,16 +92,16 @@ impl Node for MainPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        for item in &state.mask_phase.items {
-            DrawMasks::render(state, item, &mut tracked_pass);
-        }
+        // FIXME: Move these to vector plugin, or make render phases core
 
-        for item in &state.vector_tile_phase.items {
-            DrawVectorTiles::render(state, item, &mut tracked_pass);
+        for item in &world.get_resource::<MaskRenderPhase>().items {
+            DrawMasks::render(state, world, item, &mut tracked_pass);
         }
-
-        for item in &state.raster_tile_phase.items {
-            DrawRasterTiles::render(state, item, &mut tracked_pass);
+        for item in &world.get_resource::<VectorTilePhase>().items {
+            DrawVectorTiles::render(state, world, item, &mut tracked_pass);
+        }
+        for item in &world.get_resource::<RasterTilePhase>().items {
+            DrawRasterTiles::render(state, world, item, &mut tracked_pass);
         }
 
         Ok(())
@@ -111,6 +116,7 @@ impl Node for MainPassDriverNode {
         graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
         _state: &RenderState,
+        world: &World,
     ) -> Result<(), NodeRunError> {
         graph.run_sub_graph(draw_graph::NAME, vec![])?;
 

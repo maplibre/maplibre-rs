@@ -40,18 +40,18 @@ pub mod stages;
 mod debug_pass;
 mod graph_runner;
 mod main_pass;
-mod render_commands;
-mod render_phase;
-mod shaders;
-mod tile_pipeline;
-mod tile_view_pattern;
+pub mod shaders; // TODO: Make private again
 
 // Public API
 pub mod builder;
 pub mod camera;
 pub mod error;
 pub mod eventually;
+pub mod render_commands;
+pub mod render_phase;
 pub mod settings;
+pub mod tile_pipeline;
+pub mod tile_view_pattern;
 
 pub use shaders::ShaderVertex;
 pub use stages::register_default_render_stages;
@@ -70,54 +70,19 @@ use crate::{
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
 pub struct RenderState {
+    surface: Surface,
     render_target: Eventually<TextureView>,
-
-    buffer_pool: Eventually<
-        BufferPool<
-            wgpu::Queue,
-            wgpu::Buffer,
-            ShaderVertex,
-            IndexDataType,
-            ShaderLayerMetadata,
-            ShaderFeatureStyle,
-        >,
-    >,
-    tile_view_pattern: Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
-
-    vector_tile_pipeline: Eventually<wgpu::RenderPipeline>,
-    raster_resources: Eventually<RasterResources>,
-    mask_pipeline: Eventually<wgpu::RenderPipeline>,
-    debug_pipeline: Eventually<wgpu::RenderPipeline>,
-
-    globals_bind_group: Eventually<Globals>,
-
     depth_texture: Eventually<Texture>,
     multisampling_texture: Eventually<Option<Texture>>,
-
-    surface: Surface,
-
-    mask_phase: RenderPhase<TileShape>,
-    vector_tile_phase: RenderPhase<(IndexEntry, TileShape)>,
-    raster_tile_phase: RenderPhase<TileShape>,
 }
 
 impl RenderState {
     pub fn new(surface: Surface) -> Self {
         Self {
             render_target: Default::default(),
-            buffer_pool: Default::default(),
-            tile_view_pattern: Default::default(),
-            vector_tile_pipeline: Default::default(),
-            raster_resources: Default::default(),
-            mask_pipeline: Default::default(),
-            debug_pipeline: Default::default(),
-            globals_bind_group: Default::default(),
             depth_texture: Default::default(),
             multisampling_texture: Default::default(),
             surface,
-            mask_phase: Default::default(),
-            vector_tile_phase: Default::default(),
-            raster_tile_phase: Default::default(),
         }
     }
 
@@ -131,21 +96,6 @@ impl RenderState {
     pub fn surface(&self) -> &Surface {
         &self.surface
     }
-
-    pub fn buffer_pool_mut(
-        &mut self,
-    ) -> &mut Eventually<
-        BufferPool<
-            wgpu::Queue,
-            wgpu::Buffer,
-            ShaderVertex,
-            IndexDataType,
-            ShaderLayerMetadata,
-            ShaderFeatureStyle,
-        >,
-    > {
-        &mut self.buffer_pool
-    }
 }
 
 pub struct Renderer {
@@ -158,6 +108,7 @@ pub struct Renderer {
     pub settings: RendererSettings,
 
     pub state: RenderState,
+    pub render_graph: RenderGraph,
 }
 
 impl Renderer {
@@ -201,6 +152,7 @@ impl Renderer {
             wgpu_settings,
             settings,
             state: RenderState::new(surface),
+            render_graph: Default::default(),
         })
     }
 
@@ -235,6 +187,7 @@ impl Renderer {
             wgpu_settings,
             settings,
             state: RenderState::new(surface),
+            render_graph: Default::default(),
         })
     }
 
@@ -512,9 +465,7 @@ pub mod draw_graph {
     }
 }
 
-pub fn create_default_render_graph() -> Result<RenderGraph, RenderGraphError> {
-    let mut graph = RenderGraph::default();
-
+pub fn initialize_default_render_graph(graph: &mut RenderGraph) -> Result<(), RenderGraphError> {
     let mut draw_graph = RenderGraph::default();
     // Draw nodes
     draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
@@ -532,7 +483,5 @@ pub fn create_default_render_graph() -> Result<RenderGraph, RenderGraphError> {
     graph.add_node_edge(
         main_graph::node::MAIN_PASS_DEPENDENCIES,
         main_graph::node::MAIN_PASS_DRIVER,
-    )?;
-
-    Ok(graph)
+    )
 }

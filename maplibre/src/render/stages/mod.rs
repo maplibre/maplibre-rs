@@ -1,31 +1,22 @@
 //! Rendering specific [Stages](Stage)
 
 use graph_runner_stage::GraphRunnerStage;
-use resource_stage::ResourceStage;
-use upload_stage::UploadStage;
 
 use crate::{
-    context::MapContext,
+    ecs::system::stage::SystemStage,
     multi_stage,
-    render::{
-        graph::RenderGraph,
-        stages::{
-            extract_stage::ExtractStage, phase_sort_stage::PhaseSortStage, queue_stage::QueueStage,
-        },
-    },
     schedule::{Schedule, Stage, StageLabel},
 };
 
-mod extract_stage;
 mod graph_runner_stage;
-mod phase_sort_stage;
-mod queue_stage;
 mod resource_stage;
-mod upload_stage;
 
 /// The labels of the default App rendering stages.
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub enum RenderStageLabel {
+    /// Extract data from the world.
+    Extract,
+
     /// Prepare render resources from the extracted data for the GPU.
     /// For example during this phase textures are created, buffers are allocated and written.
     Prepare,
@@ -53,15 +44,16 @@ impl StageLabel for RenderStageLabel {
 }
 
 multi_stage!(
-    PrepareStage,
-    resource: ResourceStage,
-    extract: ExtractStage,
-    upload: UploadStage
+    RenderStage,
+    render: SystemStage,
+    render_graph: GraphRunnerStage
 );
 
-pub fn register_default_render_stages(graph: RenderGraph, schedule: &mut Schedule) {
-    schedule.add_stage(RenderStageLabel::Prepare, PrepareStage::default());
-    schedule.add_stage(RenderStageLabel::Queue, QueueStage::default());
-    schedule.add_stage(RenderStageLabel::PhaseSort, PhaseSortStage::default());
-    schedule.add_stage(RenderStageLabel::Render, GraphRunnerStage::new(graph));
+pub fn register_default_render_stages(schedule: &mut Schedule) {
+    schedule.add_stage(RenderStageLabel::Extract, SystemStage::default());
+    schedule.add_stage(RenderStageLabel::Prepare, SystemStage::default());
+    schedule.add_stage(RenderStageLabel::Queue, SystemStage::default());
+    schedule.add_stage(RenderStageLabel::PhaseSort, SystemStage::default());
+    schedule.add_stage(RenderStageLabel::Render, RenderStage::default());
+    schedule.add_stage(RenderStageLabel::Cleanup, SystemStage::default());
 }
