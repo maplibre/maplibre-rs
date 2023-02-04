@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use cgmath::Vector2;
 use maplibre::{
-    context::MapContext, coords::WorldCoords, io::geometry_index::IndexedGeometry,
-    view_state::World,
+    context::MapContext, coords::WorldCoords, ecs::world::World,
+    io::geometry_index::IndexedGeometry,
 };
 use winit::event::{ElementState, MouseButton};
 

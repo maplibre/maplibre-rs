@@ -21,12 +21,15 @@ pub fn tile_view_pattern_system(
     }: &mut MapContext,
 ) {
     // TODO duplicate
-    let (Initialized(tile_view_pattern), Initialized(buffer_pool), Initialized(raster_resources)) =
-        (
-            world.get_resource_mut::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>(),
-            world.get_resource::<Eventually<VectorBufferPool>>(),
-            world.get_resource::<Eventually<RasterResources>>(),
-        ) else { return; };
+    let (
+        Initialized(tile_view_pattern),
+        Initialized(buffer_pool),
+        Initialized(raster_resources)
+    ) = world.resources.collect_mut3::<
+        Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
+        Eventually<VectorBufferPool>,
+        Eventually<RasterResources>
+    >().unwrap() else { return; };
 
     let view_state = &world.view_state;
 

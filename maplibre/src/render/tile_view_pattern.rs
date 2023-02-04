@@ -3,6 +3,7 @@
 use std::{marker::PhantomData, mem::size_of, ops::Range};
 
 use cgmath::Matrix4;
+use log::warn;
 
 use crate::{
     coords::{ViewRegion, WorldTileCoords, Zoom},
@@ -67,7 +68,7 @@ impl<A: HasTile, B: HasTile> HasTile for (&A, &B) {
 
 /// Defines the exact location where a specific tile on the map is rendered. It defines the shape
 /// of the tile with its location for the current zoom factor.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct TileShape {
     coords: WorldTileCoords,
 
@@ -94,7 +95,11 @@ impl TileShape {
     }
 
     pub fn buffer_range(&self) -> Range<wgpu::BufferAddress> {
-        self.buffer_range.as_ref().unwrap().clone()
+        let option = self.buffer_range.as_ref();
+        if let None = option {
+            warn!("error {}", self.coords)
+        }
+        option.unwrap().clone()
     }
 
     pub fn coords(&self) -> WorldTileCoords {
@@ -107,7 +112,7 @@ impl TileShape {
 /// `SourceShapes::Parent((0, 0, 0))` as source.
 /// Similarly if we have the target `(0, 0, 0)` we might use
 /// `SourceShapes::Children((0, 0, 1), (0, 1, 1), (1, 0, 1), (1, 1, 1))` as sources.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum SourceShapes {
     /// Parent tile is the source. We construct the `target` from parts of a parent.
     Parent(TileShape),
@@ -121,7 +126,7 @@ pub enum SourceShapes {
 }
 
 /// Defines the `target` tile and its `source` from which data tile data comes.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ViewTile {
     target: WorldTileCoords,
     source: SourceShapes,
@@ -254,6 +259,8 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             });
         };
 
+        warn!("sdf {:?}", self.view_tiles);
+
         for view_tile in &mut self.view_tiles {
             match &mut view_tile.source {
                 SourceShapes::Parent(source_shape) => {
@@ -268,6 +275,8 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 SourceShapes::None => {}
             }
         }
+
+        warn!("afeer {:?}", self.view_tiles);
 
         let raw_buffer = bytemuck::cast_slice(buffer.as_slice());
         if raw_buffer.len() as wgpu::BufferAddress > self.view_tiles_buffer.inner_size {

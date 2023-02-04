@@ -7,7 +7,7 @@ use crate::{
     vector::{MaskRenderPhase, RasterTilePhase, VectorTilePhase},
 };
 
-pub fn render_phase_sort_system(
+pub fn phase_sort_system(
     MapContext {
         world, renderer, ..
     }: &mut MapContext,

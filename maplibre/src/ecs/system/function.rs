@@ -34,3 +34,25 @@ where
         (self.func)(context)
     }
 }
+
+/*impl<S> IntoSystem for S
+where
+    S: System,
+{
+    type System = S;
+
+    fn into_system(self: Self) -> Self::System {
+        self
+    }
+}*/
+
+impl<F> IntoSystem for F
+where
+    F: FnMut(&mut MapContext) + 'static,
+{
+    type System = FunctionSystem<F>;
+
+    fn into_system(self: Self) -> Self::System {
+        FunctionSystem { func: self }
+    }
+}

@@ -1,7 +1,10 @@
-use crate::render::{
-    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-    resource::Head,
-    RenderState,
+use crate::{
+    ecs::world::World,
+    render::{
+        graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        resource::Head,
+        RenderState,
+    },
 };
 
 /// Node which copies the contents of the GPU-side texture in [`BufferedTextureHead`] to an
@@ -30,6 +33,7 @@ impl Node for CopySurfaceBufferNode {
             command_encoder, ..
         }: &mut RenderContext,
         state: &RenderState,
+        world: &World,
     ) -> Result<(), NodeRunError> {
         let surface = state.surface();
         match surface.head() {

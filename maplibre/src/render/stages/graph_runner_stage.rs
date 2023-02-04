@@ -1,9 +1,12 @@
 //! Executes the [`RenderGraph`] current render graph.
 
+use std::borrow::Cow;
+
 use log::error;
 
 use crate::{
     context::MapContext,
+    ecs::system::System,
     render::{
         eventually::Eventually::Initialized, graph::RenderGraph, graph_runner::RenderGraphRunner,
         Renderer,
@@ -13,9 +16,13 @@ use crate::{
 
 /// Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame.
 #[derive(Default)]
-pub struct GraphRunnerStage;
+pub struct GraphRunnerSystem;
 
-impl Stage for GraphRunnerStage {
+impl System for GraphRunnerSystem {
+    fn name(&self) -> Cow<'static, str> {
+        "graph_runner".into()
+    }
+
     fn run(
         &mut self,
         MapContext {

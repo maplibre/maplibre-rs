@@ -2,6 +2,8 @@
 
 use std::iter;
 
+use log::warn;
+
 use crate::{
     context::MapContext,
     coords::ViewRegion,
@@ -19,7 +21,7 @@ use crate::{
     vector::VectorBufferPool,
 };
 
-fn upload_system(
+pub fn upload_system(
     MapContext {
         world,
         style,
@@ -27,26 +29,29 @@ fn upload_system(
         ..
     }: &mut MapContext,
 ) {
-    // TODO duplicate
-    let (Initialized(tile_view_pattern), Initialized(buffer_pool), Initialized(raster_resources)) =
-        (
-            world.get_resource_mut::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>(),
-            world.get_resource_mut::<Eventually<VectorBufferPool>>(),
-            world.get_resource_mut::<Eventually<RasterResources>>(),
-        ) else { return; };
-
     let view_state = &world.view_state;
-    let tile_repository = &world.tile_repository;
     let view_proj = view_state.view_projection();
-
     let view_region = view_state.create_view_region();
+
+    // TODO duplicate
+    let (
+        Initialized(tile_view_pattern),
+        Initialized(buffer_pool),
+        Initialized(raster_resources)
+    ) = world.resources.collect_mut3::<
+        Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
+        Eventually<VectorBufferPool>,
+        Eventually<RasterResources>
+    >().unwrap() else {
+        warn!("no view");
+        return; };
 
     if let Some(view_region) = &view_region {
         upload_tesselated_layer(
             buffer_pool,
             device,
             queue,
-            tile_repository,
+            &world.tile_repository,
             style,
             view_region,
         );
@@ -54,7 +59,7 @@ fn upload_system(
             raster_resources,
             device,
             queue,
-            tile_repository,
+            &world.tile_repository,
             style,
             view_region,
         );

@@ -28,12 +28,12 @@ use crate::{
 };
 
 pub struct RequestSystem<E: Environment> {
-    kernel: Rc<Kernel<E>>,
+    pub(crate) kernel: Rc<Kernel<E>>,
 }
 
 impl<E: Environment> System for RequestSystem<E> {
     fn name(&self) -> Cow<'static, str> {
-        "populate_world_system".into()
+        "request".into()
     }
 
     fn run(
@@ -68,13 +68,14 @@ impl<E: Environment> RequestSystem<E> {
         view_region: &ViewRegion,
     ) {
         for coords in view_region.iter() {
-            if !coords.build_quad_key().is_some() {
+            if coords.build_quad_key().is_none() {
                 continue;
             }
             // TODO: Make tesselation depend on style?
-            if !tile_repository.is_tile_pending_or_done(&coords) {
+            if tile_repository.is_tile_pending_or_done(&coords) {
                 continue;
             }
+
             tile_repository.mark_tile_pending(coords).unwrap(); // TODO: Remove unwrap
 
             tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);

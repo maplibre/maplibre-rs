@@ -6,10 +6,13 @@ mod resource;
 mod tile_view_pattern;
 mod upload;
 
-use std::ops::{Deref, DerefMut};
+use std::{
+    ops::{Deref, DerefMut},
+    rc::Rc,
+};
 
 use crate::{
-    ecs::world::World,
+    ecs::{system::stage::SystemStage, world::World},
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
@@ -18,10 +21,17 @@ use crate::{
         render_phase::RenderPhase,
         resource::{BufferPool, IndexEntry, RasterResources},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
+        stages::RenderStageLabel,
         tile_view_pattern::{TileShape, TileViewPattern},
         ShaderVertex,
     },
+    schedule::Schedule,
     tessellation::IndexDataType,
+    vector::{
+        phase_sort::phase_sort_system, populate_world_system::PopulateWorldSystem,
+        prepare::prepare_system, request::RequestSystem, resource::resource_system,
+        tile_view_pattern::tile_view_pattern_system, upload::upload_system,
+    },
 };
 
 // FIXME: Simplify those NewTypes
@@ -110,7 +120,7 @@ pub type VectorBufferPool = BufferPool<
 pub struct VectorPlugin;
 
 impl<E: Environment> Plugin<E> for VectorPlugin {
-    fn build(&self, kernel: &mut Kernel<E>, world: &mut World) {
+    fn build(&self, schedule: &mut Schedule, kernel: Rc<Kernel<E>>, world: &mut World) {
         // FIXME: Split into several plugins
 
         // buffer_pool
@@ -138,5 +148,30 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
         world.insert_resource(VectorTilePhase::default());
         // raster_tile_phase,
         world.insert_resource(RasterTilePhase::default());
+
+        schedule
+            .get_stage_mut::<SystemStage>(&RenderStageLabel::Extract)
+            .unwrap()
+            .add_system_direct(RequestSystem {
+                kernel: kernel.clone(),
+            })
+            .add_system_direct(PopulateWorldSystem { kernel });
+
+        schedule
+            .get_stage_mut::<SystemStage>(&RenderStageLabel::Prepare)
+            .unwrap()
+            .add_system(resource_system)
+            .add_system(tile_view_pattern_system);
+
+        schedule
+            .get_stage_mut::<SystemStage>(&RenderStageLabel::PhaseSort)
+            .unwrap()
+            .add_system(phase_sort_system);
+
+        schedule
+            .get_stage_mut::<SystemStage>(&RenderStageLabel::Queue)
+            .unwrap()
+            .add_system(upload_system) // TODO Upload updates the TileView in tileviewpattern -> upload most run before prepare
+            .add_system(prepare_system);
     }
 }

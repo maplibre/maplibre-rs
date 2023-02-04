@@ -1,16 +1,22 @@
 //! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.
 
+use std::borrow::Cow;
+
 use crate::{
     context::MapContext,
+    ecs::system::System,
     render::{resource::Texture, Renderer},
     schedule::Stage,
 };
 
 #[derive(Default)]
-pub struct ResourceStage;
+pub struct ResourceSystem;
 
-impl Stage for ResourceStage {
-    #[tracing::instrument(name = "ResourceStage", skip_all)]
+impl System for ResourceSystem {
+    fn name(&self) -> Cow<'static, str> {
+        "resource_stage".into()
+    }
+
     fn run(
         &mut self,
         MapContext {

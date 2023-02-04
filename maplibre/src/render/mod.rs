@@ -63,10 +63,10 @@ use crate::{
 const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
 pub struct RenderState {
-    surface: Surface,
-    render_target: Eventually<TextureView>,
-    depth_texture: Eventually<Texture>,
-    multisampling_texture: Eventually<Option<Texture>>,
+    pub surface: Surface,
+    pub render_target: Eventually<TextureView>,
+    pub depth_texture: Eventually<Texture>,
+    pub multisampling_texture: Eventually<Option<Texture>>,
 }
 
 impl RenderState {

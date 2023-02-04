@@ -16,22 +16,28 @@ pub fn prepare_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
-    let mask_phase = world.get_resource_mut::<MaskRenderPhase>();
-    mask_phase.clear();
-
-    let vector_tile_phase = world.get_resource_mut::<VectorTilePhase>();
-    vector_tile_phase.clear();
-
-    let raster_tile_phase = world.get_resource_mut::<RasterTilePhase>();
-    raster_tile_phase.clear();
-
     // TODO duplicate
-    let (Initialized(tile_view_pattern), Initialized(buffer_pool), Initialized(raster_resources)) =
-        (
-            world.get_resource::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>(),
-            world.get_resource::<Eventually<VectorBufferPool>>(),
-            world.get_resource::<Eventually<RasterResources>>(),
-        ) else { return; };
+    let collection = world.resources.collect_mut6::<
+        Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
+        Eventually<VectorBufferPool>,
+        Eventually<RasterResources>,
+        MaskRenderPhase,
+        VectorTilePhase,
+        RasterTilePhase
+    >().unwrap();
+
+    let (
+        Initialized(tile_view_pattern),
+        Initialized(buffer_pool),
+        Initialized(raster_resources),
+        mask_phase,
+        vector_tile_phase,
+        raster_tile_phase
+    ) = collection else { return; };
+
+    mask_phase.clear();
+    vector_tile_phase.clear();
+    raster_tile_phase.clear();
 
     let buffer_pool_index = buffer_pool.index();
 

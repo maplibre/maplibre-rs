@@ -25,7 +25,7 @@ impl<'w> EntityMut<'w> {
 }
 
 pub struct World {
-    resources: Resources,
+    pub resources: Resources,
     pub view_state: ViewState,
     pub tile_repository: TileRepository,
     pub geometry_index: GeometryIndex,

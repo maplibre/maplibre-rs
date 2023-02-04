@@ -8,6 +8,7 @@ use crate::{
     ecs::world::World,
     environment::Environment,
     kernel::Kernel,
+    plugin::Plugin,
     render::{
         builder::{
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
@@ -18,6 +19,7 @@ use crate::{
     },
     schedule::{Schedule, Stage},
     style::Style,
+    vector::VectorPlugin,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
 
@@ -94,15 +96,23 @@ where
 
                 let center = style.center.unwrap_or_default();
 
-                let world = World::new_at(
+                let mut world = World::new_at(
                     window_size,
                     LatLon::new(center[0], center[1]),
                     style.zoom.map(Zoom::new).unwrap_or_default(),
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
                 );
 
+                // FIXME
+                VectorPlugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
+
                 match init_result {
-                    InitializationResult::Initialized(InitializedRenderer { renderer, .. }) => {
+                    InitializationResult::Initialized(InitializedRenderer {
+                        mut renderer, ..
+                    }) => {
+                        // FIXME
+                        initialize_default_render_graph(&mut renderer.render_graph).unwrap();
+
                         self.map_context = CurrentMapContext::Ready(MapContext {
                             world,
                             style: std::mem::take(style),

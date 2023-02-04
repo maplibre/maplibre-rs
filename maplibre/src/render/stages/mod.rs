@@ -1,10 +1,11 @@
 //! Rendering specific [Stages](Stage)
 
-use graph_runner_stage::GraphRunnerStage;
+use graph_runner_stage::GraphRunnerSystem;
 
 use crate::{
     ecs::system::stage::SystemStage,
     multi_stage,
+    render::stages::resource_stage::ResourceSystem,
     schedule::{Schedule, Stage, StageLabel},
 };
 
@@ -43,17 +44,17 @@ impl StageLabel for RenderStageLabel {
     }
 }
 
-multi_stage!(
-    RenderStage,
-    render: SystemStage,
-    render_graph: GraphRunnerStage
-);
-
 pub fn register_default_render_stages(schedule: &mut Schedule) {
     schedule.add_stage(RenderStageLabel::Extract, SystemStage::default());
-    schedule.add_stage(RenderStageLabel::Prepare, SystemStage::default());
+    schedule.add_stage(
+        RenderStageLabel::Prepare,
+        SystemStage::default().with_system_direct(ResourceSystem),
+    );
     schedule.add_stage(RenderStageLabel::Queue, SystemStage::default());
     schedule.add_stage(RenderStageLabel::PhaseSort, SystemStage::default());
-    schedule.add_stage(RenderStageLabel::Render, RenderStage::default());
+    schedule.add_stage(
+        RenderStageLabel::Render,
+        SystemStage::default().with_system_direct(GraphRunnerSystem),
+    );
     schedule.add_stage(RenderStageLabel::Cleanup, SystemStage::default());
 }

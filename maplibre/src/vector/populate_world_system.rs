@@ -15,7 +15,7 @@ use crate::{
 };
 
 pub struct PopulateWorldSystem<E: Environment> {
-    kernel: Rc<Kernel<E>>,
+    pub(crate) kernel: Rc<Kernel<E>>,
 }
 
 impl<E: Environment> System for PopulateWorldSystem<E> {
