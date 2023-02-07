@@ -4,13 +4,11 @@ use crate::{
     ecs::world::World,
     render::{
         graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-        render_commands::DrawDebugOutlines,
-        render_phase::RenderCommand,
+        render_phase::{Draw, RenderCommand, RenderPhase, TileMaskItem},
         resource::TrackedRenderPass,
         Eventually::Initialized,
         RenderState,
     },
-    vector::MaskRenderPhase,
 };
 
 /// Pass which renders debug information on top of the map.
@@ -61,11 +59,15 @@ impl Node for DebugPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        // FIXME: Move these to vector plugin, or make render phases core
-
-        for item in &world.get_resource::<MaskRenderPhase>().items {
-            DrawDebugOutlines::render(state, world, item, &mut tracked_pass);
-        }
+        // FIXME: Debug vs tile mask phase?
+        /*for item in &world
+            .get_resource::<RenderPhase<TileMaskItem>>()
+            .items
+            .clone()
+        {
+            let draw_function = draw_functions.get(item.draw_function).unwrap();
+            draw_function.draw(&mut tracked_pass, state, world, item);
+        }*/
 
         Ok(())
     }

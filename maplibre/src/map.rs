@@ -9,6 +9,7 @@ use crate::{
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
+    raster::RasterPlugin,
     render::{
         builder::{
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
@@ -105,6 +106,7 @@ where
 
                 // FIXME
                 VectorPlugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
+                RasterPlugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
 
                 match init_result {
                     InitializationResult::Initialized(InitializedRenderer {

@@ -2,23 +2,20 @@
 
 use std::iter;
 
-use log::warn;
-
 use crate::{
     context::MapContext,
-    coords::ViewRegion,
-    ecs::world::World,
+    coords::{ViewRegion, WorldTileCoords},
     io::tile_repository::{StoredLayer, TileRepository},
     render::{
         camera::ViewProjection,
         eventually::{Eventually, Eventually::Initialized},
-        resource::RasterResources,
-        shaders::{ShaderCamera, ShaderFeatureStyle, ShaderGlobals, ShaderLayerMetadata, Vec4f32},
+        resource::IndexEntry,
+        shaders::{ShaderFeatureStyle, ShaderLayerMetadata, Vec4f32},
         tile_view_pattern::TileViewPattern,
         Renderer,
     },
     style::Style,
-    vector::VectorBufferPool,
+    vector::{VectorBufferPool, VectorLayersComponent},
 };
 
 pub fn upload_system(
@@ -37,17 +34,14 @@ pub fn upload_system(
     let (
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
-        Initialized(raster_resources)
-    ) = world.resources.collect_mut3::<
+    ) = world.resources.collect_mut2::<
         Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
         Eventually<VectorBufferPool>,
-        Eventually<RasterResources>
     >().unwrap() else {
-        warn!("no view");
         return; };
 
     if let Some(view_region) = &view_region {
-        upload_tesselated_layer(
+        let new_components = upload_tesselated_layer(
             buffer_pool,
             device,
             queue,
@@ -55,20 +49,20 @@ pub fn upload_system(
             style,
             view_region,
         );
-        upload_raster_layer(
-            raster_resources,
-            device,
-            queue,
-            &world.tile_repository,
-            style,
-            view_region,
-        );
         upload_tile_view_pattern(tile_view_pattern, queue, &view_proj);
+
+        for (coords, components) in new_components {
+            world
+                .query_tile_mut(coords)
+                .unwrap()
+                .insert(VectorLayersComponent {
+                    entries: components,
+                });
+        }
         //self.update_metadata(state, tile_repository, queue);
     }
 }
 
-#[tracing::instrument(skip_all)]
 fn update_metadata(
     buffer_pool: &VectorBufferPool,
     tile_repository: &TileRepository,
@@ -140,7 +134,6 @@ fn update_metadata(
     }
 }
 
-#[tracing::instrument(skip_all)]
 fn upload_tile_view_pattern(
     tile_view_pattern: &mut TileViewPattern<wgpu::Queue, wgpu::Buffer>,
     queue: &wgpu::Queue,
@@ -149,7 +142,6 @@ fn upload_tile_view_pattern(
     tile_view_pattern.upload_pattern(queue, view_proj);
 }
 
-#[tracing::instrument(skip_all)]
 fn upload_tesselated_layer(
     buffer_pool: &mut VectorBufferPool,
     device: &wgpu::Device,
@@ -157,12 +149,15 @@ fn upload_tesselated_layer(
     tile_repository: &TileRepository,
     style: &Style,
     view_region: &ViewRegion,
-) {
+) -> Vec<(WorldTileCoords, Vec<IndexEntry>)> {
+    let mut new_components_tiles = Vec::new();
+
     // Upload all tessellated layers which are in view
-    // FIXME: Take into account raster layers
     for coords in view_region.iter() {
         let Some(available_layers) =
             tile_repository.iter_missing_tesselated_layers_at(buffer_pool, &coords) else { continue; };
+
+        let mut new_components = Vec::new();
 
         for style_layer in &style.layers {
             let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
@@ -203,7 +198,7 @@ fn upload_tesselated_layer(
 
                     tracing::trace!("Allocating geometry at {}", &coords);
                     log::info!("Allocating geometry at {}", &coords);
-                    buffer_pool.allocate_layer_geometry(
+                    let entry = buffer_pool.allocate_layer_geometry(
                         queue,
                         *coords,
                         style_layer.clone(),
@@ -211,70 +206,14 @@ fn upload_tesselated_layer(
                         ShaderLayerMetadata::new(style_layer.index as f32),
                         &feature_metadata,
                     );
+
+                    new_components.push(entry);
                 }
             }
         }
+
+        new_components_tiles.push((coords, new_components));
     }
-}
 
-#[tracing::instrument(skip_all)]
-fn upload_raster_layer(
-    raster_resources: &mut RasterResources,
-    device: &wgpu::Device,
-    queue: &wgpu::Queue,
-    tile_repository: &TileRepository,
-    style: &Style,
-    view_region: &ViewRegion,
-) {
-    for coords in view_region.iter() {
-        let Some(available_layers) =
-            tile_repository.iter_missing_raster_layers_at(raster_resources, &coords) else { continue; };
-
-        for style_layer in &style.layers {
-            let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
-
-            let Some(stored_layer) = available_layers
-                .iter()
-                .find(|layer| source_layer.as_str() == layer.layer_name()) else { continue; };
-
-            match stored_layer {
-                StoredLayer::UnavailableLayer { .. } => {}
-                StoredLayer::TessellatedLayer { .. } => {}
-                StoredLayer::RasterLayer {
-                    coords,
-                    layer_name,
-                    image,
-                } => {
-                    let (width, height) = image.dimensions();
-
-                    let texture = raster_resources.create_texture(
-                        None,
-                        device,
-                        wgpu::TextureFormat::Rgba8UnormSrgb,
-                        width,
-                        height,
-                        wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-                    );
-
-                    queue.write_texture(
-                        wgpu::ImageCopyTexture {
-                            aspect: wgpu::TextureAspect::All,
-                            texture: &texture.texture,
-                            mip_level: 0,
-                            origin: wgpu::Origin3d::ZERO,
-                        },
-                        &image,
-                        wgpu::ImageDataLayout {
-                            offset: 0,
-                            bytes_per_row: std::num::NonZeroU32::new(4 * width),
-                            rows_per_image: std::num::NonZeroU32::new(height),
-                        },
-                        texture.size.clone(),
-                    );
-
-                    raster_resources.bind_texture(device, &coords, texture);
-                }
-            }
-        }
-    }
+    return new_components_tiles;
 }

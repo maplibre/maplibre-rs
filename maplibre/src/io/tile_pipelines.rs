@@ -91,8 +91,6 @@ impl Processable for TessellateLayer {
                 continue;
             }
 
-            tracing::info!("layer {} at {} ready", layer_name, coords);
-
             let mut tessellator = ZeroTessellator::<IndexDataType>::default();
             if let Err(e) = layer.process(&mut tessellator) {
                 context
@@ -212,7 +210,6 @@ impl Processable for RasterLayer {
         let img = image::load_from_memory(&data).unwrap();
         let rgba = img.to_rgba8();
 
-        error!("layer raster finished");
         context.processor_mut().layer_raster_finished(
             coords,
             "raster".to_string(),

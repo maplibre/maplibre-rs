@@ -164,7 +164,9 @@ impl TileRepository {
         buffer_pool: &BufferPool<Q, B, V, I, TM, FM>,
         coords: &WorldTileCoords,
     ) -> Option<Vec<&StoredLayer>> {
-        let loaded_layers = buffer_pool.get_loaded_layers_at(coords).unwrap_or_default();
+        let loaded_layers = buffer_pool
+            .get_loaded_source_layers_at(coords)
+            .unwrap_or_default();
 
         self.iter_layers_at(coords).map(|layers| {
             layers
@@ -173,19 +175,11 @@ impl TileRepository {
         })
     }
 
-    /// Returns the list of tessellated layers at the given world tile coords, which are not loaded in
-    /// the raster resource
-    pub fn iter_missing_raster_layers_at(
+    pub fn iter_raster_layers_at(
         &self,
         raster_resources: &RasterResources,
         coords: &WorldTileCoords,
     ) -> Option<Vec<&StoredLayer>> {
-        let is_loaded = raster_resources.get_bound_texture(coords).is_some();
-
-        if is_loaded {
-            return None;
-        }
-
         self.iter_layers_at(coords).map(|layers| {
             layers
                 .filter(|result| matches!(result, StoredLayer::RasterLayer { .. }))

@@ -1,10 +1,9 @@
-mod phase_sort;
 mod populate_world_system;
-mod prepare;
-mod request;
-mod resource;
-mod tile_view_pattern;
-mod upload;
+mod queue_system;
+mod render_commands;
+mod resource_system;
+mod tile_view_pattern_system;
+mod upload_system;
 
 use std::{
     ops::{Deref, DerefMut},
@@ -12,25 +11,30 @@ use std::{
 };
 
 use crate::{
-    ecs::{system::stage::SystemStage, world::World},
+    coords::WorldTileCoords,
+    ecs::{component::TileComponent, system::SystemContainer, world::World},
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
     render::{
         eventually::Eventually,
-        render_phase::RenderPhase,
-        resource::{BufferPool, IndexEntry, RasterResources},
+        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        resource::{BufferPool, IndexEntry},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
         stages::RenderStageLabel,
         tile_view_pattern::{TileShape, TileViewPattern},
         ShaderVertex,
     },
     schedule::Schedule,
-    tessellation::IndexDataType,
+    systems::request_system::RequestSystem,
+    tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
-        phase_sort::phase_sort_system, populate_world_system::PopulateWorldSystem,
-        prepare::prepare_system, request::RequestSystem, resource::resource_system,
-        tile_view_pattern::tile_view_pattern_system, upload::upload_system,
+        populate_world_system::PopulateWorldSystem,
+        queue_system::queue_system,
+        render_commands::{DrawMasks, DrawVectorTiles},
+        resource_system::resource_system,
+        tile_view_pattern_system::tile_view_pattern_system,
+        upload_system::upload_system,
     },
 };
 
@@ -63,51 +67,6 @@ impl Deref for DebugPipeline {
     }
 }
 
-#[derive(Default)]
-pub struct MaskRenderPhase(RenderPhase<TileShape>);
-impl Deref for MaskRenderPhase {
-    type Target = RenderPhase<TileShape>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl DerefMut for MaskRenderPhase {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-#[derive(Default)]
-pub struct RasterTilePhase(RenderPhase<TileShape>);
-impl Deref for RasterTilePhase {
-    type Target = RenderPhase<TileShape>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl DerefMut for RasterTilePhase {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-#[derive(Default)]
-pub struct VectorTilePhase(RenderPhase<(IndexEntry, TileShape)>);
-impl Deref for VectorTilePhase {
-    type Target = RenderPhase<(IndexEntry, TileShape)>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl DerefMut for VectorTilePhase {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 pub type VectorBufferPool = BufferPool<
     wgpu::Queue,
     wgpu::Buffer,
@@ -123,6 +82,9 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
     fn build(&self, schedule: &mut Schedule, kernel: Rc<Kernel<E>>, world: &mut World) {
         // FIXME: Split into several plugins
 
+        world.init_resource::<RenderPhase<LayerItem>>();
+        world.init_resource::<RenderPhase<TileMaskItem>>();
+
         // buffer_pool
         world.insert_resource(Eventually::<VectorBufferPool>::Uninitialized);
 
@@ -132,9 +94,6 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
             Eventually::<TileViewPattern<wgpu::Queue, wgpu::Buffer>>::Uninitialized,
         );
 
-        // raster_resources
-        world.insert_resource(Eventually::<RasterResources>::Uninitialized);
-
         // vector_tile_pipeline
         world.insert_resource(Eventually::<VectorPipeline>::Uninitialized);
         // mask_pipeline
@@ -142,36 +101,38 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
         // debug_pipeline
         world.insert_resource(Eventually::<DebugPipeline>::Uninitialized);
 
-        // mask_phase
-        world.insert_resource(MaskRenderPhase::default());
-        // vector_tile_phase
-        world.insert_resource(VectorTilePhase::default());
-        // raster_tile_phase,
-        world.insert_resource(RasterTilePhase::default());
+        // TODO: move
+        world.insert_resource(RenderPhase::<LayerItem>::default());
 
-        schedule
-            .get_stage_mut::<SystemStage>(&RenderStageLabel::Extract)
-            .unwrap()
-            .add_system_direct(RequestSystem {
-                kernel: kernel.clone(),
-            })
-            .add_system_direct(PopulateWorldSystem { kernel });
-
-        schedule
-            .get_stage_mut::<SystemStage>(&RenderStageLabel::Prepare)
-            .unwrap()
-            .add_system(resource_system)
-            .add_system(tile_view_pattern_system);
-
-        schedule
-            .get_stage_mut::<SystemStage>(&RenderStageLabel::PhaseSort)
-            .unwrap()
-            .add_system(phase_sort_system);
-
-        schedule
-            .get_stage_mut::<SystemStage>(&RenderStageLabel::Queue)
-            .unwrap()
-            .add_system(upload_system) // TODO Upload updates the TileView in tileviewpattern -> upload most run before prepare
-            .add_system(prepare_system);
+        // TODO: move
+        schedule.add_system_to_stage(
+            &RenderStageLabel::Extract,
+            SystemContainer::new(RequestSystem::new(&kernel)),
+        );
+        schedule.add_system_to_stage(
+            &RenderStageLabel::Extract,
+            SystemContainer::new(PopulateWorldSystem::new(&kernel)),
+        );
+        schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);
+        schedule.add_system_to_stage(&RenderStageLabel::Prepare, tile_view_pattern_system);
+        schedule.add_system_to_stage(&RenderStageLabel::Queue, upload_system); // TODO Upload updates the TileView in tileviewpattern -> upload most run before prepare
+        schedule.add_system_to_stage(&RenderStageLabel::Queue, queue_system);
     }
 }
+
+pub struct VectorLayerComponent {
+    coords: WorldTileCoords,
+    layer_name: String,
+    buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+    /// Holds for each feature the count of indices.
+    feature_indices: Vec<u32>,
+}
+
+impl TileComponent for VectorLayerComponent {}
+
+#[derive(Debug)]
+pub struct VectorLayersComponent {
+    pub entries: Vec<IndexEntry>,
+}
+
+impl TileComponent for VectorLayersComponent {}

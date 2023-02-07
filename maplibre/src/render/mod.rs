@@ -41,7 +41,6 @@ pub mod builder;
 pub mod camera;
 pub mod error;
 pub mod eventually;
-pub mod render_commands;
 pub mod render_phase;
 pub mod settings;
 pub mod tile_pipeline;
@@ -60,7 +59,7 @@ use crate::{
     window::{HeadedMapWindow, MapWindow},
 };
 
-const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
+pub(crate) const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
 pub struct RenderState {
     pub surface: Surface,

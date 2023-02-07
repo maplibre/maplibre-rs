@@ -259,8 +259,6 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
             });
         };
 
-        warn!("sdf {:?}", self.view_tiles);
-
         for view_tile in &mut self.view_tiles {
             match &mut view_tile.source {
                 SourceShapes::Parent(source_shape) => {
@@ -275,8 +273,6 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 SourceShapes::None => {}
             }
         }
-
-        warn!("afeer {:?}", self.view_tiles);
 
         let raw_buffer = bytemuck::cast_slice(buffer.as_slice());
         if raw_buffer.len() as wgpu::BufferAddress > self.view_tiles_buffer.inner_size {

@@ -1,11 +1,15 @@
 use std::{
+    borrow::BorrowMut,
+    cell::{Cell, RefCell},
     future::Future,
+    iter::Filter,
     marker::PhantomData,
     pin::Pin,
     sync::{
         mpsc,
         mpsc::{Receiver, Sender},
     },
+    vec::IntoIter,
 };
 
 use geozero::mvt::tile;
@@ -147,8 +151,15 @@ pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
     type Context: Context<Self::Transferables, HC> + Send;
     type Transferables: Transferables;
 
+    type ReceiveIterator<F: FnMut(&Message<Self::Transferables>) -> bool>: Iterator<
+        Item = Message<Self::Transferables>,
+    >;
+
     /// Try to receive a message non-blocking.
-    fn receive(&self) -> Option<Message<Self::Transferables>>;
+    fn receive<F: FnMut(&Message<Self::Transferables>) -> bool>(
+        &self,
+        filter: F,
+    ) -> Self::ReceiveIterator<F>;
 
     /// Call an [`AsyncProcedure`] using some [`Input`]. This function is non-blocking and
     /// returns immediately.
@@ -177,6 +188,7 @@ pub struct SchedulerAsyncProcedureCall<HC: HttpClient, S: Scheduler> {
         Sender<Message<DefaultTransferables>>,
         Receiver<Message<DefaultTransferables>>,
     ),
+    buffer: RefCell<Vec<Message<DefaultTransferables>>>,
     http_client: HC,
     scheduler: S,
 }
@@ -185,6 +197,7 @@ impl<HC: HttpClient, S: Scheduler> SchedulerAsyncProcedureCall<HC, S> {
     pub fn new(http_client: HC, scheduler: S) -> Self {
         Self {
             channel: mpsc::channel(),
+            buffer: RefCell::new(Vec::new()),
             http_client,
             scheduler,
         }
@@ -194,10 +207,38 @@ impl<HC: HttpClient, S: Scheduler> SchedulerAsyncProcedureCall<HC, S> {
 impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProcedureCall<HC, S> {
     type Context = SchedulerContext<Self::Transferables, HC>;
     type Transferables = DefaultTransferables;
+    type ReceiveIterator<F: FnMut(&Message<Self::Transferables>) -> bool> =
+        IntoIter<Message<DefaultTransferables>>;
 
-    fn receive(&self) -> Option<Message<DefaultTransferables>> {
-        let transferred = self.channel.1.try_recv().ok()?;
-        Some(transferred)
+    fn receive<F: FnMut(&Message<Self::Transferables>) -> bool>(
+        &self,
+        mut filter: F,
+    ) -> Self::ReceiveIterator<F> {
+        let mut buffer = self.buffer.borrow_mut();
+        let mut ret = Vec::new();
+
+        // FIXME: Verify this!
+        let mut index = 0usize;
+        let mut max_len = buffer.len();
+        while index < max_len {
+            if filter(&buffer[index]) {
+                ret.push(buffer.swap_remove(index));
+                max_len = max_len - 1;
+            }
+            index += 1;
+        }
+
+        // TODO: (optimize) Using while instead of if means that we are processing all that is
+        // available this might cause frame drops.
+        while let Some(message) = self.channel.1.try_recv().ok() {
+            if filter(&message) {
+                ret.push(message);
+            } else {
+                buffer.push(message)
+            }
+        }
+
+        ret.into_iter()
     }
 
     fn call(

@@ -1,54 +1,21 @@
 //! Specifies the instructions which are going to be sent to the GPU. Render commands can be concatenated
 //! into a new render command which executes multiple instruction sets.
 
-use std::ops::Deref;
+use log::info;
 
 use crate::{
     ecs::world::World,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
+        render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult, TileMaskItem},
         resource::{IndexEntry, RasterResources, TrackedRenderPass},
         tile_view_pattern::{TileShape, TileViewPattern},
         RenderState, INDEX_FORMAT,
     },
-    vector::{DebugPipeline, MaskPipeline, MaskRenderPhase, VectorBufferPool, VectorPipeline},
+    vector::{
+        DebugPipeline, MaskPipeline, VectorBufferPool, VectorLayersComponent, VectorPipeline,
+    },
 };
-
-impl PhaseItem for TileShape {
-    type SortKey = ();
-
-    fn sort_key(&self) -> Self::SortKey {}
-}
-
-impl PhaseItem for (IndexEntry, TileShape) {
-    type SortKey = u32;
-
-    fn sort_key(&self) -> Self::SortKey {
-        self.0.style_layer.index
-    }
-}
-
-pub struct SetRasterViewBindGroup<const I: usize>;
-impl<const I: usize> RenderCommand<TileShape> for SetRasterViewBindGroup<I> {
-    fn render<'w>(
-        state: &'w RenderState,
-        world: &'w World,
-        shape: &TileShape,
-        pass: &mut TrackedRenderPass<'w>,
-    ) -> RenderCommandResult {
-        if let Initialized(raster_resources) = world.get_resource::<Eventually<RasterResources>>() {
-            pass.set_bind_group(
-                0,
-                raster_resources.get_bound_texture(&shape.coords()).unwrap(), // TODO Remove unwrap
-                &[],
-            );
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
-    }
-}
 
 pub struct SetMaskPipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
@@ -92,44 +59,27 @@ impl<P: PhaseItem> RenderCommand<P> for SetVectorTilePipeline {
     }
 }
 
-pub struct SetRasterTilePipeline;
-impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
-    fn render<'w>(
-        state: &'w RenderState,
-        world: &'w World,
-        _item: &P,
-        pass: &mut TrackedRenderPass<'w>,
-    ) -> RenderCommandResult {
-        if let Initialized(raster_resources) = world.get_resource::<Eventually<RasterResources>>() {
-            pass.set_render_pipeline(raster_resources.pipeline());
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
-    }
-}
-
 pub struct DrawMask;
-impl RenderCommand<TileShape> for DrawMask {
+impl RenderCommand<TileMaskItem> for DrawMask {
     fn render<'w>(
         state: &'w RenderState,
         world: &'w World,
-        source_shape: &TileShape,
+        item: &TileMaskItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
+        let tile_mask = &item.source_shape;
+
         let Initialized(tile_view_pattern) = world.get_resource::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>()  else { return RenderCommandResult::Failure; };
-        tracing::trace!("Drawing mask {}", &source_shape.coords());
+        tracing::trace!("Drawing mask {}", &tile_mask.coords());
 
         // Draw mask with stencil value of e.g. parent
-        let reference = source_shape.coords().stencil_reference_value_3d() as u32;
+        let reference = tile_mask.coords().stencil_reference_value_3d() as u32;
 
         pass.set_stencil_reference(reference);
         pass.set_vertex_buffer(
             0,
             // Mask is of the requested shape
-            tile_view_pattern
-                .buffer()
-                .slice(source_shape.buffer_range()),
+            tile_view_pattern.buffer().slice(tile_mask.buffer_range()),
         );
         const TILE_MASK_SHADER_VERTICES: u32 = 6;
         pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
@@ -139,13 +89,14 @@ impl RenderCommand<TileShape> for DrawMask {
 }
 
 pub struct DrawDebugOutline;
-impl RenderCommand<TileShape> for DrawDebugOutline {
+impl RenderCommand<LayerItem> for DrawDebugOutline {
     fn render<'w>(
         state: &'w RenderState,
         world: &'w World,
-        source_shape: &TileShape,
+        item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
+        let source_shape = &item.source_shape;
         let Initialized(tile_view_pattern) = world.get_resource::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>()  else { return RenderCommandResult::Failure; };
         pass.set_vertex_buffer(
             0,
@@ -161,13 +112,23 @@ impl RenderCommand<TileShape> for DrawDebugOutline {
 }
 
 pub struct DrawVectorTile;
-impl RenderCommand<(IndexEntry, TileShape)> for DrawVectorTile {
+impl RenderCommand<LayerItem> for DrawVectorTile {
     fn render<'w>(
         state: &'w RenderState,
         world: &'w World,
-        (entry, shape): &(IndexEntry, TileShape),
+        item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
+        let shape = &item.source_shape; // FIXME: Is this correct?
+        let tile_ref = world.query_tile(item.tile.coords).unwrap();
+        let vector_layers = tile_ref.query_component::<VectorLayersComponent>().unwrap();
+
+        let entry = &vector_layers
+            .entries
+            .iter()
+            .find(|entry| entry.style_layer.id == item.style_layer)
+            .unwrap();
+
         let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
             (
                 world.get_resource::<Eventually<VectorBufferPool>>(),
@@ -210,46 +171,14 @@ impl RenderCommand<(IndexEntry, TileShape)> for DrawVectorTile {
                 .feature_metadata()
                 .slice(entry.feature_metadata_buffer_range()),
         );
+        if entry.indices_range().end == 10044 {
+            info!("condition")
+        }
         pass.draw_indexed(entry.indices_range(), 0, 0..1);
-        RenderCommandResult::Success
-    }
-}
-
-pub struct DrawRasterTile;
-impl RenderCommand<TileShape> for DrawRasterTile {
-    fn render<'w>(
-        state: &'w RenderState,
-        world: &'w World,
-        source_shape: &TileShape,
-        pass: &mut TrackedRenderPass<'w>,
-    ) -> RenderCommandResult {
-        let Initialized(tile_view_pattern) = world.get_resource::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>() else { return RenderCommandResult::Failure; };
-
-        let reference = source_shape.coords().stencil_reference_value_3d() as u32;
-
-        tracing::trace!("Drawing raster layer");
-
-        pass.set_stencil_reference(reference);
-
-        pass.set_vertex_buffer(
-            0,
-            tile_view_pattern
-                .buffer()
-                .slice(source_shape.buffer_range()),
-        );
-
-        const TILE_MASK_SHADER_VERTICES: u32 = 6;
-        pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
 
         RenderCommandResult::Success
     }
 }
-
-pub type DrawRasterTiles = (
-    SetRasterTilePipeline,
-    SetRasterViewBindGroup<0>,
-    DrawRasterTile,
-);
 
 pub type DrawVectorTiles = (SetVectorTilePipeline, DrawVectorTile);
 

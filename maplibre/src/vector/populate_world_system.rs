@@ -15,7 +15,15 @@ use crate::{
 };
 
 pub struct PopulateWorldSystem<E: Environment> {
-    pub(crate) kernel: Rc<Kernel<E>>,
+    kernel: Rc<Kernel<E>>,
+}
+
+impl<E: Environment> PopulateWorldSystem<E> {
+    pub fn new(kernel: &Rc<Kernel<E>>) -> Self {
+        Self {
+            kernel: kernel.clone(),
+        }
+    }
 }
 
 impl<E: Environment> System for PopulateWorldSystem<E> {
@@ -32,9 +40,15 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
         let tile_repository = &mut world.tile_repository;
         let geometry_index = &mut world.geometry_index;
 
-        // TODO: (optimize) Using while instead of if means that we are processing all that is
-        // available this might cause frame drops.
-        while let Some(result) = self.kernel.apc().receive() {
+        for result in self.kernel.apc().receive(|message| {
+            matches!(
+                message,
+                Message::TileTessellated(_)
+                    | Message::LayerTessellated(_)
+                    | Message::LayerIndexed(_)
+                    | Message::LayerUnavailable(_)
+            )
+        }) {
             match result {
                 // TODO: deduplicate
                 Message::TileTessellated(message) => {
@@ -85,20 +99,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
 
                     geometry_index.index_tile(&coords, message.to_tile_index());
                 }
-                Message::LayerRaster(message) => {
-                    let layer: StoredLayer = message.to_stored_layer();
-                    tracing::debug!(
-                        "Raster layer {} at {} reached main thread",
-                        layer.layer_name(),
-                        layer.get_coords()
-                    );
-                    log::warn!(
-                        "Raster layer {} at {} reached main thread",
-                        layer.layer_name(),
-                        layer.get_coords()
-                    );
-                    tile_repository.put_layer(layer);
-                }
+                _ => {}
             }
         }
     }

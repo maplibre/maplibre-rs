@@ -47,9 +47,11 @@ pub mod kernel;
 pub mod map;
 pub mod plugin;
 
+pub mod systems;
 pub mod view_state;
 
 // Plugins
+pub mod raster;
 pub mod vector;
 
 // Export tile format

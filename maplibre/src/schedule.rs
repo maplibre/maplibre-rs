@@ -2,7 +2,11 @@ use std::collections::HashMap;
 
 use downcast_rs::{impl_downcast, Downcast};
 
-use crate::{context::MapContext, define_label};
+use crate::{
+    context::MapContext,
+    define_label,
+    ecs::system::{stage::SystemStage, IntoSystemContainer},
+};
 
 pub struct NopStage;
 
@@ -260,6 +264,35 @@ impl Schedule {
         self.stage_order
             .iter()
             .map(move |label| (&**label, &*self.stages[label]))
+    }
+
+    /// Adds a system to the [`Stage`] identified by `stage_label`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use maplibre::schedule::{Schedule, NopStage};
+    /// #
+    /// # let mut schedule = Schedule::default();
+    /// # fn my_system() {}
+    /// #
+    /// schedule.add_system_to_stage("my_stage", my_system);
+    /// ```
+    pub fn add_system_to_stage(
+        &mut self,
+        stage_label: &dyn StageLabel,
+        system: impl IntoSystemContainer,
+    ) -> &mut Self {
+        let stage = self
+            .get_stage_mut::<SystemStage>(stage_label)
+            .unwrap_or_else(move || {
+                panic!(
+                    "Stage '{:?}' does not exist or is not a SystemStage",
+                    stage_label
+                )
+            });
+        stage.add_system(system);
+        self
     }
 }
 

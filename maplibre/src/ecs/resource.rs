@@ -143,4 +143,59 @@ impl Resources {
             ))
         }
     }
+
+    pub fn collect_mut4<R1: Resource, R2: Resource, R3: Resource, R4: Resource>(
+        &mut self,
+    ) -> Option<(&mut R1, &mut R2, &mut R3, &mut R4)> {
+        let i1 = self.index.get(&TypeId::of::<R1>())?;
+        let i2 = self.index.get(&TypeId::of::<R2>())?;
+        let i3 = self.index.get(&TypeId::of::<R3>())?;
+        let i4 = self.index.get(&TypeId::of::<R4>())?;
+
+        unsafe {
+            let resources = self.resources.as_mut_ptr();
+            Some((
+                (&mut *resources.offset(*i1 as isize))
+                    .as_mut()
+                    .as_any_mut()
+                    .downcast_mut()
+                    .unwrap(),
+                (&mut *resources.offset(*i2 as isize))
+                    .as_mut()
+                    .as_any_mut()
+                    .downcast_mut()
+                    .unwrap(),
+                (&mut *resources.offset(*i3 as isize))
+                    .as_mut()
+                    .as_any_mut()
+                    .downcast_mut()
+                    .unwrap(),
+                (&mut *resources.offset(*i4 as isize))
+                    .as_mut()
+                    .as_any_mut()
+                    .downcast_mut()
+                    .unwrap(),
+            ))
+        }
+    }
+    pub fn collect_mut2<R1: Resource, R2: Resource>(&mut self) -> Option<(&mut R1, &mut R2)> {
+        let i1 = self.index.get(&TypeId::of::<R1>())?;
+        let i2 = self.index.get(&TypeId::of::<R2>())?;
+
+        unsafe {
+            let resources = self.resources.as_mut_ptr();
+            Some((
+                (&mut *resources.offset(*i1 as isize))
+                    .as_mut()
+                    .as_any_mut()
+                    .downcast_mut()
+                    .unwrap(),
+                (&mut *resources.offset(*i2 as isize))
+                    .as_mut()
+                    .as_any_mut()
+                    .downcast_mut()
+                    .unwrap(),
+            ))
+        }
+    }
 }

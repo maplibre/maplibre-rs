@@ -1,16 +1,24 @@
 //! Rendering specific [Stages](Stage)
 
-use graph_runner_stage::GraphRunnerSystem;
+use graph_runner_system::GraphRunnerSystem;
 
 use crate::{
-    ecs::system::stage::SystemStage,
+    ecs::system::{stage::SystemStage, SystemContainer},
     multi_stage,
-    render::stages::resource_stage::ResourceSystem,
+    render::{
+        render_phase::LayerItem,
+        stages::{
+            cleanup_system::cleanup_system, resource_system::ResourceSystem,
+            sort_phase_system::sort_phase_system,
+        },
+    },
     schedule::{Schedule, Stage, StageLabel},
 };
 
-mod graph_runner_stage;
-mod resource_stage;
+mod cleanup_system;
+mod graph_runner_system;
+mod resource_system;
+mod sort_phase_system;
 
 /// The labels of the default App rendering stages.
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
@@ -48,13 +56,20 @@ pub fn register_default_render_stages(schedule: &mut Schedule) {
     schedule.add_stage(RenderStageLabel::Extract, SystemStage::default());
     schedule.add_stage(
         RenderStageLabel::Prepare,
-        SystemStage::default().with_system_direct(ResourceSystem),
+        SystemStage::default().with_system(SystemContainer::new(ResourceSystem)),
     );
     schedule.add_stage(RenderStageLabel::Queue, SystemStage::default());
-    schedule.add_stage(RenderStageLabel::PhaseSort, SystemStage::default());
+    schedule.add_stage(
+        RenderStageLabel::PhaseSort,
+        SystemStage::default().with_system(sort_phase_system),
+    );
+
     schedule.add_stage(
         RenderStageLabel::Render,
-        SystemStage::default().with_system_direct(GraphRunnerSystem),
+        SystemStage::default().with_system(SystemContainer::new(GraphRunnerSystem)),
     );
-    schedule.add_stage(RenderStageLabel::Cleanup, SystemStage::default());
+    schedule.add_stage(
+        RenderStageLabel::Cleanup,
+        SystemStage::default().with_system(cleanup_system),
+    );
 }

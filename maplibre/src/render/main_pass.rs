@@ -10,13 +10,11 @@ use crate::{
     render::{
         draw_graph,
         graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-        render_commands::{DrawMasks, DrawRasterTiles, DrawVectorTiles},
-        render_phase::RenderCommand,
+        render_phase::{Draw, LayerItem, RenderCommand, RenderPhase, TileMaskItem},
         resource::TrackedRenderPass,
         Eventually::Initialized,
         RenderState,
     },
-    vector::{MaskRenderPhase, RasterTilePhase, VectorTilePhase},
 };
 
 pub struct MainPassNode {}
@@ -92,16 +90,18 @@ impl Node for MainPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        // FIXME: Move these to vector plugin, or make render phases core
+        // FIXME: Debug vs tile mask phase?
+        let mask_items = world.get_resource::<RenderPhase<TileMaskItem>>();
+        for item in &mask_items.items {
+            item.draw_function
+                .draw(&mut tracked_pass, state, world, item);
+        }
 
-        for item in &world.get_resource::<MaskRenderPhase>().items {
-            DrawMasks::render(state, world, item, &mut tracked_pass);
-        }
-        for item in &world.get_resource::<VectorTilePhase>().items {
-            DrawVectorTiles::render(state, world, item, &mut tracked_pass);
-        }
-        for item in &world.get_resource::<RasterTilePhase>().items {
-            DrawRasterTiles::render(state, world, item, &mut tracked_pass);
+        let layer_items = world.get_resource::<RenderPhase<LayerItem>>();
+        // TODO print layer items count
+        for item in &layer_items.items {
+            item.draw_function
+                .draw(&mut tracked_pass, state, world, item);
         }
 
         Ok(())

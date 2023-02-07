@@ -28,7 +28,15 @@ use crate::{
 };
 
 pub struct RequestSystem<E: Environment> {
-    pub(crate) kernel: Rc<Kernel<E>>,
+    kernel: Rc<Kernel<E>>,
+}
+
+impl<E: Environment> RequestSystem<E> {
+    pub fn new(kernel: &Rc<Kernel<E>>) -> Self {
+        Self {
+            kernel: kernel.clone(),
+        }
+    }
 }
 
 impl<E: Environment> System for RequestSystem<E> {
@@ -79,6 +87,7 @@ impl<E: Environment> RequestSystem<E> {
             tile_repository.mark_tile_pending(coords).unwrap(); // TODO: Remove unwrap
 
             tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);
+            log::info!("tile request started: {}", &coords);
 
             self.kernel
                 .apc()

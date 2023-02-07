@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::{
     ecs::world::World,
     render::{resource::TrackedRenderPass, RenderState},
@@ -10,7 +12,7 @@ use crate::{
 pub trait Draw<P: PhaseItem>: 'static {
     /// Draws the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
     fn draw<'w>(
-        &mut self,
+        &self,
         pass: &mut TrackedRenderPass<'w>,
         state: &'w RenderState,
         wold: &'w World,
@@ -29,7 +31,7 @@ pub trait PhaseItem {
     /// Determines the order in which the items are drawn during the corresponding [`RenderPhase`](super::RenderPhase).
     fn sort_key(&self) -> Self::SortKey;
 
-    // TODO     fn draw_function(&self) -> DrawFunctionId;
+    fn draw_function(&self) -> &dyn Draw<Self>;
 }
 
 /// [`RenderCommand`] is a trait that runs an ECS query and produces one or more
@@ -91,14 +93,45 @@ render_command_tuple_impl!(C0, C1, C2);
 render_command_tuple_impl!(C0, C1, C2, C3);
 render_command_tuple_impl!(C0, C1, C2, C3, C4);
 
-impl<P, C: 'static> Draw<P> for C
+/*impl<P, C: 'static> Draw<P> for C
 where
     P: PhaseItem,
     C: RenderCommand<P>,
 {
     /// Prepares data for the wrapped [`RenderCommand`] and then renders it.
     fn draw<'w>(
-        &mut self,
+        &self,
+        pass: &mut TrackedRenderPass<'w>,
+        state: &'w RenderState,
+        world: &'w World,
+        item: &P,
+    ) {
+        C::render(state, world, item, pass);
+    }
+}*/
+
+pub struct DrawState<C, P> {
+    phantom_p: PhantomData<P>,
+    phantom_c: PhantomData<C>,
+}
+
+impl<C, P> DrawState<C, P> {
+    pub(crate) fn new() -> Self {
+        DrawState {
+            phantom_p: Default::default(),
+            phantom_c: Default::default(),
+        }
+    }
+}
+
+impl<P: 'static, C: 'static> Draw<P> for DrawState<P, C>
+where
+    P: PhaseItem,
+    C: RenderCommand<P>,
+{
+    /// Prepares data for the wrapped [`RenderCommand`] and then renders it.
+    fn draw<'w>(
+        &self,
         pass: &mut TrackedRenderPass<'w>,
         state: &'w RenderState,
         world: &'w World,

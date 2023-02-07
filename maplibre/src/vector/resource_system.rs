@@ -77,34 +77,6 @@ pub fn resource_system(
         });
 
     world
-        .get_resource_mut::<Eventually<RasterResources>>()
-        .initialize(|| {
-            let shader = shaders::RasterTileShader {
-                format: surface.surface_format(),
-            };
-
-            let mut raster_resources = RasterResources::new(
-                Msaa { samples: 1 },
-                device,
-                TilePipeline::new(
-                    *settings,
-                    shader.describe_vertex(),
-                    shader.describe_fragment(),
-                    true,
-                    false,
-                    false,
-                    false,
-                    true,
-                    true,
-                )
-                .describe_render_pipeline()
-                .initialize(device),
-            );
-
-            raster_resources
-        });
-
-    world
         .get_resource_mut::<Eventually<MaskPipeline>>()
         .initialize(|| {
             let mask_shader = shaders::TileMaskShader {

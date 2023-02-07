@@ -9,7 +9,7 @@ use crate::{
     window::WindowSize,
 };
 
-const VIEW_REGION_PADDING: i32 = 1;
+const VIEW_REGION_PADDING: i32 = 0;
 
 /// Stores the camera configuration.
 pub struct ViewState {

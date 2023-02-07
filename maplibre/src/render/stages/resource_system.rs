@@ -14,7 +14,7 @@ pub struct ResourceSystem;
 
 impl System for ResourceSystem {
     fn name(&self) -> Cow<'static, str> {
-        "resource_stage".into()
+        "resource_system".into()
     }
 
     fn run(

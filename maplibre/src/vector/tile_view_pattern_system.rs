@@ -28,7 +28,7 @@ pub fn tile_view_pattern_system(
     ) = world.resources.collect_mut3::<
         Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
         Eventually<VectorBufferPool>,
-        Eventually<RasterResources>
+        Eventually<RasterResources> // FIXME: Make this independent of raster
     >().unwrap() else { return; };
 
     let view_state = &world.view_state;
@@ -43,5 +43,9 @@ pub fn tile_view_pattern_system(
             &(raster_resources.deref(), buffer_pool.index()),
             zoom,
         );
+
+        for coord in view_region.iter() {
+            world.spawn_mut(coord);
+        }
     }
 }

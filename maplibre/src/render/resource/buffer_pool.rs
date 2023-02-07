@@ -191,7 +191,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         (bytes, aligned_bytes)
     }
 
-    pub fn get_loaded_layers_at(&self, coords: &WorldTileCoords) -> Option<HashSet<&str>> {
+    pub fn get_loaded_source_layers_at(&self, coords: &WorldTileCoords) -> Option<HashSet<&str>> {
         self.index.get_layers(coords).map(|layers| {
             layers
                 .iter()
@@ -214,7 +214,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         geometry: &OverAlignedVertexBuffer<V, I>,
         layer_metadata: TM,
         feature_metadata: &[FM],
-    ) {
+    ) -> IndexEntry {
         let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
         let indices_stride = size_of::<I>() as wgpu::BufferAddress;
         let layer_metadata_stride = size_of::<TM>() as wgpu::BufferAddress;
@@ -297,7 +297,8 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
             &bytemuck::cast_slice(feature_metadata)[0..aligned_feature_metadata_bytes as usize],
         );
 
-        self.index.push_back(maybe_entry);
+        self.index.push_back(maybe_entry.clone());
+        maybe_entry
     }
 
     #[tracing::instrument(skip_all)]
