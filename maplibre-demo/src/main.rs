@@ -2,12 +2,11 @@
 
 use std::io::ErrorKind;
 
-use clap::{builder::ValueParser, Parser, Subcommand};
-use maplibre::{coords::LatLon, platform::run_multithreaded};
+use clap::{Parser, Subcommand};
+use maplibre::coords::LatLon;
 use maplibre_winit::run_headed_map;
 
-use crate::headless::run_headless;
-
+#[cfg(feature = "headless")]
 mod headless;
 
 #[derive(Parser)]
@@ -36,16 +35,17 @@ fn parse_lat_long(env: &str) -> Result<LatLon, std::io::Error> {
 #[derive(Subcommand)]
 enum Commands {
     Headed {},
+    #[cfg(feature = "headless")]
     Headless {
         #[clap(default_value_t = 400)]
         tile_size: u32,
         #[clap(
-            value_parser = ValueParser::new(parse_lat_long),
+            value_parser = clap::builder::ValueParser::new(parse_lat_long),
             default_value_t = LatLon::new(48.0345697188, 11.3475219363)
         )]
         min: LatLon,
         #[clap(
-            value_parser = ValueParser::new(parse_lat_long),
+            value_parser = clap::builder::ValueParser::new(parse_lat_long),
             default_value_t = LatLon::new(48.255861, 11.7917815798)
         )]
         max: LatLon,
@@ -64,12 +64,15 @@ fn main() {
     // matches just as you would the top level cmd
     match &cli.command {
         Commands::Headed {} => run_headed_map(None),
+        #[cfg(feature = "headless")]
         Commands::Headless {
             tile_size,
             min,
             max,
         } => {
-            run_multithreaded(async { run_headless(*tile_size, *min, *max).await });
+            maplibre::platform::run_multithreaded(async {
+                headless::run_headless(*tile_size, *min, *max).await
+            });
         }
     }
 }

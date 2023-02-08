@@ -13,10 +13,11 @@ authors.workspace = true
 [features]
 web-webgl = ["maplibre/web-webgl"]
 trace = ["maplibre/trace"]
+headless = ["maplibre/headless"]
 
 [dependencies]
 env_logger = "0.10.0"
-maplibre = { path = "../maplibre", version = "0.1.0", features = ["headless", "thread-safe-futures"]  }
+maplibre = { path = "../maplibre", version = "0.1.0", features = ["thread-safe-futures"]  }
 maplibre-winit = { path = "../maplibre-winit", version = "0.1.0"  }
 
 tile-grid = "0.3"
