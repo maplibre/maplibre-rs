@@ -17,7 +17,7 @@ use crate::{
     tessellation::OverAlignedVertexBuffer,
 };
 
-// FIXME: Too low values can cause a back-and-forth between unloading and loading layers
+// TODO: Too low values can cause a back-and-forth between unloading and loading layers
 pub const VERTEX_SIZE: wgpu::BufferAddress = 10 * 1_000_000;
 pub const INDICES_SIZE: wgpu::BufferAddress = 10 * 1_000_000;
 
@@ -195,7 +195,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         self.index.get_layers(coords).map(|layers| {
             layers
                 .iter()
-                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str()) // TODO: Remove unwrap
+                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str()) // FIXME tcs: Remove unwrap
                 .collect()
         })
     }
@@ -240,7 +240,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         );
 
         if feature_metadata_bytes != aligned_feature_metadata_bytes {
-            // FIXME: align if not aligned?
+            // TODO: align if not aligned?
             panic!(
                 "feature_metadata is not aligned. This should not happen as long as size_of::<FM>() is a multiple of the alignment."
             )

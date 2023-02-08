@@ -4,20 +4,17 @@ use std::iter;
 
 use crate::{
     context::MapContext,
-    coords::{ViewRegion, WorldTileCoords},
-    ecs::{tiles::Tiles, Mut, Ref},
+    coords::ViewRegion,
+    ecs::tiles::Tiles,
     render::{
-        camera::ViewProjection,
         eventually::{Eventually, Eventually::Initialized},
-        resource::IndexEntry,
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata, Vec4f32},
-        tile_view_pattern::TileViewPattern,
         Renderer,
     },
     style::Style,
     vector::{
         AvailableVectorLayerData, VectorBufferPool, VectorLayerData, VectorLayersDataComponent,
-        VectorLayersIndicesComponent,
+        VectorLayersIndicesComponent, WgpuTileViewPattern,
     },
 };
 
@@ -33,14 +30,11 @@ pub fn upload_system(
     let view_proj = view_state.view_projection();
     let view_region = view_state.create_view_region();
 
-    // TODO duplicate
     let (
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
-    ) = world.resources.collect_mut2::<
-        Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
-        Eventually<VectorBufferPool>,
-    >().unwrap() else { return; };
+    ) = world.resources.query_mut::<(&mut Eventually<WgpuTileViewPattern>, &mut Eventually<VectorBufferPool>)
+    >().unwrap() else { return; }; // FIXME tcs: Unwrap
 
     if let Some(view_region) = &view_region {
         upload_tesselated_layer(
@@ -56,7 +50,7 @@ pub fn upload_system(
     }
 }
 
-/*fn update_metadata(
+/* FIXME tcs fn update_metadata(
     buffer_pool: &VectorBufferPool,
     tiles: &Tiles,
     queue: &wgpu::Queue,
@@ -137,8 +131,8 @@ fn upload_tesselated_layer(
 ) {
     // Upload all tessellated layers which are in view
     for coords in view_region.iter() {
-        let Some((vector_layers, vector_layers_indices)) =
-            tiles.query_component_mut::<(Mut<VectorLayersDataComponent>, Mut<VectorLayersIndicesComponent>)>(coords) else { continue; };
+        let Some((vector_layers, mut vector_layers_indices)) =
+            tiles.query_component_mut::<(&mut VectorLayersDataComponent, &mut VectorLayersIndicesComponent)>(coords) else { continue; };
 
         let loaded_layers = buffer_pool
             .get_loaded_source_layers_at(&coords)
@@ -155,7 +149,7 @@ fn upload_tesselated_layer(
             .collect::<Vec<_>>();
 
         for style_layer in &style.layers {
-            let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
+            let source_layer = style_layer.source_layer.as_ref().unwrap(); // FIXME tcs: Unwrap
 
             let Some(AvailableVectorLayerData {
                          coords,
@@ -172,7 +166,7 @@ fn upload_tesselated_layer(
                 .and_then(|paint| paint.get_color())
                 .map(|color| color.into());
 
-            let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual featrues
+            let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual features
                 .enumerate()
                 .flat_map(|(i, _feature)| {
                     iter::repeat(ShaderFeatureStyle {

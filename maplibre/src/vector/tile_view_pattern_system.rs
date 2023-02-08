@@ -12,7 +12,7 @@ use crate::{
         RenderState, Renderer,
     },
     schedule::Stage,
-    vector::VectorBufferPool,
+    vector::{VectorBufferPool, WgpuTileViewPattern},
 };
 
 pub fn tile_view_pattern_system(
@@ -20,16 +20,15 @@ pub fn tile_view_pattern_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
-    // TODO duplicate
     let (
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
         Initialized(raster_resources)
-    ) = world.resources.collect_mut3::<
-        Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
-        Eventually<VectorBufferPool>,
-        Eventually<RasterResources> // FIXME: Make this independent of raster
-    >().unwrap() else { return; };
+    ) = world.resources.query_mut::<
+        (&mut Eventually<WgpuTileViewPattern>,
+         &mut Eventually<VectorBufferPool>,
+         &mut Eventually<RasterResources>) // FIXME tcs: Make this independent of raster
+    >().unwrap() else { return; }; // FIXME tcs: Unwrap
 
     let view_state = &world.view_state;
 

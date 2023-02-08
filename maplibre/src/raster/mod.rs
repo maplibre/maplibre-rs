@@ -54,7 +54,7 @@ impl<E: Environment> Plugin<E> for RasterPlugin {
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);
 
         schedule.add_system_to_stage(&RenderStageLabel::Queue, upload_system);
-        schedule.add_system_to_stage(&RenderStageLabel::Queue, queue_system); // TODO Upload updates the TileView in tileviewpattern -> upload most run before prepare
+        schedule.add_system_to_stage(&RenderStageLabel::Queue, queue_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
     }
 }
 
@@ -64,7 +64,7 @@ pub struct RasterLayerData {
     pub image: RgbaImage,
 }
 
-// FIXME: Add AvailableRasterLayerData and UnavailableRasterLayerData
+// FIXME tcs: Add AvailableRasterLayerData and UnavailableRasterLayerData
 
 #[derive(Default)]
 pub struct RasterLayersDataComponent {

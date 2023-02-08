@@ -12,7 +12,7 @@ use crate::{
     },
     vector::{
         render_commands::{DrawMasks, DrawVectorTiles},
-        VectorBufferPool, VectorLayersIndicesComponent,
+        VectorBufferPool, VectorLayersIndicesComponent, WgpuTileViewPattern,
     },
 };
 
@@ -21,20 +21,18 @@ pub fn queue_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
-    // TODO duplicate
-    let collection = world.resources.collect_mut4::<
-        Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
-        Eventually<VectorBufferPool>,
-        RenderPhase<TileMaskItem>,
-        RenderPhase<LayerItem>,
-    >().unwrap();
-
     let (
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
         mask_phase,
         vector_tile_phase,
-    ) = collection else { return; };
+    ) = world.resources.query_mut::<(
+            &mut Eventually<WgpuTileViewPattern>,
+            &mut Eventually<VectorBufferPool>,
+            &mut RenderPhase<TileMaskItem>,
+            &mut RenderPhase<LayerItem>,
+        )>()
+        .unwrap() else { return; }; // FIXME tcs: Unwrap
 
     let buffer_pool_index = buffer_pool.index();
 

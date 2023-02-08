@@ -15,7 +15,7 @@ use crate::{
         tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
         RenderState, Renderer,
     },
-    vector::{DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline},
+    vector::{DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline, WgpuTileViewPattern},
 };
 
 pub fn resource_system(
@@ -34,13 +34,13 @@ pub fn resource_system(
     world
         .resources
         .get_mut::<Eventually<VectorBufferPool>>()
-        .unwrap()
+        .unwrap() // FIXME tcs: Unwrap
         .initialize(|| BufferPool::from_device(device));
 
     world
         .resources
-        .get_mut::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>()
-        .unwrap()
+        .get_mut::<Eventually<WgpuTileViewPattern>>()
+        .unwrap() // FIXME tcs: Unwrap
         .initialize(|| {
             let tile_view_buffer_desc = wgpu::BufferDescriptor {
                 label: Some("tile view buffer"),
@@ -59,7 +59,7 @@ pub fn resource_system(
     world
         .resources
         .get_mut::<Eventually<VectorPipeline>>()
-        .unwrap()
+        .unwrap() // FIXME tcs: Unwrap
         .initialize(|| {
             let tile_shader = shaders::VectorTileShader {
                 format: surface.surface_format(),
@@ -86,7 +86,7 @@ pub fn resource_system(
     world
         .resources
         .get_mut::<Eventually<MaskPipeline>>()
-        .unwrap()
+        .unwrap() // FIXME tcs: Unwrap
         .initialize(|| {
             let mask_shader = shaders::TileMaskShader {
                 format: surface.surface_format(),
@@ -114,7 +114,7 @@ pub fn resource_system(
     world
         .resources
         .get_mut::<Eventually<DebugPipeline>>()
-        .unwrap()
+        .unwrap() // FIXME tcs: Unwrap
         .initialize(|| {
             let mask_shader = shaders::TileMaskShader {
                 format: surface.surface_format(),

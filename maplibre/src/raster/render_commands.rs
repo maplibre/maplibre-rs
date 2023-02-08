@@ -7,6 +7,7 @@ use crate::{
         tile_view_pattern::TileViewPattern,
         RenderState,
     },
+    vector::WgpuTileViewPattern,
 };
 
 pub struct SetRasterTilePipeline;
@@ -21,6 +22,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
             .resources
             .get::<Eventually<RasterResources>>()
             .unwrap()
+        // FIXME tcs: Unwrap
         {
             pass.set_render_pipeline(raster_resources.pipeline());
             RenderCommandResult::Success
@@ -42,12 +44,13 @@ impl<const I: usize> RenderCommand<LayerItem> for SetRasterViewBindGroup<I> {
             .resources
             .get::<Eventually<RasterResources>>()
             .unwrap()
+        // FIXME tcs: Unwrap
         {
             pass.set_bind_group(
                 0,
                 raster_resources
                     .get_bound_texture(&item.tile.coords)
-                    .unwrap(), // TODO Remove unwrap
+                    .unwrap(), // FIXME tcs: Remove unwrap
                 &[],
             );
             RenderCommandResult::Success
@@ -66,7 +69,7 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let source_shape = &item.source_shape;
-        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>().unwrap() else { return RenderCommandResult::Failure; };
+        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<WgpuTileViewPattern>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
 
         let reference = source_shape.coords().stencil_reference_value_3d() as u32;
 
@@ -81,7 +84,7 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
                 .slice(source_shape.buffer_range()),
         );
 
-        // FIXME: I passin random data here right now, but instead we need the correct metadata here
+        // FIXME tcs: I passin random data here right now, but instead we need the correct metadata here
         pass.set_vertex_buffer(
             1,
             tile_view_pattern

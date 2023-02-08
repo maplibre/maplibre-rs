@@ -34,7 +34,7 @@ pub fn resource_system(
     world
         .resources
         .get_mut::<Eventually<RasterResources>>()
-        .unwrap()
+        .unwrap() // FIXME tcs: Unwrap
         .initialize(|| {
             let shader = shaders::RasterTileShader {
                 format: surface.surface_format(),

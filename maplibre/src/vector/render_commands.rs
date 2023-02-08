@@ -1,19 +1,16 @@
 //! Specifies the instructions which are going to be sent to the GPU. Render commands can be concatenated
 //! into a new render command which executes multiple instruction sets.
-
-use log::info;
-
 use crate::{
-    ecs::{world::World, Ref},
+    ecs::world::World,
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult, TileMaskItem},
-        resource::{IndexEntry, RasterResources, TrackedRenderPass},
-        tile_view_pattern::{TileShape, TileViewPattern},
+        resource::TrackedRenderPass,
         RenderState, INDEX_FORMAT,
     },
     vector::{
-        DebugPipeline, MaskPipeline, VectorBufferPool, VectorLayersIndicesComponent, VectorPipeline,
+        DebugPipeline, MaskPipeline, VectorBufferPool, VectorLayersIndicesComponent,
+        VectorPipeline, WgpuTileViewPattern,
     },
 };
 
@@ -25,7 +22,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = world.resources.get::<Eventually<MaskPipeline>>().unwrap() else { return RenderCommandResult::Failure; };
+        let Initialized(pipeline) = world.resources.get::<Eventually<MaskPipeline>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -39,7 +36,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = world.resources.get::<Eventually<DebugPipeline>>().unwrap() else { return RenderCommandResult::Failure; };
+        let Initialized(pipeline) = world.resources.get::<Eventually<DebugPipeline>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -53,7 +50,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetVectorTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = world.resources.get::<Eventually<VectorPipeline>>().unwrap() else { return RenderCommandResult::Failure; };
+        let Initialized(pipeline) = world.resources.get::<Eventually<VectorPipeline>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -69,7 +66,7 @@ impl RenderCommand<TileMaskItem> for DrawMask {
     ) -> RenderCommandResult {
         let tile_mask = &item.source_shape;
 
-        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>().unwrap() else { return RenderCommandResult::Failure; };
+        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<WgpuTileViewPattern>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
         tracing::trace!("Drawing mask {}", &tile_mask.coords());
 
         // Draw mask with stencil value of e.g. parent
@@ -97,7 +94,7 @@ impl RenderCommand<LayerItem> for DrawDebugOutline {
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let source_shape = &item.source_shape;
-        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>().unwrap() else { return RenderCommandResult::Failure; };
+        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<WgpuTileViewPattern>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
         pass.set_vertex_buffer(
             0,
             tile_view_pattern
@@ -120,22 +117,22 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let shape = &item.source_shape; // FIXME: Is this correct?
+        let shape = &item.source_shape;
         let vector_layers = world
             .tiles
-            .query_component::<Ref<VectorLayersIndicesComponent>>(item.tile.coords)
-            .unwrap();
+            .query_component::<&VectorLayersIndicesComponent>(item.tile.coords)
+            .unwrap(); // FIXME tcs: Unwrap
 
         let entry = &vector_layers
             .layers
             .iter()
             .find(|entry| entry.style_layer.id == item.style_layer)
-            .unwrap();
+            .unwrap(); // FIXME tcs: Unwrap
 
         let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
             (
-                world.resources.get::<Eventually<VectorBufferPool>>().unwrap(),
-                world.resources.get::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>().unwrap(),
+                world.resources.get::<Eventually<VectorBufferPool>>().unwrap(), // FIXME tcs: Unwrap
+                world.resources.get::<Eventually<WgpuTileViewPattern>>().unwrap(), // FIXME tcs: Unwrap
             ) else { return RenderCommandResult::Failure; };
 
         // Uses stencil value of requested tile and the shape of the requested tile

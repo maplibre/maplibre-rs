@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
-    ecs::{component::TileComponent, world::Tile, Mut, Ref},
+    ecs::{component::TileComponent, world::Tile},
 };
 
 #[derive(Default)]
@@ -29,29 +29,21 @@ impl Tiles {
         Some(Q::get_component_mut(self, Tile { coords }))
     }
 
-    /*pub fn query_tile(&self, coords: WorldTileCoords) -> Option<TileRef> {
-        if let Some(key) = coords.build_quad_key() {
-            Some(TileRef {
-                tiles: self,
-                tile: self.tiles.get(&key).cloned().unwrap(), // FIXME
+    // FIXME tcs
+    unsafe fn unsafe_get_mut<T: TileComponent>(&self, coords: WorldTileCoords) -> &mut T {
+        let key = coords.build_quad_key().unwrap(); // FIXME tcs: Unwrap
+        let components = self.components.get(&key).unwrap();
+        components
+            .iter()
+            .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
+            .and_then(|component| {
+                (component.as_ref() as *const dyn TileComponent as *mut dyn TileComponent)
+                    .as_mut()
+                    .unwrap() // FIXME tcs: Unwrap
+                    .downcast_mut()
             })
-        } else {
-            None
-        }
+            .unwrap() // FIXME tcs: Unwrap
     }
-
-    pub fn query_tile_mut(&mut self, coords: WorldTileCoords) -> Option<TileSpawnResult> {
-        if let Some(key) = coords.build_quad_key() {
-            if let Some(tile) = self.tiles.get(&key) {
-                let tile = tile.clone();
-                Some(TileSpawnResult { tiles: self, tile })
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }*/
 
     pub fn exists(&self, coords: WorldTileCoords) -> bool {
         if let Some(key) = coords.build_quad_key() {
@@ -113,32 +105,37 @@ pub trait ComponentQuery {
 
     fn get_component<'t>(tiles: &'t Tiles, tile: Tile) -> Self::Item<'t>;
     fn get_component_mut<'t>(tiles: &'t mut Tiles, tile: Tile) -> Self::Item<'t>;
+
+    // FIXME tcs: Introduce a cleaner approach!
+    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a>;
 }
 
-impl<'t, T: TileComponent> ComponentQuery for Ref<'t, T> {
-    type Item<'a> = Ref<'a, T>;
+impl<'t, T: TileComponent> ComponentQuery for &'t T {
+    type Item<'a> = &'a T;
 
     fn get_component<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
         let components = tiles
             .components
-            .get(&tile.coords.build_quad_key().unwrap())
-            .unwrap();
-        Ref {
-            value: components
-                .iter()
-                .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
-                .and_then(|component| component.as_ref().downcast_ref())
-                .unwrap(),
-        }
+            .get(&tile.coords.build_quad_key().unwrap()) // FIXME tcs: Unwrap
+            .unwrap(); // FIXME tcs: Unwrap
+        components
+            .iter()
+            .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
+            .and_then(|component| component.as_ref().downcast_ref())
+            .unwrap() // FIXME tcs: Unwrap
     }
 
     fn get_component_mut<'a>(tiles: &'a mut Tiles, tile: Tile) -> Self::Item<'a> {
         Self::get_component(tiles, tile)
     }
+
+    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
+        todo!()
+    }
 }
 
-impl<'t, T: TileComponent> ComponentQuery for Mut<'t, T> {
-    type Item<'a> = Mut<'a, T>;
+impl<'t, T: TileComponent> ComponentQuery for &'t mut T {
+    type Item<'a> = &'a mut T;
 
     fn get_component<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
         panic!("provide an inmutable World to query inmutable")
@@ -147,15 +144,18 @@ impl<'t, T: TileComponent> ComponentQuery for Mut<'t, T> {
     fn get_component_mut<'a>(tiles: &'a mut Tiles, tile: Tile) -> Self::Item<'a> {
         let components = tiles
             .components
-            .get_mut(&tile.coords.build_quad_key().unwrap())
-            .unwrap();
-        Mut {
-            value: components
-                .iter_mut()
-                .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
-                .and_then(|component| component.as_mut().downcast_mut())
-                .unwrap(),
-        }
+            .get_mut(&tile.coords.build_quad_key().unwrap()) // FIXME tcs: Unwrap
+            .unwrap(); // FIXME tcs: Unwrap
+
+        components
+            .iter_mut()
+            .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
+            .and_then(|component| component.as_mut().downcast_mut())
+            .unwrap() // FIXME tcs: Unwrap
+    }
+
+    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
+        tiles.unsafe_get_mut::<T>(tile.coords)
     }
 }
 
@@ -168,6 +168,10 @@ impl<CQ1: ComponentQuery> ComponentQuery for (CQ1,) {
 
     fn get_component_mut<'a>(tiles: &'a mut Tiles, tile: Tile) -> Self::Item<'a> {
         (CQ1::get_component_mut(tiles, tile),)
+    }
+
+    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
+        todo!()
     }
 }
 
@@ -182,17 +186,15 @@ impl<CQ1: ComponentQuery, CQ2: ComponentQuery> ComponentQuery for (CQ1, CQ2) {
     }
 
     fn get_component_mut<'a>(tiles: &'a mut Tiles, tile: Tile) -> Self::Item<'a> {
-        let components = tiles
-            .components
-            .get_mut(&tile.coords.build_quad_key().unwrap())
-            .unwrap();
+        unsafe {
+            (
+                CQ1::unsafe_get_mut(tiles, tile),
+                CQ2::unsafe_get_mut(tiles, tile),
+            )
+        }
+    }
 
-        let results = components
-            .iter_mut()
-            .filter(|component| component.as_ref().type_id() == TypeId::of::<CQ2::Item<'a>>())
-            .flat_map(|component| component.as_mut().downcast_mut::<CQ2::Item<'a>>())
-            .collect::<Vec<_>>();
-
-        (results[0], results[1])
+    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
+        todo!()
     }
 }

@@ -13,7 +13,7 @@ fn main(
     @location(7) translate4: vec4<f32>,
     @location(9) zoom_factor: f32,
 
-    @location(10) z_index: f32, // TODO: not bound yet
+    @location(10) z_index: f32,
 
     @builtin(vertex_index) vertex_idx: u32,
 ) -> VertexOutput {

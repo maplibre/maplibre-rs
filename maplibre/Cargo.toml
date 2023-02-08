@@ -12,7 +12,7 @@ keywords.workspace = true
 authors.workspace = true
 
 [features]
-# TODO: Remove raster from default
+# FIXME tcs: Remove raster from default
 default = ["raster"]
 web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web

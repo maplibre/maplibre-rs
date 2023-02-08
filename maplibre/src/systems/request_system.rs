@@ -60,7 +60,7 @@ impl<E: Environment> System for RequestSystem<E> {
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
-                // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
+                // TODO: We also need to request tiles from layers above if we are over the maximum zoom level
                 self.request_tiles_in_view(tiles, style, view_region);
             }
         }

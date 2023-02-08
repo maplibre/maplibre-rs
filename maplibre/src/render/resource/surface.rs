@@ -203,7 +203,7 @@ impl Surface {
             mapped_at_creation: false,
         });
 
-        // FIXME: Is this a sane default?
+        // TODO: Is this a sane default?
         let format = settings
             .texture_format
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);

@@ -2,14 +2,14 @@ use std::{borrow::Cow, rc::Rc};
 
 use crate::{
     context::MapContext,
-    ecs::{system::System, Mut},
+    ecs::system::System,
     environment::Environment,
     io::{
         apc::{AsyncProcedureCall, Message},
         transferables::{LayerRaster, LayerTessellated, LayerUnavailable},
     },
     kernel::Kernel,
-    raster::{RasterLayerData, RasterLayersDataComponent},
+    raster::RasterLayersDataComponent,
     vector::{VectorLayerData, VectorLayersDataComponent},
 };
 
@@ -42,7 +42,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
         for result in self.kernel.apc().receive(|message| {
             matches!(
                 message,
-                Message::LayerRaster(_) | Message::LayerUnavailable(_) // FIXME: Change to RasterLayerUnavailable
+                Message::LayerRaster(_) | Message::LayerUnavailable(_) // FIXME tcs: Change to RasterLayerUnavailable
             )
         }) {
             match result {
@@ -59,12 +59,12 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                         &layer.coords
                     );
                     tiles
-                        .query_component_mut::<Mut<RasterLayersDataComponent>>(layer.coords)
-                        .unwrap()
+                        .query_component_mut::<&mut RasterLayersDataComponent>(layer.coords)
+                        .unwrap() // FIXME tcs: Unwrap
                         .layers
                         .push(layer);
                 }
-                // FIXME: Change to RasterLayerUnvailable
+                // FIXME tcs: Change to RasterLayerUnvailable
                 Message::LayerUnavailable(message) => {
                     let layer = message.to_layer();
 
@@ -75,9 +75,9 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                     );
 
                     tiles
-                        // FIXME: Change to RasterLayersDataComponent
-                        .query_component_mut::<Mut<VectorLayersDataComponent>>(layer.coords)
-                        .unwrap()
+                        // FIXME tcs: Change to RasterLayersDataComponent
+                        .query_component_mut::<&mut VectorLayersDataComponent>(layer.coords)
+                        .unwrap() // FIXME tcs: Unwrap
                         .layers
                         .push(VectorLayerData::Unavailable(layer));
                 }

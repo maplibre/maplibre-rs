@@ -60,7 +60,6 @@ where
         renderer_builder: RendererBuilder,
     ) -> Result<Self, MapError> {
         let mut schedule = Schedule::default();
-        // TODO initialize_default_render_graph()
         register_default_render_stages(&mut schedule);
 
         let kernel = Rc::new(kernel);
@@ -104,7 +103,7 @@ where
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
                 );
 
-                // FIXME
+                // FIXME tcs: Add initialization logic
                 VectorPlugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
                 RasterPlugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
 
@@ -112,7 +111,7 @@ where
                     InitializationResult::Initialized(InitializedRenderer {
                         mut renderer, ..
                     }) => {
-                        // FIXME
+                        // FIXME tcs: Move to rendering core
                         initialize_default_render_graph(&mut renderer.render_graph).unwrap();
 
                         self.map_context = CurrentMapContext::Ready(MapContext {

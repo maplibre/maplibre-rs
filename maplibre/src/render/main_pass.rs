@@ -90,7 +90,6 @@ impl Node for MainPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        // FIXME: Debug vs tile mask phase?
         let mask_items = world.resources.get::<RenderPhase<TileMaskItem>>().unwrap();
         for item in &mask_items.items {
             item.draw_function
@@ -98,7 +97,7 @@ impl Node for MainPassNode {
         }
 
         let layer_items = world.resources.get::<RenderPhase<LayerItem>>().unwrap();
-        // TODO print layer items count
+        log::trace!("RenderPhase for LayerItem: {}", layer_items.items.len());
         for item in &layer_items.items {
             item.draw_function
                 .draw(&mut tracked_pass, state, world, item);

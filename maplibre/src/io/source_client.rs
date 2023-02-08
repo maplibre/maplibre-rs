@@ -41,7 +41,7 @@ pub struct SourceClient<HC>
 where
     HC: HttpClient,
 {
-    http: HttpSourceClient<HC>, // TODO: mbtiles: Mbtiles
+    http: HttpSourceClient<HC>,
 }
 
 impl<HC> SourceClient<HC>

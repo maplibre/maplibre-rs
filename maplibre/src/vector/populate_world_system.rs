@@ -2,7 +2,7 @@ use std::{borrow::Cow, rc::Rc};
 
 use crate::{
     context::MapContext,
-    ecs::{system::System, Mut},
+    ecs::system::System,
     environment::Environment,
     io::{
         apc::{AsyncProcedureCall, Message},
@@ -50,7 +50,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
             )
         }) {
             match result {
-                // TODO: deduplicate
+                // FIXME tcs: deduplicate
                 Message::TileTessellated(message) => {
                     let coords = message.coords();
                     tracing::event!(tracing::Level::ERROR, %coords, "tile request done: {}", &coords);
@@ -59,8 +59,8 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                     log::warn!("Vector tile at {} finished loading", coords);
 
                     tiles
-                        .query_component_mut::<Mut<VectorLayersDataComponent>>(coords)
-                        .unwrap()
+                        .query_component_mut::<&mut VectorLayersDataComponent>(coords)
+                        .unwrap() // FIXME tcs: Unwrap
                         .done = true;
                 }
                 Message::LayerUnavailable(message) => {
@@ -73,13 +73,13 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                     );
 
                     tiles
-                        .query_component_mut::<Mut<VectorLayersDataComponent>>(layer.coords)
-                        .unwrap()
+                        .query_component_mut::<&mut VectorLayersDataComponent>(layer.coords)
+                        .unwrap() // FIXME tcs: Unwrap
                         .layers
                         .push(VectorLayerData::Unavailable(layer));
                 }
                 Message::LayerTessellated(message) => {
-                    // TODO: Is it fine to ignore layers without any vertices?
+                    // FIXME: Handle points!
                     if message.is_empty() {
                         continue;
                     }
@@ -98,8 +98,8 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                     );
 
                     tiles
-                        .query_component_mut::<Mut<VectorLayersDataComponent>>(layer.coords)
-                        .unwrap()
+                        .query_component_mut::<&mut VectorLayersDataComponent>(layer.coords)
+                        .unwrap() // FIXME tcs: Unwrap
                         .layers
                         .push(VectorLayerData::Available(layer));
                 }

@@ -46,14 +46,14 @@ impl HeadlessMap {
             cgmath::Deg(0.0),
         );
 
-        /*     FIXME   let mut graph = create_default_render_graph().map_err(MapError::RenderGraphInit)?;
+        let mut graph = create_default_render_graph().map_err(MapError::RenderGraphInit)?;
         let draw_graph = graph
             .get_sub_graph_mut(draw_graph::NAME)
             .expect("Subgraph does not exist");
         draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
         draw_graph
             .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)
-            .unwrap(); // TODO: remove unwrap*/
+            .unwrap(); // TODO: remove unwrap
 
         let mut schedule = Schedule::default();
         register_default_render_stages(&mut schedule);
@@ -76,12 +76,12 @@ impl HeadlessMap {
     pub fn render_tile(&mut self, tile: StoredTile) {
         let context = &mut self.map_context;
 
-        /* FIXME if let Eventually::Initialized(pool) = context.renderer.state.buffer_pool_mut() {
-                    pool.clear();
-                } else {
-                    // TODO return error
-                }
-        */
+        if let Eventually::Initialized(pool) = context.renderer.state.buffer_pool_mut() {
+            pool.clear();
+        } else {
+            // TODO return error
+        }
+
         context.world.tile_repository.clear();
 
         context.world.tile_repository.put_tile(tile);

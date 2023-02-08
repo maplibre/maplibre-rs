@@ -29,16 +29,11 @@ use crate::{
     systems::request_system::RequestSystem,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
-        populate_world_system::PopulateWorldSystem,
-        queue_system::queue_system,
-        render_commands::{DrawMasks, DrawVectorTiles},
-        resource_system::resource_system,
-        tile_view_pattern_system::tile_view_pattern_system,
+        populate_world_system::PopulateWorldSystem, queue_system::queue_system,
+        resource_system::resource_system, tile_view_pattern_system::tile_view_pattern_system,
         upload_system::upload_system,
     },
 };
-
-// FIXME: Simplify those NewTypes
 
 pub struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {
@@ -76,12 +71,13 @@ pub type VectorBufferPool = BufferPool<
     ShaderFeatureStyle,
 >;
 
+pub type WgpuTileViewPattern = TileViewPattern<wgpu::Queue, wgpu::Buffer>;
+
 pub struct VectorPlugin;
 
 impl<E: Environment> Plugin<E> for VectorPlugin {
     fn build(&self, schedule: &mut Schedule, kernel: Rc<Kernel<E>>, world: &mut World) {
-        // FIXME: Split into several plugins
-
+        // FIXME tcs: Move to rendering core
         let resources = &mut world.resources;
         resources.init::<RenderPhase<LayerItem>>();
         resources.init::<RenderPhase<TileMaskItem>>();
@@ -90,22 +86,21 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
         resources.insert(Eventually::<VectorBufferPool>::Uninitialized);
 
         // tile_view_pattern:
-        resources.insert(
-            // FIXME: Simplify type
-            Eventually::<TileViewPattern<wgpu::Queue, wgpu::Buffer>>::Uninitialized,
-        );
+        // FIXME tcs: Move to rendering core
+        resources.insert(Eventually::<WgpuTileViewPattern>::Uninitialized);
 
         // vector_tile_pipeline
         resources.insert(Eventually::<VectorPipeline>::Uninitialized);
         // mask_pipeline
+        // FIXME tcs: Move to rendering core?
         resources.insert(Eventually::<MaskPipeline>::Uninitialized);
         // debug_pipeline
         resources.insert(Eventually::<DebugPipeline>::Uninitialized);
 
-        // TODO: move
+        // FIXME tcs: Move to rendering core
         resources.insert(RenderPhase::<LayerItem>::default());
 
-        // TODO: move
+        // FIXME tcs: Move to rendering core
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
             SystemContainer::new(RequestSystem::new(&kernel)),
@@ -116,7 +111,7 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
         );
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, tile_view_pattern_system);
-        schedule.add_system_to_stage(&RenderStageLabel::Queue, upload_system); // TODO Upload updates the TileView in tileviewpattern -> upload most run before prepare
+        schedule.add_system_to_stage(&RenderStageLabel::Queue, upload_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
         schedule.add_system_to_stage(&RenderStageLabel::Queue, queue_system);
     }
 }

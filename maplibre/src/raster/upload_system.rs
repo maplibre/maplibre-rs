@@ -2,7 +2,7 @@
 use crate::{
     context::MapContext,
     coords::ViewRegion,
-    ecs::{tiles::Tiles, Ref},
+    ecs::tiles::Tiles,
     raster::{RasterLayerData, RasterLayersDataComponent},
     render::{
         eventually::{Eventually, Eventually::Initialized},
@@ -25,8 +25,7 @@ pub fn upload_system(
 
     let Initialized(raster_resources) = world.resources.get_mut::<
         Eventually<RasterResources>
-    >().unwrap() else {
-        return; };
+    >().unwrap() else { return; }; // FIXME tcs: Unwrap
 
     if let Some(view_region) = &view_region {
         upload_raster_layer(
@@ -55,10 +54,10 @@ fn upload_raster_layer(
         }
 
         let Some(raster_layers) =
-            tiles.query_component::<Ref<RasterLayersDataComponent>>(coords) else { continue; };
+            tiles.query_component::<&RasterLayersDataComponent>(coords) else { continue; };
 
         for style_layer in &style.layers {
-            let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
+            let source_layer = style_layer.source_layer.as_ref().unwrap(); // FIXME tcs: Remove unwrap
 
             let Some(raster_layer) = raster_layers.layers
                 .iter()
