@@ -2,16 +2,16 @@ use std::{borrow::Cow, rc::Rc};
 
 use crate::{
     context::MapContext,
-    ecs::{system::System, world::World},
+    ecs::{system::System, Mut},
     environment::Environment,
     io::{
         apc::{AsyncProcedureCall, Message},
-        tile_repository::StoredLayer,
         transferables::{
             LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable, TileTessellated,
         },
     },
     kernel::Kernel,
+    vector::{UnavailableVectorLayerData, VectorLayerData, VectorLayersDataComponent},
 };
 
 pub struct PopulateWorldSystem<E: Environment> {
@@ -37,7 +37,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
             world, renderer, ..
         }: &mut MapContext,
     ) {
-        let tile_repository = &mut world.tile_repository;
+        let tiles = &mut world.tiles;
         let geometry_index = &mut world.geometry_index;
 
         for result in self.kernel.apc().receive(|message| {
@@ -55,21 +55,28 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                     let coords = message.coords();
                     tracing::event!(tracing::Level::ERROR, %coords, "tile request done: {}", &coords);
 
-                    tracing::trace!("Tile at {} finished loading", coords);
-                    log::warn!("Tile at {} finished loading", coords);
+                    tracing::trace!("Vector tile at {} finished loading", coords);
+                    log::warn!("Vector tile at {} finished loading", coords);
 
-                    tile_repository.mark_tile_succeeded(&coords).unwrap(); // TODO: unwrap
+                    tiles
+                        .query_component_mut::<Mut<VectorLayersDataComponent>>(coords)
+                        .unwrap()
+                        .done = true;
                 }
                 Message::LayerUnavailable(message) => {
-                    let layer: StoredLayer = message.to_stored_layer();
+                    let layer = message.to_layer();
 
                     tracing::debug!(
-                        "Layer {} at {} reached main thread",
-                        layer.layer_name(),
-                        layer.get_coords()
+                        "Source vector layer {} at {} reached main thread",
+                        &layer.source_layer,
+                        &layer.coords
                     );
 
-                    tile_repository.put_layer(layer);
+                    tiles
+                        .query_component_mut::<Mut<VectorLayersDataComponent>>(layer.coords)
+                        .unwrap()
+                        .layers
+                        .push(VectorLayerData::Unavailable(layer));
                 }
                 Message::LayerTessellated(message) => {
                     // TODO: Is it fine to ignore layers without any vertices?
@@ -77,25 +84,32 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                         continue;
                     }
 
-                    let layer: StoredLayer = message.to_stored_layer();
+                    let layer = message.to_layer();
 
                     tracing::debug!(
-                        "Vector layer {} at {} reached main thread",
-                        layer.layer_name(),
-                        layer.get_coords()
+                        "Source vector layer {} at {} reached main thread",
+                        &layer.source_layer,
+                        &layer.coords
                     );
                     log::warn!(
-                        "Vector layer {} at {} reached main thread",
-                        layer.layer_name(),
-                        layer.get_coords()
+                        "Source vector layer {} at {} reached main thread",
+                        &layer.source_layer,
+                        &layer.coords
                     );
 
-                    tile_repository.put_layer(layer);
+                    tiles
+                        .query_component_mut::<Mut<VectorLayersDataComponent>>(layer.coords)
+                        .unwrap()
+                        .layers
+                        .push(VectorLayerData::Available(layer));
                 }
                 Message::LayerIndexed(message) => {
                     let coords = message.coords();
 
-                    log::warn!("Layer index at {} reached main thread", coords);
+                    log::warn!(
+                        "Source vector layer index at {} reached main thread",
+                        coords
+                    );
 
                     geometry_index.index_tile(&coords, message.to_tile_index());
                 }

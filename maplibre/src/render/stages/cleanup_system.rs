@@ -8,8 +8,11 @@ pub fn cleanup_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
-    let layer_items = world.get_resource_mut::<RenderPhase<LayerItem>>();
+    let layer_items = world.resources.get_mut::<RenderPhase<LayerItem>>().unwrap();
     layer_items.clear();
-    let mask_items = world.get_resource_mut::<RenderPhase<TileMaskItem>>();
+    let mask_items = world
+        .resources
+        .get_mut::<RenderPhase<TileMaskItem>>()
+        .unwrap();
     mask_items.clear();
 }

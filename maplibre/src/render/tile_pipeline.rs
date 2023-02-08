@@ -1,6 +1,6 @@
 //! Utility for declaring pipelines.
 
-use std::cmp;
+use std::{borrow::Cow, cmp};
 
 use crate::{
     platform::MIN_WEBGL_BUFFER_SIZE,
@@ -12,6 +12,7 @@ use crate::{
 };
 
 pub struct TilePipeline {
+    name: Cow<'static, str>,
     /// Is the depth stencil used?
     depth_stencil_enabled: bool,
     /// This pipeline updates the stenctil
@@ -29,6 +30,7 @@ pub struct TilePipeline {
 
 impl TilePipeline {
     pub(crate) fn new(
+        name: Cow<'static, str>,
         settings: RendererSettings,
         vertex_state: VertexState,
         fragment_state: FragmentState,
@@ -40,6 +42,7 @@ impl TilePipeline {
         raster: bool,
     ) -> Self {
         TilePipeline {
+            name,
             depth_stencil_enabled,
             update_stencil,
             debug_stencil,
@@ -76,7 +79,7 @@ impl RenderPipeline for TilePipeline {
         };
 
         RenderPipelineDescriptor {
-            label: None,
+            label: Some(self.name),
             layout: if self.raster {
                 Some(vec![vec![
                     wgpu::BindGroupLayoutEntry {

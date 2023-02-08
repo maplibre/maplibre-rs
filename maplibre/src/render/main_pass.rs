@@ -73,7 +73,7 @@ impl Node for MainPassNode {
             render_context
                 .command_encoder
                 .begin_render_pass(&wgpu::RenderPassDescriptor {
-                    label: None,
+                    label: Some("main_pass"),
                     color_attachments: &[Some(color_attachment)],
                     depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                         view: &depth_texture.view,
@@ -91,13 +91,13 @@ impl Node for MainPassNode {
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
         // FIXME: Debug vs tile mask phase?
-        let mask_items = world.get_resource::<RenderPhase<TileMaskItem>>();
+        let mask_items = world.resources.get::<RenderPhase<TileMaskItem>>().unwrap();
         for item in &mask_items.items {
             item.draw_function
                 .draw(&mut tracked_pass, state, world, item);
         }
 
-        let layer_items = world.get_resource::<RenderPhase<LayerItem>>();
+        let layer_items = world.resources.get::<RenderPhase<LayerItem>>().unwrap();
         // TODO print layer items count
         for item in &layer_items.items {
             item.draw_function

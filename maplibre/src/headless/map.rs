@@ -11,7 +11,6 @@ use crate::{
         source_client::SourceFetchError,
         source_type::{SourceType, TessellateSource},
         tile_pipelines::{build_vector_tile_pipeline, VectorTileRequest},
-        tile_repository::{StoredLayer, StoredTile},
         RawLayer,
     },
     kernel::Kernel,

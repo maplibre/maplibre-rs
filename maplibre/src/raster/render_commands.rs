@@ -17,7 +17,11 @@ impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let Initialized(raster_resources) = world.get_resource::<Eventually<RasterResources>>() {
+        if let Initialized(raster_resources) = world
+            .resources
+            .get::<Eventually<RasterResources>>()
+            .unwrap()
+        {
             pass.set_render_pipeline(raster_resources.pipeline());
             RenderCommandResult::Success
         } else {
@@ -34,7 +38,11 @@ impl<const I: usize> RenderCommand<LayerItem> for SetRasterViewBindGroup<I> {
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let Initialized(raster_resources) = world.get_resource::<Eventually<RasterResources>>() {
+        if let Initialized(raster_resources) = world
+            .resources
+            .get::<Eventually<RasterResources>>()
+            .unwrap()
+        {
             pass.set_bind_group(
                 0,
                 raster_resources
@@ -58,7 +66,7 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let source_shape = &item.source_shape;
-        let Initialized(tile_view_pattern) = world.get_resource::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>() else { return RenderCommandResult::Failure; };
+        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>().unwrap() else { return RenderCommandResult::Failure; };
 
         let reference = source_shape.coords().stencil_reference_value_3d() as u32;
 
@@ -68,6 +76,14 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
 
         pass.set_vertex_buffer(
             0,
+            tile_view_pattern
+                .buffer()
+                .slice(source_shape.buffer_range()),
+        );
+
+        // FIXME: I passin random data here right now, but instead we need the correct metadata here
+        pass.set_vertex_buffer(
+            1,
             tile_view_pattern
                 .buffer()
                 .slice(source_shape.buffer_range()),

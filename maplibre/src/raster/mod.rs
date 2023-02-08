@@ -10,8 +10,12 @@ use std::{
     rc::Rc,
 };
 
+use image::RgbaImage;
+
 use crate::{
+    coords::WorldTileCoords,
     ecs::{
+        component::TileComponent,
         system::{stage::SystemStage, SystemContainer},
         world::World,
     },
@@ -38,7 +42,9 @@ pub struct RasterPlugin;
 impl<E: Environment> Plugin<E> for RasterPlugin {
     fn build(&self, schedule: &mut Schedule, kernel: Rc<Kernel<E>>, world: &mut World) {
         // raster_resources
-        world.insert_resource(Eventually::<RasterResources>::Uninitialized);
+        world
+            .resources
+            .insert(Eventually::<RasterResources>::Uninitialized);
 
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
@@ -51,3 +57,18 @@ impl<E: Environment> Plugin<E> for RasterPlugin {
         schedule.add_system_to_stage(&RenderStageLabel::Queue, queue_system); // TODO Upload updates the TileView in tileviewpattern -> upload most run before prepare
     }
 }
+
+pub struct RasterLayerData {
+    pub coords: WorldTileCoords,
+    pub source_layer: String,
+    pub image: RgbaImage,
+}
+
+// FIXME: Add AvailableRasterLayerData and UnavailableRasterLayerData
+
+#[derive(Default)]
+pub struct RasterLayersDataComponent {
+    pub layers: Vec<RasterLayerData>,
+}
+
+impl TileComponent for RasterLayersDataComponent {}

@@ -4,7 +4,7 @@
 use log::info;
 
 use crate::{
-    ecs::world::World,
+    ecs::{world::World, Ref},
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult, TileMaskItem},
@@ -13,7 +13,7 @@ use crate::{
         RenderState, INDEX_FORMAT,
     },
     vector::{
-        DebugPipeline, MaskPipeline, VectorBufferPool, VectorLayersComponent, VectorPipeline,
+        DebugPipeline, MaskPipeline, VectorBufferPool, VectorLayersIndicesComponent, VectorPipeline,
     },
 };
 
@@ -25,7 +25,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = world.get_resource::<Eventually<MaskPipeline>>()  else { return RenderCommandResult::Failure; };
+        let Initialized(pipeline) = world.resources.get::<Eventually<MaskPipeline>>().unwrap() else { return RenderCommandResult::Failure; };
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -39,7 +39,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = world.get_resource::<Eventually<DebugPipeline>>()  else { return RenderCommandResult::Failure; };
+        let Initialized(pipeline) = world.resources.get::<Eventually<DebugPipeline>>().unwrap() else { return RenderCommandResult::Failure; };
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -53,7 +53,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetVectorTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = world.get_resource::<Eventually<VectorPipeline>>()  else { return RenderCommandResult::Failure; };
+        let Initialized(pipeline) = world.resources.get::<Eventually<VectorPipeline>>().unwrap() else { return RenderCommandResult::Failure; };
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -69,7 +69,7 @@ impl RenderCommand<TileMaskItem> for DrawMask {
     ) -> RenderCommandResult {
         let tile_mask = &item.source_shape;
 
-        let Initialized(tile_view_pattern) = world.get_resource::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>()  else { return RenderCommandResult::Failure; };
+        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>().unwrap() else { return RenderCommandResult::Failure; };
         tracing::trace!("Drawing mask {}", &tile_mask.coords());
 
         // Draw mask with stencil value of e.g. parent
@@ -97,13 +97,14 @@ impl RenderCommand<LayerItem> for DrawDebugOutline {
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let source_shape = &item.source_shape;
-        let Initialized(tile_view_pattern) = world.get_resource::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>()  else { return RenderCommandResult::Failure; };
+        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>().unwrap() else { return RenderCommandResult::Failure; };
         pass.set_vertex_buffer(
             0,
             tile_view_pattern
                 .buffer()
                 .slice(source_shape.buffer_range()),
         );
+
         const TILE_MASK_SHADER_VERTICES: u32 = 24;
         pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
 
@@ -120,19 +121,21 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let shape = &item.source_shape; // FIXME: Is this correct?
-        let tile_ref = world.query_tile(item.tile.coords).unwrap();
-        let vector_layers = tile_ref.query_component::<VectorLayersComponent>().unwrap();
+        let vector_layers = world
+            .tiles
+            .query_component::<Ref<VectorLayersIndicesComponent>>(item.tile.coords)
+            .unwrap();
 
         let entry = &vector_layers
-            .entries
+            .layers
             .iter()
             .find(|entry| entry.style_layer.id == item.style_layer)
             .unwrap();
 
         let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
             (
-                world.get_resource::<Eventually<VectorBufferPool>>(),
-                world.get_resource::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>(),
+                world.resources.get::<Eventually<VectorBufferPool>>().unwrap(),
+                world.resources.get::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>().unwrap(),
             ) else { return RenderCommandResult::Failure; };
 
         // Uses stencil value of requested tile and the shape of the requested tile
@@ -171,9 +174,6 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
                 .feature_metadata()
                 .slice(entry.feature_metadata_buffer_range()),
         );
-        if entry.indices_range().end == 10044 {
-            info!("condition")
-        }
         pass.draw_indexed(entry.indices_range(), 0, 0..1);
 
         RenderCommandResult::Success

@@ -52,7 +52,7 @@ impl Node for DebugPassNode {
             render_context
                 .command_encoder
                 .begin_render_pass(&wgpu::RenderPassDescriptor {
-                    label: None,
+                    label: Some("debug_pass"),
                     color_attachments: &[Some(color_attachment)],
                     depth_stencil_attachment: None,
                 });

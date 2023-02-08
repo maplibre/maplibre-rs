@@ -43,9 +43,5 @@ pub fn tile_view_pattern_system(
             &(raster_resources.deref(), buffer_pool.index()),
             zoom,
         );
-
-        for coord in view_region.iter() {
-            world.spawn_mut(coord);
-        }
     }
 }

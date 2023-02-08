@@ -32,11 +32,15 @@ pub fn resource_system(
     }: &mut MapContext,
 ) {
     world
-        .get_resource_mut::<Eventually<VectorBufferPool>>()
+        .resources
+        .get_mut::<Eventually<VectorBufferPool>>()
+        .unwrap()
         .initialize(|| BufferPool::from_device(device));
 
     world
-        .get_resource_mut::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>()
+        .resources
+        .get_mut::<Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>>()
+        .unwrap()
         .initialize(|| {
             let tile_view_buffer_desc = wgpu::BufferDescriptor {
                 label: Some("tile view buffer"),
@@ -53,13 +57,16 @@ pub fn resource_system(
         });
 
     world
-        .get_resource_mut::<Eventually<VectorPipeline>>()
+        .resources
+        .get_mut::<Eventually<VectorPipeline>>()
+        .unwrap()
         .initialize(|| {
             let tile_shader = shaders::VectorTileShader {
                 format: surface.surface_format(),
             };
 
             let pipeline = TilePipeline::new(
+                "vector_pipeline".into(),
                 *settings,
                 tile_shader.describe_vertex(),
                 tile_shader.describe_fragment(),
@@ -77,7 +84,9 @@ pub fn resource_system(
         });
 
     world
-        .get_resource_mut::<Eventually<MaskPipeline>>()
+        .resources
+        .get_mut::<Eventually<MaskPipeline>>()
+        .unwrap()
         .initialize(|| {
             let mask_shader = shaders::TileMaskShader {
                 format: surface.surface_format(),
@@ -86,6 +95,7 @@ pub fn resource_system(
             };
 
             let pipeline = TilePipeline::new(
+                "mask_pipeline".into(),
                 *settings,
                 mask_shader.describe_vertex(),
                 mask_shader.describe_fragment(),
@@ -102,7 +112,9 @@ pub fn resource_system(
         });
 
     world
-        .get_resource_mut::<Eventually<DebugPipeline>>()
+        .resources
+        .get_mut::<Eventually<DebugPipeline>>()
+        .unwrap()
         .initialize(|| {
             let mask_shader = shaders::TileMaskShader {
                 format: surface.surface_format(),
@@ -111,6 +123,7 @@ pub fn resource_system(
             };
 
             let pipeline = TilePipeline::new(
+                "debug_pipeline".into(),
                 *settings,
                 mask_shader.describe_vertex(),
                 mask_shader.describe_fragment(),

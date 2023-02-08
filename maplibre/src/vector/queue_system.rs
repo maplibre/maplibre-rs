@@ -12,7 +12,7 @@ use crate::{
     },
     vector::{
         render_commands::{DrawMasks, DrawVectorTiles},
-        VectorBufferPool, VectorLayersComponent,
+        VectorBufferPool, VectorLayersIndicesComponent,
     },
 };
 

@@ -5,7 +5,7 @@ use std::iter;
 use crate::{
     context::MapContext,
     coords::{ViewRegion, WorldTileCoords},
-    io::tile_repository::{StoredLayer, TileRepository},
+    ecs::{tiles::Tiles, Mut, Ref},
     render::{
         camera::ViewProjection,
         eventually::{Eventually, Eventually::Initialized},
@@ -15,7 +15,10 @@ use crate::{
         Renderer,
     },
     style::Style,
-    vector::{VectorBufferPool, VectorLayersComponent},
+    vector::{
+        AvailableVectorLayerData, VectorBufferPool, VectorLayerData, VectorLayersDataComponent,
+        VectorLayersIndicesComponent,
+    },
 };
 
 pub fn upload_system(
@@ -37,35 +40,25 @@ pub fn upload_system(
     ) = world.resources.collect_mut2::<
         Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
         Eventually<VectorBufferPool>,
-    >().unwrap() else {
-        return; };
+    >().unwrap() else { return; };
 
     if let Some(view_region) = &view_region {
-        let new_components = upload_tesselated_layer(
+        upload_tesselated_layer(
             buffer_pool,
             device,
             queue,
-            &world.tile_repository,
+            &mut world.tiles,
             style,
             view_region,
         );
-        upload_tile_view_pattern(tile_view_pattern, queue, &view_proj);
-
-        for (coords, components) in new_components {
-            world
-                .query_tile_mut(coords)
-                .unwrap()
-                .insert(VectorLayersComponent {
-                    entries: components,
-                });
-        }
-        //self.update_metadata(state, tile_repository, queue);
+        tile_view_pattern.upload_pattern(queue, &view_proj);
+        // self.update_metadata(state, tile_repository, queue);
     }
 }
 
-fn update_metadata(
+/*fn update_metadata(
     buffer_pool: &VectorBufferPool,
-    tile_repository: &TileRepository,
+    tiles: &Tiles,
     queue: &wgpu::Queue,
 ) {
     let animated_one = 0.5
@@ -132,39 +125,46 @@ fn update_metadata(
             }
         }
     }
-}
-
-fn upload_tile_view_pattern(
-    tile_view_pattern: &mut TileViewPattern<wgpu::Queue, wgpu::Buffer>,
-    queue: &wgpu::Queue,
-    view_proj: &ViewProjection,
-) {
-    tile_view_pattern.upload_pattern(queue, view_proj);
-}
+}*/
 
 fn upload_tesselated_layer(
     buffer_pool: &mut VectorBufferPool,
     device: &wgpu::Device,
     queue: &wgpu::Queue,
-    tile_repository: &TileRepository,
+    tiles: &mut Tiles,
     style: &Style,
     view_region: &ViewRegion,
-) -> Vec<(WorldTileCoords, Vec<IndexEntry>)> {
-    let mut new_components_tiles = Vec::new();
-
+) {
     // Upload all tessellated layers which are in view
     for coords in view_region.iter() {
-        let Some(available_layers) =
-            tile_repository.iter_missing_tesselated_layers_at(buffer_pool, &coords) else { continue; };
+        let Some((vector_layers, vector_layers_indices)) =
+            tiles.query_component_mut::<(Mut<VectorLayersDataComponent>, Mut<VectorLayersIndicesComponent>)>(coords) else { continue; };
 
-        let mut new_components = Vec::new();
+        let loaded_layers = buffer_pool
+            .get_loaded_source_layers_at(&coords)
+            .unwrap_or_default();
+
+        let available_layers = vector_layers
+            .layers
+            .iter()
+            .flat_map(|data| match data {
+                VectorLayerData::Available(data) => Some(data),
+                VectorLayerData::Unavailable(_) => None,
+            })
+            .filter(|data| !loaded_layers.contains(data.source_layer.as_str()))
+            .collect::<Vec<_>>();
 
         for style_layer in &style.layers {
             let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Remove unwrap
 
-            let Some(stored_layer) = available_layers
+            let Some(AvailableVectorLayerData {
+                         coords,
+                         feature_indices,
+                         buffer,
+                         ..
+                     }) = available_layers
                 .iter()
-                .find(|layer| source_layer.as_str() == layer.layer_name()) else { continue; };
+                .find(|layer| source_layer.as_str() == layer.source_layer) else { continue; };
 
             let color: Option<Vec4f32> = style_layer
                 .paint
@@ -172,48 +172,27 @@ fn upload_tesselated_layer(
                 .and_then(|paint| paint.get_color())
                 .map(|color| color.into());
 
-            match stored_layer {
-                StoredLayer::UnavailableLayer { .. } => {}
-                StoredLayer::RasterLayer { .. } => {}
-                StoredLayer::TessellatedLayer {
-                    coords,
-                    feature_indices,
-                    buffer,
-                    ..
-                } => {
-                    let allocate_feature_metadata =
-                        tracing::span!(tracing::Level::TRACE, "allocate_feature_metadata");
+            let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual featrues
+                .enumerate()
+                .flat_map(|(i, _feature)| {
+                    iter::repeat(ShaderFeatureStyle {
+                        color: color.unwrap(),
+                    })
+                    .take(feature_indices[i] as usize)
+                })
+                .collect::<Vec<_>>();
 
-                    let guard = allocate_feature_metadata.enter();
-                    let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual featrues
-                        .enumerate()
-                        .flat_map(|(i, _feature)| {
-                            iter::repeat(ShaderFeatureStyle {
-                                color: color.unwrap(),
-                            })
-                            .take(feature_indices[i] as usize)
-                        })
-                        .collect::<Vec<_>>();
-                    drop(guard);
+            log::info!("Allocating geometry at {}", &coords);
+            let entry = buffer_pool.allocate_layer_geometry(
+                queue,
+                *coords,
+                style_layer.clone(),
+                buffer,
+                ShaderLayerMetadata::new(style_layer.index as f32),
+                &feature_metadata,
+            );
 
-                    tracing::trace!("Allocating geometry at {}", &coords);
-                    log::info!("Allocating geometry at {}", &coords);
-                    let entry = buffer_pool.allocate_layer_geometry(
-                        queue,
-                        *coords,
-                        style_layer.clone(),
-                        buffer,
-                        ShaderLayerMetadata::new(style_layer.index as f32),
-                        &feature_metadata,
-                    );
-
-                    new_components.push(entry);
-                }
-            }
+            vector_layers_indices.layers.push(entry);
         }
-
-        new_components_tiles.push((coords, new_components));
     }
-
-    return new_components_tiles;
 }

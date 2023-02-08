@@ -3,6 +3,8 @@ use std::{
     collections::HashMap,
 };
 
+use crate::ecs::{Mut, Ref};
+
 pub trait Resource: 'static {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -28,6 +30,10 @@ pub struct Resources {
 }
 
 impl Resources {
+    pub fn init<R: Resource + Default>(&mut self) {
+        self.insert(R::default());
+    }
+
     pub fn insert<R: Resource>(&mut self, resource: R) {
         let index = self.resources.len();
         self.resources.push(Box::new(resource));
@@ -56,6 +62,16 @@ impl Resources {
             return Some(x.downcast_mut().unwrap());
         }
         return None;
+    }
+
+    pub unsafe fn unsafe_get_mut<R: Resource>(&mut self) -> &mut R {
+        let i = self.index.get(&TypeId::of::<R>()).unwrap();
+        let resources = self.resources.as_mut_ptr();
+        return (&mut *resources.offset(*i as isize))
+            .as_mut()
+            .as_any_mut()
+            .downcast_mut()
+            .unwrap();
     }
 
     // FIXME: Do this properly
@@ -199,3 +215,72 @@ impl Resources {
         }
     }
 }
+
+trait ResourceQuery {
+    type Item<'a>;
+
+    fn get_resource<'a>(resources: &'a Resources) -> Self::Item<'a>;
+    fn get_resource_mut<'a>(resources: &'a mut Resources) -> Self::Item<'a>;
+}
+
+impl<'r, R: Resource> ResourceQuery for Ref<'r, R> {
+    type Item<'a> = Ref<'a, R>;
+
+    fn get_resource<'a>(resources: &'a Resources) -> Self::Item<'a> {
+        Ref {
+            value: resources.get::<R>().unwrap(),
+        }
+    }
+
+    fn get_resource_mut<'a>(resources: &'a mut Resources) -> Self::Item<'a> {
+        Self::get_resource(resources)
+    }
+}
+
+impl<'r, R: Resource> ResourceQuery for Mut<'r, R> {
+    type Item<'a> = Mut<'a, R>;
+
+    fn get_resource<'a>(resources: &'a Resources) -> Self::Item<'a> {
+        panic!("provide an inmutable World to query inmutable")
+    }
+
+    fn get_resource_mut<'a>(resources: &'a mut Resources) -> Self::Item<'a> {
+        Mut {
+            value: unsafe { resources.unsafe_get_mut::<R>() },
+        }
+    }
+}
+
+impl<RQ1: ResourceQuery> ResourceQuery for (RQ1,) {
+    type Item<'a> = (RQ1::Item<'a>,);
+
+    fn get_resource<'a>(resources: &'a Resources) -> Self::Item<'a> {
+        (RQ1::get_resource(resources),)
+    }
+
+    fn get_resource_mut<'a>(resources: &'a mut Resources) -> Self::Item<'a> {
+        (RQ1::get_resource_mut(resources),)
+    }
+}
+
+macro_rules! impl_resource_query {
+    ($($param: ident),*) => {
+        impl<$($param: ResourceQuery),*> ResourceQuery for ($($param,)*) {
+            type Item<'a> =  ($($param::Item<'a>,)*);
+
+            fn get_resource<'a>(world: &'a World) -> Self::Item<'a> {
+                ($($param::get_resource(world),)*)
+            }
+
+            fn get_resource_mut<'a>(world: &'a mut World) -> Self::Item<'a> {
+                ($($param::get_resource_mut(world),)*)
+            }
+        }
+    };
+}
+
+/*impl_system_function!(R1, R2);
+impl_system_function!(R1, R2, R3);
+impl_system_function!(R1, R2, R3, R4);
+impl_system_function!(R1, R2, R3, R4, R5);
+impl_system_function!(R1, R2, R3, R4, R5, R6);*/

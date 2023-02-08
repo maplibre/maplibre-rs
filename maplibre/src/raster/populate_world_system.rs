@@ -2,14 +2,15 @@ use std::{borrow::Cow, rc::Rc};
 
 use crate::{
     context::MapContext,
-    ecs::system::System,
+    ecs::{system::System, Mut},
     environment::Environment,
     io::{
         apc::{AsyncProcedureCall, Message},
-        tile_repository::StoredLayer,
         transferables::{LayerRaster, LayerTessellated, LayerUnavailable},
     },
     kernel::Kernel,
+    raster::{RasterLayerData, RasterLayersDataComponent},
+    vector::{VectorLayerData, VectorLayersDataComponent},
 };
 
 pub struct PopulateWorldSystem<E: Environment> {
@@ -35,7 +36,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
             world, renderer, ..
         }: &mut MapContext,
     ) {
-        let tile_repository = &mut world.tile_repository;
+        let tiles = &mut world.tiles;
         let geometry_index = &mut world.geometry_index;
 
         for result in self.kernel.apc().receive(|message| {
@@ -46,29 +47,39 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
         }) {
             match result {
                 Message::LayerRaster(message) => {
-                    let layer: StoredLayer = message.to_stored_layer();
+                    let layer = message.to_layer();
                     tracing::debug!(
                         "Raster layer {} at {} reached main thread",
-                        layer.layer_name(),
-                        layer.get_coords()
+                        &layer.source_layer,
+                        &layer.coords
                     );
                     log::warn!(
                         "Raster layer {} at {} reached main thread",
-                        layer.layer_name(),
-                        layer.get_coords()
+                        &layer.source_layer,
+                        &layer.coords
                     );
-                    tile_repository.put_layer(layer);
+                    tiles
+                        .query_component_mut::<Mut<RasterLayersDataComponent>>(layer.coords)
+                        .unwrap()
+                        .layers
+                        .push(layer);
                 }
+                // FIXME: Change to RasterLayerUnvailable
                 Message::LayerUnavailable(message) => {
-                    let layer: StoredLayer = message.to_stored_layer();
+                    let layer = message.to_layer();
 
                     tracing::debug!(
                         "Layer {} at {} did not reach main thread",
-                        layer.layer_name(),
-                        layer.get_coords()
+                        &layer.source_layer,
+                        &layer.coords
                     );
 
-                    tile_repository.put_layer(layer);
+                    tiles
+                        // FIXME: Change to RasterLayersDataComponent
+                        .query_component_mut::<Mut<VectorLayersDataComponent>>(layer.coords)
+                        .unwrap()
+                        .layers
+                        .push(VectorLayerData::Unavailable(layer));
                 }
                 _ => {}
             }

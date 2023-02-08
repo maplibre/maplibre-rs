@@ -3,9 +3,11 @@ use image::RgbaImage;
 
 use crate::{
     coords::WorldTileCoords,
-    io::{geometry_index::TileIndex, tile_repository::StoredLayer},
+    io::geometry_index::TileIndex,
+    raster::RasterLayerData,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    vector::{AvailableVectorLayerData, UnavailableVectorLayerData},
 };
 
 pub trait TileTessellated: Send {
@@ -24,7 +26,7 @@ pub trait LayerUnavailable: Send {
     fn coords(&self) -> WorldTileCoords;
     fn layer_name(&self) -> &str;
 
-    fn to_stored_layer(self) -> StoredLayer;
+    fn to_layer(self) -> UnavailableVectorLayerData;
 }
 
 pub trait LayerTessellated: Send {
@@ -41,7 +43,7 @@ pub trait LayerTessellated: Send {
 
     fn is_empty(&self) -> bool;
 
-    fn to_stored_layer(self) -> StoredLayer;
+    fn to_layer(self) -> AvailableVectorLayerData;
 }
 
 pub trait LayerIndexed: Send {
@@ -57,7 +59,7 @@ pub trait LayerIndexed: Send {
 pub trait LayerRaster: Send {
     fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self;
 
-    fn to_stored_layer(self) -> StoredLayer;
+    fn to_layer(self) -> RasterLayerData;
 }
 
 pub struct DefaultTileTessellated {
@@ -92,10 +94,10 @@ impl LayerUnavailable for DefaultLayerUnavailable {
         &self.layer_name
     }
 
-    fn to_stored_layer(self) -> StoredLayer {
-        StoredLayer::UnavailableLayer {
+    fn to_layer(self) -> UnavailableVectorLayerData {
+        UnavailableVectorLayerData {
             coords: self.coords,
-            layer_name: self.layer_name,
+            source_layer: self.layer_name,
         }
     }
 }
@@ -132,10 +134,10 @@ impl LayerTessellated for DefaultLayerTesselated {
         self.buffer.usable_indices == 0
     }
 
-    fn to_stored_layer(self) -> StoredLayer {
-        StoredLayer::TessellatedLayer {
+    fn to_layer(self) -> AvailableVectorLayerData {
+        AvailableVectorLayerData {
             coords: self.coords,
-            layer_name: self.layer_data.name,
+            source_layer: self.layer_data.name,
             buffer: self.buffer,
             feature_indices: self.feature_indices,
         }
@@ -176,10 +178,10 @@ impl LayerRaster for DefaultRasterLayer {
         }
     }
 
-    fn to_stored_layer(self) -> StoredLayer {
-        StoredLayer::RasterLayer {
+    fn to_layer(self) -> RasterLayerData {
+        RasterLayerData {
             coords: self.coords,
-            layer_name: "raster".to_string(),
+            source_layer: "raster".to_string(),
             image: self.image,
         }
     }

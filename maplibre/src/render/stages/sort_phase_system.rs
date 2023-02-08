@@ -9,6 +9,14 @@ pub fn sort_phase_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
-    world.get_resource_mut::<RenderPhase<LayerItem>>().sort();
-    world.get_resource_mut::<RenderPhase<TileMaskItem>>().sort();
+    world
+        .resources
+        .get_mut::<RenderPhase<LayerItem>>()
+        .unwrap()
+        .sort();
+    world
+        .resources
+        .get_mut::<RenderPhase<TileMaskItem>>()
+        .unwrap()
+        .sort();
 }

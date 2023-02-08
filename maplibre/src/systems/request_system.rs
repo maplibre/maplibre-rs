@@ -6,8 +6,8 @@ use log::info;
 
 use crate::{
     context::MapContext,
-    coords::{ViewRegion, WorldTileCoords},
-    ecs::{system::System, world::World},
+    coords::ViewRegion,
+    ecs::{system::System, tiles::Tiles},
     environment::Environment,
     io::{
         apc::{
@@ -20,11 +20,12 @@ use crate::{
             build_raster_tile_pipeline, build_vector_tile_pipeline, RasterTileRequest,
             VectorTileRequest,
         },
-        tile_repository::TileRepository,
         transferables::{LayerUnavailable, Transferables},
     },
     kernel::Kernel,
+    raster::RasterLayersDataComponent,
     style::Style,
+    vector::{VectorLayersDataComponent, VectorLayersIndicesComponent},
 };
 
 pub struct RequestSystem<E: Environment> {
@@ -53,13 +54,14 @@ impl<E: Environment> System for RequestSystem<E> {
             ..
         }: &mut MapContext,
     ) {
+        let tiles = &mut world.tiles;
         let view_state = &mut world.view_state;
         let view_region = view_state.create_view_region();
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
                 // FIXME: We also need to request tiles from layers above if we are over the maximum zoom level
-                self.request_tiles_in_view(&mut world.tile_repository, style, view_region);
+                self.request_tiles_in_view(tiles, style, view_region);
             }
         }
 
@@ -69,22 +71,23 @@ impl<E: Environment> System for RequestSystem<E> {
 
 impl<E: Environment> RequestSystem<E> {
     /// Request tiles which are currently in view.
-    fn request_tiles_in_view(
-        &self,
-        tile_repository: &mut TileRepository,
-        style: &Style,
-        view_region: &ViewRegion,
-    ) {
+    fn request_tiles_in_view(&self, tiles: &mut Tiles, style: &Style, view_region: &ViewRegion) {
         for coords in view_region.iter() {
             if coords.build_quad_key().is_none() {
                 continue;
             }
-            // TODO: Make tesselation depend on style?
-            if tile_repository.is_tile_pending_or_done(&coords) {
+
+            // TODO: Make tesselation depend on style? So maybe we need to request even if it exists
+            if tiles.exists(coords) {
                 continue;
             }
 
-            tile_repository.mark_tile_pending(coords).unwrap(); // TODO: Remove unwrap
+            tiles
+                .spawn_mut(coords)
+                .unwrap()
+                .insert(VectorLayersDataComponent::default())
+                .insert(VectorLayersIndicesComponent::default())
+                .insert(RasterLayersDataComponent::default());
 
             tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);
             log::info!("tile request started: {}", &coords);

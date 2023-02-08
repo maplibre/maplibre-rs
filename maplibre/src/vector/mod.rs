@@ -82,27 +82,28 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
     fn build(&self, schedule: &mut Schedule, kernel: Rc<Kernel<E>>, world: &mut World) {
         // FIXME: Split into several plugins
 
-        world.init_resource::<RenderPhase<LayerItem>>();
-        world.init_resource::<RenderPhase<TileMaskItem>>();
+        let resources = &mut world.resources;
+        resources.init::<RenderPhase<LayerItem>>();
+        resources.init::<RenderPhase<TileMaskItem>>();
 
         // buffer_pool
-        world.insert_resource(Eventually::<VectorBufferPool>::Uninitialized);
+        resources.insert(Eventually::<VectorBufferPool>::Uninitialized);
 
         // tile_view_pattern:
-        world.insert_resource(
+        resources.insert(
             // FIXME: Simplify type
             Eventually::<TileViewPattern<wgpu::Queue, wgpu::Buffer>>::Uninitialized,
         );
 
         // vector_tile_pipeline
-        world.insert_resource(Eventually::<VectorPipeline>::Uninitialized);
+        resources.insert(Eventually::<VectorPipeline>::Uninitialized);
         // mask_pipeline
-        world.insert_resource(Eventually::<MaskPipeline>::Uninitialized);
+        resources.insert(Eventually::<MaskPipeline>::Uninitialized);
         // debug_pipeline
-        world.insert_resource(Eventually::<DebugPipeline>::Uninitialized);
+        resources.insert(Eventually::<DebugPipeline>::Uninitialized);
 
         // TODO: move
-        world.insert_resource(RenderPhase::<LayerItem>::default());
+        resources.insert(RenderPhase::<LayerItem>::default());
 
         // TODO: move
         schedule.add_system_to_stage(
@@ -120,19 +121,35 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
     }
 }
 
-pub struct VectorLayerComponent {
-    coords: WorldTileCoords,
-    layer_name: String,
-    buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
+pub struct AvailableVectorLayerData {
+    pub coords: WorldTileCoords,
+    pub source_layer: String,
+    pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
-    feature_indices: Vec<u32>,
+    pub feature_indices: Vec<u32>,
 }
 
-impl TileComponent for VectorLayerComponent {}
-
-#[derive(Debug)]
-pub struct VectorLayersComponent {
-    pub entries: Vec<IndexEntry>,
+pub struct UnavailableVectorLayerData {
+    pub coords: WorldTileCoords,
+    pub source_layer: String,
 }
 
-impl TileComponent for VectorLayersComponent {}
+pub enum VectorLayerData {
+    Available(AvailableVectorLayerData),
+    Unavailable(UnavailableVectorLayerData),
+}
+
+#[derive(Default)]
+pub struct VectorLayersDataComponent {
+    pub done: bool,
+    pub layers: Vec<VectorLayerData>,
+}
+
+impl TileComponent for VectorLayersDataComponent {}
+
+#[derive(Default)]
+pub struct VectorLayersIndicesComponent {
+    pub layers: Vec<IndexEntry>,
+}
+
+impl TileComponent for VectorLayersIndicesComponent {}

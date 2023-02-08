@@ -32,7 +32,9 @@ pub fn resource_system(
     }: &mut MapContext,
 ) {
     world
-        .get_resource_mut::<Eventually<RasterResources>>()
+        .resources
+        .get_mut::<Eventually<RasterResources>>()
+        .unwrap()
         .initialize(|| {
             let shader = shaders::RasterTileShader {
                 format: surface.surface_format(),
@@ -42,6 +44,7 @@ pub fn resource_system(
                 Msaa { samples: 1 },
                 device,
                 TilePipeline::new(
+                    "raster_pipeline".into(),
                     *settings,
                     shader.describe_vertex(),
                     shader.describe_fragment(),
