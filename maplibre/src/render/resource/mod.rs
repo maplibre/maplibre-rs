@@ -1,9 +1,7 @@
 //! Utilities which holds references to GPU-owned. Usually a resource is a wrapper which makes using
 //! buffers or textures simpler.
 
-mod buffer_pool;
 mod pipeline;
-mod raster;
 mod shader;
 mod surface;
 mod texture;
