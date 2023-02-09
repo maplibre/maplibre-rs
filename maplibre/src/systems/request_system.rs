@@ -12,7 +12,7 @@ use crate::{
     io::{
         apc::{
             AsyncProcedureCall, AsyncProcedureFuture, Context, HeadedPipelineProcessor, Input,
-            Message, ProcedureError,
+            ProcedureError,
         },
         pipeline::{PipelineContext, Processable},
         source_type::{RasterSource, SourceType, TessellateSource},

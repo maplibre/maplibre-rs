@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use geozero::{mvt::Message, GeozeroDatasource};
 use image::RgbaImage;
-use log::error;
 
 use crate::{
     coords::WorldTileCoords,

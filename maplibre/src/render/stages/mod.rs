@@ -4,15 +4,11 @@ use graph_runner_system::GraphRunnerSystem;
 
 use crate::{
     ecs::system::{stage::SystemStage, SystemContainer},
-    multi_stage,
-    render::{
-        render_phase::LayerItem,
-        stages::{
-            cleanup_system::cleanup_system, resource_system::ResourceSystem,
-            sort_phase_system::sort_phase_system,
-        },
+    render::stages::{
+        cleanup_system::cleanup_system, resource_system::ResourceSystem,
+        sort_phase_system::sort_phase_system,
     },
-    schedule::{Schedule, Stage, StageLabel},
+    schedule::{Schedule, StageLabel},
 };
 
 mod cleanup_system;

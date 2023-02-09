@@ -1,10 +1,6 @@
-use log::info;
-
 use crate::{
     context::MapContext,
-    ecs::system::{
-        function::IntoSystem, BoxedSystem, IntoSystemContainer, System, SystemContainer,
-    },
+    ecs::system::{IntoSystemContainer, SystemContainer},
     schedule::Stage,
 };
 

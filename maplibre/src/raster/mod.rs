@@ -1,14 +1,4 @@
-mod populate_world_system;
-mod queue_system;
-mod render_commands;
-mod resource;
-mod resource_system;
-mod upload_system;
-
-use std::{
-    ops::{Deref, DerefMut},
-    rc::Rc,
-};
+use std::rc::Rc;
 
 use image::RgbaImage;
 pub use resource::RasterResources;
@@ -25,7 +15,16 @@ use crate::{
     },
     render::{eventually::Eventually, stages::RenderStageLabel},
     schedule::Schedule,
-}; // FIXME tcs: avoid making this public
+};
+
+mod populate_world_system;
+mod queue_system;
+mod render_commands;
+mod resource;
+mod resource_system;
+mod upload_system;
+
+// FIXME tcs: avoid making this public
 
 pub struct RasterPlugin;
 

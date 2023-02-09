@@ -3,7 +3,6 @@
 use std::{marker::PhantomData, mem::size_of, ops::Range};
 
 use cgmath::Matrix4;
-use log::warn;
 
 use crate::{
     coords::{ViewRegion, WorldTileCoords, Zoom},

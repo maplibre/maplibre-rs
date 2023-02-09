@@ -1,3 +1,3 @@
-mod raster;
-
 pub use raster::*;
+
+mod raster;

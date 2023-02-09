@@ -18,6 +18,9 @@
 
 // FIXME reenable #![deny(unused_imports)]
 
+// Export tile format
+pub use geozero::mvt::tile;
+
 // Internal modules
 pub(crate) mod tessellation;
 
@@ -53,6 +56,3 @@ pub mod view_state;
 // Plugins
 pub mod raster;
 pub mod vector;
-
-// Export tile format
-pub use geozero::mvt::tile;

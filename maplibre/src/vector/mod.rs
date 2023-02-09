@@ -1,15 +1,4 @@
-mod populate_world_system;
-mod queue_system;
-mod render_commands;
-mod resource;
-mod resource_system;
-mod tile_view_pattern_system;
-mod upload_system;
-
-use std::{
-    ops::{Deref, DerefMut},
-    rc::Rc,
-};
+use std::{ops::Deref, rc::Rc};
 
 use crate::{
     coords::WorldTileCoords,
@@ -37,6 +26,14 @@ use crate::{
         upload_system::upload_system,
     },
 };
+
+mod populate_world_system;
+mod queue_system;
+mod render_commands;
+mod resource;
+mod resource_system;
+mod tile_view_pattern_system;
+mod upload_system;
 
 pub struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {

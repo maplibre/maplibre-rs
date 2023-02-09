@@ -1,5 +1,7 @@
 //! Handles IO related processing as well as multithreading.
 
+pub use geozero::mvt::tile::Layer as RawLayer;
+
 pub mod apc;
 pub mod geometry_index;
 pub mod pipeline;
@@ -10,5 +12,3 @@ pub mod source_type;
 pub mod static_tile_fetcher;
 pub mod tile_pipelines;
 pub mod transferables;
-
-pub use geozero::mvt::tile::Layer as RawLayer;

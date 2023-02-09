@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use log::info;
 use reqwest::{Client, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use reqwest_middleware_cache::{managers::CACacheManager, Cache, CacheMode};

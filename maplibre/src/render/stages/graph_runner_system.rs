@@ -7,11 +7,7 @@ use log::error;
 use crate::{
     context::MapContext,
     ecs::system::System,
-    render::{
-        eventually::Eventually::Initialized, graph::RenderGraph, graph_runner::RenderGraphRunner,
-        Renderer,
-    },
-    schedule::Stage,
+    render::{eventually::Eventually::Initialized, graph_runner::RenderGraphRunner, Renderer},
 };
 
 /// Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame.

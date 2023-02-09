@@ -5,13 +5,12 @@ use crate::{
     ecs::system::System,
     environment::Environment,
     io::{
-        apc::{AsyncProcedureCall, Message},
-        transferables::{LayerRaster, LayerTessellated, LayerUnavailable, Transferables},
+        apc::AsyncProcedureCall,
+        transferables::{LayerRaster, Transferables},
     },
     kernel::Kernel,
     match_downcast,
     raster::RasterLayersDataComponent,
-    vector::{VectorLayerData, VectorLayersDataComponent},
 };
 
 pub struct PopulateWorldSystem<E: Environment> {

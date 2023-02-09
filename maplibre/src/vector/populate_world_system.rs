@@ -7,8 +7,7 @@ use crate::{
     io::{
         apc::AsyncProcedureCall,
         transferables::{
-            LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable, TileTessellated,
-            Transferables,
+            LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
         },
     },
     kernel::Kernel,

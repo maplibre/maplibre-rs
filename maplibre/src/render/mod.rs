@@ -20,10 +20,20 @@
 
 use std::sync::Arc;
 
-use crate::render::{
-    eventually::Eventually,
-    resource::{Head, Surface, Texture, TextureView},
-    settings::{RendererSettings, WgpuSettings},
+pub use shaders::ShaderVertex;
+pub use stages::register_default_render_stages;
+
+use crate::{
+    render::{
+        debug_pass::DebugPassNode,
+        error::RenderError,
+        eventually::Eventually,
+        graph::{EmptyNode, RenderGraph, RenderGraphError},
+        main_pass::{MainPassDriverNode, MainPassNode},
+        resource::{Head, Surface, Texture, TextureView},
+        settings::{RendererSettings, WgpuSettings},
+    },
+    window::{HeadedMapWindow, MapWindow},
 };
 
 pub mod graph;
@@ -45,19 +55,6 @@ pub mod render_phase;
 pub mod settings;
 pub mod tile_pipeline;
 pub mod tile_view_pattern;
-
-pub use shaders::ShaderVertex;
-pub use stages::register_default_render_stages;
-
-use crate::{
-    render::{
-        debug_pass::DebugPassNode,
-        error::RenderError,
-        graph::{EmptyNode, RenderGraph, RenderGraphError},
-        main_pass::{MainPassDriverNode, MainPassNode},
-    },
-    window::{HeadedMapWindow, MapWindow},
-};
 
 pub(crate) const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 

@@ -1,10 +1,6 @@
 // FIXME tcs: Rename to tcs
 
-use std::{
-    any::TypeId,
-    collections::HashSet,
-    ops::{Deref, DerefMut},
-};
+use std::{any::TypeId, collections::HashSet};
 
 mod resources;
 

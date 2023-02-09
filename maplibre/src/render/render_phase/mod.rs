@@ -1,10 +1,10 @@
 //! Describes the concept of a [`RenderPhase`] and [`PhaseItem`]
 
-mod draw;
-
 pub use draw::*;
 
 use crate::{ecs::tiles::Tile, render::tile_view_pattern::TileShape};
+
+mod draw;
 
 /// A resource to collect and sort draw requests for specific [`PhaseItems`](PhaseItem).
 pub struct RenderPhase<I: PhaseItem> {

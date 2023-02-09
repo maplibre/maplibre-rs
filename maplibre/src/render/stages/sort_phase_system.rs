@@ -1,6 +1,6 @@
 use crate::{
     context::MapContext,
-    render::render_phase::{LayerItem, PhaseItem, RenderPhase, TileMaskItem},
+    render::render_phase::{LayerItem, RenderPhase, TileMaskItem},
 };
 
 /// This system sorts all [`RenderPhases`](RenderPhase) for the [`PhaseItem`] type.

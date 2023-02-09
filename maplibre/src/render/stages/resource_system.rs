@@ -6,7 +6,6 @@ use crate::{
     context::MapContext,
     ecs::system::System,
     render::{resource::Texture, Renderer},
-    schedule::Stage,
 };
 
 #[derive(Default)]

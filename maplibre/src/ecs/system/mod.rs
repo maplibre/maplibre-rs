@@ -1,10 +1,6 @@
 use std::borrow::Cow;
 
-use crate::{
-    context::MapContext,
-    ecs::{system::function::IntoSystem, world::World},
-    environment::Environment,
-};
+use crate::{context::MapContext, ecs::system::function::IntoSystem};
 
 mod function;
 pub mod stage;

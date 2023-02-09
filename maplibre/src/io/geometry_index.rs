@@ -9,7 +9,7 @@ use geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
 };
-use log::{debug, warn};
+use log::debug;
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
 use crate::{

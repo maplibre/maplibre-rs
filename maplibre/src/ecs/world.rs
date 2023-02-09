@@ -4,7 +4,6 @@ use crate::{
     coords::{LatLon, WorldCoords, Zoom},
     ecs::{resources::Resources, tiles::Tiles},
     io::geometry_index::GeometryIndex,
-    render::render_phase::RenderCommand,
     view_state::ViewState,
     window::WindowSize,
 };

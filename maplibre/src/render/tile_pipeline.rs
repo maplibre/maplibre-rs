@@ -1,14 +1,10 @@
 //! Utility for declaring pipelines.
 
-use std::{borrow::Cow, cmp};
+use std::borrow::Cow;
 
-use crate::{
-    platform::MIN_WEBGL_BUFFER_SIZE,
-    render::{
-        resource::{FragmentState, RenderPipeline, RenderPipelineDescriptor, VertexState},
-        settings::RendererSettings,
-        shaders::ShaderGlobals,
-    },
+use crate::render::{
+    resource::{FragmentState, RenderPipeline, RenderPipelineDescriptor, VertexState},
+    settings::RendererSettings,
 };
 
 pub struct TilePipeline {

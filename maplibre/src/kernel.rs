@@ -1,8 +1,6 @@
 use crate::{
-    context::MapContext,
     environment::Environment,
     io::source_client::{HttpSourceClient, SourceClient},
-    schedule::{Schedule, Stage},
 };
 
 /// Holds references to core constructs of maplibre. Based on the compile-time initialization

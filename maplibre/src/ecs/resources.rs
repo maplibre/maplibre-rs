@@ -1,8 +1,4 @@
-use std::{
-    any,
-    any::{Any, TypeId},
-    collections::{HashMap, HashSet},
-};
+use std::{any, any::TypeId, collections::HashMap};
 
 use downcast_rs::{impl_downcast, Downcast};
 
