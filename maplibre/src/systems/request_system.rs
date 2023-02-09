@@ -109,16 +109,13 @@ impl<E: Environment> RequestSystem<E> {
     }
 }
 
-pub fn schedule_tile_request<
-    E: Environment,
-    C: Context<
-        <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Transferables,
-        E::HttpClient,
-    >,
->(
+pub fn schedule_tile_request<E: Environment, C: Context<E::HttpClient>>(
     input: Input,
     context: C,
 ) -> AsyncProcedureFuture {
+    type Type<E: Environment> =
+        <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Transferables;
+
     Box::pin(async move {
         info!("Processing thread: {:?}", std::thread::current().name());
 
@@ -160,7 +157,11 @@ pub fn schedule_tile_request<
                     let data = data.into_boxed_slice();
 
                     let mut pipeline_context =
-                        PipelineContext::new(HeadedPipelineProcessor::new(context));
+                        PipelineContext::new(HeadedPipelineProcessor::<
+                            Type<E>,
+                            <E as Environment>::HttpClient,
+                            C,
+                        >::new(context));
                     build_vector_tile_pipeline()
                         .process(
                             (
@@ -177,14 +178,12 @@ pub fn schedule_tile_request<
                 Err(e) => {
                     log::error!("{:?}", &e);
                     for to_load in &fill_layers {
-                        context.send(
-                            Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
-                                E::HttpClient,
-                            >>::Transferables as Transferables>::LayerUnavailable::build_from(
+                        context
+                            .send(<Type<E> as Transferables>::LayerUnavailable::build_from(
                                 coords,
                                 to_load.to_string(),
-                            )),
-                        ).map_err(ProcedureError::Send)?;
+                            ))
+                            .map_err(ProcedureError::Send)?;
                     }
                 }
             }
@@ -199,7 +198,11 @@ pub fn schedule_tile_request<
                     let data = data.into_boxed_slice();
 
                     let mut pipeline_context =
-                        PipelineContext::new(HeadedPipelineProcessor::new(context));
+                        PipelineContext::new(HeadedPipelineProcessor::<
+                            Type<E>,
+                            <E as Environment>::HttpClient,
+                            C,
+                        >::new(context));
 
                     build_raster_tile_pipeline()
                         .process((RasterTileRequest { coords }, data), &mut pipeline_context)
@@ -208,14 +211,12 @@ pub fn schedule_tile_request<
                 Err(e) => {
                     log::error!("{:?}", &e);
 
-                    context.send(
-                        Message::LayerUnavailable(<<E::AsyncProcedureCall as AsyncProcedureCall<
-                            E::HttpClient,
-                        >>::Transferables as Transferables>::LayerUnavailable::build_from(
+                    context
+                        .send(<Type<E> as Transferables>::LayerUnavailable::build_from(
                             coords,
                             "raster".to_string(),
-                        )),
-                    ).map_err(ProcedureError::Send)?;
+                        ))
+                        .map_err(ProcedureError::Send)?;
                 }
             }
         }

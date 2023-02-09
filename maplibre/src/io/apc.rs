@@ -1,4 +1,5 @@
 use std::{
+    any::Any,
     borrow::BorrowMut,
     cell::{Cell, RefCell},
     fmt::{Display, Formatter},
@@ -41,29 +42,12 @@ use crate::{
 /// * `TessellatedLayer` contains the result of the tessellation for a specific layer.
 /// * `UnavailableLayer` is sent if a requested layer is not found.
 /// * `TileTessellated` is sent if processing of a tile finished.
-#[derive(Clone)]
-pub enum Message<T: Transferables> {
-    TileTessellated(T::TileTessellated),
-    LayerUnavailable(T::LayerUnavailable),
-    LayerTessellated(T::LayerTessellated),
-    LayerIndexed(T::LayerIndexed),
-    LayerRaster(T::LayerRaster),
+pub struct Message {
+    pub transferable: Box<dyn Any + Send>,
 }
 
-impl<T: Transferables> Display for Message<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Message::TileTessellated(message) => write!(f, "TileTessellated({})", message.coords()),
-            Message::LayerUnavailable(message) => {
-                write!(f, "LayerUnavailable({})", message.coords())
-            }
-            Message::LayerTessellated(message) => {
-                write!(f, "LayerTessellated({})", message.coords())
-            }
-            Message::LayerIndexed(message) => write!(f, "LayerIndexed({})", message.coords()),
-            Message::LayerRaster(message) => write!(f, "LayerRaster({})", message.coords()),
-        }
-    }
+pub trait IntoMessage {
+    fn into(self) -> Message;
 }
 
 /// Inputs for an [`AsyncProcedure`]
@@ -83,9 +67,9 @@ pub enum SendError {
 }
 
 /// Allows sending messages from workers to back to the caller.
-pub trait Context<T: Transferables, HC: HttpClient>: Send + Clone + 'static {
+pub trait Context<HC: HttpClient>: Send + Clone + 'static {
     /// Send a message back to the caller.
-    fn send(&self, data: Message<T>) -> Result<(), SendError>;
+    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError>;
 
     fn source_client(&self) -> &SourceClient<HC>;
 }
@@ -165,18 +149,13 @@ pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFutur
 ///
 // TODO: Rename to AsyncProcedureCaller?
 pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
-    type Context: Context<Self::Transferables, HC> + Send;
+    type Context: Context<HC> + Send;
     type Transferables: Transferables;
 
-    type ReceiveIterator<F: FnMut(&Message<Self::Transferables>) -> bool>: Iterator<
-        Item = Message<Self::Transferables>,
-    >;
+    type ReceiveIterator<F: FnMut(&Message) -> bool>: Iterator<Item = Message>;
 
     /// Try to receive a message non-blocking.
-    fn receive<F: FnMut(&Message<Self::Transferables>) -> bool>(
-        &self,
-        filter: F,
-    ) -> Self::ReceiveIterator<F>;
+    fn receive<F: FnMut(&Message) -> bool>(&self, filter: F) -> Self::ReceiveIterator<F>;
 
     /// Call an [`AsyncProcedure`] using some [`Input`]. This function is non-blocking and
     /// returns immediately.
@@ -185,14 +164,16 @@ pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
 }
 
 #[derive(Clone)]
-pub struct SchedulerContext<T: Transferables, HC: HttpClient> {
-    sender: Sender<Message<T>>,
+pub struct SchedulerContext<HC: HttpClient> {
+    sender: Sender<Message>,
     source_client: SourceClient<HC>,
 }
 
-impl<T: Transferables, HC: HttpClient> Context<T, HC> for SchedulerContext<T, HC> {
-    fn send(&self, data: Message<T>) -> Result<(), SendError> {
-        self.sender.send(data).map_err(|_e| SendError::Transmission)
+impl<HC: HttpClient> Context<HC> for SchedulerContext<HC> {
+    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+        self.sender
+            .send(message.into())
+            .map_err(|_e| SendError::Transmission)
     }
 
     fn source_client(&self) -> &SourceClient<HC> {
@@ -201,11 +182,8 @@ impl<T: Transferables, HC: HttpClient> Context<T, HC> for SchedulerContext<T, HC
 }
 
 pub struct SchedulerAsyncProcedureCall<HC: HttpClient, S: Scheduler> {
-    channel: (
-        Sender<Message<DefaultTransferables>>,
-        Receiver<Message<DefaultTransferables>>,
-    ),
-    buffer: RefCell<Vec<Message<DefaultTransferables>>>,
+    channel: (Sender<Message>, Receiver<Message>),
+    buffer: RefCell<Vec<Message>>,
     http_client: HC,
     scheduler: S,
 }
@@ -222,15 +200,11 @@ impl<HC: HttpClient, S: Scheduler> SchedulerAsyncProcedureCall<HC, S> {
 }
 
 impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProcedureCall<HC, S> {
-    type Context = SchedulerContext<Self::Transferables, HC>;
+    type Context = SchedulerContext<HC>;
     type Transferables = DefaultTransferables;
-    type ReceiveIterator<F: FnMut(&Message<Self::Transferables>) -> bool> =
-        IntoIter<Message<DefaultTransferables>>;
+    type ReceiveIterator<F: FnMut(&Message) -> bool> = IntoIter<Message>;
 
-    fn receive<F: FnMut(&Message<Self::Transferables>) -> bool>(
-        &self,
-        mut filter: F,
-    ) -> Self::ReceiveIterator<F> {
+    fn receive<F: FnMut(&Message) -> bool>(&self, mut filter: F) -> Self::ReceiveIterator<F> {
         let mut buffer = self.buffer.borrow_mut();
         let mut ret = Vec::new();
 
@@ -248,8 +222,8 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
         // TODO: (optimize) Using while instead of if means that we are processing all that is
         // available this might cause frame drops.
         while let Some(message) = self.channel.1.try_recv().ok() {
-            tracing::debug!("Data reached main thread: {}", &message);
-            log::debug!("Data reached main thread: {}", &message);
+            // FIXME tcs tracing::debug!("Data reached main thread: {}", &message);
+            // FIXME tcs log::debug!("Data reached main thread: {}", &message);
 
             if filter(&message) {
                 ret.push(message);
@@ -285,13 +259,13 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
     }
 }
 
-pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<T, HC>> {
+pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<HC>> {
     context: C,
     phantom_t: PhantomData<T>,
     phantom_hc: PhantomData<HC>,
 }
 
-impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> HeadedPipelineProcessor<T, HC, C> {
+impl<T: Transferables, HC: HttpClient, C: Context<HC>> HeadedPipelineProcessor<T, HC, C> {
     pub fn new(context: C) -> Self {
         Self {
             context,
@@ -301,14 +275,12 @@ impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> HeadedPipelineProcesso
     }
 }
 
-impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
+impl<T: Transferables, HC: HttpClient, C: Context<HC>> PipelineProcessor
     for HeadedPipelineProcessor<T, HC, C>
 {
     fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), PipelineError> {
         self.context
-            .send(Message::TileTessellated(T::TileTessellated::build_from(
-                *coords,
-            )))
+            .send(T::TileTessellated::build_from(*coords))
             .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
@@ -318,10 +290,10 @@ impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         layer_name: &str,
     ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::LayerUnavailable(T::LayerUnavailable::build_from(
+            .send(T::LayerUnavailable::build_from(
                 *coords,
                 layer_name.to_owned(),
-            )))
+            ))
             .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
@@ -333,12 +305,12 @@ impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         layer_data: tile::Layer,
     ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::LayerTessellated(T::LayerTessellated::build_from(
+            .send(T::LayerTessellated::build_from(
                 *coords,
                 buffer,
                 feature_indices,
                 layer_data,
-            )))
+            ))
             .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
@@ -349,9 +321,7 @@ impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         image_data: RgbaImage,
     ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::LayerRaster(T::LayerRaster::build_from(
-                *coords, layer_name, image_data,
-            )))
+            .send(T::LayerRaster::build_from(*coords, layer_name, image_data))
             .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 
@@ -361,10 +331,10 @@ impl<T: Transferables, HC: HttpClient, C: Context<T, HC>> PipelineProcessor
         geometries: Vec<IndexedGeometry<f64>>,
     ) -> Result<(), PipelineError> {
         self.context
-            .send(Message::LayerIndexed(T::LayerIndexed::build_from(
+            .send(T::LayerIndexed::build_from(
                 *coords,
                 TileIndex::Linear { list: geometries },
-            )))
+            ))
             .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 }

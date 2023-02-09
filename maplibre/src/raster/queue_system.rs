@@ -1,7 +1,5 @@
 //! Queues [PhaseItems](crate::render::render_phase::PhaseItem) for rendering.
 
-use std::ops::Deref;
-
 use crate::{
     context::MapContext,
     ecs::tiles::Tile,

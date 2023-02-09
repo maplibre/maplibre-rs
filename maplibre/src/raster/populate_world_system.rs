@@ -6,9 +6,10 @@ use crate::{
     environment::Environment,
     io::{
         apc::{AsyncProcedureCall, Message},
-        transferables::{LayerRaster, LayerTessellated, LayerUnavailable},
+        transferables::{LayerRaster, LayerTessellated, LayerUnavailable, Transferables},
     },
     kernel::Kernel,
+    match_downcast,
     raster::RasterLayersDataComponent,
     vector::{VectorLayerData, VectorLayersDataComponent},
 };
@@ -36,23 +37,24 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
             world, renderer, ..
         }: &mut MapContext,
     ) {
-        for result in self.kernel.apc().receive(|message| {
-            matches!(
-                message,
-                Message::LayerRaster(_) // FIXME tcs: Add RasterLayerUnavailable
-            )
+        type Type<E: Environment> =
+            <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Transferables;
+
+        for message in self.kernel.apc().receive(|message| {
+            let transferable = &message.transferable;
+            transferable.is::<<Type<E> as Transferables>::LayerRaster>()
         }) {
-            match result {
-                Message::LayerRaster(message) => {
+            match_downcast!(message.transferable, {
+                message: <Type<E> as Transferables>::LayerRaster => {
                     let Some(component) = world
                         .tiles
                         .query_mut::<&mut RasterLayersDataComponent>(message.coords()) else { continue; };
 
                     component.layers.push(message.to_layer());
-                }
-                // FIXME tcs: Add RasterLayerUnvailable
+                },
+                  // FIXME tcs: Add RasterLayerUnvailable
                 _ => {}
-            };
+            });
         }
     }
 }

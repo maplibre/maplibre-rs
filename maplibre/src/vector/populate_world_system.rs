@@ -5,13 +5,15 @@ use crate::{
     ecs::system::System,
     environment::Environment,
     io::{
-        apc::{AsyncProcedureCall, Message},
+        apc::AsyncProcedureCall,
         transferables::{
             LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable, TileTessellated,
+            Transferables,
         },
     },
     kernel::Kernel,
-    vector::{UnavailableVectorLayerData, VectorLayerData, VectorLayersDataComponent},
+    match_downcast,
+    vector::{VectorLayerData, VectorLayersDataComponent},
 };
 
 pub struct PopulateWorldSystem<E: Environment> {
@@ -37,36 +39,34 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
             world, renderer, ..
         }: &mut MapContext,
     ) {
-        let tiles = &mut world.tiles;
         let geometry_index = &mut world.geometry_index;
 
-        for result in self.kernel.apc().receive(|message| {
-            matches!(
-                message,
-                Message::TileTessellated(_)
-                    | Message::LayerTessellated(_)
-                    | Message::LayerIndexed(_)
-                    | Message::LayerUnavailable(_)
-            )
+        type Type<E: Environment> =
+            <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Transferables;
+
+        for message in self.kernel.apc().receive(|message| {
+            let transferable = &message.transferable;
+            transferable.is::<<Type<E> as Transferables>::TileTessellated>()
+                || transferable.is::<<Type<E> as Transferables>::LayerUnavailable>()
+                || transferable.is::<<Type<E> as Transferables>::LayerTessellated>()
+                || transferable.is::<<Type<E> as Transferables>::LayerIndexed>()
         }) {
-            match result {
-                Message::TileTessellated(message) => {
+            match_downcast!(message.transferable, {
+                message: <Type<E> as Transferables>::TileTessellated => {
                     let Some(component) = world
                         .tiles
                         .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
 
                     component.done = true;
-                }
-                Message::LayerUnavailable(message) => {
+                },
+                message: <Type<E> as Transferables>::LayerUnavailable => {
                     let Some(component) = world
                         .tiles
                         .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
 
-                    component
-                        .layers
-                        .push(VectorLayerData::Unavailable(message.to_layer()));
-                }
-                Message::LayerTessellated(message) => {
+                    component.done = true;
+                },
+                message: <Type<E> as Transferables>::LayerTessellated => {
                     // FIXME: Handle points!
                     /*if message.is_empty() {
                         continue;
@@ -79,12 +79,12 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                     component
                         .layers
                         .push(VectorLayerData::Available(message.to_layer()));
-                }
-                Message::LayerIndexed(message) => {
-                    geometry_index.index_tile(&message.coords(), message.to_tile_index());
-                }
+                },
+                message: <Type<E> as Transferables>::LayerIndexed => {
+                     geometry_index.index_tile(&message.coords(), message.to_tile_index());
+                },
                 _ => {}
-            }
+            });
         }
     }
 }

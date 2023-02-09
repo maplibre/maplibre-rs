@@ -3,14 +3,17 @@ use image::RgbaImage;
 
 use crate::{
     coords::WorldTileCoords,
-    io::geometry_index::TileIndex,
+    io::{
+        apc::{IntoMessage, Message},
+        geometry_index::TileIndex,
+    },
     raster::RasterLayerData,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{AvailableVectorLayerData, UnavailableVectorLayerData},
 };
 
-pub trait TileTessellated: Send {
+pub trait TileTessellated: IntoMessage + Send {
     fn build_from(coords: WorldTileCoords) -> Self
     where
         Self: Sized;
@@ -18,7 +21,7 @@ pub trait TileTessellated: Send {
     fn coords(&self) -> WorldTileCoords;
 }
 
-pub trait LayerUnavailable: Send {
+pub trait LayerUnavailable: IntoMessage + Send {
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self
     where
         Self: Sized;
@@ -29,7 +32,7 @@ pub trait LayerUnavailable: Send {
     fn to_layer(self) -> UnavailableVectorLayerData;
 }
 
-pub trait LayerTessellated: Send {
+pub trait LayerTessellated: IntoMessage + Send {
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -46,7 +49,7 @@ pub trait LayerTessellated: Send {
     fn to_layer(self) -> AvailableVectorLayerData;
 }
 
-pub trait LayerIndexed: Send {
+pub trait LayerIndexed: IntoMessage + Send {
     fn build_from(coords: WorldTileCoords, index: TileIndex) -> Self
     where
         Self: Sized;
@@ -56,7 +59,7 @@ pub trait LayerIndexed: Send {
     fn to_tile_index(self) -> TileIndex;
 }
 
-pub trait LayerRaster: Send {
+pub trait LayerRaster: IntoMessage + Send {
     fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self;
 
     fn coords(&self) -> WorldTileCoords;
@@ -66,6 +69,14 @@ pub trait LayerRaster: Send {
 
 pub struct DefaultTileTessellated {
     pub coords: WorldTileCoords,
+}
+
+impl IntoMessage for DefaultTileTessellated {
+    fn into(self) -> Message {
+        Message {
+            transferable: Box::new(self),
+        }
+    }
 }
 
 impl TileTessellated for DefaultTileTessellated {
@@ -81,6 +92,14 @@ impl TileTessellated for DefaultTileTessellated {
 pub struct DefaultLayerUnavailable {
     pub coords: WorldTileCoords,
     pub layer_name: String,
+}
+
+impl IntoMessage for DefaultLayerUnavailable {
+    fn into(self) -> Message {
+        Message {
+            transferable: Box::new(self),
+        }
+    }
 }
 
 impl LayerUnavailable for DefaultLayerUnavailable {
@@ -111,6 +130,14 @@ pub struct DefaultLayerTesselated {
     /// Holds for each feature the count of indices.
     pub feature_indices: Vec<u32>,
     pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
+}
+
+impl IntoMessage for DefaultLayerTesselated {
+    fn into(self) -> Message {
+        Message {
+            transferable: Box::new(self),
+        }
+    }
 }
 
 impl LayerTessellated for DefaultLayerTesselated {
@@ -151,6 +178,14 @@ pub struct DefaultLayerIndexed {
     index: TileIndex,
 }
 
+impl IntoMessage for DefaultLayerIndexed {
+    fn into(self) -> Message {
+        Message {
+            transferable: Box::new(self),
+        }
+    }
+}
+
 impl LayerIndexed for DefaultLayerIndexed {
     fn build_from(coords: WorldTileCoords, index: TileIndex) -> Self {
         Self { coords, index }
@@ -169,6 +204,14 @@ pub struct DefaultRasterLayer {
     pub coords: WorldTileCoords,
     pub layer_name: String,
     pub image: RgbaImage,
+}
+
+impl IntoMessage for DefaultRasterLayer {
+    fn into(self) -> Message {
+        Message {
+            transferable: Box::new(self),
+        }
+    }
 }
 
 impl LayerRaster for DefaultRasterLayer {
