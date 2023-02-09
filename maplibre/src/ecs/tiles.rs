@@ -28,7 +28,7 @@ impl Tiles {
     pub fn query<'t, Q: ComponentQuery>(&'t self, coords: WorldTileCoords) -> Option<Q::Item<'t>> {
         let mut global_state = GlobalQueryState::default();
         let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
-        Some(Q::query(&self, Tile { coords }, state))
+        Q::query(&self, Tile { coords }, state)
     }
 
     pub fn query_mut<'t, Q: ComponentQueryMut>(
@@ -37,7 +37,7 @@ impl Tiles {
     ) -> Option<Q::MutItem<'t>> {
         let mut global_state = GlobalQueryState::default();
         let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
-        Some(Q::query_mut(self, Tile { coords }, state))
+        Q::query_mut(self, Tile { coords }, state)
     }
 
     pub fn exists(&self, coords: WorldTileCoords) -> bool {
@@ -126,23 +126,30 @@ pub trait ComponentQuery {
 
     type State<'s>: QueryState<'s>;
 
-    fn query<'t, 's>(tiles: &'t Tiles, tile: Tile, state: Self::State<'s>) -> Self::Item<'t>;
+    fn query<'t, 's>(
+        tiles: &'t Tiles,
+        tile: Tile,
+        state: Self::State<'s>,
+    ) -> Option<Self::Item<'t>>;
 }
 
 impl<'a, T: TileComponent> ComponentQuery for &'a T {
     type Item<'t> = &'t T;
     type State<'s> = EphemeralQueryState<'s>;
 
-    fn query<'t, 's>(tiles: &'t Tiles, tile: Tile, state: Self::State<'s>) -> Self::Item<'t> {
+    fn query<'t, 's>(
+        tiles: &'t Tiles,
+        tile: Tile,
+        state: Self::State<'s>,
+    ) -> Option<Self::Item<'t>> {
         let components = tiles
             .components
-            .get(&tile.coords.build_quad_key().unwrap()) // FIXME tcs: Unwrap
-            .unwrap(); // FIXME tcs: Unwrap
+            .get(&tile.coords.build_quad_key().unwrap())?; // FIXME tcs: Unwrap
+
         components
             .iter()
             .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
             .and_then(|component| component.as_ref().downcast_ref())
-            .unwrap() // FIXME tcs: Unwrap
     }
 }
 
@@ -157,7 +164,7 @@ pub trait ComponentQueryMut {
         tiles: &'t mut Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::MutItem<'t>;
+    ) -> Option<Self::MutItem<'t>>;
 }
 
 impl<'a, T: TileComponent> ComponentQueryMut for &'a T {
@@ -168,7 +175,7 @@ impl<'a, T: TileComponent> ComponentQueryMut for &'a T {
         tiles: &'t mut Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::MutItem<'t> {
+    ) -> Option<Self::MutItem<'t>> {
         <&T as ComponentQuery>::query(tiles, tile, state)
     }
 }
@@ -181,17 +188,15 @@ impl<'a, T: TileComponent> ComponentQueryMut for &'a mut T {
         tiles: &'t mut Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::MutItem<'t> {
+    ) -> Option<Self::MutItem<'t>> {
         let components = tiles
             .components
-            .get_mut(&tile.coords.build_quad_key().unwrap()) // FIXME tcs: Unwrap
-            .unwrap(); // FIXME tcs: Unwrap
+            .get_mut(&tile.coords.build_quad_key().unwrap())?; // FIXME tcs: Unwrap
 
         components
             .iter_mut()
             .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
             .and_then(|component| component.as_mut().downcast_mut())
-            .unwrap() // FIXME tcs: Unwrap
     }
 }
 
@@ -202,7 +207,7 @@ pub trait ComponentQueryUnsafe: ComponentQueryMut {
         tiles: &'t Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::MutItem<'t>;
+    ) -> Option<Self::MutItem<'t>>;
 }
 
 impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a T {
@@ -210,7 +215,7 @@ impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a T {
         tiles: &'t Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::MutItem<'t> {
+    ) -> Option<Self::MutItem<'t>> {
         <&T as ComponentQuery>::query(tiles, tile, state)
     }
 }
@@ -222,7 +227,7 @@ impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
         tiles: &'t Tiles,
         tile: Tile,
         mut state: Self::State<'s>,
-    ) -> Self::MutItem<'t> {
+    ) -> Option<Self::MutItem<'t>> {
         let id = TypeId::of::<T>();
         let borrowed = &mut state.state.mutably_borrowed;
 
@@ -235,7 +240,8 @@ impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
 
         borrowed.insert(id);
 
-        &mut *(<&T as ComponentQuery>::query(tiles, tile, state) as *const T as *mut T)
+        let result = <&T as ComponentQuery>::query(tiles, tile, state)?;
+        Some(&mut *(result as *const T as *mut T))
     }
 }
 
@@ -245,11 +251,15 @@ impl<CQ1: ComponentQuery, CQ2: ComponentQuery> ComponentQuery for (CQ1, CQ2) {
     type Item<'t> = (CQ1::Item<'t>, CQ2::Item<'t>);
     type State<'s> = EphemeralQueryState<'s>;
 
-    fn query<'t, 's>(tiles: &'t Tiles, tile: Tile, mut state: Self::State<'s>) -> Self::Item<'t> {
-        (
-            CQ1::query(tiles, tile, state.clone_to::<CQ1::State<'_>>()),
-            CQ2::query(tiles, tile, state.clone_to::<CQ2::State<'_>>()),
-        )
+    fn query<'t, 's>(
+        tiles: &'t Tiles,
+        tile: Tile,
+        mut state: Self::State<'s>,
+    ) -> Option<Self::Item<'t>> {
+        Some((
+            CQ1::query(tiles, tile, state.clone_to::<CQ1::State<'_>>())?,
+            CQ2::query(tiles, tile, state.clone_to::<CQ2::State<'_>>())?,
+        ))
     }
 }
 
@@ -265,20 +275,20 @@ impl<
         tiles: &'t mut Tiles,
         tile: Tile,
         mut state: Self::State<'s>,
-    ) -> Self::MutItem<'t> {
+    ) -> Option<Self::MutItem<'t>> {
         unsafe {
-            (
+            Some((
                 <CQ1 as ComponentQueryUnsafe>::query_unsafe(
                     tiles,
                     tile,
                     state.clone_to::<CQ1::State<'_>>(),
-                ),
+                )?,
                 <CQ2 as ComponentQueryUnsafe>::query_unsafe(
                     tiles,
                     tile,
                     state.clone_to::<CQ2::State<'_>>(),
-                ),
-            )
+                )?,
+            ))
         }
     }
 }

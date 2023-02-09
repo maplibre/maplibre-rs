@@ -43,13 +43,13 @@ impl Resources {
     pub fn query<'r, Q: ResourceQuery>(&'r self) -> Option<Q::Item<'r>> {
         let mut global_state = GlobalQueryState::default();
         let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
-        Some(Q::query(&self, state))
+        Q::query(&self, state)
     }
 
     pub fn query_mut<'r, Q: ResourceQueryMut>(&'r mut self) -> Option<Q::MutItem<'r>> {
         let mut global_state = GlobalQueryState::default();
         let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
-        Some(Q::query_mut(self, state))
+        Q::query_mut(self, state)
     }
 }
 
@@ -60,15 +60,15 @@ pub trait ResourceQuery {
 
     type State<'s>: QueryState<'s>;
 
-    fn query<'r, 's>(resources: &'r Resources, state: Self::State<'s>) -> Self::Item<'r>;
+    fn query<'r, 's>(resources: &'r Resources, state: Self::State<'s>) -> Option<Self::Item<'r>>;
 }
 
 impl<'a, R: Resource> ResourceQuery for &'a R {
     type Item<'r> = &'r R;
     type State<'s> = EphemeralQueryState<'s>;
 
-    fn query<'r, 's>(resources: &'r Resources, state: Self::State<'s>) -> Self::Item<'r> {
-        resources.get::<R>().unwrap() // FIXME tcs: Unwrap
+    fn query<'r, 's>(resources: &'r Resources, state: Self::State<'s>) -> Option<Self::Item<'r>> {
+        resources.get::<R>()
     }
 }
 
@@ -79,8 +79,10 @@ pub trait ResourceQueryMut {
 
     type State<'s>: QueryState<'s>;
 
-    fn query_mut<'r, 's>(resources: &'r mut Resources, state: Self::State<'s>)
-        -> Self::MutItem<'r>;
+    fn query_mut<'r, 's>(
+        resources: &'r mut Resources,
+        state: Self::State<'s>,
+    ) -> Option<Self::MutItem<'r>>;
 }
 
 impl<'a, R: Resource> ResourceQueryMut for &'a R {
@@ -90,7 +92,7 @@ impl<'a, R: Resource> ResourceQueryMut for &'a R {
     fn query_mut<'r, 's>(
         resources: &'r mut Resources,
         state: Self::State<'s>,
-    ) -> Self::MutItem<'r> {
+    ) -> Option<Self::MutItem<'r>> {
         <&R as ResourceQuery>::query(resources, state)
     }
 }
@@ -102,8 +104,8 @@ impl<'a, R: Resource> ResourceQueryMut for &'a mut R {
     fn query_mut<'r, 's>(
         resources: &'r mut Resources,
         state: Self::State<'s>,
-    ) -> Self::MutItem<'r> {
-        resources.get_mut::<R>().unwrap() // FIXME tcs: Unwrap
+    ) -> Option<Self::MutItem<'r>> {
+        resources.get_mut::<R>()
     }
 }
 
@@ -113,14 +115,14 @@ pub trait ResourceQueryUnsafe: ResourceQueryMut {
     unsafe fn query_unsafe<'r, 's>(
         resources: &'r Resources,
         state: Self::State<'s>,
-    ) -> Self::MutItem<'r>;
+    ) -> Option<Self::MutItem<'r>>;
 }
 
 impl<'a, R: Resource> ResourceQueryUnsafe for &'a R {
     unsafe fn query_unsafe<'r, 's>(
         resources: &'r Resources,
         state: Self::State<'s>,
-    ) -> Self::MutItem<'r> {
+    ) -> Option<Self::MutItem<'r>> {
         <&R as ResourceQuery>::query(resources, state)
     }
 }
@@ -131,7 +133,7 @@ impl<'a, R: Resource> ResourceQueryUnsafe for &'a mut R {
     unsafe fn query_unsafe<'r, 's>(
         resources: &'r Resources,
         mut state: Self::State<'s>,
-    ) -> Self::MutItem<'r> {
+    ) -> Option<Self::MutItem<'r>> {
         let id = TypeId::of::<R>();
         let borrowed = &mut state.state.mutably_borrowed;
 
@@ -144,7 +146,8 @@ impl<'a, R: Resource> ResourceQueryUnsafe for &'a mut R {
 
         borrowed.insert(id);
 
-        &mut *(<&R as ResourceQuery>::query(resources, state) as *const R as *mut R)
+        let result = <&R as ResourceQuery>::query(resources, state)?;
+        Some(&mut *(result as *const R as *mut R))
     }
 }
 
@@ -156,8 +159,12 @@ macro_rules! impl_resource_query {
             type Item<'r> = ($($param::Item<'r>,)*);
             type State<'s> = EphemeralQueryState<'s>;
 
-            fn query<'r, 's>(resources: &'r Resources, mut state: Self::State<'s>) -> Self::Item<'r> {
-                ($($param::query(resources, state.clone_to::<$param::State<'_>>()),)*)
+            fn query<'r, 's>(resources: &'r Resources, mut state: Self::State<'s>) -> Option<Self::Item<'r>> {
+                Some(
+                    (
+                        $($param::query(resources, state.clone_to::<$param::State<'_>>())?,)*
+                    )
+                )
             }
         }
 
@@ -169,9 +176,13 @@ macro_rules! impl_resource_query {
             fn query_mut<'r, 's>(
                 resources: &'r mut Resources,
                 mut state: Self::State<'s>,
-            ) -> Self::MutItem<'r> {
+            ) -> Option<Self::MutItem<'r>> {
                 unsafe {
-                    ($(<$param as ResourceQueryUnsafe>::query_unsafe(resources, state.clone_to::<$param::State<'_>>()),)*)
+                    Some(
+                        (
+                            $(<$param as ResourceQueryUnsafe>::query_unsafe(resources, state.clone_to::<$param::State<'_>>())?,)*
+                        )
+                    )
                 }
             }
         }
