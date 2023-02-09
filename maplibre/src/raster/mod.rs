@@ -1,6 +1,7 @@
 mod populate_world_system;
 mod queue_system;
 mod render_commands;
+mod resource;
 mod resource_system;
 mod upload_system;
 
@@ -10,6 +11,7 @@ use std::{
 };
 
 use image::RgbaImage;
+pub use resource::RasterResources;
 
 use crate::{
     coords::WorldTileCoords,
@@ -21,9 +23,9 @@ use crate::{
         populate_world_system::PopulateWorldSystem, queue_system::queue_system,
         resource_system::resource_system, upload_system::upload_system,
     },
-    render::{eventually::Eventually, resource::RasterResources, stages::RenderStageLabel},
+    render::{eventually::Eventually, stages::RenderStageLabel},
     schedule::Schedule,
-};
+}; // FIXME tcs: avoid making this public
 
 pub struct RasterPlugin;
 

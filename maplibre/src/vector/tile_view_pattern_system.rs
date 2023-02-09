@@ -4,14 +4,8 @@ use std::ops::Deref;
 
 use crate::{
     context::MapContext,
-    ecs::world::World,
-    render::{
-        eventually::{Eventually, Eventually::Initialized},
-        resource::RasterResources,
-        tile_view_pattern::TileViewPattern,
-        RenderState, Renderer,
-    },
-    schedule::Stage,
+    raster::RasterResources,
+    render::eventually::{Eventually, Eventually::Initialized},
     vector::{VectorBufferPool, WgpuTileViewPattern},
 };
 

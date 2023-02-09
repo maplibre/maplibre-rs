@@ -4,18 +4,19 @@ use std::mem::size_of;
 
 use crate::{
     context::MapContext,
-    ecs::world::World,
     render::{
         eventually::Eventually,
-        resource::{BackingBufferDescriptor, BufferPool, RasterResources, RenderPipeline, Texture},
-        settings::Msaa,
+        resource::{BackingBufferDescriptor, RenderPipeline},
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
         tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
         RenderState, Renderer,
     },
-    vector::{DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline, WgpuTileViewPattern},
+    vector::{
+        resource::BufferPool, DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline,
+        WgpuTileViewPattern,
+    },
 };
 
 pub fn resource_system(

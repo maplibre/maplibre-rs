@@ -56,10 +56,11 @@ pub fn queue_system(
                         source_shape: source_shape.clone(),
                     });
 
-                    let Some(mut vector_layers_indices) =
-                        world.tiles.query_mut::<&mut VectorLayersIndicesComponent>(layer_entry.coords) else { return; };
+                    let Some(mut vector_layers_indices) = world
+                        .tiles
+                        .query_mut::<&mut VectorLayersIndicesComponent>(layer_entry.coords) else { return; };
 
-                    // FIXME tcs
+                    // FIXME tcs: Should be down in upload?
                     vector_layers_indices.layers.push(layer_entry.clone());
                 }
             };

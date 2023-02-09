@@ -12,7 +12,10 @@ use bytemuck::Pod;
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
-    render::{resource::Queue, tile_view_pattern::HasTile},
+    render::{
+        resource::{BackingBufferDescriptor, Queue},
+        tile_view_pattern::HasTile,
+    },
     style::layer::StyleLayer,
     tessellation::OverAlignedVertexBuffer,
 };
@@ -47,6 +50,25 @@ pub enum BackingBufferType {
     Indices,
     Metadata,
     FeatureMetadata,
+}
+
+#[derive(Debug)]
+struct BackingBuffer<B> {
+    /// The internal structure which is used for storage
+    inner: B,
+    /// The size of the `inner` buffer
+    inner_size: wgpu::BufferAddress,
+    typ: BackingBufferType,
+}
+
+impl<B> BackingBuffer<B> {
+    fn new(inner: B, inner_size: wgpu::BufferAddress, typ: BackingBufferType) -> Self {
+        Self {
+            inner,
+            inner_size,
+            typ,
+        }
+    }
 }
 
 impl<V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<wgpu::Queue, wgpu::Buffer, V, I, TM, FM> {
@@ -195,7 +217,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         self.index.get_layers(coords).map(|layers| {
             layers
                 .iter()
-                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str()) // FIXME tcs: Remove unwrap
+                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str()) // TODO: Remove unwrap
                 .collect()
         })
     }
@@ -352,38 +374,6 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
 
     pub fn index(&self) -> &RingIndex {
         &self.index
-    }
-}
-
-pub struct BackingBufferDescriptor<B> {
-    /// The buffer which is used
-    pub(crate) buffer: B,
-    /// The size of buffer
-    pub(crate) inner_size: wgpu::BufferAddress,
-}
-
-impl<B> BackingBufferDescriptor<B> {
-    pub fn new(buffer: B, inner_size: wgpu::BufferAddress) -> Self {
-        Self { buffer, inner_size }
-    }
-}
-
-#[derive(Debug)]
-struct BackingBuffer<B> {
-    /// The internal structure which is used for storage
-    inner: B,
-    /// The size of the `inner` buffer
-    inner_size: wgpu::BufferAddress,
-    typ: BackingBufferType,
-}
-
-impl<B> BackingBuffer<B> {
-    fn new(inner: B, inner_size: wgpu::BufferAddress, typ: BackingBufferType) -> Self {
-        Self {
-            inner,
-            inner_size,
-            typ,
-        }
     }
 }
 
@@ -601,10 +591,9 @@ mod tests {
 
     use crate::{
         coords::ZoomLevel,
-        render::resource::{
-            buffer_pool::BackingBufferType, BackingBufferDescriptor, BufferPool, Queue,
-        },
+        render::resource::{BackingBufferDescriptor, Queue},
         style::layer::StyleLayer,
+        vector::resource::{BackingBufferType, BufferPool},
     };
 
     #[derive(Debug)]

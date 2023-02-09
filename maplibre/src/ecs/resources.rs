@@ -38,14 +38,6 @@ impl Resources {
         self.index.insert(TypeId::of::<R>(), index);
     }
 
-    pub fn remove<R: Resource>(&mut self) {
-        if let Some(index) = self.index.get(&TypeId::of::<R>()) {
-            self.resources.swap_remove(*index);
-            let moved = &self.resources[*index];
-            self.index.insert(moved.type_id(), *index);
-        }
-    }
-
     pub fn get<R: Resource>(&self) -> Option<&R> {
         if let Some(index) = self.index.get(&TypeId::of::<R>()) {
             let x = self.resources[*index].as_ref().as_any();

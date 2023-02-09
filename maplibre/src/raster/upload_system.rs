@@ -3,10 +3,9 @@ use crate::{
     context::MapContext,
     coords::ViewRegion,
     ecs::tiles::Tiles,
-    raster::{RasterLayerData, RasterLayersDataComponent},
+    raster::{resource::RasterResources, RasterLayerData, RasterLayersDataComponent},
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        resource::RasterResources,
         Renderer,
     },
     style::Style,

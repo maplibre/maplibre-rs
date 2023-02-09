@@ -5,11 +5,10 @@ use std::ops::Deref;
 use crate::{
     context::MapContext,
     ecs::tiles::Tile,
-    raster::render_commands::DrawRasterTiles,
+    raster::{render_commands::DrawRasterTiles, resource::RasterResources},
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{DrawState, LayerItem, RenderPhase},
-        resource::RasterResources,
         tile_view_pattern::HasTile,
     },
     vector::WgpuTileViewPattern,

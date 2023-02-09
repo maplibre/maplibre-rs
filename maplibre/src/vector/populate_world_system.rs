@@ -81,8 +81,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                         .push(VectorLayerData::Available(message.to_layer()));
                 }
                 Message::LayerIndexed(message) => {
-                    let coords = message.coords();
-                    geometry_index.index_tile(&coords, message.to_tile_index());
+                    geometry_index.index_tile(&message.coords(), message.to_tile_index());
                 }
                 _ => {}
             }

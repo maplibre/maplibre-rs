@@ -1,21 +1,11 @@
 //! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.
-
-use std::mem::size_of;
-
 use crate::{
     context::MapContext,
-    ecs::world::World,
+    raster::resource::RasterResources,
     render::{
-        eventually::Eventually,
-        resource::{BackingBufferDescriptor, BufferPool, RasterResources, RenderPipeline, Texture},
-        settings::Msaa,
-        shaders,
-        shaders::{Shader, ShaderTileMetadata},
-        tile_pipeline::TilePipeline,
-        tile_view_pattern::{TileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
-        RenderState, Renderer,
+        eventually::Eventually, resource::RenderPipeline, settings::Msaa, shaders, shaders::Shader,
+        tile_pipeline::TilePipeline, RenderState, Renderer,
     },
-    vector::{DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline},
 };
 
 pub fn resource_system(

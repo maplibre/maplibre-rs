@@ -1,6 +1,7 @@
 mod populate_world_system;
 mod queue_system;
 mod render_commands;
+mod resource;
 mod resource_system;
 mod tile_view_pattern_system;
 mod upload_system;
@@ -19,7 +20,6 @@ use crate::{
     render::{
         eventually::Eventually,
         render_phase::{LayerItem, RenderPhase, TileMaskItem},
-        resource::{BufferPool, IndexEntry},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
         stages::RenderStageLabel,
         tile_view_pattern::TileViewPattern,
@@ -29,8 +29,11 @@ use crate::{
     systems::request_system::RequestSystem,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
-        populate_world_system::PopulateWorldSystem, queue_system::queue_system,
-        resource_system::resource_system, tile_view_pattern_system::tile_view_pattern_system,
+        populate_world_system::PopulateWorldSystem,
+        queue_system::queue_system,
+        resource::{BufferPool, IndexEntry},
+        resource_system::resource_system,
+        tile_view_pattern_system::tile_view_pattern_system,
         upload_system::upload_system,
     },
 };

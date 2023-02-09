@@ -1,10 +1,10 @@
 use crate::{
     ecs::world::World,
+    raster::resource::RasterResources,
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult},
-        resource::{RasterResources, TrackedRenderPass},
-        tile_view_pattern::TileViewPattern,
+        resource::TrackedRenderPass,
         RenderState,
     },
     vector::WgpuTileViewPattern,

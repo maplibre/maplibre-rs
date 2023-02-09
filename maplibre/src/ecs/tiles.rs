@@ -1,4 +1,5 @@
 use std::{
+    any,
     any::TypeId,
     collections::{btree_map, BTreeMap, HashSet},
 };
@@ -216,6 +217,7 @@ impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a T {
 }
 
 impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
+    /// SAFETY: Safe if tiles is borrowed mutably.
     unsafe fn query_unsafe<'t: 't, 's>(
         tiles: &'t Tiles,
         tile: Tile,
@@ -225,12 +227,16 @@ impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
         let borrowed = &mut state.global().mutably_borrowed;
 
         if borrowed.contains(&id) {
-            panic!("error")
+            panic!(
+                "tried to borrow an {} more than once mutably",
+                any::type_name::<T>()
+            )
         }
 
         borrowed.insert(id);
 
-        &mut *(<&T as ComponentQuery>::query(tiles, tile, state) as *const T as *mut T)
+        // FIXME: tcs: check if really safe
+        unsafe { &mut *(<&T as ComponentQuery>::query(tiles, tile, state) as *const T as *mut T) }
     }
 }
 
