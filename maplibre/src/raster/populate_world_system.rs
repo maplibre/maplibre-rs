@@ -58,8 +58,11 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                         &layer.source_layer,
                         &layer.coords
                     );
-                    let x = tiles
-                        .query_mut::<&mut RasterLayersDataComponent>(layer.coords)
+                    let (x, y) = tiles
+                        .query_mut::<(
+                            &mut RasterLayersDataComponent,
+                            &mut RasterLayersDataComponent,
+                        )>(layer.coords)
                         .unwrap();
                     x // FIXME tcs: Unwrap
                         .layers
