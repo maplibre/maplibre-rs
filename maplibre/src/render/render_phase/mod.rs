@@ -19,7 +19,6 @@ impl<I: PhaseItem> Default for RenderPhase<I> {
 
 impl<I: PhaseItem> RenderPhase<I> {
     /// Adds a [`PhaseItem`] to this render phase.
-    #[inline]
     pub fn add(&mut self, item: I) {
         self.items.push(item);
     }
@@ -47,12 +46,10 @@ pub struct LayerItem {
 impl PhaseItem for LayerItem {
     type SortKey = u32;
 
-    #[inline]
     fn sort_key(&self) -> Self::SortKey {
         self.index
     }
 
-    #[inline]
     fn draw_function(&self) -> &dyn Draw<LayerItem> {
         self.draw_function.as_ref()
     }
@@ -66,12 +63,10 @@ pub struct TileMaskItem {
 impl PhaseItem for TileMaskItem {
     type SortKey = u32;
 
-    #[inline]
     fn sort_key(&self) -> Self::SortKey {
         0
     }
 
-    #[inline]
     fn draw_function(&self) -> &dyn Draw<TileMaskItem> {
         self.draw_function.as_ref()
     }
