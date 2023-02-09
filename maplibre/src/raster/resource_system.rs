@@ -31,34 +31,34 @@ pub fn resource_system(
         ..
     }: &mut MapContext,
 ) {
-    world
+    let Some(raster_resources) = world
         .resources
-        .get_mut::<Eventually<RasterResources>>()
-        .unwrap() // FIXME tcs: Unwrap
-        .initialize(|| {
-            let shader = shaders::RasterTileShader {
-                format: surface.surface_format(),
-            };
+        .query_mut::<&mut Eventually<RasterResources>>() else { return; };
 
-            let mut raster_resources = RasterResources::new(
-                Msaa { samples: 1 },
-                device,
-                TilePipeline::new(
-                    "raster_pipeline".into(),
-                    *settings,
-                    shader.describe_vertex(),
-                    shader.describe_fragment(),
-                    true,
-                    false,
-                    false,
-                    false,
-                    true,
-                    true,
-                )
-                .describe_render_pipeline()
-                .initialize(device),
-            );
+    raster_resources.initialize(|| {
+        let shader = shaders::RasterTileShader {
+            format: surface.surface_format(),
+        };
 
-            raster_resources
-        });
+        let mut raster_resources = RasterResources::new(
+            Msaa { samples: 1 },
+            device,
+            TilePipeline::new(
+                "raster_pipeline".into(),
+                *settings,
+                shader.describe_vertex(),
+                shader.describe_fragment(),
+                true,
+                false,
+                false,
+                false,
+                true,
+                true,
+            )
+            .describe_render_pipeline()
+            .initialize(device),
+        );
+
+        raster_resources
+    });
 }

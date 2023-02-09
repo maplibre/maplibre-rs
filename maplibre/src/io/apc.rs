@@ -1,6 +1,7 @@
 use std::{
     borrow::BorrowMut,
     cell::{Cell, RefCell},
+    fmt::{Display, Formatter},
     future::Future,
     iter::Filter,
     marker::PhantomData,
@@ -47,6 +48,22 @@ pub enum Message<T: Transferables> {
     LayerTessellated(T::LayerTessellated),
     LayerIndexed(T::LayerIndexed),
     LayerRaster(T::LayerRaster),
+}
+
+impl<T: Transferables> Display for Message<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Message::TileTessellated(message) => write!(f, "TileTessellated({})", message.coords()),
+            Message::LayerUnavailable(message) => {
+                write!(f, "LayerUnavailable({})", message.coords())
+            }
+            Message::LayerTessellated(message) => {
+                write!(f, "LayerTessellated({})", message.coords())
+            }
+            Message::LayerIndexed(message) => write!(f, "LayerIndexed({})", message.coords()),
+            Message::LayerRaster(message) => write!(f, "LayerRaster({})", message.coords()),
+        }
+    }
 }
 
 /// Inputs for an [`AsyncProcedure`]
@@ -231,6 +248,9 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
         // TODO: (optimize) Using while instead of if means that we are processing all that is
         // available this might cause frame drops.
         while let Some(message) = self.channel.1.try_recv().ok() {
+            tracing::debug!("Data reached main thread: {}", &message);
+            log::debug!("Data reached main thread: {}", &message);
+
             if filter(&message) {
                 ret.push(message);
             } else {

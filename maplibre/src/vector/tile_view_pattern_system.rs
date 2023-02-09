@@ -20,18 +20,17 @@ pub fn tile_view_pattern_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
-    let (
+    let Some((
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
         Initialized(raster_resources)
-    ) = world.resources.query_mut::<
-        (&mut Eventually<WgpuTileViewPattern>,
+    )) = world.resources.query_mut::<(
+        &mut Eventually<WgpuTileViewPattern>,
          &mut Eventually<VectorBufferPool>,
-         &mut Eventually<RasterResources>) // FIXME tcs: Make this independent of raster
-    >().unwrap() else { return; }; // FIXME tcs: Unwrap
+         &mut Eventually<RasterResources> // FIXME tcs: Make this independent of raster
+    )>() else { return; };
 
     let view_state = &world.view_state;
-
     let view_region = view_state.create_view_region();
 
     if let Some(view_region) = &view_region {

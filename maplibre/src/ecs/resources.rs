@@ -102,18 +102,6 @@ impl<'a, R: Resource> ResourceQuery for &'a mut R {
     }
 }
 
-impl<RQ1: ResourceQuery> ResourceQuery for (RQ1,) {
-    type Item<'r> = (RQ1::Item<'r>,);
-
-    fn query<'r>(resources: &'r Resources) -> Self::Item<'r> {
-        (RQ1::query(resources),)
-    }
-
-    fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r> {
-        (RQ1::query_mut(resources),)
-    }
-}
-
 macro_rules! impl_resource_query {
     ($($param: ident),*) => {
         impl<$($param: ResourceQuery),*> ResourceQuery for ($($param,)*) {
@@ -130,6 +118,7 @@ macro_rules! impl_resource_query {
     };
 }
 
+impl_resource_query!(R1);
 impl_resource_query!(R1, R2);
 impl_resource_query!(R1, R2, R3);
 impl_resource_query!(R1, R2, R3, R4);

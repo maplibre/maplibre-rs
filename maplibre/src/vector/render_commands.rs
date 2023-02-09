@@ -22,7 +22,7 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = world.resources.get::<Eventually<MaskPipeline>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
+        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<MaskPipeline>>() else { return RenderCommandResult::Failure; };
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -36,7 +36,10 @@ impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = world.resources.get::<Eventually<DebugPipeline>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
+        let Some(Initialized(pipeline)) = world
+            .resources
+            .get::<Eventually<DebugPipeline>>() else { return RenderCommandResult::Failure; };
+
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -50,7 +53,10 @@ impl<P: PhaseItem> RenderCommand<P> for SetVectorTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Initialized(pipeline) = world.resources.get::<Eventually<VectorPipeline>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
+        let Some(Initialized(pipeline)) = world
+            .resources
+            .get::<Eventually<VectorPipeline>>() else { return RenderCommandResult::Failure; };
+
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -64,9 +70,12 @@ impl RenderCommand<TileMaskItem> for DrawMask {
         item: &TileMaskItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
+        let Some(Initialized(tile_view_pattern)) = world
+            .resources
+            .get::<Eventually<WgpuTileViewPattern>>() else { return RenderCommandResult::Failure; };
+
         let tile_mask = &item.source_shape;
 
-        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<WgpuTileViewPattern>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
         tracing::trace!("Drawing mask {}", &tile_mask.coords());
 
         // Draw mask with stencil value of e.g. parent
@@ -93,8 +102,12 @@ impl RenderCommand<LayerItem> for DrawDebugOutline {
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
+        let Some(Initialized(tile_view_pattern)) = world
+            .resources
+            .get::<Eventually<WgpuTileViewPattern>>() else { return RenderCommandResult::Failure; };
+
         let source_shape = &item.source_shape;
-        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<WgpuTileViewPattern>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
+
         pass.set_vertex_buffer(
             0,
             tile_view_pattern
@@ -117,23 +130,24 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let shape = &item.source_shape;
-        let vector_layers = world
-            .tiles
-            .query::<&VectorLayersIndicesComponent>(item.tile.coords)
-            .unwrap(); // FIXME tcs: Unwrap
+        let Some((
+            Initialized(buffer_pool),
+            Initialized(tile_view_pattern)
+        )) = world.resources.query::<(
+            &Eventually<VectorBufferPool>,
+            &Eventually<WgpuTileViewPattern>
+        )>() else { return RenderCommandResult::Failure; };
 
-        let entry = &vector_layers
+        let Some(vector_layers) = world
+            .tiles
+            .query::<&VectorLayersIndicesComponent>(item.tile.coords) else { return RenderCommandResult::Failure; };
+
+        let Some(entry) = vector_layers
             .layers
             .iter()
-            .find(|entry| entry.style_layer.id == item.style_layer)
-            .unwrap(); // FIXME tcs: Unwrap
+            .find(|entry| entry.style_layer.id == item.style_layer) else { return RenderCommandResult::Failure; };
 
-        let (Initialized(buffer_pool), Initialized(tile_view_pattern)) =
-            (
-                world.resources.get::<Eventually<VectorBufferPool>>().unwrap(), // FIXME tcs: Unwrap
-                world.resources.get::<Eventually<WgpuTileViewPattern>>().unwrap(), // FIXME tcs: Unwrap
-            ) else { return RenderCommandResult::Failure; };
+        let shape = &item.source_shape;
 
         // Uses stencil value of requested tile and the shape of the requested tile
         let reference = shape.coords().stencil_reference_value_3d() as u32;

@@ -18,17 +18,12 @@ impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let Initialized(raster_resources) = world
+        let Some(Initialized(raster_resources)) = world
             .resources
-            .get::<Eventually<RasterResources>>()
-            .unwrap()
-        // FIXME tcs: Unwrap
-        {
-            pass.set_render_pipeline(raster_resources.pipeline());
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
+            .get::<Eventually<RasterResources>>() else { return RenderCommandResult::Failure; };
+
+        pass.set_render_pipeline(raster_resources.pipeline());
+        RenderCommandResult::Success
     }
 }
 
@@ -40,23 +35,18 @@ impl<const I: usize> RenderCommand<LayerItem> for SetRasterViewBindGroup<I> {
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        if let Initialized(raster_resources) = world
+        let Some(Initialized(raster_resources)) = world
             .resources
-            .get::<Eventually<RasterResources>>()
-            .unwrap()
-        // FIXME tcs: Unwrap
-        {
-            pass.set_bind_group(
-                0,
-                raster_resources
-                    .get_bound_texture(&item.tile.coords)
-                    .unwrap(), // FIXME tcs: Remove unwrap
-                &[],
-            );
-            RenderCommandResult::Success
-        } else {
-            RenderCommandResult::Failure
-        }
+            .get::<Eventually<RasterResources>>() else { return RenderCommandResult::Failure; };
+
+        pass.set_bind_group(
+            0,
+            raster_resources
+                .get_bound_texture(&item.tile.coords)
+                .unwrap(), // FIXME tcs: Remove unwrap
+            &[],
+        );
+        RenderCommandResult::Success
     }
 }
 
@@ -68,8 +58,11 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
+        let Some(Initialized(tile_view_pattern)) = world
+            .resources
+            .get::<Eventually<WgpuTileViewPattern>>() else { return RenderCommandResult::Failure; };
+
         let source_shape = &item.source_shape;
-        let Initialized(tile_view_pattern) = world.resources.get::<Eventually<WgpuTileViewPattern>>().unwrap() else { return RenderCommandResult::Failure; }; // FIXME tcs: Unwrap
 
         let reference = source_shape.coords().stencil_reference_value_3d() as u32;
 

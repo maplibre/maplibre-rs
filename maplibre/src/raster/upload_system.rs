@@ -20,12 +20,12 @@ pub fn upload_system(
         ..
     }: &mut MapContext,
 ) {
+    let Some(Initialized(raster_resources)) = world
+        .resources
+        .query_mut::<&mut Eventually<RasterResources>>() else { return; };
+
     let view_state = &world.view_state;
     let view_region = view_state.create_view_region();
-
-    let Initialized(raster_resources) = world.resources.get_mut::<
-        Eventually<RasterResources>
-    >().unwrap() else { return; }; // FIXME tcs: Unwrap
 
     if let Some(view_region) = &view_region {
         upload_raster_layer(

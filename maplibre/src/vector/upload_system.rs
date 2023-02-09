@@ -26,15 +26,17 @@ pub fn upload_system(
         ..
     }: &mut MapContext,
 ) {
+    let Some((
+        Initialized(tile_view_pattern),
+        Initialized(buffer_pool)
+    )) = world.resources.query_mut::<(
+        &mut Eventually<WgpuTileViewPattern>,
+        &mut Eventually<VectorBufferPool>,
+    )>() else { return; };
+
     let view_state = &world.view_state;
     let view_proj = view_state.view_projection();
     let view_region = view_state.create_view_region();
-
-    let (
-        Initialized(tile_view_pattern),
-        Initialized(buffer_pool),
-    ) = world.resources.query_mut::<(&mut Eventually<WgpuTileViewPattern>, &mut Eventually<VectorBufferPool>)
-    >().unwrap() else { return; }; // FIXME tcs: Unwrap
 
     if let Some(view_region) = &view_region {
         upload_tesselated_layer(
@@ -149,7 +151,7 @@ fn upload_tesselated_layer(
             .collect::<Vec<_>>();
 
         for style_layer in &style.layers {
-            let source_layer = style_layer.source_layer.as_ref().unwrap(); // FIXME tcs: Unwrap
+            let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Unwrap
 
             let Some(AvailableVectorLayerData {
                          coords,

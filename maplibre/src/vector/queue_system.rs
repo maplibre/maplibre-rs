@@ -17,18 +17,17 @@ pub fn queue_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
-    let (
+    let Some((
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
         mask_phase,
-        vector_tile_phase,
-    ) = world.resources.query_mut::<(
-            &mut Eventually<WgpuTileViewPattern>,
-            &mut Eventually<VectorBufferPool>,
-            &mut RenderPhase<TileMaskItem>,
-            &mut RenderPhase<LayerItem>,
-        )>()
-        .unwrap() else { return; }; // FIXME tcs: Unwrap
+        layer_item_phase,
+    )) = world.resources.query_mut::<(
+        &mut Eventually<WgpuTileViewPattern>,
+        &mut Eventually<VectorBufferPool>,
+        &mut RenderPhase<TileMaskItem>,
+        &mut RenderPhase<LayerItem>,
+    )>() else { return; };
 
     let buffer_pool_index = buffer_pool.index();
 
@@ -47,7 +46,7 @@ pub fn queue_system(
             if let Some(layer_entries) = buffer_pool_index.get_layers(&source_shape.coords()) {
                 for layer_entry in layer_entries {
                     // Draw tile
-                    vector_tile_phase.add(LayerItem {
+                    layer_item_phase.add(LayerItem {
                         draw_function: Box::new(DrawState::<LayerItem, DrawVectorTiles>::new()),
                         index: layer_entry.style_layer.index,
                         style_layer: layer_entry.style_layer.id.clone(),

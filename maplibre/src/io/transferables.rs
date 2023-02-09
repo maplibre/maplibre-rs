@@ -59,6 +59,8 @@ pub trait LayerIndexed: Send {
 pub trait LayerRaster: Send {
     fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self;
 
+    fn coords(&self) -> WorldTileCoords;
+
     fn to_layer(self) -> RasterLayerData;
 }
 
@@ -176,6 +178,10 @@ impl LayerRaster for DefaultRasterLayer {
             layer_name,
             image,
         }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
     }
 
     fn to_layer(self) -> RasterLayerData {

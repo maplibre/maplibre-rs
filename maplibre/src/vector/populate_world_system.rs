@@ -50,67 +50,38 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
             )
         }) {
             match result {
-                // FIXME tcs: deduplicate
                 Message::TileTessellated(message) => {
-                    let coords = message.coords();
-                    tracing::event!(tracing::Level::ERROR, %coords, "tile request done: {}", &coords);
+                    let Some(component) = world
+                        .tiles
+                        .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
 
-                    tracing::trace!("Vector tile at {} finished loading", coords);
-                    log::warn!("Vector tile at {} finished loading", coords);
-
-                    tiles
-                        .query_mut::<&mut VectorLayersDataComponent>(coords)
-                        .unwrap() // FIXME tcs: Unwrap
-                        .done = true;
+                    component.done = true;
                 }
                 Message::LayerUnavailable(message) => {
-                    let layer = message.to_layer();
+                    let Some(component) = world
+                        .tiles
+                        .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
 
-                    tracing::debug!(
-                        "Source vector layer {} at {} reached main thread",
-                        &layer.source_layer,
-                        &layer.coords
-                    );
-
-                    tiles
-                        .query_mut::<&mut VectorLayersDataComponent>(layer.coords)
-                        .unwrap() // FIXME tcs: Unwrap
+                    component
                         .layers
-                        .push(VectorLayerData::Unavailable(layer));
+                        .push(VectorLayerData::Unavailable(message.to_layer()));
                 }
                 Message::LayerTessellated(message) => {
                     // FIXME: Handle points!
-                    if message.is_empty() {
+                    /*if message.is_empty() {
                         continue;
-                    }
+                    }*/
 
-                    let layer = message.to_layer();
+                    let Some(component) = world
+                        .tiles
+                        .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
 
-                    tracing::debug!(
-                        "Source vector layer {} at {} reached main thread",
-                        &layer.source_layer,
-                        &layer.coords
-                    );
-                    log::warn!(
-                        "Source vector layer {} at {} reached main thread",
-                        &layer.source_layer,
-                        &layer.coords
-                    );
-
-                    tiles
-                        .query_mut::<&mut VectorLayersDataComponent>(layer.coords)
-                        .unwrap() // FIXME tcs: Unwrap
+                    component
                         .layers
-                        .push(VectorLayerData::Available(layer));
+                        .push(VectorLayerData::Available(message.to_layer()));
                 }
                 Message::LayerIndexed(message) => {
                     let coords = message.coords();
-
-                    log::warn!(
-                        "Source vector layer index at {} reached main thread",
-                        coords
-                    );
-
                     geometry_index.index_tile(&coords, message.to_tile_index());
                 }
                 _ => {}

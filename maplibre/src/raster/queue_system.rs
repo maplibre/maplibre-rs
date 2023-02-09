@@ -20,11 +20,15 @@ pub fn queue_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
-    let (
+    let Some((
         Initialized(tile_view_pattern),
-        Initialized(ref raster_resources),
-        mut raster_tile_phase,
-    ) = world.resources.query_mut::<(&mut Eventually<WgpuTileViewPattern>, &mut Eventually<RasterResources>, &mut RenderPhase<LayerItem>)>().unwrap() else { return; }; // FIXME tcs: Unwrap
+        Initialized(raster_resources),
+        layer_item_phase,
+    )) = world.resources.query_mut::<(
+        &mut Eventually<WgpuTileViewPattern>,
+        &mut Eventually<RasterResources>,
+        &mut RenderPhase<LayerItem>,
+    )>() else { return; };
 
     for view_tile in tile_view_pattern.iter() {
         let coords = &view_tile.coords();
@@ -33,7 +37,7 @@ pub fn queue_system(
         // draw tile normal or the source e.g. parent or children
         view_tile.render(|source_shape| {
             if raster_resources.has_tile(&source_shape.coords()) {
-                raster_tile_phase.add(LayerItem {
+                layer_item_phase.add(LayerItem {
                     draw_function: Box::new(DrawState::<LayerItem, DrawRasterTiles>::new()),
                     index: 0,
                     style_layer: "raster".to_string(),
