@@ -35,7 +35,7 @@ impl Tiles {
     pub fn query_mut<'t, Q: ComponentQueryMut>(
         &'t mut self,
         coords: WorldTileCoords,
-    ) -> Option<Q::ItemMut<'t>> {
+    ) -> Option<Q::MutItem<'t>> {
         let mut global_state = GlobalQueryState::default();
         let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
         Some(Q::query_mut(self, Tile { coords }, state))
@@ -103,7 +103,7 @@ pub struct GlobalQueryState {
 
 pub trait QueryState<'s> {
     fn create(state: &'s mut GlobalQueryState) -> Self;
-    fn global(&mut self) -> &mut GlobalQueryState;
+    fn clone_to<'a, S: QueryState<'a>>(&'a mut self) -> S;
 }
 
 pub struct EphemeralQueryState<'s> {
@@ -115,8 +115,8 @@ impl<'s> QueryState<'s> for EphemeralQueryState<'s> {
         Self { state }
     }
 
-    fn global(&mut self) -> &mut GlobalQueryState {
-        &mut self.state
+    fn clone_to<'a, S: QueryState<'a>>(&'a mut self) -> S {
+        S::create(&mut self.state)
     }
 }
 
@@ -127,14 +127,14 @@ pub trait ComponentQuery {
 
     type State<'s>: QueryState<'s>;
 
-    fn query<'t: 't, 's>(tiles: &'t Tiles, tile: Tile, state: Self::State<'s>) -> Self::Item<'t>;
+    fn query<'t, 's>(tiles: &'t Tiles, tile: Tile, state: Self::State<'s>) -> Self::Item<'t>;
 }
 
 impl<'a, T: TileComponent> ComponentQuery for &'a T {
     type Item<'t> = &'t T;
     type State<'s> = EphemeralQueryState<'s>;
 
-    fn query<'t: 't, 's>(tiles: &'t Tiles, tile: Tile, state: Self::State<'s>) -> Self::Item<'t> {
+    fn query<'t, 's>(tiles: &'t Tiles, tile: Tile, state: Self::State<'s>) -> Self::Item<'t> {
         let components = tiles
             .components
             .get(&tile.coords.build_quad_key().unwrap()) // FIXME tcs: Unwrap
@@ -150,39 +150,39 @@ impl<'a, T: TileComponent> ComponentQuery for &'a T {
 // ComponentQueryMut
 
 pub trait ComponentQueryMut {
-    type ItemMut<'t>;
+    type MutItem<'t>;
 
     type State<'s>: QueryState<'s>;
 
-    fn query_mut<'t: 't, 's>(
+    fn query_mut<'t, 's>(
         tiles: &'t mut Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::ItemMut<'t>;
+    ) -> Self::MutItem<'t>;
 }
 
 impl<'a, T: TileComponent> ComponentQueryMut for &'a T {
-    type ItemMut<'t> = &'t T;
+    type MutItem<'t> = &'t T;
     type State<'s> = EphemeralQueryState<'s>;
 
-    fn query_mut<'t: 't, 's>(
+    fn query_mut<'t, 's>(
         tiles: &'t mut Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::ItemMut<'t> {
+    ) -> Self::MutItem<'t> {
         <&T as ComponentQuery>::query(tiles, tile, state)
     }
 }
 
 impl<'a, T: TileComponent> ComponentQueryMut for &'a mut T {
-    type ItemMut<'t> = &'t mut T;
+    type MutItem<'t> = &'t mut T;
     type State<'s> = EphemeralQueryState<'s>;
 
-    fn query_mut<'t: 't, 's>(
+    fn query_mut<'t, 's>(
         tiles: &'t mut Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::ItemMut<'t> {
+    ) -> Self::MutItem<'t> {
         let components = tiles
             .components
             .get_mut(&tile.coords.build_quad_key().unwrap()) // FIXME tcs: Unwrap
@@ -199,32 +199,33 @@ impl<'a, T: TileComponent> ComponentQueryMut for &'a mut T {
 // ComponentQueryUnsafe
 
 pub trait ComponentQueryUnsafe: ComponentQueryMut {
-    unsafe fn query_unsafe<'t: 't, 's>(
+    unsafe fn query_unsafe<'t, 's>(
         tiles: &'t Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::ItemMut<'t>;
+    ) -> Self::MutItem<'t>;
 }
 
 impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a T {
-    unsafe fn query_unsafe<'t: 't, 's>(
+    unsafe fn query_unsafe<'t, 's>(
         tiles: &'t Tiles,
         tile: Tile,
         state: Self::State<'s>,
-    ) -> Self::ItemMut<'t> {
+    ) -> Self::MutItem<'t> {
         <&T as ComponentQuery>::query(tiles, tile, state)
     }
 }
 
 impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
     /// SAFETY: Safe if tiles is borrowed mutably.
-    unsafe fn query_unsafe<'t: 't, 's>(
+    // FIXME: tcs: check if really safe
+    unsafe fn query_unsafe<'t, 's>(
         tiles: &'t Tiles,
         tile: Tile,
         mut state: Self::State<'s>,
-    ) -> Self::ItemMut<'t> {
+    ) -> Self::MutItem<'t> {
         let id = TypeId::of::<T>();
-        let borrowed = &mut state.global().mutably_borrowed;
+        let borrowed = &mut state.state.mutably_borrowed;
 
         if borrowed.contains(&id) {
             panic!(
@@ -235,8 +236,7 @@ impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
 
         borrowed.insert(id);
 
-        // FIXME: tcs: check if really safe
-        unsafe { &mut *(<&T as ComponentQuery>::query(tiles, tile, state) as *const T as *mut T) }
+        &mut *(<&T as ComponentQuery>::query(tiles, tile, state) as *const T as *mut T)
     }
 }
 
@@ -246,20 +246,10 @@ impl<CQ1: ComponentQuery, CQ2: ComponentQuery> ComponentQuery for (CQ1, CQ2) {
     type Item<'t> = (CQ1::Item<'t>, CQ2::Item<'t>);
     type State<'s> = EphemeralQueryState<'s>;
 
-    fn query<'t: 't, 's>(
-        tiles: &'t Tiles,
-        tile: Tile,
-        mut state: Self::State<'s>,
-    ) -> Self::Item<'t> {
+    fn query<'t, 's>(tiles: &'t Tiles, tile: Tile, mut state: Self::State<'s>) -> Self::Item<'t> {
         (
-            {
-                let mut state = <CQ1::State<'_> as QueryState>::create(state.global());
-                CQ1::query(tiles, tile, state)
-            },
-            {
-                let mut state = <CQ2::State<'_> as QueryState>::create(state.global());
-                CQ2::query(tiles, tile, state)
-            },
+            CQ1::query(tiles, tile, state.clone_to::<CQ1::State<'_>>()),
+            CQ2::query(tiles, tile, state.clone_to::<CQ2::State<'_>>()),
         )
     }
 }
@@ -269,25 +259,25 @@ impl<
         CQ2: ComponentQueryMut + ComponentQueryUnsafe + 'static,
     > ComponentQueryMut for (CQ1, CQ2)
 {
-    type ItemMut<'t> = (CQ1::ItemMut<'t>, CQ2::ItemMut<'t>);
+    type MutItem<'t> = (CQ1::MutItem<'t>, CQ2::MutItem<'t>);
     type State<'s> = EphemeralQueryState<'s>;
 
-    fn query_mut<'t: 't, 's>(
+    fn query_mut<'t, 's>(
         tiles: &'t mut Tiles,
         tile: Tile,
         mut state: Self::State<'s>,
-    ) -> Self::ItemMut<'t> {
+    ) -> Self::MutItem<'t> {
         unsafe {
             (
                 <CQ1 as ComponentQueryUnsafe>::query_unsafe(
                     tiles,
                     tile,
-                    <CQ1::State<'_> as QueryState>::create(state.global()),
+                    state.clone_to::<CQ1::State<'_>>(),
                 ),
                 <CQ2 as ComponentQueryUnsafe>::query_unsafe(
                     tiles,
                     tile,
-                    <CQ2::State<'_> as QueryState>::create(state.global()),
+                    state.clone_to::<CQ2::State<'_>>(),
                 ),
             )
         }

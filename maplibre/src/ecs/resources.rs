@@ -1,25 +1,17 @@
 use std::{
+    any,
     any::{Any, TypeId},
-    collections::HashMap,
+    collections::{HashMap, HashSet},
 };
 
-pub trait Resource: 'static {
-    fn as_any(&self) -> &dyn Any;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
-}
+use downcast_rs::{impl_downcast, Downcast};
 
-impl<T> Resource for T
-where
-    T: 'static,
-{
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
+use crate::ecs::{EphemeralQueryState, GlobalQueryState, QueryState};
 
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
+pub trait Resource: Downcast + 'static {}
+impl_downcast!(Resource);
+
+impl<T> Resource for T where T: 'static {}
 
 #[derive(Default)]
 pub struct Resources {
@@ -40,71 +32,151 @@ impl Resources {
 
     pub fn get<R: Resource>(&self) -> Option<&R> {
         if let Some(index) = self.index.get(&TypeId::of::<R>()) {
-            let x = self.resources[*index].as_ref().as_any();
-            return Some(x.downcast_ref().unwrap()); // FIXME tcs: Unwrap
+            return Some(self.resources[*index].downcast_ref().unwrap()); // FIXME tcs: Unwrap
         }
         return None;
     }
 
     pub fn get_mut<R: Resource>(&mut self) -> Option<&mut R> {
         if let Some(index) = self.index.get(&TypeId::of::<R>()) {
-            let x = self.resources[*index].as_mut().as_any_mut();
-            return Some(x.downcast_mut().unwrap()); // FIXME tcs: Unwrap
+            return Some(self.resources[*index].downcast_mut().unwrap()); // FIXME tcs: Unwrap
         }
         return None;
     }
 
-    pub fn query<'t, Q: ResourceQuery>(&'t self) -> Option<Q::Item<'t>> {
-        Some(Q::query(self))
+    pub fn query<'r, Q: ResourceQuery>(&'r self) -> Option<Q::Item<'r>> {
+        let mut global_state = GlobalQueryState::default();
+        let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
+        Some(Q::query(&self, state))
     }
 
-    pub fn query_mut<'t, Q: ResourceQuery>(&'t mut self) -> Option<Q::Item<'t>> {
-        Some(Q::query_mut(self))
+    pub fn query_mut<'r, Q: ResourceQueryMut>(&'r mut self) -> Option<Q::MutItem<'r>> {
+        let mut global_state = GlobalQueryState::default();
+        let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
+        Some(Q::query_mut(self, state))
     }
 }
+
+// ResourceQuery
 
 pub trait ResourceQuery {
     type Item<'r>;
 
-    fn query<'r>(resources: &'r Resources) -> Self::Item<'r>;
-    fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r>;
+    type State<'s>: QueryState<'s>;
+
+    fn query<'r, 's>(resources: &'r Resources, state: Self::State<'s>) -> Self::Item<'r>;
 }
 
 impl<'a, R: Resource> ResourceQuery for &'a R {
     type Item<'r> = &'r R;
+    type State<'s> = EphemeralQueryState<'s>;
 
-    fn query<'r>(resources: &'r Resources) -> Self::Item<'r> {
+    fn query<'r, 's>(resources: &'r Resources, state: Self::State<'s>) -> Self::Item<'r> {
         resources.get::<R>().unwrap() // FIXME tcs: Unwrap
-    }
-
-    fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r> {
-        Self::query(resources)
     }
 }
 
-impl<'a, R: Resource> ResourceQuery for &'a mut R {
-    type Item<'r> = &'r mut R;
+// ResourceQueryMut
 
-    fn query<'r>(resources: &'r Resources) -> Self::Item<'r> {
-        unsafe { &mut *(<&R as ResourceQuery>::query(resources) as *const R as *mut R) }
+pub trait ResourceQueryMut {
+    type MutItem<'r>;
+
+    type State<'s>: QueryState<'s>;
+
+    fn query_mut<'r, 's>(resources: &'r mut Resources, state: Self::State<'s>)
+        -> Self::MutItem<'r>;
+}
+
+impl<'a, R: Resource> ResourceQueryMut for &'a R {
+    type MutItem<'r> = &'r R;
+    type State<'s> = EphemeralQueryState<'s>;
+
+    fn query_mut<'r, 's>(
+        resources: &'r mut Resources,
+        state: Self::State<'s>,
+    ) -> Self::MutItem<'r> {
+        <&R as ResourceQuery>::query(resources, state)
     }
+}
 
-    fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r> {
+impl<'a, R: Resource> ResourceQueryMut for &'a mut R {
+    type MutItem<'r> = &'r mut R;
+    type State<'s> = EphemeralQueryState<'s>;
+
+    fn query_mut<'r, 's>(
+        resources: &'r mut Resources,
+        state: Self::State<'s>,
+    ) -> Self::MutItem<'r> {
         resources.get_mut::<R>().unwrap() // FIXME tcs: Unwrap
     }
 }
 
+// ResourceQueryUnsafe
+
+pub trait ResourceQueryUnsafe: ResourceQueryMut {
+    unsafe fn query_unsafe<'r, 's>(
+        resources: &'r Resources,
+        state: Self::State<'s>,
+    ) -> Self::MutItem<'r>;
+}
+
+impl<'a, R: Resource> ResourceQueryUnsafe for &'a R {
+    unsafe fn query_unsafe<'r, 's>(
+        resources: &'r Resources,
+        state: Self::State<'s>,
+    ) -> Self::MutItem<'r> {
+        <&R as ResourceQuery>::query(resources, state)
+    }
+}
+
+impl<'a, R: Resource> ResourceQueryUnsafe for &'a mut R {
+    /// SAFETY: Safe if tiles is borrowed mutably.
+    // FIXME: tcs: check if really safe
+    unsafe fn query_unsafe<'r, 's>(
+        resources: &'r Resources,
+        mut state: Self::State<'s>,
+    ) -> Self::MutItem<'r> {
+        let id = TypeId::of::<R>();
+        let borrowed = &mut state.state.mutably_borrowed;
+
+        if borrowed.contains(&id) {
+            panic!(
+                "tried to borrow an {} more than once mutably",
+                any::type_name::<R>()
+            )
+        }
+
+        borrowed.insert(id);
+
+        &mut *(<&R as ResourceQuery>::query(resources, state) as *const R as *mut R)
+    }
+}
+
+// Lift to tuples
+
 macro_rules! impl_resource_query {
     ($($param: ident),*) => {
         impl<$($param: ResourceQuery),*> ResourceQuery for ($($param,)*) {
-            type Item<'r> =  ($($param::Item<'r>,)*);
+            type Item<'r> = ($($param::Item<'r>,)*);
+            type State<'s> = EphemeralQueryState<'s>;
 
-            fn query<'r>(resources: &'r Resources) -> Self::Item<'r> {
-                ($($param::query(resources),)*)
+            fn query<'r, 's>(resources: &'r Resources, mut state: Self::State<'s>) -> Self::Item<'r> {
+                ($($param::query(resources, state.clone_to::<$param::State<'_>>()),)*)
             }
+        }
 
-            fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r> {
-                ($($param::query(resources),)*)
+        impl<$($param: ResourceQueryMut + ResourceQueryUnsafe + 'static),*> ResourceQueryMut for ($($param,)*)
+        {
+            type MutItem<'r> = ($($param::MutItem<'r>,)*);
+            type State<'s> = EphemeralQueryState<'s>;
+
+            fn query_mut<'r, 's>(
+                resources: &'r mut Resources,
+                mut state: Self::State<'s>,
+            ) -> Self::MutItem<'r> {
+                unsafe {
+                    ($(<$param as ResourceQueryUnsafe>::query_unsafe(resources, state.clone_to::<$param::State<'_>>()),)*)
+                }
             }
         }
     };
