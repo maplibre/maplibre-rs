@@ -82,10 +82,14 @@ impl RenderCommand<TileMaskItem> for DrawMask {
         let reference = tile_mask.coords().stencil_reference_value_3d() as u32;
 
         pass.set_stencil_reference(reference);
+
+        let tile_view_pattern_buffer = tile_mask
+            .buffer_range()
+            .expect("tile_view_pattern needs to be uploaded first"); // FIXME: tcs
         pass.set_vertex_buffer(
             0,
             // Mask is of the requested shape
-            tile_view_pattern.buffer().slice(tile_mask.buffer_range()),
+            tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
         );
         const TILE_MASK_SHADER_VERTICES: u32 = 6;
         pass.draw(0..TILE_MASK_SHADER_VERTICES, 0..1);
@@ -108,11 +112,12 @@ impl RenderCommand<LayerItem> for DrawDebugOutline {
 
         let source_shape = &item.source_shape;
 
+        let tile_view_pattern_buffer = source_shape
+            .buffer_range()
+            .expect("tile_view_pattern needs to be uploaded first"); // FIXME: tcs
         pass.set_vertex_buffer(
             0,
-            tile_view_pattern
-                .buffer()
-                .slice(source_shape.buffer_range()),
+            tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
         );
 
         const TILE_MASK_SHADER_VERTICES: u32 = 24;
@@ -147,10 +152,10 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
             .iter()
             .find(|entry| entry.style_layer.id == item.style_layer) else { return RenderCommandResult::Failure; };
 
-        let shape = &item.source_shape;
+        let source_shape = &item.source_shape;
 
         // Uses stencil value of requested tile and the shape of the requested tile
-        let reference = shape.coords().stencil_reference_value_3d() as u32;
+        let reference = source_shape.coords().stencil_reference_value_3d() as u32;
 
         tracing::trace!(
             "Drawing layer {:?} at {}",
@@ -172,7 +177,13 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
             0,
             buffer_pool.vertices().slice(entry.vertices_buffer_range()),
         );
-        pass.set_vertex_buffer(1, tile_view_pattern.buffer().slice(shape.buffer_range()));
+        let tile_view_pattern_buffer = source_shape
+            .buffer_range()
+            .expect("tile_view_pattern needs to be uploaded first"); // FIXME: tcs
+        pass.set_vertex_buffer(
+            1,
+            tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
+        );
         pass.set_vertex_buffer(
             2,
             buffer_pool

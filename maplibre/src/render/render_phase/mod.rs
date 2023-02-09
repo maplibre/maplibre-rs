@@ -41,7 +41,7 @@ pub struct LayerItem {
     pub style_layer: String,
 
     pub tile: Tile,
-    pub source_shape: TileShape,
+    pub source_shape: TileShape, // FIXME tcs: TileShape contains buffer ranges. This is bad, move them to a component?
 }
 
 impl PhaseItem for LayerItem {

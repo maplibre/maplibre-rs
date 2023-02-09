@@ -94,12 +94,8 @@ impl TileShape {
         self.buffer_range = Some(index * STRIDE..(index + 1) * STRIDE);
     }
 
-    pub fn buffer_range(&self) -> Range<wgpu::BufferAddress> {
-        let option = self.buffer_range.as_ref();
-        if let None = option {
-            warn!("error {}", self.coords)
-        }
-        option.unwrap().clone()
+    pub fn buffer_range(&self) -> Option<Range<wgpu::BufferAddress>> {
+        self.buffer_range.clone()
     }
 
     pub fn coords(&self) -> WorldTileCoords {

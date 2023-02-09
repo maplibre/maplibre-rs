@@ -70,19 +70,22 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
 
         pass.set_stencil_reference(reference);
 
+        let tile_view_pattern_buffer = source_shape
+            .buffer_range()
+            .expect("tile_view_pattern needs to be uploaded first"); // FIXME: tcs
         pass.set_vertex_buffer(
             0,
-            tile_view_pattern
-                .buffer()
-                .slice(source_shape.buffer_range()),
+            tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
         );
+
+        let tile_view_pattern_buffer = source_shape
+            .buffer_range()
+            .expect("tile_view_pattern needs to be uploaded first"); // FIXME: tcs
 
         // FIXME tcs: I passin random data here right now, but instead we need the correct metadata here
         pass.set_vertex_buffer(
             1,
-            tile_view_pattern
-                .buffer()
-                .slice(source_shape.buffer_range()),
+            tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
         );
 
         const TILE_MASK_SHADER_VERTICES: u32 = 6;
