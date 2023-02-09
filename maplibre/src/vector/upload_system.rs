@@ -132,7 +132,7 @@ fn upload_tesselated_layer(
     // Upload all tessellated layers which are in view
     for coords in view_region.iter() {
         let Some((vector_layers, mut vector_layers_indices)) =
-            tiles.query_component_mut::<(&mut VectorLayersDataComponent, &mut VectorLayersIndicesComponent)>(coords) else { continue; };
+            tiles.query_mut::<(&VectorLayersDataComponent, &mut VectorLayersIndicesComponent)>(coords) else { continue; };
 
         let loaded_layers = buffer_pool
             .get_loaded_source_layers_at(&coords)
@@ -186,7 +186,7 @@ fn upload_tesselated_layer(
                 &feature_metadata,
             );
 
-            vector_layers_indices.layers.push(entry);
+            // FIXME tcs vector_layers_indices.layers.push(entry);
         }
     }
 }

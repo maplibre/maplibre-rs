@@ -62,96 +62,69 @@ impl Resources {
         return None;
     }
 
-    pub fn query_mut<'t, Q: ResourceQuery>(&'t mut self) -> Option<Q::Item<'t>> {
-        Some(Q::get_resource_mut(self))
+    pub fn query<'t, Q: ResourceQuery>(&'t self) -> Option<Q::Item<'t>> {
+        Some(Q::query(self))
     }
 
-    // FIXME tcs
-    unsafe fn unsafe_get_mut<R: Resource>(&self) -> &mut R {
-        let i = self.index.get(&TypeId::of::<R>()).unwrap();
-        let resources = self.resources.as_ptr();
-
-        (&mut *(resources.offset(*i as isize) as *mut Box<dyn Resource>))
-            .as_mut()
-            .as_any_mut()
-            .downcast_mut()
-            .unwrap()
+    pub fn query_mut<'t, Q: ResourceQuery>(&'t mut self) -> Option<Q::Item<'t>> {
+        Some(Q::query_mut(self))
     }
 }
 
 pub trait ResourceQuery {
-    type Item<'a>;
+    type Item<'r>;
 
-    fn get_resource<'a>(resources: &'a Resources) -> Self::Item<'a>;
-    fn get_resource_mut<'a>(resources: &'a mut Resources) -> Self::Item<'a>;
-
-    unsafe fn unsafe_get_mut<'a>(resources: &'a Resources) -> Self::Item<'a>;
+    fn query<'r>(resources: &'r Resources) -> Self::Item<'r>;
+    fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r>;
 }
 
-impl<'r, R: Resource> ResourceQuery for &'r R {
-    type Item<'a> = &'a R;
+impl<'a, R: Resource> ResourceQuery for &'a R {
+    type Item<'r> = &'r R;
 
-    fn get_resource<'a>(resources: &'a Resources) -> Self::Item<'a> {
+    fn query<'r>(resources: &'r Resources) -> Self::Item<'r> {
         resources.get::<R>().unwrap() // FIXME tcs: Unwrap
     }
 
-    fn get_resource_mut<'a>(resources: &'a mut Resources) -> Self::Item<'a> {
-        Self::get_resource(resources)
-    }
-
-    unsafe fn unsafe_get_mut<'a>(resources: &'a Resources) -> Self::Item<'a> {
-        resources.unsafe_get_mut::<R>()
+    fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r> {
+        Self::query(resources)
     }
 }
 
-impl<'r, R: Resource> ResourceQuery for &'r mut R {
-    type Item<'a> = &'a mut R;
+impl<'a, R: Resource> ResourceQuery for &'a mut R {
+    type Item<'r> = &'r mut R;
 
-    fn get_resource<'a>(resources: &'a Resources) -> Self::Item<'a> {
-        panic!("provide an inmutable World to query inmutable")
+    fn query<'r>(resources: &'r Resources) -> Self::Item<'r> {
+        unsafe { &mut *(<&R as ResourceQuery>::query(resources) as *const R as *mut R) }
     }
 
-    fn get_resource_mut<'a>(resources: &'a mut Resources) -> Self::Item<'a> {
+    fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r> {
         resources.get_mut::<R>().unwrap() // FIXME tcs: Unwrap
-    }
-
-    unsafe fn unsafe_get_mut<'a>(resources: &'a Resources) -> Self::Item<'a> {
-        resources.unsafe_get_mut::<R>()
     }
 }
 
 impl<RQ1: ResourceQuery> ResourceQuery for (RQ1,) {
-    type Item<'a> = (RQ1::Item<'a>,);
+    type Item<'r> = (RQ1::Item<'r>,);
 
-    fn get_resource<'a>(resources: &'a Resources) -> Self::Item<'a> {
-        (RQ1::get_resource(resources),)
+    fn query<'r>(resources: &'r Resources) -> Self::Item<'r> {
+        (RQ1::query(resources),)
     }
 
-    fn get_resource_mut<'a>(resources: &'a mut Resources) -> Self::Item<'a> {
-        (RQ1::get_resource_mut(resources),)
-    }
-
-    unsafe fn unsafe_get_mut<'a>(resources: &'a Resources) -> Self::Item<'a> {
-        todo!()
+    fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r> {
+        (RQ1::query_mut(resources),)
     }
 }
 
 macro_rules! impl_resource_query {
     ($($param: ident),*) => {
         impl<$($param: ResourceQuery),*> ResourceQuery for ($($param,)*) {
-            type Item<'a> =  ($($param::Item<'a>,)*);
+            type Item<'r> =  ($($param::Item<'r>,)*);
 
-            fn get_resource<'a>(resources: &'a Resources) -> Self::Item<'a> {
-                ($($param::get_resource(resources),)*)
+            fn query<'r>(resources: &'r Resources) -> Self::Item<'r> {
+                ($($param::query(resources),)*)
             }
 
-            fn get_resource_mut<'a>(resources: &'a mut Resources) -> Self::Item<'a> {
-                unsafe {
-                    ($($param::unsafe_get_mut(resources),)*)
-                }
-            }
-            unsafe fn unsafe_get_mut<'a>(resources: &'a Resources) -> Self::Item<'a> {
-                todo!()
+            fn query_mut<'r>(resources: &'r mut Resources) -> Self::Item<'r> {
+                ($($param::query(resources),)*)
             }
         }
     };

@@ -3,10 +3,19 @@ use std::{
     collections::{btree_map, BTreeMap},
 };
 
-use crate::{
-    coords::{Quadkey, WorldTileCoords},
-    ecs::{component::TileComponent, world::Tile},
-};
+use downcast_rs::{impl_downcast, Downcast};
+
+use crate::coords::{Quadkey, WorldTileCoords};
+
+#[derive(Copy, Clone, Debug)]
+pub struct Tile {
+    pub coords: WorldTileCoords,
+}
+
+/// A component is data associated with an [`Entity`](crate::ecs::entity::Entity). Each entity can have
+/// multiple different types of components, but only one of them per type.
+pub trait TileComponent: Downcast + 'static {}
+impl_downcast!(TileComponent);
 
 #[derive(Default)]
 pub struct Tiles {
@@ -15,34 +24,15 @@ pub struct Tiles {
 }
 
 impl Tiles {
-    pub fn query_component<'t, Q: ComponentQuery>(
-        &'t self,
-        coords: WorldTileCoords,
-    ) -> Option<Q::Item<'t>> {
-        Some(Q::get_component(&self, Tile { coords }))
+    pub fn query<'t, Q: ComponentQuery>(&'t self, coords: WorldTileCoords) -> Option<Q::Item<'t>> {
+        Some(Q::query(&self, Tile { coords }))
     }
 
-    pub fn query_component_mut<'t, Q: ComponentQuery>(
+    pub fn query_mut<'t, Q: ComponentQueryMut>(
         &'t mut self,
         coords: WorldTileCoords,
-    ) -> Option<Q::Item<'t>> {
-        Some(Q::get_component_mut(self, Tile { coords }))
-    }
-
-    // FIXME tcs
-    unsafe fn unsafe_get_mut<T: TileComponent>(&self, coords: WorldTileCoords) -> &mut T {
-        let key = coords.build_quad_key().unwrap(); // FIXME tcs: Unwrap
-        let components = self.components.get(&key).unwrap();
-        components
-            .iter()
-            .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
-            .and_then(|component| {
-                (component.as_ref() as *const dyn TileComponent as *mut dyn TileComponent)
-                    .as_mut()
-                    .unwrap() // FIXME tcs: Unwrap
-                    .downcast_mut()
-            })
-            .unwrap() // FIXME tcs: Unwrap
+    ) -> Option<Q::ItemMut<'t>> {
+        Some(Q::query_mut(self, Tile { coords }))
     }
 
     pub fn exists(&self, coords: WorldTileCoords) -> bool {
@@ -100,20 +90,18 @@ impl<'w> TileSpawnResult<'w> {
     }
 }
 
+// ComponentQuery
+
 pub trait ComponentQuery {
-    type Item<'a>;
+    type Item<'t>;
 
-    fn get_component<'t>(tiles: &'t Tiles, tile: Tile) -> Self::Item<'t>;
-    fn get_component_mut<'t>(tiles: &'t mut Tiles, tile: Tile) -> Self::Item<'t>;
-
-    // FIXME tcs: Introduce a cleaner approach!
-    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a>;
+    fn query<'t>(tiles: &'t Tiles, tile: Tile) -> Self::Item<'t>;
 }
 
-impl<'t, T: TileComponent> ComponentQuery for &'t T {
-    type Item<'a> = &'a T;
+impl<'a, T: TileComponent> ComponentQuery for &'a T {
+    type Item<'t> = &'t T;
 
-    fn get_component<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
+    fn query<'t>(tiles: &'t Tiles, tile: Tile) -> Self::Item<'t> {
         let components = tiles
             .components
             .get(&tile.coords.build_quad_key().unwrap()) // FIXME tcs: Unwrap
@@ -124,24 +112,27 @@ impl<'t, T: TileComponent> ComponentQuery for &'t T {
             .and_then(|component| component.as_ref().downcast_ref())
             .unwrap() // FIXME tcs: Unwrap
     }
+}
 
-    fn get_component_mut<'a>(tiles: &'a mut Tiles, tile: Tile) -> Self::Item<'a> {
-        Self::get_component(tiles, tile)
-    }
+// ComponentQueryMut
 
-    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
-        todo!()
+pub trait ComponentQueryMut {
+    type ItemMut<'t>;
+    fn query_mut<'t>(tiles: &'t mut Tiles, tile: Tile) -> Self::ItemMut<'t>;
+}
+
+impl<'a, T: TileComponent> ComponentQueryMut for &'a T {
+    type ItemMut<'t> = &'t T;
+
+    fn query_mut<'t>(tiles: &'t mut Tiles, tile: Tile) -> Self::ItemMut<'t> {
+        <&T as ComponentQuery>::query(tiles, tile)
     }
 }
 
-impl<'t, T: TileComponent> ComponentQuery for &'t mut T {
-    type Item<'a> = &'a mut T;
+impl<'a, T: TileComponent> ComponentQueryMut for &'a mut T {
+    type ItemMut<'t> = &'t mut T;
 
-    fn get_component<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
-        panic!("provide an inmutable World to query inmutable")
-    }
-
-    fn get_component_mut<'a>(tiles: &'a mut Tiles, tile: Tile) -> Self::Item<'a> {
+    fn query_mut<'t>(tiles: &'t mut Tiles, tile: Tile) -> Self::ItemMut<'t> {
         let components = tiles
             .components
             .get_mut(&tile.coords.build_quad_key().unwrap()) // FIXME tcs: Unwrap
@@ -153,48 +144,51 @@ impl<'t, T: TileComponent> ComponentQuery for &'t mut T {
             .and_then(|component| component.as_mut().downcast_mut())
             .unwrap() // FIXME tcs: Unwrap
     }
+}
 
-    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
-        tiles.unsafe_get_mut::<T>(tile.coords)
+// ComponentQueryUnsafe
+
+pub trait ComponentQueryUnsafe: ComponentQueryMut {
+    unsafe fn query_unsafe<'t>(tiles: &'t Tiles, tile: Tile) -> Self::ItemMut<'t>;
+}
+
+impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a T {
+    unsafe fn query_unsafe<'t>(tiles: &'t Tiles, tile: Tile) -> Self::ItemMut<'t> {
+        <&T as ComponentQuery>::query(tiles, tile)
     }
 }
 
-impl<CQ1: ComponentQuery> ComponentQuery for (CQ1,) {
-    type Item<'a> = (CQ1::Item<'a>,);
-
-    fn get_component<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
-        (CQ1::get_component(tiles, tile),)
-    }
-
-    fn get_component_mut<'a>(tiles: &'a mut Tiles, tile: Tile) -> Self::Item<'a> {
-        (CQ1::get_component_mut(tiles, tile),)
-    }
-
-    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
-        todo!()
+impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
+    unsafe fn query_unsafe<'t>(tiles: &'t Tiles, tile: Tile) -> Self::ItemMut<'t> {
+        &mut *(<&T as ComponentQuery>::query(tiles, tile) as *const T as *mut T)
     }
 }
+
+// Lift to tuples
 
 impl<CQ1: ComponentQuery, CQ2: ComponentQuery> ComponentQuery for (CQ1, CQ2) {
-    type Item<'a> = (CQ1::Item<'a>, CQ2::Item<'a>);
+    type Item<'t> = (CQ1::Item<'t>, CQ2::Item<'t>);
 
-    fn get_component<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
-        (
-            CQ1::get_component(tiles, tile),
-            CQ2::get_component(tiles, tile),
-        )
+    fn query<'t>(tiles: &'t Tiles, tile: Tile) -> Self::Item<'t> {
+        (CQ1::query(tiles, tile), CQ2::query(tiles, tile))
     }
+}
 
-    fn get_component_mut<'a>(tiles: &'a mut Tiles, tile: Tile) -> Self::Item<'a> {
+impl<
+        CQ1: ComponentQueryMut + ComponentQueryUnsafe + 'static,
+        CQ2: ComponentQueryMut + ComponentQueryUnsafe + 'static,
+    > ComponentQueryMut for (CQ1, CQ2)
+{
+    type ItemMut<'t> = (CQ1::ItemMut<'t>, CQ2::ItemMut<'t>);
+
+    fn query_mut<'t>(tiles: &'t mut Tiles, tile: Tile) -> Self::ItemMut<'t> {
+        let id = TypeId::of::<Self::ItemMut<'t>>();
+
         unsafe {
             (
-                CQ1::unsafe_get_mut(tiles, tile),
-                CQ2::unsafe_get_mut(tiles, tile),
+                <CQ1 as ComponentQueryUnsafe>::query_unsafe(tiles, tile),
+                <CQ2 as ComponentQueryUnsafe>::query_unsafe(tiles, tile),
             )
         }
-    }
-
-    unsafe fn unsafe_get_mut<'a>(tiles: &'a Tiles, tile: Tile) -> Self::Item<'a> {
-        todo!()
     }
 }

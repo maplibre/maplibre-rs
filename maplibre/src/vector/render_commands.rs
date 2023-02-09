@@ -120,7 +120,7 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
         let shape = &item.source_shape;
         let vector_layers = world
             .tiles
-            .query_component::<&VectorLayersIndicesComponent>(item.tile.coords)
+            .query::<&VectorLayersIndicesComponent>(item.tile.coords)
             .unwrap(); // FIXME tcs: Unwrap
 
         let entry = &vector_layers

@@ -59,7 +59,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                     log::warn!("Vector tile at {} finished loading", coords);
 
                     tiles
-                        .query_component_mut::<&mut VectorLayersDataComponent>(coords)
+                        .query_mut::<&mut VectorLayersDataComponent>(coords)
                         .unwrap() // FIXME tcs: Unwrap
                         .done = true;
                 }
@@ -73,7 +73,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                     );
 
                     tiles
-                        .query_component_mut::<&mut VectorLayersDataComponent>(layer.coords)
+                        .query_mut::<&mut VectorLayersDataComponent>(layer.coords)
                         .unwrap() // FIXME tcs: Unwrap
                         .layers
                         .push(VectorLayerData::Unavailable(layer));
@@ -98,7 +98,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                     );
 
                     tiles
-                        .query_component_mut::<&mut VectorLayersDataComponent>(layer.coords)
+                        .query_mut::<&mut VectorLayersDataComponent>(layer.coords)
                         .unwrap() // FIXME tcs: Unwrap
                         .layers
                         .push(VectorLayerData::Available(layer));

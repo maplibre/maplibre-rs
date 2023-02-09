@@ -54,7 +54,7 @@ fn upload_raster_layer(
         }
 
         let Some(raster_layers) =
-            tiles.query_component::<&RasterLayersDataComponent>(coords) else { continue; };
+            tiles.query::<&RasterLayersDataComponent>(coords) else { continue; };
 
         for style_layer in &style.layers {
             let source_layer = style_layer.source_layer.as_ref().unwrap(); // FIXME tcs: Remove unwrap

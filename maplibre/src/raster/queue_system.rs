@@ -4,7 +4,7 @@ use std::ops::Deref;
 
 use crate::{
     context::MapContext,
-    ecs::world::Tile,
+    ecs::tiles::Tile,
     raster::render_commands::DrawRasterTiles,
     render::{
         eventually::{Eventually, Eventually::Initialized},

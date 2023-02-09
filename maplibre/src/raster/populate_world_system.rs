@@ -58,9 +58,10 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
                         &layer.source_layer,
                         &layer.coords
                     );
-                    tiles
-                        .query_component_mut::<&mut RasterLayersDataComponent>(layer.coords)
-                        .unwrap() // FIXME tcs: Unwrap
+                    let x = tiles
+                        .query_mut::<&mut RasterLayersDataComponent>(layer.coords)
+                        .unwrap();
+                    x // FIXME tcs: Unwrap
                         .layers
                         .push(layer);
                 }
@@ -76,7 +77,7 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
 
                     tiles
                         // FIXME tcs: Change to RasterLayersDataComponent
-                        .query_component_mut::<&mut VectorLayersDataComponent>(layer.coords)
+                        .query_mut::<&mut VectorLayersDataComponent>(layer.coords)
                         .unwrap() // FIXME tcs: Unwrap
                         .layers
                         .push(VectorLayerData::Unavailable(layer));

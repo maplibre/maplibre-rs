@@ -12,7 +12,7 @@ use std::{
 
 use crate::{
     coords::WorldTileCoords,
-    ecs::{component::TileComponent, system::SystemContainer, world::World},
+    ecs::{system::SystemContainer, tiles::TileComponent, world::World},
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
@@ -22,7 +22,7 @@ use crate::{
         resource::{BufferPool, IndexEntry},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
         stages::RenderStageLabel,
-        tile_view_pattern::{TileShape, TileViewPattern},
+        tile_view_pattern::TileViewPattern,
         ShaderVertex,
     },
     schedule::Schedule,

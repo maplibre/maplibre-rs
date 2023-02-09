@@ -1,28 +1,13 @@
-use std::{
-    any::{Any, TypeId},
-    collections::{btree_map, BTreeMap},
-    default::Default,
-    marker::PhantomData,
-    ops::{Deref, DerefMut},
-};
+use std::default::Default;
 
 use crate::{
-    coords::{LatLon, Quadkey, WorldCoords, WorldTileCoords, Zoom},
-    ecs::{
-        component::TileComponent,
-        resources::{Resource, Resources},
-        tiles::Tiles,
-    },
+    coords::{LatLon, WorldCoords, Zoom},
+    ecs::{resources::Resources, tiles::Tiles},
     io::geometry_index::GeometryIndex,
     render::render_phase::RenderCommand,
     view_state::ViewState,
     window::WindowSize,
 };
-
-#[derive(Copy, Clone, Debug)]
-pub struct Tile {
-    pub coords: WorldTileCoords,
-}
 
 pub struct World {
     pub resources: Resources,

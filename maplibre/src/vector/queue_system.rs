@@ -1,14 +1,10 @@
 //! Queues [PhaseItems](crate::render::render_phase::PhaseItem) for rendering.
-
-use log::info;
-
 use crate::{
     context::MapContext,
-    ecs::world::Tile,
+    ecs::tiles::Tile,
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{DrawState, LayerItem, RenderPhase, TileMaskItem},
-        tile_view_pattern::TileViewPattern,
     },
     vector::{
         render_commands::{DrawMasks, DrawVectorTiles},
@@ -59,7 +55,13 @@ pub fn queue_system(
                             coords: layer_entry.coords,
                         },
                         source_shape: source_shape.clone(),
-                    })
+                    });
+
+                    let Some(mut vector_layers_indices) =
+                        world.tiles.query_mut::<&mut VectorLayersIndicesComponent>(layer_entry.coords) else { return; };
+
+                    // FIXME tcs
+                    vector_layers_indices.layers.push(layer_entry.clone());
                 }
             };
         });

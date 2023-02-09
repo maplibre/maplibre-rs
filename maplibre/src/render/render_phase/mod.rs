@@ -4,7 +4,7 @@ mod draw;
 
 pub use draw::*;
 
-use crate::{ecs::world::Tile, render::tile_view_pattern::TileShape};
+use crate::{ecs::tiles::Tile, render::tile_view_pattern::TileShape};
 
 /// A resource to collect and sort draw requests for specific [`PhaseItems`](PhaseItem).
 pub struct RenderPhase<I: PhaseItem> {

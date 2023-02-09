@@ -5,7 +5,6 @@ mod resource_system;
 mod upload_system;
 
 use std::{
-    alloc::System,
     ops::{Deref, DerefMut},
     rc::Rc,
 };
@@ -14,26 +13,15 @@ use image::RgbaImage;
 
 use crate::{
     coords::WorldTileCoords,
-    ecs::{
-        component::TileComponent,
-        system::{stage::SystemStage, SystemContainer},
-        world::World,
-    },
+    ecs::{system::SystemContainer, tiles::TileComponent, world::World},
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
     raster::{
         populate_world_system::PopulateWorldSystem, queue_system::queue_system,
-        render_commands::DrawRasterTiles, resource_system::resource_system,
-        upload_system::upload_system,
+        resource_system::resource_system, upload_system::upload_system,
     },
-    render::{
-        eventually::Eventually,
-        render_phase::{LayerItem, RenderPhase},
-        resource::RasterResources,
-        stages::RenderStageLabel,
-        tile_view_pattern::TileShape,
-    },
+    render::{eventually::Eventually, resource::RasterResources, stages::RenderStageLabel},
     schedule::Schedule,
 };
 
