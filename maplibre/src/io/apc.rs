@@ -23,10 +23,6 @@ use crate::{
         pipeline::{PipelineError, PipelineProcessor},
         scheduler::Scheduler,
         source_client::{HttpClient, HttpSourceClient, SourceClient},
-        transferables::{
-            DefaultTransferables, LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable,
-            TileTessellated, Transferables,
-        },
     },
     render::ShaderVertex,
     style::Style,
@@ -147,7 +143,6 @@ pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFutur
 // TODO: Rename to AsyncProcedureCaller?
 pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
     type Context: Context<HC> + Send;
-    type Transferables: Transferables;
 
     type ReceiveIterator<F: FnMut(&Message) -> bool>: Iterator<Item = Message>;
 
@@ -198,7 +193,6 @@ impl<HC: HttpClient, S: Scheduler> SchedulerAsyncProcedureCall<HC, S> {
 
 impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProcedureCall<HC, S> {
     type Context = SchedulerContext<HC>;
-    type Transferables = DefaultTransferables;
     type ReceiveIterator<F: FnMut(&Message) -> bool> = IntoIter<Message>;
 
     fn receive<F: FnMut(&Message) -> bool>(&self, mut filter: F) -> Self::ReceiveIterator<F> {
@@ -242,6 +236,8 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
 
         self.scheduler
             .schedule(move || async move {
+                log::info!("Processing on thread: {:?}", std::thread::current().name());
+
                 procedure(
                     input,
                     SchedulerContext {
@@ -253,85 +249,5 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
                 .unwrap();
             })
             .map_err(|_e| CallError::Schedule)
-    }
-}
-
-pub struct HeadedPipelineProcessor<T: Transferables, HC: HttpClient, C: Context<HC>> {
-    context: C,
-    phantom_t: PhantomData<T>,
-    phantom_hc: PhantomData<HC>,
-}
-
-impl<T: Transferables, HC: HttpClient, C: Context<HC>> HeadedPipelineProcessor<T, HC, C> {
-    pub fn new(context: C) -> Self {
-        Self {
-            context,
-            phantom_t: Default::default(),
-            phantom_hc: Default::default(),
-        }
-    }
-}
-
-impl<T: Transferables, HC: HttpClient, C: Context<HC>> PipelineProcessor
-    for HeadedPipelineProcessor<T, HC, C>
-{
-    fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), PipelineError> {
-        self.context
-            .send(T::TileTessellated::build_from(*coords))
-            .map_err(|e| PipelineError::Processing(Box::new(e)))
-    }
-
-    fn layer_unavailable(
-        &mut self,
-        coords: &WorldTileCoords,
-        layer_name: &str,
-    ) -> Result<(), PipelineError> {
-        self.context
-            .send(T::LayerUnavailable::build_from(
-                *coords,
-                layer_name.to_owned(),
-            ))
-            .map_err(|e| PipelineError::Processing(Box::new(e)))
-    }
-
-    fn layer_tesselation_finished(
-        &mut self,
-        coords: &WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
-        layer_data: tile::Layer,
-    ) -> Result<(), PipelineError> {
-        self.context
-            .send(T::LayerTessellated::build_from(
-                *coords,
-                buffer,
-                feature_indices,
-                layer_data,
-            ))
-            .map_err(|e| PipelineError::Processing(Box::new(e)))
-    }
-
-    fn layer_raster_finished(
-        &mut self,
-        coords: &WorldTileCoords,
-        layer_name: String,
-        image_data: RgbaImage,
-    ) -> Result<(), PipelineError> {
-        self.context
-            .send(T::LayerRaster::build_from(*coords, layer_name, image_data))
-            .map_err(|e| PipelineError::Processing(Box::new(e)))
-    }
-
-    fn layer_indexing_finished(
-        &mut self,
-        coords: &WorldTileCoords,
-        geometries: Vec<IndexedGeometry<f64>>,
-    ) -> Result<(), PipelineError> {
-        self.context
-            .send(T::LayerIndexed::build_from(
-                *coords,
-                TileIndex::Linear { list: geometries },
-            ))
-            .map_err(|e| PipelineError::Processing(Box::new(e)))
     }
 }

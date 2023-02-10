@@ -90,11 +90,12 @@ impl PipelineContext {
 pub trait Processable {
     type Input;
     type Output;
+    type Context;
 
     fn process(
         &self,
         input: Self::Input,
-        context: &mut PipelineContext,
+        context: &mut Self::Context,
     ) -> Result<Self::Output, PipelineError>;
 }
 
@@ -119,18 +120,19 @@ where
     }
 }
 
-impl<P, N> Processable for DataPipeline<P, N>
+impl<P, N, C> Processable for DataPipeline<P, N>
 where
-    P: Processable,
-    N: Processable<Input = P::Output>,
+    P: Processable<Context = C>,
+    N: Processable<Input = P::Output, Context = C>,
 {
     type Input = P::Input;
     type Output = N::Output;
+    type Context = P::Context;
 
     fn process(
         &self,
         input: Self::Input,
-        context: &mut PipelineContext,
+        context: &mut Self::Context,
     ) -> Result<Self::Output, PipelineError> {
         let output = self.step.process(input, context)?;
         self.next_step.process(output, context)
@@ -138,52 +140,57 @@ where
 }
 
 /// Marks the end of a [`DataPipeline`]
-pub struct PipelineEnd<I> {
-    phantom: PhantomData<I>,
+pub struct PipelineEnd<I, C> {
+    phantom_i: PhantomData<I>,
+    phantom_c: PhantomData<C>,
 }
 
-impl<I> Default for PipelineEnd<I> {
+impl<I, C> Default for PipelineEnd<I, C> {
     fn default() -> Self {
         Self {
-            phantom: PhantomData::default(),
+            phantom_i: Default::default(),
+            phantom_c: Default::default(),
         }
     }
 }
 
-impl<I> Processable for PipelineEnd<I> {
+impl<I, C> Processable for PipelineEnd<I, C> {
     type Input = I;
     type Output = I;
+    type Context = C;
 
     fn process(
         &self,
         input: Self::Input,
-        _context: &mut PipelineContext,
+        _context: &mut Self::Context,
     ) -> Result<Self::Output, PipelineError> {
         Ok(input)
     }
 }
 
-impl<I, O> Processable for &fn(input: I, context: &mut PipelineContext) -> O {
+impl<I, O, C> Processable for &fn(input: I, context: &mut C) -> O {
     type Input = I;
     type Output = O;
+    type Context = C;
 
     fn process(
         &self,
         input: Self::Input,
-        context: &mut PipelineContext,
+        context: &mut Self::Context,
     ) -> Result<Self::Output, PipelineError> {
         Ok((self)(input, context))
     }
 }
 
-impl<I, O> Processable for fn(input: I, context: &mut PipelineContext) -> O {
+impl<I, O, C> Processable for fn(input: I, context: &mut C) -> O {
     type Input = I;
     type Output = O;
+    type Context = C;
 
     fn process(
         &self,
         input: Self::Input,
-        context: &mut PipelineContext,
+        context: &mut Self::Context,
     ) -> Result<Self::Output, PipelineError> {
         Ok((self)(input, context))
     }
@@ -191,37 +198,42 @@ impl<I, O> Processable for fn(input: I, context: &mut PipelineContext) -> O {
 
 // TODO: Implementing Processable directly on Fn is not possible for some strange reason:
 //       https://github.com/rust-lang/rust/issues/25041
-pub struct ClosureProcessable<F, I, O>
+pub struct ClosureProcessable<F, I, O, C>
 where
-    F: Fn(I, &mut PipelineContext) -> O,
+    F: Fn(I, &mut C) -> O,
 {
     func: F,
     phantom_i: PhantomData<I>,
+    phantom_o: PhantomData<O>,
+    phantom_c: PhantomData<C>,
 }
 
-impl<F, I, O> From<F> for ClosureProcessable<F, I, O>
+impl<F, I, O, C> From<F> for ClosureProcessable<F, I, O, C>
 where
-    F: Fn(I, &mut PipelineContext) -> O,
+    F: Fn(I, &mut C) -> O,
 {
     fn from(func: F) -> Self {
         ClosureProcessable {
             func,
             phantom_i: PhantomData::default(),
+            phantom_o: Default::default(),
+            phantom_c: Default::default(),
         }
     }
 }
 
-impl<F, I, O> Processable for ClosureProcessable<F, I, O>
+impl<F, I, O, C> Processable for ClosureProcessable<F, I, O, C>
 where
-    F: Fn(I, &mut PipelineContext) -> O,
+    F: Fn(I, &mut C) -> O,
 {
     type Input = I;
     type Output = O;
+    type Context = C;
 
     fn process(
         &self,
         input: Self::Input,
-        context: &mut PipelineContext,
+        context: &mut Self::Context,
     ) -> Result<Self::Output, PipelineError> {
         Ok((self.func)(input, context))
     }

@@ -11,7 +11,8 @@ use crate::{
     plugin::Plugin,
     raster::{
         populate_world_system::PopulateWorldSystem, queue_system::queue_system,
-        resource_system::resource_system, upload_system::upload_system,
+        request_system::RequestSystem, resource_system::resource_system,
+        transferables::DefaultTransferables, upload_system::upload_system,
     },
     render::{eventually::Eventually, stages::RenderStageLabel},
     schedule::Schedule,
@@ -19,9 +20,12 @@ use crate::{
 
 mod populate_world_system;
 mod queue_system;
+mod raster_pipeline;
 mod render_commands;
+mod request_system;
 mod resource;
 mod resource_system;
+mod transferables;
 mod upload_system;
 
 // FIXME tcs: avoid making this public
@@ -37,7 +41,11 @@ impl<E: Environment> Plugin<E> for RasterPlugin {
 
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
-            SystemContainer::new(PopulateWorldSystem::new(&kernel)),
+            SystemContainer::new(RequestSystem::<E, DefaultTransferables>::new(&kernel)),
+        );
+        schedule.add_system_to_stage(
+            &RenderStageLabel::Extract,
+            SystemContainer::new(PopulateWorldSystem::<E, DefaultTransferables>::new(&kernel)),
         );
 
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);

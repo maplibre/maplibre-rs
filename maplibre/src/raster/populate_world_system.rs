@@ -1,31 +1,33 @@
-use std::{borrow::Cow, rc::Rc};
+use std::{borrow::Cow, marker::PhantomData, rc::Rc};
 
 use crate::{
     context::MapContext,
     ecs::system::System,
     environment::Environment,
-    io::{
-        apc::AsyncProcedureCall,
-        transferables::{LayerRaster, Transferables},
-    },
+    io::apc::AsyncProcedureCall,
     kernel::Kernel,
     match_downcast,
-    raster::RasterLayersDataComponent,
+    raster::{
+        transferables::{LayerRaster, Transferables},
+        RasterLayersDataComponent,
+    },
 };
 
-pub struct PopulateWorldSystem<E: Environment> {
+pub struct PopulateWorldSystem<E: Environment, T> {
     kernel: Rc<Kernel<E>>,
+    phantom_t: PhantomData<T>,
 }
 
-impl<E: Environment> PopulateWorldSystem<E> {
+impl<E: Environment, T> PopulateWorldSystem<E, T> {
     pub fn new(kernel: &Rc<Kernel<E>>) -> Self {
         Self {
             kernel: kernel.clone(),
+            phantom_t: Default::default(),
         }
     }
 }
 
-impl<E: Environment> System for PopulateWorldSystem<E> {
+impl<E: Environment, T: Transferables> System for PopulateWorldSystem<E, T> {
     fn name(&self) -> Cow<'static, str> {
         "populate_world_system".into()
     }
@@ -36,15 +38,12 @@ impl<E: Environment> System for PopulateWorldSystem<E> {
             world, renderer, ..
         }: &mut MapContext,
     ) {
-        type Type<E: Environment> =
-            <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Transferables;
-
         for message in self.kernel.apc().receive(|message| {
             let transferable = &message.transferable;
-            transferable.is::<<Type<E> as Transferables>::LayerRaster>()
+            transferable.is::<<T as Transferables>::LayerRaster>()
         }) {
             match_downcast!(message.transferable, {
-                message: <Type<E> as Transferables>::LayerRaster => {
+                message: <T as Transferables>::LayerRaster => {
                     let Some(component) = world
                         .tiles
                         .query_mut::<&mut RasterLayersDataComponent>(message.coords()) else { continue; };

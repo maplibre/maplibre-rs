@@ -34,6 +34,11 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
         source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
     };
 
+    log::info!(
+        "Processing on web worker: {:?}",
+        std::thread::current().name()
+    );
+
     procedure(input, context).await?;
 
     Ok(())

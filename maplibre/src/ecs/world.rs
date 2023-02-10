@@ -12,7 +12,7 @@ pub struct World {
     pub resources: Resources,
     pub tiles: Tiles,
 
-    pub view_state: ViewState, // FIXME: create resource
+    pub view_state: ViewState, // FIXME tcs: create resource
     pub geometry_index: GeometryIndex,
 }
 

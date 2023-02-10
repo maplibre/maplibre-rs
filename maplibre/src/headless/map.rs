@@ -8,9 +8,9 @@ use crate::{
     },
     io::{
         pipeline::{PipelineContext, PipelineError, PipelineProcessor, Processable},
+        raster_pipeline::{build_vector_tile_pipeline, VectorTileRequest},
         source_client::SourceFetchError,
         source_type::{SourceType, TessellateSource},
-        tile_pipelines::{build_vector_tile_pipeline, VectorTileRequest},
         RawLayer,
     },
     kernel::Kernel,

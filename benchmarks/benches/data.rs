@@ -6,7 +6,7 @@ use maplibre::{
     coords::{TileCoords, ZoomLevel},
     io::{
         pipeline::{PipelineContext, PipelineProcessor, Processable},
-        tile_pipelines::{ParseTile, TessellateLayer},
+        raster_pipeline::{ParseTile, TessellateLayer},
         TileRequest,
     },
     style::source::TileAddressingScheme,

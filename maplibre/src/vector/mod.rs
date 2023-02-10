@@ -15,14 +15,15 @@ use crate::{
         ShaderVertex,
     },
     schedule::Schedule,
-    systems::request_system::RequestSystem,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
         populate_world_system::PopulateWorldSystem,
         queue_system::queue_system,
+        request_system::RequestSystem,
         resource::{BufferPool, IndexEntry},
         resource_system::resource_system,
         tile_view_pattern_system::tile_view_pattern_system,
+        transferables::DefaultTransferables,
         upload_system::upload_system,
     },
 };
@@ -30,10 +31,13 @@ use crate::{
 mod populate_world_system;
 mod queue_system;
 mod render_commands;
+mod request_system;
 mod resource;
 mod resource_system;
 mod tile_view_pattern_system;
+mod transferables;
 mod upload_system;
+mod vector_pipeline;
 
 pub struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {
@@ -100,14 +104,13 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
         // FIXME tcs: Move to rendering core
         resources.insert(RenderPhase::<LayerItem>::default());
 
-        // FIXME tcs: Move to rendering core
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
-            SystemContainer::new(RequestSystem::new(&kernel)),
+            SystemContainer::new(RequestSystem::<E, DefaultTransferables>::new(&kernel)),
         );
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
-            SystemContainer::new(PopulateWorldSystem::new(&kernel)),
+            SystemContainer::new(PopulateWorldSystem::<E, DefaultTransferables>::new(&kernel)),
         );
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, tile_view_pattern_system);

@@ -49,8 +49,6 @@ pub mod event_loop;
 pub mod kernel;
 pub mod map;
 pub mod plugin;
-
-pub mod systems;
 pub mod view_state;
 
 // Plugins
