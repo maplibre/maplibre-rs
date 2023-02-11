@@ -85,7 +85,7 @@ impl Default for StyleLayer {
         Self {
             index: 0,
             id: "id".to_string(),
-            typ: None,
+            typ: Some("fill".to_string()),
             maxzoom: None,
             minzoom: None,
             metadata: None,
