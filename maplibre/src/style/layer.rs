@@ -66,12 +66,14 @@ pub struct StyleLayer {
     #[serde(skip)]
     pub index: u32, // FIXME: How is this initialized?
     pub id: String,
+    #[serde(rename = "type")]
+    pub typ: Option<String>,
     // TODO filter
     // TODO layout
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maxzoom: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub minzoom: Option<u8>,
+    pub minzoom: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<HashMap<String, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -88,6 +90,7 @@ impl Default for StyleLayer {
         Self {
             index: 0,
             id: "id".to_string(),
+            typ: Some("fill".to_string()),
             maxzoom: None,
             minzoom: None,
             metadata: None,

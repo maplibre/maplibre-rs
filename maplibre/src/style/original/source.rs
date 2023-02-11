@@ -1,7 +1,7 @@
 //! Vector tile data utilities.
 
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+
 /// String url to a tile.
 pub type TileUrl = String;
 
@@ -45,14 +45,8 @@ pub struct VectorSource {
     /// Array of URLs which can contain place holders like {x}, {y}, {z}.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tiles: Option<TileUrl>,
-
-    // #[serde(skip_serializing_if = "Option::is_none", rename = "testtype")]
-    // pub type: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
+    // url: Option<TileJSONUrl>,
     // TODO volatile
-    #[serde(flatten)]
-    pub extra: Map<String, Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -62,6 +56,4 @@ pub enum Source {
     Vector(VectorSource),
     #[serde(rename = "raster")]
     Raster(VectorSource), // FIXME: Does it make sense that a raster have a VectorSource?
-    #[serde(rename = "raster-dem")]
-    RasterDem(VectorSource), // FIXME
 }
