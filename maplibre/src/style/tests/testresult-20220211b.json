@@ -1,0 +1,1571 @@
+
+running 1 test
+test style::style::tests::load_sample_data_two ... ok
+
+successes:
+
+---- style::style::tests::load_sample_data_two stdout ----
+Style {
+    version: 8,
+    name: "Ice Cream",
+    metadata: {
+        "mapbox:trackposition": Bool(false),
+        "mapbox:groups": Object {
+            "003e472752e5683c3f8ef9dee45b54a0": Object {
+                "collapsed": Bool(true),
+                "name": String("Misc"),
+            },
+            "0cb8c63458cbe21bbe1ad66543f73a04": Object {
+                "collapsed": Bool(true),
+                "name": String("Roads"),
+            },
+            "0e4fe52bb6e07167e428ec66ad643fd7": Object {
+                "collapsed": Bool(true),
+                "name": String("Place labels"),
+            },
+            "1cfc175b0e7532a47eec44b8ede849d8": Object {
+                "collapsed": Bool(true),
+                "name": String("Landcover"),
+            },
+            "4a585425cb0cc2af93b4cdedda86461d": Object {
+                "collapsed": Bool(true),
+                "name": String("Borders"),
+            },
+            "659790aba31107609c41007408bfdeeb": Object {
+                "collapsed": Bool(true),
+                "name": String("Road labels"),
+            },
+            "7d43494b5025022bf83d5e73f771a8c5": Object {
+                "collapsed": Bool(true),
+                "name": String("Low zoom labels"),
+            },
+            "87eb9fc4e65e33c3909d5992c53c8c22": Object {
+                "collapsed": Bool(true),
+                "name": String("POI labels"),
+            },
+            "a636a5194689e7c1dede11bf3cd8dcac": Object {
+                "collapsed": Bool(true),
+                "name": String("Landuse"),
+            },
+            "d84bd578f1389e89645c76070bd1c761": Object {
+                "collapsed": Bool(true),
+                "name": String("Marine labels"),
+            },
+        },
+        "mapbox:autocomposite": Bool(true),
+    },
+    center: Some(
+        [
+            -75.91113580567469,
+            42.09726652147151,
+        ],
+    ),
+    zoom: Some(
+        14.135947655906548,
+    ),
+    bearing: Some(
+        -0.011496756350993564,
+    ),
+    pitch: Some(
+        0.0,
+    ),
+    sources: {
+        "composite": Vector(
+            VectorSource {
+                attribution: None,
+                bounds: None,
+                maxzoom: None,
+                minzoom: None,
+                scheme: None,
+                tiles: None,
+                url: Some(
+                    "mapbox://mapbox.mapbox-terrain-v2,mapbox.mapbox-streets-v7",
+                ),
+                extra: {},
+            },
+        ),
+    },
+    sprite: Some(
+        "mapbox://sprites/mapbox/cj7t3i5yj0unt2rmt3y4b5e32",
+    ),
+    glyphs: Some(
+        "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+    ),
+    projection: None,
+    layers: [
+        StyleLayer {
+            index: 0,
+            id: "background",
+            typ: Some(
+                "background",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: None,
+            paint: None,
+            source: None,
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "landcover_foliage",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: Some(
+                14,
+            ),
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "1cfc175b0e7532a47eec44b8ede849d8",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "national_park",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "1cfc175b0e7532a47eec44b8ede849d8",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "landcover_snow",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "1cfc175b0e7532a47eec44b8ede849d8",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "industrial",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "a636a5194689e7c1dede11bf3cd8dcac",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "schools",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "a636a5194689e7c1dede11bf3cd8dcac",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "hospitals",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "a636a5194689e7c1dede11bf3cd8dcac",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "cemeteries",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                10.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "a636a5194689e7c1dede11bf3cd8dcac",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "parks",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "a636a5194689e7c1dede11bf3cd8dcac",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "pitch",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "a636a5194689e7c1dede11bf3cd8dcac",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "sand",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "a636a5194689e7c1dede11bf3cd8dcac",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "water",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "a636a5194689e7c1dede11bf3cd8dcac",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "waterway-river-canal",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                8.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "003e472752e5683c3f8ef9dee45b54a0",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "barrier_line-land-polygon",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "003e472752e5683c3f8ef9dee45b54a0",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "barrier_line-land-line",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "003e472752e5683c3f8ef9dee45b54a0",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "aeroway-polygon",
+            typ: Some(
+                "fill",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                11.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "003e472752e5683c3f8ef9dee45b54a0",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "aeroway-runway",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                9.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "003e472752e5683c3f8ef9dee45b54a0",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "aeroway-taxiway",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                9.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "003e472752e5683c3f8ef9dee45b54a0",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "ferries",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                11.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "003e472752e5683c3f8ef9dee45b54a0",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-construction",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                14.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-sidewalks",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                16.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-path",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-steps",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-trunk_link",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                11.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-motorway_link",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                10.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-pedestrian",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                12.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-service-link-track",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                14.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-street_limited",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                11.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-street",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                11.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-secondary-tertiary",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-primary",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-trunk",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                5.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-motorway",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-rail",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                13.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-subway",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                13.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0cb8c63458cbe21bbe1ad66543f73a04",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "admin-2-boundaries-bg",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                1.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "4a585425cb0cc2af93b4cdedda86461d",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "admin-3-4-boundaries",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "4a585425cb0cc2af93b4cdedda86461d",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "admin-2-boundaries",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                1.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "4a585425cb0cc2af93b4cdedda86461d",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "admin-2-boundaries-dispute",
+            typ: Some(
+                "line",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                1.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "4a585425cb0cc2af93b4cdedda86461d",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "waterway-label",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                12.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "87eb9fc4e65e33c3909d5992c53c8c22",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "water-label",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                5.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "87eb9fc4e65e33c3909d5992c53c8c22",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "poi-scalerank1",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: None,
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "87eb9fc4e65e33c3909d5992c53c8c22",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "airport-label",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                10.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "87eb9fc4e65e33c3909d5992c53c8c22",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "ferry-label",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                11.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "87eb9fc4e65e33c3909d5992c53c8c22",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-label-small",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                15.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "659790aba31107609c41007408bfdeeb",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-label-medium",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                13.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "659790aba31107609c41007408bfdeeb",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "road-label-large",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: None,
+            minzoom: Some(
+                12.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "659790aba31107609c41007408bfdeeb",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-islets-archipelago-aboriginal",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                16,
+            ),
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-neighbourhood",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                16,
+            ),
+            minzoom: Some(
+                12.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-suburb",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                16,
+            ),
+            minzoom: Some(
+                11.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-hamlet",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                16,
+            ),
+            minzoom: Some(
+                10.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-village",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                15,
+            ),
+            minzoom: Some(
+                11.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-town",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                15,
+            ),
+            minzoom: Some(
+                7.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-islands",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                16,
+            ),
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-city-sm",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                15,
+            ),
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-city-md",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                15,
+            ),
+            minzoom: None,
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "place-city-lg",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                15,
+            ),
+            minzoom: Some(
+                1.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "0e4fe52bb6e07167e428ec66ad643fd7",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "marine-label-sm-ln",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                10,
+            ),
+            minzoom: Some(
+                3.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "d84bd578f1389e89645c76070bd1c761",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "marine-label-sm-pt",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                10,
+            ),
+            minzoom: Some(
+                3.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "d84bd578f1389e89645c76070bd1c761",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "marine-label-md-ln",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                8,
+            ),
+            minzoom: Some(
+                2.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "d84bd578f1389e89645c76070bd1c761",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "marine-label-md-pt",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                8,
+            ),
+            minzoom: Some(
+                2.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "d84bd578f1389e89645c76070bd1c761",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "marine-label-lg-ln",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                4,
+            ),
+            minzoom: Some(
+                1.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "d84bd578f1389e89645c76070bd1c761",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "marine-label-lg-pt",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                4,
+            ),
+            minzoom: Some(
+                1.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "d84bd578f1389e89645c76070bd1c761",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "state-label-sm",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                9,
+            ),
+            minzoom: Some(
+                3.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "7d43494b5025022bf83d5e73f771a8c5",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "state-label-md",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                8,
+            ),
+            minzoom: Some(
+                3.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "7d43494b5025022bf83d5e73f771a8c5",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "state-label-lg",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                7,
+            ),
+            minzoom: Some(
+                3.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "7d43494b5025022bf83d5e73f771a8c5",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "country-label-sm",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                10,
+            ),
+            minzoom: Some(
+                1.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "7d43494b5025022bf83d5e73f771a8c5",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "country-label-md",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                8,
+            ),
+            minzoom: Some(
+                1.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "7d43494b5025022bf83d5e73f771a8c5",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+        StyleLayer {
+            index: 0,
+            id: "country-label-lg",
+            typ: Some(
+                "symbol",
+            ),
+            maxzoom: Some(
+                7,
+            ),
+            minzoom: Some(
+                1.0,
+            ),
+            metadata: Some(
+                {
+                    "mapbox:group": "7d43494b5025022bf83d5e73f771a8c5",
+                },
+            ),
+            paint: None,
+            source: Some(
+                "composite",
+            ),
+            source_layer: None,
+        },
+    ],
+    created: Some(
+        "2017-09-20T13:59:59.764Z",
+    ),
+    modified: Some(
+        "2017-09-26T19:14:05.560Z",
+    ),
+    id: Some(
+        "cj7t3i5yj0unt2rmt3y4b5e32",
+    ),
+    owner: Some(
+        "mapbox",
+    ),
+    visibility: Some(
+        "public",
+    ),
+    protected: Some(
+        false,
+    ),
+    draft: Some(
+        false,
+    ),
+    extra: {
+        "light": Object {
+            "intensity": Number(0.25),
+        },
+    },
+}
+
+
+successes:
+    style::style::tests::load_sample_data_two
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 44 filtered out; finished in 0.00s
+
