@@ -5,16 +5,15 @@ use std::{borrow::Cow, collections::HashSet, marker::PhantomData, rc::Rc};
 use crate::{
     context::MapContext,
     ecs::system::System,
-    environment::Environment,
+    environment::{Environment, OffscreenKernelEnvironment},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
-        pipeline::Processable,
         source_type::{SourceType, TessellateSource},
     },
     kernel::Kernel,
     vector::{
+        process_vector::{process_vector_tile, ProcessVectorContext, VectorTileRequest},
         transferables::{LayerUnavailable, Transferables},
-        vector_pipeline::{build_vector_tile_pipeline, VectorPipelineProcessor, VectorTileRequest},
         VectorLayersDataComponent, VectorLayersIndicesComponent,
     },
 };
@@ -89,9 +88,11 @@ impl<E: Environment, T: Transferables> System for RequestSystem<E, T> {
                                 style: style.clone(), // TODO: Avoid cloning whole style
                             },
                             fetch_vector_apc::<
-                                E,
+                                E::OffscreenKernelEnvironment,
                                 T,
-                                <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Context,
+                                <E::AsyncProcedureCall as AsyncProcedureCall<
+                                    E::OffscreenKernelEnvironment,
+                                >>::Context,
                             >,
                         )
                         .unwrap(); // TODO: Remove unwrap
@@ -103,9 +104,10 @@ impl<E: Environment, T: Transferables> System for RequestSystem<E, T> {
     }
 }
 
-pub fn fetch_vector_apc<E: Environment, T: Transferables, C: Context<E::HttpClient>>(
+pub fn fetch_vector_apc<K: OffscreenKernelEnvironment, T: Transferables, C: Context>(
     input: Input,
     context: C,
+    kernel: K,
 ) -> AsyncProcedureFuture {
     Box::pin(async move {
         let Input::TileRequest {coords, style} = input else {
@@ -124,7 +126,7 @@ pub fn fetch_vector_apc<E: Environment, T: Transferables, C: Context<E::HttpClie
             })
             .collect();
 
-        let client = context.source_client();
+        let client = kernel.source_client();
 
         if !fill_layers.is_empty() {
             let context = context.clone();
@@ -133,22 +135,16 @@ pub fn fetch_vector_apc<E: Environment, T: Transferables, C: Context<E::HttpClie
                 Ok(data) => {
                     let data = data.into_boxed_slice();
 
-                    let mut pipeline_context =
-                        VectorPipelineProcessor::<T, <E as Environment>::HttpClient, C>::new(
-                            context,
-                        );
-                    build_vector_tile_pipeline::<T, <E as Environment>::HttpClient, C>()
-                        .process(
-                            (
-                                VectorTileRequest {
-                                    coords,
-                                    layers: fill_layers,
-                                },
-                                data,
-                            ),
-                            &mut pipeline_context,
-                        )
-                        .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
+                    let mut pipeline_context = ProcessVectorContext::<T, C>::new(context);
+                    process_vector_tile(
+                        &data,
+                        VectorTileRequest {
+                            coords,
+                            layers: fill_layers,
+                        },
+                        &mut pipeline_context,
+                    )
+                    .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
                 }
                 Err(e) => {
                     log::error!("{:?}", &e);

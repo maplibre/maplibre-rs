@@ -1,0 +1,90 @@
+use std::marker::PhantomData;
+
+use geozero::{mvt::Message, GeozeroDatasource};
+use image::RgbaImage;
+use thiserror::Error;
+
+use crate::{
+    coords::WorldTileCoords,
+    io::{
+        apc::{Context, SendError},
+        source_client::HttpClient,
+    },
+    raster::transferables::{LayerRaster, Transferables},
+};
+
+#[derive(Error, Debug)]
+pub enum ProcessRasterError {
+    /// Sending of results failed
+    #[error("sending data back through context failed")]
+    SendError(SendError),
+    /// Error during processing of the pipeline
+    #[error("processing data in pipeline failed")]
+    Processing(Box<dyn std::error::Error>),
+}
+
+pub struct RasterTileRequest {
+    pub coords: WorldTileCoords,
+}
+
+pub fn process_raster_tile<T: Transferables, C: Context>(
+    data: &[u8],
+    tile_request: RasterTileRequest,
+    context: &mut ProcessRasterContext<T, C>,
+) -> Result<(), ProcessRasterError> {
+    let coords = &tile_request.coords;
+    let img = image::load_from_memory(&data).unwrap();
+    let rgba = img.to_rgba8();
+
+    context.layer_raster_finished(coords, "raster".to_string(), rgba.clone())?;
+
+    Ok(())
+}
+pub struct ProcessRasterContext<T: Transferables, C: Context> {
+    context: C,
+    phantom_t: PhantomData<T>,
+}
+
+impl<T: Transferables, C: Context> ProcessRasterContext<T, C> {
+    pub fn new(context: C) -> Self {
+        Self {
+            context,
+            phantom_t: Default::default(),
+        }
+    }
+}
+
+impl<T: Transferables, C: Context> ProcessRasterContext<T, C> {
+    fn layer_raster_finished(
+        &mut self,
+        coords: &WorldTileCoords,
+        layer_name: String,
+        image_data: RgbaImage,
+    ) -> Result<(), ProcessRasterError> {
+        self.context
+            .send(T::LayerRaster::build_from(*coords, layer_name, image_data))
+            .map_err(|e| ProcessRasterError::Processing(Box::new(e)))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::process_raster_tile;
+    use crate::{
+        coords::ZoomLevel,
+        io::apc::tests::DummyContext,
+        raster::process_raster::{ProcessRasterContext, RasterTileRequest},
+    };
+
+    #[test] // TODO: Add proper tile byte array
+    #[ignore]
+    fn test() {
+        let _output = process_raster_tile(
+            &[0],
+            RasterTileRequest {
+                coords: (0, 0, ZoomLevel::default()).into(),
+            },
+            &mut ProcessRasterContext::new(DummyContext),
+        );
+    }
+}

@@ -1,5 +1,6 @@
 use std::{
     any::Any,
+    borrow::Borrow,
     cell::RefCell,
     future::Future,
     marker::PhantomData,
@@ -11,22 +12,14 @@ use std::{
     vec::IntoIter,
 };
 
-use geozero::mvt::tile;
-use image::RgbaImage;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
     coords::WorldTileCoords,
-    io::{
-        geometry_index::{IndexedGeometry, TileIndex},
-        pipeline::{PipelineError, PipelineProcessor},
-        scheduler::Scheduler,
-        source_client::{HttpClient, HttpSourceClient, SourceClient},
-    },
-    render::ShaderVertex,
+    environment::{Environment, OffscreenKernelEnvironment},
+    io::scheduler::Scheduler,
     style::Style,
-    tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
 
 /// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
@@ -60,11 +53,9 @@ pub enum SendError {
 }
 
 /// Allows sending messages from workers to back to the caller.
-pub trait Context<HC: HttpClient>: Send + Clone + 'static {
+pub trait Context: Send + Clone + 'static {
     /// Send a message back to the caller.
     fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError>;
-
-    fn source_client(&self) -> &SourceClient<HC>;
 }
 
 #[derive(Error, Debug)]
@@ -99,7 +90,7 @@ pub enum CallError {
 /// [`AsyncProcedureCall`]. Functions of this type are required to be statically available at
 /// compile time. It is explicitly not possible to use closures, as they would require special
 /// serialization which is currently not supported.
-pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFuture;
+pub type AsyncProcedure<K, C> = fn(input: Input, context: C, kernel: K) -> AsyncProcedureFuture;
 
 /// APCs define an interface for performing work asynchronously.
 /// This work can be implemented through procedures which can be called asynchronously, hence the
@@ -141,8 +132,8 @@ pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFutur
 ///
 ///
 // TODO: Rename to AsyncProcedureCaller?
-pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
-    type Context: Context<HC> + Send;
+pub trait AsyncProcedureCall<K: OffscreenKernelEnvironment>: 'static {
+    type Context: Context + Send;
 
     type ReceiveIterator<F: FnMut(&Message) -> bool>: Iterator<Item = Message>;
 
@@ -151,48 +142,48 @@ pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
 
     /// Call an [`AsyncProcedure`] using some [`Input`]. This function is non-blocking and
     /// returns immediately.
-    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>)
-        -> Result<(), CallError>;
+    fn call(
+        &self,
+        input: Input,
+        procedure: AsyncProcedure<K, Self::Context>,
+    ) -> Result<(), CallError>;
 }
 
 #[derive(Clone)]
-pub struct SchedulerContext<HC: HttpClient> {
+pub struct SchedulerContext {
     sender: Sender<Message>,
-    source_client: SourceClient<HC>,
 }
 
-impl<HC: HttpClient> Context<HC> for SchedulerContext<HC> {
+impl Context for SchedulerContext {
     fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
         self.sender
             .send(message.into())
             .map_err(|_e| SendError::Transmission)
     }
-
-    fn source_client(&self) -> &SourceClient<HC> {
-        &self.source_client
-    }
 }
 
-pub struct SchedulerAsyncProcedureCall<HC: HttpClient, S: Scheduler> {
+pub struct SchedulerAsyncProcedureCall<K: OffscreenKernelEnvironment, S: Scheduler> {
     channel: (Sender<Message>, Receiver<Message>),
     buffer: RefCell<Vec<Message>>,
-    http_client: HC,
     scheduler: S,
+    phantom_k: PhantomData<K>,
 }
 
-impl<HC: HttpClient, S: Scheduler> SchedulerAsyncProcedureCall<HC, S> {
-    pub fn new(http_client: HC, scheduler: S) -> Self {
+impl<K: OffscreenKernelEnvironment, S: Scheduler> SchedulerAsyncProcedureCall<K, S> {
+    pub fn new(scheduler: S) -> Self {
         Self {
             channel: mpsc::channel(),
             buffer: RefCell::new(Vec::new()),
-            http_client,
+            phantom_k: PhantomData::default(),
             scheduler,
         }
     }
 }
 
-impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProcedureCall<HC, S> {
-    type Context = SchedulerContext<HC>;
+impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
+    for SchedulerAsyncProcedureCall<K, S>
+{
+    type Context = SchedulerContext;
     type ReceiveIterator<F: FnMut(&Message) -> bool> = IntoIter<Message>;
 
     fn receive<F: FnMut(&Message) -> bool>(&self, mut filter: F) -> Self::ReceiveIterator<F> {
@@ -229,25 +220,32 @@ impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProc
     fn call(
         &self,
         input: Input,
-        procedure: AsyncProcedure<Self::Context>,
+        procedure: AsyncProcedure<K, Self::Context>,
     ) -> Result<(), CallError> {
         let sender = self.channel.0.clone();
-        let client = self.http_client.clone(); // TODO (perf): do not clone each time
 
         self.scheduler
             .schedule(move || async move {
                 log::info!("Processing on thread: {:?}", std::thread::current().name());
 
-                procedure(
-                    input,
-                    SchedulerContext {
-                        sender,
-                        source_client: SourceClient::new(HttpSourceClient::new(client)),
-                    },
-                )
-                .await
-                .unwrap();
+                procedure(input, SchedulerContext { sender }, K::create())
+                    .await
+                    .unwrap();
             })
             .map_err(|_e| CallError::Schedule)
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use crate::io::apc::{Context, IntoMessage, SendError};
+
+    #[derive(Clone)]
+    pub struct DummyContext;
+
+    impl Context for DummyContext {
+        fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+            Ok(())
+        }
     }
 }

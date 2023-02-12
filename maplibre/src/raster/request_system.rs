@@ -5,15 +5,15 @@ use std::{borrow::Cow, collections::HashSet, marker::PhantomData, rc::Rc};
 use crate::{
     context::MapContext,
     ecs::system::System,
-    environment::Environment,
+    environment::{Environment, OffscreenKernelEnvironment},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
-        pipeline::{PipelineContext, Processable},
+        source_client::HttpClient,
         source_type::{RasterSource, SourceType},
     },
     kernel::Kernel,
     raster::{
-        raster_pipeline::{build_raster_tile_pipeline, RasterPipelineProcessor, RasterTileRequest},
+        process_raster::{process_raster_tile, ProcessRasterContext, RasterTileRequest},
         transferables::Transferables,
         RasterLayersDataComponent,
     },
@@ -86,9 +86,11 @@ impl<E: Environment, T: Transferables> System for RequestSystem<E, T> {
                                 style: style.clone(), // TODO: Avoid cloning whole style
                             },
                             fetch_raster_apc::<
-                                E,
+                                E::OffscreenKernelEnvironment,
                                 T,
-                                <E::AsyncProcedureCall as AsyncProcedureCall<E::HttpClient>>::Context,
+                                <E::AsyncProcedureCall as AsyncProcedureCall<
+                                    E::OffscreenKernelEnvironment,
+                                >>::Context,
                             >,
                         )
                         .unwrap(); // TODO: Remove unwrap
@@ -99,9 +101,10 @@ impl<E: Environment, T: Transferables> System for RequestSystem<E, T> {
         view_state.update_references();
     }
 }
-pub fn fetch_raster_apc<E: Environment, T: Transferables, C: Context<E::HttpClient>>(
+pub fn fetch_raster_apc<K: OffscreenKernelEnvironment, T: Transferables, C: Context>(
     input: Input,
     context: C,
+    kernel: K,
 ) -> AsyncProcedureFuture {
     Box::pin(async move {
         let Input::TileRequest {coords, style} = input else {
@@ -120,7 +123,7 @@ pub fn fetch_raster_apc<E: Environment, T: Transferables, C: Context<E::HttpClie
             })
             .collect();
 
-        let client = context.source_client();
+        let client = kernel.source_client();
 
         if !raster_layers.is_empty() {
             let context = context.clone();
@@ -130,13 +133,9 @@ pub fn fetch_raster_apc<E: Environment, T: Transferables, C: Context<E::HttpClie
                 Ok(data) => {
                     let data = data.into_boxed_slice();
 
-                    let mut pipeline_context =
-                        RasterPipelineProcessor::<T, <E as Environment>::HttpClient, C>::new(
-                            context,
-                        );
+                    let mut process_context = ProcessRasterContext::<T, C>::new(context);
 
-                    build_raster_tile_pipeline()
-                        .process((RasterTileRequest { coords }, data), &mut pipeline_context)
+                    process_raster_tile(&data, RasterTileRequest { coords }, &mut process_context)
                         .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
                 }
                 Err(e) => {

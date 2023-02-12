@@ -10,7 +10,10 @@ use maplibre::{
     io::apc::SchedulerAsyncProcedureCall,
     kernel::{Kernel, KernelBuilder},
     map::Map,
-    platform::{http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler},
+    platform::{
+        http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler,
+        ReqwestOffscreenKernelEnvironment,
+    },
     render::{builder::RendererBuilder, settings::WgpuSettings},
     style::Style,
     window::{MapWindow, MapWindowConfig, WindowSize},
@@ -72,14 +75,15 @@ impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
 
 pub fn run_headed_map(cache_path: Option<String>) {
     run_multithreaded(async {
+        type Environment<S, HC, APC> =
+            WinitEnvironment<S, HC, ReqwestOffscreenKernelEnvironment, APC, ()>;
+
         let client = ReqwestHttpClient::new(cache_path);
-        let kernel: Kernel<WinitEnvironment<_, _, _, ()>> = KernelBuilder::new()
+
+        let kernel: Kernel<Environment<_, _, _>> = KernelBuilder::new()
             .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
             .with_http_client(client.clone())
-            .with_apc(SchedulerAsyncProcedureCall::new(
-                client,
-                TokioScheduler::new(),
-            ))
+            .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new()))
             .with_scheduler(TokioScheduler::new())
             .build();
 

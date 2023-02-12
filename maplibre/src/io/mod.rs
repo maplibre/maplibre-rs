@@ -4,7 +4,6 @@ pub use geozero::mvt::tile::Layer as RawLayer;
 
 pub mod apc;
 pub mod geometry_index;
-pub mod pipeline;
 pub mod scheduler;
 pub mod source_client;
 pub mod source_type;

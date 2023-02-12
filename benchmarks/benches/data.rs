@@ -4,11 +4,6 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
     benchmarking::io::static_tile_fetcher::StaticTileFetcher,
     coords::{TileCoords, ZoomLevel},
-    io::{
-        pipeline::{PipelineContext, PipelineProcessor, Processable},
-        raster_pipeline::{ParseTile, TessellateLayer},
-        TileRequest,
-    },
     style::source::TileAddressingScheme,
 };
 

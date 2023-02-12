@@ -29,6 +29,7 @@ use crate::{
 };
 
 mod populate_world_system;
+mod process_vector;
 mod queue_system;
 mod render_commands;
 mod request_system;
@@ -37,7 +38,6 @@ mod resource_system;
 mod tile_view_pattern_system;
 mod transferables;
 mod upload_system;
-mod vector_pipeline;
 
 pub struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {

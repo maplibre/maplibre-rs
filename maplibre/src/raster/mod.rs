@@ -19,8 +19,8 @@ use crate::{
 };
 
 mod populate_world_system;
+mod process_raster;
 mod queue_system;
-mod raster_pipeline;
 mod render_commands;
 mod request_system;
 mod resource;
