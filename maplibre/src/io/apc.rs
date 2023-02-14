@@ -13,20 +13,30 @@ use std::{
     vec::IntoIter,
 };
 
+use downcast_rs::Downcast;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
     coords::WorldTileCoords,
+    define_label,
     environment::{Environment, OffscreenKernelEnvironment},
     io::scheduler::Scheduler,
     style::Style,
 };
 
+define_label!(MessageTag);
+
+impl MessageTag for u32 {
+    fn dyn_clone(&self) -> Box<dyn MessageTag> {
+        Box::new(*self)
+    }
+}
+
 #[derive(Error, Debug)]
 pub enum MessageError {
     #[error("the message did not contain the expected data")]
-    CastError(Box<dyn Any + Send>),
+    CastError(Box<dyn Any>),
 }
 
 /// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
@@ -37,15 +47,27 @@ pub enum MessageError {
 /// * `TileTessellated` is sent if processing of a tile finished.
 #[derive(Debug)]
 pub struct Message {
-    pub tag: u32,
-    pub transferable: Box<dyn Any + Send>,
+    tag: &'static dyn MessageTag,
+    transferable: Box<dyn Any + Send>,
 }
 
 impl Message {
+    pub fn new(tag: &'static dyn MessageTag, transferable: Box<dyn Any + Send>) -> Self {
+        Self { tag, transferable }
+    }
+
     pub fn into_transferable<T: 'static>(self) -> Result<Box<T>, MessageError> {
         self.transferable
             .downcast::<T>()
             .map_err(|e| MessageError::CastError(e))
+    }
+
+    pub fn has_tag(&self, tag: &'static dyn MessageTag) -> bool {
+        self.tag == tag
+    }
+
+    pub fn tag(&self) -> &'static dyn MessageTag {
+        self.tag
     }
 }
 

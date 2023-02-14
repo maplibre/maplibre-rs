@@ -7,7 +7,7 @@ use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::WorldTileCoords,
     io::{
-        apc::{IntoMessage, Message},
+        apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
     raster::{LayerRaster, RasterLayerData, RasterTransferables},
@@ -20,7 +20,7 @@ use maplibre::{
 };
 
 use crate::platform::singlethreaded::{
-    apc::MessageTag,
+    apc::WebMessageTag,
     transferables::{
         basic_generated::*, layer_indexed_generated::*, layer_raster_generated::*,
         layer_tessellated_generated::*, layer_unavailable_generated::*,
@@ -67,13 +67,13 @@ pub mod tile_tessellated_generated {
 }
 
 pub struct FlatBufferTransferable {
-    tag: MessageTag,
+    tag: WebMessageTag,
     data: Vec<u8>,
     start: usize,
 }
 
 impl FlatBufferTransferable {
-    pub fn from_array_buffer(tag: MessageTag, buffer: ArrayBuffer) -> Self {
+    pub fn from_array_buffer(tag: WebMessageTag, buffer: ArrayBuffer) -> Self {
         let buffer = Uint8Array::new(&buffer);
 
         FlatBufferTransferable {
@@ -89,8 +89,8 @@ impl FlatBufferTransferable {
 }
 
 impl TileTessellated for FlatBufferTransferable {
-    fn message_tag() -> u32 {
-        MessageTag::TileTessellated as u32
+    fn message_tag() -> &'static dyn MessageTag {
+        &WebMessageTag::TileTessellated
     }
 
     fn build_from(coords: WorldTileCoords) -> Self {
@@ -106,7 +106,7 @@ impl TileTessellated for FlatBufferTransferable {
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
         FlatBufferTransferable {
-            tag: MessageTag::TileTessellated,
+            tag: WebMessageTag::TileTessellated,
             data,
             start,
         }
@@ -119,8 +119,8 @@ impl TileTessellated for FlatBufferTransferable {
 }
 
 impl LayerUnavailable for FlatBufferTransferable {
-    fn message_tag() -> u32 {
-        MessageTag::LayerUnavailable as u32
+    fn message_tag() -> &'static dyn MessageTag {
+        &WebMessageTag::LayerUnavailable
     }
 
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self {
@@ -139,7 +139,7 @@ impl LayerUnavailable for FlatBufferTransferable {
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
         FlatBufferTransferable {
-            tag: MessageTag::LayerUnavailable,
+            tag: WebMessageTag::LayerUnavailable,
             data,
             start,
         }
@@ -163,24 +163,21 @@ impl LayerUnavailable for FlatBufferTransferable {
     }
 }
 
-impl IntoMessage for FlatBufferTransferable {
-    fn into(self) -> Message {
-        Message {
-            tag: self.tag.into(),
-            transferable: Box::new(self),
-        }
-    }
-}
-
 impl Debug for FlatBufferTransferable {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "FlatBufferTransferable<{:?}>(??)", self.tag)
     }
 }
 
+impl IntoMessage for FlatBufferTransferable {
+    fn into(self) -> Message {
+        Message::new(self.tag.to_static(), Box::new(self))
+    }
+}
+
 impl LayerTessellated for FlatBufferTransferable {
-    fn message_tag() -> u32 {
-        MessageTag::LayerTessellated as u32
+    fn message_tag() -> &'static dyn MessageTag {
+        &WebMessageTag::LayerTessellated
     }
 
     fn build_from(
@@ -220,7 +217,7 @@ impl LayerTessellated for FlatBufferTransferable {
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
         FlatBufferTransferable {
-            tag: MessageTag::LayerTessellated,
+            tag: WebMessageTag::LayerTessellated,
             data,
             start,
         }
@@ -257,8 +254,8 @@ impl LayerTessellated for FlatBufferTransferable {
 }
 
 impl LayerIndexed for FlatBufferTransferable {
-    fn message_tag() -> u32 {
-        MessageTag::LayerIndexed as u32
+    fn message_tag() -> &'static dyn MessageTag {
+        &WebMessageTag::LayerIndexed
     }
 
     fn build_from(coords: WorldTileCoords, _index: TileIndex) -> Self {
@@ -276,7 +273,7 @@ impl LayerIndexed for FlatBufferTransferable {
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
         FlatBufferTransferable {
-            tag: MessageTag::LayerIndexed,
+            tag: WebMessageTag::LayerIndexed,
             data,
             start,
         }
@@ -293,8 +290,8 @@ impl LayerIndexed for FlatBufferTransferable {
 }
 
 impl LayerRaster for FlatBufferTransferable {
-    fn message_tag() -> u32 {
-        MessageTag::LayerRaster as u32
+    fn message_tag() -> &'static dyn MessageTag {
+        &WebMessageTag::LayerRaster
     }
 
     fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self {
@@ -322,7 +319,7 @@ impl LayerRaster for FlatBufferTransferable {
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
         FlatBufferTransferable {
-            tag: MessageTag::LayerRaster,
+            tag: WebMessageTag::LayerRaster,
             data,
             start,
         }

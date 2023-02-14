@@ -16,7 +16,7 @@ use wasm_bindgen::{prelude::*, JsCast};
 use crate::{
     error::JSError,
     platform::singlethreaded::{
-        apc::{MessageTag, ReceivedType},
+        apc::{ReceivedType, WebMessageTag},
         transferables::FlatBufferTransferable,
         PassingContext, UsedContext, UsedOffscreenKernelEnvironment,
     },
@@ -66,12 +66,12 @@ pub unsafe fn singlethreaded_main_entry(
         .dyn_into()
         .map_err(|_e| CallError::Deserialize(Box::new(DeserializeMessage)))?;
 
-    let tag = MessageTag::from_u32(tag).map_err(|e| CallError::Deserialize(Box::new(e)))?;
+    let tag = WebMessageTag::from_u32(tag).map_err(|e| CallError::Deserialize(Box::new(e)))?;
 
-    let message = Message {
-        tag: tag.into(), // FIXME tcs: Why put tag twice in here?
-        transferable: Box::new(FlatBufferTransferable::from_array_buffer(tag, buffer)),
-    };
+    let message = Message::new(
+        tag.to_static(),
+        Box::new(FlatBufferTransferable::from_array_buffer(tag, buffer)),
+    );
 
     log::warn!(
         "type_name js: {:?}",

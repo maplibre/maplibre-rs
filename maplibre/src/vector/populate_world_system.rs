@@ -37,13 +37,13 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
         let geometry_index = &mut world.geometry_index;
 
         for message in self.kernel.apc().receive(|message| {
-            message.tag == T::TileTessellated::message_tag()
-                || message.tag == T::LayerUnavailable::message_tag()
-                || message.tag == T::LayerTessellated::message_tag()
-                || message.tag == T::LayerIndexed::message_tag()
+            message.has_tag(T::TileTessellated::message_tag())
+                || message.has_tag(T::LayerUnavailable::message_tag())
+                || message.has_tag(T::LayerTessellated::message_tag())
+                || message.has_tag(T::LayerIndexed::message_tag())
         }) {
             let message: Message = message;
-            if message.tag == T::TileTessellated::message_tag() {
+            if message.has_tag(T::TileTessellated::message_tag()) {
                 if let Ok(message) = message.into_transferable::<T::TileTessellated>() {
                     let Some(component) = world
                        .tiles
@@ -51,7 +51,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
 
                     component.done = true;
                 }
-            } else if message.tag == T::LayerUnavailable::message_tag() {
+            } else if message.has_tag(T::LayerUnavailable::message_tag()) {
                 if let Ok(message) = message.into_transferable::<T::LayerUnavailable>() {
                     let Some(component) = world
                         .tiles
@@ -61,7 +61,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
                         .layers
                         .push(VectorLayerData::Unavailable(message.to_layer()));
                 }
-            } else if message.tag == T::LayerTessellated::message_tag() {
+            } else if message.has_tag(T::LayerTessellated::message_tag()) {
                 if let Ok(message) = message.into_transferable::<T::LayerTessellated>() {
                     // FIXME: Handle points!
                     /*if message.is_empty() {
@@ -76,7 +76,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
                         .layers
                         .push(VectorLayerData::Available(message.to_layer()));
                 }
-            } else if message.tag == T::LayerIndexed::message_tag() {
+            } else if message.has_tag(T::LayerIndexed::message_tag()) {
                 if let Ok(message) = message.into_transferable::<T::LayerIndexed>() {
                     geometry_index.index_tile(&message.coords(), message.to_tile_index());
                 }

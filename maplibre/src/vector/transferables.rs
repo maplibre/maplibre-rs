@@ -5,18 +5,17 @@ use geozero::mvt::tile::Layer;
 use crate::{
     coords::WorldTileCoords,
     io::{
-        apc::{IntoMessage, Message},
+        apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
+    raster::LayerRaster,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{AvailableVectorLayerData, UnavailableVectorLayerData},
 };
 
 pub trait TileTessellated: IntoMessage + Debug + Send {
-    fn message_tag() -> u32 {
-        0
-    }
+    fn message_tag() -> &'static dyn MessageTag;
 
     fn build_from(coords: WorldTileCoords) -> Self
     where
@@ -26,9 +25,7 @@ pub trait TileTessellated: IntoMessage + Debug + Send {
 }
 
 pub trait LayerUnavailable: IntoMessage + Debug + Send {
-    fn message_tag() -> u32 {
-        1
-    }
+    fn message_tag() -> &'static dyn MessageTag;
 
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self
     where
@@ -42,9 +39,7 @@ pub trait LayerUnavailable: IntoMessage + Debug + Send {
 }
 
 pub trait LayerTessellated: IntoMessage + Debug + Send {
-    fn message_tag() -> u32 {
-        2
-    }
+    fn message_tag() -> &'static dyn MessageTag;
 
     fn build_from(
         coords: WorldTileCoords,
@@ -63,9 +58,7 @@ pub trait LayerTessellated: IntoMessage + Debug + Send {
 }
 
 pub trait LayerIndexed: IntoMessage + Debug + Send {
-    fn message_tag() -> u32 {
-        3
-    }
+    fn message_tag() -> &'static dyn MessageTag;
 
     fn build_from(coords: WorldTileCoords, index: TileIndex) -> Self
     where
@@ -88,16 +81,13 @@ impl Debug for DefaultTileTessellated {
 
 impl IntoMessage for DefaultTileTessellated {
     fn into(self) -> Message {
-        Message {
-            tag: DefaultTileTessellated::message_tag(), // FIXME tcs: Avoid duplicates!
-            transferable: Box::new(self),
-        }
+        Message::new(Self::message_tag(), Box::new(self))
     }
 }
 
 impl TileTessellated for DefaultTileTessellated {
-    fn message_tag() -> u32 {
-        4
+    fn message_tag() -> &'static dyn MessageTag {
+        &2
     }
 
     fn build_from(coords: WorldTileCoords) -> Self {
@@ -122,16 +112,13 @@ impl Debug for DefaultLayerUnavailable {
 
 impl IntoMessage for DefaultLayerUnavailable {
     fn into(self) -> Message {
-        Message {
-            tag: DefaultLayerUnavailable::message_tag(), // FIXME tcs: Avoid duplicates!
-            transferable: Box::new(self),
-        }
+        Message::new(Self::message_tag(), Box::new(self))
     }
 }
 
 impl LayerUnavailable for DefaultLayerUnavailable {
-    fn message_tag() -> u32 {
-        5
+    fn message_tag() -> &'static dyn MessageTag {
+        &3
     }
 
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self {
@@ -170,14 +157,15 @@ impl Debug for DefaultLayerTesselated {
 
 impl IntoMessage for DefaultLayerTesselated {
     fn into(self) -> Message {
-        Message {
-            tag: DefaultLayerTesselated::message_tag(), // FIXME tcs: Avoid duplicates!
-            transferable: Box::new(self),
-        }
+        Message::new(Self::message_tag(), Box::new(self))
     }
 }
 
 impl LayerTessellated for DefaultLayerTesselated {
+    fn message_tag() -> &'static dyn MessageTag {
+        &4
+    }
+
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -223,14 +211,15 @@ impl Debug for DefaultLayerIndexed {
 
 impl IntoMessage for DefaultLayerIndexed {
     fn into(self) -> Message {
-        Message {
-            tag: DefaultLayerIndexed::message_tag(), // FIXME tcs: Avoid duplicates!
-            transferable: Box::new(self),
-        }
+        Message::new(Self::message_tag(), Box::new(self))
     }
 }
 
 impl LayerIndexed for DefaultLayerIndexed {
+    fn message_tag() -> &'static dyn MessageTag {
+        &5
+    }
+
     fn build_from(coords: WorldTileCoords, index: TileIndex) -> Self {
         Self { coords, index }
     }

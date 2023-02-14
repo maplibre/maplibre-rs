@@ -4,14 +4,12 @@ use image::RgbaImage;
 
 use crate::{
     coords::WorldTileCoords,
-    io::apc::{IntoMessage, Message},
+    io::apc::{IntoMessage, Message, MessageTag},
     raster::RasterLayerData,
 };
 
 pub trait LayerRaster: IntoMessage + Debug + Send {
-    fn message_tag() -> u32 {
-        6
-    }
+    fn message_tag() -> &'static dyn MessageTag;
 
     fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self;
 
@@ -34,14 +32,15 @@ impl Debug for DefaultRasterLayer {
 
 impl IntoMessage for DefaultRasterLayer {
     fn into(self) -> Message {
-        Message {
-            tag: DefaultRasterLayer::message_tag(), // FIXME tcs: Avoid duplicates!
-            transferable: Box::new(self),
-        }
+        Message::new(Self::message_tag(), Box::new(self))
     }
 }
 
 impl LayerRaster for DefaultRasterLayer {
+    fn message_tag() -> &'static dyn MessageTag {
+        &6
+    }
+
     fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self {
         Self {
             coords,

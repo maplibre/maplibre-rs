@@ -1,4 +1,4 @@
-use std::{any::type_name, borrow::Cow, marker::PhantomData, rc::Rc};
+use std::{borrow::Cow, marker::PhantomData, rc::Rc};
 
 use crate::{
     context::MapContext,
@@ -40,10 +40,10 @@ impl<E: Environment, T: RasterTransferables> System for PopulateWorldSystem<E, T
         for message in self
             .kernel
             .apc()
-            .receive(|message| message.tag == T::LayerRaster::message_tag())
+            .receive(|message| message.has_tag(T::LayerRaster::message_tag()))
         {
             let message: Message = message;
-            if message.tag == T::LayerRaster::message_tag() {
+            if message.has_tag(T::LayerRaster::message_tag()) {
                 if let Ok(message) = message.into_transferable::<T::LayerRaster>() {
                     let Some(component) = world
                         .tiles

@@ -7,7 +7,7 @@ use maplibre::{
     io::{
         apc::{
             AsyncProcedure, AsyncProcedureCall, CallError, Context, Input, IntoMessage, Message,
-            SendError,
+            MessageTag, SendError,
         },
         source_client::SourceClient,
     },
@@ -29,8 +29,14 @@ use crate::{
 #[error("failed to deserialize message tag")]
 pub struct MessageTagDeserializeError;
 
-#[derive(Clone, Copy, Debug)]
-pub enum MessageTag {
+impl MessageTag for WebMessageTag {
+    fn dyn_clone(&self) -> Box<dyn MessageTag> {
+        Box::new(*self)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+pub enum WebMessageTag {
     TileTessellated = 1,
     LayerUnavailable = 2,
     LayerTessellated = 3,
@@ -38,24 +44,31 @@ pub enum MessageTag {
     LayerRaster = 5,
 }
 
-impl MessageTag {
-    pub fn from_message(message: &Message) -> Self {
-        Self::from_u32(message.tag).expect("Unknown message tag encountered") // FIXME tcs: Remove expect
+impl WebMessageTag {
+    pub fn to_static(&self) -> &'static WebMessageTag {
+        match self {
+            WebMessageTag::LayerRaster => &WebMessageTag::LayerRaster,
+            WebMessageTag::LayerUnavailable => &WebMessageTag::LayerUnavailable,
+            WebMessageTag::LayerIndexed => &WebMessageTag::LayerIndexed,
+            WebMessageTag::TileTessellated => &WebMessageTag::TileTessellated,
+            WebMessageTag::LayerTessellated => &WebMessageTag::LayerTessellated,
+            _ => unreachable!(),
+        }
     }
 
     pub fn from_u32(tag: u32) -> Result<Self, MessageTagDeserializeError> {
         match tag {
-            x if x == MessageTag::LayerUnavailable as u32 => Ok(MessageTag::LayerUnavailable),
-            x if x == MessageTag::LayerTessellated as u32 => Ok(MessageTag::LayerTessellated),
-            x if x == MessageTag::TileTessellated as u32 => Ok(MessageTag::TileTessellated),
-            x if x == MessageTag::LayerIndexed as u32 => Ok(MessageTag::LayerIndexed),
-            x if x == MessageTag::LayerRaster as u32 => Ok(MessageTag::LayerRaster),
+            x if x == WebMessageTag::LayerUnavailable as u32 => Ok(WebMessageTag::LayerUnavailable),
+            x if x == WebMessageTag::LayerTessellated as u32 => Ok(WebMessageTag::LayerTessellated),
+            x if x == WebMessageTag::TileTessellated as u32 => Ok(WebMessageTag::TileTessellated),
+            x if x == WebMessageTag::LayerIndexed as u32 => Ok(WebMessageTag::LayerIndexed),
+            x if x == WebMessageTag::LayerRaster as u32 => Ok(WebMessageTag::LayerRaster),
             _ => Err(MessageTagDeserializeError),
         }
     }
 }
 
-impl Into<u32> for MessageTag {
+impl Into<u32> for WebMessageTag {
     fn into(self) -> u32 {
         self as u32
     }
@@ -69,10 +82,21 @@ pub struct PassingContext {
 impl Context for PassingContext {
     fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
         let message = message.into();
-        let tag = MessageTag::from_u32(message.tag).unwrap(); // FIXME tcs
+        let tag = if WebMessageTag::LayerRaster.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerRaster
+        } else if WebMessageTag::LayerTessellated.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerTessellated
+        } else if WebMessageTag::TileTessellated.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::TileTessellated
+        } else if WebMessageTag::LayerUnavailable.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerUnavailable
+        } else if WebMessageTag::LayerIndexed.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerIndexed
+        } else {
+            unreachable!()
+        };
         let transferable = message
-            .transferable
-            .downcast::<FlatBufferTransferable>()
+            .into_transferable::<FlatBufferTransferable>()
             .expect("Unable to downcast to FlatBufferTransferable"); // FIXME tcs
         let data = transferable.data();
 
@@ -88,7 +112,7 @@ impl Context for PassingContext {
             .map_err(|_e| SendError::Transmission)?;
         global
             .post_message_with_transfer(
-                &js_sys::Array::of2(&JsValue::from(tag as u32), &buffer),
+                &js_sys::Array::of2(&JsValue::from(*tag as u32), &buffer),
                 &js_sys::Array::of1(&buffer),
             )
             .map_err(|_e| SendError::Transmission)
