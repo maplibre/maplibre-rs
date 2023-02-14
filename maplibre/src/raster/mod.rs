@@ -44,6 +44,7 @@ impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
             .resources
             .insert(Eventually::<RasterResources>::Uninitialized);
 
+        // FIXME tcs: Disable for headless?
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
             SystemContainer::new(RequestSystem::<E, T>::new(&kernel)),

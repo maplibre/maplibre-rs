@@ -53,8 +53,8 @@ pub fn tile_view_pattern_system(
         tile_view_pattern.update_pattern(
             view_region,
             &(
-                raster_resources.deref(),
-                buffer_pool.index(),
+                raster_resources.deref(), // FIXME tcs: Remove for headless?
+                buffer_pool.index(),      // FIXME tcs: Remove for headless?
                 &VectorTilesDone {
                     tiles: &world.tiles,
                 },

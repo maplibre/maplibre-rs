@@ -105,7 +105,11 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
     }
 }
 
-pub fn fetch_vector_apc<K: OffscreenKernelEnvironment, T: VectorTransferables, C: Context>(
+pub fn fetch_vector_apc<
+    K: OffscreenKernelEnvironment,
+    T: VectorTransferables,
+    C: Context + Clone + Send,
+>(
     input: Input,
     context: C,
     kernel: K,

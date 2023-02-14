@@ -88,7 +88,8 @@ pub enum SendError {
 }
 
 /// Allows sending messages from workers to back to the caller.
-pub trait Context: Send + Clone + 'static {
+pub trait Context: 'static {
+    // FIXME tcs: Does this need to be clone and send?
     /// Send a message back to the caller.
     fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError>;
 }
@@ -170,7 +171,7 @@ pub type AsyncProcedure<K, C> = fn(input: Input, context: C, kernel: K) -> Async
 ///
 // TODO: Rename to AsyncProcedureCaller?
 pub trait AsyncProcedureCall<K: OffscreenKernelEnvironment>: 'static {
-    type Context: Context + Send;
+    type Context: Context + Send + Clone;
 
     type ReceiveIterator<F: FnMut(&Message) -> bool>: Iterator<Item = Message>;
 

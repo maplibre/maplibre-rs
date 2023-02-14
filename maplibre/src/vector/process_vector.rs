@@ -116,7 +116,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 }
 
 pub struct ProcessVectorContext<T: VectorTransferables, C: Context> {
-    context: C,
+    pub context: C, // FIXME tcs: make private
     phantom_t: PhantomData<T>,
 }
 

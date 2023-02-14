@@ -27,10 +27,7 @@ pub async fn create_headless_renderer(
             WindowSize::new(tile_size, tile_size).unwrap(),
         ))
         .with_http_client(client.clone())
-        .with_apc(SchedulerAsyncProcedureCall::new(
-            client,
-            TokioScheduler::new(),
-        ))
+        .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new()))
         .with_scheduler(TokioScheduler::new())
         .build();
 

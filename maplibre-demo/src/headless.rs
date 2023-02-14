@@ -35,7 +35,7 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
 
         let tile = map.fetch_tile(coords).await.expect("Failed to fetch!");
 
-        let tile = map
+        let layers = map
             .process_tile(
                 tile,
                 &requested_layers
@@ -43,9 +43,8 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
                     .map(|layer| layer.as_str())
                     .collect::<Vec<_>>(),
             )
-            .await
-            .expect("Failed to process!");
+            .await;
 
-        map.render_tile(tile);
+        map.render_tile(layers);
     }
 }

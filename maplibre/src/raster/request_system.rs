@@ -102,7 +102,11 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
         view_state.update_references();
     }
 }
-pub fn fetch_raster_apc<K: OffscreenKernelEnvironment, T: RasterTransferables, C: Context>(
+pub fn fetch_raster_apc<
+    K: OffscreenKernelEnvironment,
+    T: RasterTransferables,
+    C: Context + Clone + Send,
+>(
     input: Input,
     context: C,
     kernel: K,

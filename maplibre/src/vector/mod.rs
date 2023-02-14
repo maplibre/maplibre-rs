@@ -1,5 +1,6 @@
 use std::{marker::PhantomData, ops::Deref, rc::Rc};
 
+pub use process_vector::*;
 pub use transferables::{DefaultVectorTransferables, *};
 
 use crate::{
@@ -112,6 +113,7 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
         // FIXME tcs: Move to rendering core
         resources.insert(RenderPhase::<LayerItem>::default());
 
+        // FIXME tcs: Disable for headless?
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
             SystemContainer::new(RequestSystem::<E, T>::new(&kernel)),
@@ -121,7 +123,7 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
             SystemContainer::new(PopulateWorldSystem::<E, T>::new(&kernel)),
         );
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);
-        schedule.add_system_to_stage(&RenderStageLabel::Prepare, tile_view_pattern_system);
+        schedule.add_system_to_stage(&RenderStageLabel::Queue, tile_view_pattern_system);
         schedule.add_system_to_stage(&RenderStageLabel::Queue, upload_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
         schedule.add_system_to_stage(&RenderStageLabel::Queue, queue_system);
     }

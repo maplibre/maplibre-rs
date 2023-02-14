@@ -66,6 +66,11 @@ impl Tiles {
             None
         }
     }
+
+    pub fn clear(&mut self) {
+        self.tiles.clear();
+        self.components.clear();
+    }
 }
 
 pub struct TileSpawnResult<'t> {

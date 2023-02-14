@@ -1,7 +1,8 @@
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 use crate::{
     context::MapContext,
+    ecs::system::System,
     render::{
         resource::{BufferedTextureHead, Head},
         Renderer,
@@ -11,12 +12,12 @@ use crate::{
 
 /// Stage which writes the current contents of the GPU/CPU buffer in [`BufferedTextureHead`]
 /// to disk as PNG.
-pub struct WriteSurfaceBufferStage {
+pub struct WriteSurfaceBufferSystem {
     frame: u64,
     write_to_disk: bool,
 }
 
-impl WriteSurfaceBufferStage {
+impl WriteSurfaceBufferSystem {
     pub fn new(write_to_disk: bool) -> Self {
         Self {
             frame: 0,
@@ -25,7 +26,11 @@ impl WriteSurfaceBufferStage {
     }
 }
 
-impl Stage for WriteSurfaceBufferStage {
+impl System for WriteSurfaceBufferSystem {
+    fn name(&self) -> Cow<'static, str> {
+        "write_surfaced_buffer".into()
+    }
+
     fn run(
         &mut self,
         MapContext {
