@@ -6,7 +6,7 @@ use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 
-use crate::style::raster::RasterLayer;
+use crate::style::{layer::LayerPaint::Fill, raster::RasterLayer};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {
@@ -66,8 +66,6 @@ pub struct StyleLayer {
     #[serde(skip)]
     pub index: u32, // FIXME: How is this initialized?
     pub id: String,
-    #[serde(rename = "type")]
-    pub typ: String,
     // TODO filter
     // TODO layout
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -90,7 +88,6 @@ impl Default for StyleLayer {
         Self {
             index: 0,
             id: "id".to_string(),
-            typ: "fill".to_string(),
             maxzoom: None,
             minzoom: None,
             metadata: None,

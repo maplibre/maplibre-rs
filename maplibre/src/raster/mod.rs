@@ -1,7 +1,8 @@
-use std::rc::Rc;
+use std::{marker::PhantomData, rc::Rc};
 
 use image::RgbaImage;
-pub use resource::RasterResources;
+pub use resource::RasterResources; // FIXME tcs
+pub use transferables::*;
 
 use crate::{
     coords::WorldTileCoords,
@@ -12,7 +13,7 @@ use crate::{
     raster::{
         populate_world_system::PopulateWorldSystem, queue_system::queue_system,
         request_system::RequestSystem, resource_system::resource_system,
-        transferables::DefaultTransferables, upload_system::upload_system,
+        upload_system::upload_system,
     },
     render::{eventually::Eventually, stages::RenderStageLabel},
     schedule::Schedule,
@@ -30,9 +31,15 @@ mod upload_system;
 
 // FIXME tcs: avoid making this public
 
-pub struct RasterPlugin;
+pub struct RasterPlugin<T>(PhantomData<T>);
 
-impl<E: Environment> Plugin<E> for RasterPlugin {
+impl<T: RasterTransferables> Default for RasterPlugin<T> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
     fn build(&self, schedule: &mut Schedule, kernel: Rc<Kernel<E>>, world: &mut World) {
         // raster_resources
         world
@@ -41,11 +48,11 @@ impl<E: Environment> Plugin<E> for RasterPlugin {
 
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
-            SystemContainer::new(RequestSystem::<E, DefaultTransferables>::new(&kernel)),
+            SystemContainer::new(RequestSystem::<E, T>::new(&kernel)),
         );
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
-            SystemContainer::new(PopulateWorldSystem::<E, DefaultTransferables>::new(&kernel)),
+            SystemContainer::new(PopulateWorldSystem::<E, T>::new(&kernel)),
         );
 
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);

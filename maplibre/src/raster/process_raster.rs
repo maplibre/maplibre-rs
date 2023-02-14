@@ -10,7 +10,7 @@ use crate::{
         apc::{Context, SendError},
         source_client::HttpClient,
     },
-    raster::transferables::{LayerRaster, Transferables},
+    raster::transferables::{LayerRaster, RasterTransferables},
 };
 
 #[derive(Error, Debug)]
@@ -27,7 +27,7 @@ pub struct RasterTileRequest {
     pub coords: WorldTileCoords,
 }
 
-pub fn process_raster_tile<T: Transferables, C: Context>(
+pub fn process_raster_tile<T: RasterTransferables, C: Context>(
     data: &[u8],
     tile_request: RasterTileRequest,
     context: &mut ProcessRasterContext<T, C>,
@@ -40,12 +40,12 @@ pub fn process_raster_tile<T: Transferables, C: Context>(
 
     Ok(())
 }
-pub struct ProcessRasterContext<T: Transferables, C: Context> {
+pub struct ProcessRasterContext<T: RasterTransferables, C: Context> {
     context: C,
     phantom_t: PhantomData<T>,
 }
 
-impl<T: Transferables, C: Context> ProcessRasterContext<T, C> {
+impl<T: RasterTransferables, C: Context> ProcessRasterContext<T, C> {
     pub fn new(context: C) -> Self {
         Self {
             context,
@@ -54,7 +54,7 @@ impl<T: Transferables, C: Context> ProcessRasterContext<T, C> {
     }
 }
 
-impl<T: Transferables, C: Context> ProcessRasterContext<T, C> {
+impl<T: RasterTransferables, C: Context> ProcessRasterContext<T, C> {
     fn layer_raster_finished(
         &mut self,
         coords: &WorldTileCoords,

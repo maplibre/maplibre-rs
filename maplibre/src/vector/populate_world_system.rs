@@ -4,9 +4,8 @@ use crate::{
     context::MapContext,
     ecs::system::System,
     environment::Environment,
-    io::apc::AsyncProcedureCall,
+    io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
-    match_downcast,
     vector::{transferables::*, VectorLayerData, VectorLayersDataComponent},
 };
 
@@ -24,7 +23,7 @@ impl<E: Environment, T> PopulateWorldSystem<E, T> {
     }
 }
 
-impl<E: Environment, T: Transferables> System for PopulateWorldSystem<E, T> {
+impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T> {
     fn name(&self) -> Cow<'static, str> {
         "populate_world_system".into()
     }
@@ -38,28 +37,32 @@ impl<E: Environment, T: Transferables> System for PopulateWorldSystem<E, T> {
         let geometry_index = &mut world.geometry_index;
 
         for message in self.kernel.apc().receive(|message| {
-            let transferable = &message.transferable;
-            transferable.is::<<T as Transferables>::TileTessellated>()
-                || transferable.is::<<T as Transferables>::LayerUnavailable>()
-                || transferable.is::<<T as Transferables>::LayerTessellated>()
-                || transferable.is::<<T as Transferables>::LayerIndexed>()
+            message.tag == T::TileTessellated::message_tag()
+                || message.tag == T::LayerUnavailable::message_tag()
+                || message.tag == T::LayerTessellated::message_tag()
+                || message.tag == T::LayerIndexed::message_tag()
         }) {
-            match_downcast!(message.transferable, {
-                message: <T as Transferables>::TileTessellated => {
+            let message: Message = message;
+            if message.tag == T::TileTessellated::message_tag() {
+                if let Ok(message) = message.into_transferable::<T::TileTessellated>() {
+                    let Some(component) = world
+                       .tiles
+                       .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
+
+                    component.done = true;
+                }
+            } else if message.tag == T::LayerUnavailable::message_tag() {
+                if let Ok(message) = message.into_transferable::<T::LayerUnavailable>() {
                     let Some(component) = world
                         .tiles
                         .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
 
-                    component.done = true;
-                },
-                message: <T as Transferables>::LayerUnavailable => {
-                    let Some(component) = world
-                        .tiles
-                        .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
-
-                    component.done = true;
-                },
-                message: <T as Transferables>::LayerTessellated => {
+                    component
+                        .layers
+                        .push(VectorLayerData::Unavailable(message.to_layer()));
+                }
+            } else if message.tag == T::LayerTessellated::message_tag() {
+                if let Ok(message) = message.into_transferable::<T::LayerTessellated>() {
                     // FIXME: Handle points!
                     /*if message.is_empty() {
                         continue;
@@ -72,12 +75,12 @@ impl<E: Environment, T: Transferables> System for PopulateWorldSystem<E, T> {
                     component
                         .layers
                         .push(VectorLayerData::Available(message.to_layer()));
-                },
-                message: <T as Transferables>::LayerIndexed => {
-                     geometry_index.index_tile(&message.coords(), message.to_tile_index());
-                },
-                _ => {}
-            });
+                }
+            } else if message.tag == T::LayerIndexed::message_tag() {
+                if let Ok(message) = message.into_transferable::<T::LayerIndexed>() {
+                    geometry_index.index_tile(&message.coords(), message.to_tile_index());
+                }
+            }
         }
     }
 }

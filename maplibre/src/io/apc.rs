@@ -2,6 +2,7 @@ use std::{
     any::Any,
     borrow::Borrow,
     cell::RefCell,
+    fmt::Debug,
     future::Future,
     marker::PhantomData,
     pin::Pin,
@@ -22,14 +23,30 @@ use crate::{
     style::Style,
 };
 
+#[derive(Error, Debug)]
+pub enum MessageError {
+    #[error("the message did not contain the expected data")]
+    CastError(Box<dyn Any + Send>),
+}
+
 /// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
 /// of an [`AsyncProcedure`].
 ///
 /// * `TessellatedLayer` contains the result of the tessellation for a specific layer.
 /// * `UnavailableLayer` is sent if a requested layer is not found.
 /// * `TileTessellated` is sent if processing of a tile finished.
+#[derive(Debug)]
 pub struct Message {
+    pub tag: u32,
     pub transferable: Box<dyn Any + Send>,
+}
+
+impl Message {
+    pub fn into_transferable<T: 'static>(self) -> Result<Box<T>, MessageError> {
+        self.transferable
+            .downcast::<T>()
+            .map_err(|e| MessageError::CastError(e))
+    }
 }
 
 pub trait IntoMessage {
@@ -84,6 +101,8 @@ pub enum CallError {
     Serialize(Box<dyn std::error::Error>),
     #[error("deserializing failed")]
     Deserialize(Box<dyn std::error::Error>),
+    #[error("deserializing input failed")]
+    DeserializeInput(Box<dyn std::error::Error>),
 }
 
 /// Type definitions for asynchronous procedure calls. These functions can be called in an
@@ -204,8 +223,8 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
         // TODO: (optimize) Using while instead of if means that we are processing all that is
         // available this might cause frame drops.
         while let Some(message) = self.channel.1.try_recv().ok() {
-            // FIXME tcs tracing::debug!("Data reached main thread: {}", &message);
-            // FIXME tcs log::debug!("Data reached main thread: {}", &message);
+            tracing::debug!("Data reached main thread: {:?}", &message);
+            log::debug!("Data reached main thread: {:?}", &message);
 
             if filter(&message) {
                 ret.push(message);

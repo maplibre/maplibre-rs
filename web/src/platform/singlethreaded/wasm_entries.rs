@@ -4,9 +4,10 @@ use js_sys::ArrayBuffer;
 use log::error;
 use maplibre::{
     benchmarking::io::{
-        apc::{AsyncProcedure, Input},
+        apc::{AsyncProcedure, Input, Message},
         source_client::{HttpSourceClient, SourceClient},
     },
+    environment::OffscreenKernelEnvironment,
     io::apc::CallError,
 };
 use thiserror::Error;
@@ -17,7 +18,7 @@ use crate::{
     platform::singlethreaded::{
         apc::{MessageTag, ReceivedType},
         transferables::FlatBufferTransferable,
-        PassingContext, UsedContext,
+        PassingContext, UsedContext, UsedOffscreenKernelEnvironment,
     },
     WHATWGFetchHttpClient,
 };
@@ -25,10 +26,12 @@ use crate::{
 /// Entry point invoked by the worker.
 #[wasm_bindgen]
 pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> Result<(), JSError> {
-    let procedure: AsyncProcedure<UsedContext> = unsafe { mem::transmute(procedure_ptr) };
+    let procedure: AsyncProcedure<UsedOffscreenKernelEnvironment, UsedContext> =
+        unsafe { mem::transmute(procedure_ptr) };
 
-    let input =
-        serde_json::from_str::<Input>(&input).map_err(|e| CallError::Deserialize(Box::new(e)))?;
+    let input = serde_json::from_str::<Input>(&input).map_err(|e| {
+        CallError::DeserializeInput(Box::new(e)) // TODO: This error e is not logged
+    })?;
 
     let context = PassingContext {
         source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
@@ -39,7 +42,7 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
         std::thread::current().name()
     );
 
-    procedure(input, context).await?;
+    procedure(input, context, UsedOffscreenKernelEnvironment::create()).await?;
 
     Ok(())
 }
@@ -65,7 +68,15 @@ pub unsafe fn singlethreaded_main_entry(
 
     let tag = MessageTag::from_u32(tag).map_err(|e| CallError::Deserialize(Box::new(e)))?;
 
-    let message = tag.create_message(FlatBufferTransferable::from_array_buffer(buffer));
+    let message = Message {
+        tag: tag.into(), // FIXME tcs: Why put tag twice in here?
+        transferable: Box::new(FlatBufferTransferable::from_array_buffer(tag, buffer)),
+    };
+
+    log::warn!(
+        "type_name js: {:?}",
+        std::any::TypeId::of::<FlatBufferTransferable>()
+    );
 
     // FIXME: Can we make this call safe? check if it was cloned before?
     let received: Rc<ReceivedType> = Rc::from_raw(received_ptr);

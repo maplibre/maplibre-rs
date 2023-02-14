@@ -9,7 +9,6 @@ use crate::coords::WorldTileCoords;
 mod fps_meter;
 pub mod grid;
 pub mod label;
-pub mod macros;
 pub mod math;
 
 struct MinMaxBoundingBox {

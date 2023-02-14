@@ -14,8 +14,10 @@ use maplibre::{
         http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler,
         ReqwestOffscreenKernelEnvironment,
     },
+    raster::{DefaultRasterTransferables, RasterPlugin},
     render::{builder::RendererBuilder, settings::WgpuSettings},
     style::Style,
+    vector::{DefaultVectorTransferables, VectorPlugin},
     window::{MapWindow, MapWindowConfig, WindowSize},
 };
 use winit::window::WindowBuilder;
@@ -92,7 +94,16 @@ pub fn run_headed_map(cache_path: Option<String>) {
             ..WgpuSettings::default()
         });
 
-        let mut map = Map::new(Style::default(), kernel, renderer_builder).unwrap();
+        let mut map = Map::new(
+            Style::default(),
+            kernel,
+            renderer_builder,
+            vec![
+                Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
+                Box::new(RasterPlugin::<DefaultRasterTransferables>::default()),
+            ],
+        )
+        .unwrap();
 
         #[cfg(not(target_os = "android"))]
         {

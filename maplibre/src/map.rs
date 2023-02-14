@@ -48,6 +48,8 @@ pub struct Map<E: Environment> {
     schedule: Schedule,
     map_context: CurrentMapContext,
     window: <E::MapWindowConfig as MapWindowConfig>::MapWindow,
+
+    plugins: Vec<Box<dyn Plugin<E>>>,
 }
 
 impl<E: Environment> Map<E>
@@ -58,6 +60,7 @@ where
         style: Style,
         mut kernel: Kernel<E>,
         renderer_builder: RendererBuilder,
+        plugins: Vec<Box<dyn Plugin<E>>>,
     ) -> Result<Self, MapError> {
         let mut schedule = Schedule::default();
         register_default_render_stages(&mut schedule);
@@ -74,6 +77,7 @@ where
                 renderer_builder,
             },
             window,
+            plugins,
         };
         Ok(map)
     }
@@ -104,8 +108,9 @@ where
                 );
 
                 // FIXME tcs: Add initialization logic
-                VectorPlugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
-                RasterPlugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
+                for plugin in &self.plugins {
+                    plugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
+                }
 
                 match init_result {
                     InitializationResult::Initialized(InitializedRenderer {

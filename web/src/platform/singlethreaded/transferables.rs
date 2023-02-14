@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter};
+
 use flatbuffers::FlatBufferBuilder;
 use image::RgbaImage;
 use js_sys::{ArrayBuffer, Uint8Array};
@@ -5,25 +7,25 @@ use maplibre::{
     benchmarking::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     coords::WorldTileCoords,
     io::{
-        apc::Message,
+        apc::{IntoMessage, Message},
         geometry_index::TileIndex,
-        tile_repository::StoredLayer,
-        transferables::{
-            LayerIndexed, LayerRaster, LayerTessellated, LayerUnavailable, TileTessellated,
-            Transferables,
-        },
     },
+    raster::{LayerRaster, RasterLayerData, RasterTransferables},
     render::ShaderVertex,
     tile::Layer,
+    vector::{
+        AvailableVectorLayerData, LayerIndexed, LayerTessellated, LayerUnavailable,
+        TileTessellated, UnavailableVectorLayerData, VectorTransferables,
+    },
 };
 
 use crate::platform::singlethreaded::{
+    apc::MessageTag,
     transferables::{
         basic_generated::*, layer_indexed_generated::*, layer_raster_generated::*,
         layer_tessellated_generated::*, layer_unavailable_generated::*,
         tile_tessellated_generated::*,
     },
-    UsedTransferables,
 };
 
 pub mod basic_generated {
@@ -65,15 +67,17 @@ pub mod tile_tessellated_generated {
 }
 
 pub struct FlatBufferTransferable {
+    tag: MessageTag,
     data: Vec<u8>,
     start: usize,
 }
 
 impl FlatBufferTransferable {
-    pub fn from_array_buffer(buffer: ArrayBuffer) -> Self {
+    pub fn from_array_buffer(tag: MessageTag, buffer: ArrayBuffer) -> Self {
         let buffer = Uint8Array::new(&buffer);
 
         FlatBufferTransferable {
+            tag,
             data: buffer.to_vec(),
             start: 0,
         }
@@ -82,19 +86,13 @@ impl FlatBufferTransferable {
     pub fn data(&self) -> &[u8] {
         &self.data[self.start..]
     }
-
-    pub fn from_message(message: Message<UsedTransferables>) -> Self {
-        match message {
-            Message::TileTessellated(transferable) => transferable,
-            Message::LayerUnavailable(transferable) => transferable,
-            Message::LayerTessellated(transferable) => transferable,
-            Message::LayerIndexed(transferable) => transferable,
-            Message::LayerRaster(transferable) => transferable,
-        }
-    }
 }
 
 impl TileTessellated for FlatBufferTransferable {
+    fn message_tag() -> u32 {
+        MessageTag::TileTessellated as u32
+    }
+
     fn build_from(coords: WorldTileCoords) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
         let mut builder = FlatTileTessellatedBuilder::new(&mut inner_builder);
@@ -107,16 +105,24 @@ impl TileTessellated for FlatBufferTransferable {
         let root = builder.finish();
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
-        FlatBufferTransferable { data, start }
+        FlatBufferTransferable {
+            tag: MessageTag::TileTessellated,
+            data,
+            start,
+        }
     }
 
     fn coords(&self) -> WorldTileCoords {
-        let data = unsafe { root_as_flat_tile_tessellated_unchecked(&self.data[self.start..]) };
+        let data = root_as_flat_tile_tessellated(&self.data[self.start..]).unwrap();
         data.coords().unwrap().into()
     }
 }
 
 impl LayerUnavailable for FlatBufferTransferable {
+    fn message_tag() -> u32 {
+        MessageTag::LayerUnavailable as u32
+    }
+
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
         let layer_name = inner_builder.create_string(&layer_name);
@@ -132,28 +138,51 @@ impl LayerUnavailable for FlatBufferTransferable {
 
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
-        FlatBufferTransferable { data, start }
+        FlatBufferTransferable {
+            tag: MessageTag::LayerUnavailable,
+            data,
+            start,
+        }
     }
 
     fn coords(&self) -> WorldTileCoords {
-        let data = unsafe { root_as_flat_layer_unavailable_unchecked(&self.data[self.start..]) };
+        let data = root_as_flat_layer_unavailable(&self.data[self.start..]).unwrap();
         data.coords().unwrap().into()
     }
 
     fn layer_name(&self) -> &str {
-        let data = unsafe { root_as_flat_layer_unavailable_unchecked(&self.data[self.start..]) };
+        let data = root_as_flat_layer_unavailable(&self.data[self.start..]).unwrap();
         data.layer_name().expect("property must be set")
     }
 
-    fn to_stored_layer(self) -> StoredLayer {
-        StoredLayer::UnavailableLayer {
-            layer_name: self.layer_name().to_owned(),
+    fn to_layer(self) -> UnavailableVectorLayerData {
+        UnavailableVectorLayerData {
+            source_layer: self.layer_name().to_owned(),
             coords: LayerUnavailable::coords(&self),
         }
     }
 }
 
+impl IntoMessage for FlatBufferTransferable {
+    fn into(self) -> Message {
+        Message {
+            tag: self.tag.into(),
+            transferable: Box::new(self),
+        }
+    }
+}
+
+impl Debug for FlatBufferTransferable {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "FlatBufferTransferable<{:?}>(??)", self.tag)
+    }
+}
+
 impl LayerTessellated for FlatBufferTransferable {
+    fn message_tag() -> u32 {
+        MessageTag::LayerTessellated as u32
+    }
+
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -190,21 +219,25 @@ impl LayerTessellated for FlatBufferTransferable {
 
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
-        FlatBufferTransferable { data, start }
+        FlatBufferTransferable {
+            tag: MessageTag::LayerTessellated,
+            data,
+            start,
+        }
     }
 
     fn coords(&self) -> WorldTileCoords {
-        let data = unsafe { root_as_flat_layer_tessellated_unchecked(&self.data[self.start..]) };
+        let data = root_as_flat_layer_tessellated(&self.data[self.start..]).unwrap();
         data.coords().unwrap().into()
     }
 
     fn is_empty(&self) -> bool {
-        let data = unsafe { root_as_flat_layer_tessellated_unchecked(&self.data[self.start..]) };
+        let data = root_as_flat_layer_tessellated(&self.data[self.start..]).unwrap();
         data.usable_indices() == 0
     }
 
-    fn to_stored_layer(self) -> StoredLayer {
-        let data = unsafe { root_as_flat_layer_tessellated_unchecked(&self.data[self.start..]) };
+    fn to_layer(self) -> AvailableVectorLayerData {
+        let data = root_as_flat_layer_tessellated(&self.data[self.start..]).unwrap();
         let vertices = data
             .vertices()
             .unwrap()
@@ -214,9 +247,9 @@ impl LayerTessellated for FlatBufferTransferable {
         let indices = data.indices().unwrap();
         let feature_indices: Vec<u32> = data.feature_indices().unwrap().iter().collect();
         let usable_indices = data.usable_indices();
-        StoredLayer::TessellatedLayer {
+        AvailableVectorLayerData {
             coords: LayerTessellated::coords(&self),
-            layer_name: data.layer_name().unwrap().to_owned(),
+            source_layer: data.layer_name().unwrap().to_owned(),
             buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
             feature_indices,
         }
@@ -224,6 +257,10 @@ impl LayerTessellated for FlatBufferTransferable {
 }
 
 impl LayerIndexed for FlatBufferTransferable {
+    fn message_tag() -> u32 {
+        MessageTag::LayerIndexed as u32
+    }
+
     fn build_from(coords: WorldTileCoords, _index: TileIndex) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
         let mut builder = FlatLayerIndexedBuilder::new(&mut inner_builder);
@@ -238,11 +275,15 @@ impl LayerIndexed for FlatBufferTransferable {
         let root = builder.finish();
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
-        FlatBufferTransferable { data, start }
+        FlatBufferTransferable {
+            tag: MessageTag::LayerIndexed,
+            data,
+            start,
+        }
     }
 
     fn coords(&self) -> WorldTileCoords {
-        let data = unsafe { root_as_flat_layer_indexed_unchecked(&self.data[self.start..]) };
+        let data = root_as_flat_layer_indexed(&self.data[self.start..]).unwrap();
         data.coords().unwrap().into()
     }
 
@@ -252,6 +293,10 @@ impl LayerIndexed for FlatBufferTransferable {
 }
 
 impl LayerRaster for FlatBufferTransferable {
+    fn message_tag() -> u32 {
+        MessageTag::LayerRaster as u32
+    }
+
     fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
 
@@ -276,15 +321,24 @@ impl LayerRaster for FlatBufferTransferable {
         let root = builder.finish();
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
-        FlatBufferTransferable { data, start }
+        FlatBufferTransferable {
+            tag: MessageTag::LayerRaster,
+            data,
+            start,
+        }
     }
 
-    fn to_stored_layer(self) -> StoredLayer {
-        let data = unsafe { root_as_flat_layer_raster_unchecked(&self.data[self.start..]) };
+    fn coords(&self) -> WorldTileCoords {
+        let data = root_as_flat_layer_raster(&self.data[self.start..]).unwrap();
+        data.coords().unwrap().into()
+    }
+
+    fn to_layer(self) -> RasterLayerData {
+        let data = root_as_flat_layer_raster(&self.data[self.start..]).unwrap();
         let image_data = data.image_data().unwrap().iter().collect();
-        StoredLayer::RasterLayer {
-            coords: LayerTessellated::coords(&self),
-            layer_name: "raster".to_owned(),
+        RasterLayerData {
+            coords: LayerRaster::coords(&self),
+            source_layer: "raster".to_owned(),
             image: RgbaImage::from_vec(data.width(), data.height(), image_data).unwrap(),
         }
     }
@@ -293,10 +347,13 @@ impl LayerRaster for FlatBufferTransferable {
 #[derive(Copy, Clone)]
 pub struct FlatTransferables;
 
-impl Transferables for FlatTransferables {
+impl VectorTransferables for FlatTransferables {
     type TileTessellated = FlatBufferTransferable;
     type LayerUnavailable = FlatBufferTransferable;
     type LayerTessellated = FlatBufferTransferable;
     type LayerIndexed = FlatBufferTransferable;
+}
+
+impl RasterTransferables for FlatTransferables {
     type LayerRaster = FlatBufferTransferable;
 }

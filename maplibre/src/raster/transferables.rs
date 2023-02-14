@@ -9,6 +9,10 @@ use crate::{
 };
 
 pub trait LayerRaster: IntoMessage + Debug + Send {
+    fn message_tag() -> u32 {
+        6
+    }
+
     fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self;
 
     fn coords(&self) -> WorldTileCoords;
@@ -31,6 +35,7 @@ impl Debug for DefaultRasterLayer {
 impl IntoMessage for DefaultRasterLayer {
     fn into(self) -> Message {
         Message {
+            tag: DefaultRasterLayer::message_tag(), // FIXME tcs: Avoid duplicates!
             transferable: Box::new(self),
         }
     }
@@ -58,13 +63,13 @@ impl LayerRaster for DefaultRasterLayer {
     }
 }
 
-pub trait Transferables: Copy + Clone + 'static {
+pub trait RasterTransferables: Copy + Clone + 'static {
     type LayerRaster: LayerRaster;
 }
 
 #[derive(Copy, Clone)]
-pub struct DefaultTransferables;
+pub struct DefaultRasterTransferables;
 
-impl Transferables for DefaultTransferables {
+impl RasterTransferables for DefaultRasterTransferables {
     type LayerRaster = DefaultRasterLayer;
 }

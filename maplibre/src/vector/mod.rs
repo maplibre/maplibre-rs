@@ -1,4 +1,6 @@
-use std::{ops::Deref, rc::Rc};
+use std::{marker::PhantomData, ops::Deref, rc::Rc};
+
+pub use transferables::{DefaultVectorTransferables, *};
 
 use crate::{
     coords::WorldTileCoords,
@@ -23,7 +25,6 @@ use crate::{
         resource::{BufferPool, IndexEntry},
         resource_system::resource_system,
         tile_view_pattern_system::tile_view_pattern_system,
-        transferables::DefaultTransferables,
         upload_system::upload_system,
     },
 };
@@ -77,9 +78,15 @@ pub type VectorBufferPool = BufferPool<
 
 pub type WgpuTileViewPattern = TileViewPattern<wgpu::Queue, wgpu::Buffer>;
 
-pub struct VectorPlugin;
+pub struct VectorPlugin<T>(PhantomData<T>);
 
-impl<E: Environment> Plugin<E> for VectorPlugin {
+impl<T: VectorTransferables> Default for VectorPlugin<T> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
     fn build(&self, schedule: &mut Schedule, kernel: Rc<Kernel<E>>, world: &mut World) {
         // FIXME tcs: Move to rendering core
         let resources = &mut world.resources;
@@ -106,11 +113,11 @@ impl<E: Environment> Plugin<E> for VectorPlugin {
 
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
-            SystemContainer::new(RequestSystem::<E, DefaultTransferables>::new(&kernel)),
+            SystemContainer::new(RequestSystem::<E, T>::new(&kernel)),
         );
         schedule.add_system_to_stage(
             &RenderStageLabel::Extract,
-            SystemContainer::new(PopulateWorldSystem::<E, DefaultTransferables>::new(&kernel)),
+            SystemContainer::new(PopulateWorldSystem::<E, T>::new(&kernel)),
         );
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);
         schedule.add_system_to_stage(&RenderStageLabel::Prepare, tile_view_pattern_system);

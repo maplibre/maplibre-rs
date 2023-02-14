@@ -1,14 +1,13 @@
-use std::{borrow::Cow, marker::PhantomData, rc::Rc};
+use std::{any::type_name, borrow::Cow, marker::PhantomData, rc::Rc};
 
 use crate::{
     context::MapContext,
     ecs::system::System,
     environment::Environment,
-    io::apc::AsyncProcedureCall,
+    io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
-    match_downcast,
     raster::{
-        transferables::{LayerRaster, Transferables},
+        transferables::{LayerRaster, RasterTransferables},
         RasterLayersDataComponent,
     },
 };
@@ -27,7 +26,7 @@ impl<E: Environment, T> PopulateWorldSystem<E, T> {
     }
 }
 
-impl<E: Environment, T: Transferables> System for PopulateWorldSystem<E, T> {
+impl<E: Environment, T: RasterTransferables> System for PopulateWorldSystem<E, T> {
     fn name(&self) -> Cow<'static, str> {
         "populate_world_system".into()
     }
@@ -38,21 +37,21 @@ impl<E: Environment, T: Transferables> System for PopulateWorldSystem<E, T> {
             world, renderer, ..
         }: &mut MapContext,
     ) {
-        for message in self.kernel.apc().receive(|message| {
-            let transferable = &message.transferable;
-            transferable.is::<<T as Transferables>::LayerRaster>()
-        }) {
-            match_downcast!(message.transferable, {
-                message: <T as Transferables>::LayerRaster => {
+        for message in self
+            .kernel
+            .apc()
+            .receive(|message| message.tag == T::LayerRaster::message_tag())
+        {
+            let message: Message = message;
+            if message.tag == T::LayerRaster::message_tag() {
+                if let Ok(message) = message.into_transferable::<T::LayerRaster>() {
                     let Some(component) = world
                         .tiles
                         .query_mut::<&mut RasterLayersDataComponent>(message.coords()) else { continue; };
 
                     component.layers.push(message.to_layer());
-                },
-                  // FIXME tcs: Add RasterLayerUnvailable
-                _ => {}
-            });
+                }
+            }
         }
     }
 }

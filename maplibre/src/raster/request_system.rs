@@ -14,17 +14,18 @@ use crate::{
     kernel::Kernel,
     raster::{
         process_raster::{process_raster_tile, ProcessRasterContext, RasterTileRequest},
-        transferables::Transferables,
+        transferables::RasterTransferables,
         RasterLayersDataComponent,
     },
+    style::layer::LayerPaint,
 };
 
-pub struct RequestSystem<E: Environment, T: Transferables> {
+pub struct RequestSystem<E: Environment, T: RasterTransferables> {
     kernel: Rc<Kernel<E>>,
     phantom_t: PhantomData<T>,
 }
 
-impl<E: Environment, T: Transferables> RequestSystem<E, T> {
+impl<E: Environment, T: RasterTransferables> RequestSystem<E, T> {
     pub fn new(kernel: &Rc<Kernel<E>>) -> Self {
         Self {
             kernel: kernel.clone(),
@@ -33,7 +34,7 @@ impl<E: Environment, T: Transferables> RequestSystem<E, T> {
     }
 }
 
-impl<E: Environment, T: Transferables> System for RequestSystem<E, T> {
+impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
     fn name(&self) -> Cow<'static, str> {
         "raster_request".into()
     }
@@ -101,7 +102,7 @@ impl<E: Environment, T: Transferables> System for RequestSystem<E, T> {
         view_state.update_references();
     }
 }
-pub fn fetch_raster_apc<K: OffscreenKernelEnvironment, T: Transferables, C: Context>(
+pub fn fetch_raster_apc<K: OffscreenKernelEnvironment, T: RasterTransferables, C: Context>(
     input: Input,
     context: C,
     kernel: K,
@@ -115,7 +116,7 @@ pub fn fetch_raster_apc<K: OffscreenKernelEnvironment, T: Transferables, C: Cont
             .layers
             .iter()
             .filter_map(|layer| {
-                if layer.typ == "raster" {
+                if matches!(layer.paint, Some(LayerPaint::Raster(_))) {
                     layer.source_layer.clone()
                 } else {
                     None

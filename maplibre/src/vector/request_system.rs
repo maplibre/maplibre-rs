@@ -11,9 +11,10 @@ use crate::{
         source_type::{SourceType, TessellateSource},
     },
     kernel::Kernel,
+    style::layer::LayerPaint,
     vector::{
         process_vector::{process_vector_tile, ProcessVectorContext, VectorTileRequest},
-        transferables::{LayerUnavailable, Transferables},
+        transferables::{LayerUnavailable, VectorTransferables},
         VectorLayersDataComponent, VectorLayersIndicesComponent,
     },
 };
@@ -32,7 +33,7 @@ impl<E: Environment, T> RequestSystem<E, T> {
     }
 }
 
-impl<E: Environment, T: Transferables> System for RequestSystem<E, T> {
+impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
     fn name(&self) -> Cow<'static, str> {
         "vector_request".into()
     }
@@ -104,7 +105,7 @@ impl<E: Environment, T: Transferables> System for RequestSystem<E, T> {
     }
 }
 
-pub fn fetch_vector_apc<K: OffscreenKernelEnvironment, T: Transferables, C: Context>(
+pub fn fetch_vector_apc<K: OffscreenKernelEnvironment, T: VectorTransferables, C: Context>(
     input: Input,
     context: C,
     kernel: K,
@@ -118,7 +119,9 @@ pub fn fetch_vector_apc<K: OffscreenKernelEnvironment, T: Transferables, C: Cont
             .layers
             .iter()
             .filter_map(|layer| {
-                if layer.typ == "fill" || layer.typ == "line" {
+                if matches!(layer.paint, Some(LayerPaint::Fill(_)))
+                    || matches!(layer.paint, Some(LayerPaint::Line(_)))
+                {
                     layer.source_layer.clone()
                 } else {
                     None
@@ -150,7 +153,7 @@ pub fn fetch_vector_apc<K: OffscreenKernelEnvironment, T: Transferables, C: Cont
                     log::error!("{:?}", &e);
                     for to_load in &fill_layers {
                         context
-                            .send(<T as Transferables>::LayerUnavailable::build_from(
+                            .send(<T as VectorTransferables>::LayerUnavailable::build_from(
                                 coords,
                                 to_load.to_string(),
                             ))

@@ -14,6 +14,10 @@ use crate::{
 };
 
 pub trait TileTessellated: IntoMessage + Debug + Send {
+    fn message_tag() -> u32 {
+        0
+    }
+
     fn build_from(coords: WorldTileCoords) -> Self
     where
         Self: Sized;
@@ -22,17 +26,26 @@ pub trait TileTessellated: IntoMessage + Debug + Send {
 }
 
 pub trait LayerUnavailable: IntoMessage + Debug + Send {
+    fn message_tag() -> u32 {
+        1
+    }
+
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self
     where
         Self: Sized;
 
     fn coords(&self) -> WorldTileCoords;
+
     fn layer_name(&self) -> &str;
 
     fn to_layer(self) -> UnavailableVectorLayerData;
 }
 
 pub trait LayerTessellated: IntoMessage + Debug + Send {
+    fn message_tag() -> u32 {
+        2
+    }
+
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -50,6 +63,10 @@ pub trait LayerTessellated: IntoMessage + Debug + Send {
 }
 
 pub trait LayerIndexed: IntoMessage + Debug + Send {
+    fn message_tag() -> u32 {
+        3
+    }
+
     fn build_from(coords: WorldTileCoords, index: TileIndex) -> Self
     where
         Self: Sized;
@@ -60,7 +77,7 @@ pub trait LayerIndexed: IntoMessage + Debug + Send {
 }
 
 pub struct DefaultTileTessellated {
-    pub coords: WorldTileCoords,
+    coords: WorldTileCoords,
 }
 
 impl Debug for DefaultTileTessellated {
@@ -72,12 +89,17 @@ impl Debug for DefaultTileTessellated {
 impl IntoMessage for DefaultTileTessellated {
     fn into(self) -> Message {
         Message {
+            tag: DefaultTileTessellated::message_tag(), // FIXME tcs: Avoid duplicates!
             transferable: Box::new(self),
         }
     }
 }
 
 impl TileTessellated for DefaultTileTessellated {
+    fn message_tag() -> u32 {
+        4
+    }
+
     fn build_from(coords: WorldTileCoords) -> Self {
         Self { coords }
     }
@@ -101,12 +123,17 @@ impl Debug for DefaultLayerUnavailable {
 impl IntoMessage for DefaultLayerUnavailable {
     fn into(self) -> Message {
         Message {
+            tag: DefaultLayerUnavailable::message_tag(), // FIXME tcs: Avoid duplicates!
             transferable: Box::new(self),
         }
     }
 }
 
 impl LayerUnavailable for DefaultLayerUnavailable {
+    fn message_tag() -> u32 {
+        5
+    }
+
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self {
         Self { coords, layer_name }
     }
@@ -144,6 +171,7 @@ impl Debug for DefaultLayerTesselated {
 impl IntoMessage for DefaultLayerTesselated {
     fn into(self) -> Message {
         Message {
+            tag: DefaultLayerTesselated::message_tag(), // FIXME tcs: Avoid duplicates!
             transferable: Box::new(self),
         }
     }
@@ -196,6 +224,7 @@ impl Debug for DefaultLayerIndexed {
 impl IntoMessage for DefaultLayerIndexed {
     fn into(self) -> Message {
         Message {
+            tag: DefaultLayerIndexed::message_tag(), // FIXME tcs: Avoid duplicates!
             transferable: Box::new(self),
         }
     }
@@ -215,7 +244,7 @@ impl LayerIndexed for DefaultLayerIndexed {
     }
 }
 
-pub trait Transferables: Copy + Clone + 'static {
+pub trait VectorTransferables: Copy + Clone + 'static {
     type TileTessellated: TileTessellated;
     type LayerUnavailable: LayerUnavailable;
     type LayerTessellated: LayerTessellated;
@@ -223,9 +252,9 @@ pub trait Transferables: Copy + Clone + 'static {
 }
 
 #[derive(Copy, Clone)]
-pub struct DefaultTransferables;
+pub struct DefaultVectorTransferables;
 
-impl Transferables for DefaultTransferables {
+impl VectorTransferables for DefaultVectorTransferables {
     type TileTessellated = DefaultTileTessellated;
     type LayerUnavailable = DefaultLayerUnavailable;
     type LayerTessellated = DefaultLayerTesselated;

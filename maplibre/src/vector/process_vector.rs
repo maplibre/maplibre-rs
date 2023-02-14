@@ -16,7 +16,7 @@ use crate::{
     render::ShaderVertex,
     tessellation::{zero_tessellator::ZeroTessellator, IndexDataType, OverAlignedVertexBuffer},
     vector::transferables::{
-        LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, Transferables,
+        LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, VectorTransferables,
     },
 };
 
@@ -36,7 +36,7 @@ pub struct VectorTileRequest {
     pub layers: HashSet<String>,
 }
 
-pub fn process_vector_tile<T: Transferables, C: Context>(
+pub fn process_vector_tile<T: VectorTransferables, C: Context>(
     data: &[u8],
     tile_request: VectorTileRequest,
     context: &mut ProcessVectorContext<T, C>,
@@ -115,12 +115,12 @@ pub fn process_vector_tile<T: Transferables, C: Context>(
     Ok(())
 }
 
-pub struct ProcessVectorContext<T: Transferables, C: Context> {
+pub struct ProcessVectorContext<T: VectorTransferables, C: Context> {
     context: C,
     phantom_t: PhantomData<T>,
 }
 
-impl<T: Transferables, C: Context> ProcessVectorContext<T, C> {
+impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
     pub fn new(context: C) -> Self {
         Self {
             context,
@@ -129,7 +129,7 @@ impl<T: Transferables, C: Context> ProcessVectorContext<T, C> {
     }
 }
 
-impl<T: Transferables, C: Context> ProcessVectorContext<T, C> {
+impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
     fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), ProcessVectorError> {
         self.context
             .send(T::TileTessellated::build_from(*coords))

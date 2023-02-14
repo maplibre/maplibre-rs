@@ -6,7 +6,7 @@ use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 
 use crate::style::{
-    layer::{LayerPaint, LinePaint, StyleLayer},
+    layer::{FillPaint, LayerPaint, LinePaint, StyleLayer},
     raster::RasterLayer,
     source::Source,
 };
@@ -38,12 +38,11 @@ impl Default for Style {
                 StyleLayer {
                     index: 0,
                     id: "park".to_string(),
-                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(Color::from_str("#c8facc").unwrap()),
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(Color::from_str("#c8facc").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("park".to_string()),
@@ -51,12 +50,11 @@ impl Default for Style {
                 StyleLayer {
                     index: 1,
                     id: "landuse".to_string(),
-                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(Color::from_str("#e0dfdf").unwrap()),
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(Color::from_str("#e0dfdf").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("landuse".to_string()),
@@ -64,12 +62,11 @@ impl Default for Style {
                 StyleLayer {
                     index: 2,
                     id: "landcover".to_string(),
-                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(Color::from_str("#aedfa3").unwrap()),
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(Color::from_str("#aedfa3").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("landcover".to_string()),
@@ -77,7 +74,6 @@ impl Default for Style {
                 StyleLayer {
                     index: 3,
                     id: "transportation".to_string(),
-                    typ: "line".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -90,12 +86,11 @@ impl Default for Style {
                 StyleLayer {
                     index: 4,
                     id: "building".to_string(),
-                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(Color::from_str("#d9d0c9").unwrap()),
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(Color::from_str("#d9d0c9").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("building".to_string()),
@@ -103,12 +98,11 @@ impl Default for Style {
                 StyleLayer {
                     index: 4,
                     id: "water".to_string(),
-                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(Color::from_str("#aad3df").unwrap()),
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(Color::from_str("#aad3df").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("water".to_string()),
@@ -116,12 +110,11 @@ impl Default for Style {
                 StyleLayer {
                     index: 6,
                     id: "waterway".to_string(),
-                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(Color::from_str("#aad3df").unwrap()),
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(Color::from_str("#aad3df").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("waterway".to_string()),
@@ -129,7 +122,6 @@ impl Default for Style {
                 StyleLayer {
                     index: 7,
                     id: "boundary".to_string(),
-                    typ: "line".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
@@ -142,7 +134,6 @@ impl Default for Style {
                 StyleLayer {
                     index: 8,
                     id: "raster".to_string(),
-                    typ: "raster".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,

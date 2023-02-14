@@ -200,13 +200,13 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                 if container.has_tile(&coords) {
                     SourceShapes::SourceEqTarget(TileShape::new(coords, zoom))
                 } else if let Some(parent_coords) = container.get_available_parent(&coords) {
-                    log::info!("Could not find data at {coords}. Falling back to {parent_coords}");
+                    log::debug!("Could not find data at {coords}. Falling back to {parent_coords}");
 
                     SourceShapes::Parent(TileShape::new(parent_coords, zoom))
                 } else if let Some(children_coords) =
                     container.get_available_children(&coords, CHILDREN_SEARCH_DEPTH)
                 {
-                    log::info!(
+                    log::debug!(
                         "Could not find data at {coords}. Falling back children: {children_coords:?}"
                     );
 
