@@ -145,7 +145,7 @@ fn upload_tesselated_layer(
             .iter()
             .flat_map(|data| match data {
                 VectorLayerData::Available(data) => Some(data),
-                VectorLayerData::Unavailable(_) => None,
+                VectorLayerData::Missing(_) => None,
             })
             .filter(|data| !loaded_layers.contains(data.source_layer.as_str()))
             .collect::<Vec<_>>();

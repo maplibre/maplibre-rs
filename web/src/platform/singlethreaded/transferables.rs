@@ -10,21 +10,23 @@ use maplibre::{
         apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
-    raster::{LayerRaster, RasterLayerData, RasterTransferables},
+    raster::{
+        AvailableRasterLayerData, LayerRaster, LayerRasterMissing, MissingRasterLayerData,
+        RasterTransferables,
+    },
     render::ShaderVertex,
     tile::Layer,
     vector::{
-        AvailableVectorLayerData, LayerIndexed, LayerTessellated, LayerUnavailable,
-        TileTessellated, UnavailableVectorLayerData, VectorTransferables,
+        AvailableVectorLayerData, LayerIndexed, LayerMissing, LayerTessellated,
+        MissingVectorLayerData, TileTessellated, VectorTransferables,
     },
 };
 
 use crate::platform::singlethreaded::{
     apc::WebMessageTag,
     transferables::{
-        basic_generated::*, layer_indexed_generated::*, layer_raster_generated::*,
-        layer_tessellated_generated::*, layer_unavailable_generated::*,
-        tile_tessellated_generated::*,
+        basic_generated::*, layer_indexed_generated::*, layer_missing_generated::*,
+        layer_raster_generated::*, layer_tessellated_generated::*, tile_tessellated_generated::*,
     },
 };
 
@@ -53,17 +55,17 @@ pub mod layer_tessellated_generated {
     #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/layer_tessellated_generated.rs"));
 }
-pub mod layer_unavailable_generated {
+pub mod layer_missing_generated {
     #![allow(unused, unused_imports, clippy::all)]
-    include!(concat!(env!("OUT_DIR"), "/layer_unavailable_generated.rs"));
-}
-pub mod layer_raster_generated {
-    #![allow(unused, unused_imports, clippy::all)]
-    include!(concat!(env!("OUT_DIR"), "/layer_raster_generated.rs"));
+    include!(concat!(env!("OUT_DIR"), "/layer_missing_generated.rs"));
 }
 pub mod tile_tessellated_generated {
     #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/tile_tessellated_generated.rs"));
+}
+pub mod layer_raster_generated {
+    #![allow(unused, unused_imports, clippy::all)]
+    include!(concat!(env!("OUT_DIR"), "/layer_raster_generated.rs"));
 }
 
 pub struct FlatBufferTransferable {
@@ -118,16 +120,16 @@ impl TileTessellated for FlatBufferTransferable {
     }
 }
 
-impl LayerUnavailable for FlatBufferTransferable {
+impl LayerMissing for FlatBufferTransferable {
     fn message_tag() -> &'static dyn MessageTag {
-        &WebMessageTag::LayerUnavailable
+        &WebMessageTag::LayerMissing
     }
 
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
         let layer_name = inner_builder.create_string(&layer_name);
 
-        let mut builder = FlatLayerUnavailableBuilder::new(&mut inner_builder);
+        let mut builder = FlatLayerMissingBuilder::new(&mut inner_builder);
         builder.add_coords(&FlatWorldTileCoords::new(
             coords.x,
             coords.y,
@@ -139,26 +141,26 @@ impl LayerUnavailable for FlatBufferTransferable {
         inner_builder.finish(root, None);
         let (data, start) = inner_builder.collapse();
         FlatBufferTransferable {
-            tag: WebMessageTag::LayerUnavailable,
+            tag: WebMessageTag::LayerMissing,
             data,
             start,
         }
     }
 
     fn coords(&self) -> WorldTileCoords {
-        let data = root_as_flat_layer_unavailable(&self.data[self.start..]).unwrap();
+        let data = root_as_flat_layer_missing(&self.data[self.start..]).unwrap();
         data.coords().unwrap().into()
     }
 
     fn layer_name(&self) -> &str {
-        let data = root_as_flat_layer_unavailable(&self.data[self.start..]).unwrap();
+        let data = root_as_flat_layer_missing(&self.data[self.start..]).unwrap();
         data.layer_name().expect("property must be set")
     }
 
-    fn to_layer(self) -> UnavailableVectorLayerData {
-        UnavailableVectorLayerData {
+    fn to_layer(self) -> MissingVectorLayerData {
+        MissingVectorLayerData {
             source_layer: self.layer_name().to_owned(),
-            coords: LayerUnavailable::coords(&self),
+            coords: LayerMissing::coords(&self),
         }
     }
 }
@@ -330,13 +332,51 @@ impl LayerRaster for FlatBufferTransferable {
         data.coords().unwrap().into()
     }
 
-    fn to_layer(self) -> RasterLayerData {
+    fn to_layer(self) -> AvailableRasterLayerData {
         let data = root_as_flat_layer_raster(&self.data[self.start..]).unwrap();
         let image_data = data.image_data().unwrap().iter().collect();
-        RasterLayerData {
+        AvailableRasterLayerData {
             coords: LayerRaster::coords(&self),
             source_layer: "raster".to_owned(),
             image: RgbaImage::from_vec(data.width(), data.height(), image_data).unwrap(),
+        }
+    }
+}
+
+impl LayerRasterMissing for FlatBufferTransferable {
+    fn message_tag() -> &'static dyn MessageTag {
+        &WebMessageTag::LayerRasterMissing
+    }
+
+    fn build_from(coords: WorldTileCoords) -> Self {
+        let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
+        let mut builder = FlatLayerIndexedBuilder::new(&mut inner_builder);
+
+        builder.add_coords(&FlatWorldTileCoords::new(
+            coords.x,
+            coords.y,
+            coords.z.into(),
+        ));
+        let root = builder.finish();
+        inner_builder.finish(root, None);
+        let (data, start) = inner_builder.collapse();
+        FlatBufferTransferable {
+            tag: WebMessageTag::LayerRasterMissing,
+            data,
+            start,
+        }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        let data = root_as_flat_layer_missing(&self.data[self.start..]).unwrap();
+        data.coords().unwrap().into()
+    }
+
+    fn to_layer(self) -> MissingRasterLayerData {
+        let data = root_as_flat_layer_raster(&self.data[self.start..]).unwrap();
+        MissingRasterLayerData {
+            coords: LayerRaster::coords(&self),
+            source_layer: "raster".to_string(),
         }
     }
 }
@@ -346,11 +386,12 @@ pub struct FlatTransferables;
 
 impl VectorTransferables for FlatTransferables {
     type TileTessellated = FlatBufferTransferable;
-    type LayerUnavailable = FlatBufferTransferable;
+    type LayerMissing = FlatBufferTransferable;
     type LayerTessellated = FlatBufferTransferable;
     type LayerIndexed = FlatBufferTransferable;
 }
 
 impl RasterTransferables for FlatTransferables {
     type LayerRaster = FlatBufferTransferable;
+    type LayerRasterMissing = FlatBufferTransferable;
 }

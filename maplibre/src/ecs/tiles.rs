@@ -142,14 +142,17 @@ impl<'a, T: TileComponent> ComponentQuery for &'a T {
         tile: Tile,
         state: Self::State<'s>,
     ) -> Option<Self::Item<'t>> {
-        let components = tiles
-            .components
-            .get(&tile.coords.build_quad_key().unwrap())?; // FIXME tcs: Unwrap
+        let components = tiles.components.get(&tile.coords.build_quad_key()?)?;
 
         components
             .iter()
             .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
-            .and_then(|component| component.as_ref().downcast_ref())
+            .map(|component| {
+                component
+                    .as_ref()
+                    .downcast_ref()
+                    .expect("inserted component has wrong TypeId")
+            })
     }
 }
 
@@ -189,14 +192,17 @@ impl<'a, T: TileComponent> ComponentQueryMut for &'a mut T {
         tile: Tile,
         state: Self::State<'s>,
     ) -> Option<Self::MutItem<'t>> {
-        let components = tiles
-            .components
-            .get_mut(&tile.coords.build_quad_key().unwrap())?; // FIXME tcs: Unwrap
+        let components = tiles.components.get_mut(&tile.coords.build_quad_key()?)?;
 
         components
             .iter_mut()
             .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
-            .and_then(|component| component.as_mut().downcast_mut())
+            .map(|component| {
+                component
+                    .as_mut()
+                    .downcast_mut()
+                    .expect("inserted component has wrong TypeId")
+            })
     }
 }
 

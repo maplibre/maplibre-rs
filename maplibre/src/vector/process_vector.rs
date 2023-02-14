@@ -16,7 +16,7 @@ use crate::{
     render::ShaderVertex,
     tessellation::{zero_tessellator::ZeroTessellator, IndexDataType, OverAlignedVertexBuffer},
     vector::transferables::{
-        LayerIndexed, LayerTessellated, LayerUnavailable, TileTessellated, VectorTransferables,
+        LayerIndexed, LayerMissing, LayerTessellated, TileTessellated, VectorTransferables,
     },
 };
 
@@ -58,7 +58,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 
         let mut tessellator = ZeroTessellator::<IndexDataType>::default();
         if let Err(e) = layer.process(&mut tessellator) {
-            context.layer_unavailable(coords, layer_name)?;
+            context.layer_missing(coords, layer_name)?;
 
             tracing::error!(
                 "layer {} at {} tesselation failed {:?}",
@@ -76,7 +76,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
         }
     }
 
-    // Unavailable
+    // Missing
 
     let coords = &tile_request.coords;
 
@@ -87,7 +87,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
         .collect::<HashSet<_>>();
 
     for missing_layer in tile_request.layers.difference(&available_layers) {
-        context.layer_unavailable(coords, missing_layer)?;
+        context.layer_missing(coords, missing_layer)?;
 
         tracing::info!(
             "requested layer {} at {} not found in tile",
@@ -136,16 +136,13 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
             .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
     }
 
-    fn layer_unavailable(
+    fn layer_missing(
         &mut self,
         coords: &WorldTileCoords,
         layer_name: &str,
     ) -> Result<(), ProcessVectorError> {
         self.context
-            .send(T::LayerUnavailable::build_from(
-                *coords,
-                layer_name.to_owned(),
-            ))
+            .send(T::LayerMissing::build_from(*coords, layer_name.to_owned()))
             .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
     }
 

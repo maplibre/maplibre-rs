@@ -38,48 +38,44 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
 
         for message in self.kernel.apc().receive(|message| {
             message.has_tag(T::TileTessellated::message_tag())
-                || message.has_tag(T::LayerUnavailable::message_tag())
+                || message.has_tag(T::LayerMissing::message_tag())
                 || message.has_tag(T::LayerTessellated::message_tag())
                 || message.has_tag(T::LayerIndexed::message_tag())
         }) {
             let message: Message = message;
             if message.has_tag(T::TileTessellated::message_tag()) {
-                if let Ok(message) = message.into_transferable::<T::TileTessellated>() {
-                    let Some(component) = world
+                let message = message.into_transferable::<T::TileTessellated>();
+                let Some(component) = world
                        .tiles
                        .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
 
-                    component.done = true;
-                }
-            } else if message.has_tag(T::LayerUnavailable::message_tag()) {
-                if let Ok(message) = message.into_transferable::<T::LayerUnavailable>() {
-                    let Some(component) = world
+                component.done = true;
+            } else if message.has_tag(T::LayerMissing::message_tag()) {
+                let message = message.into_transferable::<T::LayerMissing>();
+                let Some(component) = world
                         .tiles
                         .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
 
-                    component
-                        .layers
-                        .push(VectorLayerData::Unavailable(message.to_layer()));
-                }
+                component
+                    .layers
+                    .push(VectorLayerData::Missing(message.to_layer()));
             } else if message.has_tag(T::LayerTessellated::message_tag()) {
-                if let Ok(message) = message.into_transferable::<T::LayerTessellated>() {
-                    // FIXME: Handle points!
-                    /*if message.is_empty() {
-                        continue;
-                    }*/
+                let message = message.into_transferable::<T::LayerTessellated>();
+                // FIXME: Handle points!
+                /*if message.is_empty() {
+                    continue;
+                }*/
 
-                    let Some(component) = world
+                let Some(component) = world
                         .tiles
                         .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
 
-                    component
-                        .layers
-                        .push(VectorLayerData::Available(message.to_layer()));
-                }
+                component
+                    .layers
+                    .push(VectorLayerData::Available(message.to_layer()));
             } else if message.has_tag(T::LayerIndexed::message_tag()) {
-                if let Ok(message) = message.into_transferable::<T::LayerIndexed>() {
-                    geometry_index.index_tile(&message.coords(), message.to_tile_index());
-                }
+                let message = message.into_transferable::<T::LayerIndexed>();
+                geometry_index.index_tile(&message.coords(), message.to_tile_index());
             }
         }
     }

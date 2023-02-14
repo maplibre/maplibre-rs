@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use image::RgbaImage;
-pub use resource::RasterResources; // FIXME tcs
+pub use resource::RasterResources;
 pub use transferables::*;
 
 use crate::{
@@ -28,8 +28,6 @@ mod resource;
 mod resource_system;
 mod transferables;
 mod upload_system;
-
-// FIXME tcs: avoid making this public
 
 pub struct RasterPlugin<T>(PhantomData<T>);
 
@@ -62,13 +60,21 @@ impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
     }
 }
 
-pub struct RasterLayerData {
+pub struct AvailableRasterLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
     pub image: RgbaImage,
 }
 
-// FIXME tcs: Add AvailableRasterLayerData and UnavailableRasterLayerData
+pub struct MissingRasterLayerData {
+    pub coords: WorldTileCoords,
+    pub source_layer: String,
+}
+
+pub enum RasterLayerData {
+    Available(AvailableRasterLayerData),
+    Missing(MissingRasterLayerData),
+}
 
 #[derive(Default)]
 pub struct RasterLayersDataComponent {

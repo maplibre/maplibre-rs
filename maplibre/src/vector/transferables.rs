@@ -11,7 +11,7 @@ use crate::{
     raster::LayerRaster,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    vector::{AvailableVectorLayerData, UnavailableVectorLayerData},
+    vector::{AvailableVectorLayerData, MissingVectorLayerData},
 };
 
 pub trait TileTessellated: IntoMessage + Debug + Send {
@@ -24,7 +24,7 @@ pub trait TileTessellated: IntoMessage + Debug + Send {
     fn coords(&self) -> WorldTileCoords;
 }
 
-pub trait LayerUnavailable: IntoMessage + Debug + Send {
+pub trait LayerMissing: IntoMessage + Debug + Send {
     fn message_tag() -> &'static dyn MessageTag;
 
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self
@@ -35,7 +35,7 @@ pub trait LayerUnavailable: IntoMessage + Debug + Send {
 
     fn layer_name(&self) -> &str;
 
-    fn to_layer(self) -> UnavailableVectorLayerData;
+    fn to_layer(self) -> MissingVectorLayerData;
 }
 
 pub trait LayerTessellated: IntoMessage + Debug + Send {
@@ -99,24 +99,24 @@ impl TileTessellated for DefaultTileTessellated {
     }
 }
 
-pub struct DefaultLayerUnavailable {
+pub struct DefaultLayerMissing {
     pub coords: WorldTileCoords,
     pub layer_name: String,
 }
 
-impl Debug for DefaultLayerUnavailable {
+impl Debug for DefaultLayerMissing {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "DefaultLayerUnavailable({})", self.coords)
+        write!(f, "DefaultLayerMissing({})", self.coords)
     }
 }
 
-impl IntoMessage for DefaultLayerUnavailable {
+impl IntoMessage for DefaultLayerMissing {
     fn into(self) -> Message {
         Message::new(Self::message_tag(), Box::new(self))
     }
 }
 
-impl LayerUnavailable for DefaultLayerUnavailable {
+impl LayerMissing for DefaultLayerMissing {
     fn message_tag() -> &'static dyn MessageTag {
         &3
     }
@@ -133,8 +133,8 @@ impl LayerUnavailable for DefaultLayerUnavailable {
         &self.layer_name
     }
 
-    fn to_layer(self) -> UnavailableVectorLayerData {
-        UnavailableVectorLayerData {
+    fn to_layer(self) -> MissingVectorLayerData {
+        MissingVectorLayerData {
             coords: self.coords,
             source_layer: self.layer_name,
         }
@@ -235,7 +235,7 @@ impl LayerIndexed for DefaultLayerIndexed {
 
 pub trait VectorTransferables: Copy + Clone + 'static {
     type TileTessellated: TileTessellated;
-    type LayerUnavailable: LayerUnavailable;
+    type LayerMissing: LayerMissing;
     type LayerTessellated: LayerTessellated;
     type LayerIndexed: LayerIndexed;
 }
@@ -245,7 +245,7 @@ pub struct DefaultVectorTransferables;
 
 impl VectorTransferables for DefaultVectorTransferables {
     type TileTessellated = DefaultTileTessellated;
-    type LayerUnavailable = DefaultLayerUnavailable;
+    type LayerMissing = DefaultLayerMissing;
     type LayerTessellated = DefaultLayerTesselated;
     type LayerIndexed = DefaultLayerIndexed;
 }

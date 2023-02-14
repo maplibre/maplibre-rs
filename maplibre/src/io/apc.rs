@@ -41,10 +41,6 @@ pub enum MessageError {
 
 /// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
 /// of an [`AsyncProcedure`].
-///
-/// * `TessellatedLayer` contains the result of the tessellation for a specific layer.
-/// * `UnavailableLayer` is sent if a requested layer is not found.
-/// * `TileTessellated` is sent if processing of a tile finished.
 #[derive(Debug)]
 pub struct Message {
     tag: &'static dyn MessageTag,
@@ -56,10 +52,10 @@ impl Message {
         Self { tag, transferable }
     }
 
-    pub fn into_transferable<T: 'static>(self) -> Result<Box<T>, MessageError> {
+    pub fn into_transferable<T: 'static>(self) -> Box<T> {
         self.transferable
             .downcast::<T>()
-            .map_err(|e| MessageError::CastError(e))
+            .expect("message has wrong tag")
     }
 
     pub fn has_tag(&self, tag: &'static dyn MessageTag) -> bool {

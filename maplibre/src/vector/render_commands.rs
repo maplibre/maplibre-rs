@@ -4,7 +4,9 @@ use crate::{
     ecs::world::World,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult, TileMaskItem},
+        render_phase::{
+            LayerItem, PhaseItem, RenderCommand, RenderCommandResult, TileDebugItem, TileMaskItem,
+        },
         resource::TrackedRenderPass,
         RenderState, INDEX_FORMAT,
     },
@@ -99,11 +101,11 @@ impl RenderCommand<TileMaskItem> for DrawMask {
 }
 
 pub struct DrawDebugOutline;
-impl RenderCommand<LayerItem> for DrawDebugOutline {
+impl RenderCommand<TileDebugItem> for DrawDebugOutline {
     fn render<'w>(
         state: &'w RenderState,
         world: &'w World,
-        item: &LayerItem,
+        item: &TileDebugItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let Some(Initialized(tile_view_pattern)) = world

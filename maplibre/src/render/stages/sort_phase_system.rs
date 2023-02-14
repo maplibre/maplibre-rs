@@ -9,14 +9,10 @@ pub fn sort_phase_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
+    // We are only sorting layers and not masks
     world
         .resources
         .get_mut::<RenderPhase<LayerItem>>()
-        .unwrap()
-        .sort();
-    world
-        .resources
-        .get_mut::<RenderPhase<TileMaskItem>>()
         .unwrap()
         .sort();
 }

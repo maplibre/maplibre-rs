@@ -10,7 +10,7 @@ use crate::{
     plugin::Plugin,
     render::{
         eventually::Eventually,
-        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        render_phase::{LayerItem, RenderPhase, TileDebugItem, TileMaskItem},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
         stages::RenderStageLabel,
         tile_view_pattern::TileViewPattern,
@@ -92,6 +92,7 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
         let resources = &mut world.resources;
         resources.init::<RenderPhase<LayerItem>>();
         resources.init::<RenderPhase<TileMaskItem>>();
+        resources.init::<RenderPhase<TileDebugItem>>();
 
         // buffer_pool
         resources.insert(Eventually::<VectorBufferPool>::Uninitialized);
@@ -134,14 +135,14 @@ pub struct AvailableVectorLayerData {
     pub feature_indices: Vec<u32>,
 }
 
-pub struct UnavailableVectorLayerData {
+pub struct MissingVectorLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
 }
 
 pub enum VectorLayerData {
     Available(AvailableVectorLayerData),
-    Unavailable(UnavailableVectorLayerData),
+    Missing(MissingVectorLayerData),
 }
 
 #[derive(Default)]

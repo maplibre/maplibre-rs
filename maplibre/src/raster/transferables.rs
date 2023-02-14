@@ -5,7 +5,8 @@ use image::RgbaImage;
 use crate::{
     coords::WorldTileCoords,
     io::apc::{IntoMessage, Message, MessageTag},
-    raster::RasterLayerData,
+    raster::{AvailableRasterLayerData, MissingRasterLayerData, RasterLayerData},
+    vector::AvailableVectorLayerData,
 };
 
 pub trait LayerRaster: IntoMessage + Debug + Send {
@@ -15,28 +16,38 @@ pub trait LayerRaster: IntoMessage + Debug + Send {
 
     fn coords(&self) -> WorldTileCoords;
 
-    fn to_layer(self) -> RasterLayerData;
+    fn to_layer(self) -> AvailableRasterLayerData;
 }
 
-pub struct DefaultRasterLayer {
+pub trait LayerRasterMissing: IntoMessage + Debug + Send {
+    fn message_tag() -> &'static dyn MessageTag;
+
+    fn build_from(coords: WorldTileCoords) -> Self;
+
+    fn coords(&self) -> WorldTileCoords;
+
+    fn to_layer(self) -> MissingRasterLayerData;
+}
+
+pub struct DefaultLayerRaster {
     pub coords: WorldTileCoords,
     pub layer_name: String,
     pub image: RgbaImage,
 }
 
-impl Debug for DefaultRasterLayer {
+impl Debug for DefaultLayerRaster {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "DefaultRasterLayer({})", self.coords)
     }
 }
 
-impl IntoMessage for DefaultRasterLayer {
+impl IntoMessage for DefaultLayerRaster {
     fn into(self) -> Message {
         Message::new(Self::message_tag(), Box::new(self))
     }
 }
 
-impl LayerRaster for DefaultRasterLayer {
+impl LayerRaster for DefaultLayerRaster {
     fn message_tag() -> &'static dyn MessageTag {
         &6
     }
@@ -53,8 +64,8 @@ impl LayerRaster for DefaultRasterLayer {
         self.coords
     }
 
-    fn to_layer(self) -> RasterLayerData {
-        RasterLayerData {
+    fn to_layer(self) -> AvailableRasterLayerData {
+        AvailableRasterLayerData {
             coords: self.coords,
             source_layer: "raster".to_string(),
             image: self.image,
@@ -62,13 +73,52 @@ impl LayerRaster for DefaultRasterLayer {
     }
 }
 
+pub struct DefaultLayerRasterMissing {
+    pub coords: WorldTileCoords,
+}
+
+impl Debug for DefaultLayerRasterMissing {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "DefaultRasterLayerMissing({})", self.coords)
+    }
+}
+
+impl IntoMessage for DefaultLayerRasterMissing {
+    fn into(self) -> Message {
+        Message::new(Self::message_tag(), Box::new(self))
+    }
+}
+
+impl LayerRasterMissing for DefaultLayerRasterMissing {
+    fn message_tag() -> &'static dyn MessageTag {
+        &7
+    }
+
+    fn build_from(coords: WorldTileCoords) -> Self {
+        Self { coords }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
+    }
+
+    fn to_layer(self) -> MissingRasterLayerData {
+        MissingRasterLayerData {
+            coords: self.coords,
+            source_layer: "raster".to_string(),
+        }
+    }
+}
+
 pub trait RasterTransferables: Copy + Clone + 'static {
     type LayerRaster: LayerRaster;
+    type LayerRasterMissing: LayerRasterMissing;
 }
 
 #[derive(Copy, Clone)]
 pub struct DefaultRasterTransferables;
 
 impl RasterTransferables for DefaultRasterTransferables {
-    type LayerRaster = DefaultRasterLayer;
+    type LayerRaster = DefaultLayerRaster;
+    type LayerRasterMissing = DefaultLayerRasterMissing;
 }

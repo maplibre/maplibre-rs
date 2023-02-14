@@ -38,31 +38,35 @@ impl MessageTag for WebMessageTag {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum WebMessageTag {
     TileTessellated = 1,
-    LayerUnavailable = 2,
+    LayerMissing = 2,
     LayerTessellated = 3,
     LayerIndexed = 4,
     LayerRaster = 5,
+    LayerRasterMissing = 6,
 }
 
 impl WebMessageTag {
     pub fn to_static(&self) -> &'static WebMessageTag {
         match self {
             WebMessageTag::LayerRaster => &WebMessageTag::LayerRaster,
-            WebMessageTag::LayerUnavailable => &WebMessageTag::LayerUnavailable,
+            WebMessageTag::LayerMissing => &WebMessageTag::LayerMissing,
             WebMessageTag::LayerIndexed => &WebMessageTag::LayerIndexed,
             WebMessageTag::TileTessellated => &WebMessageTag::TileTessellated,
             WebMessageTag::LayerTessellated => &WebMessageTag::LayerTessellated,
-            _ => unreachable!(),
+            WebMessageTag::LayerRasterMissing => &WebMessageTag::LayerRasterMissing,
         }
     }
 
     pub fn from_u32(tag: u32) -> Result<Self, MessageTagDeserializeError> {
         match tag {
-            x if x == WebMessageTag::LayerUnavailable as u32 => Ok(WebMessageTag::LayerUnavailable),
+            x if x == WebMessageTag::LayerMissing as u32 => Ok(WebMessageTag::LayerMissing),
             x if x == WebMessageTag::LayerTessellated as u32 => Ok(WebMessageTag::LayerTessellated),
             x if x == WebMessageTag::TileTessellated as u32 => Ok(WebMessageTag::TileTessellated),
             x if x == WebMessageTag::LayerIndexed as u32 => Ok(WebMessageTag::LayerIndexed),
             x if x == WebMessageTag::LayerRaster as u32 => Ok(WebMessageTag::LayerRaster),
+            x if x == WebMessageTag::LayerRasterMissing as u32 => {
+                Ok(WebMessageTag::LayerRasterMissing)
+            }
             _ => Err(MessageTagDeserializeError),
         }
     }
@@ -88,16 +92,14 @@ impl Context for PassingContext {
             &WebMessageTag::LayerTessellated
         } else if WebMessageTag::TileTessellated.dyn_clone().as_ref() == message.tag() {
             &WebMessageTag::TileTessellated
-        } else if WebMessageTag::LayerUnavailable.dyn_clone().as_ref() == message.tag() {
-            &WebMessageTag::LayerUnavailable
+        } else if WebMessageTag::LayerMissing.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerMissing
         } else if WebMessageTag::LayerIndexed.dyn_clone().as_ref() == message.tag() {
             &WebMessageTag::LayerIndexed
         } else {
             unreachable!()
         };
-        let transferable = message
-            .into_transferable::<FlatBufferTransferable>()
-            .expect("Unable to downcast to FlatBufferTransferable"); // FIXME tcs
+        let transferable = message.into_transferable::<FlatBufferTransferable>();
         let data = transferable.data();
 
         let buffer = ArrayBuffer::new(data.len() as u32);

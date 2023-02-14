@@ -15,7 +15,7 @@ use crate::{
     raster::{
         process_raster::{process_raster_tile, ProcessRasterContext, RasterTileRequest},
         transferables::RasterTransferables,
-        RasterLayersDataComponent,
+        LayerRasterMissing, RasterLayersDataComponent,
     },
     style::layer::LayerPaint,
 };
@@ -142,13 +142,11 @@ pub fn fetch_raster_apc<K: OffscreenKernelEnvironment, T: RasterTransferables, C
                 Err(e) => {
                     log::error!("{:?}", &e);
 
-                    // FIXME: RasterUnavailable
-                    /*context
-                    .send(<T as Transferables>::LayerUnavailable::build_from(
-                        coords,
-                        "raster".to_string(),
-                    ))
-                    .map_err(ProcedureError::Send)?;*/
+                    context
+                        .send(<T as RasterTransferables>::LayerRasterMissing::build_from(
+                            coords,
+                        ))
+                        .map_err(ProcedureError::Send)?;
                 }
             }
         }

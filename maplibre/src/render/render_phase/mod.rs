@@ -71,3 +71,20 @@ impl PhaseItem for TileMaskItem {
         self.draw_function.as_ref()
     }
 }
+
+pub struct TileDebugItem {
+    pub draw_function: Box<dyn Draw<TileDebugItem>>,
+    pub source_shape: TileShape,
+}
+
+impl PhaseItem for TileDebugItem {
+    type SortKey = u32;
+
+    fn sort_key(&self) -> Self::SortKey {
+        0
+    }
+
+    fn draw_function(&self) -> &dyn Draw<TileDebugItem> {
+        self.draw_function.as_ref()
+    }
+}

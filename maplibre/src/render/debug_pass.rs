@@ -4,6 +4,7 @@ use crate::{
     ecs::world::World,
     render::{
         graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        render_phase::{RenderPhase, TileDebugItem},
         resource::TrackedRenderPass,
         Eventually::Initialized,
         RenderState,
@@ -58,15 +59,15 @@ impl Node for DebugPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        // FIXME tcs: Debug vs tile mask phase?
-        /*for item in &world
-            .get_resource::<RenderPhase<TileMaskItem>>()
+        for item in &world
+            .resources
+            .get::<RenderPhase<TileDebugItem>>()
+            .unwrap()
             .items
-            .clone()
         {
-            let draw_function = draw_functions.get(item.draw_function).unwrap();
-            draw_function.draw(&mut tracked_pass, state, world, item);
-        }*/
+            item.draw_function
+                .draw(&mut tracked_pass, state, world, item);
+        }
 
         Ok(())
     }

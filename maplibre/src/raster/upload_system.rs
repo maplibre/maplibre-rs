@@ -3,7 +3,10 @@ use crate::{
     context::MapContext,
     coords::ViewRegion,
     ecs::tiles::Tiles,
-    raster::{resource::RasterResources, RasterLayerData, RasterLayersDataComponent},
+    raster::{
+        resource::RasterResources, AvailableRasterLayerData, RasterLayerData,
+        RasterLayersDataComponent,
+    },
     render::{
         eventually::{Eventually, Eventually::Initialized},
         Renderer,
@@ -56,17 +59,19 @@ fn upload_raster_layer(
             tiles.query::<&RasterLayersDataComponent>(coords) else { continue; };
 
         for style_layer in &style.layers {
-            let source_layer = style_layer.source_layer.as_ref().unwrap(); // FIXME tcs: Remove unwrap
+            let style_source_layer = style_layer.source_layer.as_ref().unwrap(); // FIXME tcs: Remove unwrap
 
-            let Some(raster_layer) = raster_layers.layers
-                .iter()
-                .find(|layer| source_layer.as_str() == layer.source_layer) else { continue; };
-
-            let RasterLayerData {
+            let Some(AvailableRasterLayerData {
                 coords,
-                source_layer,
                 image,
-            } = &raster_layer;
+                ..
+            }) = raster_layers.layers
+                .iter()
+                .flat_map(|data| match data {
+                    RasterLayerData::Available(data) => Some(data),
+                    RasterLayerData::Missing(_) => None,
+                })
+                .find(|layer| style_source_layer.as_str() == layer.source_layer) else { continue; };
 
             let (width, height) = image.dimensions();
 

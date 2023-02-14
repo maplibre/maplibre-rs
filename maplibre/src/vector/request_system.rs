@@ -14,7 +14,7 @@ use crate::{
     style::layer::LayerPaint,
     vector::{
         process_vector::{process_vector_tile, ProcessVectorContext, VectorTileRequest},
-        transferables::{LayerUnavailable, VectorTransferables},
+        transferables::{LayerMissing, VectorTransferables},
         VectorLayersDataComponent, VectorLayersIndicesComponent,
     },
 };
@@ -153,7 +153,7 @@ pub fn fetch_vector_apc<K: OffscreenKernelEnvironment, T: VectorTransferables, C
                     log::error!("{:?}", &e);
                     for to_load in &fill_layers {
                         context
-                            .send(<T as VectorTransferables>::LayerUnavailable::build_from(
+                            .send(<T as VectorTransferables>::LayerMissing::build_from(
                                 coords,
                                 to_load.to_string(),
                             ))

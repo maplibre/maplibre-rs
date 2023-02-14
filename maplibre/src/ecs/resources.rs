@@ -28,14 +28,22 @@ impl Resources {
 
     pub fn get<R: Resource>(&self) -> Option<&R> {
         if let Some(index) = self.index.get(&TypeId::of::<R>()) {
-            return Some(self.resources[*index].downcast_ref().unwrap()); // FIXME tcs: Unwrap
+            return Some(
+                self.resources[*index]
+                    .downcast_ref()
+                    .expect("inserted resource has wrong TypeId"),
+            );
         }
         return None;
     }
 
     pub fn get_mut<R: Resource>(&mut self) -> Option<&mut R> {
         if let Some(index) = self.index.get(&TypeId::of::<R>()) {
-            return Some(self.resources[*index].downcast_mut().unwrap()); // FIXME tcs: Unwrap
+            return Some(
+                self.resources[*index]
+                    .downcast_mut()
+                    .expect("inserted resource has wrong TypeId"),
+            );
         }
         return None;
     }

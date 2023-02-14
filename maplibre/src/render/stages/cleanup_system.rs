@@ -1,6 +1,6 @@
 use crate::{
     context::MapContext,
-    render::render_phase::{LayerItem, RenderPhase, TileMaskItem},
+    render::render_phase::{LayerItem, RenderPhase, TileDebugItem, TileMaskItem},
 };
 
 pub fn cleanup_system(
@@ -8,11 +8,15 @@ pub fn cleanup_system(
         world, renderer, ..
     }: &mut MapContext,
 ) {
-    let layer_items = world.resources.get_mut::<RenderPhase<LayerItem>>().unwrap();
-    layer_items.clear();
-    let mask_items = world
+    let Some((layer_item_phase, tile_mask_phase, debug_tile_phase)) = world
         .resources
-        .get_mut::<RenderPhase<TileMaskItem>>()
-        .unwrap();
-    mask_items.clear();
+        .query_mut::<(
+            &mut RenderPhase<LayerItem>,
+            &mut RenderPhase<TileMaskItem>,
+            &mut RenderPhase<TileDebugItem>,
+        )>() else { return; };
+
+    layer_item_phase.clear();
+    tile_mask_phase.clear();
+    debug_tile_phase.clear();
 }

@@ -90,13 +90,13 @@ impl Node for MainPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        let mask_items = world.resources.get::<RenderPhase<TileMaskItem>>().unwrap();
+        let mask_items = world.resources.get::<RenderPhase<TileMaskItem>>().unwrap(); // FIXME tcs: Fixme unwrap
         for item in &mask_items.items {
             item.draw_function
                 .draw(&mut tracked_pass, state, world, item);
         }
 
-        let layer_items = world.resources.get::<RenderPhase<LayerItem>>().unwrap();
+        let layer_items = world.resources.get::<RenderPhase<LayerItem>>().unwrap(); // FIXME tcs: Fixme unwrap
         log::trace!("RenderPhase for LayerItem: {}", layer_items.items.len());
         for item in &layer_items.items {
             item.draw_function

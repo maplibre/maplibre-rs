@@ -4,10 +4,30 @@ use std::ops::Deref;
 
 use crate::{
     context::MapContext,
+    coords::WorldTileCoords,
+    ecs::tiles::Tiles,
     raster::RasterResources,
-    render::eventually::{Eventually, Eventually::Initialized},
-    vector::{VectorBufferPool, WgpuTileViewPattern},
+    render::{
+        eventually::{Eventually, Eventually::Initialized},
+        tile_view_pattern::HasTile,
+    },
+    vector::{VectorBufferPool, VectorLayersDataComponent, WgpuTileViewPattern},
 };
+
+// FIXME: Is this the correct way to do this? Ideally we want to wait until all layers are uploaded to the gpu?
+struct VectorTilesDone<'t> {
+    tiles: &'t Tiles,
+}
+
+impl<'t> HasTile for VectorTilesDone<'t> {
+    fn has_tile(&self, coords: &WorldTileCoords) -> bool {
+        let Some(vector_layers_indices) = self
+            .tiles
+            .query::<&VectorLayersDataComponent>(*coords) else { return false; };
+
+        vector_layers_indices.done
+    }
+}
 
 pub fn tile_view_pattern_system(
     MapContext {
@@ -32,7 +52,13 @@ pub fn tile_view_pattern_system(
         //tile_view_pattern.update_pattern(view_region, buffer_pool.index(), zoom);
         tile_view_pattern.update_pattern(
             view_region,
-            &(raster_resources.deref(), buffer_pool.index()),
+            &(
+                raster_resources.deref(),
+                buffer_pool.index(),
+                &VectorTilesDone {
+                    tiles: &world.tiles,
+                },
+            ),
             zoom,
         );
     }

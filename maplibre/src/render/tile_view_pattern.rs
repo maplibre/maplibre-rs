@@ -61,7 +61,13 @@ pub trait HasTile {
 
 impl<A: HasTile, B: HasTile> HasTile for (&A, &B) {
     fn has_tile(&self, coords: &WorldTileCoords) -> bool {
-        self.0.has_tile(coords) || self.1.has_tile(coords)
+        self.0.has_tile(coords) && self.1.has_tile(coords)
+    }
+}
+
+impl<A: HasTile, B: HasTile, C: HasTile> HasTile for (&A, &B, &C) {
+    fn has_tile(&self, coords: &WorldTileCoords) -> bool {
+        self.0.has_tile(coords) && self.1.has_tile(coords) && self.2.has_tile(coords)
     }
 }
 

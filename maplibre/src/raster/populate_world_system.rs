@@ -8,7 +8,7 @@ use crate::{
     kernel::Kernel,
     raster::{
         transferables::{LayerRaster, RasterTransferables},
-        RasterLayersDataComponent,
+        LayerRasterMissing, RasterLayerData, RasterLayersDataComponent,
     },
 };
 
@@ -37,20 +37,29 @@ impl<E: Environment, T: RasterTransferables> System for PopulateWorldSystem<E, T
             world, renderer, ..
         }: &mut MapContext,
     ) {
-        for message in self
-            .kernel
-            .apc()
-            .receive(|message| message.has_tag(T::LayerRaster::message_tag()))
-        {
+        for message in self.kernel.apc().receive(|message| {
+            message.has_tag(T::LayerRaster::message_tag())
+                || message.has_tag(T::LayerRasterMissing::message_tag())
+        }) {
             let message: Message = message;
             if message.has_tag(T::LayerRaster::message_tag()) {
-                if let Ok(message) = message.into_transferable::<T::LayerRaster>() {
-                    let Some(component) = world
+                let message = message.into_transferable::<T::LayerRaster>();
+                let Some(component) = world
                         .tiles
                         .query_mut::<&mut RasterLayersDataComponent>(message.coords()) else { continue; };
 
-                    component.layers.push(message.to_layer());
-                }
+                component
+                    .layers
+                    .push(RasterLayerData::Available(message.to_layer()));
+            } else if message.has_tag(T::LayerRaster::message_tag()) {
+                let message = message.into_transferable::<T::LayerRasterMissing>();
+                let Some(component) = world
+                    .tiles
+                    .query_mut::<&mut RasterLayersDataComponent>(message.coords()) else { continue; };
+
+                component
+                    .layers
+                    .push(RasterLayerData::Missing(message.to_layer()));
             }
         }
     }
