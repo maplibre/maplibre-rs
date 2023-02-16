@@ -19,15 +19,15 @@ use crate::{
     raster::{DefaultRasterTransferables, RasterPlugin},
     render::{
         draw_graph, eventually::Eventually, initialize_default_render_graph,
-        register_default_render_stages, stages::RenderStageLabel, Renderer,
+        register_default_render_stages, RenderStageLabel, Renderer,
     },
     schedule::{Schedule, Stage},
     style::Style,
     vector::{
-        process_vector_tile, AvailableVectorLayerData, DefaultLayerTesselated,
-        DefaultVectorTransferables, LayerTessellated, ProcessVectorContext, VectorBufferPool,
-        VectorLayerData, VectorLayersDataComponent, VectorLayersIndicesComponent, VectorPlugin,
-        VectorTileRequest, VectorTransferables,
+        process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
+        LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
+        VectorLayersDataComponent, VectorLayersIndicesComponent, VectorPlugin, VectorTileRequest,
+        VectorTransferables,
     },
 };
 
@@ -97,7 +97,10 @@ impl HeadlessMap {
         })
     }
 
-    pub fn render_tile(&mut self, layers: Vec<Box<DefaultLayerTesselated>>) {
+    pub fn render_tile(
+        &mut self,
+        layers: Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>>,
+    ) {
         let context = &mut self.map_context;
         let tiles = &mut context.world.tiles;
 
@@ -127,7 +130,7 @@ impl HeadlessMap {
 
         tiles.clear();
         let mut pool = resources
-            .query_mut::<&mut Eventually<VectorBufferPool>>()
+            .query_mut::<&mut Eventually<VectorBufferPool>>() // FIXME tcs: we access internals of the vector plugin here
             .expect("VectorBufferPool not found")
             .expect_initialized_mut("VectorBufferPool not initialized");
 
@@ -150,7 +153,7 @@ impl HeadlessMap {
         &self,
         tile_data: Box<[u8]>,
         source_layers: &[&str],
-    ) -> Vec<Box<DefaultLayerTesselated>> {
+    ) -> Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>> {
         let context = SimpleContext::default();
         let mut processor =
             ProcessVectorContext::<DefaultVectorTransferables, SimpleContext>::new(context);

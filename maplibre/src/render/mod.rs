@@ -21,7 +21,7 @@
 use std::sync::Arc;
 
 pub use shaders::ShaderVertex;
-pub use stages::register_default_render_stages;
+pub use systems::register_default_render_stages;
 
 use crate::{
     render::{
@@ -33,12 +33,13 @@ use crate::{
         resource::{Head, Surface, Texture, TextureView},
         settings::{RendererSettings, WgpuSettings},
     },
+    schedule::StageLabel,
     window::{HeadedMapWindow, MapWindow},
 };
 
 pub mod graph;
 pub mod resource;
-pub mod stages;
+pub mod systems;
 
 // Rendering internals
 mod debug_pass;
@@ -486,4 +487,37 @@ pub fn initialize_default_render_graph(graph: &mut RenderGraph) -> Result<(), Re
         main_graph::node::MAIN_PASS_DEPENDENCIES,
         main_graph::node::MAIN_PASS_DRIVER,
     )
+}
+
+/// The labels of the default App rendering stages.
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub enum RenderStageLabel {
+    /// Extract data from the world.
+    Extract,
+
+    /// Prepare render resources from the extracted data for the GPU.
+    /// For example during this phase textures are created, buffers are allocated and written.
+    Prepare,
+
+    /// Queues [PhaseItems](crate::render::render_phase::PhaseItem) that depend on
+    /// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the
+    /// [`Render`](RenderStageLabel::Render) stage.
+    /// For example data is uploaded to the GPU in this stage.
+    Queue,
+
+    /// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.
+    PhaseSort,
+
+    /// Actual rendering happens here.
+    /// In most cases, only the render backend should insert resources here.
+    Render,
+
+    /// Cleanup render resources here.
+    Cleanup,
+}
+
+impl StageLabel for RenderStageLabel {
+    fn dyn_clone(&self) -> Box<dyn StageLabel> {
+        Box::new(self.clone())
+    }
 }

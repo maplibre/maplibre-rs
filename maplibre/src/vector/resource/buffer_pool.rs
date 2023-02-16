@@ -12,6 +12,7 @@ use bytemuck::Pod;
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
+    ecs::world::World,
     render::{
         resource::{BackingBufferDescriptor, Queue},
         tile_view_pattern::HasTile,
@@ -213,7 +214,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         (bytes, aligned_bytes)
     }
 
-    pub fn get_loaded_source_layers_at(&self, coords: &WorldTileCoords) -> Option<HashSet<&str>> {
+    pub fn get_loaded_source_layers_at(&self, coords: WorldTileCoords) -> Option<HashSet<&str>> {
         self.index.get_layers(coords).map(|layers| {
             layers
                 .iter()
@@ -456,7 +457,7 @@ impl RingIndex {
         })
     }
 
-    pub fn get_layers(&self, coords: &WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
+    pub fn get_layers(&self, coords: WorldTileCoords) -> Option<&VecDeque<IndexEntry>> {
         coords
             .build_quad_key()
             .and_then(|key| self.tree_index.get(&key))
@@ -573,9 +574,9 @@ impl RingIndex {
     }
 }
 
-impl HasTile for RingIndex {
-    fn has_tile(&self, coords: &WorldTileCoords) -> bool {
-        self.get_layers(coords).is_some()
+impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> HasTile for BufferPool<Q, B, V, I, TM, FM> {
+    fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
+        self.index().get_layers(coords).is_some()
     }
 }
 

@@ -1,8 +1,6 @@
 use std::{marker::PhantomData, rc::Rc};
 
 use image::RgbaImage;
-pub use resource::RasterResources;
-pub use transferables::*;
 
 use crate::{
     coords::WorldTileCoords,
@@ -12,10 +10,10 @@ use crate::{
     plugin::Plugin,
     raster::{
         populate_world_system::PopulateWorldSystem, queue_system::queue_system,
-        request_system::RequestSystem, resource_system::resource_system,
+        request_system::RequestSystem, resource::RasterResources, resource_system::resource_system,
         upload_system::upload_system,
     },
-    render::{eventually::Eventually, stages::RenderStageLabel},
+    render::{eventually::Eventually, tile_view_pattern::TilePhase, RenderStageLabel},
     schedule::Schedule,
 };
 
@@ -28,6 +26,10 @@ mod resource;
 mod resource_system;
 mod transferables;
 mod upload_system;
+
+pub use transferables::{
+    DefaultRasterTransferables, LayerRaster, LayerRasterMissing, RasterTransferables,
+};
 
 pub struct RasterPlugin<T>(PhantomData<T>);
 
@@ -43,6 +45,12 @@ impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
         world
             .resources
             .insert(Eventually::<RasterResources>::Uninitialized);
+
+        // FIXME tcs: Disable for headless?
+        world
+            .resources
+            .get_or_init_mut::<TilePhase>()
+            .add_resource_query::<&Eventually<RasterResources>>();
 
         // FIXME tcs: Disable for headless?
         schedule.add_system_to_stage(

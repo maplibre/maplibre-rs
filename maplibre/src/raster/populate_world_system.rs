@@ -7,8 +7,8 @@ use crate::{
     io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
     raster::{
-        transferables::{LayerRaster, RasterTransferables},
-        LayerRasterMissing, RasterLayerData, RasterLayersDataComponent,
+        transferables::{LayerRaster, LayerRasterMissing, RasterTransferables},
+        RasterLayerData, RasterLayersDataComponent,
     },
 };
 

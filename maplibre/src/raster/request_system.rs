@@ -13,8 +13,8 @@ use crate::{
     kernel::Kernel,
     raster::{
         process_raster::{process_raster_tile, ProcessRasterContext, RasterTileRequest},
-        transferables::RasterTransferables,
-        LayerRasterMissing, RasterLayersDataComponent,
+        transferables::{LayerRasterMissing, RasterTransferables},
+        RasterLayersDataComponent,
     },
     style::layer::LayerPaint,
 };

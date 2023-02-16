@@ -5,10 +5,11 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{DrawState, LayerItem, RenderPhase, TileDebugItem, TileMaskItem},
+        tile_view_pattern::WgpuTileViewPattern,
     },
     vector::{
         render_commands::{DrawDebugOutlines, DrawMasks, DrawVectorTiles},
-        VectorBufferPool, VectorLayersIndicesComponent, WgpuTileViewPattern,
+        VectorBufferPool, VectorLayersIndicesComponent,
     },
 };
 
@@ -50,7 +51,7 @@ pub fn queue_system(
                 source_shape: source_shape.clone(),
             });
 
-            if let Some(layer_entries) = buffer_pool_index.get_layers(&source_shape.coords()) {
+            if let Some(layer_entries) = buffer_pool_index.get_layers(source_shape.coords()) {
                 for layer_entry in layer_entries {
                     // Draw tile
                     layer_item_phase.add(LayerItem {

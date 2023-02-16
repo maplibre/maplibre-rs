@@ -3,13 +3,12 @@
 use crate::{
     context::MapContext,
     ecs::tiles::Tile,
-    raster::{render_commands::DrawRasterTiles, resource::RasterResources},
+    raster::render_commands::DrawRasterTiles,
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{DrawState, LayerItem, RenderPhase},
-        tile_view_pattern::HasTile,
+        tile_view_pattern::WgpuTileViewPattern,
     },
-    vector::WgpuTileViewPattern,
 };
 
 pub fn queue_system(
@@ -19,13 +18,11 @@ pub fn queue_system(
 ) {
     let Some((
         Initialized(tile_view_pattern),
-        Initialized(raster_resources),
-        layer_item_phase,
-    )) = world.resources.query_mut::<(
-        &mut Eventually<WgpuTileViewPattern>,
-        &mut Eventually<RasterResources>,
-        &mut RenderPhase<LayerItem>,
+    )) = world.resources.query::<(
+        &Eventually<WgpuTileViewPattern>,
     )>() else { return; };
+
+    let mut items = Vec::new();
 
     for view_tile in tile_view_pattern.iter() {
         let coords = &view_tile.coords();
@@ -33,17 +30,24 @@ pub fn queue_system(
 
         // draw tile normal or the source e.g. parent or children
         view_tile.render(|source_shape| {
-            if raster_resources.has_tile(&source_shape.coords()) {
-                layer_item_phase.add(LayerItem {
-                    draw_function: Box::new(DrawState::<LayerItem, DrawRasterTiles>::new()),
-                    index: 0,
-                    style_layer: "raster".to_string(),
-                    tile: Tile {
-                        coords: source_shape.coords(),
-                    },
-                    source_shape: source_shape.clone(),
-                })
-            }
+            // FIXME if raster_resources.has_tile(source_shape.coords(), world) {
+            items.push(LayerItem {
+                draw_function: Box::new(DrawState::<LayerItem, DrawRasterTiles>::new()),
+                index: 0,
+                style_layer: "raster".to_string(),
+                tile: Tile {
+                    coords: source_shape.coords(),
+                },
+                source_shape: source_shape.clone(),
+            })
         });
+    }
+
+    let Some(layer_item_phase) = world
+        .resources
+        .query_mut::<&mut RenderPhase<LayerItem>>() else { return; };
+
+    for item in items {
+        layer_item_phase.add(item)
     }
 }

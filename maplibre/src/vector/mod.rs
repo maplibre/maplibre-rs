@@ -1,8 +1,5 @@
 use std::{marker::PhantomData, ops::Deref, rc::Rc};
 
-pub use process_vector::*;
-pub use transferables::{DefaultVectorTransferables, *};
-
 use crate::{
     coords::WorldTileCoords,
     ecs::{system::SystemContainer, tiles::TileComponent, world::World},
@@ -13,9 +10,8 @@ use crate::{
         eventually::Eventually,
         render_phase::{LayerItem, RenderPhase, TileDebugItem, TileMaskItem},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        stages::RenderStageLabel,
-        tile_view_pattern::TileViewPattern,
-        ShaderVertex,
+        tile_view_pattern::{HasTile, TilePhase, WgpuTileViewPattern},
+        RenderStageLabel, ShaderVertex,
     },
     schedule::Schedule,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
@@ -25,7 +21,6 @@ use crate::{
         request_system::RequestSystem,
         resource::{BufferPool, IndexEntry},
         resource_system::resource_system,
-        tile_view_pattern_system::tile_view_pattern_system,
         upload_system::upload_system,
     },
 };
@@ -37,9 +32,14 @@ mod render_commands;
 mod request_system;
 mod resource;
 mod resource_system;
-mod tile_view_pattern_system;
 mod transferables;
 mod upload_system;
+
+pub use process_vector::*;
+pub use transferables::{
+    DefaultVectorTransferables, LayerIndexed, LayerMissing, LayerTessellated, TileTessellated,
+    VectorTransferables,
+};
 
 pub struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {
@@ -77,13 +77,25 @@ pub type VectorBufferPool = BufferPool<
     ShaderFeatureStyle,
 >;
 
-pub type WgpuTileViewPattern = TileViewPattern<wgpu::Queue, wgpu::Buffer>;
-
 pub struct VectorPlugin<T>(PhantomData<T>);
 
 impl<T: VectorTransferables> Default for VectorPlugin<T> {
     fn default() -> Self {
         Self(Default::default())
+    }
+}
+
+// FIXME: Is this the correct way to do this? Ideally we want to wait until all layers are uploaded to the gpu?
+#[derive(Default)]
+struct VectorTilesDone;
+
+impl HasTile for VectorTilesDone {
+    fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
+        let Some(vector_layers_indices) = world
+            .tiles
+            .query::<&VectorLayersDataComponent>(coords) else { return false; };
+
+        vector_layers_indices.done
     }
 }
 
@@ -94,6 +106,15 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
         resources.init::<RenderPhase<LayerItem>>();
         resources.init::<RenderPhase<TileMaskItem>>();
         resources.init::<RenderPhase<TileDebugItem>>();
+
+        // FIXME tcs: Move to rendering core
+        resources.init::<TilePhase>();
+
+        // FIXME tcs: Disable for headless?
+        resources
+            .get_or_init_mut::<TilePhase>()
+            .add_resource_query::<&Eventually<VectorBufferPool>>()
+            .add::<VectorTilesDone>();
 
         // buffer_pool
         resources.insert(Eventually::<VectorBufferPool>::Uninitialized);
@@ -123,7 +144,6 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
             SystemContainer::new(PopulateWorldSystem::<E, T>::new(&kernel)),
         );
         schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system);
-        schedule.add_system_to_stage(RenderStageLabel::Queue, tile_view_pattern_system);
         schedule.add_system_to_stage(RenderStageLabel::Queue, upload_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
         schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system);
     }

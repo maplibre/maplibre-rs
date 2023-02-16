@@ -20,10 +20,25 @@ impl Resources {
         self.insert(R::default());
     }
 
+    pub fn get_or_init_mut<R: Resource + Default>(&mut self) -> &mut R {
+        if self.exists::<R>() {
+            self.get_mut::<R>()
+                .expect("unable get get just initialized resource")
+        } else {
+            self.init::<R>();
+            self.get_mut()
+                .expect("unable get get just initialized resource")
+        }
+    }
+
     pub fn insert<R: Resource>(&mut self, resource: R) {
         let index = self.resources.len();
         self.resources.push(Box::new(resource));
         self.index.insert(TypeId::of::<R>(), index);
+    }
+
+    pub fn exists<R: Resource>(&self) -> bool {
+        self.index.contains_key(&TypeId::of::<R>())
     }
 
     pub fn get<R: Resource>(&self) -> Option<&R> {

@@ -8,11 +8,11 @@ use crate::{
             LayerItem, PhaseItem, RenderCommand, RenderCommandResult, TileDebugItem, TileMaskItem,
         },
         resource::TrackedRenderPass,
+        tile_view_pattern::WgpuTileViewPattern,
         RenderState, INDEX_FORMAT,
     },
     vector::{
-        DebugPipeline, MaskPipeline, VectorBufferPool, VectorLayersIndicesComponent,
-        VectorPipeline, WgpuTileViewPattern,
+        DebugPipeline, MaskPipeline, VectorBufferPool, VectorLayersIndicesComponent, VectorPipeline,
     },
 };
 

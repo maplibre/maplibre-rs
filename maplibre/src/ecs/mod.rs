@@ -2,8 +2,7 @@
 
 use std::{any::TypeId, collections::HashSet};
 
-mod resources;
-
+pub mod resources;
 pub mod system;
 pub mod tiles;
 pub mod world;

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     coords::WorldTileCoords,
+    ecs::world::World,
     render::{resource::Texture, settings::Msaa, tile_view_pattern::HasTile},
 };
 
@@ -92,7 +93,7 @@ impl RasterResources {
 }
 
 impl HasTile for RasterResources {
-    fn has_tile(&self, coords: &WorldTileCoords) -> bool {
-        self.bound_textures.contains_key(coords)
+    fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
+        self.bound_textures.contains_key(&coords)
     }
 }

@@ -1,5 +1,7 @@
 use std::mem;
 
+use crate::{coords::WorldTileCoords, ecs::world::World, render::tile_view_pattern::HasTile};
+
 /// Wrapper around a resource which can be initialized or uninitialized.
 /// Uninitialized resourced can be initialized by calling [`Eventually::initialize()`].
 pub enum Eventually<T> {
@@ -66,5 +68,17 @@ impl<T> Eventually<T> {
 impl<T> Default for Eventually<T> {
     fn default() -> Self {
         Eventually::Uninitialized
+    }
+}
+
+impl<T> HasTile for Eventually<T>
+where
+    T: HasTile,
+{
+    fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
+        match self {
+            Eventually::Initialized(value) => value.has_tile(coords, world),
+            Eventually::Uninitialized => false,
+        }
     }
 }

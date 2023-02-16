@@ -9,12 +9,13 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata, Vec4f32},
+        tile_view_pattern::WgpuTileViewPattern,
         Renderer,
     },
     style::Style,
     vector::{
         AvailableVectorLayerData, VectorBufferPool, VectorLayerData, VectorLayersDataComponent,
-        VectorLayersIndicesComponent, WgpuTileViewPattern,
+        VectorLayersIndicesComponent,
     },
 };
 
@@ -137,7 +138,7 @@ fn upload_tesselated_layer(
             tiles.query_mut::<(&VectorLayersDataComponent, &mut VectorLayersIndicesComponent)>(coords) else { continue; };
 
         let loaded_layers = buffer_pool
-            .get_loaded_source_layers_at(&coords)
+            .get_loaded_source_layers_at(coords)
             .unwrap_or_default();
 
         let available_layers = vector_layers

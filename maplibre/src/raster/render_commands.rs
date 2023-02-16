@@ -5,9 +5,9 @@ use crate::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult},
         resource::TrackedRenderPass,
+        tile_view_pattern::WgpuTileViewPattern,
         RenderState,
     },
-    vector::WgpuTileViewPattern,
 };
 
 pub struct SetRasterTilePipeline;
