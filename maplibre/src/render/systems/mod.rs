@@ -29,6 +29,7 @@ pub enum RenderStageLabel {
     /// Queues [PhaseItems](crate::render::render_phase::draw::PhaseItem) that depend on
     /// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the
     /// [`Render`](RenderStageLabel::Render) stage.
+    /// For example data is uploaded to the GPU in this stage.
     Queue,
 
     /// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.
