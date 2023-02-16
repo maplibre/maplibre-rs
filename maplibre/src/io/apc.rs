@@ -89,7 +89,6 @@ pub enum SendError {
 
 /// Allows sending messages from workers to back to the caller.
 pub trait Context: 'static {
-    // FIXME tcs: Does this need to be clone and send?
     /// Send a message back to the caller.
     fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError>;
 }

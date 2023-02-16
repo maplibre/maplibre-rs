@@ -170,7 +170,7 @@ impl HeadlessMap {
         )
         .expect("Failed to process!");
 
-        let messages = processor.context.messages.deref().take();
+        let messages = processor.take_context().messages.deref().take();
         let layers = messages.into_iter()
             .filter(|message| message.tag() == <DefaultVectorTransferables as VectorTransferables>::LayerTessellated::message_tag())
             .map(|message| message.into_transferable::<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>())

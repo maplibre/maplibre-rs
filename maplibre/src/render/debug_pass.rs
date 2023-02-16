@@ -59,14 +59,15 @@ impl Node for DebugPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        for item in &world
-            .resources
-            .get::<RenderPhase<TileDebugItem>>()
-            .unwrap()
-            .items
-        {
-            item.draw_function
-                .draw(&mut tracked_pass, state, world, item);
+        if let Some(debug_items) = world.resources.get::<RenderPhase<TileDebugItem>>() {
+            log::trace!(
+                "RenderPhase<TileDebugItem>::size() = {}",
+                debug_items.size()
+            );
+            for item in debug_items {
+                item.draw_function
+                    .draw(&mut tracked_pass, state, world, item);
+            }
         }
 
         Ok(())

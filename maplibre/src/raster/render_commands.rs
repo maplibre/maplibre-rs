@@ -39,13 +39,10 @@ impl<const I: usize> RenderCommand<LayerItem> for SetRasterViewBindGroup<I> {
             .resources
             .get::<Eventually<RasterResources>>() else { return RenderCommandResult::Failure; };
 
-        pass.set_bind_group(
-            0,
-            raster_resources
-                .get_bound_texture(&item.tile.coords)
-                .unwrap(), // FIXME tcs: Remove unwrap
-            &[],
-        );
+        let Some(bind_group) = raster_resources
+            .get_bound_texture(&item.tile.coords) else { return RenderCommandResult::Failure; };
+
+        pass.set_bind_group(0, bind_group, &[]);
         RenderCommandResult::Success
     }
 }

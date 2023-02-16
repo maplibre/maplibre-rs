@@ -116,7 +116,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 }
 
 pub struct ProcessVectorContext<T: VectorTransferables, C: Context> {
-    pub context: C, // FIXME tcs: make private
+    context: C,
     phantom_t: PhantomData<T>,
 }
 
@@ -130,6 +130,10 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
 }
 
 impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
+    pub fn take_context(self) -> C {
+        self.context
+    }
+
     fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), ProcessVectorError> {
         self.context
             .send(T::TileTessellated::build_from(*coords))

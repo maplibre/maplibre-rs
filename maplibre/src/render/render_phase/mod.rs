@@ -8,7 +8,16 @@ mod draw;
 
 /// A resource to collect and sort draw requests for specific [`PhaseItems`](PhaseItem).
 pub struct RenderPhase<I: PhaseItem> {
-    pub items: Vec<I>,
+    items: Vec<I>,
+}
+
+impl<'a, I: PhaseItem> IntoIterator for &'a RenderPhase<I> {
+    type Item = <&'a Vec<I> as IntoIterator>::Item;
+    type IntoIter = <&'a Vec<I> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.items.iter()
+    }
 }
 
 impl<I: PhaseItem> Default for RenderPhase<I> {
@@ -30,6 +39,10 @@ impl<I: PhaseItem> RenderPhase<I> {
 
     pub fn clear(&mut self) {
         self.items.clear();
+    }
+
+    pub fn size(&self) -> usize {
+        self.items.len()
     }
 }
 
