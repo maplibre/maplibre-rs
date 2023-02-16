@@ -81,7 +81,7 @@ impl HeadlessMap {
         );
 
         schedule.add_system_to_stage(
-            &RenderStageLabel::Cleanup,
+            RenderStageLabel::Cleanup,
             SystemContainer::new(WriteSurfaceBufferSystem::new(write_to_disk)),
         );
 

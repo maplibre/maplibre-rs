@@ -141,6 +141,7 @@ impl LayerMissing for DefaultLayerMissing {
     }
 }
 
+#[derive(Clone)]
 pub struct DefaultLayerTesselated {
     pub coords: WorldTileCoords,
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,

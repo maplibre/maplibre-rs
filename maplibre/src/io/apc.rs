@@ -277,7 +277,6 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
 pub mod tests {
     use crate::io::apc::{Context, IntoMessage, SendError};
 
-    #[derive(Clone)]
     pub struct DummyContext;
 
     impl Context for DummyContext {

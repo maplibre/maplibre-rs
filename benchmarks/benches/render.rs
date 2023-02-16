@@ -8,7 +8,7 @@ use maplibre::{
 
 fn headless_render(c: &mut Criterion) {
     c.bench_function("headless_render", |b| {
-        let (mut map, tile) = run_multithreaded(async {
+        let (mut map, layer) = run_multithreaded(async {
             let (kernel, renderer) = create_headless_renderer(1000, None).await;
             let style = Style::default();
             let map = HeadlessMap::new(style, renderer, kernel, false).unwrap();
@@ -18,16 +18,13 @@ fn headless_render(c: &mut Criterion) {
                 .await
                 .expect("Failed to fetch!");
 
-            let tile = map
-                .process_tile(tile, &["water"])
-                .await
-                .expect("Failed to process!");
+            let tile = map.process_tile(tile, &["water"]).await;
 
             (map, tile)
         });
 
         b.iter(|| {
-            map.render_tile(tile.clone());
+            map.render_tile(layer.clone());
         });
     });
 }
