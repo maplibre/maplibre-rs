@@ -11,7 +11,7 @@ use crate::{
 };
 
 mod graph_node;
-mod stage;
+mod system;
 
 pub mod environment;
 pub mod map;

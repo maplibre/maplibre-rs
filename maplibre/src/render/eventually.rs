@@ -54,6 +54,13 @@ impl<T> Eventually<T> {
     pub fn take(&mut self) -> Eventually<T> {
         mem::replace(self, Eventually::Uninitialized)
     }
+
+    pub fn expect_initialized_mut(&mut self, message: &str) -> &mut T {
+        match self {
+            Eventually::Initialized(value) => value,
+            Eventually::Uninitialized => panic!("{}", message),
+        }
+    }
 }
 
 impl<T> Default for Eventually<T> {

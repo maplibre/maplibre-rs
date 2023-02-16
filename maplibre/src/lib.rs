@@ -18,6 +18,8 @@
 
 // FIXME reenable #![deny(unused_imports)]
 
+extern crate core;
+
 // Export tile format
 pub use geozero::mvt::tile;
 

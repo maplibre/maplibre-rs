@@ -106,6 +106,13 @@ impl Schedule {
         self
     }
 
+    pub fn remove_stage(&mut self, label: impl StageLabel) -> &mut Self {
+        let remove: Box<dyn StageLabel> = Box::new(label);
+        self.stages.remove(&remove).expect("stage not found");
+        self.stage_order.retain(|label| label != &remove);
+        self
+    }
+
     /// Adds the given `stage` immediately after the `target` stage.
     ///
     /// # Example

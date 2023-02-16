@@ -6,7 +6,7 @@ use crate::{
     ecs::{system::SystemContainer, world::World},
     headless::{
         environment::HeadlessEnvironment, graph_node::CopySurfaceBufferNode,
-        stage::WriteSurfaceBufferSystem,
+        system::WriteSurfaceBufferSystem,
     },
     io::{
         apc::{Context, IntoMessage, Message, SendError},
@@ -19,8 +19,11 @@ use crate::{
     plugin::Plugin,
     raster::{DefaultRasterTransferables, RasterPlugin},
     render::{
-        draw_graph, eventually::Eventually, initialize_default_render_graph,
-        register_default_render_stages, stages::RenderStageLabel, Renderer, ShaderVertex,
+        draw_graph,
+        eventually::{Eventually, Eventually::Initialized},
+        initialize_default_render_graph, register_default_render_stages,
+        stages::RenderStageLabel,
+        Renderer, ShaderVertex,
     },
     schedule::{Schedule, Stage},
     style::Style,
@@ -80,6 +83,9 @@ impl HeadlessMap {
             &mut world,
         );
 
+        // FIXME tcs: Is this good style?
+        schedule.remove_stage(RenderStageLabel::Extract);
+
         schedule.add_system_to_stage(
             RenderStageLabel::Cleanup,
             SystemContainer::new(WriteSurfaceBufferSystem::new(write_to_disk)),
@@ -98,14 +104,11 @@ impl HeadlessMap {
 
     pub fn render_tile(&mut self, layers: Vec<Box<DefaultLayerTesselated>>) {
         let context = &mut self.map_context;
+        let tiles = &mut context.world.tiles;
 
-        context.world.tiles.clear();
-
-        context
-            .world
-            .tiles
+        tiles
             .spawn_mut((0, 0, ZoomLevel::default()).into())
-            .unwrap()
+            .expect("unable to spawn tile")
             .insert(VectorLayersDataComponent {
                 done: true,
                 layers: layers
@@ -124,15 +127,16 @@ impl HeadlessMap {
 
         self.schedule.run(context);
 
-        if let Some(Eventually::Initialized(pool)) = context
-            .world
-            .resources
+        let resources = &mut context.world.resources;
+        let tiles = &mut context.world.tiles;
+
+        tiles.clear();
+        let mut pool = resources
             .query_mut::<&mut Eventually<VectorBufferPool>>()
-        {
-            pool.clear();
-        } else {
-            panic!("failed to clear");
-        }
+            .expect("VectorBufferPool not found")
+            .expect_initialized_mut("VectorBufferPool not initialized");
+
+        pool.clear();
     }
 
     pub async fn fetch_tile(&self, coords: WorldTileCoords) -> Result<Box<[u8]>, SourceFetchError> {
