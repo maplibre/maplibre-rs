@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::RefCell, ops::Deref, rc::Rc, sync::Arc};
+use std::{cell::RefCell, ops::Deref, rc::Rc};
 
 use crate::{
     context::MapContext,
@@ -12,22 +12,17 @@ use crate::{
         apc::{Context, IntoMessage, Message, SendError},
         source_client::SourceFetchError,
         source_type::{SourceType, TessellateSource},
-        RawLayer,
     },
     kernel::Kernel,
     map::MapError,
     plugin::Plugin,
     raster::{DefaultRasterTransferables, RasterPlugin},
     render::{
-        draw_graph,
-        eventually::{Eventually, Eventually::Initialized},
-        initialize_default_render_graph, register_default_render_stages,
-        stages::RenderStageLabel,
-        Renderer, ShaderVertex,
+        draw_graph, eventually::Eventually, initialize_default_render_graph,
+        register_default_render_stages, stages::RenderStageLabel, Renderer,
     },
     schedule::{Schedule, Stage},
     style::Style,
-    tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
         process_vector_tile, AvailableVectorLayerData, DefaultLayerTesselated,
         DefaultVectorTransferables, LayerTessellated, ProcessVectorContext, VectorBufferPool,

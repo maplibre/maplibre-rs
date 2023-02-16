@@ -1,5 +1,5 @@
 use crate::{
-    environment::{Environment, OffscreenKernelEnvironment},
+    environment::Environment,
     headless::window::HeadlessMapWindowConfig,
     io::apc::SchedulerAsyncProcedureCall,
     platform::{

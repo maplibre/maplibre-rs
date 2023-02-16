@@ -7,7 +7,6 @@ use crate::{
         resource::{BufferedTextureHead, Head},
         Renderer,
     },
-    schedule::Stage,
 };
 
 /// Stage which writes the current contents of the GPU/CPU buffer in [`BufferedTextureHead`]
