@@ -11,9 +11,15 @@ runs:
   steps:
     - name:  Install binstall
       run: |
+        ls -lah /c/Users/runneradmin/.cargo/bin/
+        
         if command -v cargo-binstall &> /dev/null; then
           echo "binstall already found at $(command -v cargo-binstall)"
-          exit 0
+          if [ -e "$(command -v cargo-binstall)" ] ; then
+            exit 0
+          else
+            echo "... but the symlink was broken. continuing with install."
+          fi
         fi
         
         FILE=""
