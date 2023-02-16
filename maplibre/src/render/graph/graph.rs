@@ -29,12 +29,17 @@ use crate::{
 /// Here is a simple render graph example with two nodes connected by a node edge.
 /// ```
 /// #
-/// # use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
+/// # use maplibre::ecs::world::World;
+/// use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
 /// # use maplibre::render::{RenderState};
 /// # struct MyNode;
 /// #
 /// # impl Node for MyNode {
-/// #     fn run(&self, graph: &mut RenderGraphContext, render_context: &mut RenderContext, state: &RenderState) -> Result<(), NodeRunError> {
+/// #     fn run(&self,
+/// #               graph: &mut RenderGraphContext,
+/// #               render_context: &mut RenderContext,
+/// #               state: &RenderState,
+/// #               world: &World) -> Result<(), NodeRunError> {
 /// #         unimplemented!()
 /// #     }
 /// # }
@@ -578,9 +583,12 @@ mod tests {
         Edge, Node, NodeId, NodeRunError, RenderGraph, RenderGraphContext, RenderGraphError,
         SlotInfo,
     };
-    use crate::render::{
-        graph::{RenderContext, SlotType},
-        RenderState,
+    use crate::{
+        ecs::world::World,
+        render::{
+            graph::{RenderContext, SlotType},
+            RenderState,
+        },
     };
 
     #[derive(Debug)]
@@ -616,6 +624,7 @@ mod tests {
             _graph: &mut RenderGraphContext,
             _render_context: &mut RenderContext,
             _state: &RenderState,
+            world: &World,
         ) -> Result<(), NodeRunError> {
             Ok(())
         }
@@ -689,6 +698,7 @@ mod tests {
                 _graph: &mut RenderGraphContext,
                 _render_context: &mut RenderContext,
                 _state: &RenderState,
+                world: &World,
             ) -> Result<(), NodeRunError> {
                 Ok(())
             }

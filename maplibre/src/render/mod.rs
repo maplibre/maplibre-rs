@@ -355,7 +355,13 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-    use crate::window::{MapWindow, MapWindowConfig, WindowSize};
+    use cgmath::Deg;
+
+    use crate::{
+        coords::{WorldCoords, Zoom},
+        ecs::world::World,
+        window::{MapWindow, MapWindowConfig, WindowSize},
+    };
 
     pub struct HeadlessMapWindowConfig {
         size: WindowSize,
@@ -422,7 +428,14 @@ mod tests {
             &RendererSettings::default(),
         ));
 
-        RenderGraphRunner::run(&graph, &device, &queue, &render_state).unwrap();
+        let world = World::new(
+            WindowSize::new(100, 100).unwrap(),
+            WorldCoords::at_ground(0.0, 0.0),
+            Zoom::default(),
+            Deg(0.0),
+        );
+
+        RenderGraphRunner::run(&graph, &device, &queue, &render_state, &world).unwrap();
     }
 }
 

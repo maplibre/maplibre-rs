@@ -73,7 +73,10 @@ mod tests {
     use crate::{
         coords::ZoomLevel,
         io::apc::tests::DummyContext,
-        raster::process_raster::{ProcessRasterContext, RasterTileRequest},
+        raster::{
+            process_raster::{ProcessRasterContext, RasterTileRequest},
+            DefaultRasterTransferables,
+        },
     };
 
     #[test] // TODO: Add proper tile byte array
@@ -84,7 +87,7 @@ mod tests {
             RasterTileRequest {
                 coords: (0, 0, ZoomLevel::default()).into(),
             },
-            &mut ProcessRasterContext::new(DummyContext),
+            &mut ProcessRasterContext::<DefaultRasterTransferables, _>::new(DummyContext),
         );
     }
 }

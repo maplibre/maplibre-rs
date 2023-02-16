@@ -115,17 +115,17 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
 
         // FIXME tcs: Disable for headless?
         schedule.add_system_to_stage(
-            &RenderStageLabel::Extract,
+            RenderStageLabel::Extract,
             SystemContainer::new(RequestSystem::<E, T>::new(&kernel)),
         );
         schedule.add_system_to_stage(
-            &RenderStageLabel::Extract,
+            RenderStageLabel::Extract,
             SystemContainer::new(PopulateWorldSystem::<E, T>::new(&kernel)),
         );
-        schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);
-        schedule.add_system_to_stage(&RenderStageLabel::Queue, tile_view_pattern_system);
-        schedule.add_system_to_stage(&RenderStageLabel::Queue, upload_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
-        schedule.add_system_to_stage(&RenderStageLabel::Queue, queue_system);
+        schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system);
+        schedule.add_system_to_stage(RenderStageLabel::Queue, tile_view_pattern_system);
+        schedule.add_system_to_stage(RenderStageLabel::Queue, upload_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
+        schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system);
     }
 }
 

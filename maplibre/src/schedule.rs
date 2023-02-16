@@ -271,20 +271,23 @@ impl Schedule {
     /// # Examples
     ///
     /// ```
+    /// # use maplibre::context::MapContext;
+    /// use maplibre::ecs::system::stage::SystemStage;
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// # fn my_system() {}
+    /// # schedule.add_stage("my_stage", SystemStage::default());
+    /// # fn my_system(context: &mut MapContext) {}
     /// #
     /// schedule.add_system_to_stage("my_stage", my_system);
     /// ```
     pub fn add_system_to_stage(
         &mut self,
-        stage_label: &dyn StageLabel,
+        stage_label: impl StageLabel,
         system: impl IntoSystemContainer,
     ) -> &mut Self {
         let stage = self
-            .get_stage_mut::<SystemStage>(stage_label)
+            .get_stage_mut::<SystemStage>(&stage_label)
             .unwrap_or_else(move || {
                 panic!(
                     "Stage '{:?}' does not exist or is not a SystemStage",

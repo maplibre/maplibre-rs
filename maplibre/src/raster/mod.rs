@@ -46,18 +46,18 @@ impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
 
         // FIXME tcs: Disable for headless?
         schedule.add_system_to_stage(
-            &RenderStageLabel::Extract,
+            RenderStageLabel::Extract,
             SystemContainer::new(RequestSystem::<E, T>::new(&kernel)),
         );
         schedule.add_system_to_stage(
-            &RenderStageLabel::Extract,
+            RenderStageLabel::Extract,
             SystemContainer::new(PopulateWorldSystem::<E, T>::new(&kernel)),
         );
 
-        schedule.add_system_to_stage(&RenderStageLabel::Prepare, resource_system);
+        schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system);
 
-        schedule.add_system_to_stage(&RenderStageLabel::Queue, upload_system);
-        schedule.add_system_to_stage(&RenderStageLabel::Queue, queue_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
+        schedule.add_system_to_stage(RenderStageLabel::Queue, upload_system);
+        schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
     }
 }
 

@@ -187,7 +187,10 @@ mod tests {
     use crate::{
         coords::ZoomLevel,
         io::apc::tests::DummyContext,
-        vector::process_vector::{process_vector_tile, VectorTileRequest},
+        vector::{
+            process_vector::{process_vector_tile, VectorTileRequest},
+            DefaultVectorTransferables,
+        },
     };
 
     #[test] // TODO: Add proper tile byte array
@@ -199,7 +202,7 @@ mod tests {
                 coords: (0, 0, ZoomLevel::default()).into(),
                 layers: Default::default(),
             },
-            &mut ProcessVectorContext::new(DummyContext),
+            &mut ProcessVectorContext::<DefaultVectorTransferables, _>::new(DummyContext),
         );
     }
 }
