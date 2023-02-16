@@ -8,7 +8,6 @@ use crate::{
         apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
-    raster::LayerRaster,
     render::ShaderVertex,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{AvailableVectorLayerData, MissingVectorLayerData},

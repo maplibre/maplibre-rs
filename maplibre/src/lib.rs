@@ -16,7 +16,7 @@
 //! maplibre = "0.0.2"
 //! ```
 
-// FIXME reenable #![deny(unused_imports)]
+#![deny(unused_imports)]
 
 extern crate core;
 

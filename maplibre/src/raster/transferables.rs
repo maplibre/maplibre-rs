@@ -5,8 +5,7 @@ use image::RgbaImage;
 use crate::{
     coords::WorldTileCoords,
     io::apc::{IntoMessage, Message, MessageTag},
-    raster::{AvailableRasterLayerData, MissingRasterLayerData, RasterLayerData},
-    vector::AvailableVectorLayerData,
+    raster::{AvailableRasterLayerData, MissingRasterLayerData},
 };
 
 pub trait LayerRaster: IntoMessage + Debug + Send {

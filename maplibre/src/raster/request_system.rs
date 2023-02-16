@@ -8,7 +8,6 @@ use crate::{
     environment::{Environment, OffscreenKernelEnvironment},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
-        source_client::HttpClient,
         source_type::{RasterSource, SourceType},
     },
     kernel::Kernel,

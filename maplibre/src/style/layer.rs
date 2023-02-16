@@ -6,7 +6,7 @@ use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 
-use crate::style::{layer::LayerPaint::Fill, raster::RasterLayer};
+use crate::style::raster::RasterLayer;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {

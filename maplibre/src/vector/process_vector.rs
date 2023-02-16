@@ -11,7 +11,6 @@ use crate::{
     io::{
         apc::{Context, SendError},
         geometry_index::{IndexProcessor, IndexedGeometry, TileIndex},
-        source_client::HttpClient,
     },
     render::ShaderVertex,
     tessellation::{zero_tessellator::ZeroTessellator, IndexDataType, OverAlignedVertexBuffer},

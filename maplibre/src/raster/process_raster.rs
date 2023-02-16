@@ -1,15 +1,11 @@
 use std::marker::PhantomData;
 
-use geozero::{mvt::Message, GeozeroDatasource};
 use image::RgbaImage;
 use thiserror::Error;
 
 use crate::{
     coords::WorldTileCoords,
-    io::{
-        apc::{Context, SendError},
-        source_client::HttpClient,
-    },
+    io::apc::{Context, SendError},
     raster::transferables::{LayerRaster, RasterTransferables},
 };
 

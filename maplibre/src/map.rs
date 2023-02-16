@@ -9,7 +9,6 @@ use crate::{
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
-    raster::RasterPlugin,
     render::{
         builder::{
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
@@ -20,7 +19,6 @@ use crate::{
     },
     schedule::{Schedule, Stage},
     style::Style,
-    vector::VectorPlugin,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
 

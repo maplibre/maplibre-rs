@@ -1,6 +1,5 @@
 use std::{
     any::Any,
-    borrow::Borrow,
     cell::RefCell,
     fmt::Debug,
     future::Future,
@@ -13,16 +12,12 @@ use std::{
     vec::IntoIter,
 };
 
-use downcast_rs::Downcast;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
-    coords::WorldTileCoords,
-    define_label,
-    environment::{Environment, OffscreenKernelEnvironment},
-    io::scheduler::Scheduler,
-    style::Style,
+    coords::WorldTileCoords, define_label, environment::OffscreenKernelEnvironment,
+    io::scheduler::Scheduler, style::Style,
 };
 
 define_label!(MessageTag);
