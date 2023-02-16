@@ -1,9 +1,6 @@
-use crate::{
-    platform::{
-        http_client::WHATWGFetchHttpClient,
-        singlethreaded::{apc::PassingContext, transferables::FlatTransferables},
-    },
-    WHATWGOffscreenKernelEnvironment,
+use crate::platform::{
+    http_client::WHATWGFetchHttpClient,
+    singlethreaded::{apc::PassingContext, transferables::FlatTransferables},
 };
 
 pub mod apc;
@@ -13,4 +10,3 @@ pub mod wasm_entries;
 pub type UsedTransferables = FlatTransferables;
 pub type UsedHttpClient = WHATWGFetchHttpClient;
 pub type UsedContext = PassingContext;
-pub type UsedOffscreenKernelEnvironment = WHATWGOffscreenKernelEnvironment;

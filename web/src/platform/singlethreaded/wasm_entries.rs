@@ -15,10 +15,13 @@ use wasm_bindgen::{prelude::*, JsCast};
 
 use crate::{
     error::JSError,
-    platform::singlethreaded::{
-        apc::{ReceivedType, WebMessageTag},
-        transferables::FlatBufferTransferable,
-        PassingContext, UsedContext, UsedOffscreenKernelEnvironment,
+    platform::{
+        singlethreaded::{
+            apc::{ReceivedType, WebMessageTag},
+            transferables::FlatBufferTransferable,
+            PassingContext, UsedContext,
+        },
+        UsedOffscreenKernelEnvironment,
     },
     WHATWGFetchHttpClient,
 };

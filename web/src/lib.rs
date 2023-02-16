@@ -18,8 +18,8 @@ use wasm_bindgen::prelude::*;
 use crate::{
     error::JSError,
     platform::{
-        http_client::WHATWGFetchHttpClient,
-        singlethreaded::{transferables::FlatTransferables, UsedOffscreenKernelEnvironment},
+        http_client::WHATWGFetchHttpClient, UsedOffscreenKernelEnvironment,
+        UsedRasterTransferables, UsedVectorTransferables,
     },
 };
 
@@ -80,8 +80,9 @@ type CurrentEnvironment = WinitEnvironment<
 type CurrentEnvironment = WinitEnvironment<
     platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
     WHATWGFetchHttpClient,
+    UsedOffscreenKernelEnvironment,
     maplibre::io::apc::SchedulerAsyncProcedureCall<
-        WHATWGFetchHttpClient,
+        UsedOffscreenKernelEnvironment,
         platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
     >,
     (),
@@ -99,7 +100,6 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
     {
         kernel_builder = kernel_builder
             .with_apc(maplibre::io::apc::SchedulerAsyncProcedureCall::new(
-                WHATWGFetchHttpClient::new(),
                 platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(
                     new_worker.clone(),
                 )?,
@@ -116,7 +116,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
             .with_scheduler(maplibre::io::scheduler::NopScheduler);
     }
 
-    let kernel: Kernel<WinitEnvironment<_, _, WHATWGOffscreenKernelEnvironment, _, ()>> =
+    let kernel: Kernel<WinitEnvironment<_, _, UsedOffscreenKernelEnvironment, _, ()>> =
         kernel_builder.build();
 
     let mut map: MapType = Map::new(
@@ -124,8 +124,8 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
         kernel,
         RendererBuilder::new(),
         vec![
-            Box::new(VectorPlugin::<FlatTransferables>::default()),
-            Box::new(RasterPlugin::<FlatTransferables>::default()),
+            Box::new(VectorPlugin::<UsedVectorTransferables>::default()),
+            Box::new(RasterPlugin::<UsedRasterTransferables>::default()),
         ],
     )
     .unwrap();
