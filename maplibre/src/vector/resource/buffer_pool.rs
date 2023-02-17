@@ -237,7 +237,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         geometry: &OverAlignedVertexBuffer<V, I>,
         layer_metadata: TM,
         feature_metadata: &[FM],
-    ) -> IndexEntry {
+    ) {
         let vertices_stride = size_of::<V>() as wgpu::BufferAddress;
         let indices_stride = size_of::<I>() as wgpu::BufferAddress;
         let layer_metadata_stride = size_of::<TM>() as wgpu::BufferAddress;
@@ -321,7 +321,6 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
         );
 
         self.index.push_back(maybe_entry.clone());
-        maybe_entry
     }
 
     #[tracing::instrument(skip_all)]

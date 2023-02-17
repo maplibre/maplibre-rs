@@ -105,7 +105,7 @@ where
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
                 );
 
-                // FIXME tcs: Add initialization logic
+                // FIXME tcs: Improve initialization logic
                 for plugin in &self.plugins {
                     plugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
                 }

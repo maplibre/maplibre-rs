@@ -16,11 +16,8 @@ use crate::{
     schedule::Schedule,
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
-        populate_world_system::PopulateWorldSystem,
-        queue_system::queue_system,
-        request_system::RequestSystem,
-        resource::{BufferPool, IndexEntry},
-        resource_system::resource_system,
+        populate_world_system::PopulateWorldSystem, queue_system::queue_system,
+        request_system::RequestSystem, resource::BufferPool, resource_system::resource_system,
         upload_system::upload_system,
     },
 };
@@ -174,10 +171,3 @@ pub struct VectorLayersDataComponent {
 }
 
 impl TileComponent for VectorLayersDataComponent {}
-
-#[derive(Default)]
-pub struct VectorLayersIndicesComponent {
-    pub layers: Vec<IndexEntry>,
-}
-
-impl TileComponent for VectorLayersIndicesComponent {}

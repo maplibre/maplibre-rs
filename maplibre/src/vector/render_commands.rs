@@ -11,9 +11,7 @@ use crate::{
         tile_view_pattern::WgpuTileViewPattern,
         RenderState, INDEX_FORMAT,
     },
-    vector::{
-        DebugPipeline, MaskPipeline, VectorBufferPool, VectorLayersIndicesComponent, VectorPipeline,
-    },
+    vector::{DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline},
 };
 
 pub struct SetMaskPipeline;
@@ -139,18 +137,15 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
     ) -> RenderCommandResult {
         let Some((
             Initialized(buffer_pool),
-            Initialized(tile_view_pattern)
+            Initialized(tile_view_pattern),
         )) = world.resources.query::<(
             &Eventually<VectorBufferPool>,
             &Eventually<WgpuTileViewPattern>
         )>() else { return RenderCommandResult::Failure; };
 
-        let Some(vector_layers) = world
-            .tiles
-            .query::<&VectorLayersIndicesComponent>(item.tile.coords) else { return RenderCommandResult::Failure; };
+        let Some(vector_layers) = buffer_pool.index().get_layers(item.tile.coords) else { return RenderCommandResult::Failure; };
 
         let Some(entry) = vector_layers
-            .layers
             .iter()
             .find(|entry| entry.style_layer.id == item.style_layer) else { return RenderCommandResult::Failure; };
 

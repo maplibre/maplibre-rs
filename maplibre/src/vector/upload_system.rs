@@ -15,7 +15,6 @@ use crate::{
     style::Style,
     vector::{
         AvailableVectorLayerData, VectorBufferPool, VectorLayerData, VectorLayersDataComponent,
-        VectorLayersIndicesComponent,
     },
 };
 
@@ -134,8 +133,7 @@ fn upload_tesselated_layer(
 ) {
     // Upload all tessellated layers which are in view
     for coords in view_region.iter() {
-        let Some((vector_layers, mut vector_layers_indices)) =
-            tiles.query_mut::<(&VectorLayersDataComponent, &mut VectorLayersIndicesComponent)>(coords) else { continue; };
+        let Some(vector_layers) = tiles.query_mut::<&VectorLayersDataComponent>(coords) else { continue; };
 
         let loaded_layers = buffer_pool
             .get_loaded_source_layers_at(coords)
@@ -180,7 +178,7 @@ fn upload_tesselated_layer(
                 .collect::<Vec<_>>();
 
             log::info!("Allocating geometry at {}", &coords);
-            let entry = buffer_pool.allocate_layer_geometry(
+            buffer_pool.allocate_layer_geometry(
                 queue,
                 *coords,
                 style_layer.clone(),
@@ -188,8 +186,6 @@ fn upload_tesselated_layer(
                 ShaderLayerMetadata::new(style_layer.index as f32),
                 &feature_metadata,
             );
-
-            // FIXME tcs vector_layers_indices.layers.push(entry);
         }
     }
 }

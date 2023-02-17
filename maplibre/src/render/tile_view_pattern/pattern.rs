@@ -30,7 +30,7 @@ impl<B> BackingBuffer<B> {
 
 /// The tile mask pattern assigns each tile a value which can be used for stencil testing.
 pub struct TileViewPattern<Q, B> {
-    pub view_tiles: Vec<ViewTile>, // FIXME tcs
+    view_tiles: Vec<ViewTile>,
     view_tiles_buffer: BackingBuffer<B>,
     phantom_q: PhantomData<Q>,
 }
@@ -95,6 +95,11 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         }
 
         view_tiles
+    }
+
+    pub fn update_pattern(&mut self, mut view_tiles: Vec<ViewTile>) {
+        self.view_tiles.clear();
+        self.view_tiles.append(&mut view_tiles)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &ViewTile> + '_ {

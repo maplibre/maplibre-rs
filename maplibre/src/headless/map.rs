@@ -26,8 +26,7 @@ use crate::{
     vector::{
         process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
         LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
-        VectorLayersDataComponent, VectorLayersIndicesComponent, VectorPlugin, VectorTileRequest,
-        VectorTransferables,
+        VectorLayersDataComponent, VectorPlugin, VectorTileRequest, VectorTransferables,
     },
 };
 
@@ -120,8 +119,7 @@ impl HeadlessMap {
                         })
                     })
                     .collect::<Vec<_>>(),
-            })
-            .insert(VectorLayersIndicesComponent::default());
+            });
 
         self.schedule.run(context);
 
