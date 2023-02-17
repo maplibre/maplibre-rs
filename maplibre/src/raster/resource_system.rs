@@ -34,7 +34,9 @@ pub fn resource_system(
             format: surface.surface_format(),
         };
 
-        let mut raster_resources = RasterResources::new(
+        
+
+        RasterResources::new(
             Msaa { samples: 1 },
             device,
             TilePipeline::new(
@@ -51,8 +53,6 @@ pub fn resource_system(
             )
             .describe_render_pipeline()
             .initialize(device),
-        );
-
-        raster_resources
+        )
     });
 }

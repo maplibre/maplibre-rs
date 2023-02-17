@@ -24,7 +24,7 @@ impl SystemStage {
 
 impl Stage for SystemStage {
     fn run(&mut self, context: &mut MapContext) {
-        for mut container in &mut self.systems {
+        for container in &mut self.systems {
             #[cfg(feature = "trace")]
             let _span =
                 tracing::info_span!("system", name = container.system.name().as_ref()).entered();

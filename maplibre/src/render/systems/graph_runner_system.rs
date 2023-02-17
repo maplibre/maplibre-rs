@@ -36,7 +36,7 @@ impl System for GraphRunnerSystem {
     ) {
         render_graph.update(state);
 
-        if let Err(e) = RenderGraphRunner::run(&render_graph, device, queue, state, world) {
+        if let Err(e) = RenderGraphRunner::run(render_graph, device, queue, state, world) {
             error!("Error running render graph:");
             {
                 let mut src: &dyn std::error::Error = &e;

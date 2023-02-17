@@ -5,7 +5,7 @@ use crate::{
 
 pub fn cleanup_system(
     MapContext {
-        world, renderer, ..
+        world,  ..
     }: &mut MapContext,
 ) {
     let Some((layer_item_phase, tile_mask_phase)) = world

@@ -373,7 +373,7 @@ impl LayerRasterMissing for FlatBufferTransferable {
     }
 
     fn to_layer(self) -> MissingRasterLayerData {
-        let data = root_as_flat_layer_raster(&self.data[self.start..]).unwrap();
+        let _data = root_as_flat_layer_raster(&self.data[self.start..]).unwrap();
         MissingRasterLayerData {
             coords: LayerRaster::coords(&self),
             source_layer: "raster".to_string(),

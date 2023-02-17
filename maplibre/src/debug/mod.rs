@@ -70,13 +70,13 @@ impl<E: Environment> Plugin<E> for DebugPlugin {
     fn build(
         &self,
         schedule: &mut Schedule,
-        kernel: Rc<Kernel<E>>,
+        _kernel: Rc<Kernel<E>>,
         world: &mut World,
         graph: &mut RenderGraph,
     ) {
         let resources = &mut world.resources;
 
-        let mut draw_graph = graph.get_sub_graph_mut(draw_graph::NAME).unwrap();
+        let draw_graph = graph.get_sub_graph_mut(draw_graph::NAME).unwrap();
         draw_graph.add_node(draw_graph::node::DEBUG_PASS, DebugPassNode::new());
 
         draw_graph

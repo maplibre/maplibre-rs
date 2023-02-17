@@ -1,5 +1,4 @@
 #![deny(unused_imports)]
-#![feature(new_uninit)]
 
 use maplibre::{
     environment::OffscreenKernelEnvironment,
@@ -7,9 +6,8 @@ use maplibre::{
     io::source_client::{HttpSourceClient, SourceClient},
     kernel::{Kernel, KernelBuilder},
     map::Map,
-    render::{builder::RendererBuilder, RenderPlugin},
+    render::builder::RendererBuilder,
     style::Style,
-    vector::VectorPlugin,
 };
 use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
@@ -59,7 +57,7 @@ impl OffscreenKernelEnvironment for WHATWGOffscreenKernelEnvironment {
     }
 
     fn source_client(&self) -> SourceClient<Self::HttpClient> {
-        SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new()))
+        SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::default()))
     }
 }
 
@@ -90,7 +88,7 @@ pub type MapType = Map<CurrentEnvironment>;
 pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
     let mut kernel_builder = KernelBuilder::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
-        .with_http_client(WHATWGFetchHttpClient::new());
+        .with_http_client(WHATWGFetchHttpClient::default());
 
     #[cfg(target_feature = "atomics")]
     {
@@ -120,8 +118,8 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
         kernel,
         RendererBuilder::new(),
         vec![
-            Box::new(RenderPlugin::default()),
-            Box::new(VectorPlugin::<platform::UsedVectorTransferables>::default()),
+            Box::<maplibre::render::RenderPlugin>::default(),
+            Box::<maplibre::vector::VectorPlugin<platform::UsedVectorTransferables>>::default(),
             // Box::new(RasterPlugin::<platform::UsedRasterTransferables>::default()),
         ],
     )

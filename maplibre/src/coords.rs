@@ -464,7 +464,7 @@ impl WorldTileCoords {
         const CASES: u8 = 4;
         let z = u8::from(self.z);
         match (self.x % 2 == 0, self.y % 2 == 0) {
-            (true, true) => 0 + z * CASES,
+            (true, true) => z * CASES,
             (true, false) => 1 + z * CASES,
             (false, true) => 2 + z * CASES,
             (false, false) => 3 + z * CASES,

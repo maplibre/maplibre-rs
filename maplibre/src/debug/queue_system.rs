@@ -11,7 +11,7 @@ use crate::{
 
 pub fn queue_system(
     MapContext {
-        world, renderer, ..
+        world,  ..
     }: &mut MapContext,
 ) {
     let Some((

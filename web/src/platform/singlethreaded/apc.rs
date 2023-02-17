@@ -72,9 +72,9 @@ impl WebMessageTag {
     }
 }
 
-impl Into<u32> for WebMessageTag {
-    fn into(self) -> u32 {
-        self as u32
+impl From<WebMessageTag> for u32 {
+    fn from(val: WebMessageTag) -> Self {
+        val as u32
     }
 }
 
@@ -184,7 +184,7 @@ impl<K: OffscreenKernelEnvironment> AsyncProcedureCall<K> for PassingAsyncProced
         while index < max_len {
             if filter(&buffer[index]) {
                 ret.push(buffer.swap_remove(index));
-                max_len = max_len - 1;
+                max_len -= 1;
             }
             index += 1;
         }

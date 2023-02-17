@@ -402,11 +402,9 @@ impl Renderer {
 }
 
 #[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 mod tests {
-    use cgmath::Deg;
-
     use crate::{
-        coords::{WorldCoords, Zoom},
         tcs::world::World,
         window::{MapWindow, MapWindowConfig, WindowSize},
     };
@@ -433,7 +431,6 @@ mod tests {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
     async fn test_render() {
         use log::LevelFilter;
@@ -476,13 +473,7 @@ mod tests {
             &RendererSettings::default(),
         ));
 
-        let world = World::new(
-            WindowSize::new(100, 100).unwrap(),
-            WorldCoords::at_ground(0.0, 0.0),
-            Zoom::default(),
-            Deg(0.0),
-        );
-
+        let world = World::default();
         RenderGraphRunner::run(&graph, &device, &queue, &render_state, &world).unwrap();
     }
 }

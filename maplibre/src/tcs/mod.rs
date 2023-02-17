@@ -25,6 +25,6 @@ impl<'s> QueryState<'s> for EphemeralQueryState<'s> {
     }
 
     fn clone_to<'a, S: QueryState<'a>>(&'a mut self) -> S {
-        S::create(&mut self.state)
+        S::create(self.state)
     }
 }

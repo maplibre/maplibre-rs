@@ -52,7 +52,7 @@ impl RasterResources {
             format,
             width,
             height,
-            self.msaa.clone(),
+            self.msaa,
             usage,
         )
     }
@@ -93,7 +93,7 @@ impl RasterResources {
 }
 
 impl HasTile for RasterResources {
-    fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
+    fn has_tile(&self, coords: WorldTileCoords, _world: &World) -> bool {
         self.bound_textures.contains_key(&coords)
     }
 }

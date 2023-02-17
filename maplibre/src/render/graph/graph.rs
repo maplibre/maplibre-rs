@@ -565,7 +565,7 @@ impl Node for GraphInputNode {
         graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
         _state: &RenderResources,
-        world: &World,
+        _world: &World,
     ) -> Result<(), NodeRunError> {
         for i in 0..graph.inputs().len() {
             let input = graph.inputs()[i].clone();
@@ -624,7 +624,7 @@ mod tests {
             _graph: &mut RenderGraphContext,
             _render_context: &mut RenderContext,
             _state: &RenderResources,
-            world: &World,
+            _world: &World,
         ) -> Result<(), NodeRunError> {
             Ok(())
         }
@@ -698,7 +698,7 @@ mod tests {
                 _graph: &mut RenderGraphContext,
                 _render_context: &mut RenderContext,
                 _state: &RenderResources,
-                world: &World,
+                _world: &World,
             ) -> Result<(), NodeRunError> {
                 Ok(())
             }

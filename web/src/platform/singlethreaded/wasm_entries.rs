@@ -38,7 +38,7 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
     })?;
 
     let context = PassingContext {
-        source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
+        source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::default())),
     };
 
     if let Ok(global) = js_sys::global().dyn_into::<DedicatedWorkerGlobalScope>() {

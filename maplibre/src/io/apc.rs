@@ -228,14 +228,14 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
         while index < max_len {
             if filter(&buffer[index]) {
                 ret.push(buffer.swap_remove(index));
-                max_len = max_len - 1;
+                max_len -= 1;
             }
             index += 1;
         }
 
         // TODO: (optimize) Using while instead of if means that we are processing all that is
         // available this might cause frame drops.
-        while let Some(message) = self.channel.1.try_recv().ok() {
+        while let Ok(message) = self.channel.1.try_recv() {
             tracing::debug!("Data reached main thread: {:?}", &message);
             log::debug!("Data reached main thread: {:?}", &message);
 
@@ -275,7 +275,7 @@ pub mod tests {
     pub struct DummyContext;
 
     impl Context for DummyContext {
-        fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+        fn send<T: IntoMessage>(&self, _message: T) -> Result<(), SendError> {
             Ok(())
         }
     }

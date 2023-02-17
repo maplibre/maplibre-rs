@@ -9,7 +9,7 @@ use crate::{context::MapContext, tcs::system::System};
 pub trait IntoSystem: Sized {
     type System: System;
     /// Turns this value into its corresponding [`System`].
-    fn into_system(self: Self) -> Self::System;
+    fn into_system(self) -> Self::System;
 }
 
 pub struct FunctionSystem<F> {
@@ -35,7 +35,7 @@ where
 {
     type System = FunctionSystem<F>;
 
-    fn into_system(self: Self) -> Self::System {
+    fn into_system(self) -> Self::System {
         FunctionSystem { func: self }
     }
 }

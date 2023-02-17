@@ -56,11 +56,11 @@ where
 {
     pub fn new(
         style: Style,
-        mut kernel: Kernel<E>,
+        kernel: Kernel<E>,
         renderer_builder: RendererBuilder,
         plugins: Vec<Box<dyn Plugin<E>>>,
     ) -> Result<Self, MapError> {
-        let mut schedule = Schedule::default();
+        let schedule = Schedule::default();
 
         let kernel = Rc::new(kernel);
 

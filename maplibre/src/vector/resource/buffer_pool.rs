@@ -320,7 +320,7 @@ impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> BufferPool<Q, B, V, I, TM
             &bytemuck::cast_slice(feature_metadata)[0..aligned_feature_metadata_bytes as usize],
         );
 
-        self.index.push_back(maybe_entry.clone());
+        self.index.push_back(maybe_entry);
     }
 
     #[tracing::instrument(skip_all)]
@@ -574,7 +574,7 @@ impl RingIndex {
 }
 
 impl<Q: Queue<B>, B, V: Pod, I: Pod, TM: Pod, FM: Pod> HasTile for BufferPool<Q, B, V, I, TM, FM> {
-    fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
+    fn has_tile(&self, coords: WorldTileCoords, _world: &World) -> bool {
         self.index().get_layers(coords).is_some()
     }
 }

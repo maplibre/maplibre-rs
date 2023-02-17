@@ -31,8 +31,8 @@ pub struct Tiles {
 impl Tiles {
     pub fn query<'t, Q: ComponentQuery>(&'t self, coords: WorldTileCoords) -> Option<Q::Item<'t>> {
         let mut global_state = GlobalQueryState::default();
-        let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
-        Q::query(&self, Tile { coords }, state)
+        let state = <Q::State<'_> as QueryState>::create(&mut global_state);
+        Q::query(self, Tile { coords }, state)
     }
 
     pub fn query_mut<'t, Q: ComponentQueryMut>(
@@ -40,7 +40,7 @@ impl Tiles {
         coords: WorldTileCoords,
     ) -> Option<Q::MutItem<'t>> {
         let mut global_state = GlobalQueryState::default();
-        let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
+        let state = <Q::State<'_> as QueryState>::create(&mut global_state);
         Q::query_mut(self, Tile { coords }, state)
     }
 
@@ -55,7 +55,7 @@ impl Tiles {
     pub fn spawn_mut(&mut self, coords: WorldTileCoords) -> Option<TileSpawnResult> {
         if let Some(key) = coords.build_quad_key() {
             if let Some(tile) = self.tiles.get(&key) {
-                let tile = tile.clone();
+                let tile = *tile;
                 Some(TileSpawnResult { tiles: self, tile })
             } else {
                 let tile = Tile { coords };
@@ -63,7 +63,7 @@ impl Tiles {
                 self.components.insert(key, Vec::new());
                 Some(TileSpawnResult {
                     tiles: self,
-                    tile: tile.clone(),
+                    tile,
                 })
             }
         } else {
@@ -124,7 +124,7 @@ impl<'s> QueryState<'s> for EphemeralQueryState<'s> {
     }
 
     fn clone_to<'a, S: QueryState<'a>>(&'a mut self) -> S {
-        S::create(&mut self.state)
+        S::create(self.state)
     }
 }
 
@@ -149,7 +149,7 @@ impl<'a, T: TileComponent> ComponentQuery for &'a T {
     fn query<'t, 's>(
         tiles: &'t Tiles,
         tile: Tile,
-        state: Self::State<'s>,
+        _state: Self::State<'s>,
     ) -> Option<Self::Item<'t>> {
         let components = tiles.components.get(&tile.coords.build_quad_key()?)?;
 
@@ -199,7 +199,7 @@ impl<'a, T: TileComponent> ComponentQueryMut for &'a mut T {
     fn query_mut<'t, 's>(
         tiles: &'t mut Tiles,
         tile: Tile,
-        state: Self::State<'s>,
+        _state: Self::State<'s>,
     ) -> Option<Self::MutItem<'t>> {
         let components = tiles.components.get_mut(&tile.coords.build_quad_key()?)?;
 
@@ -241,7 +241,7 @@ impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
     unsafe fn query_unsafe<'t, 's>(
         tiles: &'t Tiles,
         tile: Tile,
-        mut state: Self::State<'s>,
+        state: Self::State<'s>,
     ) -> Option<Self::MutItem<'t>> {
         let id = TypeId::of::<T>();
         let borrowed = &mut state.state.mutably_borrowed;

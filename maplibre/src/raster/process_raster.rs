@@ -5,15 +5,12 @@ use thiserror::Error;
 
 use crate::{
     coords::WorldTileCoords,
-    io::apc::{Context, SendError},
+    io::apc::Context,
     raster::transferables::{LayerRaster, RasterTransferables},
 };
 
 #[derive(Error, Debug)]
 pub enum ProcessRasterError {
-    /// Sending of results failed
-    #[error("sending data back through context failed")]
-    SendError(SendError),
     /// Error during processing of the pipeline
     #[error("processing data in pipeline failed")]
     Processing(Box<dyn std::error::Error>),
@@ -29,10 +26,10 @@ pub fn process_raster_tile<T: RasterTransferables, C: Context>(
     context: &mut ProcessRasterContext<T, C>,
 ) -> Result<(), ProcessRasterError> {
     let coords = &tile_request.coords;
-    let img = image::load_from_memory(&data).unwrap();
+    let img = image::load_from_memory(data).unwrap();
     let rgba = img.to_rgba8();
 
-    context.layer_raster_finished(coords, "raster".to_string(), rgba.clone())?;
+    context.layer_raster_finished(coords, "raster".to_string(), rgba)?;
 
     Ok(())
 }

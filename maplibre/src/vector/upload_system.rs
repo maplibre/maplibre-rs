@@ -125,7 +125,7 @@ pub fn upload_system(
 
 fn upload_tesselated_layer(
     buffer_pool: &mut VectorBufferPool,
-    device: &wgpu::Device,
+    _device: &wgpu::Device,
     queue: &wgpu::Queue,
     tiles: &mut Tiles,
     style: &Style,

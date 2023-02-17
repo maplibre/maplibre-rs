@@ -90,16 +90,16 @@ fn upload_raster_layer(
                     mip_level: 0,
                     origin: wgpu::Origin3d::ZERO,
                 },
-                &image,
+                image,
                 wgpu::ImageDataLayout {
                     offset: 0,
                     bytes_per_row: std::num::NonZeroU32::new(4 * width),
                     rows_per_image: std::num::NonZeroU32::new(height),
                 },
-                texture.size.clone(),
+                texture.size,
             );
 
-            raster_resources.bind_texture(device, &coords, texture);
+            raster_resources.bind_texture(device, coords, texture);
         }
     }
 }

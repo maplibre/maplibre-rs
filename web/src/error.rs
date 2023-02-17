@@ -49,17 +49,17 @@ impl From<JsValue> for WebError {
 /// functions called from JS-land as return error type.
 #[derive(Error, Debug)]
 pub enum JSError {
-    ProcedureError(#[from] ProcedureError),
-    CallError(#[from] CallError),
-    WebError(#[from] WebError),
+    Procedure(#[from] ProcedureError),
+    Call(#[from] CallError),
+    Web(#[from] WebError),
 }
 
 impl Display for JSError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            JSError::ProcedureError(inner) => inner.fmt(f),
-            JSError::CallError(inner) => inner.fmt(f),
-            JSError::WebError(inner) => inner.fmt(f),
+            JSError::Procedure(inner) => inner.fmt(f),
+            JSError::Call(inner) => inner.fmt(f),
+            JSError::Web(inner) => inner.fmt(f),
         }
     }
 }

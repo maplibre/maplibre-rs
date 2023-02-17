@@ -12,7 +12,7 @@ pub fn tile_view_pattern_system(
     MapContext {
         view_state,
         world,
-        renderer,
+        
         ..
     }: &mut MapContext,
 ) {

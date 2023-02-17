@@ -177,13 +177,14 @@ pub struct QueryHasTile<Q> {
     phantom_q: PhantomData<Q>,
 }
 
-impl<Q: ResourceQuery> QueryHasTile<Q> {
-    pub fn new() -> Self {
+impl<Q: ResourceQuery> Default for QueryHasTile<Q> {
+    fn default() -> Self {
         Self {
             phantom_q: Default::default(),
         }
     }
 }
+
 impl<Q: ResourceQuery> HasTile for QueryHasTile<Q>
 where
     for<'a> Q::Item<'a>: HasTile,
@@ -198,13 +199,14 @@ where
     }
 }
 
+#[derive(Default)]
 pub struct ViewTileSources {
     items: Vec<Box<dyn HasTile>>,
 }
 
 impl ViewTileSources {
     pub fn add<H: HasTile + 'static + Default>(&mut self) -> &mut Self {
-        self.items.push(Box::new(H::default()));
+        self.items.push(Box::<H>::default());
         self
     }
 
@@ -212,20 +214,12 @@ impl ViewTileSources {
     where
         for<'a> Q::Item<'a>: HasTile,
     {
-        self.items.push(Box::new(QueryHasTile::<Q>::new()));
+        self.items.push(Box::new(QueryHasTile::<Q>::default()));
         self
     }
 
     pub fn clear(&mut self) {
         self.items.clear()
-    }
-}
-
-impl Default for ViewTileSources {
-    fn default() -> Self {
-        Self {
-            items: Vec::default(),
-        }
     }
 }
 

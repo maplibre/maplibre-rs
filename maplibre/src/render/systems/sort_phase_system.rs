@@ -6,7 +6,7 @@ use crate::{
 /// This system sorts all [`RenderPhases`](RenderPhase) for the [`PhaseItem`] type.
 pub fn sort_phase_system(
     MapContext {
-        world, renderer, ..
+        world,  ..
     }: &mut MapContext,
 ) {
     // We are only sorting layers and not masks

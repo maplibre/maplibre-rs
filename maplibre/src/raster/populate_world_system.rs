@@ -34,7 +34,7 @@ impl<E: Environment, T: RasterTransferables> System for PopulateWorldSystem<E, T
     fn run(
         &mut self,
         MapContext {
-            world, renderer, ..
+            world,  ..
         }: &mut MapContext,
     ) {
         for message in self.kernel.apc().receive(|message| {

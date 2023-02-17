@@ -3,6 +3,7 @@ use maplibre::{
     coords::{WorldTileCoords, ZoomLevel},
     headless::{create_headless_renderer, map::HeadlessMap, HeadlessPlugin},
     platform::run_multithreaded,
+    plugin::Plugin,
     raster::{DefaultRasterTransferables, RasterPlugin},
     render::RenderPlugin,
     style::Style,
@@ -15,7 +16,7 @@ fn headless_render(c: &mut Criterion) {
             let (kernel, renderer) = create_headless_renderer(1000, None).await;
             let style = Style::default();
 
-            let plugins = vec![
+            let plugins: Vec<Box<dyn Plugin<_>>> = vec![
                 Box::new(RenderPlugin::default()),
                 Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
                 Box::new(RasterPlugin::<DefaultRasterTransferables>::default()),

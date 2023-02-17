@@ -77,7 +77,7 @@ where
         source_type: &SourceType,
     ) -> Result<Vec<u8>, SourceFetchError> {
         self.inner_client
-            .fetch(&source_type.format(&coords).as_str())
+            .fetch(source_type.format(coords).as_str())
             .await
     }
 }

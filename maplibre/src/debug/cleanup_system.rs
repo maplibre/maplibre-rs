@@ -2,7 +2,7 @@ use crate::{context::MapContext, debug::TileDebugItem, render::render_phase::Ren
 
 pub fn cleanup_system(
     MapContext {
-        world, renderer, ..
+        world,  ..
     }: &mut MapContext,
 ) {
     let Some(debug_tile_phase) = world

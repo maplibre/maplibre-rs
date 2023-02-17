@@ -49,7 +49,7 @@ impl Resources {
                     .expect("inserted resource has wrong TypeId"),
             );
         }
-        return None;
+        None
     }
 
     pub fn get_mut<R: Resource>(&mut self) -> Option<&mut R> {
@@ -60,18 +60,18 @@ impl Resources {
                     .expect("inserted resource has wrong TypeId"),
             );
         }
-        return None;
+        None
     }
 
     pub fn query<'r, Q: ResourceQuery>(&'r self) -> Option<Q::Item<'r>> {
         let mut global_state = GlobalQueryState::default();
-        let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
-        Q::query(&self, state)
+        let state = <Q::State<'_> as QueryState>::create(&mut global_state);
+        Q::query(self, state)
     }
 
     pub fn query_mut<'r, Q: ResourceQueryMut>(&'r mut self) -> Option<Q::MutItem<'r>> {
         let mut global_state = GlobalQueryState::default();
-        let mut state = <Q::State<'_> as QueryState>::create(&mut global_state);
+        let state = <Q::State<'_> as QueryState>::create(&mut global_state);
         Q::query_mut(self, state)
     }
 }
@@ -90,7 +90,7 @@ impl<'a, R: Resource> ResourceQuery for &'a R {
     type Item<'r> = &'r R;
     type State<'s> = EphemeralQueryState<'s>;
 
-    fn query<'r, 's>(resources: &'r Resources, state: Self::State<'s>) -> Option<Self::Item<'r>> {
+    fn query<'r, 's>(resources: &'r Resources, _state: Self::State<'s>) -> Option<Self::Item<'r>> {
         resources.get::<R>()
     }
 }
@@ -126,7 +126,7 @@ impl<'a, R: Resource> ResourceQueryMut for &'a mut R {
 
     fn query_mut<'r, 's>(
         resources: &'r mut Resources,
-        state: Self::State<'s>,
+        _state: Self::State<'s>,
     ) -> Option<Self::MutItem<'r>> {
         resources.get_mut::<R>()
     }
@@ -155,7 +155,7 @@ impl<'a, R: Resource> ResourceQueryUnsafe for &'a mut R {
     // FIXME: tcs: check if really safe
     unsafe fn query_unsafe<'r, 's>(
         resources: &'r Resources,
-        mut state: Self::State<'s>,
+        state: Self::State<'s>,
     ) -> Option<Self::MutItem<'r>> {
         let id = TypeId::of::<R>();
         let borrowed = &mut state.state.mutably_borrowed;

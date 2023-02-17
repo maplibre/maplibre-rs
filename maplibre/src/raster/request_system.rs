@@ -44,11 +44,11 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
             style,
             view_state,
             world,
-            renderer,
+            
             ..
         }: &mut MapContext,
     ) {
-        let tiles = &mut world.tiles;
+        let _tiles = &mut world.tiles;
         let view_region = view_state.create_view_region();
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
