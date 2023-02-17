@@ -2,13 +2,13 @@
 
 use crate::{
     context::MapContext,
-    ecs::tiles::Tile,
     raster::render_commands::DrawRasterTiles,
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{DrawState, LayerItem, RenderPhase},
         tile_view_pattern::WgpuTileViewPattern,
     },
+    tcs::tiles::Tile,
 };
 
 pub fn queue_system(

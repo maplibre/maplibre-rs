@@ -1,6 +1,6 @@
 use std::mem;
 
-use crate::{coords::WorldTileCoords, ecs::world::World, render::tile_view_pattern::HasTile};
+use crate::{coords::WorldTileCoords, render::tile_view_pattern::HasTile, tcs::world::World};
 
 /// Wrapper around a resource which can be initialized or uninitialized.
 /// Uninitialized resourced can be initialized by calling [`Eventually::initialize()`].

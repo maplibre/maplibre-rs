@@ -5,7 +5,6 @@ use thiserror::Error;
 use crate::{
     context::MapContext,
     coords::{LatLon, Zoom},
-    ecs::world::World,
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
@@ -19,6 +18,7 @@ use crate::{
     },
     schedule::{Schedule, Stage},
     style::Style,
+    tcs::world::World,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
 

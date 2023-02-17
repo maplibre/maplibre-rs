@@ -4,7 +4,6 @@ use std::{borrow::Cow, collections::HashSet, marker::PhantomData, rc::Rc};
 
 use crate::{
     context::MapContext,
-    ecs::system::System,
     environment::{Environment, OffscreenKernelEnvironment},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
@@ -17,6 +16,7 @@ use crate::{
         RasterLayersDataComponent,
     },
     style::layer::LayerPaint,
+    tcs::system::System,
 };
 
 pub struct RequestSystem<E: Environment, T: RasterTransferables> {

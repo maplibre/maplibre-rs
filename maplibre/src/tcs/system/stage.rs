@@ -1,7 +1,7 @@
 use crate::{
     context::MapContext,
-    ecs::system::{IntoSystemContainer, SystemContainer},
     schedule::Stage,
+    tcs::system::{IntoSystemContainer, SystemContainer},
 };
 
 #[derive(Default)]

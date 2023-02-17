@@ -2,7 +2,7 @@
 
 pub use draw::*;
 
-use crate::{ecs::tiles::Tile, render::tile_view_pattern::TileShape};
+use crate::{render::tile_view_pattern::TileShape, tcs::tiles::Tile};
 
 mod draw;
 

@@ -1,4 +1,4 @@
-use crate::{ecs::world::World, render::Renderer, style::Style};
+use crate::{render::Renderer, style::Style, tcs::world::World};
 
 /// Stores the context of the map.
 ///

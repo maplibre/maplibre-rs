@@ -1,10 +1,10 @@
 use crate::{
-    ecs::world::World,
     render::{
         graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
         resource::Head,
         RenderState,
     },
+    tcs::world::World,
 };
 
 /// Node which copies the contents of the GPU-side texture in [`BufferedTextureHead`] to an

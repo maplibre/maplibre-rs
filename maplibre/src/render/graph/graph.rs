@@ -5,8 +5,8 @@ use super::{
     RenderGraphError, SlotInfo, SlotLabel,
 };
 use crate::{
-    ecs::world::World,
     render::{graph::RenderContext, RenderState},
+    tcs::world::World,
 };
 
 /// The render graph configures the modular, parallel and re-usable render logic.
@@ -29,7 +29,7 @@ use crate::{
 /// Here is a simple render graph example with two nodes connected by a node edge.
 /// ```
 /// #
-/// # use maplibre::ecs::world::World;
+/// # use maplibre::tcs::world::World;
 /// use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
 /// # use maplibre::render::{RenderState};
 /// # struct MyNode;
@@ -584,11 +584,11 @@ mod tests {
         SlotInfo,
     };
     use crate::{
-        ecs::world::World,
         render::{
             graph::{RenderContext, SlotType},
             RenderState,
         },
+        tcs::world::World,
     };
 
     #[derive(Debug)]

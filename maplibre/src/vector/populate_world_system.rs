@@ -2,10 +2,10 @@ use std::{borrow::Cow, marker::PhantomData, rc::Rc};
 
 use crate::{
     context::MapContext,
-    ecs::system::System,
     environment::Environment,
     io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
+    tcs::system::System,
     vector::{transferables::*, VectorLayerData, VectorLayersDataComponent},
 };
 

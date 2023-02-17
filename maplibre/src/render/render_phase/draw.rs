@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
 use crate::{
-    ecs::world::World,
     render::{resource::TrackedRenderPass, RenderState},
+    tcs::world::World,
 };
 
 /// A draw function which is used to draw a specific [`PhaseItem`].

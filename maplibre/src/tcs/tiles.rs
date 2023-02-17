@@ -13,7 +13,7 @@ pub struct Tile {
     pub coords: WorldTileCoords,
 }
 
-/// A component is data associated with an [`Entity`](crate::ecs::entity::Entity). Each entity can have
+/// A component is data associated with an [`Entity`](crate::tcs::entity::Entity). Each entity can have
 /// multiple different types of components, but only one of them per type.
 pub trait TileComponent: Downcast + 'static {}
 impl_downcast!(TileComponent);

@@ -4,8 +4,8 @@ use std::borrow::Cow;
 
 use crate::{
     context::MapContext,
-    ecs::system::System,
     render::{resource::Texture, Renderer},
+    tcs::system::System,
 };
 
 #[derive(Default)]

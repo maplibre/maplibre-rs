@@ -6,8 +6,8 @@ use log::error;
 
 use crate::{
     context::MapContext,
-    ecs::system::System,
     render::{eventually::Eventually::Initialized, graph_runner::RenderGraphRunner, Renderer},
+    tcs::system::System,
 };
 
 /// Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame.

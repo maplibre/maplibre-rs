@@ -1,7 +1,6 @@
 //! Specifies the instructions which are going to be sent to the GPU. Render commands can be concatenated
 //! into a new render command which executes multiple instruction sets.
 use crate::{
-    ecs::world::World,
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{
@@ -11,6 +10,7 @@ use crate::{
         tile_view_pattern::WgpuTileViewPattern,
         RenderState, INDEX_FORMAT,
     },
+    tcs::world::World,
     vector::{DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline},
 };
 

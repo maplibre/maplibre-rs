@@ -7,7 +7,7 @@ use super::{
     Edge, InputSlotError, OutputSlotError, RenderGraphContext, RenderGraphError, RunSubGraphError,
     SlotInfo, SlotInfos,
 };
-use crate::{ecs::world::World, render::RenderState};
+use crate::{render::RenderState, tcs::world::World};
 
 /// The context with all information required to interact with the GPU.
 ///

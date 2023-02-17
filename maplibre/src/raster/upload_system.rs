@@ -2,7 +2,6 @@
 use crate::{
     context::MapContext,
     coords::ViewRegion,
-    ecs::tiles::Tiles,
     raster::{
         resource::RasterResources, AvailableRasterLayerData, RasterLayerData,
         RasterLayersDataComponent,
@@ -12,6 +11,7 @@ use crate::{
         Renderer,
     },
     style::Style,
+    tcs::tiles::Tiles,
 };
 
 pub fn upload_system(

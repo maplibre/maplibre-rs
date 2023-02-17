@@ -4,7 +4,6 @@ use image::RgbaImage;
 
 use crate::{
     coords::WorldTileCoords,
-    ecs::{system::SystemContainer, tiles::TileComponent, world::World},
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
@@ -15,6 +14,7 @@ use crate::{
     },
     render::{eventually::Eventually, tile_view_pattern::TilePhase, RenderStageLabel},
     schedule::Schedule,
+    tcs::{system::SystemContainer, tiles::TileComponent, world::World},
 };
 
 mod populate_world_system;

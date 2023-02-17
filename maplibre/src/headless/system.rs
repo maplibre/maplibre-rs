@@ -2,11 +2,11 @@ use std::{borrow::Cow, sync::Arc};
 
 use crate::{
     context::MapContext,
-    ecs::system::System,
     render::{
         resource::{BufferedTextureHead, Head},
         Renderer,
     },
+    tcs::system::System,
 };
 
 /// Stage which writes the current contents of the GPU/CPU buffer in [`BufferedTextureHead`]

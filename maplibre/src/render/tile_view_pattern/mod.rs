@@ -9,8 +9,8 @@ pub use pattern::{TileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE};
 
 use crate::{
     coords::{WorldTileCoords, Zoom},
-    ecs::{resources::ResourceQuery, world::World},
     render::shaders::ShaderTileMetadata,
+    tcs::{resources::ResourceQuery, world::World},
 };
 
 pub type WgpuTileViewPattern = TileViewPattern<wgpu::Queue, wgpu::Buffer>;

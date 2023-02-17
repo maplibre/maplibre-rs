@@ -2,13 +2,13 @@ use std::marker::PhantomData;
 
 use crate::{
     coords::{ViewRegion, Zoom},
-    ecs::world::World,
     render::{
         camera::ViewProjection,
         resource::{BackingBufferDescriptor, Queue},
         shaders::ShaderTileMetadata,
         tile_view_pattern::{HasTile, SourceShapes, TileShape, ViewTile},
     },
+    tcs::world::World,
 };
 
 pub const DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = 32 * 4;

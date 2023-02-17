@@ -10,7 +10,6 @@ use smallvec::{smallvec, SmallVec};
 use thiserror::Error;
 
 use crate::{
-    ecs::world::World,
     render::{
         graph::{
             Edge, NodeId, NodeRunError, NodeState, RenderContext, RenderGraph, RenderGraphContext,
@@ -18,6 +17,7 @@ use crate::{
         },
         RenderState,
     },
+    tcs::world::World,
 };
 
 pub(crate) struct RenderGraphRunner;

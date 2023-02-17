@@ -2,8 +2,8 @@ use std::default::Default;
 
 use crate::{
     coords::{LatLon, WorldCoords, Zoom},
-    ecs::{resources::Resources, tiles::Tiles},
     io::geometry_index::GeometryIndex,
+    tcs::{resources::Resources, tiles::Tiles},
     view_state::ViewState,
     window::WindowSize,
 };

@@ -12,12 +12,12 @@ use bytemuck::Pod;
 
 use crate::{
     coords::{Quadkey, WorldTileCoords},
-    ecs::world::World,
     render::{
         resource::{BackingBufferDescriptor, Queue},
         tile_view_pattern::HasTile,
     },
     style::layer::StyleLayer,
+    tcs::world::World,
     tessellation::OverAlignedVertexBuffer,
 };
 

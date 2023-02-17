@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
-use maplibre::{context::MapContext, ecs::world::World, render::camera::Camera};
+use maplibre::{context::MapContext, render::camera::Camera, tcs::world::World};
 use winit::event::{ElementState, MouseButton};
 
 use super::UpdateState;

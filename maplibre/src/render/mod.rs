@@ -360,7 +360,7 @@ mod tests {
 
     use crate::{
         coords::{WorldCoords, Zoom},
-        ecs::world::World,
+        tcs::world::World,
         window::{MapWindow, MapWindowConfig, WindowSize},
     };
 

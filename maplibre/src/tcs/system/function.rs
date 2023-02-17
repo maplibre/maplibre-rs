@@ -1,6 +1,6 @@
 use std::{any::type_name, borrow::Cow};
 
-use crate::{context::MapContext, ecs::system::System};
+use crate::{context::MapContext, tcs::system::System};
 
 /// Conversion trait to turn something into a [`System`].
 ///

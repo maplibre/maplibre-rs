@@ -4,7 +4,6 @@ use std::{borrow::Cow, collections::HashSet, marker::PhantomData, rc::Rc};
 
 use crate::{
     context::MapContext,
-    ecs::system::System,
     environment::{Environment, OffscreenKernelEnvironment},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
@@ -12,6 +11,7 @@ use crate::{
     },
     kernel::Kernel,
     style::layer::LayerPaint,
+    tcs::system::System,
     vector::{
         process_vector::{process_vector_tile, ProcessVectorContext, VectorTileRequest},
         transferables::{LayerMissing, VectorTransferables},

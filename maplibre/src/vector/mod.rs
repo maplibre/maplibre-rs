@@ -2,7 +2,6 @@ use std::{marker::PhantomData, ops::Deref, rc::Rc};
 
 use crate::{
     coords::WorldTileCoords,
-    ecs::{system::SystemContainer, tiles::TileComponent, world::World},
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
@@ -14,6 +13,7 @@ use crate::{
         RenderStageLabel, ShaderVertex,
     },
     schedule::Schedule,
+    tcs::{system::SystemContainer, tiles::TileComponent, world::World},
     tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
         populate_world_system::PopulateWorldSystem, queue_system::queue_system,

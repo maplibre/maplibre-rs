@@ -1,12 +1,12 @@
 //! Queues [PhaseItems](crate::render::render_phase::PhaseItem) for rendering.
 use crate::{
     context::MapContext,
-    ecs::tiles::Tile,
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_phase::{DrawState, LayerItem, RenderPhase, TileDebugItem, TileMaskItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
+    tcs::tiles::Tile,
     vector::{
         render_commands::{DrawDebugOutlines, DrawMasks, DrawVectorTiles},
         VectorBufferPool,

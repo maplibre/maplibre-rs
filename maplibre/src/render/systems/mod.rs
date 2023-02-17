@@ -3,7 +3,6 @@
 use graph_runner_system::GraphRunnerSystem;
 
 use crate::{
-    ecs::system::{stage::SystemStage, SystemContainer},
     render::{
         systems::{
             cleanup_system::cleanup_system, resource_system::ResourceSystem,
@@ -13,6 +12,7 @@ use crate::{
         RenderStageLabel,
     },
     schedule::Schedule,
+    tcs::system::{stage::SystemStage, SystemContainer},
 };
 
 mod cleanup_system;

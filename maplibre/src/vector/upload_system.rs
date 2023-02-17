@@ -5,7 +5,6 @@ use std::iter;
 use crate::{
     context::MapContext,
     coords::ViewRegion,
-    ecs::tiles::Tiles,
     render::{
         eventually::{Eventually, Eventually::Initialized},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata, Vec4f32},
@@ -13,6 +12,7 @@ use crate::{
         Renderer,
     },
     style::Style,
+    tcs::tiles::Tiles,
     vector::{
         AvailableVectorLayerData, VectorBufferPool, VectorLayerData, VectorLayersDataComponent,
     },

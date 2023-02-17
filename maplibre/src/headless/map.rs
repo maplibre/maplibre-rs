@@ -3,7 +3,6 @@ use std::{cell::RefCell, ops::Deref, rc::Rc};
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel, TILE_SIZE},
-    ecs::{system::SystemContainer, world::World},
     headless::{
         environment::HeadlessEnvironment, graph_node::CopySurfaceBufferNode,
         system::WriteSurfaceBufferSystem,
@@ -23,6 +22,7 @@ use crate::{
     },
     schedule::{Schedule, Stage},
     style::Style,
+    tcs::{system::SystemContainer, world::World},
     vector::{
         process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
         LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,

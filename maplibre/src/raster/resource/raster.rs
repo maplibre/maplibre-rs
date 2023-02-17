@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use crate::{
     coords::WorldTileCoords,
-    ecs::world::World,
     render::{resource::Texture, settings::Msaa, tile_view_pattern::HasTile},
+    tcs::world::World,
 };
 
 /// Holds the resources necessary for the raster tiles such as the

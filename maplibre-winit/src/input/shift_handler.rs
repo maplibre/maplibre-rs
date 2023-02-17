@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{Vector3, Zero};
-use maplibre::{context::MapContext, ecs::world::World};
+use maplibre::{context::MapContext, tcs::world::World};
 
 use super::UpdateState;
 

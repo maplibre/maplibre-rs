@@ -46,11 +46,11 @@ pub mod environment;
 // Used for benchmarking
 pub mod benchmarking;
 
-pub mod ecs;
 pub mod event_loop;
 pub mod kernel;
 pub mod map;
 pub mod plugin;
+pub mod tcs;
 pub mod view_state;
 
 // Plugins

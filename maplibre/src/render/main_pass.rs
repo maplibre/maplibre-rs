@@ -6,7 +6,6 @@
 use std::ops::Deref;
 
 use crate::{
-    ecs::world::World,
     render::{
         draw_graph,
         graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
@@ -15,6 +14,7 @@ use crate::{
         Eventually::Initialized,
         RenderState,
     },
+    tcs::world::World,
 };
 
 pub struct MainPassNode {}

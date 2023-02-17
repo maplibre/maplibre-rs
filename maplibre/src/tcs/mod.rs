@@ -1,5 +1,3 @@
-// FIXME tcs: Rename to tcs
-
 use std::{any::TypeId, collections::HashSet};
 
 pub mod resources;

@@ -5,7 +5,7 @@ use downcast_rs::{impl_downcast, Downcast};
 use crate::{
     context::MapContext,
     define_label,
-    ecs::system::{stage::SystemStage, IntoSystemContainer},
+    tcs::system::{stage::SystemStage, IntoSystemContainer},
 };
 
 pub struct NopStage;
@@ -279,7 +279,7 @@ impl Schedule {
     ///
     /// ```
     /// # use maplibre::context::MapContext;
-    /// use maplibre::ecs::system::stage::SystemStage;
+    /// use maplibre::tcs::system::stage::SystemStage;
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();

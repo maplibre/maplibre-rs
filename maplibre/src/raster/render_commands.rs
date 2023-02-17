@@ -1,5 +1,4 @@
 use crate::{
-    ecs::world::World,
     raster::resource::RasterResources,
     render::{
         eventually::{Eventually, Eventually::Initialized},
@@ -8,6 +7,7 @@ use crate::{
         tile_view_pattern::WgpuTileViewPattern,
         RenderState,
     },
+    tcs::world::World,
 };
 
 pub struct SetRasterTilePipeline;

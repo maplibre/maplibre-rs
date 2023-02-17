@@ -2,7 +2,7 @@ use std::{any, any::TypeId, collections::HashMap};
 
 use downcast_rs::{impl_downcast, Downcast};
 
-use crate::ecs::{EphemeralQueryState, GlobalQueryState, QueryState};
+use crate::tcs::{EphemeralQueryState, GlobalQueryState, QueryState};
 
 pub trait Resource: Downcast + 'static {}
 impl_downcast!(Resource);

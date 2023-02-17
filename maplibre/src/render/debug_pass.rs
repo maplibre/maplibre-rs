@@ -1,7 +1,6 @@
 use std::ops::Deref;
 
 use crate::{
-    ecs::world::World,
     render::{
         graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
         render_phase::{RenderPhase, TileDebugItem},
@@ -9,6 +8,7 @@ use crate::{
         Eventually::Initialized,
         RenderState,
     },
+    tcs::world::World,
 };
 
 /// Pass which renders debug information on top of the map.

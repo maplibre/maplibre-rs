@@ -2,7 +2,6 @@ use std::{borrow::Cow, marker::PhantomData, rc::Rc};
 
 use crate::{
     context::MapContext,
-    ecs::system::System,
     environment::Environment,
     io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
@@ -10,6 +9,7 @@ use crate::{
         transferables::{LayerRaster, LayerRasterMissing, RasterTransferables},
         RasterLayerData, RasterLayersDataComponent,
     },
+    tcs::system::System,
 };
 
 pub struct PopulateWorldSystem<E: Environment, T> {
