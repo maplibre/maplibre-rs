@@ -37,8 +37,6 @@ impl RenderCommand<TileMaskItem> for DrawMask {
 
         let tile_mask = &item.source_shape;
 
-        tracing::trace!("Drawing mask {}", &tile_mask.coords());
-
         // Draw mask with stencil value of e.g. parent
         let reference = tile_mask.coords().stencil_reference_value_3d() as u32;
 
@@ -46,7 +44,7 @@ impl RenderCommand<TileMaskItem> for DrawMask {
 
         let tile_view_pattern_buffer = tile_mask
             .buffer_range()
-            .expect("tile_view_pattern needs to be uploaded first"); // FIXME: tcs
+            .expect("tile_view_pattern needs to be uploaded first"); // FIXME tcs
         pass.set_vertex_buffer(
             0,
             // Mask is of the requested shape

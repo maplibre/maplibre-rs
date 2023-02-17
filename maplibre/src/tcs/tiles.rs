@@ -244,7 +244,7 @@ impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a T {
 
 impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
     /// SAFETY: Safe if tiles is borrowed mutably.
-    // FIXME: tcs: check if really safe
+    // FIXME tcs: check if really safe
     unsafe fn query_unsafe<'t, 's>(
         tiles: &'t Tiles,
         tile: Tile,

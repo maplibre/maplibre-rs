@@ -8,6 +8,18 @@ use crate::{
     raster::{AvailableRasterLayerData, MissingRasterLayerData},
 };
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+pub enum RasterMessageTag {
+    LayerRaster,
+    LayerRasterMissing,
+}
+
+impl MessageTag for RasterMessageTag {
+    fn dyn_clone(&self) -> Box<dyn MessageTag> {
+        Box::new(*self)
+    }
+}
+
 pub trait LayerRaster: IntoMessage + Debug + Send {
     fn message_tag() -> &'static dyn MessageTag;
 
@@ -48,7 +60,7 @@ impl IntoMessage for DefaultLayerRaster {
 
 impl LayerRaster for DefaultLayerRaster {
     fn message_tag() -> &'static dyn MessageTag {
-        &6
+        &RasterMessageTag::LayerRaster
     }
 
     fn build_from(coords: WorldTileCoords, layer_name: String, image: RgbaImage) -> Self {
@@ -90,7 +102,7 @@ impl IntoMessage for DefaultLayerRasterMissing {
 
 impl LayerRasterMissing for DefaultLayerRasterMissing {
     fn message_tag() -> &'static dyn MessageTag {
-        &7
+        &RasterMessageTag::LayerRasterMissing
     }
 
     fn build_from(coords: WorldTileCoords) -> Self {

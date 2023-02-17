@@ -13,6 +13,20 @@ use crate::{
     vector::{AvailableVectorLayerData, MissingVectorLayerData},
 };
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+pub enum VectorMessageTag {
+    TileTessellated = 1,
+    LayerMissing = 2,
+    LayerTessellated = 3,
+    LayerIndexed = 4,
+}
+
+impl MessageTag for VectorMessageTag {
+    fn dyn_clone(&self) -> Box<dyn MessageTag> {
+        Box::new(*self)
+    }
+}
+
 pub trait TileTessellated: IntoMessage + Debug + Send {
     fn message_tag() -> &'static dyn MessageTag;
 
@@ -86,7 +100,7 @@ impl IntoMessage for DefaultTileTessellated {
 
 impl TileTessellated for DefaultTileTessellated {
     fn message_tag() -> &'static dyn MessageTag {
-        &2
+        &VectorMessageTag::TileTessellated
     }
 
     fn build_from(coords: WorldTileCoords) -> Self {
@@ -117,7 +131,7 @@ impl IntoMessage for DefaultLayerMissing {
 
 impl LayerMissing for DefaultLayerMissing {
     fn message_tag() -> &'static dyn MessageTag {
-        &3
+        &VectorMessageTag::LayerMissing
     }
 
     fn build_from(coords: WorldTileCoords, layer_name: String) -> Self {
@@ -163,7 +177,7 @@ impl IntoMessage for DefaultLayerTesselated {
 
 impl LayerTessellated for DefaultLayerTesselated {
     fn message_tag() -> &'static dyn MessageTag {
-        &4
+        &VectorMessageTag::LayerTessellated
     }
 
     fn build_from(
@@ -217,7 +231,7 @@ impl IntoMessage for DefaultLayerIndexed {
 
 impl LayerIndexed for DefaultLayerIndexed {
     fn message_tag() -> &'static dyn MessageTag {
-        &5
+        &VectorMessageTag::LayerIndexed
     }
 
     fn build_from(coords: WorldTileCoords, index: TileIndex) -> Self {

@@ -159,7 +159,7 @@ impl<'a, R: Resource> ResourceQueryUnsafe for &'a R {
 
 impl<'a, R: Resource> ResourceQueryUnsafe for &'a mut R {
     /// SAFETY: Safe if tiles is borrowed mutably.
-    // FIXME: tcs: check if really safe
+    // FIXME tcs: check if really safe
     unsafe fn query_unsafe<'r, 's>(
         resources: &'r Resources,
         state: Self::State<'s>,

@@ -46,6 +46,7 @@ pub trait PhaseItem {
 /// ```
 pub trait RenderCommand<P: PhaseItem> {
     /// Renders the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
+    // TODO: reorder the arguments to match Node and Draw
     fn render<'w>(
         world: &'w World,
         item: &P,

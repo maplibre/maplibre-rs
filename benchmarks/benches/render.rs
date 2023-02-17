@@ -17,7 +17,6 @@ fn headless_render(c: &mut Criterion) {
             let style = Style::default();
 
             let plugins: Vec<Box<dyn Plugin<_>>> = vec![
-                Box::new(RenderPlugin::default()),
                 Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
                 Box::new(RasterPlugin::<DefaultRasterTransferables>::default()),
                 Box::new(HeadlessPlugin::new(false)),

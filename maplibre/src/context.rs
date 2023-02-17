@@ -3,7 +3,7 @@ use crate::{render::Renderer, style::Style, tcs::world::World, view_state::ViewS
 /// Stores the context of the map.
 ///
 /// This struct should not depend on the [`crate::environment::Environment`] trait. Else types
-/// throughout the create get messy quickly.
+/// throughout the crate get messy quickly.
 pub struct MapContext {
     pub style: Style,
     pub world: World,

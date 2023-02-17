@@ -42,7 +42,7 @@ impl RenderCommand<TileDebugItem> for DrawDebugOutline {
 
         let tile_view_pattern_buffer = source_shape
             .buffer_range()
-            .expect("tile_view_pattern needs to be uploaded first"); // FIXME: tcs
+            .expect("tile_view_pattern needs to be uploaded first"); // FIXME tcs
         pass.set_vertex_buffer(
             0,
             tile_view_pattern.buffer().slice(tile_view_pattern_buffer),

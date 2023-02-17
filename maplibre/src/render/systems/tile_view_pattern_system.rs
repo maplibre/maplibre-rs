@@ -15,7 +15,7 @@ pub fn tile_view_pattern_system(
 ) {
     let Some((
         Initialized(tile_view_pattern),
-        tile_phase,
+        view_tile_sources,
     )) = world.resources.query::<(
         &Eventually<WgpuTileViewPattern>,
         &ViewTileSources
@@ -25,8 +25,10 @@ pub fn tile_view_pattern_system(
     if let Some(view_region) = &view_region {
         let zoom = view_state.zoom();
 
-        let view_tiles = tile_view_pattern.generate_pattern(view_region, tile_phase, zoom, world);
+        let view_tiles =
+            tile_view_pattern.generate_pattern(view_region, view_tile_sources, zoom, world);
 
+        // TODO: Can we &mut borrow initially somehow instead of here?
         let Some(Initialized(tile_view_pattern)) = world
             .resources
             .query_mut::<&mut Eventually<WgpuTileViewPattern>>() else { return; };

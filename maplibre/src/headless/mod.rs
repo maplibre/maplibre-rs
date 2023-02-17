@@ -61,7 +61,7 @@ mod draw_graph {
     // Labels for non-input nodes
     pub mod node {
         pub const MAIN_PASS: &str = "main_pass";
-        pub const COPY: &str = "copy";
+        pub const COPY: &str = "copy_pass";
     }
 }
 

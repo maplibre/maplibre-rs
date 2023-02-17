@@ -222,7 +222,7 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
         let mut buffer = self.buffer.borrow_mut();
         let mut ret = Vec::new();
 
-        // FIXME: Verify this!
+        // FIXME tcs: Verify this!
         let mut index = 0usize;
         let mut max_len = buffer.len();
         while index < max_len {
@@ -234,7 +234,7 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
         }
 
         // TODO: (optimize) Using while instead of if means that we are processing all that is
-        // available this might cause frame drops.
+        // TODO: available this might cause frame drops.
         while let Ok(message) = self.channel.1.try_recv() {
             tracing::debug!("Data reached main thread: {:?}", &message);
             log::debug!("Data reached main thread: {:?}", &message);

@@ -178,7 +178,7 @@ impl<K: OffscreenKernelEnvironment> AsyncProcedureCall<K> for PassingAsyncProced
         let mut buffer = self.buffer.borrow_mut();
         let mut ret = Vec::new();
 
-        // FIXME: Verify this!
+        // FIXME tcs: Verify this!
         let mut index = 0usize;
         let mut max_len = buffer.len();
         while index < max_len {
@@ -190,7 +190,7 @@ impl<K: OffscreenKernelEnvironment> AsyncProcedureCall<K> for PassingAsyncProced
         }
 
         // TODO: (optimize) Using while instead of if means that we are processing all that is
-        // available this might cause frame drops.
+        // TODO available this might cause frame drops.
         while let Some(message) = self
             .received
             .try_borrow_mut()

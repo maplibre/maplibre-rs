@@ -25,7 +25,7 @@ pub struct TilePipeline {
 }
 
 impl TilePipeline {
-    pub(crate) fn new(
+    pub fn new(
         name: Cow<'static, str>,
         settings: RendererSettings,
         vertex_state: VertexState,

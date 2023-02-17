@@ -279,7 +279,7 @@ impl Schedule {
     ///
     /// ```
     /// # use maplibre::context::MapContext;
-    /// use maplibre::tcs::system::stage::SystemStage;
+    /// # use maplibre::tcs::system::stage::SystemStage;
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();

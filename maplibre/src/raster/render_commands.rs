@@ -59,13 +59,11 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
 
         let reference = source_shape.coords().stencil_reference_value_3d() as u32;
 
-        tracing::trace!("Drawing raster layer");
-
         pass.set_stencil_reference(reference);
 
         let tile_view_pattern_buffer = source_shape
             .buffer_range()
-            .expect("tile_view_pattern needs to be uploaded first"); // FIXME: tcs
+            .expect("tile_view_pattern needs to be uploaded first"); // FIXME tcs
         pass.set_vertex_buffer(
             0,
             tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
@@ -73,7 +71,7 @@ impl RenderCommand<LayerItem> for DrawRasterTile {
 
         let tile_view_pattern_buffer = source_shape
             .buffer_range()
-            .expect("tile_view_pattern needs to be uploaded first"); // FIXME: tcs
+            .expect("tile_view_pattern needs to be uploaded first"); // FIXME tcs
 
         // FIXME tcs: I passin random data here right now, but instead we need the correct metadata here
         pass.set_vertex_buffer(

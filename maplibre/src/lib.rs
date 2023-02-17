@@ -21,7 +21,7 @@
 extern crate core;
 
 // Export tile format
-pub use geozero::mvt::tile;
+pub use geozero::mvt::tile; // Used in transferables.rs in web/singlethreaded
 
 // Internal modules
 pub(crate) mod tessellation;
