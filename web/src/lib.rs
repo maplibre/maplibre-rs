@@ -8,7 +8,7 @@ use maplibre::{
     kernel::{Kernel, KernelBuilder},
     map::Map,
     raster::RasterPlugin,
-    render::builder::RendererBuilder,
+    render::{builder::RendererBuilder, RenderPlugin},
     style::Style,
     vector::VectorPlugin,
 };
@@ -124,6 +124,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
         kernel,
         RendererBuilder::new(),
         vec![
+            Box::new(RenderPlugin::default()),
             Box::new(VectorPlugin::<UsedVectorTransferables>::default()),
             Box::new(RasterPlugin::<UsedRasterTransferables>::default()),
         ],

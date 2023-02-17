@@ -18,21 +18,30 @@
 //! We appreciate the design and implementation work which as gone into it.
 //!
 
-use std::sync::Arc;
-
-pub use shaders::ShaderVertex;
-pub use systems::register_default_render_stages;
+use std::{ops::Deref, rc::Rc, sync::Arc};
 
 use crate::{
+    environment::Environment,
+    kernel::Kernel,
+    plugin::Plugin,
     render::{
         error::RenderError,
         eventually::Eventually,
-        graph::{EmptyNode, RenderGraph, RenderGraphError},
+        graph::{EmptyNode, RenderGraph},
         main_pass::{MainPassDriverNode, MainPassNode},
         resource::{Head, Surface, Texture, TextureView},
         settings::{RendererSettings, WgpuSettings},
+        systems::{
+            cleanup_system::cleanup_system, resource_system::ResourceSystem,
+            sort_phase_system::sort_phase_system,
+            tile_view_pattern_system::tile_view_pattern_system,
+        },
     },
-    schedule::StageLabel,
+    schedule::{Schedule, StageLabel},
+    tcs::{
+        system::{stage::SystemStage, SystemContainer},
+        world::World,
+    },
     window::{HeadedMapWindow, MapWindow},
 };
 
@@ -43,7 +52,7 @@ pub mod systems;
 // Rendering internals
 mod graph_runner;
 mod main_pass;
-pub mod shaders; // TODO: Make private again
+pub mod shaders; // TODO: Make private
 
 // Public API
 pub mod builder;
@@ -54,7 +63,48 @@ pub mod render_phase;
 pub mod settings;
 pub mod tile_view_pattern;
 
+pub use shaders::ShaderVertex;
+
+use crate::render::{
+    render_phase::{LayerItem, RenderPhase, TileMaskItem},
+    systems::graph_runner_system::GraphRunnerSystem,
+    tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
+};
+
 pub(crate) const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
+
+/// The labels of the default App rendering stages.
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub enum RenderStageLabel {
+    /// Extract data from the world.
+    Extract,
+
+    /// Prepare render resources from the extracted data for the GPU.
+    /// For example during this phase textures are created, buffers are allocated and written.
+    Prepare,
+
+    /// Queues [PhaseItems](crate::render::render_phase::PhaseItem) that depend on
+    /// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the
+    /// [`Render`](RenderStageLabel::Render) stage.
+    /// For example data is uploaded to the GPU in this stage.
+    Queue,
+
+    /// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.
+    PhaseSort,
+
+    /// Actual rendering happens here.
+    /// In most cases, only the render backend should insert resources here.
+    Render,
+
+    /// Cleanup render resources here.
+    Cleanup,
+}
+
+impl StageLabel for RenderStageLabel {
+    fn dyn_clone(&self) -> Box<dyn StageLabel> {
+        Box::new(self.clone())
+    }
+}
 
 pub struct RenderResources {
     pub surface: Surface,
@@ -462,53 +512,78 @@ mod draw_graph {
     }
 }
 
-pub fn initialize_default_render_graph(graph: &mut RenderGraph) -> Result<(), RenderGraphError> {
-    let mut draw_graph = RenderGraph::default();
-    // Draw nodes
-    draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
-    // Input node
-    let input_node_id = draw_graph.set_input(vec![]);
-    // Edges
-    draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
+pub struct MaskPipeline(pub wgpu::RenderPipeline);
+impl Deref for MaskPipeline {
+    type Target = wgpu::RenderPipeline;
 
-    graph.add_sub_graph(draw_graph::NAME, draw_graph);
-    graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
-    graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
-    graph.add_node_edge(
-        main_graph::node::MAIN_PASS_DEPENDENCIES,
-        main_graph::node::MAIN_PASS_DRIVER,
-    )
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
-/// The labels of the default App rendering stages.
-#[derive(Debug, Hash, PartialEq, Eq, Clone)]
-pub enum RenderStageLabel {
-    /// Extract data from the world.
-    Extract,
+// TODO: Do we really want a render plugin or do we want to statically do this setup?
+#[derive(Default)]
+pub struct RenderPlugin;
 
-    /// Prepare render resources from the extracted data for the GPU.
-    /// For example during this phase textures are created, buffers are allocated and written.
-    Prepare,
+impl<E: Environment> Plugin<E> for RenderPlugin {
+    fn build(
+        &self,
+        schedule: &mut Schedule,
+        _kernel: Rc<Kernel<E>>,
+        world: &mut World,
+        graph: &mut RenderGraph,
+    ) {
+        let resources = &mut world.resources;
 
-    /// Queues [PhaseItems](crate::render::render_phase::PhaseItem) that depend on
-    /// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the
-    /// [`Render`](RenderStageLabel::Render) stage.
-    /// For example data is uploaded to the GPU in this stage.
-    Queue,
+        let mut draw_graph = RenderGraph::default();
+        // Draw nodes
+        draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+        // Input node
+        let input_node_id = draw_graph.set_input(vec![]);
+        // Edges
+        draw_graph
+            .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
+            .unwrap();
 
-    /// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.
-    PhaseSort,
+        graph.add_sub_graph(draw_graph::NAME, draw_graph);
+        graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
+        graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
+        graph
+            .add_node_edge(
+                main_graph::node::MAIN_PASS_DEPENDENCIES,
+                main_graph::node::MAIN_PASS_DRIVER,
+            )
+            .unwrap();
 
-    /// Actual rendering happens here.
-    /// In most cases, only the render backend should insert resources here.
-    Render,
+        // render graph dependency
+        resources.init::<RenderPhase<LayerItem>>();
+        resources.init::<RenderPhase<TileMaskItem>>();
+        // tile_view_pattern:
+        resources.insert(Eventually::<WgpuTileViewPattern>::Uninitialized);
+        resources.init::<ViewTileSources>();
+        // masks
+        resources.insert(Eventually::<MaskPipeline>::Uninitialized);
 
-    /// Cleanup render resources here.
-    Cleanup,
-}
-
-impl StageLabel for RenderStageLabel {
-    fn dyn_clone(&self) -> Box<dyn StageLabel> {
-        Box::new(self.clone())
+        schedule.add_stage(RenderStageLabel::Extract, SystemStage::default());
+        schedule.add_stage(
+            RenderStageLabel::Prepare,
+            SystemStage::default().with_system(SystemContainer::new(ResourceSystem)),
+        );
+        schedule.add_stage(
+            RenderStageLabel::Queue,
+            SystemStage::default().with_system(tile_view_pattern_system),
+        );
+        schedule.add_stage(
+            RenderStageLabel::PhaseSort,
+            SystemStage::default().with_system(sort_phase_system),
+        );
+        schedule.add_stage(
+            RenderStageLabel::Render,
+            SystemStage::default().with_system(SystemContainer::new(GraphRunnerSystem)),
+        );
+        schedule.add_stage(
+            RenderStageLabel::Cleanup,
+            SystemStage::default().with_system(cleanup_system),
+        );
     }
 }

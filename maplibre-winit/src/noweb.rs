@@ -16,7 +16,7 @@ use maplibre::{
         ReqwestOffscreenKernelEnvironment,
     },
     raster::{DefaultRasterTransferables, RasterPlugin},
-    render::{builder::RendererBuilder, settings::WgpuSettings},
+    render::{builder::RendererBuilder, settings::WgpuSettings, RenderPlugin},
     style::Style,
     vector::{DefaultVectorTransferables, VectorPlugin},
     window::{MapWindow, MapWindowConfig, WindowSize},
@@ -100,6 +100,7 @@ pub fn run_headed_map(cache_path: Option<String>) {
             kernel,
             renderer_builder,
             vec![
+                Box::new(RenderPlugin::default()),
                 Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
                 Box::new(RasterPlugin::<DefaultRasterTransferables>::default()),
                 Box::new(DebugPlugin::default()),

@@ -6,10 +6,10 @@ use crate::{
         render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult, TileMaskItem},
         resource::TrackedRenderPass,
         tile_view_pattern::WgpuTileViewPattern,
-        INDEX_FORMAT,
+        MaskPipeline, INDEX_FORMAT,
     },
     tcs::world::World,
-    vector::{MaskPipeline, VectorBufferPool, VectorPipeline},
+    vector::{VectorBufferPool, VectorPipeline},
 };
 
 pub struct SetMaskPipeline;

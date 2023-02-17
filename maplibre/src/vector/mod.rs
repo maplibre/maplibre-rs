@@ -7,9 +7,8 @@ use crate::{
     plugin::Plugin,
     render::{
         eventually::Eventually,
-        render_phase::{LayerItem, RenderPhase, TileMaskItem},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        tile_view_pattern::{HasTile, ViewTileSources, WgpuTileViewPattern},
+        tile_view_pattern::{HasTile, ViewTileSources},
         RenderStageLabel, ShaderVertex,
     },
     schedule::Schedule,
@@ -42,15 +41,6 @@ use crate::render::graph::RenderGraph;
 
 struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {
-    type Target = wgpu::RenderPipeline;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-struct MaskPipeline(wgpu::RenderPipeline);
-impl Deref for MaskPipeline {
     type Target = wgpu::RenderPipeline;
 
     fn deref(&self) -> &Self::Target {
@@ -98,16 +88,6 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
         graph: &mut RenderGraph,
     ) {
         let resources = &mut world.resources;
-
-        // FIXME tcs: Move to rendering core
-        // render graph dependency
-        resources.init::<RenderPhase<LayerItem>>();
-        resources.init::<RenderPhase<TileMaskItem>>();
-        // tile_view_pattern:
-        resources.insert(Eventually::<WgpuTileViewPattern>::Uninitialized);
-        resources.init::<ViewTileSources>();
-        // masks
-        resources.insert(Eventually::<MaskPipeline>::Uninitialized);
 
         // buffer_pool
         resources.insert(Eventually::<VectorBufferPool>::Uninitialized);

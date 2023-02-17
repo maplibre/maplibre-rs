@@ -10,9 +10,9 @@ use crate::{
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_view_pattern::{TileViewPattern, WgpuTileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
-        RenderResources, Renderer,
+        MaskPipeline, RenderResources, Renderer,
     },
-    vector::{resource::BufferPool, MaskPipeline, VectorBufferPool, VectorPipeline},
+    vector::{resource::BufferPool, VectorBufferPool, VectorPipeline},
 };
 
 pub fn resource_system(

@@ -16,10 +16,7 @@ use crate::{
     map::MapError,
     plugin::Plugin,
     raster::{DefaultRasterTransferables, RasterPlugin},
-    render::{
-        eventually::Eventually, initialize_default_render_graph, register_default_render_stages,
-        RenderStageLabel, Renderer,
-    },
+    render::{eventually::Eventually, RenderPlugin, RenderStageLabel, Renderer},
     schedule::{Schedule, Stage},
     style::Style,
     tcs::{system::SystemContainer, world::World},
@@ -67,21 +64,11 @@ impl HeadlessMap {
         );
 
         let mut world = World::default();
-
-        let graph = &mut renderer.render_graph;
-        initialize_default_render_graph(graph).unwrap();
-        let draw_graph = graph
-            .get_sub_graph_mut(draw_graph::NAME)
-            .expect("Subgraph does not exist");
-        draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
-        draw_graph
-            .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)
-            .unwrap(); // TODO: remove unwrap
-
         let mut schedule = Schedule::default();
-        register_default_render_stages(&mut schedule);
-
         let kernel = Rc::new(kernel);
+        let graph = &mut renderer.render_graph;
+
+        RenderPlugin::default().build(&mut schedule, kernel.clone(), &mut world, graph);
         VectorPlugin::<DefaultVectorTransferables>::default().build(
             &mut schedule,
             kernel.clone(),
@@ -94,6 +81,14 @@ impl HeadlessMap {
             &mut world,
             graph,
         );
+
+        let draw_graph = graph
+            .get_sub_graph_mut(draw_graph::NAME)
+            .expect("Subgraph does not exist");
+        draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
+        draw_graph
+            .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)
+            .unwrap(); // TODO: remove unwrap
 
         // FIXME tcs: Is this good style?
         schedule.remove_stage(RenderStageLabel::Extract);

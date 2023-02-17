@@ -14,7 +14,6 @@ use crate::{
         },
         error::RenderError,
         graph::RenderGraphError,
-        initialize_default_render_graph, register_default_render_stages,
     },
     schedule::{Schedule, Stage},
     style::Style,
@@ -62,7 +61,6 @@ where
         plugins: Vec<Box<dyn Plugin<E>>>,
     ) -> Result<Self, MapError> {
         let mut schedule = Schedule::default();
-        register_default_render_stages(&mut schedule);
 
         let kernel = Rc::new(kernel);
 
@@ -113,9 +111,6 @@ where
                     InitializationResult::Initialized(InitializedRenderer {
                         mut renderer, ..
                     }) => {
-                        // FIXME tcs: Move to rendering core
-                        initialize_default_render_graph(&mut renderer.render_graph).unwrap();
-
                         // FIXME tcs: Improve initialization logic
                         for plugin in &self.plugins {
                             plugin.build(
