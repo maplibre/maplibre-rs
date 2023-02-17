@@ -25,7 +25,6 @@ pub use systems::register_default_render_stages;
 
 use crate::{
     render::{
-        debug_pass::DebugPassNode,
         error::RenderError,
         eventually::Eventually,
         graph::{EmptyNode, RenderGraph, RenderGraphError},
@@ -42,7 +41,6 @@ pub mod resource;
 pub mod systems;
 
 // Rendering internals
-mod debug_pass;
 mod graph_runner;
 mod main_pass;
 pub mod shaders; // TODO: Make private again
@@ -455,16 +453,13 @@ pub mod main_graph {
 }
 
 /// Labels for the "draw" graph
-pub mod draw_graph {
+mod draw_graph {
     pub const NAME: &str = "draw";
     // Labels for input nodes
     pub mod input {}
     // Labels for non-input nodes
     pub mod node {
         pub const MAIN_PASS: &str = "main_pass";
-        pub const DEBUG_PASS: &str = "debug_pass";
-        #[cfg(feature = "headless")]
-        pub const COPY: &str = "copy";
     }
 }
 
@@ -472,13 +467,10 @@ pub fn initialize_default_render_graph(graph: &mut RenderGraph) -> Result<(), Re
     let mut draw_graph = RenderGraph::default();
     // Draw nodes
     draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
-    draw_graph.add_node(draw_graph::node::DEBUG_PASS, DebugPassNode::new());
     // Input node
     let input_node_id = draw_graph.set_input(vec![]);
     // Edges
     draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
-    // TODO: Enable debug pass via runtime flag
-    draw_graph.add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::DEBUG_PASS)?;
 
     graph.add_sub_graph(draw_graph::NAME, draw_graph);
     graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);

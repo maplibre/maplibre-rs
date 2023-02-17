@@ -13,7 +13,7 @@ use crate::{
         tile_view_pattern::{TileViewPattern, WgpuTileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
         RenderResources, Renderer,
     },
-    vector::{resource::BufferPool, DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline},
+    vector::{resource::BufferPool, MaskPipeline, VectorBufferPool, VectorPipeline},
 };
 
 pub fn resource_system(
@@ -33,14 +33,12 @@ pub fn resource_system(
         buffer_pool,
         tile_view_pattern,
         vector_pipeline,
-        mask_pipeline,
-        debug_pipeline
+        mask_pipeline
     )) = world.resources.query_mut::<(
         &mut Eventually<VectorBufferPool>,
         &mut Eventually<WgpuTileViewPattern>,
         &mut Eventually<VectorPipeline>,
         &mut Eventually<MaskPipeline>,
-        &mut Eventually<DebugPipeline>,
     )>() else { return; };
 
     buffer_pool.initialize(|| BufferPool::from_device(device));
@@ -105,29 +103,5 @@ pub fn resource_system(
         .describe_render_pipeline()
         .initialize(device);
         MaskPipeline(pipeline)
-    });
-
-    debug_pipeline.initialize(|| {
-        let mask_shader = shaders::TileMaskShader {
-            format: surface.surface_format(),
-            draw_colors: true,
-            debug_lines: true,
-        };
-
-        let pipeline = TilePipeline::new(
-            "debug_pipeline".into(),
-            *settings,
-            mask_shader.describe_vertex(),
-            mask_shader.describe_fragment(),
-            false,
-            false,
-            true,
-            false,
-            false,
-            false,
-        )
-        .describe_render_pipeline()
-        .initialize(device);
-        DebugPipeline(pipeline)
     });
 }

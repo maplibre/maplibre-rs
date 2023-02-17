@@ -1,11 +1,12 @@
 use std::ops::Deref;
 
 use crate::{
+    debug::TileDebugItem,
     render::{
+        eventually::Eventually::Initialized,
         graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-        render_phase::{RenderPhase, TileDebugItem},
+        render_phase::RenderPhase,
         resource::TrackedRenderPass,
-        Eventually::Initialized,
         RenderResources,
     },
     tcs::world::World,

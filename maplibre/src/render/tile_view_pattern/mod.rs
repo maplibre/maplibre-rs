@@ -198,11 +198,11 @@ where
     }
 }
 
-pub struct TilePhase {
+pub struct ViewTileSources {
     items: Vec<Box<dyn HasTile>>,
 }
 
-impl TilePhase {
+impl ViewTileSources {
     pub fn add<H: HasTile + 'static + Default>(&mut self) -> &mut Self {
         self.items.push(Box::new(H::default()));
         self
@@ -217,7 +217,7 @@ impl TilePhase {
     }
 }
 
-impl Default for TilePhase {
+impl Default for ViewTileSources {
     fn default() -> Self {
         Self {
             items: Vec::default(),
@@ -225,7 +225,7 @@ impl Default for TilePhase {
     }
 }
 
-impl HasTile for TilePhase {
+impl HasTile for ViewTileSources {
     fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
         self.items.iter().all(|item| item.has_tile(coords, world))
     }

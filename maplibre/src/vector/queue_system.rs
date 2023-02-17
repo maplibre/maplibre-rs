@@ -3,12 +3,12 @@ use crate::{
     context::MapContext,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        render_phase::{DrawState, LayerItem, RenderPhase, TileDebugItem, TileMaskItem},
+        render_phase::{DrawState, LayerItem, RenderPhase, TileMaskItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
     tcs::tiles::Tile,
     vector::{
-        render_commands::{DrawDebugOutlines, DrawMasks, DrawVectorTiles},
+        render_commands::{DrawMasks, DrawVectorTiles},
         VectorBufferPool,
     },
 };
@@ -22,14 +22,12 @@ pub fn queue_system(
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
         mask_phase,
-        layer_item_phase,
-        tile_debug_phase,
+        layer_item_phase
     )) = world.resources.query_mut::<(
         &mut Eventually<WgpuTileViewPattern>,
         &mut Eventually<VectorBufferPool>,
         &mut RenderPhase<TileMaskItem>,
         &mut RenderPhase<LayerItem>,
-        &mut RenderPhase<TileDebugItem>,
     )>() else { return; };
 
     let buffer_pool_index = buffer_pool.index();
@@ -43,11 +41,6 @@ pub fn queue_system(
             // Draw masks for all source_shapes
             mask_phase.add(TileMaskItem {
                 draw_function: Box::new(DrawState::<TileMaskItem, DrawMasks>::new()),
-                source_shape: source_shape.clone(),
-            });
-
-            tile_debug_phase.add(TileDebugItem {
-                draw_function: Box::new(DrawState::<TileDebugItem, DrawDebugOutlines>::new()),
                 source_shape: source_shape.clone(),
             });
 

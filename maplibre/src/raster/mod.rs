@@ -12,7 +12,7 @@ use crate::{
         request_system::RequestSystem, resource::RasterResources, resource_system::resource_system,
         upload_system::upload_system,
     },
-    render::{eventually::Eventually, tile_view_pattern::TilePhase, RenderStageLabel},
+    render::{eventually::Eventually, tile_view_pattern::ViewTileSources, RenderStageLabel},
     schedule::Schedule,
     tcs::{system::SystemContainer, tiles::TileComponent, world::World},
 };
@@ -31,6 +31,8 @@ pub use transferables::{
     DefaultRasterTransferables, LayerRaster, LayerRasterMissing, RasterTransferables,
 };
 
+use crate::render::graph::RenderGraph;
+
 pub struct RasterPlugin<T>(PhantomData<T>);
 
 impl<T: RasterTransferables> Default for RasterPlugin<T> {
@@ -40,7 +42,13 @@ impl<T: RasterTransferables> Default for RasterPlugin<T> {
 }
 
 impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
-    fn build(&self, schedule: &mut Schedule, kernel: Rc<Kernel<E>>, world: &mut World) {
+    fn build(
+        &self,
+        schedule: &mut Schedule,
+        kernel: Rc<Kernel<E>>,
+        world: &mut World,
+        graph: &mut RenderGraph,
+    ) {
         // raster_resources
         world
             .resources
@@ -49,7 +57,7 @@ impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
         // FIXME tcs: Disable for headless?
         world
             .resources
-            .get_or_init_mut::<TilePhase>()
+            .get_or_init_mut::<ViewTileSources>()
             .add_resource_query::<&Eventually<RasterResources>>();
 
         // FIXME tcs: Disable for headless?

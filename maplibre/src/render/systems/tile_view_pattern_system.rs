@@ -4,7 +4,7 @@ use crate::{
     context::MapContext,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        tile_view_pattern::{TilePhase, WgpuTileViewPattern},
+        tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
     },
 };
 
@@ -21,7 +21,7 @@ pub fn tile_view_pattern_system(
         tile_phase,
     )) = world.resources.query::<(
         &Eventually<WgpuTileViewPattern>,
-        &TilePhase
+        &ViewTileSources
     )>() else { return; };
     let view_region = view_state.create_view_region();
 

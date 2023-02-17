@@ -54,5 +54,6 @@ pub mod tcs;
 pub mod view_state;
 
 // Plugins
+pub mod debug;
 pub mod raster;
 pub mod vector;

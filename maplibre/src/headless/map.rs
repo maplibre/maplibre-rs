@@ -17,8 +17,8 @@ use crate::{
     plugin::Plugin,
     raster::{DefaultRasterTransferables, RasterPlugin},
     render::{
-        draw_graph, eventually::Eventually, initialize_default_render_graph,
-        register_default_render_stages, RenderStageLabel, Renderer,
+        eventually::Eventually, initialize_default_render_graph, register_default_render_stages,
+        RenderStageLabel, Renderer,
     },
     schedule::{Schedule, Stage},
     style::Style,
@@ -30,6 +30,18 @@ use crate::{
     },
     view_state::ViewState,
 };
+
+/// Labels for the "draw" graph
+mod draw_graph {
+    pub const NAME: &str = "draw";
+    // Labels for input nodes
+    pub mod input {}
+    // Labels for non-input nodes
+    pub mod node {
+        pub const MAIN_PASS: &str = "main_pass";
+        pub const COPY: &str = "copy";
+    }
+}
 
 pub struct HeadlessMap {
     kernel: Rc<Kernel<HeadlessEnvironment>>,
@@ -74,11 +86,13 @@ impl HeadlessMap {
             &mut schedule,
             kernel.clone(),
             &mut world,
+            graph,
         );
         RasterPlugin::<DefaultRasterTransferables>::default().build(
             &mut schedule,
             kernel.clone(),
             &mut world,
+            graph,
         );
 
         // FIXME tcs: Is this good style?

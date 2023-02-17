@@ -98,9 +98,6 @@ where
                 let window_size = self.window.size();
 
                 let center = style.center.unwrap_or_default();
-
-                let mut world = World::default();
-
                 let initial_zoom = style.zoom.map(Zoom::new).unwrap_or_default();
                 let view_state = ViewState::new(
                     window_size,
@@ -110,10 +107,7 @@ where
                     cgmath::Deg(110.0),
                 );
 
-                // FIXME tcs: Improve initialization logic
-                for plugin in &self.plugins {
-                    plugin.build(&mut self.schedule, self.kernel.clone(), &mut world);
-                }
+                let mut world = World::default();
 
                 match init_result {
                     InitializationResult::Initialized(InitializedRenderer {
@@ -121,6 +115,16 @@ where
                     }) => {
                         // FIXME tcs: Move to rendering core
                         initialize_default_render_graph(&mut renderer.render_graph).unwrap();
+
+                        // FIXME tcs: Improve initialization logic
+                        for plugin in &self.plugins {
+                            plugin.build(
+                                &mut self.schedule,
+                                self.kernel.clone(),
+                                &mut world,
+                                &mut renderer.render_graph,
+                            );
+                        }
 
                         self.map_context = CurrentMapContext::Ready(MapContext {
                             world,

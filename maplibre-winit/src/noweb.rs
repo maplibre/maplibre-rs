@@ -6,6 +6,7 @@
 use std::marker::PhantomData;
 
 use maplibre::{
+    debug::DebugPlugin,
     event_loop::EventLoop,
     io::apc::SchedulerAsyncProcedureCall,
     kernel::{Kernel, KernelBuilder},
@@ -101,6 +102,7 @@ pub fn run_headed_map(cache_path: Option<String>) {
             vec![
                 Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
                 Box::new(RasterPlugin::<DefaultRasterTransferables>::default()),
+                Box::new(DebugPlugin::default()),
             ],
         )
         .unwrap();

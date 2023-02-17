@@ -7,9 +7,9 @@ use crate::{
     plugin::Plugin,
     render::{
         eventually::Eventually,
-        render_phase::{LayerItem, RenderPhase, TileDebugItem, TileMaskItem},
+        render_phase::{LayerItem, RenderPhase, TileMaskItem},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        tile_view_pattern::{HasTile, TilePhase, WgpuTileViewPattern},
+        tile_view_pattern::{HasTile, ViewTileSources, WgpuTileViewPattern},
         RenderStageLabel, ShaderVertex,
     },
     schedule::Schedule,
@@ -38,7 +38,9 @@ pub use transferables::{
     VectorTransferables,
 };
 
-pub struct VectorPipeline(wgpu::RenderPipeline);
+use crate::render::graph::RenderGraph;
+
+struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {
     type Target = wgpu::RenderPipeline;
 
@@ -47,17 +49,8 @@ impl Deref for VectorPipeline {
     }
 }
 
-pub struct MaskPipeline(wgpu::RenderPipeline);
+struct MaskPipeline(wgpu::RenderPipeline);
 impl Deref for MaskPipeline {
-    type Target = wgpu::RenderPipeline;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-pub struct DebugPipeline(wgpu::RenderPipeline);
-impl Deref for DebugPipeline {
     type Target = wgpu::RenderPipeline;
 
     fn deref(&self) -> &Self::Target {
@@ -97,39 +90,35 @@ impl HasTile for VectorTilesDone {
 }
 
 impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
-    fn build(&self, schedule: &mut Schedule, kernel: Rc<Kernel<E>>, world: &mut World) {
-        // FIXME tcs: Move to rendering core
+    fn build(
+        &self,
+        schedule: &mut Schedule,
+        kernel: Rc<Kernel<E>>,
+        world: &mut World,
+        graph: &mut RenderGraph,
+    ) {
         let resources = &mut world.resources;
+
+        // FIXME tcs: Move to rendering core
+        // render graph dependency
         resources.init::<RenderPhase<LayerItem>>();
         resources.init::<RenderPhase<TileMaskItem>>();
-        resources.init::<RenderPhase<TileDebugItem>>();
-
-        // FIXME tcs: Move to rendering core
-        resources.init::<TilePhase>();
-
-        // FIXME tcs: Disable for headless?
-        resources
-            .get_or_init_mut::<TilePhase>()
-            .add_resource_query::<&Eventually<VectorBufferPool>>()
-            .add::<VectorTilesDone>();
+        // tile_view_pattern:
+        resources.insert(Eventually::<WgpuTileViewPattern>::Uninitialized);
+        resources.init::<ViewTileSources>();
+        // masks
+        resources.insert(Eventually::<MaskPipeline>::Uninitialized);
 
         // buffer_pool
         resources.insert(Eventually::<VectorBufferPool>::Uninitialized);
-
-        // tile_view_pattern:
-        // FIXME tcs: Move to rendering core
-        resources.insert(Eventually::<WgpuTileViewPattern>::Uninitialized);
-
         // vector_tile_pipeline
         resources.insert(Eventually::<VectorPipeline>::Uninitialized);
-        // mask_pipeline
-        // FIXME tcs: Move to rendering core?
-        resources.insert(Eventually::<MaskPipeline>::Uninitialized);
-        // debug_pipeline
-        resources.insert(Eventually::<DebugPipeline>::Uninitialized);
 
-        // FIXME tcs: Move to rendering core
-        resources.insert(RenderPhase::<LayerItem>::default());
+        // FIXME tcs: Disable for headless?
+        resources
+            .get_or_init_mut::<ViewTileSources>()
+            .add_resource_query::<&Eventually<VectorBufferPool>>()
+            .add::<VectorTilesDone>();
 
         // FIXME tcs: Disable for headless?
         schedule.add_system_to_stage(
