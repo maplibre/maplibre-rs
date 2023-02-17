@@ -62,10 +62,12 @@ runs:
         fi
         
         # Upgrade binstall to latest version
-        cargo binstall --no-confirm --force cargo-binstall
+        # Do not use symlinks because they behave weird on Windows(+Bash)
+        cargo binstall --no-confirm --force --no-symlinks cargo-binstall
         # Use latest version to reinstall binstall
-        cargo binstall --no-confirm --force cargo-binstall
+        cargo binstall --no-confirm --force --no-symlinks cargo-binstall
       shell: bash
     - name: Install ${{ inputs.name }}
       shell: bash
-      run: cargo binstall --no-confirm --force ${{ inputs.name }}
+      # Do not use symlinks because they behave weird on Windows(+Bash)
+      run: cargo binstall --no-confirm --force --no-symlinks ${{ inputs.name }}
