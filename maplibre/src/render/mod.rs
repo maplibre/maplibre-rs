@@ -462,7 +462,6 @@ mod tests {
                 None,
             )
             .await
-            .ok()
             .expect("Unable to request device");
 
         let render_state = RenderResources::new(Surface::from_image(

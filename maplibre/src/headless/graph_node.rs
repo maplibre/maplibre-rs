@@ -33,7 +33,7 @@ impl Node for CopySurfaceBufferNode {
             command_encoder, ..
         }: &mut RenderContext,
         state: &RenderResources,
-        world: &World,
+        _world: &World,
     ) -> Result<(), NodeRunError> {
         let surface = state.surface();
         match surface.head() {

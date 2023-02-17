@@ -104,7 +104,7 @@ impl HeadlessMap {
 
         tiles.clear();
 
-        let mut pool = resources
+        let pool = resources
             .query_mut::<&mut Eventually<VectorBufferPool>>() // FIXME tcs: we access internals of the vector plugin here
             .expect("VectorBufferPool not found")
             .expect_initialized_mut("VectorBufferPool not initialized");
