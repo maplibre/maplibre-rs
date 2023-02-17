@@ -64,6 +64,15 @@ runs:
         # Upgrade
         cargo binstall --no-confirm --force cargo-binstall
       shell: bash
+    - name: ls
+      shell: bash
+      run: ls -lah /c/Users/runneradmin/.cargo/bin/
+    - name: cargo-binstall
+      shell: bash
+      run: cargo-binstall || true
+    - name: cargo-binstall.exe
+      shell: bash
+      run: cargo-binstall.exe || true
     - name: Install ${{ inputs.name }}
       shell: bash
       run: cargo binstall --no-confirm --force ${{ inputs.name }}
