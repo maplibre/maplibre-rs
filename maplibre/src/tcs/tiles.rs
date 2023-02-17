@@ -1,6 +1,7 @@
 use std::{
     any,
     any::TypeId,
+    cell::UnsafeCell,
     collections::{btree_map, BTreeMap, HashSet},
 };
 
@@ -24,21 +25,21 @@ impl_downcast!(TileComponent);
 #[derive(Default)]
 pub struct Tiles {
     pub tiles: BTreeMap<Quadkey, Tile>,
-    pub components: BTreeMap<Quadkey, Vec<Box<dyn TileComponent>>>,
+    pub components: BTreeMap<Quadkey, Vec<UnsafeCell<Box<dyn TileComponent>>>>,
     pub geometry_index: GeometryIndex,
 }
 
 impl Tiles {
-    pub fn query<'t, Q: ComponentQuery>(&'t self, coords: WorldTileCoords) -> Option<Q::Item<'t>> {
+    pub fn query<Q: ComponentQuery>(&self, coords: WorldTileCoords) -> Option<Q::Item<'_>> {
         let mut global_state = GlobalQueryState::default();
         let state = <Q::State<'_> as QueryState>::create(&mut global_state);
         Q::query(self, Tile { coords }, state)
     }
 
-    pub fn query_mut<'t, Q: ComponentQueryMut>(
-        &'t mut self,
+    pub fn query_mut<Q: ComponentQueryMut>(
+        &mut self,
         coords: WorldTileCoords,
-    ) -> Option<Q::MutItem<'t>> {
+    ) -> Option<Q::MutItem<'_>> {
         let mut global_state = GlobalQueryState::default();
         let state = <Q::State<'_> as QueryState>::create(&mut global_state);
         Q::query_mut(self, Tile { coords }, state)
@@ -61,10 +62,7 @@ impl Tiles {
                 let tile = Tile { coords };
                 self.tiles.insert(key, tile);
                 self.components.insert(key, Vec::new());
-                Some(TileSpawnResult {
-                    tiles: self,
-                    tile,
-                })
+                Some(TileSpawnResult { tiles: self, tile })
             }
         } else {
             None
@@ -96,7 +94,7 @@ impl<'w> TileSpawnResult<'w> {
                     )
                 }
                 btree_map::Entry::Occupied(mut entry) => {
-                    entry.get_mut().push(Box::new(component));
+                    entry.get_mut().push(UnsafeCell::new(Box::new(component)));
                 }
             }
         }
@@ -155,9 +153,15 @@ impl<'a, T: TileComponent> ComponentQuery for &'a T {
 
         components
             .iter()
-            .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
-            .map(|component| {
+            // FIXME tcs: Is this safe? We cast directly to & instead of &mut
+            .find(|component| unsafe {
+                component.get().as_ref().unwrap().as_ref().type_id() == TypeId::of::<T>()
+            })
+            .map(|component| unsafe {
                 component
+                    .get()
+                    .as_ref()
+                    .unwrap()
                     .as_ref()
                     .downcast_ref()
                     .expect("inserted component has wrong TypeId")
@@ -205,9 +209,12 @@ impl<'a, T: TileComponent> ComponentQueryMut for &'a mut T {
 
         components
             .iter_mut()
-            .find(|component| component.as_ref().type_id() == TypeId::of::<T>())
+            .find(|component| unsafe {
+                component.get().as_ref().unwrap().as_ref().type_id() == TypeId::of::<T>()
+            })
             .map(|component| {
                 component
+                    .get_mut()
                     .as_mut()
                     .downcast_mut()
                     .expect("inserted component has wrong TypeId")
@@ -255,8 +262,21 @@ impl<'a, T: TileComponent> ComponentQueryUnsafe for &'a mut T {
 
         borrowed.insert(id);
 
-        let result = <&T as ComponentQuery>::query(tiles, tile, state)?;
-        Some(&mut *(result as *const T as *mut T))
+        let components = tiles.components.get(&tile.coords.build_quad_key()?)?;
+
+        components
+            .iter()
+            .find(|component| {
+                component.get().as_ref().unwrap().as_ref().type_id() == TypeId::of::<T>()
+            })
+            .map(|component| {
+                component
+                    .get()
+                    .as_mut()
+                    .unwrap()
+                    .downcast_mut()
+                    .expect("inserted component has wrong TypeId")
+            })
     }
 }
 

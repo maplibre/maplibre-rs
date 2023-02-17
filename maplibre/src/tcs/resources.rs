@@ -1,4 +1,4 @@
-use std::{any, any::TypeId, collections::HashMap};
+use std::{any, any::TypeId, cell::UnsafeCell, collections::HashMap};
 
 use downcast_rs::{impl_downcast, Downcast};
 
@@ -11,7 +11,7 @@ impl<T> Resource for T where T: 'static {}
 
 #[derive(Default)]
 pub struct Resources {
-    resources: Vec<Box<dyn Resource>>,
+    resources: Vec<UnsafeCell<Box<dyn Resource>>>,
     index: HashMap<TypeId, usize>,
 }
 
@@ -33,7 +33,7 @@ impl Resources {
 
     pub fn insert<R: Resource>(&mut self, resource: R) {
         let index = self.resources.len();
-        self.resources.push(Box::new(resource));
+        self.resources.push(UnsafeCell::new(Box::new(resource)));
         self.index.insert(TypeId::of::<R>(), index);
     }
 
@@ -43,11 +43,17 @@ impl Resources {
 
     pub fn get<R: Resource>(&self) -> Option<&R> {
         if let Some(index) = self.index.get(&TypeId::of::<R>()) {
-            return Some(
-                self.resources[*index]
-                    .downcast_ref()
-                    .expect("inserted resource has wrong TypeId"),
-            );
+            unsafe {
+                return Some(
+                    self.resources[*index]
+                        // FIXME tcs: Is this safe? We cast directly to & instead of &mut
+                        .get()
+                        .as_ref()
+                        .unwrap()
+                        .downcast_ref()
+                        .expect("inserted resource has wrong TypeId"),
+                );
+            }
         }
         None
     }
@@ -56,6 +62,7 @@ impl Resources {
         if let Some(index) = self.index.get(&TypeId::of::<R>()) {
             return Some(
                 self.resources[*index]
+                    .get_mut()
                     .downcast_mut()
                     .expect("inserted resource has wrong TypeId"),
             );
@@ -63,13 +70,13 @@ impl Resources {
         None
     }
 
-    pub fn query<'r, Q: ResourceQuery>(&'r self) -> Option<Q::Item<'r>> {
+    pub fn query<Q: ResourceQuery>(&self) -> Option<Q::Item<'_>> {
         let mut global_state = GlobalQueryState::default();
         let state = <Q::State<'_> as QueryState>::create(&mut global_state);
         Q::query(self, state)
     }
 
-    pub fn query_mut<'r, Q: ResourceQueryMut>(&'r mut self) -> Option<Q::MutItem<'r>> {
+    pub fn query_mut<Q: ResourceQueryMut>(&mut self) -> Option<Q::MutItem<'_>> {
         let mut global_state = GlobalQueryState::default();
         let state = <Q::State<'_> as QueryState>::create(&mut global_state);
         Q::query_mut(self, state)
@@ -169,8 +176,18 @@ impl<'a, R: Resource> ResourceQueryUnsafe for &'a mut R {
 
         borrowed.insert(id);
 
-        let result = <&R as ResourceQuery>::query(resources, state)?;
-        Some(&mut *(result as *const R as *mut R))
+        if let Some(index) = resources.index.get(&TypeId::of::<R>()) {
+            return Some(
+                resources.resources[*index]
+                    .get()
+                    .as_mut()
+                    .unwrap()
+                    .downcast_mut()
+                    .expect("inserted resource has wrong TypeId"),
+            );
+        }
+
+        None
     }
 }
 
