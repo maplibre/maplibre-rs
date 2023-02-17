@@ -13,11 +13,7 @@ use crate::{
     },
 };
 
-pub fn queue_system(
-    MapContext {
-        world, renderer, ..
-    }: &mut MapContext,
-) {
+pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
     let Some((
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),

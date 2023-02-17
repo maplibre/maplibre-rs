@@ -85,22 +85,18 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
         schedule: &mut Schedule,
         kernel: Rc<Kernel<E>>,
         world: &mut World,
-        graph: &mut RenderGraph,
+        _graph: &mut RenderGraph,
     ) {
         let resources = &mut world.resources;
 
-        // buffer_pool
         resources.insert(Eventually::<VectorBufferPool>::Uninitialized);
-        // vector_tile_pipeline
         resources.insert(Eventually::<VectorPipeline>::Uninitialized);
 
-        // FIXME tcs: Disable for headless?
         resources
             .get_or_init_mut::<ViewTileSources>()
             .add_resource_query::<&Eventually<VectorBufferPool>>()
             .add::<VectorTilesDone>();
 
-        // FIXME tcs: Disable for headless?
         schedule.add_system_to_stage(
             RenderStageLabel::Extract,
             SystemContainer::new(RequestSystem::<E, T>::new(&kernel)),
@@ -109,6 +105,7 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
             RenderStageLabel::Extract,
             SystemContainer::new(PopulateWorldSystem::<E, T>::new(&kernel)),
         );
+
         schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system);
         schedule.add_system_to_stage(RenderStageLabel::Queue, upload_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
         schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system);

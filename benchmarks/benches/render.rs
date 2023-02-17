@@ -1,9 +1,12 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
     coords::{WorldTileCoords, ZoomLevel},
-    headless::{create_headless_renderer, map::HeadlessMap},
+    headless::{create_headless_renderer, map::HeadlessMap, HeadlessPlugin},
     platform::run_multithreaded,
+    raster::{DefaultRasterTransferables, RasterPlugin},
+    render::RenderPlugin,
     style::Style,
+    vector::{DefaultVectorTransferables, VectorPlugin},
 };
 
 fn headless_render(c: &mut Criterion) {
@@ -11,7 +14,15 @@ fn headless_render(c: &mut Criterion) {
         let (mut map, layer) = run_multithreaded(async {
             let (kernel, renderer) = create_headless_renderer(1000, None).await;
             let style = Style::default();
-            let map = HeadlessMap::new(style, renderer, kernel, false).unwrap();
+
+            let plugins = vec![
+                Box::new(RenderPlugin::default()),
+                Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
+                Box::new(RasterPlugin::<DefaultRasterTransferables>::default()),
+                Box::new(HeadlessPlugin::new(false)),
+            ];
+
+            let map = HeadlessMap::new(style, renderer, kernel, plugins).unwrap();
 
             let tile = map
                 .fetch_tile(WorldTileCoords::from((0, 0, ZoomLevel::default())))

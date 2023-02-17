@@ -111,7 +111,6 @@ where
                     InitializationResult::Initialized(InitializedRenderer {
                         mut renderer, ..
                     }) => {
-                        // FIXME tcs: Improve initialization logic
                         for plugin in &self.plugins {
                             plugin.build(
                                 &mut self.schedule,

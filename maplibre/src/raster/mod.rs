@@ -47,20 +47,17 @@ impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
         schedule: &mut Schedule,
         kernel: Rc<Kernel<E>>,
         world: &mut World,
-        graph: &mut RenderGraph,
+        _graph: &mut RenderGraph,
     ) {
-        // raster_resources
         world
             .resources
             .insert(Eventually::<RasterResources>::Uninitialized);
 
-        // FIXME tcs: Disable for headless?
         world
             .resources
             .get_or_init_mut::<ViewTileSources>()
             .add_resource_query::<&Eventually<RasterResources>>();
 
-        // FIXME tcs: Disable for headless?
         schedule.add_system_to_stage(
             RenderStageLabel::Extract,
             SystemContainer::new(RequestSystem::<E, T>::new(&kernel)),
@@ -69,9 +66,7 @@ impl<E: Environment, T: RasterTransferables> Plugin<E> for RasterPlugin<T> {
             RenderStageLabel::Extract,
             SystemContainer::new(PopulateWorldSystem::<E, T>::new(&kernel)),
         );
-
         schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system);
-
         schedule.add_system_to_stage(RenderStageLabel::Queue, upload_system);
         schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
     }

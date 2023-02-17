@@ -33,7 +33,7 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
 
         await maplibre.run_maplibre(() => {
             return workerPath ? new Worker(workerPath, {
-                type: 'module'
+                type: 'module',
             }) : MultithreadedPoolWorker();
         });
     } else {
@@ -42,8 +42,8 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
 
         await maplibre.run_maplibre((ptr) => {
             let worker: Worker = workerPath ? new Worker(workerPath, {
-                type: 'module'
-            }) : PoolWorker();
+                type: 'module',
+            }) : PoolWorker();  // Setting a "name" for this webworker is not yet supported, because it needs support from esbuild-plugin-inline-worker
 
             worker.onmessage = (message: MessageEvent) => {
                 // WARNING: Do not modify data passed from Rust!

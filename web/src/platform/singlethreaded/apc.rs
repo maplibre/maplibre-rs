@@ -108,7 +108,12 @@ impl Context for PassingContext {
             byte_buffer.set(&Uint8Array::view(data), 0);
         }
 
-        error!("postMessage() during send {:?} {}", tag, data.len());
+        log::debug!(
+            "sending message ({:?}) with {}bytes to main thread",
+            tag,
+            data.len()
+        );
+
         let global: DedicatedWorkerGlobalScope = js_sys::global()
             .dyn_into()
             .map_err(|_e| SendError::Transmission)?;
@@ -192,8 +197,7 @@ impl<K: OffscreenKernelEnvironment> AsyncProcedureCall<K> for PassingAsyncProced
             .expect("Failed to borrow in receive of APC")
             .pop()
         {
-            // FIXME tracing::debug!("Data reached main thread: {:?}", &message);
-            log::warn!("Data reached main thread: {:?}", &message);
+            log::debug!("Data reached main thread: {:?}", &message);
 
             if filter(&message) {
                 ret.push(message);

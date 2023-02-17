@@ -7,7 +7,6 @@ use maplibre::{
     io::source_client::{HttpSourceClient, SourceClient},
     kernel::{Kernel, KernelBuilder},
     map::Map,
-    raster::RasterPlugin,
     render::{builder::RendererBuilder, RenderPlugin},
     style::Style,
     vector::VectorPlugin,
@@ -17,10 +16,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     error::JSError,
-    platform::{
-        http_client::WHATWGFetchHttpClient, UsedOffscreenKernelEnvironment,
-        UsedRasterTransferables, UsedVectorTransferables,
-    },
+    platform::{http_client::WHATWGFetchHttpClient, UsedOffscreenKernelEnvironment},
 };
 
 mod error;
@@ -125,8 +121,8 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
         RendererBuilder::new(),
         vec![
             Box::new(RenderPlugin::default()),
-            Box::new(VectorPlugin::<UsedVectorTransferables>::default()),
-            Box::new(RasterPlugin::<UsedRasterTransferables>::default()),
+            Box::new(VectorPlugin::<platform::UsedVectorTransferables>::default()),
+            // Box::new(RasterPlugin::<platform::UsedRasterTransferables>::default()),
         ],
     )
     .unwrap();

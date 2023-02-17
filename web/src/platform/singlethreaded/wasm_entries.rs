@@ -12,6 +12,7 @@ use maplibre::{
 };
 use thiserror::Error;
 use wasm_bindgen::{prelude::*, JsCast};
+use web_sys::DedicatedWorkerGlobalScope;
 
 use crate::{
     error::JSError,
@@ -40,10 +41,17 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
         source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
     };
 
-    log::info!(
-        "Processing on web worker: {:?}",
-        std::thread::current().name()
-    );
+    if let Ok(global) = js_sys::global().dyn_into::<DedicatedWorkerGlobalScope>() {
+        let name = global.name();
+        log::info!(
+            "Processing on web worker: {}",
+            if name.is_empty() {
+                "name not set"
+            } else {
+                name.as_str()
+            }
+        );
+    }
 
     procedure(input, context, UsedOffscreenKernelEnvironment::create()).await?;
 
@@ -71,20 +79,19 @@ pub unsafe fn singlethreaded_main_entry(
 
     let tag = WebMessageTag::from_u32(tag).map_err(|e| CallError::Deserialize(Box::new(e)))?;
 
+    log::debug!(
+        "received message ({:?}) with {}bytes on main thread",
+        tag,
+        buffer.byte_length()
+    );
+
     let message = Message::new(
         tag.to_static(),
         Box::new(FlatBufferTransferable::from_array_buffer(tag, buffer)),
     );
 
-    log::warn!(
-        "type_name js: {:?}",
-        std::any::TypeId::of::<FlatBufferTransferable>()
-    );
-
     // FIXME: Can we make this call safe? check if it was cloned before?
     let received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
-
-    error!("pushing finished message {:?}", tag);
 
     // MAJOR FIXME: Fix mutability
     received

@@ -3,7 +3,7 @@ use std::{cell::RefCell, ops::Deref, rc::Rc};
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel, TILE_SIZE},
-    headless::{environment::HeadlessEnvironment, HeadlessPlugin},
+    headless::environment::HeadlessEnvironment,
     io::{
         apc::{Context, IntoMessage, Message, SendError},
         source_client::SourceFetchError,
@@ -12,15 +12,14 @@ use crate::{
     kernel::Kernel,
     map::MapError,
     plugin::Plugin,
-    raster::{DefaultRasterTransferables, RasterPlugin},
-    render::{eventually::Eventually, RenderPlugin, Renderer},
+    render::{eventually::Eventually, Renderer},
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
     vector::{
         process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
         LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
-        VectorLayersDataComponent, VectorPlugin, VectorTileRequest, VectorTransferables,
+        VectorLayersDataComponent, VectorTileRequest, VectorTransferables,
     },
     view_state::ViewState,
 };
@@ -36,7 +35,7 @@ impl HeadlessMap {
         style: Style,
         mut renderer: Renderer,
         kernel: Kernel<HeadlessEnvironment>,
-        write_to_disk: bool,
+        plugins: Vec<Box<dyn Plugin<HeadlessEnvironment>>>,
     ) -> Result<Self, MapError> {
         let window_size = renderer.state().surface().size();
 
@@ -51,22 +50,15 @@ impl HeadlessMap {
         let mut world = World::default();
         let mut schedule = Schedule::default();
         let kernel = Rc::new(kernel);
-        let graph = &mut renderer.render_graph;
 
-        RenderPlugin::default().build(&mut schedule, kernel.clone(), &mut world, graph);
-        VectorPlugin::<DefaultVectorTransferables>::default().build(
-            &mut schedule,
-            kernel.clone(),
-            &mut world,
-            graph,
-        );
-        RasterPlugin::<DefaultRasterTransferables>::default().build(
-            &mut schedule,
-            kernel.clone(),
-            &mut world,
-            graph,
-        );
-        HeadlessPlugin::new(write_to_disk).build(&mut schedule, kernel.clone(), &mut world, graph);
+        for plugin in &plugins {
+            plugin.build(
+                &mut schedule,
+                kernel.clone(),
+                &mut world,
+                &mut renderer.render_graph,
+            );
+        }
 
         Ok(Self {
             kernel,
@@ -111,6 +103,7 @@ impl HeadlessMap {
         let tiles = &mut context.world.tiles;
 
         tiles.clear();
+
         let mut pool = resources
             .query_mut::<&mut Eventually<VectorBufferPool>>() // FIXME tcs: we access internals of the vector plugin here
             .expect("VectorBufferPool not found")
