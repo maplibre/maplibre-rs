@@ -6,10 +6,9 @@ use crate::{
     context::MapContext,
     render::{
         eventually::Eventually,
-        resource::{BackingBufferDescriptor, RenderPipeline},
+        resource::{BackingBufferDescriptor, RenderPipeline, TilePipeline},
         shaders,
         shaders::{Shader, ShaderTileMetadata},
-        tile_pipeline::TilePipeline,
         tile_view_pattern::{TileViewPattern, WgpuTileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
         RenderResources, Renderer,
     },

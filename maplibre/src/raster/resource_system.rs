@@ -3,8 +3,12 @@ use crate::{
     context::MapContext,
     raster::resource::RasterResources,
     render::{
-        eventually::Eventually, resource::RenderPipeline, settings::Msaa, shaders, shaders::Shader,
-        tile_pipeline::TilePipeline, RenderResources, Renderer,
+        eventually::Eventually,
+        resource::{RenderPipeline, TilePipeline},
+        settings::Msaa,
+        shaders,
+        shaders::Shader,
+        RenderResources, Renderer,
     },
 };
 

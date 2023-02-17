@@ -52,7 +52,6 @@ pub mod error;
 pub mod eventually;
 pub mod render_phase;
 pub mod settings;
-pub mod tile_pipeline;
 pub mod tile_view_pattern;
 
 pub(crate) const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType

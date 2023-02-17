@@ -3,8 +3,11 @@ use crate::{
     context::MapContext,
     debug::DebugPipeline,
     render::{
-        eventually::Eventually, resource::RenderPipeline, shaders, shaders::Shader,
-        tile_pipeline::TilePipeline, RenderResources, Renderer,
+        eventually::Eventually,
+        resource::{RenderPipeline, TilePipeline},
+        shaders,
+        shaders::Shader,
+        RenderResources, Renderer,
     },
 };
 
