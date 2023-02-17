@@ -31,12 +31,7 @@ impl<E: Environment, T: RasterTransferables> System for PopulateWorldSystem<E, T
         "populate_world_system".into()
     }
 
-    fn run(
-        &mut self,
-        MapContext {
-            world,  ..
-        }: &mut MapContext,
-    ) {
+    fn run(&mut self, MapContext { world, .. }: &mut MapContext) {
         for message in self.kernel.apc().receive(|message| {
             message.has_tag(T::LayerRaster::message_tag())
                 || message.has_tag(T::LayerRasterMissing::message_tag())

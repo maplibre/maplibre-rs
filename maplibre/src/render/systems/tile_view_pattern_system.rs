@@ -10,10 +10,7 @@ use crate::{
 
 pub fn tile_view_pattern_system(
     MapContext {
-        view_state,
-        world,
-        
-        ..
+        view_state, world, ..
     }: &mut MapContext,
 ) {
     let Some((

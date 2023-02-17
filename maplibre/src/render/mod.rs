@@ -47,7 +47,7 @@ use crate::{
 
 pub mod graph;
 pub mod resource;
-pub mod systems;
+mod systems;
 
 // Rendering internals
 mod graph_runner;
@@ -59,6 +59,7 @@ pub mod builder;
 pub mod camera;
 pub mod error;
 pub mod eventually;
+pub mod render_commands;
 pub mod render_phase;
 pub mod settings;
 pub mod tile_view_pattern;
@@ -67,7 +68,7 @@ pub use shaders::ShaderVertex;
 
 use crate::render::{
     render_phase::{LayerItem, RenderPhase, TileMaskItem},
-    systems::graph_runner_system::GraphRunnerSystem,
+    systems::{graph_runner_system::GraphRunnerSystem, upload_system::upload_system},
     tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
 };
 
@@ -561,7 +562,9 @@ impl<E: Environment> Plugin<E> for RenderPlugin {
         );
         schedule.add_stage(
             RenderStageLabel::Queue,
-            SystemStage::default().with_system(tile_view_pattern_system),
+            SystemStage::default()
+                .with_system(tile_view_pattern_system)
+                .with_system(upload_system),
         );
         schedule.add_stage(
             RenderStageLabel::PhaseSort,

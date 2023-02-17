@@ -3,14 +3,12 @@ use crate::{
     context::MapContext,
     render::{
         eventually::{Eventually, Eventually::Initialized},
+        render_commands::DrawMasks,
         render_phase::{DrawState, LayerItem, RenderPhase, TileMaskItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
     tcs::tiles::Tile,
-    vector::{
-        render_commands::{DrawMasks, DrawVectorTiles},
-        VectorBufferPool,
-    },
+    vector::{render_commands::DrawVectorTiles, VectorBufferPool},
 };
 
 pub fn queue_system(MapContext { world, .. }: &mut MapContext) {

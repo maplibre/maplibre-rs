@@ -46,15 +46,7 @@ impl RasterResources {
         height: u32,
         usage: wgpu::TextureUsages,
     ) -> Texture {
-        Texture::new(
-            label,
-            device,
-            format,
-            width,
-            height,
-            self.msaa,
-            usage,
-        )
+        Texture::new(label, device, format, width, height, self.msaa, usage)
     }
 
     pub fn get_bound_texture(&self, coords: &WorldTileCoords) -> Option<&wgpu::BindGroup> {

@@ -34,8 +34,6 @@ pub fn resource_system(
             format: surface.surface_format(),
         };
 
-        
-
         RasterResources::new(
             Msaa { samples: 1 },
             device,

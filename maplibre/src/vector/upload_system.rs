@@ -8,7 +8,6 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata, Vec4f32},
-        tile_view_pattern::WgpuTileViewPattern,
         Renderer,
     },
     style::Style,
@@ -27,15 +26,12 @@ pub fn upload_system(
         ..
     }: &mut MapContext,
 ) {
-    let Some((
-        Initialized(tile_view_pattern),
+    let Some(
         Initialized(buffer_pool)
-    )) = world.resources.query_mut::<(
-        &mut Eventually<WgpuTileViewPattern>,
+    ) = world.resources.query_mut::<
         &mut Eventually<VectorBufferPool>,
-    )>() else { return; };
+    >() else { return; };
 
-    let view_proj = view_state.view_projection();
     let view_region = view_state.create_view_region();
 
     if let Some(view_region) = &view_region {
@@ -47,7 +43,6 @@ pub fn upload_system(
             style,
             view_region,
         );
-        tile_view_pattern.upload_pattern(queue, &view_proj);
         // self.update_metadata(state, tile_repository, queue);
     }
 }

@@ -44,7 +44,6 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
             style,
             view_state,
             world,
-            
             ..
         }: &mut MapContext,
     ) {
