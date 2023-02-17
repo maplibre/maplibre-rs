@@ -18,6 +18,7 @@ pub fn upload_system(
     MapContext {
         world,
         style,
+        view_state,
         renderer: Renderer { device, queue, .. },
         ..
     }: &mut MapContext,
@@ -25,8 +26,6 @@ pub fn upload_system(
     let Some(Initialized(raster_resources)) = world
         .resources
         .query_mut::<&mut Eventually<RasterResources>>() else { return; };
-
-    let view_state = &world.view_state;
     let view_region = view_state.create_view_region();
 
     if let Some(view_region) = &view_region {

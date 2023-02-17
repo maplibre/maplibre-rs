@@ -2,7 +2,7 @@ use crate::{
     render::{
         graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
         resource::Head,
-        RenderState,
+        RenderResources,
     },
     tcs::world::World,
 };
@@ -24,7 +24,7 @@ impl Node for CopySurfaceBufferNode {
         vec![]
     }
 
-    fn update(&mut self, _state: &mut RenderState) {}
+    fn update(&mut self, _state: &mut RenderResources) {}
 
     fn run(
         &self,
@@ -32,7 +32,7 @@ impl Node for CopySurfaceBufferNode {
         RenderContext {
             command_encoder, ..
         }: &mut RenderContext,
-        state: &RenderState,
+        state: &RenderResources,
         world: &World,
     ) -> Result<(), NodeRunError> {
         let surface = state.surface();

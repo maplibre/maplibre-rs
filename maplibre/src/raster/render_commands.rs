@@ -5,7 +5,6 @@ use crate::{
         render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult},
         resource::TrackedRenderPass,
         tile_view_pattern::WgpuTileViewPattern,
-        RenderState,
     },
     tcs::world::World,
 };
@@ -13,7 +12,6 @@ use crate::{
 pub struct SetRasterTilePipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
@@ -30,7 +28,6 @@ impl<P: PhaseItem> RenderCommand<P> for SetRasterTilePipeline {
 pub struct SetRasterViewBindGroup<const I: usize>;
 impl<const I: usize> RenderCommand<LayerItem> for SetRasterViewBindGroup<I> {
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
@@ -50,7 +47,6 @@ impl<const I: usize> RenderCommand<LayerItem> for SetRasterViewBindGroup<I> {
 pub struct DrawRasterTile;
 impl RenderCommand<LayerItem> for DrawRasterTile {
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,

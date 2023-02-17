@@ -1,10 +1,7 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
-use maplibre::{
-    context::MapContext, coords::WorldCoords, io::geometry_index::IndexedGeometry,
-    tcs::world::World,
-};
+use maplibre::{context::MapContext, coords::WorldCoords, io::geometry_index::IndexedGeometry};
 use winit::event::{ElementState, MouseButton};
 
 use crate::input::UpdateState;
@@ -59,13 +56,7 @@ impl UpdateState for QueryHandler {
     fn update_state(
         &mut self,
         MapContext {
-            world:
-                World {
-                    view_state,
-                    geometry_index,
-                    ..
-                },
-            ..
+            view_state, world, ..
         }: &mut MapContext,
         _dt: Duration,
     ) {
@@ -82,7 +73,9 @@ impl UpdateState for QueryHandler {
                     &inverted_view_proj,
                     false,
                 ) {
-                    if let Some(geometries) = geometry_index
+                    if let Some(geometries) = world
+                        .tiles
+                        .geometry_index
                         .query_point(
                             &WorldCoords {
                                 x: coordinates.x,

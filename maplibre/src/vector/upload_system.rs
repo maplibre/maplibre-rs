@@ -22,6 +22,7 @@ pub fn upload_system(
     MapContext {
         world,
         style,
+        view_state,
         renderer: Renderer { device, queue, .. },
         ..
     }: &mut MapContext,
@@ -34,7 +35,6 @@ pub fn upload_system(
         &mut Eventually<VectorBufferPool>,
     )>() else { return; };
 
-    let view_state = &world.view_state;
     let view_proj = view_state.view_projection();
     let view_region = view_state.create_view_region();
 

@@ -5,7 +5,7 @@ use super::{
     RenderGraphError, SlotInfo, SlotLabel,
 };
 use crate::{
-    render::{graph::RenderContext, RenderState},
+    render::{graph::RenderContext, RenderResources},
     tcs::world::World,
 };
 
@@ -31,14 +31,14 @@ use crate::{
 /// #
 /// # use maplibre::tcs::world::World;
 /// use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
-/// # use maplibre::render::{RenderState};
+/// # use maplibre::render::{RenderResources};
 /// # struct MyNode;
 /// #
 /// # impl Node for MyNode {
 /// #     fn run(&self,
 /// #               graph: &mut RenderGraphContext,
 /// #               render_context: &mut RenderContext,
-/// #               state: &RenderState,
+/// #               state: &RenderResources,
 /// #               world: &World) -> Result<(), NodeRunError> {
 /// #         unimplemented!()
 /// #     }
@@ -64,7 +64,7 @@ impl RenderGraph {
     pub const INPUT_NODE_NAME: &'static str = "GraphInputNode";
 
     /// Updates all nodes and sub graphs of the render graph. Should be called before executing it.
-    pub fn update(&mut self, state: &mut RenderState) {
+    pub fn update(&mut self, state: &mut RenderResources) {
         for node in self.nodes.values_mut() {
             node.node.update(state);
         }
@@ -564,7 +564,7 @@ impl Node for GraphInputNode {
         &self,
         graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
-        _state: &RenderState,
+        _state: &RenderResources,
         world: &World,
     ) -> Result<(), NodeRunError> {
         for i in 0..graph.inputs().len() {
@@ -586,7 +586,7 @@ mod tests {
     use crate::{
         render::{
             graph::{RenderContext, SlotType},
-            RenderState,
+            RenderResources,
         },
         tcs::world::World,
     };
@@ -623,7 +623,7 @@ mod tests {
             &self,
             _graph: &mut RenderGraphContext,
             _render_context: &mut RenderContext,
-            _state: &RenderState,
+            _state: &RenderResources,
             world: &World,
         ) -> Result<(), NodeRunError> {
             Ok(())
@@ -697,7 +697,7 @@ mod tests {
                 &self,
                 _graph: &mut RenderGraphContext,
                 _render_context: &mut RenderContext,
-                _state: &RenderState,
+                _state: &RenderResources,
                 world: &World,
             ) -> Result<(), NodeRunError> {
                 Ok(())

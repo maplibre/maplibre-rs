@@ -59,14 +59,14 @@ pub mod tile_view_pattern;
 
 pub(crate) const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
-pub struct RenderState {
+pub struct RenderResources {
     pub surface: Surface,
     pub render_target: Eventually<TextureView>,
     pub depth_texture: Eventually<Texture>,
     pub multisampling_texture: Eventually<Option<Texture>>,
 }
 
-impl RenderState {
+impl RenderResources {
     pub fn new(surface: Surface) -> Self {
         Self {
             render_target: Default::default(),
@@ -97,7 +97,7 @@ pub struct Renderer {
     pub wgpu_settings: WgpuSettings,
     pub settings: RendererSettings,
 
-    pub state: RenderState,
+    pub resources: RenderResources,
     pub render_graph: RenderGraph,
 }
 
@@ -141,7 +141,7 @@ impl Renderer {
             adapter,
             wgpu_settings,
             settings,
-            state: RenderState::new(surface),
+            resources: RenderResources::new(surface),
             render_graph: Default::default(),
         })
     }
@@ -176,13 +176,13 @@ impl Renderer {
             adapter,
             wgpu_settings,
             settings,
-            state: RenderState::new(surface),
+            resources: RenderResources::new(surface),
             render_graph: Default::default(),
         })
     }
 
-    pub fn resize(&mut self, width: u32, height: u32) {
-        self.state.surface.resize(width, height)
+    pub fn resize_surface(&mut self, width: u32, height: u32) {
+        self.resources.surface.resize(width, height)
     }
 
     /// Requests a device
@@ -346,11 +346,11 @@ impl Renderer {
     pub fn queue(&self) -> &wgpu::Queue {
         &self.queue
     }
-    pub fn state(&self) -> &RenderState {
-        &self.state
+    pub fn state(&self) -> &RenderResources {
+        &self.resources
     }
     pub fn surface(&self) -> &Surface {
-        &self.state.surface
+        &self.resources.surface
     }
 }
 
@@ -392,8 +392,8 @@ mod tests {
         use log::LevelFilter;
 
         use crate::render::{
-            graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface, RenderState,
-            RendererSettings,
+            graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface,
+            RenderResources, RendererSettings,
         };
 
         let _ = env_logger::builder()
@@ -421,7 +421,7 @@ mod tests {
             .ok()
             .expect("Unable to request device");
 
-        let render_state = RenderState::new(Surface::from_image(
+        let render_state = RenderResources::new(Surface::from_image(
             &device,
             &HeadlessMapWindow {
                 size: WindowSize::new(100, 100).unwrap(),

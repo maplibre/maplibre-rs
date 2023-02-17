@@ -1,9 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{
-    render::{resource::TrackedRenderPass, RenderState},
-    tcs::world::World,
-};
+use crate::{render::resource::TrackedRenderPass, tcs::world::World};
 
 /// A draw function which is used to draw a specific [`PhaseItem`].
 ///
@@ -11,13 +8,7 @@ use crate::{
 /// are more modular.
 pub trait Draw<P: PhaseItem>: 'static {
     /// Draws the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
-    fn draw<'w>(
-        &self,
-        pass: &mut TrackedRenderPass<'w>,
-        state: &'w RenderState,
-        wold: &'w World,
-        item: &P,
-    );
+    fn draw<'w>(&self, pass: &mut TrackedRenderPass<'w>, wold: &'w World, item: &P);
 }
 
 /// An item which will be drawn to the screen. A phase item should be queued up for rendering
@@ -56,7 +47,6 @@ pub trait PhaseItem {
 pub trait RenderCommand<P: PhaseItem> {
     /// Renders the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         item: &P,
         pass: &mut TrackedRenderPass<'w>,
@@ -73,12 +63,11 @@ macro_rules! render_command_tuple_impl {
         impl<P: PhaseItem, $($name: RenderCommand<P>),*> RenderCommand<P> for ($($name,)*) {
             #[allow(non_snake_case)]
             fn render<'w>(
-                state: &'w RenderState,
                 world: &'w World,
                 item: &P,
                 pass: &mut TrackedRenderPass<'w>,
             ) -> RenderCommandResult{
-                $(if let RenderCommandResult::Failure = $name::render(state, world, item, pass) {
+                $(if let RenderCommandResult::Failure = $name::render(world, item, pass) {
                     return RenderCommandResult::Failure;
                 })*
                 RenderCommandResult::Success
@@ -92,23 +81,6 @@ render_command_tuple_impl!(C0, C1);
 render_command_tuple_impl!(C0, C1, C2);
 render_command_tuple_impl!(C0, C1, C2, C3);
 render_command_tuple_impl!(C0, C1, C2, C3, C4);
-
-/*impl<P, C: 'static> Draw<P> for C
-where
-    P: PhaseItem,
-    C: RenderCommand<P>,
-{
-    /// Prepares data for the wrapped [`RenderCommand`] and then renders it.
-    fn draw<'w>(
-        &self,
-        pass: &mut TrackedRenderPass<'w>,
-        state: &'w RenderState,
-        world: &'w World,
-        item: &P,
-    ) {
-        C::render(state, world, item, pass);
-    }
-}*/
 
 pub struct DrawState<C, P> {
     phantom_p: PhantomData<P>,
@@ -130,13 +102,7 @@ where
     C: RenderCommand<P>,
 {
     /// Prepares data for the wrapped [`RenderCommand`] and then renders it.
-    fn draw<'w>(
-        &self,
-        pass: &mut TrackedRenderPass<'w>,
-        state: &'w RenderState,
-        world: &'w World,
-        item: &P,
-    ) {
-        C::render(state, world, item, pass);
+    fn draw<'w>(&self, pass: &mut TrackedRenderPass<'w>, world: &'w World, item: &P) {
+        C::render(world, item, pass);
     }
 }

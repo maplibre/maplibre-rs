@@ -11,7 +11,7 @@ use crate::{
         shaders::{Shader, ShaderTileMetadata},
         tile_pipeline::TilePipeline,
         tile_view_pattern::{TileViewPattern, WgpuTileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
-        RenderState, Renderer,
+        RenderResources, Renderer,
     },
     vector::{resource::BufferPool, DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline},
 };
@@ -22,7 +22,7 @@ pub fn resource_system(
         renderer:
             Renderer {
                 device,
-                state: RenderState { surface, .. },
+                resources: RenderResources { surface, .. },
                 settings,
                 ..
             },

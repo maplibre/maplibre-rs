@@ -6,7 +6,10 @@ use std::{
 
 use downcast_rs::{impl_downcast, Downcast};
 
-use crate::coords::{Quadkey, WorldTileCoords};
+use crate::{
+    coords::{Quadkey, WorldTileCoords},
+    io::geometry_index::GeometryIndex,
+};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Tile {
@@ -22,6 +25,7 @@ impl_downcast!(TileComponent);
 pub struct Tiles {
     pub tiles: BTreeMap<Quadkey, Tile>,
     pub components: BTreeMap<Quadkey, Vec<Box<dyn TileComponent>>>,
+    pub geometry_index: GeometryIndex,
 }
 
 impl Tiles {

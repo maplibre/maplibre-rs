@@ -27,7 +27,7 @@ impl System for GraphRunnerSystem {
                 Renderer {
                     device,
                     queue,
-                    state,
+                    resources: state,
                     render_graph,
                     ..
                 },

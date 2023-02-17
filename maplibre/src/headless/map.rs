@@ -28,6 +28,7 @@ use crate::{
         LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
         VectorLayersDataComponent, VectorPlugin, VectorTileRequest, VectorTransferables,
     },
+    view_state::ViewState,
 };
 
 pub struct HeadlessMap {
@@ -45,12 +46,15 @@ impl HeadlessMap {
     ) -> Result<Self, MapError> {
         let window_size = renderer.state().surface().size();
 
-        let mut world = World::new(
+        let view_state = ViewState::new(
             window_size,
             WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
             Zoom::default(),
             cgmath::Deg(0.0),
+            cgmath::Deg(110.0),
         );
+
+        let mut world = World::default();
 
         let graph = &mut renderer.render_graph;
         initialize_default_render_graph(graph).unwrap();
@@ -89,6 +93,7 @@ impl HeadlessMap {
             kernel,
             map_context: MapContext {
                 style,
+                view_state,
                 world,
                 renderer,
             },

@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::{
     context::MapContext,
-    coords::{LatLon, Zoom},
+    coords::{LatLon, WorldCoords, Zoom},
     environment::Environment,
     kernel::Kernel,
     plugin::Plugin,
@@ -19,6 +19,7 @@ use crate::{
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
+    view_state::ViewState,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
 
@@ -98,11 +99,15 @@ where
 
                 let center = style.center.unwrap_or_default();
 
-                let mut world = World::new_at(
+                let mut world = World::default();
+
+                let initial_zoom = style.zoom.map(Zoom::new).unwrap_or_default();
+                let view_state = ViewState::new(
                     window_size,
-                    LatLon::new(center[0], center[1]),
-                    style.zoom.map(Zoom::new).unwrap_or_default(),
+                    WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), initial_zoom),
+                    initial_zoom,
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
+                    cgmath::Deg(110.0),
                 );
 
                 // FIXME tcs: Improve initialization logic
@@ -119,6 +124,7 @@ where
 
                         self.map_context = CurrentMapContext::Ready(MapContext {
                             world,
+                            view_state,
                             style: std::mem::take(style),
                             renderer,
                         });

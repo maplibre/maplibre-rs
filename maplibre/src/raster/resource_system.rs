@@ -4,7 +4,7 @@ use crate::{
     raster::resource::RasterResources,
     render::{
         eventually::Eventually, resource::RenderPipeline, settings::Msaa, shaders, shaders::Shader,
-        tile_pipeline::TilePipeline, RenderState, Renderer,
+        tile_pipeline::TilePipeline, RenderResources, Renderer,
     },
 };
 
@@ -14,7 +14,7 @@ pub fn resource_system(
         renderer:
             Renderer {
                 device,
-                state: RenderState { surface, .. },
+                resources: RenderResources { surface, .. },
                 settings,
                 ..
             },

@@ -15,7 +15,7 @@ use crate::{
             Edge, NodeId, NodeRunError, NodeState, RenderContext, RenderGraph, RenderGraphContext,
             SlotLabel, SlotType, SlotValue,
         },
-        RenderState,
+        RenderResources,
     },
     tcs::world::World,
 };
@@ -52,7 +52,7 @@ impl RenderGraphRunner {
         graph: &RenderGraph,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
-        state: &RenderState,
+        state: &RenderResources,
         world: &World,
     ) -> Result<(), RenderGraphRunnerError> {
         let command_encoder =
@@ -75,7 +75,7 @@ impl RenderGraphRunner {
         graph: &RenderGraph,
         graph_name: Option<Cow<'static, str>>,
         render_context: &mut RenderContext,
-        state: &RenderState,
+        state: &RenderResources,
         world: &World,
         inputs: &[SlotValue],
     ) -> Result<(), RenderGraphRunnerError> {

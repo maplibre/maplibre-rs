@@ -8,7 +8,7 @@ use crate::{
         },
         resource::TrackedRenderPass,
         tile_view_pattern::WgpuTileViewPattern,
-        RenderState, INDEX_FORMAT,
+        INDEX_FORMAT,
     },
     tcs::world::World,
     vector::{DebugPipeline, MaskPipeline, VectorBufferPool, VectorPipeline},
@@ -17,7 +17,6 @@ use crate::{
 pub struct SetMaskPipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
@@ -31,7 +30,6 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
 pub struct SetDebugPipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
@@ -48,7 +46,6 @@ impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
 pub struct SetVectorTilePipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetVectorTilePipeline {
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
@@ -65,7 +62,6 @@ impl<P: PhaseItem> RenderCommand<P> for SetVectorTilePipeline {
 pub struct DrawMask;
 impl RenderCommand<TileMaskItem> for DrawMask {
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         item: &TileMaskItem,
         pass: &mut TrackedRenderPass<'w>,
@@ -101,7 +97,6 @@ impl RenderCommand<TileMaskItem> for DrawMask {
 pub struct DrawDebugOutline;
 impl RenderCommand<TileDebugItem> for DrawDebugOutline {
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         item: &TileDebugItem,
         pass: &mut TrackedRenderPass<'w>,
@@ -130,7 +125,6 @@ impl RenderCommand<TileDebugItem> for DrawDebugOutline {
 pub struct DrawVectorTile;
 impl RenderCommand<LayerItem> for DrawVectorTile {
     fn render<'w>(
-        state: &'w RenderState,
         world: &'w World,
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,

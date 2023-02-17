@@ -33,7 +33,12 @@ impl System for WriteSurfaceBufferSystem {
     fn run(
         &mut self,
         MapContext {
-            renderer: Renderer { state, device, .. },
+            renderer:
+                Renderer {
+                    resources: state,
+                    device,
+                    ..
+                },
             ..
         }: &mut MapContext,
     ) {

@@ -10,7 +10,10 @@ use crate::{
 
 pub fn tile_view_pattern_system(
     MapContext {
-        world, renderer, ..
+        view_state,
+        world,
+        renderer,
+        ..
     }: &mut MapContext,
 ) {
     let Some((
@@ -20,8 +23,6 @@ pub fn tile_view_pattern_system(
         &Eventually<WgpuTileViewPattern>,
         &TilePhase
     )>() else { return; };
-
-    let view_state = &world.view_state;
     let view_region = view_state.create_view_region();
 
     if let Some(view_region) = &view_region {

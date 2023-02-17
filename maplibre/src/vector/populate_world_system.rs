@@ -34,8 +34,6 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
             world, renderer, ..
         }: &mut MapContext,
     ) {
-        let geometry_index = &mut world.geometry_index;
-
         for message in self.kernel.apc().receive(|message| {
             message.has_tag(T::TileTessellated::message_tag())
                 || message.has_tag(T::LayerMissing::message_tag())
@@ -75,7 +73,10 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
                     .push(VectorLayerData::Available(message.to_layer()));
             } else if message.has_tag(T::LayerIndexed::message_tag()) {
                 let message = message.into_transferable::<T::LayerIndexed>();
-                geometry_index.index_tile(&message.coords(), message.to_tile_index());
+                world
+                    .tiles
+                    .geometry_index
+                    .index_tile(&message.coords(), message.to_tile_index());
             }
         }
     }

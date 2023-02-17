@@ -23,7 +23,7 @@ impl System for ResourceSystem {
                 Renderer {
                     settings,
                     device,
-                    state,
+                    resources: state,
                     ..
                 },
             ..

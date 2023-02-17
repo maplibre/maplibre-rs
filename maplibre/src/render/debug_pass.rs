@@ -6,7 +6,7 @@ use crate::{
         render_phase::{RenderPhase, TileDebugItem},
         resource::TrackedRenderPass,
         Eventually::Initialized,
-        RenderState,
+        RenderResources,
     },
     tcs::world::World,
 };
@@ -25,16 +25,16 @@ impl Node for DebugPassNode {
         vec![]
     }
 
-    fn update(&mut self, _state: &mut RenderState) {}
+    fn update(&mut self, _state: &mut RenderResources) {}
 
     fn run(
         &self,
         _graph: &mut RenderGraphContext,
         render_context: &mut RenderContext,
-        state: &RenderState,
+        resources: &RenderResources,
         world: &World,
     ) -> Result<(), NodeRunError> {
-        let Initialized(render_target) = &state.render_target else {
+        let Initialized(render_target) = &resources.render_target else {
             return Ok(());
         };
 
@@ -65,8 +65,7 @@ impl Node for DebugPassNode {
                 debug_items.size()
             );
             for item in debug_items {
-                item.draw_function
-                    .draw(&mut tracked_pass, state, world, item);
+                item.draw_function.draw(&mut tracked_pass, world, item);
             }
         }
 
