@@ -215,6 +215,10 @@ impl ViewTileSources {
         self.items.push(Box::new(QueryHasTile::<Q>::new()));
         self
     }
+
+    pub fn clear(&mut self) {
+        self.items.clear()
+    }
 }
 
 impl Default for ViewTileSources {

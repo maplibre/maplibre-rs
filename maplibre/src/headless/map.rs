@@ -3,10 +3,7 @@ use std::{cell::RefCell, ops::Deref, rc::Rc};
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel, TILE_SIZE},
-    headless::{
-        environment::HeadlessEnvironment, graph_node::CopySurfaceBufferNode,
-        system::WriteSurfaceBufferSystem,
-    },
+    headless::{environment::HeadlessEnvironment, HeadlessPlugin},
     io::{
         apc::{Context, IntoMessage, Message, SendError},
         source_client::SourceFetchError,
@@ -16,10 +13,10 @@ use crate::{
     map::MapError,
     plugin::Plugin,
     raster::{DefaultRasterTransferables, RasterPlugin},
-    render::{eventually::Eventually, RenderPlugin, RenderStageLabel, Renderer},
+    render::{eventually::Eventually, RenderPlugin, Renderer},
     schedule::{Schedule, Stage},
     style::Style,
-    tcs::{system::SystemContainer, world::World},
+    tcs::world::World,
     vector::{
         process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
         LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
@@ -27,18 +24,6 @@ use crate::{
     },
     view_state::ViewState,
 };
-
-/// Labels for the "draw" graph
-mod draw_graph {
-    pub const NAME: &str = "draw";
-    // Labels for input nodes
-    pub mod input {}
-    // Labels for non-input nodes
-    pub mod node {
-        pub const MAIN_PASS: &str = "main_pass";
-        pub const COPY: &str = "copy";
-    }
-}
 
 pub struct HeadlessMap {
     kernel: Rc<Kernel<HeadlessEnvironment>>,
@@ -81,22 +66,7 @@ impl HeadlessMap {
             &mut world,
             graph,
         );
-
-        let draw_graph = graph
-            .get_sub_graph_mut(draw_graph::NAME)
-            .expect("Subgraph does not exist");
-        draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
-        draw_graph
-            .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)
-            .unwrap(); // TODO: remove unwrap
-
-        // FIXME tcs: Is this good style?
-        schedule.remove_stage(RenderStageLabel::Extract);
-
-        schedule.add_system_to_stage(
-            RenderStageLabel::Cleanup,
-            SystemContainer::new(WriteSurfaceBufferSystem::new(write_to_disk)),
-        );
+        HeadlessPlugin::new(write_to_disk).build(&mut schedule, kernel.clone(), &mut world, graph);
 
         Ok(Self {
             kernel,
@@ -166,9 +136,9 @@ impl HeadlessMap {
         tile_data: Box<[u8]>,
         source_layers: &[&str],
     ) -> Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>> {
-        let context = SimpleContext::default();
+        let context = HeadlessContext::default();
         let mut processor =
-            ProcessVectorContext::<DefaultVectorTransferables, SimpleContext>::new(context);
+            ProcessVectorContext::<DefaultVectorTransferables, HeadlessContext>::new(context);
 
         let target_coords = WorldTileCoords::default(); // load to 0,0,0
         process_vector_tile(
@@ -195,11 +165,11 @@ impl HeadlessMap {
 }
 
 #[derive(Default, Clone)]
-pub struct SimpleContext {
+pub struct HeadlessContext {
     pub messages: Rc<RefCell<Vec<Message>>>,
 }
 
-impl Context for SimpleContext {
+impl Context for HeadlessContext {
     fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
         self.messages.deref().borrow_mut().push(message.into());
         Ok(())
