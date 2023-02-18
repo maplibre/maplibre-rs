@@ -1,27 +1,24 @@
-use crate::render::{
-    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-    resource::Head,
-    RenderState,
+use crate::{
+    render::{
+        graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        resource::Head,
+        RenderResources,
+    },
+    tcs::world::World,
 };
 
 /// Node which copies the contents of the GPU-side texture in [`BufferedTextureHead`] to an
 /// unmapped GPU-side buffer. This buffer will be mapped in
 /// [`crate::render::stages::write_surface_buffer_stage::WriteSurfaceBufferStage`].
 #[derive(Default)]
-pub struct CopySurfaceBufferNode {}
-
-impl CopySurfaceBufferNode {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
+pub struct CopySurfaceBufferNode;
 
 impl Node for CopySurfaceBufferNode {
     fn input(&self) -> Vec<SlotInfo> {
         vec![]
     }
 
-    fn update(&mut self, _state: &mut RenderState) {}
+    fn update(&mut self, _state: &mut RenderResources) {}
 
     fn run(
         &self,
@@ -29,7 +26,8 @@ impl Node for CopySurfaceBufferNode {
         RenderContext {
             command_encoder, ..
         }: &mut RenderContext,
-        state: &RenderState,
+        state: &RenderResources,
+        _world: &World,
     ) -> Result<(), NodeRunError> {
         let surface = state.surface();
         match surface.head() {

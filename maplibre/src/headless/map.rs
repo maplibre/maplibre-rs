@@ -1,33 +1,31 @@
-use std::collections::HashSet;
+use std::{cell::RefCell, ops::Deref, rc::Rc};
 
 use crate::{
     context::MapContext,
-    coords::{WorldCoords, WorldTileCoords, Zoom, TILE_SIZE},
-    headless::{
-        environment::HeadlessEnvironment, graph_node::CopySurfaceBufferNode,
-        stage::WriteSurfaceBufferStage,
-    },
+    coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel, TILE_SIZE},
+    headless::environment::HeadlessEnvironment,
     io::{
-        pipeline::{PipelineContext, PipelineError, PipelineProcessor, Processable},
+        apc::{Context, IntoMessage, Message, SendError},
         source_client::SourceFetchError,
-        tile_pipelines::build_vector_tile_pipeline,
-        tile_repository::{StoredLayer, StoredTile},
-        RawLayer, TileRequest,
+        source_type::{SourceType, TessellateSource},
     },
     kernel::Kernel,
     map::MapError,
-    render::{
-        create_default_render_graph, draw_graph, eventually::Eventually,
-        register_default_render_stages, stages::RenderStageLabel, Renderer, ShaderVertex,
-    },
+    plugin::Plugin,
+    render::{eventually::Eventually, Renderer},
     schedule::{Schedule, Stage},
     style::Style,
-    tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    world::World,
+    tcs::world::World,
+    vector::{
+        process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
+        LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
+        VectorLayersDataComponent, VectorTileRequest, VectorTransferables,
+    },
+    view_state::ViewState,
 };
 
 pub struct HeadlessMap {
-    kernel: Kernel<HeadlessEnvironment>,
+    kernel: Rc<Kernel<HeadlessEnvironment>>,
     schedule: Schedule,
     map_context: MapContext,
 }
@@ -35,39 +33,38 @@ pub struct HeadlessMap {
 impl HeadlessMap {
     pub fn new(
         style: Style,
-        renderer: Renderer,
+        mut renderer: Renderer,
         kernel: Kernel<HeadlessEnvironment>,
-        write_to_disk: bool,
+        plugins: Vec<Box<dyn Plugin<HeadlessEnvironment>>>,
     ) -> Result<Self, MapError> {
         let window_size = renderer.state().surface().size();
 
-        let world = World::new(
+        let view_state = ViewState::new(
             window_size,
             WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
             Zoom::default(),
             cgmath::Deg(0.0),
+            cgmath::Deg(110.0),
         );
 
-        let mut graph = create_default_render_graph().map_err(MapError::RenderGraphInit)?;
-        let draw_graph = graph
-            .get_sub_graph_mut(draw_graph::NAME)
-            .expect("Subgraph does not exist");
-        draw_graph.add_node(draw_graph::node::COPY, CopySurfaceBufferNode::default());
-        draw_graph
-            .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::COPY)
-            .unwrap(); // TODO: remove unwrap
-
+        let mut world = World::default();
         let mut schedule = Schedule::default();
-        register_default_render_stages(graph, &mut schedule);
-        schedule.add_stage(
-            RenderStageLabel::Cleanup,
-            WriteSurfaceBufferStage::new(write_to_disk),
-        );
+        let kernel = Rc::new(kernel);
+
+        for plugin in &plugins {
+            plugin.build(
+                &mut schedule,
+                kernel.clone(),
+                &mut world,
+                &mut renderer.render_graph,
+            );
+        }
 
         Ok(Self {
             kernel,
             map_context: MapContext {
                 style,
+                view_state,
                 world,
                 renderer,
             },
@@ -75,78 +72,99 @@ impl HeadlessMap {
         })
     }
 
-    pub fn render_tile(&mut self, tile: StoredTile) {
+    pub fn render_tile(
+        &mut self,
+        layers: Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>>,
+    ) {
         let context = &mut self.map_context;
+        let tiles = &mut context.world.tiles;
 
-        if let Eventually::Initialized(pool) = context.renderer.state.buffer_pool_mut() {
-            pool.clear();
-        } else {
-            // TODO return error
-        }
+        tiles
+            .spawn_mut((0, 0, ZoomLevel::default()).into())
+            .expect("unable to spawn tile")
+            .insert(VectorLayersDataComponent {
+                done: true,
+                layers: layers
+                    .into_iter()
+                    .map(|layer| {
+                        VectorLayerData::Available(AvailableVectorLayerData {
+                            coords: layer.coords,
+                            source_layer: layer.layer_data.name,
+                            buffer: layer.buffer,
+                            feature_indices: layer.feature_indices,
+                        })
+                    })
+                    .collect::<Vec<_>>(),
+            });
 
-        context.world.tile_repository.clear();
+        self.schedule.run(context);
 
-        context.world.tile_repository.put_tile(tile);
+        let resources = &mut context.world.resources;
+        let tiles = &mut context.world.tiles;
 
-        self.schedule.run(&mut self.map_context);
+        tiles.clear();
+
+        let pool = resources
+            .query_mut::<&mut Eventually<VectorBufferPool>>() // FIXME tcs: we access internals of the vector plugin here
+            .expect("VectorBufferPool not found")
+            .expect_initialized_mut("VectorBufferPool not initialized");
+
+        pool.clear();
     }
 
     pub async fn fetch_tile(&self, coords: WorldTileCoords) -> Result<Box<[u8]>, SourceFetchError> {
         let source_client = self.kernel.source_client();
-
-        Ok(source_client.fetch(&coords).await?.into_boxed_slice())
+        let data = source_client
+            .fetch(
+                &coords,
+                &SourceType::Tessellate(TessellateSource::default()),
+            )
+            .await?
+            .into_boxed_slice();
+        Ok(data)
     }
 
     pub async fn process_tile(
         &self,
         tile_data: Box<[u8]>,
         source_layers: &[&str],
-    ) -> Result<StoredTile, PipelineError> {
-        let mut pipeline_context = PipelineContext::new(HeadlessPipelineProcessor::default());
-        let pipeline = build_vector_tile_pipeline();
+    ) -> Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>> {
+        let context = HeadlessContext::default();
+        let mut processor =
+            ProcessVectorContext::<DefaultVectorTransferables, HeadlessContext>::new(context);
 
         let target_coords = WorldTileCoords::default(); // load to 0,0,0
-        pipeline.process(
-            (
-                TileRequest {
-                    coords: target_coords,
-                    layers: source_layers
-                        .iter()
-                        .map(|layer| layer.to_string())
-                        .collect::<HashSet<String>>(),
-                },
-                tile_data,
-            ),
-            &mut pipeline_context,
-        )?;
+        process_vector_tile(
+            &tile_data,
+            VectorTileRequest {
+                coords: target_coords,
+                layers: source_layers
+                    .iter()
+                    .map(|layer| layer.to_string())
+                    .collect(),
+            },
+            &mut processor,
+        )
+        .expect("Failed to process!");
 
-        let processor = pipeline_context
-            .take_processor::<HeadlessPipelineProcessor>()
-            .expect("Unable to get processor");
+        let messages = processor.take_context().messages.deref().take();
+        let layers = messages.into_iter()
+            .filter(|message| message.tag() == <DefaultVectorTransferables as VectorTransferables>::LayerTessellated::message_tag())
+            .map(|message| message.into_transferable::<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>())
+            .collect::<Vec<_>>();
 
-        Ok(StoredTile::success(target_coords, processor.layers))
+        layers
     }
 }
 
-#[derive(Default)]
-pub struct HeadlessPipelineProcessor {
-    pub layers: Vec<StoredLayer>,
+#[derive(Default, Clone)]
+pub struct HeadlessContext {
+    pub messages: Rc<RefCell<Vec<Message>>>,
 }
 
-impl PipelineProcessor for HeadlessPipelineProcessor {
-    fn layer_tesselation_finished(
-        &mut self,
-        coords: &WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
-        layer_data: RawLayer,
-    ) -> Result<(), PipelineError> {
-        self.layers.push(StoredLayer::TessellatedLayer {
-            coords: *coords,
-            layer_name: layer_data.name,
-            buffer,
-            feature_indices,
-        });
+impl Context for HeadlessContext {
+    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+        self.messages.deref().borrow_mut().push(message.into());
         Ok(())
     }
 }

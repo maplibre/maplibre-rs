@@ -5,14 +5,16 @@
 
 use std::ops::Deref;
 
-use crate::render::{
-    draw_graph,
-    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-    render_commands::{DrawMasks, DrawTiles},
-    render_phase::RenderCommand,
-    resource::TrackedRenderPass,
-    Eventually::Initialized,
-    RenderState,
+use crate::{
+    render::{
+        draw_graph,
+        graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        resource::TrackedRenderPass,
+        Eventually::Initialized,
+        RenderResources,
+    },
+    tcs::world::World,
 };
 
 pub struct MainPassNode {}
@@ -28,13 +30,14 @@ impl Node for MainPassNode {
         vec![]
     }
 
-    fn update(&mut self, _state: &mut RenderState) {}
+    fn update(&mut self, _state: &mut RenderResources) {}
 
     fn run(
         &self,
         _graph: &mut RenderGraphContext,
         render_context: &mut RenderContext,
-        state: &RenderState,
+        state: &RenderResources,
+        world: &World,
     ) -> Result<(), NodeRunError> {
         let Initialized(render_target) = &state.render_target else {
             return Ok(());
@@ -70,7 +73,7 @@ impl Node for MainPassNode {
             render_context
                 .command_encoder
                 .begin_render_pass(&wgpu::RenderPassDescriptor {
-                    label: None,
+                    label: Some("main_pass"),
                     color_attachments: &[Some(color_attachment)],
                     depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                         view: &depth_texture.view,
@@ -87,12 +90,18 @@ impl Node for MainPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        for item in &state.mask_phase.items {
-            DrawMasks::render(state, item, &mut tracked_pass);
+        if let Some(mask_items) = world.resources.get::<RenderPhase<TileMaskItem>>() {
+            log::trace!("RenderPhase<TileMaskItem>::size() = {}", mask_items.size());
+            for item in mask_items {
+                item.draw_function.draw(&mut tracked_pass, world, item);
+            }
         }
 
-        for item in &state.tile_phase.items {
-            DrawTiles::render(state, item, &mut tracked_pass);
+        if let Some(layer_items) = world.resources.get::<RenderPhase<LayerItem>>() {
+            log::trace!("RenderPhase<LayerItem>::size() = {}", layer_items.size());
+            for item in layer_items {
+                item.draw_function.draw(&mut tracked_pass, world, item);
+            }
         }
 
         Ok(())
@@ -106,7 +115,8 @@ impl Node for MainPassDriverNode {
         &self,
         graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
-        _state: &RenderState,
+        _resources: &RenderResources,
+        _world: &World,
     ) -> Result<(), NodeRunError> {
         graph.run_sub_graph(draw_graph::NAME, vec![])?;
 

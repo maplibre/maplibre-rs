@@ -1,15 +1,15 @@
 //! Utils which are used internally
 
-mod fps_meter;
-pub mod grid;
-pub mod label;
-pub mod math;
-
 use std::ops::{Deref, DerefMut};
 
 pub use fps_meter::FPSMeter;
 
 use crate::coords::WorldTileCoords;
+
+mod fps_meter;
+pub mod grid;
+pub mod label;
+pub mod math;
 
 struct MinMaxBoundingBox {
     min_x: i32,
@@ -19,8 +19,8 @@ struct MinMaxBoundingBox {
     initialized: bool,
 }
 
-impl MinMaxBoundingBox {
-    fn new() -> Self {
+impl Default for MinMaxBoundingBox {
+    fn default() -> Self {
         Self {
             min_x: i32::MAX,
             min_y: i32::MAX,
@@ -29,7 +29,9 @@ impl MinMaxBoundingBox {
             initialized: false,
         }
     }
+}
 
+impl MinMaxBoundingBox {
     pub fn is_initialized(&self) -> bool {
         self.initialized
     }

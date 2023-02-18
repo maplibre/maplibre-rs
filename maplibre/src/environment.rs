@@ -1,5 +1,9 @@
 use crate::{
-    io::{apc::AsyncProcedureCall, scheduler::Scheduler, source_client::HttpClient},
+    io::{
+        apc::AsyncProcedureCall,
+        scheduler::Scheduler,
+        source_client::{HttpClient, SourceClient},
+    },
     window::MapWindowConfig,
 };
 
@@ -14,9 +18,18 @@ use crate::{
 pub trait Environment: 'static {
     type MapWindowConfig: MapWindowConfig;
 
-    type AsyncProcedureCall: AsyncProcedureCall<Self::HttpClient>;
+    type AsyncProcedureCall: AsyncProcedureCall<Self::OffscreenKernelEnvironment>;
 
     type Scheduler: Scheduler;
 
     type HttpClient: HttpClient;
+
+    type OffscreenKernelEnvironment: OffscreenKernelEnvironment;
+}
+
+pub trait OffscreenKernelEnvironment: Send + Sync + 'static {
+    type HttpClient: HttpClient;
+    fn create() -> Self;
+
+    fn source_client(&self) -> SourceClient<Self::HttpClient>;
 }

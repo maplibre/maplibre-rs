@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{Vector2, Vector3};
-use maplibre::{context::MapContext, coords::Zoom, world::World};
+use maplibre::{context::MapContext, coords::Zoom};
 
 use super::UpdateState;
 
@@ -12,14 +12,7 @@ pub struct ZoomHandler {
 }
 
 impl UpdateState for ZoomHandler {
-    fn update_state(
-        &mut self,
-        MapContext {
-            world: World { view_state, .. },
-            ..
-        }: &mut MapContext,
-        _dt: Duration,
-    ) {
+    fn update_state(&mut self, MapContext { view_state, .. }: &mut MapContext, _dt: Duration) {
         if let Some(zoom_delta) = self.zoom_delta {
             if let Some(window_position) = self.window_position {
                 let current_zoom = view_state.zoom();

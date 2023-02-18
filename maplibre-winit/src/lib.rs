@@ -4,7 +4,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use instant::Instant;
 use maplibre::{
-    environment::Environment,
+    environment::{Environment, OffscreenKernelEnvironment},
     event_loop::{EventLoop, EventLoopProxy, SendEventError},
     io::{apc::AsyncProcedureCall, scheduler::Scheduler, source_client::HttpClient},
     map::Map,
@@ -185,18 +185,31 @@ impl<ET: 'static> EventLoopProxy<ET> for WinitEventLoopProxy<ET> {
     }
 }
 
-pub struct WinitEnvironment<S: Scheduler, HC: HttpClient, APC: AsyncProcedureCall<HC>, ET> {
+pub struct WinitEnvironment<
+    S: Scheduler,
+    HC: HttpClient,
+    K: OffscreenKernelEnvironment,
+    APC: AsyncProcedureCall<K>,
+    ET,
+> {
     phantom_s: PhantomData<S>,
     phantom_hc: PhantomData<HC>,
+    phantom_k: PhantomData<K>,
     phantom_apc: PhantomData<APC>,
     phantom_et: PhantomData<ET>,
 }
 
-impl<S: Scheduler, HC: HttpClient, APC: AsyncProcedureCall<HC>, ET: 'static> Environment
-    for WinitEnvironment<S, HC, APC, ET>
+impl<
+        S: Scheduler,
+        HC: HttpClient,
+        K: OffscreenKernelEnvironment,
+        APC: AsyncProcedureCall<K>,
+        ET: 'static,
+    > Environment for WinitEnvironment<S, HC, K, APC, ET>
 {
     type MapWindowConfig = WinitMapWindowConfig<ET>;
     type AsyncProcedureCall = APC;
     type Scheduler = S;
     type HttpClient = HC;
+    type OffscreenKernelEnvironment = K;
 }

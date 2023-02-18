@@ -19,6 +19,9 @@ jobs:
       - name: Show PATH
         shell: powershell
         run: Write-Host $env:path
+      - name: Show bash PATH
+        shell: bash
+        run: echo $PATH
       - uses: actions/checkout@v3
       - name: Setup
         uses: ./.github/actions/setup

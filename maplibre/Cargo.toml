@@ -12,13 +12,15 @@ keywords.workspace = true
 authors.workspace = true
 
 [features]
-default = []
+# FIXME tcs: Remove raster from default
+default = ["raster"]
 web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web
 trace = ["tracing-subscriber", "tracing-tracy"]
 thread-safe-futures = []
 embed-static-tiles = ["maplibre-build-tools/sqlite"]
 headless = ["png"]
+raster = ["image"]
 
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
@@ -84,6 +86,7 @@ smallvec = "1.9.0"
 
 # Headless
 png = { version = "0.17.5", optional = true }
+image = { version = "0.24", default-features = false, features = ["jpeg", "webp", "png"], optional = true }
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }

@@ -1,15 +1,15 @@
-mod context;
-mod edge;
-mod graph;
-mod node;
-mod node_slot;
-
 pub use context::*;
 pub use edge::*;
 pub use graph::*;
 pub use node::*;
 pub use node_slot::*;
 use thiserror::Error;
+
+mod context;
+mod edge;
+mod graph;
+mod node;
+mod node_slot;
 
 #[derive(Error, Debug, Eq, PartialEq)]
 pub enum RenderGraphError {

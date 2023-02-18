@@ -61,7 +61,7 @@ fn main(
         vec3<f32>(EXTENT, EXTENT - WIDTH, z)
     );
 
-    let a_position = VERTICES[vertex_idx];
+    let vertex = VERTICES[vertex_idx];
 
     let scaling: mat3x3<f32> = mat3x3<f32>(
             vec3<f32>(target_width,   0.0,            0.0),
@@ -69,7 +69,7 @@ fn main(
             vec3<f32>(0.0,            0.0,            1.0)
     );
 
-    var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>((scaling * a_position), 1.0);
+    var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>((scaling * vertex), 1.0);
     position.z = 1.0;
     return VertexOutput(DEBUG_COLOR, position);
 }

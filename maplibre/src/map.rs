@@ -4,23 +4,22 @@ use thiserror::Error;
 
 use crate::{
     context::MapContext,
-    coords::{LatLon, Zoom},
+    coords::{LatLon, WorldCoords, Zoom},
     environment::Environment,
     kernel::Kernel,
+    plugin::Plugin,
     render::{
         builder::{
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
         },
-        create_default_render_graph,
         error::RenderError,
         graph::RenderGraphError,
-        register_default_render_stages,
     },
     schedule::{Schedule, Stage},
-    stages::register_stages,
     style::Style,
+    tcs::world::World,
+    view_state::ViewState,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
-    world::World,
 };
 
 #[derive(Error, Debug)]
@@ -34,7 +33,7 @@ pub enum MapError {
     DeviceInit(RenderError),
 }
 
-pub enum MapContextState {
+pub enum CurrentMapContext {
     Ready(MapContext),
     Pending {
         style: Style,
@@ -45,8 +44,10 @@ pub enum MapContextState {
 pub struct Map<E: Environment> {
     kernel: Rc<Kernel<E>>,
     schedule: Schedule,
-    map_context: MapContextState,
+    map_context: CurrentMapContext,
     window: <E::MapWindowConfig as MapWindowConfig>::MapWindow,
+
+    plugins: Vec<Box<dyn Plugin<E>>>,
 }
 
 impl<E: Environment> Map<E>
@@ -57,34 +58,31 @@ where
         style: Style,
         kernel: Kernel<E>,
         renderer_builder: RendererBuilder,
+        plugins: Vec<Box<dyn Plugin<E>>>,
     ) -> Result<Self, MapError> {
-        let mut schedule = Schedule::default();
-
-        let graph = create_default_render_graph().unwrap(); // TODO: Remove unwrap
-        register_default_render_stages(graph, &mut schedule);
+        let schedule = Schedule::default();
 
         let kernel = Rc::new(kernel);
-
-        register_stages::<E>(&mut schedule, kernel.clone());
 
         let window = kernel.map_window_config().create();
 
         let map = Self {
             kernel,
-            map_context: MapContextState::Pending {
+            schedule,
+            map_context: CurrentMapContext::Pending {
                 style,
                 renderer_builder,
             },
-            schedule,
             window,
+            plugins,
         };
         Ok(map)
     }
 
     pub async fn initialize_renderer(&mut self) -> Result<(), MapError> {
         match &mut self.map_context {
-            MapContextState::Ready(_) => Err(MapError::RendererAlreadySet),
-            MapContextState::Pending {
+            CurrentMapContext::Ready(_) => Err(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending {
                 style,
                 renderer_builder,
             } => {
@@ -98,18 +96,33 @@ where
                 let window_size = self.window.size();
 
                 let center = style.center.unwrap_or_default();
-
-                let world = World::new_at(
+                let initial_zoom = style.zoom.map(Zoom::new).unwrap_or_default();
+                let view_state = ViewState::new(
                     window_size,
-                    LatLon::new(center[0], center[1]),
-                    style.zoom.map(Zoom::new).unwrap_or_default(),
+                    WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), initial_zoom),
+                    initial_zoom,
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
+                    cgmath::Deg(110.0),
                 );
 
+                let mut world = World::default();
+
                 match init_result {
-                    InitializationResult::Initialized(InitializedRenderer { renderer, .. }) => {
-                        self.map_context = MapContextState::Ready(MapContext {
+                    InitializationResult::Initialized(InitializedRenderer {
+                        mut renderer, ..
+                    }) => {
+                        for plugin in &self.plugins {
+                            plugin.build(
+                                &mut self.schedule,
+                                self.kernel.clone(),
+                                &mut world,
+                                &mut renderer.render_graph,
+                            );
+                        }
+
+                        self.map_context = CurrentMapContext::Ready(MapContext {
                             world,
+                            view_state,
                             style: std::mem::take(style),
                             renderer,
                         });
@@ -131,33 +144,33 @@ where
 
     pub fn has_renderer(&self) -> bool {
         match &self.map_context {
-            MapContextState::Ready(_) => true,
-            MapContextState::Pending { .. } => false,
+            CurrentMapContext::Ready(_) => true,
+            CurrentMapContext::Pending { .. } => false,
         }
     }
 
     #[tracing::instrument(name = "update_and_redraw", skip_all)]
     pub fn run_schedule(&mut self) -> Result<(), MapError> {
         match &mut self.map_context {
-            MapContextState::Ready(map_context) => {
+            CurrentMapContext::Ready(map_context) => {
                 self.schedule.run(map_context);
                 Ok(())
             }
-            MapContextState::Pending { .. } => Err(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending { .. } => Err(MapError::RendererAlreadySet),
         }
     }
 
     pub fn context(&self) -> Result<&MapContext, MapError> {
         match &self.map_context {
-            MapContextState::Ready(map_context) => Ok(map_context),
-            MapContextState::Pending { .. } => Err(MapError::RendererAlreadySet),
+            CurrentMapContext::Ready(map_context) => Ok(map_context),
+            CurrentMapContext::Pending { .. } => Err(MapError::RendererAlreadySet),
         }
     }
 
     pub fn context_mut(&mut self) -> Result<&mut MapContext, MapError> {
         match &mut self.map_context {
-            MapContextState::Ready(map_context) => Ok(map_context),
-            MapContextState::Pending { .. } => Err(MapError::RendererAlreadySet),
+            CurrentMapContext::Ready(map_context) => Ok(map_context),
+            CurrentMapContext::Pending { .. } => Err(MapError::RendererAlreadySet),
         }
     }
 

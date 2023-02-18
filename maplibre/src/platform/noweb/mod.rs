@@ -5,6 +5,12 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+use crate::{
+    environment::OffscreenKernelEnvironment,
+    io::source_client::{HttpSourceClient, SourceClient},
+    platform::http_client::ReqwestHttpClient,
+};
+
 pub mod http_client;
 pub mod scheduler;
 pub mod trace;
@@ -27,4 +33,18 @@ pub fn run_multithreaded<F: Future>(future: F) -> F::Output {
         .build()
         .unwrap()
         .block_on(future)
+}
+
+pub struct ReqwestOffscreenKernelEnvironment;
+
+impl OffscreenKernelEnvironment for ReqwestOffscreenKernelEnvironment {
+    type HttpClient = ReqwestHttpClient;
+
+    fn create() -> Self {
+        ReqwestOffscreenKernelEnvironment
+    }
+
+    fn source_client(&self) -> SourceClient<Self::HttpClient> {
+        SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new(None)))
+    }
 }

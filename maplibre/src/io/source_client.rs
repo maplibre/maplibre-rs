@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use thiserror::Error;
 
-use crate::{coords::WorldTileCoords, style::source::TileAddressingScheme};
+use crate::{coords::WorldTileCoords, io::source_type::SourceType};
 
 /// A closure that returns a HTTP client.
 pub type HTTPClientFactory<HC> = dyn Fn() -> HC;
@@ -41,7 +41,7 @@ pub struct SourceClient<HC>
 where
     HC: HttpClient,
 {
-    http: HttpSourceClient<HC>, // TODO: mbtiles: Mbtiles
+    http: HttpSourceClient<HC>,
 }
 
 impl<HC> SourceClient<HC>
@@ -52,8 +52,12 @@ where
         Self { http }
     }
 
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, SourceFetchError> {
-        self.http.fetch(coords).await
+    pub async fn fetch(
+        &self,
+        coords: &WorldTileCoords,
+        source_type: &SourceType,
+    ) -> Result<Vec<u8>, SourceFetchError> {
+        self.http.fetch(coords, source_type).await
     }
 }
 
@@ -67,18 +71,13 @@ where
         }
     }
 
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, SourceFetchError> {
-        let tile_coords = coords.into_tile(TileAddressingScheme::XYZ).unwrap();
+    pub async fn fetch(
+        &self,
+        coords: &WorldTileCoords,
+        source_type: &SourceType,
+    ) -> Result<Vec<u8>, SourceFetchError> {
         self.inner_client
-            .fetch(
-                format!(
-                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}",
-                    x = tile_coords.x,
-                    y = tile_coords.y,
-                    z = tile_coords.z
-                )
-                .as_str(),
-            )
+            .fetch(source_type.format(coords).as_str())
             .await
     }
 }

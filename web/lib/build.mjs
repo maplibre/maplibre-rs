@@ -79,6 +79,7 @@ let config = {
             ...baseConfig,
             format: "cjs",
             target: 'es2022',
+            // workerName: 'worker' Supported when the follow commit is released: https://github.com/mitschabaude/esbuild-plugin-inline-worker/commit/d1aaffc721a62a3fe33f59f8f69b462c7dd05f45
         }),
         metaUrlPlugin()
     ],
