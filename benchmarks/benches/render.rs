@@ -4,7 +4,6 @@ use maplibre::{
     headless::{create_headless_renderer, map::HeadlessMap, HeadlessPlugin},
     platform::run_multithreaded,
     plugin::Plugin,
-    raster::{DefaultRasterTransferables, RasterPlugin},
     render::RenderPlugin,
     style::Style,
     vector::{DefaultVectorTransferables, VectorPlugin},
@@ -17,8 +16,8 @@ fn headless_render(c: &mut Criterion) {
             let style = Style::default();
 
             let plugins: Vec<Box<dyn Plugin<_>>> = vec![
+                Box::new(RenderPlugin::default()),
                 Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
-                Box::new(RasterPlugin::<DefaultRasterTransferables>::default()),
                 Box::new(HeadlessPlugin::new(false)),
             ];
 
