@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["register_stages","Register stages required for requesting and preparing new tiles."]],"mod":[["populate_tile_store_stage","Receives data from async threads and populates the [`crate::io::tile_repository::TileRepository`]."],["request_stage","Requests tiles which are currently in view"]],"struct":[["HeadedPipelineProcessor",""]]};

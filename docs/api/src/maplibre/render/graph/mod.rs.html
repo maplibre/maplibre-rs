@@ -43,18 +43,18 @@
 <span id="43">43</span>
 <span id="44">44</span>
 <span id="45">45</span>
-</pre><pre class="rust"><code><span class="kw">mod </span>context;
-<span class="kw">mod </span>edge;
-<span class="kw">mod </span>graph;
-<span class="kw">mod </span>node;
-<span class="kw">mod </span>node_slot;
-
-<span class="kw">pub use </span>context::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="kw">pub use </span>context::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>edge::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>graph::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>node::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>node_slot::<span class="kw-2">*</span>;
 <span class="kw">use </span>thiserror::Error;
+
+<span class="kw">mod </span>context;
+<span class="kw">mod </span>edge;
+<span class="kw">mod </span>graph;
+<span class="kw">mod </span>node;
+<span class="kw">mod </span>node_slot;
 
 <span class="attribute">#[derive(Error, Debug, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>RenderGraphError {

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["DefaultLayerIndexed",""],["DefaultLayerTesselated",""],["DefaultLayerUnavailable",""],["DefaultTileTessellated",""],["DefaultTransferables",""]],"trait":[["LayerIndexed",""],["LayerTessellated",""],["LayerUnavailable",""],["TileTessellated",""],["Transferables",""]]};

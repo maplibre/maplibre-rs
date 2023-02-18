@@ -81,13 +81,12 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
-<span id="84">84</span>
 </pre><pre class="rust"><code><span class="doccomment">//! HTTP client.
 
 </span><span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>thiserror::Error;
 
-<span class="kw">use crate</span>::{coords::WorldTileCoords, style::source::TileAddressingScheme};
+<span class="kw">use crate</span>::{coords::WorldTileCoords, io::source_type::SourceType};
 
 <span class="doccomment">/// A closure that returns a HTTP client.
 </span><span class="kw">pub type </span>HTTPClientFactory&lt;HC&gt; = <span class="kw">dyn </span>Fn() -&gt; HC;
@@ -125,8 +124,8 @@
 <span class="kw">where
     </span>HC: HttpClient,
 {
-    http: HttpSourceClient&lt;HC&gt;, <span class="comment">// TODO: mbtiles: Mbtiles
-</span>}
+    http: HttpSourceClient&lt;HC&gt;,
+}
 
 <span class="kw">impl</span>&lt;HC&gt; SourceClient&lt;HC&gt;
 <span class="kw">where
@@ -136,8 +135,12 @@
         <span class="self">Self </span>{ http }
     }
 
-    <span class="kw">pub async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, SourceFetchError&gt; {
-        <span class="self">self</span>.http.fetch(coords).<span class="kw">await
+    <span class="kw">pub async fn </span>fetch(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        coords: <span class="kw-2">&amp;</span>WorldTileCoords,
+        source_type: <span class="kw-2">&amp;</span>SourceType,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, SourceFetchError&gt; {
+        <span class="self">self</span>.http.fetch(coords, source_type).<span class="kw">await
     </span>}
 }
 
@@ -151,18 +154,13 @@
         }
     }
 
-    <span class="kw">pub async fn </span>fetch(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, SourceFetchError&gt; {
-        <span class="kw">let </span>tile_coords = coords.into_tile(TileAddressingScheme::XYZ).unwrap();
+    <span class="kw">pub async fn </span>fetch(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        coords: <span class="kw-2">&amp;</span>WorldTileCoords,
+        source_type: <span class="kw-2">&amp;</span>SourceType,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, SourceFetchError&gt; {
         <span class="self">self</span>.inner_client
-            .fetch(
-                <span class="macro">format!</span>(
-                    <span class="string">&quot;https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}&quot;</span>,
-                    x = tile_coords.x,
-                    y = tile_coords.y,
-                    z = tile_coords.z
-                )
-                .as_str(),
-            )
+            .fetch(source_type.format(coords).as_str())
             .<span class="kw">await
     </span>}
 }

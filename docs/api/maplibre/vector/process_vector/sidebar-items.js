@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["ProcessVectorError",""]],"fn":[["process_vector_tile",""]],"struct":[["ProcessVectorContext",""],["VectorTileRequest","A request for a tile at the given coordinates and in the given layers."]]};

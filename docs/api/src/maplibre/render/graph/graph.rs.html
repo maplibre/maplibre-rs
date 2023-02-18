@@ -745,13 +745,30 @@
 <span id="745">745</span>
 <span id="746">746</span>
 <span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, collections::HashMap, fmt::Debug};
 
 <span class="kw">use super</span>::{
     Edge, EdgeExistence, Node, NodeId, NodeLabel, NodeRunError, NodeState, RenderGraphContext,
     RenderGraphError, SlotInfo, SlotLabel,
 };
-<span class="kw">use </span><span class="kw">crate</span>::render::{graph::RenderContext, RenderState};
+<span class="kw">use crate</span>::{
+    render::{graph::RenderContext, RenderResources},
+    tcs::world::World,
+};
 
 <span class="doccomment">/// The render graph configures the modular, parallel and re-usable render logic.
 /// It is a retained and stateless (nodes itself my have their internal state) structure,
@@ -773,12 +790,17 @@
 /// Here is a simple render graph example with two nodes connected by a node edge.
 /// ```
 /// #
-/// # use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
-/// # use maplibre::render::{RenderState};
+/// # use maplibre::tcs::world::World;
+/// use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
+/// # use maplibre::render::{RenderResources};
 /// # struct MyNode;
 /// #
 /// # impl Node for MyNode {
-/// #     fn run(&amp;self, graph: &amp;mut RenderGraphContext, render_context: &amp;mut RenderContext, state: &amp;RenderState) -&gt; Result&lt;(), NodeRunError&gt; {
+/// #     fn run(&amp;self,
+/// #               graph: &amp;mut RenderGraphContext,
+/// #               render_context: &amp;mut RenderContext,
+/// #               state: &amp;RenderResources,
+/// #               world: &amp;World) -&gt; Result&lt;(), NodeRunError&gt; {
 /// #         unimplemented!()
 /// #     }
 /// # }
@@ -803,7 +825,7 @@
     </span><span class="kw">pub const </span>INPUT_NODE_NAME: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;GraphInputNode&quot;</span>;
 
     <span class="doccomment">/// Updates all nodes and sub graphs of the render graph. Should be called before executing it.
-    </span><span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>RenderState) {
+    </span><span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>RenderResources) {
         <span class="kw">for </span>node <span class="kw">in </span><span class="self">self</span>.nodes.values_mut() {
             node.node.update(state);
         }
@@ -1303,7 +1325,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
         _render_context: <span class="kw-2">&amp;mut </span>RenderContext,
-        _state: <span class="kw-2">&amp;</span>RenderState,
+        _state: <span class="kw-2">&amp;</span>RenderResources,
+        _world: <span class="kw-2">&amp;</span>World,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..graph.inputs().len() {
             <span class="kw">let </span>input = graph.inputs()[i].clone();
@@ -1321,9 +1344,12 @@
         Edge, Node, NodeId, NodeRunError, RenderGraph, RenderGraphContext, RenderGraphError,
         SlotInfo,
     };
-    <span class="kw">use </span><span class="kw">crate</span>::render::{
-        graph::{RenderContext, SlotType},
-        RenderState,
+    <span class="kw">use crate</span>::{
+        render::{
+            graph::{RenderContext, SlotType},
+            RenderResources,
+        },
+        tcs::world::World,
     };
 
     <span class="attribute">#[derive(Debug)]
@@ -1358,7 +1384,8 @@
             <span class="kw-2">&amp;</span><span class="self">self</span>,
             _graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
             _render_context: <span class="kw-2">&amp;mut </span>RenderContext,
-            _state: <span class="kw-2">&amp;</span>RenderState,
+            _state: <span class="kw-2">&amp;</span>RenderResources,
+            _world: <span class="kw-2">&amp;</span>World,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
             <span class="prelude-val">Ok</span>(())
         }
@@ -1431,7 +1458,8 @@
                 <span class="kw-2">&amp;</span><span class="self">self</span>,
                 _graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
                 _render_context: <span class="kw-2">&amp;mut </span>RenderContext,
-                _state: <span class="kw-2">&amp;</span>RenderState,
+                _state: <span class="kw-2">&amp;</span>RenderResources,
+                _world: <span class="kw-2">&amp;</span>World,
             ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
                 <span class="prelude-val">Ok</span>(())
             }

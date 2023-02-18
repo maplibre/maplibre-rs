@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["FunctionSystem",""]],"trait":[["IntoSystem","Conversion trait to turn something into a [`System`]."]]};

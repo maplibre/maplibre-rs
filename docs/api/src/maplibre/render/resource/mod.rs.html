@@ -29,21 +29,21 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities which holds references to GPU-owned. Usually a resource is a wrapper which makes using
 //! buffers or textures simpler.
 
-</span><span class="kw">mod </span>buffer_pool;
-<span class="kw">mod </span>globals;
-<span class="kw">mod </span>pipeline;
-<span class="kw">mod </span>shader;
-<span class="kw">mod </span>surface;
-<span class="kw">mod </span>texture;
-<span class="kw">mod </span>tracked_render_pass;
-
-<span class="kw">pub use </span>buffer_pool::<span class="kw-2">*</span>;
-<span class="kw">pub use </span>globals::<span class="kw-2">*</span>;
+</span><span class="kw">pub use </span>buffer::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>pipeline::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>shader::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>surface::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>texture::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>tile_pipeline::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>tracked_render_pass::<span class="kw-2">*</span>;
+
+<span class="kw">mod </span>buffer;
+<span class="kw">mod </span>pipeline;
+<span class="kw">mod </span>shader;
+<span class="kw">mod </span>surface;
+<span class="kw">mod </span>texture;
+<span class="kw">mod </span>tile_pipeline;
+<span class="kw">mod </span>tracked_render_pass;
 
 <span class="kw">pub trait </span>Queue&lt;B&gt; {
     <span class="kw">fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>B, offset: wgpu::BufferAddress, data: <span class="kw-2">&amp;</span>[u8]);

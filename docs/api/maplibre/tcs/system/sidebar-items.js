@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["function",""],["stage",""]],"struct":[["SystemContainer",""]],"trait":[["IntoSystemContainer",""],["System","An system that can be added to a `Schedule`"]],"type":[["BoxedSystem","A convenience type alias for a boxed [`System`] trait object."]]};

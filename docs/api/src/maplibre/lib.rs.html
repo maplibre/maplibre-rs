@@ -50,6 +50,13 @@
 <span id="50">50</span>
 <span id="51">51</span>
 <span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
 </pre><pre class="rust"><code><span class="doccomment">//! # Maplibre-rs
 //!
 //! A multi-platform library for rendering vector tile maps with WebGPU.
@@ -70,7 +77,12 @@
 
 </span><span class="attribute">#![deny(unused_imports)]
 
-</span><span class="comment">// Internal modules
+</span><span class="kw">extern crate </span>core;
+
+<span class="comment">// Export tile format
+</span><span class="kw">pub use </span>geozero::mvt::tile; <span class="comment">// Used in transferables.rs in web/singlethreaded
+
+// Internal modules
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>tessellation;
 
 <span class="kw">pub mod </span>context;
@@ -87,8 +99,6 @@
 <span class="kw">pub mod </span>window;
 <span class="comment">// Exposed because of doc-strings
 </span><span class="kw">pub mod </span>schedule;
-<span class="comment">// Exposed because of SharedThreadState
-</span><span class="kw">pub mod </span>stages;
 
 <span class="kw">pub mod </span>environment;
 
@@ -98,9 +108,13 @@
 <span class="kw">pub mod </span>event_loop;
 <span class="kw">pub mod </span>kernel;
 <span class="kw">pub mod </span>map;
-<span class="kw">pub mod </span>world;
+<span class="kw">pub mod </span>plugin;
+<span class="kw">pub mod </span>tcs;
+<span class="kw">pub mod </span>view_state;
 
-<span class="comment">// Export tile format
-</span><span class="kw">pub use </span>geozero::mvt::tile;
+<span class="comment">// Plugins
+</span><span class="kw">pub mod </span>debug;
+<span class="kw">pub mod </span>raster;
+<span class="kw">pub mod </span>vector;
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

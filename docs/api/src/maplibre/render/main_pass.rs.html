@@ -113,6 +113,16 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
 </pre><pre class="rust"><code><span class="doccomment">//! The main render pass for this application.
 //!
 //! Right now there is only one render graph. A use case for multiple render passes would be
@@ -120,14 +130,16 @@
 
 </span><span class="kw">use </span>std::ops::Deref;
 
-<span class="kw">use </span><span class="kw">crate</span>::render::{
-    draw_graph,
-    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-    render_commands::{DrawMasks, DrawTiles},
-    render_phase::RenderCommand,
-    resource::TrackedRenderPass,
-    Eventually::Initialized,
-    RenderState,
+<span class="kw">use crate</span>::{
+    render::{
+        draw_graph,
+        graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        resource::TrackedRenderPass,
+        Eventually::Initialized,
+        RenderResources,
+    },
+    tcs::world::World,
 };
 
 <span class="kw">pub struct </span>MainPassNode {}
@@ -143,13 +155,14 @@
         <span class="macro">vec!</span>[]
     }
 
-    <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>RenderState) {}
+    <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>RenderResources) {}
 
     <span class="kw">fn </span>run(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         _graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
         render_context: <span class="kw-2">&amp;mut </span>RenderContext,
-        state: <span class="kw-2">&amp;</span>RenderState,
+        state: <span class="kw-2">&amp;</span>RenderResources,
+        world: <span class="kw-2">&amp;</span>World,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
         <span class="kw">let </span>Initialized(render_target) = <span class="kw-2">&amp;</span>state.render_target <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -185,7 +198,7 @@
             render_context
                 .command_encoder
                 .begin_render_pass(<span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
-                    label: <span class="prelude-val">None</span>,
+                    label: <span class="prelude-val">Some</span>(<span class="string">&quot;main_pass&quot;</span>),
                     color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(color_attachment)],
                     depth_stencil_attachment: <span class="prelude-val">Some</span>(wgpu::RenderPassDepthStencilAttachment {
                         view: <span class="kw-2">&amp;</span>depth_texture.view,
@@ -202,12 +215,18 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>tracked_pass = TrackedRenderPass::new(render_pass);
 
-        <span class="kw">for </span>item <span class="kw">in </span><span class="kw-2">&amp;</span>state.mask_phase.items {
-            DrawMasks::render(state, item, <span class="kw-2">&amp;mut </span>tracked_pass);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(mask_items) = world.resources.get::&lt;RenderPhase&lt;TileMaskItem&gt;&gt;() {
+            <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPhase&lt;TileMaskItem&gt;::size() = {}&quot;</span>, mask_items.size());
+            <span class="kw">for </span>item <span class="kw">in </span>mask_items {
+                item.draw_function.draw(<span class="kw-2">&amp;mut </span>tracked_pass, world, item);
+            }
         }
 
-        <span class="kw">for </span>item <span class="kw">in </span><span class="kw-2">&amp;</span>state.tile_phase.items {
-            DrawTiles::render(state, item, <span class="kw-2">&amp;mut </span>tracked_pass);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(layer_items) = world.resources.get::&lt;RenderPhase&lt;LayerItem&gt;&gt;() {
+            <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPhase&lt;LayerItem&gt;::size() = {}&quot;</span>, layer_items.size());
+            <span class="kw">for </span>item <span class="kw">in </span>layer_items {
+                item.draw_function.draw(<span class="kw-2">&amp;mut </span>tracked_pass, world, item);
+            }
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -221,7 +240,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
         _render_context: <span class="kw-2">&amp;mut </span>RenderContext,
-        _state: <span class="kw-2">&amp;</span>RenderState,
+        _resources: <span class="kw-2">&amp;</span>RenderResources,
+        _world: <span class="kw-2">&amp;</span>World,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
         graph.run_sub_graph(draw_graph::NAME, <span class="macro">vec!</span>[])<span class="question-mark">?</span>;
 

@@ -203,6 +203,9 @@
 <span id="203">203</span>
 <span id="204">204</span>
 <span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Default vector tile styles configuration.
 
 </span><span class="kw">use </span>std::{collections::HashMap, str::FromStr};
@@ -211,7 +214,8 @@
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use </span><span class="kw">crate</span>::style::{
-    layer::{LayerPaint, LinePaint, StyleLayer},
+    layer::{FillPaint, LayerPaint, LinePaint, StyleLayer},
+    raster::RasterLayer,
     source::Source,
 };
 
@@ -242,12 +246,11 @@
                 StyleLayer {
                     index: <span class="number">0</span>,
                     id: <span class="string">&quot;park&quot;</span>.to_string(),
-                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
                     maxzoom: <span class="prelude-val">None</span>,
                     minzoom: <span class="prelude-val">None</span>,
                     metadata: <span class="prelude-val">None</span>,
-                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
-                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#c8facc&quot;</span>).unwrap()),
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Fill(FillPaint {
+                        fill_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#c8facc&quot;</span>).unwrap()),
                     })),
                     source: <span class="prelude-val">None</span>,
                     source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;park&quot;</span>.to_string()),
@@ -255,12 +258,11 @@
                 StyleLayer {
                     index: <span class="number">1</span>,
                     id: <span class="string">&quot;landuse&quot;</span>.to_string(),
-                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
                     maxzoom: <span class="prelude-val">None</span>,
                     minzoom: <span class="prelude-val">None</span>,
                     metadata: <span class="prelude-val">None</span>,
-                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
-                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#e0dfdf&quot;</span>).unwrap()),
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Fill(FillPaint {
+                        fill_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#e0dfdf&quot;</span>).unwrap()),
                     })),
                     source: <span class="prelude-val">None</span>,
                     source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;landuse&quot;</span>.to_string()),
@@ -268,12 +270,11 @@
                 StyleLayer {
                     index: <span class="number">2</span>,
                     id: <span class="string">&quot;landcover&quot;</span>.to_string(),
-                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
                     maxzoom: <span class="prelude-val">None</span>,
                     minzoom: <span class="prelude-val">None</span>,
                     metadata: <span class="prelude-val">None</span>,
-                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
-                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#aedfa3&quot;</span>).unwrap()),
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Fill(FillPaint {
+                        fill_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#aedfa3&quot;</span>).unwrap()),
                     })),
                     source: <span class="prelude-val">None</span>,
                     source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;landcover&quot;</span>.to_string()),
@@ -281,7 +282,6 @@
                 StyleLayer {
                     index: <span class="number">3</span>,
                     id: <span class="string">&quot;transportation&quot;</span>.to_string(),
-                    typ: <span class="string">&quot;line&quot;</span>.to_string(),
                     maxzoom: <span class="prelude-val">None</span>,
                     minzoom: <span class="prelude-val">None</span>,
                     metadata: <span class="prelude-val">None</span>,
@@ -294,12 +294,11 @@
                 StyleLayer {
                     index: <span class="number">4</span>,
                     id: <span class="string">&quot;building&quot;</span>.to_string(),
-                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
                     maxzoom: <span class="prelude-val">None</span>,
                     minzoom: <span class="prelude-val">None</span>,
                     metadata: <span class="prelude-val">None</span>,
-                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
-                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#d9d0c9&quot;</span>).unwrap()),
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Fill(FillPaint {
+                        fill_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#d9d0c9&quot;</span>).unwrap()),
                     })),
                     source: <span class="prelude-val">None</span>,
                     source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;building&quot;</span>.to_string()),
@@ -307,12 +306,11 @@
                 StyleLayer {
                     index: <span class="number">4</span>,
                     id: <span class="string">&quot;water&quot;</span>.to_string(),
-                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
                     maxzoom: <span class="prelude-val">None</span>,
                     minzoom: <span class="prelude-val">None</span>,
                     metadata: <span class="prelude-val">None</span>,
-                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
-                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#aad3df&quot;</span>).unwrap()),
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Fill(FillPaint {
+                        fill_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#aad3df&quot;</span>).unwrap()),
                     })),
                     source: <span class="prelude-val">None</span>,
                     source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;water&quot;</span>.to_string()),
@@ -320,12 +318,11 @@
                 StyleLayer {
                     index: <span class="number">6</span>,
                     id: <span class="string">&quot;waterway&quot;</span>.to_string(),
-                    typ: <span class="string">&quot;fill&quot;</span>.to_string(),
                     maxzoom: <span class="prelude-val">None</span>,
                     minzoom: <span class="prelude-val">None</span>,
                     metadata: <span class="prelude-val">None</span>,
-                    paint: <span class="prelude-val">Some</span>(LayerPaint::Line(LinePaint {
-                        line_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#aad3df&quot;</span>).unwrap()),
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Fill(FillPaint {
+                        fill_color: <span class="prelude-val">Some</span>(Color::from_str(<span class="string">&quot;#aad3df&quot;</span>).unwrap()),
                     })),
                     source: <span class="prelude-val">None</span>,
                     source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;waterway&quot;</span>.to_string()),
@@ -333,7 +330,6 @@
                 StyleLayer {
                     index: <span class="number">7</span>,
                     id: <span class="string">&quot;boundary&quot;</span>.to_string(),
-                    typ: <span class="string">&quot;line&quot;</span>.to_string(),
                     maxzoom: <span class="prelude-val">None</span>,
                     minzoom: <span class="prelude-val">None</span>,
                     metadata: <span class="prelude-val">None</span>,
@@ -342,6 +338,16 @@
                     })),
                     source: <span class="prelude-val">None</span>,
                     source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;boundary&quot;</span>.to_string()),
+                },
+                StyleLayer {
+                    index: <span class="number">8</span>,
+                    id: <span class="string">&quot;raster&quot;</span>.to_string(),
+                    maxzoom: <span class="prelude-val">None</span>,
+                    minzoom: <span class="prelude-val">None</span>,
+                    metadata: <span class="prelude-val">None</span>,
+                    paint: <span class="prelude-val">Some</span>(LayerPaint::Raster(RasterLayer::default())),
+                    source: <span class="prelude-val">None</span>,
+                    source_layer: <span class="prelude-val">Some</span>(<span class="string">&quot;raster&quot;</span>.to_string()),
                 },
             ],
         }

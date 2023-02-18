@@ -95,6 +95,8 @@
 <span id="95">95</span>
 <span id="96">96</span>
 <span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Vector tile layer drawing utilities.
 
 </span><span class="kw">use </span>std::collections::HashMap;
@@ -102,6 +104,8 @@
 <span class="kw">use </span>cint::{Alpha, EncodedSrgb};
 <span class="kw">use </span>csscolorparser::Color;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
+
+<span class="kw">use </span><span class="kw">crate</span>::style::raster::RasterLayer;
 
 <span class="attribute">#[derive(Serialize, Deserialize, Debug, Clone)]
 </span><span class="kw">pub struct </span>BackgroundPaint {
@@ -137,6 +141,8 @@
     </span>Line(LinePaint),
     <span class="attribute">#[serde(rename = <span class="string">&quot;fill&quot;</span>)]
     </span>Fill(FillPaint),
+    <span class="attribute">#[serde(rename = <span class="string">&quot;raster&quot;</span>)]
+    </span>Raster(RasterLayer),
 }
 
 <span class="kw">impl </span>LayerPaint {
@@ -148,6 +154,7 @@
                 .map(|color| color.clone().into()),
             LayerPaint::Line(paint) =&gt; paint.line_color.as_ref().map(|color| color.clone().into()),
             LayerPaint::Fill(paint) =&gt; paint.fill_color.as_ref().map(|color| color.clone().into()),
+            LayerPaint::Raster(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
         }
     }
 }
@@ -158,8 +165,6 @@
     <span class="attribute">#[serde(skip)]
     </span><span class="kw">pub </span>index: u32, <span class="comment">// FIXME: How is this initialized?
     </span><span class="kw">pub </span>id: String,
-    <span class="attribute">#[serde(rename = <span class="string">&quot;type&quot;</span>)]
-    </span><span class="kw">pub </span>typ: String,
     <span class="comment">// TODO filter
     // TODO layout
     </span><span class="attribute">#[serde(skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>)]
@@ -182,7 +187,6 @@
         <span class="self">Self </span>{
             index: <span class="number">0</span>,
             id: <span class="string">&quot;id&quot;</span>.to_string(),
-            typ: <span class="string">&quot;fill&quot;</span>.to_string(),
             maxzoom: <span class="prelude-val">None</span>,
             minzoom: <span class="prelude-val">None</span>,
             metadata: <span class="prelude-val">None</span>,

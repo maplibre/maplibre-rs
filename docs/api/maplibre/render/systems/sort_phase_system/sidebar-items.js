@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["sort_phase_system","This system sorts all `RenderPhases` for the [`PhaseItem`] type."]]};

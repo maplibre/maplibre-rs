@@ -341,7 +341,7 @@
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
 };
-<span class="kw">use </span>log::warn;
+<span class="kw">use </span>log::debug;
 <span class="kw">use </span>rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
 <span class="kw">use crate</span>::{
@@ -644,19 +644,19 @@
                 IndexedGeometry::from_linestring(linestring, <span class="self">self</span>.properties.take().unwrap())
                     .unwrap(),
             ),
-            <span class="prelude-val">Some</span>(Geometry::Point(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported Point geometry in index&quot;</span>),
-            <span class="prelude-val">Some</span>(Geometry::Line(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported Line geometry in index&quot;</span>),
-            <span class="prelude-val">Some</span>(Geometry::MultiPoint(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported MultiPoint geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::Point(<span class="kw">_</span>)) =&gt; <span class="macro">debug!</span>(<span class="string">&quot;Unsupported Point geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::Line(<span class="kw">_</span>)) =&gt; <span class="macro">debug!</span>(<span class="string">&quot;Unsupported Line geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::MultiPoint(<span class="kw">_</span>)) =&gt; <span class="macro">debug!</span>(<span class="string">&quot;Unsupported MultiPoint geometry in index&quot;</span>),
             <span class="prelude-val">Some</span>(Geometry::MultiLineString(<span class="kw">_</span>)) =&gt; {
-                <span class="macro">warn!</span>(<span class="string">&quot;Unsupported MultiLineString geometry in index&quot;</span>)
+                <span class="macro">debug!</span>(<span class="string">&quot;Unsupported MultiLineString geometry in index&quot;</span>)
             }
-            <span class="prelude-val">Some</span>(Geometry::MultiPolygon(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported MultiPolygon geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::MultiPolygon(<span class="kw">_</span>)) =&gt; <span class="macro">debug!</span>(<span class="string">&quot;Unsupported MultiPolygon geometry in index&quot;</span>),
             <span class="prelude-val">Some</span>(Geometry::GeometryCollection(<span class="kw">_</span>)) =&gt; {
-                <span class="macro">warn!</span>(<span class="string">&quot;Unsupported GeometryCollection geometry in index&quot;</span>)
+                <span class="macro">debug!</span>(<span class="string">&quot;Unsupported GeometryCollection geometry in index&quot;</span>)
             }
-            <span class="prelude-val">Some</span>(Geometry::Rect(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported Rect geometry in index&quot;</span>),
-            <span class="prelude-val">Some</span>(Geometry::Triangle(<span class="kw">_</span>)) =&gt; <span class="macro">warn!</span>(<span class="string">&quot;Unsupported Triangle geometry in index&quot;</span>),
-            <span class="prelude-val">None </span>=&gt; <span class="macro">warn!</span>(<span class="string">&quot;No geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::Rect(<span class="kw">_</span>)) =&gt; <span class="macro">debug!</span>(<span class="string">&quot;Unsupported Rect geometry in index&quot;</span>),
+            <span class="prelude-val">Some</span>(Geometry::Triangle(<span class="kw">_</span>)) =&gt; <span class="macro">debug!</span>(<span class="string">&quot;Unsupported Triangle geometry in index&quot;</span>),
+            <span class="prelude-val">None </span>=&gt; <span class="macro">debug!</span>(<span class="string">&quot;No geometry in index&quot;</span>),
         };
 
         <span class="prelude-val">Ok</span>(())

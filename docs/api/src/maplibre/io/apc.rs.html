@@ -207,44 +207,154 @@
 <span id="207">207</span>
 <span id="208">208</span>
 <span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
+    any::Any,
+    cell::RefCell,
+    fmt::Debug,
     future::Future,
+    marker::PhantomData,
     pin::Pin,
     sync::{
         mpsc,
         mpsc::{Receiver, Sender},
     },
+    vec::IntoIter,
 };
 
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>thiserror::Error;
 
-<span class="kw">use </span><span class="kw">crate</span>::io::{
-    scheduler::Scheduler,
-    source_client::{HttpClient, HttpSourceClient, SourceClient},
-    transferables::{DefaultTransferables, Transferables},
-    TileRequest,
+<span class="kw">use crate</span>::{
+    coords::WorldTileCoords, define_label, environment::OffscreenKernelEnvironment,
+    io::scheduler::Scheduler, style::Style,
 };
+
+<span class="macro">define_label!</span>(MessageTag);
+
+<span class="kw">impl </span>MessageTag <span class="kw">for </span>u32 {
+    <span class="kw">fn </span>dyn_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>MessageTag&gt; {
+        Box::new(<span class="kw-2">*</span><span class="self">self</span>)
+    }
+}
+
+<span class="attribute">#[derive(Error, Debug)]
+</span><span class="kw">pub enum </span>MessageError {
+    <span class="attribute">#[error(<span class="string">&quot;the message did not contain the expected data&quot;</span>)]
+    </span>CastError(Box&lt;<span class="kw">dyn </span>Any&gt;),
+}
 
 <span class="doccomment">/// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
 /// of an [`AsyncProcedure`].
-///
-/// * `TessellatedLayer` contains the result of the tessellation for a specific layer.
-/// * `UnavailableLayer` is sent if a requested layer is not found.
-/// * `TileTessellated` is sent if processing of a tile finished.
-</span><span class="attribute">#[derive(Clone)]
-</span><span class="kw">pub enum </span>Message&lt;T: Transferables&gt; {
-    TileTessellated(T::TileTessellated),
-    LayerUnavailable(T::LayerUnavailable),
-    LayerTessellated(T::LayerTessellated),
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Message {
+    tag: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>MessageTag,
+    transferable: Box&lt;<span class="kw">dyn </span>Any + Send&gt;,
+}
 
-    LayerIndexed(T::LayerIndexed),
+<span class="kw">impl </span>Message {
+    <span class="kw">pub fn </span>new(tag: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>MessageTag, transferable: Box&lt;<span class="kw">dyn </span>Any + Send&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ tag, transferable }
+    }
+
+    <span class="kw">pub fn </span>into_transferable&lt;T: <span class="lifetime">&#39;static</span>&gt;(<span class="self">self</span>) -&gt; Box&lt;T&gt; {
+        <span class="self">self</span>.transferable
+            .downcast::&lt;T&gt;()
+            .expect(<span class="string">&quot;message has wrong tag&quot;</span>)
+    }
+
+    <span class="kw">pub fn </span>has_tag(<span class="kw-2">&amp;</span><span class="self">self</span>, tag: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>MessageTag) -&gt; bool {
+        <span class="self">self</span>.tag == tag
+    }
+
+    <span class="kw">pub fn </span>tag(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>MessageTag {
+        <span class="self">self</span>.tag
+    }
+}
+
+<span class="kw">pub trait </span>IntoMessage {
+    <span class="kw">fn </span>into(<span class="self">self</span>) -&gt; Message;
 }
 
 <span class="doccomment">/// Inputs for an [`AsyncProcedure`]
 </span><span class="attribute">#[derive(Clone, Serialize, Deserialize)]
 </span><span class="kw">pub enum </span>Input {
-    TileRequest(TileRequest),
+    TileRequest {
+        coords: WorldTileCoords,
+        style: Style, <span class="comment">// TODO
+    </span>},
     NotYetImplemented, <span class="comment">// TODO: Placeholder, should be removed when second input is added
 </span>}
 
@@ -255,11 +365,9 @@
 }
 
 <span class="doccomment">/// Allows sending messages from workers to back to the caller.
-</span><span class="kw">pub trait </span>Context&lt;T: Transferables, HC: HttpClient&gt;: Send + <span class="lifetime">&#39;static </span>{
+</span><span class="kw">pub trait </span>Context: <span class="lifetime">&#39;static </span>{
     <span class="doccomment">/// Send a message back to the caller.
-    </span><span class="kw">fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, data: Message&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt;;
-
-    <span class="kw">fn </span>source_client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>SourceClient&lt;HC&gt;;
+    </span><span class="kw">fn </span>send&lt;T: IntoMessage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, message: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt;;
 }
 
 <span class="attribute">#[derive(Error, Debug)]
@@ -288,13 +396,15 @@
     </span>Serialize(Box&lt;<span class="kw">dyn </span>std::error::Error&gt;),
     <span class="attribute">#[error(<span class="string">&quot;deserializing failed&quot;</span>)]
     </span>Deserialize(Box&lt;<span class="kw">dyn </span>std::error::Error&gt;),
+    <span class="attribute">#[error(<span class="string">&quot;deserializing input failed&quot;</span>)]
+    </span>DeserializeInput(Box&lt;<span class="kw">dyn </span>std::error::Error&gt;),
 }
 
 <span class="doccomment">/// Type definitions for asynchronous procedure calls. These functions can be called in an
 /// [`AsyncProcedureCall`]. Functions of this type are required to be statically available at
 /// compile time. It is explicitly not possible to use closures, as they would require special
 /// serialization which is currently not supported.
-</span><span class="kw">pub type </span>AsyncProcedure&lt;C&gt; = <span class="kw">fn</span>(input: Input, context: C) -&gt; AsyncProcedureFuture;
+</span><span class="kw">pub type </span>AsyncProcedure&lt;K, C&gt; = <span class="kw">fn</span>(input: Input, context: C, kernel: K) -&gt; AsyncProcedureFuture;
 
 <span class="doccomment">/// APCs define an interface for performing work asynchronously.
 /// This work can be implemented through procedures which can be called asynchronously, hence the
@@ -332,88 +442,124 @@
 /// [`PassingAsyncProcedureCall`]. This implementation does not depend on shared-memory compared to
 /// [`SchedulerAsyncProcedureCall`]. In fact, on the web we are currently not depending on
 /// shared-memory because that feature is hidden behind feature flags in browsers
-/// (see [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer).
+/// (see [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer)).
 ///
 ///
 </span><span class="comment">// TODO: Rename to AsyncProcedureCaller?
-</span><span class="kw">pub trait </span>AsyncProcedureCall&lt;HC: HttpClient&gt;: <span class="lifetime">&#39;static </span>{
-    <span class="kw">type </span>Context: Context&lt;<span class="self">Self</span>::Transferables, HC&gt; + Send;
-    <span class="kw">type </span>Transferables: Transferables;
+</span><span class="kw">pub trait </span>AsyncProcedureCall&lt;K: OffscreenKernelEnvironment&gt;: <span class="lifetime">&#39;static </span>{
+    <span class="kw">type </span>Context: Context + Send + Clone;
+
+    <span class="kw">type </span>ReceiveIterator&lt;F: FnMut(<span class="kw-2">&amp;</span>Message) -&gt; bool&gt;: Iterator&lt;Item = Message&gt;;
 
     <span class="doccomment">/// Try to receive a message non-blocking.
-    </span><span class="kw">fn </span>receive(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Message&lt;<span class="self">Self</span>::Transferables&gt;&gt;;
+    </span><span class="kw">fn </span>receive&lt;F: FnMut(<span class="kw-2">&amp;</span>Message) -&gt; bool&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, filter: F) -&gt; <span class="self">Self</span>::ReceiveIterator&lt;F&gt;;
 
     <span class="doccomment">/// Call an [`AsyncProcedure`] using some [`Input`]. This function is non-blocking and
     /// returns immediately.
-    </span><span class="kw">fn </span>call(<span class="kw-2">&amp;</span><span class="self">self</span>, input: Input, procedure: AsyncProcedure&lt;<span class="self">Self</span>::Context&gt;)
-        -&gt; <span class="prelude-ty">Result</span>&lt;(), CallError&gt;;
+    </span><span class="kw">fn </span>call(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        input: Input,
+        procedure: AsyncProcedure&lt;K, <span class="self">Self</span>::Context&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CallError&gt;;
 }
 
 <span class="attribute">#[derive(Clone)]
-</span><span class="kw">pub struct </span>SchedulerContext&lt;T: Transferables, HC: HttpClient&gt; {
-    sender: Sender&lt;Message&lt;T&gt;&gt;,
-    source_client: SourceClient&lt;HC&gt;,
+</span><span class="kw">pub struct </span>SchedulerContext {
+    sender: Sender&lt;Message&gt;,
 }
 
-<span class="kw">impl</span>&lt;T: Transferables, HC: HttpClient&gt; Context&lt;T, HC&gt; <span class="kw">for </span>SchedulerContext&lt;T, HC&gt; {
-    <span class="kw">fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, data: Message&lt;T&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt; {
-        <span class="self">self</span>.sender.send(data).map_err(|_e| SendError::Transmission)
-    }
-
-    <span class="kw">fn </span>source_client(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>SourceClient&lt;HC&gt; {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.source_client
+<span class="kw">impl </span>Context <span class="kw">for </span>SchedulerContext {
+    <span class="kw">fn </span>send&lt;T: IntoMessage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, message: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt; {
+        <span class="self">self</span>.sender
+            .send(message.into())
+            .map_err(|_e| SendError::Transmission)
     }
 }
 
-<span class="kw">pub struct </span>SchedulerAsyncProcedureCall&lt;HC: HttpClient, S: Scheduler&gt; {
-    channel: (
-        Sender&lt;Message&lt;DefaultTransferables&gt;&gt;,
-        Receiver&lt;Message&lt;DefaultTransferables&gt;&gt;,
-    ),
-    http_client: HC,
+<span class="kw">pub struct </span>SchedulerAsyncProcedureCall&lt;K: OffscreenKernelEnvironment, S: Scheduler&gt; {
+    channel: (Sender&lt;Message&gt;, Receiver&lt;Message&gt;),
+    buffer: RefCell&lt;Vec&lt;Message&gt;&gt;,
     scheduler: S,
+    phantom_k: PhantomData&lt;K&gt;,
 }
 
-<span class="kw">impl</span>&lt;HC: HttpClient, S: Scheduler&gt; SchedulerAsyncProcedureCall&lt;HC, S&gt; {
-    <span class="kw">pub fn </span>new(http_client: HC, scheduler: S) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;K: OffscreenKernelEnvironment, S: Scheduler&gt; SchedulerAsyncProcedureCall&lt;K, S&gt; {
+    <span class="kw">pub fn </span>new(scheduler: S) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             channel: mpsc::channel(),
-            http_client,
+            buffer: RefCell::new(Vec::new()),
+            phantom_k: PhantomData::default(),
             scheduler,
         }
     }
 }
 
-<span class="kw">impl</span>&lt;HC: HttpClient, S: Scheduler&gt; AsyncProcedureCall&lt;HC&gt; <span class="kw">for </span>SchedulerAsyncProcedureCall&lt;HC, S&gt; {
-    <span class="kw">type </span>Context = SchedulerContext&lt;<span class="self">Self</span>::Transferables, HC&gt;;
-    <span class="kw">type </span>Transferables = DefaultTransferables;
+<span class="kw">impl</span>&lt;K: OffscreenKernelEnvironment, S: Scheduler&gt; AsyncProcedureCall&lt;K&gt;
+    <span class="kw">for </span>SchedulerAsyncProcedureCall&lt;K, S&gt;
+{
+    <span class="kw">type </span>Context = SchedulerContext;
+    <span class="kw">type </span>ReceiveIterator&lt;F: FnMut(<span class="kw-2">&amp;</span>Message) -&gt; bool&gt; = IntoIter&lt;Message&gt;;
 
-    <span class="kw">fn </span>receive(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Message&lt;DefaultTransferables&gt;&gt; {
-        <span class="kw">let </span>transferred = <span class="self">self</span>.channel.<span class="number">1</span>.try_recv().ok()<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(transferred)
+    <span class="kw">fn </span>receive&lt;F: FnMut(<span class="kw-2">&amp;</span>Message) -&gt; bool&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>filter: F) -&gt; <span class="self">Self</span>::ReceiveIterator&lt;F&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = <span class="self">self</span>.buffer.borrow_mut();
+        <span class="kw">let </span><span class="kw-2">mut </span>ret = Vec::new();
+
+        <span class="comment">// FIXME tcs: Verify this!
+        </span><span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0usize</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>max_len = buffer.len();
+        <span class="kw">while </span>index &lt; max_len {
+            <span class="kw">if </span>filter(<span class="kw-2">&amp;</span>buffer[index]) {
+                ret.push(buffer.swap_remove(index));
+                max_len -= <span class="number">1</span>;
+            }
+            index += <span class="number">1</span>;
+        }
+
+        <span class="comment">// TODO: (optimize) Using while instead of if means that we are processing all that is
+        // TODO: available this might cause frame drops.
+        </span><span class="kw">while let </span><span class="prelude-val">Ok</span>(message) = <span class="self">self</span>.channel.<span class="number">1</span>.try_recv() {
+            <span class="macro">tracing::debug!</span>(<span class="string">&quot;Data reached main thread: {:?}&quot;</span>, <span class="kw-2">&amp;</span>message);
+            <span class="macro">log::debug!</span>(<span class="string">&quot;Data reached main thread: {:?}&quot;</span>, <span class="kw-2">&amp;</span>message);
+
+            <span class="kw">if </span>filter(<span class="kw-2">&amp;</span>message) {
+                ret.push(message);
+            } <span class="kw">else </span>{
+                buffer.push(message)
+            }
+        }
+
+        ret.into_iter()
     }
 
     <span class="kw">fn </span>call(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input: Input,
-        procedure: AsyncProcedure&lt;<span class="self">Self</span>::Context&gt;,
+        procedure: AsyncProcedure&lt;K, <span class="self">Self</span>::Context&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CallError&gt; {
         <span class="kw">let </span>sender = <span class="self">self</span>.channel.<span class="number">0</span>.clone();
-        <span class="kw">let </span>client = <span class="self">self</span>.http_client.clone(); <span class="comment">// TODO (perf): do not clone each time
 
-        </span><span class="self">self</span>.scheduler
+        <span class="self">self</span>.scheduler
             .schedule(<span class="kw">move </span>|| <span class="kw">async move </span>{
-                procedure(
-                    input,
-                    SchedulerContext {
-                        sender,
-                        source_client: SourceClient::new(HttpSourceClient::new(client)),
-                    },
-                )
-                .<span class="kw">await
-                </span>.unwrap();
+                <span class="macro">log::info!</span>(<span class="string">&quot;Processing on thread: {:?}&quot;</span>, std::thread::current().name());
+
+                procedure(input, SchedulerContext { sender }, K::create())
+                    .<span class="kw">await
+                    </span>.unwrap();
             })
             .map_err(|_e| CallError::Schedule)
+    }
+}
+
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">pub mod </span>tests {
+    <span class="kw">use </span><span class="kw">crate</span>::io::apc::{Context, IntoMessage, SendError};
+
+    <span class="kw">pub struct </span>DummyContext;
+
+    <span class="kw">impl </span>Context <span class="kw">for </span>DummyContext {
+        <span class="kw">fn </span>send&lt;T: IntoMessage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, _message: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt; {
+            <span class="prelude-val">Ok</span>(())
+        }
     }
 }
 </code></pre></div>

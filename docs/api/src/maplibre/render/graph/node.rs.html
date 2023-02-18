@@ -334,6 +334,8 @@
 <span id="334">334</span>
 <span id="335">335</span>
 <span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, fmt::Debug};
 
 <span class="kw">use </span>downcast_rs::{impl_downcast, Downcast};
@@ -343,7 +345,7 @@
     Edge, InputSlotError, OutputSlotError, RenderGraphContext, RenderGraphError, RunSubGraphError,
     SlotInfo, SlotInfos,
 };
-<span class="kw">use </span><span class="kw">crate</span>::render::RenderState;
+<span class="kw">use crate</span>::{render::RenderResources, tcs::world::World};
 
 <span class="doccomment">/// The context with all information required to interact with the GPU.
 ///
@@ -393,8 +395,8 @@
         Vec::new()
     }
 
-    <span class="doccomment">/// Updates internal node state using the current [`RenderState`] prior to the run method.
-    </span><span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>RenderState) {}
+    <span class="doccomment">/// Updates internal node state using the current [`RenderResources`] prior to the run method.
+    </span><span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>RenderResources) {}
 
     <span class="doccomment">/// Runs the graph node logic, issues draw calls, updates the output slots and
     /// optionally queues up subgraphs for execution. The graph data, input and output values are
@@ -403,7 +405,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
         render_context: <span class="kw-2">&amp;mut </span>RenderContext,
-        state: <span class="kw-2">&amp;</span>RenderState,
+        resources: <span class="kw-2">&amp;</span>RenderResources,
+        world: <span class="kw-2">&amp;</span>World,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt;;
 }
 
@@ -665,7 +668,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         _graph: <span class="kw-2">&amp;mut </span>RenderGraphContext,
         _render_context: <span class="kw-2">&amp;mut </span>RenderContext,
-        _state: <span class="kw-2">&amp;</span>RenderState,
+        _state: <span class="kw-2">&amp;</span>RenderResources,
+        _world: <span class="kw-2">&amp;</span>World,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), NodeRunError&gt; {
         <span class="prelude-val">Ok</span>(())
     }

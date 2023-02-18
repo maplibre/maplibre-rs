@@ -1246,7 +1246,7 @@
         <span class="kw">const </span>CASES: u8 = <span class="number">4</span>;
         <span class="kw">let </span>z = u8::from(<span class="self">self</span>.z);
         <span class="kw">match </span>(<span class="self">self</span>.x % <span class="number">2 </span>== <span class="number">0</span>, <span class="self">self</span>.y % <span class="number">2 </span>== <span class="number">0</span>) {
-            (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; <span class="number">0 </span>+ z * CASES,
+            (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; z * CASES,
             (<span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; <span class="number">1 </span>+ z * CASES,
             (<span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; <span class="number">2 </span>+ z * CASES,
             (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="number">3 </span>+ z * CASES,

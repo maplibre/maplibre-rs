@@ -88,7 +88,28 @@
 <span id="88">88</span>
 <span id="89">89</span>
 <span id="90">90</span>
-</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::render::{resource::TrackedRenderPass, RenderState};
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+</pre><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
+
+<span class="kw">use crate</span>::{render::resource::TrackedRenderPass, tcs::world::World};
 
 <span class="doccomment">/// A draw function which is used to draw a specific [`PhaseItem`].
 ///
@@ -96,7 +117,7 @@
 /// are more modular.
 </span><span class="kw">pub trait </span>Draw&lt;P: PhaseItem&gt;: <span class="lifetime">&#39;static </span>{
     <span class="doccomment">/// Draws the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
-    </span><span class="kw">fn </span>draw&lt;<span class="lifetime">&#39;w</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;, state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span>RenderState, item: <span class="kw-2">&amp;</span>P);
+    </span><span class="kw">fn </span>draw&lt;<span class="lifetime">&#39;w</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;, wold: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span>World, item: <span class="kw-2">&amp;</span>P);
 }
 
 <span class="doccomment">/// An item which will be drawn to the screen. A phase item should be queued up for rendering
@@ -109,6 +130,8 @@
     </span><span class="kw">type </span>SortKey: Ord;
     <span class="doccomment">/// Determines the order in which the items are drawn during the corresponding [`RenderPhase`](super::RenderPhase).
     </span><span class="kw">fn </span>sort_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span>::SortKey;
+
+    <span class="kw">fn </span>draw_function(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Draw&lt;<span class="self">Self</span>&gt;;
 }
 
 <span class="doccomment">/// [`RenderCommand`] is a trait that runs an ECS query and produces one or more
@@ -132,8 +155,9 @@
 /// ```
 </span><span class="kw">pub trait </span>RenderCommand&lt;P: PhaseItem&gt; {
     <span class="doccomment">/// Renders the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
+    </span><span class="comment">// TODO: reorder the arguments to match Node and Draw
     </span><span class="kw">fn </span>render&lt;<span class="lifetime">&#39;w</span>&gt;(
-        state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span>RenderState,
+        world: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span>World,
         item: <span class="kw-2">&amp;</span>P,
         pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;,
     ) -&gt; RenderCommandResult;
@@ -149,11 +173,11 @@
         <span class="kw">impl</span>&lt;P: PhaseItem, $(<span class="macro-nonterminal">$name</span>: RenderCommand&lt;P&gt;),<span class="kw-2">*</span>&gt; RenderCommand&lt;P&gt; <span class="kw">for </span>($(<span class="macro-nonterminal">$name</span>,)<span class="kw-2">*</span>) {
             <span class="attribute">#[allow(non_snake_case)]
             </span><span class="kw">fn </span>render&lt;<span class="lifetime">&#39;w</span>&gt;(
-                _state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span>RenderState,
-                _item: <span class="kw-2">&amp;</span>P,
-                _pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;,
+                world: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span>World,
+                item: <span class="kw-2">&amp;</span>P,
+                pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;,
             ) -&gt; RenderCommandResult{
-                $(<span class="kw">if let </span>RenderCommandResult::Failure = <span class="macro-nonterminal">$name::render</span>(_state, _item, _pass) {
+                $(<span class="kw">if let </span>RenderCommandResult::Failure = <span class="macro-nonterminal">$name::render</span>(world, item, pass) {
                     <span class="kw">return </span>RenderCommandResult::Failure;
                 })*
                 RenderCommandResult::Success
@@ -168,14 +192,28 @@
 <span class="macro">render_command_tuple_impl!</span>(C0, C1, C2, C3);
 <span class="macro">render_command_tuple_impl!</span>(C0, C1, C2, C3, C4);
 
-<span class="kw">impl</span>&lt;P, C: <span class="lifetime">&#39;static</span>&gt; Draw&lt;P&gt; <span class="kw">for </span>C
+<span class="kw">pub struct </span>DrawState&lt;C, P&gt; {
+    phantom_p: PhantomData&lt;P&gt;,
+    phantom_c: PhantomData&lt;C&gt;,
+}
+
+<span class="kw">impl</span>&lt;C, P&gt; DrawState&lt;C, P&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        DrawState {
+            phantom_p: Default::default(),
+            phantom_c: Default::default(),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;P: <span class="lifetime">&#39;static</span>, C: <span class="lifetime">&#39;static</span>&gt; Draw&lt;P&gt; <span class="kw">for </span>DrawState&lt;P, C&gt;
 <span class="kw">where
     </span>P: PhaseItem,
     C: RenderCommand&lt;P&gt;,
 {
     <span class="doccomment">/// Prepares data for the wrapped [`RenderCommand`] and then renders it.
-    </span><span class="kw">fn </span>draw&lt;<span class="lifetime">&#39;w</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;, state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span>RenderState, item: <span class="kw-2">&amp;</span>P) {
-        C::render(state, item, pass);
+    </span><span class="kw">fn </span>draw&lt;<span class="lifetime">&#39;w</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>TrackedRenderPass&lt;<span class="lifetime">&#39;w</span>&gt;, world: <span class="kw-2">&amp;</span><span class="lifetime">&#39;w </span>World, item: <span class="kw-2">&amp;</span>P) {
+        C::render(world, item, pass);
     }
 }
 </code></pre></div>

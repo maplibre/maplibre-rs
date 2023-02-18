@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["RasterMessageTag",""]],"struct":[["DefaultLayerRaster",""],["DefaultLayerRasterMissing",""],["DefaultRasterTransferables",""]],"trait":[["LayerRaster",""],["LayerRasterMissing",""],["RasterTransferables",""]]};

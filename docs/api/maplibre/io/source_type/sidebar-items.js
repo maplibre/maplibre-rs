@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["SourceType","Represents the tiles’ different types of source."]],"struct":[["RasterSource","Represents a source from which the raster tile are fetched."],["TessellateSource","Represents a source from which the vector tile are fetched."]]};

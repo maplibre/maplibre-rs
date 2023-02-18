@@ -1,0 +1,1450 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/vector/resource/buffer_pool.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>buffer_pool.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../maplibre/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+</pre><pre class="rust"><code><span class="doccomment">//! A ring-buffer like pool of [buffers](wgpu::Buffer).
+
+</span><span class="kw">use </span>std::{
+    collections::{btree_map, BTreeMap, HashSet, VecDeque},
+    fmt::Debug,
+    marker::PhantomData,
+    mem::size_of,
+    ops::Range,
+};
+
+<span class="kw">use </span>bytemuck::Pod;
+
+<span class="kw">use crate</span>::{
+    coords::{Quadkey, WorldTileCoords},
+    render::{
+        resource::{BackingBufferDescriptor, Queue},
+        tile_view_pattern::HasTile,
+    },
+    style::layer::StyleLayer,
+    tcs::world::World,
+    tessellation::OverAlignedVertexBuffer,
+};
+
+<span class="comment">// TODO: Too low values can cause a back-and-forth between unloading and loading layers
+</span><span class="kw">pub const </span>VERTEX_SIZE: wgpu::BufferAddress = <span class="number">10 </span>* <span class="number">1_000_000</span>;
+<span class="kw">pub const </span>INDICES_SIZE: wgpu::BufferAddress = <span class="number">10 </span>* <span class="number">1_000_000</span>;
+
+<span class="kw">pub const </span>FEATURE_METADATA_SIZE: wgpu::BufferAddress = <span class="number">10 </span>* <span class="number">1024 </span>* <span class="number">1000</span>;
+<span class="kw">pub const </span>LAYER_METADATA_SIZE: wgpu::BufferAddress = <span class="number">10 </span>* <span class="number">1024</span>;
+
+<span class="doccomment">/// This is inspired by the memory pool in Vulkan documented
+/// [here](https://gpuopen-librariesandsdks.github.io/VulkanMemoryAllocator/html/custom_memory_pools.html).
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>BufferPool&lt;Q, B, V, I, TM, FM&gt; {
+    vertices: BackingBuffer&lt;B&gt;,
+    indices: BackingBuffer&lt;B&gt;,
+    layer_metadata: BackingBuffer&lt;B&gt;,
+    feature_metadata: BackingBuffer&lt;B&gt;,
+
+    index: RingIndex,
+    phantom_v: PhantomData&lt;V&gt;,
+    phantom_i: PhantomData&lt;I&gt;,
+    phantom_q: PhantomData&lt;Q&gt;,
+    phantom_m: PhantomData&lt;TM&gt;,
+    phantom_fm: PhantomData&lt;FM&gt;,
+}
+
+<span class="attribute">#[derive(Clone, Copy, Debug)]
+</span><span class="kw">pub enum </span>BackingBufferType {
+    Vertices,
+    Indices,
+    Metadata,
+    FeatureMetadata,
+}
+
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">struct </span>BackingBuffer&lt;B&gt; {
+    <span class="doccomment">/// The internal structure which is used for storage
+    </span>inner: B,
+    <span class="doccomment">/// The size of the `inner` buffer
+    </span>inner_size: wgpu::BufferAddress,
+    typ: BackingBufferType,
+}
+
+<span class="kw">impl</span>&lt;B&gt; BackingBuffer&lt;B&gt; {
+    <span class="kw">fn </span>new(inner: B, inner_size: wgpu::BufferAddress, typ: BackingBufferType) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner,
+            inner_size,
+            typ,
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;V: Pod, I: Pod, TM: Pod, FM: Pod&gt; BufferPool&lt;wgpu::Queue, wgpu::Buffer, V, I, TM, FM&gt; {
+    <span class="kw">pub fn </span>from_device(device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>vertex_buffer_desc = wgpu::BufferDescriptor {
+            label: <span class="prelude-val">Some</span>(<span class="string">&quot;vertex buffer&quot;</span>),
+            size: size_of::&lt;V&gt;() <span class="kw">as </span>wgpu::BufferAddress * VERTEX_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: <span class="bool-val">false</span>,
+        };
+
+        <span class="kw">let </span>indices_buffer_desc = wgpu::BufferDescriptor {
+            label: <span class="prelude-val">Some</span>(<span class="string">&quot;indices buffer&quot;</span>),
+            size: size_of::&lt;I&gt;() <span class="kw">as </span>wgpu::BufferAddress * INDICES_SIZE,
+            usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: <span class="bool-val">false</span>,
+        };
+
+        <span class="kw">let </span>feature_metadata_desc = wgpu::BufferDescriptor {
+            label: <span class="prelude-val">Some</span>(<span class="string">&quot;feature metadata buffer&quot;</span>),
+            size: size_of::&lt;FM&gt;() <span class="kw">as </span>wgpu::BufferAddress * FEATURE_METADATA_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: <span class="bool-val">false</span>,
+        };
+
+        <span class="kw">let </span>layer_metadata_desc = wgpu::BufferDescriptor {
+            label: <span class="prelude-val">Some</span>(<span class="string">&quot;layer metadata buffer&quot;</span>),
+            size: size_of::&lt;TM&gt;() <span class="kw">as </span>wgpu::BufferAddress * LAYER_METADATA_SIZE,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: <span class="bool-val">false</span>,
+        };
+
+        BufferPool::new(
+            BackingBufferDescriptor::new(
+                device.create_buffer(<span class="kw-2">&amp;</span>vertex_buffer_desc),
+                vertex_buffer_desc.size,
+            ),
+            BackingBufferDescriptor::new(
+                device.create_buffer(<span class="kw-2">&amp;</span>indices_buffer_desc),
+                indices_buffer_desc.size,
+            ),
+            BackingBufferDescriptor::new(
+                device.create_buffer(<span class="kw-2">&amp;</span>layer_metadata_desc),
+                layer_metadata_desc.size,
+            ),
+            BackingBufferDescriptor::new(
+                device.create_buffer(<span class="kw-2">&amp;</span>feature_metadata_desc),
+                feature_metadata_desc.size,
+            ),
+        )
+    }
+}
+<span class="kw">impl</span>&lt;Q: Queue&lt;B&gt;, B, V: Pod, I: Pod, TM: Pod, FM: Pod&gt; BufferPool&lt;Q, B, V, I, TM, FM&gt; {
+    <span class="kw">pub fn </span>new(
+        vertices: BackingBufferDescriptor&lt;B&gt;,
+        indices: BackingBufferDescriptor&lt;B&gt;,
+        layer_metadata: BackingBufferDescriptor&lt;B&gt;,
+        feature_metadata: BackingBufferDescriptor&lt;B&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            vertices: BackingBuffer::new(
+                vertices.buffer,
+                vertices.inner_size,
+                BackingBufferType::Vertices,
+            ),
+            indices: BackingBuffer::new(
+                indices.buffer,
+                indices.inner_size,
+                BackingBufferType::Indices,
+            ),
+            layer_metadata: BackingBuffer::new(
+                layer_metadata.buffer,
+                layer_metadata.inner_size,
+                BackingBufferType::Metadata,
+            ),
+            feature_metadata: BackingBuffer::new(
+                feature_metadata.buffer,
+                feature_metadata.inner_size,
+                BackingBufferType::FeatureMetadata,
+            ),
+            index: RingIndex::new(),
+            phantom_v: Default::default(),
+            phantom_i: Default::default(),
+            phantom_q: Default::default(),
+            phantom_m: Default::default(),
+            phantom_fm: Default::default(),
+        }
+    }
+
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.index.clear()
+    }
+
+    <span class="attribute">#[cfg(test)]
+    </span><span class="kw">fn </span>available_space(<span class="kw-2">&amp;</span><span class="self">self</span>, typ: BackingBufferType) -&gt; wgpu::BufferAddress {
+        <span class="kw">let </span>gap = <span class="self">self</span>.index.find_largest_gap(
+            typ,
+            <span class="kw">match </span>typ {
+                BackingBufferType::Vertices =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.vertices,
+                BackingBufferType::Indices =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.indices,
+                BackingBufferType::Metadata =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.layer_metadata,
+                BackingBufferType::FeatureMetadata =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.feature_metadata,
+            }
+            .inner_size,
+        );
+
+        gap.end - gap.start
+    }
+
+    <span class="kw">pub fn </span>vertices(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>B {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.vertices.inner
+    }
+
+    <span class="kw">pub fn </span>indices(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>B {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.indices.inner
+    }
+
+    <span class="kw">pub fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>B {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.layer_metadata.inner
+    }
+
+    <span class="kw">pub fn </span>feature_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>B {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.feature_metadata.inner
+    }
+
+    <span class="doccomment">/// The VertexBuffers can contain padding elements. Not everything from a VertexBuffers is useable.
+    /// The function returns the `bytes` and `aligned_bytes`. See [`OverAlignedVertexBuffer`].
+    </span><span class="kw">fn </span>align(
+        stride: wgpu::BufferAddress,
+        elements: wgpu::BufferAddress,
+        usable_elements: wgpu::BufferAddress,
+    ) -&gt; (wgpu::BufferAddress, wgpu::BufferAddress) {
+        <span class="kw">let </span>bytes = elements * stride;
+
+        <span class="kw">let </span>usable_bytes = (usable_elements * stride) <span class="kw">as </span>wgpu::BufferAddress;
+
+        <span class="kw">let </span>align = wgpu::COPY_BUFFER_ALIGNMENT;
+        <span class="kw">let </span>padding = (align - usable_bytes % align) % align;
+
+        <span class="kw">let </span>aligned_bytes = usable_bytes + padding;
+
+        (bytes, aligned_bytes)
+    }
+
+    <span class="kw">pub fn </span>get_loaded_source_layers_at(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;HashSet&lt;<span class="kw-2">&amp;</span>str&gt;&gt; {
+        <span class="self">self</span>.index.get_layers(coords).map(|layers| {
+            layers
+                .iter()
+                .map(|entry| entry.style_layer.source_layer.as_ref().unwrap().as_str()) <span class="comment">// TODO: Remove unwrap
+                </span>.collect()
+        })
+    }
+
+    <span class="doccomment">/// Allocates
+    /// * `geometry`
+    /// * `layer_metadata` and
+    /// * `feature_metadata` for a layer. This function is able to dynamically evict layers if there
+    /// is not enough space available.
+    </span><span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>allocate_layer_geometry(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        queue: <span class="kw-2">&amp;</span>Q,
+        coords: WorldTileCoords,
+        style_layer: StyleLayer,
+        geometry: <span class="kw-2">&amp;</span>OverAlignedVertexBuffer&lt;V, I&gt;,
+        layer_metadata: TM,
+        feature_metadata: <span class="kw-2">&amp;</span>[FM],
+    ) {
+        <span class="kw">let </span>vertices_stride = size_of::&lt;V&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+        <span class="kw">let </span>indices_stride = size_of::&lt;I&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+        <span class="kw">let </span>layer_metadata_stride = size_of::&lt;TM&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+        <span class="kw">let </span>feature_metadata_stride = size_of::&lt;FM&gt;() <span class="kw">as </span>wgpu::BufferAddress;
+
+        <span class="kw">let </span>(vertices_bytes, aligned_vertices_bytes) = <span class="self">Self</span>::align(
+            vertices_stride,
+            geometry.buffer.vertices.len() <span class="kw">as </span>wgpu::BufferAddress,
+            geometry.buffer.vertices.len() <span class="kw">as </span>wgpu::BufferAddress,
+        );
+        <span class="kw">let </span>(indices_bytes, aligned_indices_bytes) = <span class="self">Self</span>::align(
+            indices_stride,
+            geometry.buffer.indices.len() <span class="kw">as </span>wgpu::BufferAddress,
+            geometry.usable_indices <span class="kw">as </span>wgpu::BufferAddress,
+        );
+        <span class="kw">let </span>(layer_metadata_bytes, aligned_layer_metadata_bytes) =
+            <span class="self">Self</span>::align(layer_metadata_stride, <span class="number">1</span>, <span class="number">1</span>);
+
+        <span class="kw">let </span>(feature_metadata_bytes, aligned_feature_metadata_bytes) = <span class="self">Self</span>::align(
+            feature_metadata_stride,
+            feature_metadata.len() <span class="kw">as </span>wgpu::BufferAddress,
+            feature_metadata.len() <span class="kw">as </span>wgpu::BufferAddress,
+        );
+
+        <span class="kw">if </span>feature_metadata_bytes != aligned_feature_metadata_bytes {
+            <span class="comment">// TODO: align if not aligned?
+            </span><span class="macro">panic!</span>(
+                <span class="string">&quot;feature_metadata is not aligned. This should not happen as long as size_of::&lt;FM&gt;() is a multiple of the alignment.&quot;
+            </span>)
+        }
+
+        <span class="kw">let </span>maybe_entry = IndexEntry {
+            coords,
+            style_layer,
+            buffer_vertices: <span class="self">self</span>.index.make_room(
+                vertices_bytes,
+                <span class="self">self</span>.vertices.typ,
+                <span class="self">self</span>.vertices.inner_size,
+            ),
+            buffer_indices: <span class="self">self</span>.index.make_room(
+                indices_bytes,
+                <span class="self">self</span>.indices.typ,
+                <span class="self">self</span>.indices.inner_size,
+            ),
+            usable_indices: geometry.usable_indices,
+            buffer_layer_metadata: <span class="self">self</span>.index.make_room(
+                layer_metadata_bytes,
+                <span class="self">self</span>.layer_metadata.typ,
+                <span class="self">self</span>.layer_metadata.inner_size,
+            ),
+            buffer_feature_metadata: <span class="self">self</span>.index.make_room(
+                feature_metadata_bytes,
+                <span class="self">self</span>.feature_metadata.typ,
+                <span class="self">self</span>.feature_metadata.inner_size,
+            ),
+        };
+
+        <span class="comment">// write_buffer() is the preferred method for WASM: https://toji.github.io/webgpu-best-practices/buffer-uploads.html#when-in-doubt-writebuffer
+        </span>queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.vertices.inner,
+            maybe_entry.buffer_vertices.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(<span class="kw-2">&amp;</span>geometry.buffer.vertices)[<span class="number">0</span>..aligned_vertices_bytes <span class="kw">as </span>usize],
+        );
+
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.indices.inner,
+            maybe_entry.buffer_indices.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(<span class="kw-2">&amp;</span>geometry.buffer.indices)[<span class="number">0</span>..aligned_indices_bytes <span class="kw">as </span>usize],
+        );
+
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.layer_metadata.inner,
+            maybe_entry.buffer_layer_metadata.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(<span class="kw-2">&amp;</span>[layer_metadata])[<span class="number">0</span>..aligned_layer_metadata_bytes <span class="kw">as </span>usize],
+        );
+
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.feature_metadata.inner,
+            maybe_entry.buffer_feature_metadata.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(feature_metadata)[<span class="number">0</span>..aligned_feature_metadata_bytes <span class="kw">as </span>usize],
+        );
+
+        <span class="self">self</span>.index.push_back(maybe_entry);
+    }
+
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>update_layer_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>Q, entry: <span class="kw-2">&amp;</span>IndexEntry, layer_metadata: TM) {
+        <span class="kw">let </span>layer_metadata_stride = size_of::&lt;TM&gt;() <span class="kw">as </span>wgpu::BufferAddress; <span class="comment">// TODO: deduplicate
+        </span><span class="kw">let </span>(layer_metadata_bytes, aligned_layer_metadata_bytes) =
+            <span class="self">Self</span>::align(layer_metadata_stride, <span class="number">1</span>, <span class="number">1</span>);
+
+        <span class="kw">if </span>entry.buffer_layer_metadata.end - entry.buffer_layer_metadata.start
+            != layer_metadata_bytes
+        {
+            <span class="macro">panic!</span>(<span class="string">&quot;Updated layer metadata has wrong size!&quot;</span>);
+        }
+
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.layer_metadata.inner,
+            entry.buffer_layer_metadata.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(<span class="kw-2">&amp;</span>[layer_metadata])[<span class="number">0</span>..aligned_layer_metadata_bytes <span class="kw">as </span>usize],
+        );
+    }
+
+    <span class="attribute">#[tracing::instrument(skip_all)]
+    </span><span class="kw">pub fn </span>update_feature_metadata(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>Q, entry: <span class="kw-2">&amp;</span>IndexEntry, feature_metadata: <span class="kw-2">&amp;</span>[FM]) {
+        <span class="kw">let </span>feature_metadata_stride = size_of::&lt;FM&gt;() <span class="kw">as </span>wgpu::BufferAddress; <span class="comment">// TODO: deduplicate
+
+        </span><span class="kw">let </span>(feature_metadata_bytes, aligned_feature_metadata_bytes) = <span class="self">Self</span>::align(
+            feature_metadata_stride,
+            feature_metadata.len() <span class="kw">as </span>wgpu::BufferAddress,
+            feature_metadata.len() <span class="kw">as </span>wgpu::BufferAddress,
+        );
+
+        <span class="kw">if </span>entry.buffer_feature_metadata.end - entry.buffer_feature_metadata.start
+            != feature_metadata_bytes
+        {
+            <span class="macro">panic!</span>(<span class="string">&quot;Updated feature metadata has wrong size!&quot;</span>);
+        }
+
+        <span class="kw">if </span>feature_metadata_bytes != aligned_feature_metadata_bytes {
+            <span class="comment">// FIXME: align if not aligned?
+            </span><span class="macro">panic!</span>(
+                <span class="string">&quot;feature_metadata is not aligned. This should not happen as long as size_of::&lt;FM&gt;() is a multiple of the alignment.&quot;
+            </span>)
+        }
+
+        queue.write_buffer(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.feature_metadata.inner,
+            entry.buffer_feature_metadata.start,
+            <span class="kw-2">&amp;</span>bytemuck::cast_slice(feature_metadata)[<span class="number">0</span>..aligned_feature_metadata_bytes <span class="kw">as </span>usize],
+        );
+    }
+
+    <span class="kw">pub fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RingIndex {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.index
+    }
+}
+
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>IndexEntry {
+    <span class="kw">pub </span>coords: WorldTileCoords, <span class="comment">// TODO: replace with generic key
+    </span><span class="kw">pub </span>style_layer: StyleLayer, <span class="comment">// TODO: remove
+    // Range of bytes within the backing buffer for vertices
+    </span>buffer_vertices: Range&lt;wgpu::BufferAddress&gt;,
+    <span class="comment">// Range of bytes within the backing buffer for indices
+    </span>buffer_indices: Range&lt;wgpu::BufferAddress&gt;,
+    <span class="comment">// Range of bytes within the backing buffer for metadata
+    </span>buffer_layer_metadata: Range&lt;wgpu::BufferAddress&gt;,
+    <span class="comment">// Range of bytes within the backing buffer for feature metadata
+    </span>buffer_feature_metadata: Range&lt;wgpu::BufferAddress&gt;,
+    <span class="comment">// Amount of actually usable indices. Each index has the size/format `IndexDataType`.
+    // Can be lower than size(buffer_indices) / indices_stride because of alignment.
+    </span>usable_indices: u32,
+}
+
+<span class="kw">impl </span>IndexEntry {
+    <span class="kw">pub fn </span>indices_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;u32&gt; {
+        <span class="number">0</span>..<span class="self">self</span>.usable_indices
+    }
+
+    <span class="kw">pub fn </span>indices_buffer_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="self">self</span>.buffer_indices.clone()
+    }
+
+    <span class="kw">pub fn </span>vertices_buffer_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="self">self</span>.buffer_vertices.clone()
+    }
+
+    <span class="kw">pub fn </span>layer_metadata_buffer_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="self">self</span>.buffer_layer_metadata.clone()
+    }
+
+    <span class="kw">pub fn </span>feature_metadata_buffer_range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="self">self</span>.buffer_feature_metadata.clone()
+    }
+}
+
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>RingIndexEntry {
+    layers: VecDeque&lt;IndexEntry&gt;,
+}
+
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>RingIndex {
+    tree_index: BTreeMap&lt;Quadkey, RingIndexEntry&gt;,
+    linear_index: VecDeque&lt;Quadkey&gt;,
+}
+
+<span class="kw">impl </span>RingIndex {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            tree_index: Default::default(),
+            linear_index: Default::default(),
+        }
+    }
+
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.linear_index.clear();
+        <span class="self">self</span>.tree_index.clear();
+    }
+
+    <span class="kw">pub fn </span>front(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>IndexEntry&gt; {
+        <span class="self">self</span>.linear_index.front().and_then(|key| {
+            <span class="self">self</span>.tree_index
+                .get(key)
+                .and_then(|entry| entry.layers.front())
+        })
+    }
+
+    <span class="kw">pub fn </span>back(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>IndexEntry&gt; {
+        <span class="self">self</span>.linear_index.back().and_then(|key| {
+            <span class="self">self</span>.tree_index
+                .get(key)
+                .and_then(|entry| entry.layers.back())
+        })
+    }
+
+    <span class="kw">pub fn </span>get_layers(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: WorldTileCoords) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>VecDeque&lt;IndexEntry&gt;&gt; {
+        coords
+            .build_quad_key()
+            .and_then(|key| <span class="self">self</span>.tree_index.get(<span class="kw-2">&amp;</span>key))
+            .map(|entry| <span class="kw-2">&amp;</span>entry.layers)
+    }
+
+    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>IndexEntry&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="self">self</span>.linear_index
+            .iter()
+            .flat_map(|key| <span class="self">self</span>.tree_index.get(key).map(|entry| entry.layers.iter()))
+    }
+
+    <span class="kw">fn </span>pop_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;IndexEntry&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = <span class="self">self
+            </span>.linear_index
+            .pop_front()
+            .and_then(|key| <span class="self">self</span>.tree_index.get_mut(<span class="kw-2">&amp;</span>key))
+        {
+            entry.layers.pop_front()
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
+    }
+
+    <span class="kw">fn </span>push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, entry: IndexEntry) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(key) = entry.coords.build_quad_key() {
+            <span class="kw">match </span><span class="self">self</span>.tree_index.entry(key) {
+                btree_map::Entry::Vacant(index_entry) =&gt; {
+                    index_entry.insert(RingIndexEntry {
+                        layers: VecDeque::from([entry]),
+                    });
+                }
+                btree_map::Entry::Occupied(<span class="kw-2">mut </span>index_entry) =&gt; {
+                    index_entry.get_mut().layers.push_back(entry);
+                }
+            }
+
+            <span class="self">self</span>.linear_index.push_back(key)
+        } <span class="kw">else </span>{
+            <span class="macro">unreachable!</span>() <span class="comment">// TODO handle
+        </span>}
+    }
+
+    <span class="kw">fn </span>make_room(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        new_data: wgpu::BufferAddress,
+        typ: BackingBufferType,
+        inner_size: wgpu::BufferAddress,
+    ) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="kw">if </span>new_data &gt; inner_size {
+            <span class="macro">panic!</span>(
+                <span class="string">&quot;can not allocate because backing buffer {:?} are too small&quot;</span>,
+                typ
+            )
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>available_gap = <span class="self">self</span>.find_largest_gap(typ, inner_size);
+
+        <span class="kw">while </span>new_data &gt; available_gap.end - available_gap.start {
+            <span class="comment">// no more space, we need to evict items
+            </span><span class="kw">if </span><span class="self">self</span>.pop_front().is_some() {
+                available_gap = <span class="self">self</span>.find_largest_gap(typ, inner_size);
+            } <span class="kw">else </span>{
+                <span class="macro">panic!</span>(<span class="string">&quot;evicted even though index is empty&quot;</span>)
+            }
+        }
+
+        available_gap.start..available_gap.start + new_data
+    }
+
+    <span class="kw">fn </span>find_largest_gap(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        typ: BackingBufferType,
+        inner_size: wgpu::BufferAddress,
+    ) -&gt; Range&lt;wgpu::BufferAddress&gt; {
+        <span class="kw">let </span>start = <span class="self">self</span>.front().map(|first| <span class="kw">match </span>typ {
+            BackingBufferType::Vertices =&gt; first.buffer_vertices.start,
+            BackingBufferType::Indices =&gt; first.buffer_indices.start,
+            BackingBufferType::Metadata =&gt; first.buffer_layer_metadata.start,
+            BackingBufferType::FeatureMetadata =&gt; first.buffer_feature_metadata.start,
+        });
+        <span class="kw">let </span>end = <span class="self">self</span>.back().map(|first| <span class="kw">match </span>typ {
+            BackingBufferType::Vertices =&gt; first.buffer_vertices.end,
+            BackingBufferType::Indices =&gt; first.buffer_indices.end,
+            BackingBufferType::Metadata =&gt; first.buffer_layer_metadata.end,
+            BackingBufferType::FeatureMetadata =&gt; first.buffer_feature_metadata.end,
+        });
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(start) = start {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(end) = end {
+                <span class="kw">if </span>end &gt; start {
+                    <span class="comment">// we haven&#39;t wrapped yet in the ring buffer
+
+                    </span><span class="kw">let </span>gap_from_start = <span class="number">0</span>..start; <span class="comment">// gap from beginning to first entry
+                    </span><span class="kw">let </span>gap_to_end = end..inner_size;
+
+                    <span class="kw">if </span>gap_to_end.end - gap_to_end.start &gt; gap_from_start.end - gap_from_start.start
+                    {
+                        gap_to_end
+                    } <span class="kw">else </span>{
+                        gap_from_start
+                    }
+                } <span class="kw">else </span>{
+                    <span class="comment">// we already wrapped in the ring buffer
+                    // we choose the gab between the two
+                    </span>end..start
+                }
+            } <span class="kw">else </span>{
+                <span class="macro">unreachable!</span>()
+            }
+        } <span class="kw">else </span>{
+            <span class="number">0</span>..inner_size
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;Q: Queue&lt;B&gt;, B, V: Pod, I: Pod, TM: Pod, FM: Pod&gt; HasTile <span class="kw">for </span>BufferPool&lt;Q, B, V, I, TM, FM&gt; {
+    <span class="kw">fn </span>has_tile(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: WorldTileCoords, _world: <span class="kw-2">&amp;</span>World) -&gt; bool {
+        <span class="self">self</span>.index().get_layers(coords).is_some()
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>RingIndex {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
+    }
+}
+
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>lyon::tessellation::VertexBuffers;
+
+    <span class="kw">use crate</span>::{
+        coords::ZoomLevel,
+        render::resource::{BackingBufferDescriptor, Queue},
+        style::layer::StyleLayer,
+        vector::resource::{BackingBufferType, BufferPool},
+    };
+
+    <span class="attribute">#[derive(Debug)]
+    </span><span class="kw">struct </span>TestBuffer {
+        size: wgpu::BufferAddress,
+    }
+    <span class="kw">struct </span>TestQueue;
+
+    <span class="kw">impl </span>Queue&lt;TestBuffer&gt; <span class="kw">for </span>TestQueue {
+        <span class="kw">fn </span>write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>TestBuffer, offset: wgpu::BufferAddress, data: <span class="kw-2">&amp;</span>[u8]) {
+            <span class="kw">if </span>offset + data.len() <span class="kw">as </span>wgpu::BufferAddress &gt; buffer.size {
+                <span class="macro">panic!</span>(<span class="string">&quot;write out of bounds&quot;</span>);
+            }
+        }
+    }
+
+    <span class="attribute">#[repr(C)]
+    #[derive(Default, Copy, Clone, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
+    </span><span class="kw">struct </span>TestVertex {
+        data: [u8; <span class="number">24</span>],
+    }
+
+    <span class="kw">fn </span>create_48byte() -&gt; Vec&lt;TestVertex&gt; {
+        <span class="macro">vec!</span>[TestVertex::default(), TestVertex::default()]
+    }
+
+    <span class="kw">fn </span>create_24byte() -&gt; Vec&lt;TestVertex&gt; {
+        <span class="macro">vec!</span>[TestVertex::default()]
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_allocate() {
+        <span class="kw">let </span><span class="kw-2">mut </span>pool: BufferPool&lt;TestQueue, TestBuffer, TestVertex, u32, u32, u32&gt; =
+            BufferPool::new(
+                BackingBufferDescriptor::new(TestBuffer { size: <span class="number">128 </span>}, <span class="number">128</span>),
+                BackingBufferDescriptor::new(TestBuffer { size: <span class="number">128 </span>}, <span class="number">128</span>),
+                BackingBufferDescriptor::new(TestBuffer { size: <span class="number">128 </span>}, <span class="number">128</span>),
+                BackingBufferDescriptor::new(TestBuffer { size: <span class="number">128 </span>}, <span class="number">128</span>),
+            );
+
+        <span class="kw">let </span>queue = TestQueue {};
+        <span class="kw">let </span>style_layer = StyleLayer::default();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>data48bytes = VertexBuffers::new();
+        data48bytes.vertices.append(<span class="kw-2">&amp;mut </span>create_48byte());
+        data48bytes.indices.append(<span class="kw-2">&amp;mut </span><span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
+        <span class="kw">let </span>data48bytes_aligned = data48bytes.into();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>data24bytes = VertexBuffers::new();
+        data24bytes.vertices.append(<span class="kw-2">&amp;mut </span>create_24byte());
+        data24bytes.indices.append(<span class="kw-2">&amp;mut </span><span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>]);
+        <span class="kw">let </span>data24bytes_aligned = data24bytes.into();
+
+        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">2 </span>{
+            pool.allocate_layer_geometry(
+                <span class="kw-2">&amp;</span>queue,
+                (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+                style_layer.clone(),
+                <span class="kw-2">&amp;</span>data48bytes_aligned,
+                <span class="number">2</span>,
+                <span class="kw-2">&amp;</span>[],
+            );
+        }
+        <span class="macro">assert_eq!</span>(
+            <span class="number">128 </span>- <span class="number">2 </span>* <span class="number">48</span>,
+            pool.available_space(BackingBufferType::Vertices)
+        );
+
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer.clone(),
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
+            <span class="number">2</span>,
+            <span class="kw-2">&amp;</span>[],
+        );
+        <span class="macro">assert_eq!</span>(
+            <span class="number">128 </span>- <span class="number">2 </span>* <span class="number">48 </span>- <span class="number">24</span>,
+            pool.available_space(BackingBufferType::Vertices)
+        );
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
+
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer.clone(),
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
+            <span class="number">2</span>,
+            <span class="kw-2">&amp;</span>[],
+        );
+        <span class="comment">// appended now at the beginning
+        </span><span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
+        <span class="macro">assert_eq!</span>(<span class="number">24</span>, pool.available_space(BackingBufferType::Vertices));
+
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer.clone(),
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
+            <span class="number">2</span>,
+            <span class="kw-2">&amp;</span>[],
+        );
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
+        <span class="macro">assert_eq!</span>(<span class="number">0</span>, pool.available_space(BackingBufferType::Vertices));
+
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer.clone(),
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
+            <span class="number">2</span>,
+            <span class="kw-2">&amp;</span>[],
+        );
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
+        <span class="macro">assert_eq!</span>(<span class="number">24</span>, pool.available_space(BackingBufferType::Vertices));
+
+        pool.allocate_layer_geometry(
+            <span class="kw-2">&amp;</span>queue,
+            (<span class="number">0</span>, <span class="number">0</span>, ZoomLevel::default()).into(),
+            style_layer,
+            <span class="kw-2">&amp;</span>data24bytes_aligned,
+            <span class="number">2</span>,
+            <span class="kw-2">&amp;</span>[],
+        );
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>pool.index);
+        <span class="macro">assert_eq!</span>(<span class="number">0</span>, pool.available_space(BackingBufferType::Vertices));
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

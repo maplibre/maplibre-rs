@@ -165,29 +165,41 @@
 <span id="165">165</span>
 <span id="166">166</span>
 <span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::rc::Rc;
 
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use crate</span>::{
     context::MapContext,
-    coords::{LatLon, Zoom},
+    coords::{LatLon, WorldCoords, Zoom},
     environment::Environment,
     kernel::Kernel,
+    plugin::Plugin,
     render::{
         builder::{
             InitializationResult, InitializedRenderer, RendererBuilder, UninitializedRenderer,
         },
-        create_default_render_graph,
         error::RenderError,
         graph::RenderGraphError,
-        register_default_render_stages,
     },
     schedule::{Schedule, Stage},
-    stages::register_stages,
     style::Style,
+    tcs::world::World,
+    view_state::ViewState,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
-    world::World,
 };
 
 <span class="attribute">#[derive(Error, Debug)]
@@ -201,7 +213,7 @@
     </span>DeviceInit(RenderError),
 }
 
-<span class="kw">pub enum </span>MapContextState {
+<span class="kw">pub enum </span>CurrentMapContext {
     Ready(MapContext),
     Pending {
         style: Style,
@@ -212,8 +224,10 @@
 <span class="kw">pub struct </span>Map&lt;E: Environment&gt; {
     kernel: Rc&lt;Kernel&lt;E&gt;&gt;,
     schedule: Schedule,
-    map_context: MapContextState,
+    map_context: CurrentMapContext,
     window: &lt;E::MapWindowConfig <span class="kw">as </span>MapWindowConfig&gt;::MapWindow,
+
+    plugins: Vec&lt;Box&lt;<span class="kw">dyn </span>Plugin&lt;E&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;E: Environment&gt; Map&lt;E&gt;
@@ -224,34 +238,31 @@
         style: Style,
         kernel: Kernel&lt;E&gt;,
         renderer_builder: RendererBuilder,
+        plugins: Vec&lt;Box&lt;<span class="kw">dyn </span>Plugin&lt;E&gt;&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, MapError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>schedule = Schedule::default();
-
-        <span class="kw">let </span>graph = create_default_render_graph().unwrap(); <span class="comment">// TODO: Remove unwrap
-        </span>register_default_render_stages(graph, <span class="kw-2">&amp;mut </span>schedule);
+        <span class="kw">let </span>schedule = Schedule::default();
 
         <span class="kw">let </span>kernel = Rc::new(kernel);
-
-        register_stages::&lt;E&gt;(<span class="kw-2">&amp;mut </span>schedule, kernel.clone());
 
         <span class="kw">let </span>window = kernel.map_window_config().create();
 
         <span class="kw">let </span>map = <span class="self">Self </span>{
             kernel,
-            map_context: MapContextState::Pending {
+            schedule,
+            map_context: CurrentMapContext::Pending {
                 style,
                 renderer_builder,
             },
-            schedule,
             window,
+            plugins,
         };
         <span class="prelude-val">Ok</span>(map)
     }
 
     <span class="kw">pub async fn </span>initialize_renderer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.map_context {
-            MapContextState::Ready(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
-            MapContextState::Pending {
+            CurrentMapContext::Ready(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending {
                 style,
                 renderer_builder,
             } =&gt; {
@@ -265,18 +276,33 @@
                 <span class="kw">let </span>window_size = <span class="self">self</span>.window.size();
 
                 <span class="kw">let </span>center = style.center.unwrap_or_default();
-
-                <span class="kw">let </span>world = World::new_at(
+                <span class="kw">let </span>initial_zoom = style.zoom.map(Zoom::new).unwrap_or_default();
+                <span class="kw">let </span>view_state = ViewState::new(
                     window_size,
-                    LatLon::new(center[<span class="number">0</span>], center[<span class="number">1</span>]),
-                    style.zoom.map(Zoom::new).unwrap_or_default(),
+                    WorldCoords::from_lat_lon(LatLon::new(center[<span class="number">0</span>], center[<span class="number">1</span>]), initial_zoom),
+                    initial_zoom,
                     cgmath::Deg::&lt;f64&gt;(style.pitch.unwrap_or_default()),
+                    cgmath::Deg(<span class="number">110.0</span>),
                 );
 
+                <span class="kw">let </span><span class="kw-2">mut </span>world = World::default();
+
                 <span class="kw">match </span>init_result {
-                    InitializationResult::Initialized(InitializedRenderer { renderer, .. }) =&gt; {
-                        <span class="self">self</span>.map_context = MapContextState::Ready(MapContext {
+                    InitializationResult::Initialized(InitializedRenderer {
+                        <span class="kw-2">mut </span>renderer, ..
+                    }) =&gt; {
+                        <span class="kw">for </span>plugin <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.plugins {
+                            plugin.build(
+                                <span class="kw-2">&amp;mut </span><span class="self">self</span>.schedule,
+                                <span class="self">self</span>.kernel.clone(),
+                                <span class="kw-2">&amp;mut </span>world,
+                                <span class="kw-2">&amp;mut </span>renderer.render_graph,
+                            );
+                        }
+
+                        <span class="self">self</span>.map_context = CurrentMapContext::Ready(MapContext {
                             world,
+                            view_state,
                             style: std::mem::take(style),
                             renderer,
                         });
@@ -298,33 +324,33 @@
 
     <span class="kw">pub fn </span>has_renderer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.map_context {
-            MapContextState::Ready(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
-            MapContextState::Pending { .. } =&gt; <span class="bool-val">false</span>,
+            CurrentMapContext::Ready(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+            CurrentMapContext::Pending { .. } =&gt; <span class="bool-val">false</span>,
         }
     }
 
     <span class="attribute">#[tracing::instrument(name = <span class="string">&quot;update_and_redraw&quot;</span>, skip_all)]
     </span><span class="kw">pub fn </span>run_schedule(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.map_context {
-            MapContextState::Ready(map_context) =&gt; {
+            CurrentMapContext::Ready(map_context) =&gt; {
                 <span class="self">self</span>.schedule.run(map_context);
                 <span class="prelude-val">Ok</span>(())
             }
-            MapContextState::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
         }
     }
 
     <span class="kw">pub fn </span>context(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>MapContext, MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.map_context {
-            MapContextState::Ready(map_context) =&gt; <span class="prelude-val">Ok</span>(map_context),
-            MapContextState::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
+            CurrentMapContext::Ready(map_context) =&gt; <span class="prelude-val">Ok</span>(map_context),
+            CurrentMapContext::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
         }
     }
 
     <span class="kw">pub fn </span>context_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>MapContext, MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.map_context {
-            MapContextState::Ready(map_context) =&gt; <span class="prelude-val">Ok</span>(map_context),
-            MapContextState::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
+            CurrentMapContext::Ready(map_context) =&gt; <span class="prelude-val">Ok</span>(map_context),
+            CurrentMapContext::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
         }
     }
 

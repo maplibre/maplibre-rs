@@ -531,6 +531,55 @@
 <span id="531">531</span>
 <span id="532">532</span>
 <span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -551,101 +600,109 @@
 //! We appreciate the design and implementation work which as gone into it.
 //!
 
-</span><span class="kw">use </span>std::sync::Arc;
+</span><span class="kw">use </span>std::{ops::Deref, rc::Rc, sync::Arc};
 
 <span class="kw">use crate</span>::{
+    environment::Environment,
+    kernel::Kernel,
+    plugin::Plugin,
     render::{
-        eventually::Eventually,
-        render_phase::RenderPhase,
-        resource::{BufferPool, Globals, Head, IndexEntry, Surface, Texture, TextureView},
-        settings::{RendererSettings, WgpuSettings},
-        shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        tile_view_pattern::{TileShape, TileViewPattern},
-    },
-    tessellation::IndexDataType,
-};
-
-<span class="kw">pub mod </span>graph;
-<span class="kw">pub mod </span>resource;
-<span class="kw">pub mod </span>stages;
-
-<span class="comment">// Rendering internals
-</span><span class="kw">mod </span>debug_pass;
-<span class="kw">mod </span>graph_runner;
-<span class="kw">mod </span>main_pass;
-<span class="kw">mod </span>render_commands;
-<span class="kw">mod </span>render_phase;
-<span class="kw">mod </span>shaders;
-<span class="kw">mod </span>tile_pipeline;
-<span class="kw">mod </span>tile_view_pattern;
-
-<span class="comment">// Public API
-</span><span class="kw">pub mod </span>builder;
-<span class="kw">pub mod </span>camera;
-<span class="kw">pub mod </span>error;
-<span class="kw">pub mod </span>eventually;
-<span class="kw">pub mod </span>settings;
-
-<span class="kw">pub use </span>shaders::ShaderVertex;
-<span class="kw">pub use </span>stages::register_default_render_stages;
-
-<span class="kw">use crate</span>::{
-    render::{
-        debug_pass::DebugPassNode,
         error::RenderError,
-        graph::{EmptyNode, RenderGraph, RenderGraphError},
+        eventually::Eventually,
+        graph::{EmptyNode, RenderGraph},
         main_pass::{MainPassDriverNode, MainPassNode},
+        resource::{Head, Surface, Texture, TextureView},
+        settings::{RendererSettings, WgpuSettings},
+        systems::{
+            cleanup_system::cleanup_system, resource_system::ResourceSystem,
+            sort_phase_system::sort_phase_system,
+            tile_view_pattern_system::tile_view_pattern_system,
+        },
+    },
+    schedule::{Schedule, StageLabel},
+    tcs::{
+        system::{stage::SystemStage, SystemContainer},
+        world::World,
     },
     window::{HeadedMapWindow, MapWindow},
 };
 
-<span class="kw">const </span>INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; <span class="comment">// Must match IndexDataType
+<span class="kw">pub mod </span>graph;
+<span class="kw">pub mod </span>resource;
+<span class="kw">mod </span>systems;
 
-</span><span class="kw">pub struct </span>RenderState {
-    render_target: Eventually&lt;TextureView&gt;,
+<span class="comment">// Rendering internals
+</span><span class="kw">mod </span>graph_runner;
+<span class="kw">mod </span>main_pass;
+<span class="kw">pub mod </span>shaders; <span class="comment">// TODO: Make private
 
-    buffer_pool: Eventually&lt;
-        BufferPool&lt;
-            wgpu::Queue,
-            wgpu::Buffer,
-            ShaderVertex,
-            IndexDataType,
-            ShaderLayerMetadata,
-            ShaderFeatureStyle,
-        &gt;,
-    &gt;,
-    tile_view_pattern: Eventually&lt;TileViewPattern&lt;wgpu::Queue, wgpu::Buffer&gt;&gt;,
+// Public API
+</span><span class="kw">pub mod </span>builder;
+<span class="kw">pub mod </span>camera;
+<span class="kw">pub mod </span>error;
+<span class="kw">pub mod </span>eventually;
+<span class="kw">pub mod </span>render_commands;
+<span class="kw">pub mod </span>render_phase;
+<span class="kw">pub mod </span>settings;
+<span class="kw">pub mod </span>tile_view_pattern;
 
-    tile_pipeline: Eventually&lt;wgpu::RenderPipeline&gt;,
-    mask_pipeline: Eventually&lt;wgpu::RenderPipeline&gt;,
-    debug_pipeline: Eventually&lt;wgpu::RenderPipeline&gt;,
+<span class="kw">pub use </span>shaders::ShaderVertex;
 
-    globals_bind_group: Eventually&lt;Globals&gt;,
+<span class="kw">use </span><span class="kw">crate</span>::render::{
+    render_phase::{LayerItem, RenderPhase, TileMaskItem},
+    systems::{graph_runner_system::GraphRunnerSystem, upload_system::upload_system},
+    tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
+};
 
-    depth_texture: Eventually&lt;Texture&gt;,
-    multisampling_texture: Eventually&lt;<span class="prelude-ty">Option</span>&lt;Texture&gt;&gt;,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; <span class="comment">// Must match IndexDataType
 
-    surface: Surface,
+</span><span class="doccomment">/// The labels of the default App rendering stages.
+</span><span class="attribute">#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+</span><span class="kw">pub enum </span>RenderStageLabel {
+    <span class="doccomment">/// Extract data from the world.
+    </span>Extract,
 
-    mask_phase: RenderPhase&lt;TileShape&gt;,
-    tile_phase: RenderPhase&lt;(IndexEntry, TileShape)&gt;,
+    <span class="doccomment">/// Prepare render resources from the extracted data for the GPU.
+    /// For example during this phase textures are created, buffers are allocated and written.
+    </span>Prepare,
+
+    <span class="doccomment">/// Queues [PhaseItems](crate::render::render_phase::PhaseItem) that depend on
+    /// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the
+    /// [`Render`](RenderStageLabel::Render) stage.
+    /// For example data is uploaded to the GPU in this stage.
+    </span>Queue,
+
+    <span class="doccomment">/// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.
+    </span>PhaseSort,
+
+    <span class="doccomment">/// Actual rendering happens here.
+    /// In most cases, only the render backend should insert resources here.
+    </span>Render,
+
+    <span class="doccomment">/// Cleanup render resources here.
+    </span>Cleanup,
 }
 
-<span class="kw">impl </span>RenderState {
+<span class="kw">impl </span>StageLabel <span class="kw">for </span>RenderStageLabel {
+    <span class="kw">fn </span>dyn_clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>StageLabel&gt; {
+        Box::new(<span class="self">self</span>.clone())
+    }
+}
+
+<span class="kw">pub struct </span>RenderResources {
+    <span class="kw">pub </span>surface: Surface,
+    <span class="kw">pub </span>render_target: Eventually&lt;TextureView&gt;,
+    <span class="kw">pub </span>depth_texture: Eventually&lt;Texture&gt;,
+    <span class="kw">pub </span>multisampling_texture: Eventually&lt;<span class="prelude-ty">Option</span>&lt;Texture&gt;&gt;,
+}
+
+<span class="kw">impl </span>RenderResources {
     <span class="kw">pub fn </span>new(surface: Surface) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             render_target: Default::default(),
-            buffer_pool: Default::default(),
-            tile_view_pattern: Default::default(),
-            tile_pipeline: Default::default(),
-            mask_pipeline: Default::default(),
-            debug_pipeline: Default::default(),
-            globals_bind_group: Default::default(),
             depth_texture: Default::default(),
             multisampling_texture: Default::default(),
             surface,
-            mask_phase: Default::default(),
-            tile_phase: Default::default(),
         }
     }
 
@@ -659,21 +716,6 @@
     <span class="kw">pub fn </span>surface(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Surface {
         <span class="kw-2">&amp;</span><span class="self">self</span>.surface
     }
-
-    <span class="kw">pub fn </span>buffer_pool_mut(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="kw-2">&amp;mut </span>Eventually&lt;
-        BufferPool&lt;
-            wgpu::Queue,
-            wgpu::Buffer,
-            ShaderVertex,
-            IndexDataType,
-            ShaderLayerMetadata,
-            ShaderFeatureStyle,
-        &gt;,
-    &gt; {
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.buffer_pool
-    }
 }
 
 <span class="kw">pub struct </span>Renderer {
@@ -685,7 +727,8 @@
     <span class="kw">pub </span>wgpu_settings: WgpuSettings,
     <span class="kw">pub </span>settings: RendererSettings,
 
-    <span class="kw">pub </span>state: RenderState,
+    <span class="kw">pub </span>resources: RenderResources,
+    <span class="kw">pub </span>render_graph: RenderGraph,
 }
 
 <span class="kw">impl </span>Renderer {
@@ -728,7 +771,8 @@
             adapter,
             wgpu_settings,
             settings,
-            state: RenderState::new(surface),
+            resources: RenderResources::new(surface),
+            render_graph: Default::default(),
         })
     }
 
@@ -762,12 +806,13 @@
             adapter,
             wgpu_settings,
             settings,
-            state: RenderState::new(surface),
+            resources: RenderResources::new(surface),
+            render_graph: Default::default(),
         })
     }
 
-    <span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32) {
-        <span class="self">self</span>.state.surface.resize(width, height)
+    <span class="kw">pub fn </span>resize_surface(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32) {
+        <span class="self">self</span>.resources.surface.resize(width, height)
     }
 
     <span class="doccomment">/// Requests a device
@@ -931,17 +976,21 @@
     <span class="kw">pub fn </span>queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Queue {
         <span class="kw-2">&amp;</span><span class="self">self</span>.queue
     }
-    <span class="kw">pub fn </span>state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RenderState {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.state
+    <span class="kw">pub fn </span>state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RenderResources {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.resources
     }
     <span class="kw">pub fn </span>surface(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Surface {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.state.surface
+        <span class="kw-2">&amp;</span><span class="self">self</span>.resources.surface
     }
 }
 
 <span class="attribute">#[cfg(test)]
+#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
 </span><span class="kw">mod </span>tests {
-    <span class="kw">use </span><span class="kw">crate</span>::window::{MapWindow, MapWindowConfig, WindowSize};
+    <span class="kw">use crate</span>::{
+        tcs::world::World,
+        window::{MapWindow, MapWindowConfig, WindowSize},
+    };
 
     <span class="kw">pub struct </span>HeadlessMapWindowConfig {
         size: WindowSize,
@@ -965,14 +1014,13 @@
         }
     }
 
-    <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
-    #[tokio::test]
+    <span class="attribute">#[tokio::test]
     </span><span class="kw">async fn </span>test_render() {
         <span class="kw">use </span>log::LevelFilter;
 
         <span class="kw">use </span><span class="kw">crate</span>::render::{
-            graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface, RenderState,
-            RendererSettings,
+            graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface,
+            RenderResources, RendererSettings,
         };
 
         <span class="kw">let _ </span>= env_logger::builder()
@@ -997,10 +1045,9 @@
                 <span class="prelude-val">None</span>,
             )
             .<span class="kw">await
-            </span>.ok()
-            .expect(<span class="string">&quot;Unable to request device&quot;</span>);
+            </span>.expect(<span class="string">&quot;Unable to request device&quot;</span>);
 
-        <span class="kw">let </span>render_state = RenderState::new(Surface::from_image(
+        <span class="kw">let </span>render_state = RenderResources::new(Surface::from_image(
             <span class="kw-2">&amp;</span>device,
             <span class="kw-2">&amp;</span>HeadlessMapWindow {
                 size: WindowSize::new(<span class="number">100</span>, <span class="number">100</span>).unwrap(),
@@ -1008,7 +1055,8 @@
             <span class="kw-2">&amp;</span>RendererSettings::default(),
         ));
 
-        RenderGraphRunner::run(<span class="kw-2">&amp;</span>graph, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue, <span class="kw-2">&amp;</span>render_state).unwrap();
+        <span class="kw">let </span>world = World::default();
+        RenderGraphRunner::run(<span class="kw-2">&amp;</span>graph, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue, <span class="kw-2">&amp;</span>render_state, <span class="kw-2">&amp;</span>world).unwrap();
     }
 }
 
@@ -1027,42 +1075,92 @@
 }
 
 <span class="doccomment">/// Labels for the &quot;draw&quot; graph
-</span><span class="kw">pub mod </span>draw_graph {
+</span><span class="kw">mod </span>draw_graph {
     <span class="kw">pub const </span>NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;draw&quot;</span>;
     <span class="comment">// Labels for input nodes
     </span><span class="kw">pub mod </span>input {}
     <span class="comment">// Labels for non-input nodes
     </span><span class="kw">pub mod </span>node {
         <span class="kw">pub const </span>MAIN_PASS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass&quot;</span>;
-        <span class="kw">pub const </span>DEBUG_PASS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;debug_pass&quot;</span>;
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;headless&quot;</span>)]
-        </span><span class="kw">pub const </span>COPY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;copy&quot;</span>;
     }
 }
 
-<span class="kw">pub fn </span>create_default_render_graph() -&gt; <span class="prelude-ty">Result</span>&lt;RenderGraph, RenderGraphError&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>graph = RenderGraph::default();
+<span class="kw">pub struct </span>MaskPipeline(<span class="kw">pub </span>wgpu::RenderPipeline);
+<span class="kw">impl </span>Deref <span class="kw">for </span>MaskPipeline {
+    <span class="kw">type </span>Target = wgpu::RenderPipeline;
 
-    <span class="kw">let </span><span class="kw-2">mut </span>draw_graph = RenderGraph::default();
-    <span class="comment">// Draw nodes
-    </span>draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
-    draw_graph.add_node(draw_graph::node::DEBUG_PASS, DebugPassNode::new());
-    <span class="comment">// Input node
-    </span><span class="kw">let </span>input_node_id = draw_graph.set_input(<span class="macro">vec!</span>[]);
-    <span class="comment">// Edges
-    </span>draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)<span class="question-mark">?</span>;
-    <span class="comment">// TODO: Enable debug pass via runtime flag
-    </span>draw_graph.add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::DEBUG_PASS)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
+    </span>}
+}
 
-    graph.add_sub_graph(draw_graph::NAME, draw_graph);
-    graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
-    graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
-    graph.add_node_edge(
-        main_graph::node::MAIN_PASS_DEPENDENCIES,
-        main_graph::node::MAIN_PASS_DRIVER,
-    )<span class="question-mark">?</span>;
+<span class="comment">// TODO: Do we really want a render plugin or do we want to statically do this setup?
+</span><span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>RenderPlugin;
 
-    <span class="prelude-val">Ok</span>(graph)
+<span class="kw">impl</span>&lt;E: Environment&gt; Plugin&lt;E&gt; <span class="kw">for </span>RenderPlugin {
+    <span class="kw">fn </span>build(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        schedule: <span class="kw-2">&amp;mut </span>Schedule,
+        _kernel: Rc&lt;Kernel&lt;E&gt;&gt;,
+        world: <span class="kw-2">&amp;mut </span>World,
+        graph: <span class="kw-2">&amp;mut </span>RenderGraph,
+    ) {
+        <span class="kw">let </span>resources = <span class="kw-2">&amp;mut </span>world.resources;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>draw_graph = RenderGraph::default();
+        <span class="comment">// Draw nodes
+        </span>draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+        <span class="comment">// Input node
+        </span><span class="kw">let </span>input_node_id = draw_graph.set_input(<span class="macro">vec!</span>[]);
+        <span class="comment">// Edges
+        </span>draw_graph
+            .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
+            .unwrap();
+
+        graph.add_sub_graph(draw_graph::NAME, draw_graph);
+        graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
+        graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
+        graph
+            .add_node_edge(
+                main_graph::node::MAIN_PASS_DEPENDENCIES,
+                main_graph::node::MAIN_PASS_DRIVER,
+            )
+            .unwrap();
+
+        <span class="comment">// render graph dependency
+        </span>resources.init::&lt;RenderPhase&lt;LayerItem&gt;&gt;();
+        resources.init::&lt;RenderPhase&lt;TileMaskItem&gt;&gt;();
+        <span class="comment">// tile_view_pattern:
+        </span>resources.insert(Eventually::&lt;WgpuTileViewPattern&gt;::Uninitialized);
+        resources.init::&lt;ViewTileSources&gt;();
+        <span class="comment">// masks
+        </span>resources.insert(Eventually::&lt;MaskPipeline&gt;::Uninitialized);
+
+        schedule.add_stage(RenderStageLabel::Extract, SystemStage::default());
+        schedule.add_stage(
+            RenderStageLabel::Prepare,
+            SystemStage::default().with_system(SystemContainer::new(ResourceSystem)),
+        );
+        schedule.add_stage(
+            RenderStageLabel::Queue,
+            SystemStage::default()
+                .with_system(tile_view_pattern_system)
+                .with_system(upload_system),
+        );
+        schedule.add_stage(
+            RenderStageLabel::PhaseSort,
+            SystemStage::default().with_system(sort_phase_system),
+        );
+        schedule.add_stage(
+            RenderStageLabel::Render,
+            SystemStage::default().with_system(SystemContainer::new(GraphRunnerSystem)),
+        );
+        schedule.add_stage(
+            RenderStageLabel::Cleanup,
+            SystemStage::default().with_system(cleanup_system),
+        );
+    }
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="maplibre" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

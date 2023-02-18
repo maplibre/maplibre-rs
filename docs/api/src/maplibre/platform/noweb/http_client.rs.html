@@ -59,6 +59,7 @@
 <span id="59">59</span>
 <span id="60">60</span>
 <span id="61">61</span>
+<span id="62">62</span>
 </pre><pre class="rust"><code><span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>reqwest::{Client, StatusCode};
 <span class="kw">use </span>reqwest_middleware::ClientWithMiddleware;
@@ -114,6 +115,7 @@
                 }
 
                 <span class="kw">let </span>body = response.bytes().<span class="kw">await</span><span class="question-mark">?</span>;
+
                 <span class="prelude-val">Ok</span>(Vec::from(body.as_ref()))
             }
             <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(SourceFetchError(Box::new(e))),

@@ -116,18 +116,20 @@
 <span id="116">116</span>
 <span id="117">117</span>
 <span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utils which are used internally
 
-</span><span class="kw">mod </span>fps_meter;
-<span class="kw">pub mod </span>grid;
-<span class="kw">pub mod </span>label;
-<span class="kw">pub mod </span>math;
-
-<span class="kw">use </span>std::ops::{Deref, DerefMut};
+</span><span class="kw">use </span>std::ops::{Deref, DerefMut};
 
 <span class="kw">pub use </span>fps_meter::FPSMeter;
 
 <span class="kw">use </span><span class="kw">crate</span>::coords::WorldTileCoords;
+
+<span class="kw">mod </span>fps_meter;
+<span class="kw">pub mod </span>grid;
+<span class="kw">pub mod </span>label;
+<span class="kw">pub mod </span>math;
 
 <span class="kw">struct </span>MinMaxBoundingBox {
     min_x: i32,
@@ -137,8 +139,8 @@
     initialized: bool,
 }
 
-<span class="kw">impl </span>MinMaxBoundingBox {
-    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>Default <span class="kw">for </span>MinMaxBoundingBox {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             min_x: i32::MAX,
             min_y: i32::MAX,
@@ -147,7 +149,9 @@
             initialized: <span class="bool-val">false</span>,
         }
     }
+}
 
+<span class="kw">impl </span>MinMaxBoundingBox {
     <span class="kw">pub fn </span>is_initialized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.initialized
     }

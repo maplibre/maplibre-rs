@@ -213,6 +213,14 @@
 <span id="213">213</span>
 <span id="214">214</span>
 <span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Executes a [`RenderGraph`]
 
 </span><span class="kw">use </span>std::{
@@ -224,12 +232,15 @@
 <span class="kw">use </span>smallvec::{smallvec, SmallVec};
 <span class="kw">use </span>thiserror::Error;
 
-<span class="kw">use </span><span class="kw">crate</span>::render::{
-    graph::{
-        Edge, NodeId, NodeRunError, NodeState, RenderContext, RenderGraph, RenderGraphContext,
-        SlotLabel, SlotType, SlotValue,
+<span class="kw">use crate</span>::{
+    render::{
+        graph::{
+            Edge, NodeId, NodeRunError, NodeState, RenderContext, RenderGraph, RenderGraphContext,
+            SlotLabel, SlotType, SlotValue,
+        },
+        RenderResources,
     },
-    RenderState,
+    tcs::world::World,
 };
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RenderGraphRunner;
@@ -264,7 +275,8 @@
         graph: <span class="kw-2">&amp;</span>RenderGraph,
         device: <span class="kw-2">&amp;</span>wgpu::Device,
         queue: <span class="kw-2">&amp;</span>wgpu::Queue,
-        state: <span class="kw-2">&amp;</span>RenderState,
+        state: <span class="kw-2">&amp;</span>RenderResources,
+        world: <span class="kw-2">&amp;</span>World,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderGraphRunnerError&gt; {
         <span class="kw">let </span>command_encoder =
             device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default());
@@ -273,7 +285,7 @@
             command_encoder,
         };
 
-        <span class="self">Self</span>::run_graph(graph, <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut </span>render_context, state, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+        <span class="self">Self</span>::run_graph(graph, <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut </span>render_context, state, world, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
         {
             <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">let </span>_span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;submit_graph_commands&quot;</span>).entered();
@@ -286,7 +298,8 @@
         graph: <span class="kw-2">&amp;</span>RenderGraph,
         graph_name: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
         render_context: <span class="kw-2">&amp;mut </span>RenderContext,
-        state: <span class="kw-2">&amp;</span>RenderState,
+        state: <span class="kw-2">&amp;</span>RenderResources,
+        world: <span class="kw-2">&amp;</span>World,
         inputs: <span class="kw-2">&amp;</span>[SlotValue],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderGraphRunnerError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>node_outputs: HashMap&lt;NodeId, SmallVec&lt;[SlotValue; <span class="number">4</span>]&gt;&gt; = HashMap::default();
@@ -388,7 +401,9 @@
                     <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
                     </span><span class="kw">let </span>_span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;node&quot;</span>, name = node_state.type_name).entered();
 
-                    node_state.node.run(<span class="kw-2">&amp;mut </span>context, render_context, state)<span class="question-mark">?</span>;
+                    node_state
+                        .node
+                        .run(<span class="kw-2">&amp;mut </span>context, render_context, state, world)<span class="question-mark">?</span>;
                 }
 
                 <span class="kw">for </span>run_sub_graph <span class="kw">in </span>context.finish() {
@@ -400,6 +415,7 @@
                         <span class="prelude-val">Some</span>(run_sub_graph.name),
                         render_context,
                         state,
+                        world,
                         <span class="kw-2">&amp;</span>run_sub_graph.inputs,
                     )<span class="question-mark">?</span>;
                 }

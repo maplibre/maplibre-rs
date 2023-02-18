@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["DrawDebugOutline",""],["DrawMask",""],["DrawTile",""],["SetDebugPipeline",""],["SetMaskPipeline",""],["SetTilePipeline",""],["SetViewBindGroup",""]],"type":[["DrawDebugOutlines",""],["DrawMasks",""],["DrawTiles",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["DrawMask",""],["SetMaskPipeline",""]],"type":[["DrawMasks",""]]};
