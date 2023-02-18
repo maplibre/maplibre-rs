@@ -46,7 +46,7 @@ pub fn resource_system(
                 false,
                 false,
                 false,
-                true,
+                surface.is_multisampling_supported(settings.msaa),
                 true,
             )
             .describe_render_pipeline()

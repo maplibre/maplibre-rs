@@ -127,7 +127,7 @@ impl System for ResourceSystem {
                 true,
                 false,
                 false,
-                true,
+                surface.is_multisampling_supported(settings.msaa),
                 false,
             )
             .describe_render_pipeline()
