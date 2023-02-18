@@ -64,6 +64,12 @@ impl Shader for TileMaskShader {
                         format: wgpu::VertexFormat::Float32x4,
                         shader_location: 7,
                     },
+                    // zoom factor
+                    wgpu::VertexAttribute {
+                        offset: 4 * wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32,
+                        shader_location: 9,
+                    },
                 ],
             }],
         }

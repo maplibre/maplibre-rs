@@ -12,6 +12,7 @@ fn main(
     @location(5) translate2: vec4<f32>,
     @location(6) translate3: vec4<f32>,
     @location(7) translate4: vec4<f32>,
+    @location(9) zoom_factor: f32,
     @builtin(vertex_index) vertex_idx: u32,
     @builtin(instance_index) instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
@@ -20,7 +21,7 @@ fn main(
     let target_width = 1.0;
     let target_height = 1.0;
 
-    let WIDTH = EXTENT / 1024.0;
+    let WIDTH = EXTENT * zoom_factor / 1024.0;
 
     var VERTICES: array<vec3<f32>, 24> = array<vec3<f32>, 24>(
         // Debug lines vertices
