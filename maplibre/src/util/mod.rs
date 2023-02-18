@@ -19,8 +19,8 @@ struct MinMaxBoundingBox {
     initialized: bool,
 }
 
-impl MinMaxBoundingBox {
-    fn new() -> Self {
+impl Default for MinMaxBoundingBox {
+    fn default() -> Self {
         Self {
             min_x: i32::MAX,
             min_y: i32::MAX,
@@ -29,7 +29,9 @@ impl MinMaxBoundingBox {
             initialized: false,
         }
     }
+}
 
+impl MinMaxBoundingBox {
     pub fn is_initialized(&self) -> bool {
         self.initialized
     }

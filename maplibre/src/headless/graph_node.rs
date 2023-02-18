@@ -11,13 +11,7 @@ use crate::{
 /// unmapped GPU-side buffer. This buffer will be mapped in
 /// [`crate::render::stages::write_surface_buffer_stage::WriteSurfaceBufferStage`].
 #[derive(Default)]
-pub struct CopySurfaceBufferNode {}
-
-impl CopySurfaceBufferNode {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
+pub struct CopySurfaceBufferNode;
 
 impl Node for CopySurfaceBufferNode {
     fn input(&self) -> Vec<SlotInfo> {
