@@ -10,6 +10,7 @@ use crate::{
 };
 
 const VIEW_REGION_PADDING: i32 = 1;
+const MAX_N_TILES: usize = 128;
 
 /// Stores the camera configuration.
 pub struct ViewState {
@@ -63,7 +64,7 @@ impl ViewState {
                 ViewRegion::new(
                     bounding_box,
                     VIEW_REGION_PADDING,
-                    32,
+                    MAX_N_TILES,
                     *self.zoom,
                     visible_level,
                 )

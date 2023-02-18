@@ -8,6 +8,7 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata, Vec4f32},
+        tile_view_pattern::DEFAULT_TILE_SIZE,
         Renderer,
     },
     style::Style,
@@ -32,7 +33,8 @@ pub fn upload_system(
         &mut Eventually<VectorBufferPool>,
     >() else { return; };
 
-    let view_region = view_state.create_view_region();
+    let view_region =
+        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 
     if let Some(view_region) = &view_region {
         upload_tesselated_layer(

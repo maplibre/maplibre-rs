@@ -224,6 +224,8 @@ impl Zoom {
     /// Adopted from
     /// [Transform::coveringZoomLevel](https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L279-L288)
     ///
+    /// This function calculates which ZoomLevel to show at this zoom.
+    ///
     /// The `tile_size` is the size of the tile like specified in the source definition,
     /// For example raster tiles can be 512px or 256px. If it is 256px, then 2x as many tiles are
     /// displayed. If the raster tile is 512px then exactly as many raster tiles like vector
@@ -700,7 +702,6 @@ mod tests {
     use crate::{
         coords::{
             Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
-            TILE_SIZE,
         },
         style::source::TileAddressingScheme,
         util::math::Aabb2,
@@ -716,7 +717,8 @@ mod tests {
         println!("{:?}\n{:?}", p1, p2);
 
         assert_eq!(
-            WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.zoom_level(TILE_SIZE), zoom),
+            WorldCoords::from((p1.x, p1.y))
+                .into_world_tile(zoom.zoom_level(DEFAULT_TILE_SIZE), zoom),
             tile
         );
     }
