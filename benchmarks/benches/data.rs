@@ -11,6 +11,7 @@ use maplibre::{
     },
 };
 
+// https://tile.openstreetmap.org/15/17425/11365.png
 const MUNICH_COORDS: TileCoords = TileCoords {
     x: 17425,
     y: 11365,
@@ -41,7 +42,11 @@ fn bench_process_vector_tile(c: &mut Criterion) {
                     coords: MUNICH_COORDS
                         .into_world_tile(TileAddressingScheme::XYZ)
                         .unwrap(),
-                    layers: HashSet::from(["boundary".to_owned(), "water".to_owned()]),
+                    layers: HashSet::from([
+                        "transportation".to_owned(),
+                        "water".to_owned(),
+                        "building".to_owned(),
+                    ]),
                 },
                 &mut ProcessVectorContext::<DefaultVectorTransferables, _>::new(DummyContext),
             );
