@@ -4,12 +4,12 @@ use std::collections::{BTreeMap, HashMap};
 
 use cgmath::{num_traits::Signed, Bounded};
 use geo::prelude::*;
-use geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
+use geo_types::{Coord, CoordFloat, Geometry, LineString, Point, Polygon};
 use geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
 };
-use log::warn;
+use log::debug;
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
 use crate::{
@@ -82,7 +82,7 @@ pub enum TileIndex {
 impl TileIndex {
     pub fn point_query(&self, inner_coords: InnerCoords) -> Vec<&IndexedGeometry<f64>> {
         let point = geo_types::Point::new(inner_coords.x, inner_coords.y);
-        let coordinate: Coordinate<_> = point.into();
+        let coordinate: Coord<_> = point.into();
 
         // FIXME: Respect layer order of style
         match self {
@@ -312,9 +312,19 @@ impl FeatureProcessor for IndexProcessor {
                 IndexedGeometry::from_linestring(linestring, self.properties.take().unwrap())
                     .unwrap(),
             ),
-            _ => {
-                warn!("Unknown geometry in index")
+            Some(Geometry::Point(_)) => debug!("Unsupported Point geometry in index"),
+            Some(Geometry::Line(_)) => debug!("Unsupported Line geometry in index"),
+            Some(Geometry::MultiPoint(_)) => debug!("Unsupported MultiPoint geometry in index"),
+            Some(Geometry::MultiLineString(_)) => {
+                debug!("Unsupported MultiLineString geometry in index")
             }
+            Some(Geometry::MultiPolygon(_)) => debug!("Unsupported MultiPolygon geometry in index"),
+            Some(Geometry::GeometryCollection(_)) => {
+                debug!("Unsupported GeometryCollection geometry in index")
+            }
+            Some(Geometry::Rect(_)) => debug!("Unsupported Rect geometry in index"),
+            Some(Geometry::Triangle(_)) => debug!("Unsupported Triangle geometry in index"),
+            None => debug!("No geometry in index"),
         };
 
         Ok(())

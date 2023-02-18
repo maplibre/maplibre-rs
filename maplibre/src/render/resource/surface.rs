@@ -82,7 +82,7 @@ pub struct BufferedTextureHead {
 
 #[cfg(feature = "headless")]
 impl BufferedTextureHead {
-    pub fn map_async<'a>(&self, device: &wgpu::Device) -> wgpu::BufferSlice {
+    pub fn map_async(&self, device: &wgpu::Device) -> wgpu::BufferSlice {
         // Note that we're not calling `.await` here.
         let buffer_slice = self.output_buffer.slice(..);
         buffer_slice.map_async(wgpu::MapMode::Read, |_| ());
@@ -203,7 +203,7 @@ impl Surface {
             mapped_at_creation: false,
         });
 
-        // FIXME: Is this a sane default?
+        // TODO: Is this a sane default?
         let format = settings
             .texture_format
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
@@ -278,7 +278,7 @@ impl Surface {
         match &mut self.head {
             Head::Headed(window) => {
                 if window.has_changed(&(self.size.width(), self.size.height())) {
-                    window.resize_and_configure(self.size.height(), self.size.width(), device);
+                    window.resize_and_configure(self.size.width(), self.size.height(), device);
                 }
             }
             Head::Headless(_) => {}

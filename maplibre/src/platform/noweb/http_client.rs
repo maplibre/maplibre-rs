@@ -53,6 +53,7 @@ impl HttpClient for ReqwestHttpClient {
                 }
 
                 let body = response.bytes().await?;
+
                 Ok(Vec::from(body.as_ref()))
             }
             Err(e) => Err(SourceFetchError(Box::new(e))),

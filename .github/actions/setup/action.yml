@@ -54,3 +54,7 @@ runs:
       uses: ./.github/actions/cargo-install
       with:
         name: just
+    - name: Install cargo-criterion
+      uses: ./.github/actions/cargo-install
+      with:
+        name: cargo-criterion

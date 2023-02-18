@@ -18,6 +18,11 @@
 
 #![deny(unused_imports)]
 
+extern crate core;
+
+// Export tile format
+pub use geozero::mvt::tile; // Used in transferables.rs in web/singlethreaded
+
 // Internal modules
 pub(crate) mod tessellation;
 
@@ -35,8 +40,6 @@ pub mod util;
 pub mod window;
 // Exposed because of doc-strings
 pub mod schedule;
-// Exposed because of SharedThreadState
-pub mod stages;
 
 pub mod environment;
 
@@ -46,7 +49,11 @@ pub mod benchmarking;
 pub mod event_loop;
 pub mod kernel;
 pub mod map;
-pub mod world;
+pub mod plugin;
+pub mod tcs;
+pub mod view_state;
 
-// Export tile format
-pub use geozero::mvt::tile;
+// Plugins
+pub mod debug;
+pub mod raster;
+pub mod vector;

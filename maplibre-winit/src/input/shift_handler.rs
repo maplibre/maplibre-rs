@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{Vector3, Zero};
-use maplibre::{context::MapContext, world::World};
+use maplibre::context::MapContext;
 
 use super::UpdateState;
 
@@ -13,14 +13,7 @@ pub struct ShiftHandler {
 }
 
 impl UpdateState for ShiftHandler {
-    fn update_state(
-        &mut self,
-        MapContext {
-            world: World { view_state, .. },
-            ..
-        }: &mut MapContext,
-        dt: Duration,
-    ) {
+    fn update_state(&mut self, MapContext { view_state, .. }: &mut MapContext, dt: Duration) {
         let dt = dt.as_secs_f64() * (1.0 / self.speed);
 
         let delta = self.camera_translate * dt;

@@ -1,9 +1,16 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, vec::IntoIter};
 
 use js_sys::{ArrayBuffer, Uint8Array};
-use maplibre::io::{
-    apc::{AsyncProcedure, AsyncProcedureCall, CallError, Context, Input, Message, SendError},
-    source_client::SourceClient,
+use log::error;
+use maplibre::{
+    environment::OffscreenKernelEnvironment,
+    io::{
+        apc::{
+            AsyncProcedure, AsyncProcedureCall, CallError, Context, Input, IntoMessage, Message,
+            MessageTag, SendError,
+        },
+        source_client::SourceClient,
+    },
 };
 use rand::{prelude::SliceRandom, thread_rng};
 use thiserror::Error;
@@ -13,7 +20,7 @@ use web_sys::{DedicatedWorkerGlobalScope, Worker};
 use crate::{
     error::WebError,
     platform::singlethreaded::{
-        transferables::FlatBufferTransferable, UsedContext, UsedHttpClient, UsedTransferables,
+        transferables::FlatBufferTransferable, UsedContext, UsedHttpClient,
     },
 };
 
@@ -22,51 +29,52 @@ use crate::{
 #[error("failed to deserialize message tag")]
 pub struct MessageTagDeserializeError;
 
-#[derive(Debug)]
-pub enum MessageTag {
-    TileTessellated = 1,
-    LayerUnavailable = 2,
-    LayerTessellated = 3,
-    LayerIndexed = 4,
+impl MessageTag for WebMessageTag {
+    fn dyn_clone(&self) -> Box<dyn MessageTag> {
+        Box::new(*self)
+    }
 }
 
-impl MessageTag {
-    pub fn from_message(message: &Message<UsedTransferables>) -> Self {
-        match message {
-            Message::TileTessellated(_) => MessageTag::TileTessellated,
-            Message::LayerUnavailable(_) => MessageTag::LayerUnavailable,
-            Message::LayerTessellated(_) => MessageTag::LayerTessellated,
-            Message::LayerIndexed(_) => MessageTag::LayerIndexed,
-        }
-    }
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+pub enum WebMessageTag {
+    TileTessellated = 1,
+    LayerMissing = 2,
+    LayerTessellated = 3,
+    LayerIndexed = 4,
+    LayerRaster = 5,
+    LayerRasterMissing = 6,
+}
 
-    pub fn create_message(
-        &self,
-        transferable: FlatBufferTransferable,
-    ) -> Message<UsedTransferables> {
-        // TODO: Verify that data matches tag
+impl WebMessageTag {
+    pub fn to_static(&self) -> &'static WebMessageTag {
         match self {
-            MessageTag::TileTessellated => {
-                Message::<UsedTransferables>::TileTessellated(transferable)
-            }
-            MessageTag::LayerUnavailable => {
-                Message::<UsedTransferables>::LayerUnavailable(transferable)
-            }
-            MessageTag::LayerTessellated => {
-                Message::<UsedTransferables>::LayerTessellated(transferable)
-            }
-            MessageTag::LayerIndexed => Message::<UsedTransferables>::LayerIndexed(transferable),
+            WebMessageTag::LayerRaster => &WebMessageTag::LayerRaster,
+            WebMessageTag::LayerMissing => &WebMessageTag::LayerMissing,
+            WebMessageTag::LayerIndexed => &WebMessageTag::LayerIndexed,
+            WebMessageTag::TileTessellated => &WebMessageTag::TileTessellated,
+            WebMessageTag::LayerTessellated => &WebMessageTag::LayerTessellated,
+            WebMessageTag::LayerRasterMissing => &WebMessageTag::LayerRasterMissing,
         }
     }
 
     pub fn from_u32(tag: u32) -> Result<Self, MessageTagDeserializeError> {
         match tag {
-            x if x == MessageTag::LayerUnavailable as u32 => Ok(MessageTag::LayerUnavailable),
-            x if x == MessageTag::LayerTessellated as u32 => Ok(MessageTag::LayerTessellated),
-            x if x == MessageTag::TileTessellated as u32 => Ok(MessageTag::TileTessellated),
-            x if x == MessageTag::LayerIndexed as u32 => Ok(MessageTag::LayerIndexed),
+            x if x == WebMessageTag::LayerMissing as u32 => Ok(WebMessageTag::LayerMissing),
+            x if x == WebMessageTag::LayerTessellated as u32 => Ok(WebMessageTag::LayerTessellated),
+            x if x == WebMessageTag::TileTessellated as u32 => Ok(WebMessageTag::TileTessellated),
+            x if x == WebMessageTag::LayerIndexed as u32 => Ok(WebMessageTag::LayerIndexed),
+            x if x == WebMessageTag::LayerRaster as u32 => Ok(WebMessageTag::LayerRaster),
+            x if x == WebMessageTag::LayerRasterMissing as u32 => {
+                Ok(WebMessageTag::LayerRasterMissing)
+            }
             _ => Err(MessageTagDeserializeError),
         }
+    }
+}
+
+impl From<WebMessageTag> for u32 {
+    fn from(val: WebMessageTag) -> Self {
+        val as u32
     }
 }
 
@@ -75,10 +83,23 @@ pub struct PassingContext {
     pub source_client: SourceClient<UsedHttpClient>,
 }
 
-impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
-    fn send(&self, message: Message<UsedTransferables>) -> Result<(), SendError> {
-        let tag = MessageTag::from_message(&message);
-        let transferable = FlatBufferTransferable::from_message(message);
+impl Context for PassingContext {
+    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+        let message = message.into();
+        let tag = if WebMessageTag::LayerRaster.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerRaster
+        } else if WebMessageTag::LayerTessellated.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerTessellated
+        } else if WebMessageTag::TileTessellated.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::TileTessellated
+        } else if WebMessageTag::LayerMissing.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerMissing
+        } else if WebMessageTag::LayerIndexed.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerIndexed
+        } else {
+            unreachable!()
+        };
+        let transferable = message.into_transferable::<FlatBufferTransferable>();
         let data = transferable.data();
 
         let buffer = ArrayBuffer::new(data.len() as u32);
@@ -87,26 +108,30 @@ impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
             byte_buffer.set(&Uint8Array::view(data), 0);
         }
 
+        log::debug!(
+            "sending message ({:?}) with {}bytes to main thread",
+            tag,
+            data.len()
+        );
+
         let global: DedicatedWorkerGlobalScope = js_sys::global()
             .dyn_into()
             .map_err(|_e| SendError::Transmission)?;
         global
             .post_message_with_transfer(
-                &js_sys::Array::of2(&JsValue::from(tag as u32), &buffer),
+                &js_sys::Array::of2(&JsValue::from(*tag as u32), &buffer),
                 &js_sys::Array::of1(&buffer),
             )
             .map_err(|_e| SendError::Transmission)
     }
-
-    fn source_client(&self) -> &SourceClient<UsedHttpClient> {
-        &self.source_client
-    }
 }
 
-pub type ReceivedType = RefCell<Vec<Message<UsedTransferables>>>;
+pub type ReceivedType = RefCell<Vec<Message>>;
 
 pub struct PassingAsyncProcedureCall {
     workers: Vec<Worker>,
+
+    buffer: RefCell<Vec<Message>>,
 
     received: Rc<ReceivedType>, // FIXME: Is RefCell fine?
 }
@@ -137,27 +162,59 @@ impl PassingAsyncProcedureCall {
             workers.push(worker);
         }
 
-        Ok(Self { workers, received })
+        Ok(Self {
+            workers,
+            buffer: RefCell::new(Vec::default()),
+            received,
+        })
     }
 }
 
-impl AsyncProcedureCall<UsedHttpClient> for PassingAsyncProcedureCall {
+impl<K: OffscreenKernelEnvironment> AsyncProcedureCall<K> for PassingAsyncProcedureCall {
     type Context = UsedContext;
-    type Transferables = UsedTransferables;
+    type ReceiveIterator<F: FnMut(&Message) -> bool> = IntoIter<Message>;
 
-    fn receive(&self) -> Option<Message<UsedTransferables>> {
-        self.received
+    fn receive<F: FnMut(&Message) -> bool>(&self, mut filter: F) -> Self::ReceiveIterator<F> {
+        let mut buffer = self.buffer.borrow_mut();
+        let mut ret = Vec::new();
+
+        // FIXME tcs: Verify this!
+        let mut index = 0usize;
+        let mut max_len = buffer.len();
+        while index < max_len {
+            if filter(&buffer[index]) {
+                ret.push(buffer.swap_remove(index));
+                max_len -= 1;
+            }
+            index += 1;
+        }
+
+        // TODO: (optimize) Using while instead of if means that we are processing all that is
+        // TODO available this might cause frame drops.
+        while let Some(message) = self
+            .received
             .try_borrow_mut()
             .expect("Failed to borrow in receive of APC")
             .pop()
+        {
+            log::debug!("Data reached main thread: {:?}", &message);
+
+            if filter(&message) {
+                ret.push(message);
+            } else {
+                buffer.push(message)
+            }
+        }
+
+        ret.into_iter()
     }
 
     fn call(
         &self,
         input: Input,
-        procedure: AsyncProcedure<Self::Context>,
+        procedure: AsyncProcedure<K, UsedContext>,
     ) -> Result<(), CallError> {
-        let procedure_ptr = procedure as *mut AsyncProcedure<Self::Context> as u32; // FIXME: is u32 fine, define an overflow safe function?
+        let procedure_ptr = procedure as *mut AsyncProcedure<K, UsedContext> as u32; // FIXME: is u32 fine, define an overflow safe function?
         let input = serde_json::to_string(&input).map_err(|e| CallError::Serialize(Box::new(e)))?;
 
         let message = js_sys::Array::of2(&JsValue::from(procedure_ptr), &JsValue::from(input));

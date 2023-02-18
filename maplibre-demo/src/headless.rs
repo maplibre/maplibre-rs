@@ -1,8 +1,12 @@
 use maplibre::{
     coords::{LatLon, WorldTileCoords},
-    headless::{create_headless_renderer, map::HeadlessMap},
+    headless::{create_headless_renderer, map::HeadlessMap, HeadlessPlugin},
+    plugin::Plugin,
+    raster::{DefaultRasterTransferables, RasterPlugin},
+    render::RenderPlugin,
     style::Style,
     util::grid::google_mercator,
+    vector::{DefaultVectorTransferables, VectorPlugin},
 };
 use tile_grid::{extent_wgs84_to_merc, Extent, GridIterator};
 
@@ -17,7 +21,14 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
         .map(|layer| layer.source_layer.as_ref().unwrap().clone())
         .collect::<Vec<_>>();
 
-    let mut map = HeadlessMap::new(style, renderer, kernel, true).unwrap();
+    let plugins: Vec<Box<dyn Plugin<_>>> = vec![
+        Box::new(RenderPlugin::default()),
+        Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
+        Box::new(RasterPlugin::<DefaultRasterTransferables>::default()),
+        Box::new(HeadlessPlugin::new(true)),
+    ];
+
+    let mut map = HeadlessMap::new(style, renderer, kernel, plugins).unwrap();
 
     let tile_limits = google_mercator().tile_limits(
         extent_wgs84_to_merc(&Extent {
@@ -35,7 +46,7 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
 
         let tile = map.fetch_tile(coords).await.expect("Failed to fetch!");
 
-        let tile = map
+        let layers = map
             .process_tile(
                 tile,
                 &requested_layers
@@ -43,9 +54,8 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
                     .map(|layer| layer.as_str())
                     .collect::<Vec<_>>(),
             )
-            .await
-            .expect("Failed to process!");
+            .await;
 
-        map.render_tile(tile);
+        map.render_tile(layers);
     }
 }

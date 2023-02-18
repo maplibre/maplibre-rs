@@ -2,7 +2,11 @@ use std::collections::HashMap;
 
 use downcast_rs::{impl_downcast, Downcast};
 
-use crate::{context::MapContext, define_label};
+use crate::{
+    context::MapContext,
+    define_label,
+    tcs::system::{stage::SystemStage, IntoSystemContainer},
+};
 
 pub struct NopStage;
 
@@ -18,7 +22,7 @@ macro_rules! multi_stage {
         }
 
         impl Stage for $multi_stage {
-            fn run(&mut self, context: &mut MapContext) {
+            fn run(&mut self, context: &mut $crate::context::MapContext) {
                  $(self.$stage.run(context);)*
             }
         }
@@ -99,6 +103,13 @@ impl Schedule {
         self.stage_order.push(label.clone());
         let prev = self.stages.insert(label.clone(), Box::new(stage));
         assert!(prev.is_none(), "Stage already exists: {:?}.", label);
+        self
+    }
+
+    pub fn remove_stage(&mut self, label: impl StageLabel) -> &mut Self {
+        let remove: Box<dyn StageLabel> = Box::new(label);
+        self.stages.remove(&remove).expect("stage not found");
+        self.stage_order.retain(|label| label != &remove);
         self
     }
 
@@ -260,6 +271,38 @@ impl Schedule {
         self.stage_order
             .iter()
             .map(move |label| (&**label, &*self.stages[label]))
+    }
+
+    /// Adds a system to the [`Stage`] identified by `stage_label`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use maplibre::context::MapContext;
+    /// # use maplibre::tcs::system::stage::SystemStage;
+    /// # use maplibre::schedule::{Schedule, NopStage};
+    /// #
+    /// # let mut schedule = Schedule::default();
+    /// # schedule.add_stage("my_stage", SystemStage::default());
+    /// # fn my_system(context: &mut MapContext) {}
+    /// #
+    /// schedule.add_system_to_stage("my_stage", my_system);
+    /// ```
+    pub fn add_system_to_stage(
+        &mut self,
+        stage_label: impl StageLabel,
+        system: impl IntoSystemContainer,
+    ) -> &mut Self {
+        let stage = self
+            .get_stage_mut::<SystemStage>(&stage_label)
+            .unwrap_or_else(move || {
+                panic!(
+                    "Stage '{:?}' does not exist or is not a SystemStage",
+                    stage_label
+                )
+            });
+        stage.add_system(system);
+        self
     }
 }
 

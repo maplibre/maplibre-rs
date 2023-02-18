@@ -1,41 +1,78 @@
 use std::{
+    any::Any,
+    cell::RefCell,
+    fmt::Debug,
     future::Future,
+    marker::PhantomData,
     pin::Pin,
     sync::{
         mpsc,
         mpsc::{Receiver, Sender},
     },
+    vec::IntoIter,
 };
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::io::{
-    scheduler::Scheduler,
-    source_client::{HttpClient, HttpSourceClient, SourceClient},
-    transferables::{DefaultTransferables, Transferables},
-    TileRequest,
+use crate::{
+    coords::WorldTileCoords, define_label, environment::OffscreenKernelEnvironment,
+    io::scheduler::Scheduler, style::Style,
 };
+
+define_label!(MessageTag);
+
+impl MessageTag for u32 {
+    fn dyn_clone(&self) -> Box<dyn MessageTag> {
+        Box::new(*self)
+    }
+}
+
+#[derive(Error, Debug)]
+pub enum MessageError {
+    #[error("the message did not contain the expected data")]
+    CastError(Box<dyn Any>),
+}
 
 /// The result of the tessellation of a tile. This is sent as a message from a worker to the caller
 /// of an [`AsyncProcedure`].
-///
-/// * `TessellatedLayer` contains the result of the tessellation for a specific layer.
-/// * `UnavailableLayer` is sent if a requested layer is not found.
-/// * `TileTessellated` is sent if processing of a tile finished.
-#[derive(Clone)]
-pub enum Message<T: Transferables> {
-    TileTessellated(T::TileTessellated),
-    LayerUnavailable(T::LayerUnavailable),
-    LayerTessellated(T::LayerTessellated),
+#[derive(Debug)]
+pub struct Message {
+    tag: &'static dyn MessageTag,
+    transferable: Box<dyn Any + Send>,
+}
 
-    LayerIndexed(T::LayerIndexed),
+impl Message {
+    pub fn new(tag: &'static dyn MessageTag, transferable: Box<dyn Any + Send>) -> Self {
+        Self { tag, transferable }
+    }
+
+    pub fn into_transferable<T: 'static>(self) -> Box<T> {
+        self.transferable
+            .downcast::<T>()
+            .expect("message has wrong tag")
+    }
+
+    pub fn has_tag(&self, tag: &'static dyn MessageTag) -> bool {
+        self.tag == tag
+    }
+
+    pub fn tag(&self) -> &'static dyn MessageTag {
+        self.tag
+    }
+}
+
+pub trait IntoMessage {
+    fn into(self) -> Message;
 }
 
 /// Inputs for an [`AsyncProcedure`]
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Input {
-    TileRequest(TileRequest),
+    TileRequest {
+        coords: WorldTileCoords,
+        style: Style, // TODO
+    },
     NotYetImplemented, // TODO: Placeholder, should be removed when second input is added
 }
 
@@ -46,11 +83,9 @@ pub enum SendError {
 }
 
 /// Allows sending messages from workers to back to the caller.
-pub trait Context<T: Transferables, HC: HttpClient>: Send + 'static {
+pub trait Context: 'static {
     /// Send a message back to the caller.
-    fn send(&self, data: Message<T>) -> Result<(), SendError>;
-
-    fn source_client(&self) -> &SourceClient<HC>;
+    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError>;
 }
 
 #[derive(Error, Debug)]
@@ -79,13 +114,15 @@ pub enum CallError {
     Serialize(Box<dyn std::error::Error>),
     #[error("deserializing failed")]
     Deserialize(Box<dyn std::error::Error>),
+    #[error("deserializing input failed")]
+    DeserializeInput(Box<dyn std::error::Error>),
 }
 
 /// Type definitions for asynchronous procedure calls. These functions can be called in an
 /// [`AsyncProcedureCall`]. Functions of this type are required to be statically available at
 /// compile time. It is explicitly not possible to use closures, as they would require special
 /// serialization which is currently not supported.
-pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFuture;
+pub type AsyncProcedure<K, C> = fn(input: Input, context: C, kernel: K) -> AsyncProcedureFuture;
 
 /// APCs define an interface for performing work asynchronously.
 /// This work can be implemented through procedures which can be called asynchronously, hence the
@@ -123,87 +160,123 @@ pub type AsyncProcedure<C> = fn(input: Input, context: C) -> AsyncProcedureFutur
 /// [`PassingAsyncProcedureCall`]. This implementation does not depend on shared-memory compared to
 /// [`SchedulerAsyncProcedureCall`]. In fact, on the web we are currently not depending on
 /// shared-memory because that feature is hidden behind feature flags in browsers
-/// (see [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer).
+/// (see [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer)).
 ///
 ///
 // TODO: Rename to AsyncProcedureCaller?
-pub trait AsyncProcedureCall<HC: HttpClient>: 'static {
-    type Context: Context<Self::Transferables, HC> + Send;
-    type Transferables: Transferables;
+pub trait AsyncProcedureCall<K: OffscreenKernelEnvironment>: 'static {
+    type Context: Context + Send + Clone;
+
+    type ReceiveIterator<F: FnMut(&Message) -> bool>: Iterator<Item = Message>;
 
     /// Try to receive a message non-blocking.
-    fn receive(&self) -> Option<Message<Self::Transferables>>;
+    fn receive<F: FnMut(&Message) -> bool>(&self, filter: F) -> Self::ReceiveIterator<F>;
 
     /// Call an [`AsyncProcedure`] using some [`Input`]. This function is non-blocking and
     /// returns immediately.
-    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>)
-        -> Result<(), CallError>;
+    fn call(
+        &self,
+        input: Input,
+        procedure: AsyncProcedure<K, Self::Context>,
+    ) -> Result<(), CallError>;
 }
 
 #[derive(Clone)]
-pub struct SchedulerContext<T: Transferables, HC: HttpClient> {
-    sender: Sender<Message<T>>,
-    source_client: SourceClient<HC>,
+pub struct SchedulerContext {
+    sender: Sender<Message>,
 }
 
-impl<T: Transferables, HC: HttpClient> Context<T, HC> for SchedulerContext<T, HC> {
-    fn send(&self, data: Message<T>) -> Result<(), SendError> {
-        self.sender.send(data).map_err(|_e| SendError::Transmission)
-    }
-
-    fn source_client(&self) -> &SourceClient<HC> {
-        &self.source_client
+impl Context for SchedulerContext {
+    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+        self.sender
+            .send(message.into())
+            .map_err(|_e| SendError::Transmission)
     }
 }
 
-pub struct SchedulerAsyncProcedureCall<HC: HttpClient, S: Scheduler> {
-    channel: (
-        Sender<Message<DefaultTransferables>>,
-        Receiver<Message<DefaultTransferables>>,
-    ),
-    http_client: HC,
+pub struct SchedulerAsyncProcedureCall<K: OffscreenKernelEnvironment, S: Scheduler> {
+    channel: (Sender<Message>, Receiver<Message>),
+    buffer: RefCell<Vec<Message>>,
     scheduler: S,
+    phantom_k: PhantomData<K>,
 }
 
-impl<HC: HttpClient, S: Scheduler> SchedulerAsyncProcedureCall<HC, S> {
-    pub fn new(http_client: HC, scheduler: S) -> Self {
+impl<K: OffscreenKernelEnvironment, S: Scheduler> SchedulerAsyncProcedureCall<K, S> {
+    pub fn new(scheduler: S) -> Self {
         Self {
             channel: mpsc::channel(),
-            http_client,
+            buffer: RefCell::new(Vec::new()),
+            phantom_k: PhantomData::default(),
             scheduler,
         }
     }
 }
 
-impl<HC: HttpClient, S: Scheduler> AsyncProcedureCall<HC> for SchedulerAsyncProcedureCall<HC, S> {
-    type Context = SchedulerContext<Self::Transferables, HC>;
-    type Transferables = DefaultTransferables;
+impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
+    for SchedulerAsyncProcedureCall<K, S>
+{
+    type Context = SchedulerContext;
+    type ReceiveIterator<F: FnMut(&Message) -> bool> = IntoIter<Message>;
 
-    fn receive(&self) -> Option<Message<DefaultTransferables>> {
-        let transferred = self.channel.1.try_recv().ok()?;
-        Some(transferred)
+    fn receive<F: FnMut(&Message) -> bool>(&self, mut filter: F) -> Self::ReceiveIterator<F> {
+        let mut buffer = self.buffer.borrow_mut();
+        let mut ret = Vec::new();
+
+        // FIXME tcs: Verify this!
+        let mut index = 0usize;
+        let mut max_len = buffer.len();
+        while index < max_len {
+            if filter(&buffer[index]) {
+                ret.push(buffer.swap_remove(index));
+                max_len -= 1;
+            }
+            index += 1;
+        }
+
+        // TODO: (optimize) Using while instead of if means that we are processing all that is
+        // TODO: available this might cause frame drops.
+        while let Ok(message) = self.channel.1.try_recv() {
+            tracing::debug!("Data reached main thread: {:?}", &message);
+            log::debug!("Data reached main thread: {:?}", &message);
+
+            if filter(&message) {
+                ret.push(message);
+            } else {
+                buffer.push(message)
+            }
+        }
+
+        ret.into_iter()
     }
 
     fn call(
         &self,
         input: Input,
-        procedure: AsyncProcedure<Self::Context>,
+        procedure: AsyncProcedure<K, Self::Context>,
     ) -> Result<(), CallError> {
         let sender = self.channel.0.clone();
-        let client = self.http_client.clone(); // TODO (perf): do not clone each time
 
         self.scheduler
             .schedule(move || async move {
-                procedure(
-                    input,
-                    SchedulerContext {
-                        sender,
-                        source_client: SourceClient::new(HttpSourceClient::new(client)),
-                    },
-                )
-                .await
-                .unwrap();
+                log::info!("Processing on thread: {:?}", std::thread::current().name());
+
+                procedure(input, SchedulerContext { sender }, K::create())
+                    .await
+                    .unwrap();
             })
             .map_err(|_e| CallError::Schedule)
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use crate::io::apc::{Context, IntoMessage, SendError};
+
+    pub struct DummyContext;
+
+    impl Context for DummyContext {
+        fn send<T: IntoMessage>(&self, _message: T) -> Result<(), SendError> {
+            Ok(())
+        }
     }
 }

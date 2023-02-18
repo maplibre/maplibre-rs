@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
-use maplibre::{context::MapContext, render::camera::Camera, world::World};
+use maplibre::{context::MapContext, render::camera::Camera};
 use winit::event::{ElementState, MouseButton};
 
 use super::UpdateState;
@@ -15,14 +15,7 @@ pub struct PanHandler {
 }
 
 impl UpdateState for PanHandler {
-    fn update_state(
-        &mut self,
-        MapContext {
-            world: World { view_state, .. },
-            ..
-        }: &mut MapContext,
-        _dt: Duration,
-    ) {
+    fn update_state(&mut self, MapContext { view_state, .. }: &mut MapContext, _dt: Duration) {
         if !self.is_panning {
             return;
         }

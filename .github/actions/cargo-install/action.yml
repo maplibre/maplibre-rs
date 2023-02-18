@@ -12,7 +12,7 @@ runs:
     - name:  Install binstall
       run: |
         if command -v cargo-binstall &> /dev/null; then
-          echo "binstall already found"
+          echo "binstall already found at $(command -v cargo-binstall)"
           exit 0
         fi
         
@@ -61,9 +61,13 @@ runs:
           echo "Skipping binary install"
         fi
         
-        # Upgrade
-        cargo binstall --no-confirm --force cargo-binstall
+        # Upgrade binstall to latest version
+        # Do not use symlinks because they behave weird on Windows(+Bash)
+        cargo binstall --no-confirm --force --no-symlinks cargo-binstall
+        # Use latest version to reinstall binstall
+        cargo binstall --no-confirm --force --no-symlinks cargo-binstall
       shell: bash
     - name: Install ${{ inputs.name }}
       shell: bash
-      run: cargo binstall --no-confirm --force ${{ inputs.name }}
+      # Do not use symlinks because they behave weird on Windows(+Bash)
+      run: cargo binstall --no-confirm --force --no-symlinks ${{ inputs.name }}

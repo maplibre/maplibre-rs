@@ -9,12 +9,15 @@ use log::error;
 use smallvec::{smallvec, SmallVec};
 use thiserror::Error;
 
-use crate::render::{
-    graph::{
-        Edge, NodeId, NodeRunError, NodeState, RenderContext, RenderGraph, RenderGraphContext,
-        SlotLabel, SlotType, SlotValue,
+use crate::{
+    render::{
+        graph::{
+            Edge, NodeId, NodeRunError, NodeState, RenderContext, RenderGraph, RenderGraphContext,
+            SlotLabel, SlotType, SlotValue,
+        },
+        RenderResources,
     },
-    RenderState,
+    tcs::world::World,
 };
 
 pub(crate) struct RenderGraphRunner;
@@ -49,7 +52,8 @@ impl RenderGraphRunner {
         graph: &RenderGraph,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
-        state: &RenderState,
+        state: &RenderResources,
+        world: &World,
     ) -> Result<(), RenderGraphRunnerError> {
         let command_encoder =
             device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
@@ -58,7 +62,7 @@ impl RenderGraphRunner {
             command_encoder,
         };
 
-        Self::run_graph(graph, None, &mut render_context, state, &[])?;
+        Self::run_graph(graph, None, &mut render_context, state, world, &[])?;
         {
             #[cfg(feature = "trace")]
             let _span = tracing::info_span!("submit_graph_commands").entered();
@@ -71,7 +75,8 @@ impl RenderGraphRunner {
         graph: &RenderGraph,
         graph_name: Option<Cow<'static, str>>,
         render_context: &mut RenderContext,
-        state: &RenderState,
+        state: &RenderResources,
+        world: &World,
         inputs: &[SlotValue],
     ) -> Result<(), RenderGraphRunnerError> {
         let mut node_outputs: HashMap<NodeId, SmallVec<[SlotValue; 4]>> = HashMap::default();
@@ -173,7 +178,9 @@ impl RenderGraphRunner {
                     #[cfg(feature = "trace")]
                     let _span = tracing::info_span!("node", name = node_state.type_name).entered();
 
-                    node_state.node.run(&mut context, render_context, state)?;
+                    node_state
+                        .node
+                        .run(&mut context, render_context, state, world)?;
                 }
 
                 for run_sub_graph in context.finish() {
@@ -185,6 +192,7 @@ impl RenderGraphRunner {
                         Some(run_sub_graph.name),
                         render_context,
                         state,
+                        world,
                         &run_sub_graph.inputs,
                     )?;
                 }

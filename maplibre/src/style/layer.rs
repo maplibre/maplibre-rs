@@ -6,6 +6,8 @@ use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 
+use crate::style::raster::RasterLayer;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BackgroundPaint {
     #[serde(rename = "background-color")]
@@ -40,6 +42,8 @@ pub enum LayerPaint {
     Line(LinePaint),
     #[serde(rename = "fill")]
     Fill(FillPaint),
+    #[serde(rename = "raster")]
+    Raster(RasterLayer),
 }
 
 impl LayerPaint {
@@ -51,6 +55,7 @@ impl LayerPaint {
                 .map(|color| color.clone().into()),
             LayerPaint::Line(paint) => paint.line_color.as_ref().map(|color| color.clone().into()),
             LayerPaint::Fill(paint) => paint.fill_color.as_ref().map(|color| color.clone().into()),
+            LayerPaint::Raster(_) => None,
         }
     }
 }
@@ -61,8 +66,6 @@ pub struct StyleLayer {
     #[serde(skip)]
     pub index: u32, // FIXME: How is this initialized?
     pub id: String,
-    #[serde(rename = "type")]
-    pub typ: String,
     // TODO filter
     // TODO layout
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -85,7 +88,6 @@ impl Default for StyleLayer {
         Self {
             index: 0,
             id: "id".to_string(),
-            typ: "fill".to_string(),
             maxzoom: None,
             minzoom: None,
             metadata: None,

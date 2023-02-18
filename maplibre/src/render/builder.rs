@@ -114,12 +114,12 @@ impl UninitializedRenderer {
     where
         MWC: MapWindowConfig,
     {
-        Ok(Renderer::initialize_headless(
+        Renderer::initialize_headless(
             existing_window,
             self.wgpu_settings.clone(),
             self.renderer_settings,
         )
-        .await?)
+        .await
     }
 }
 

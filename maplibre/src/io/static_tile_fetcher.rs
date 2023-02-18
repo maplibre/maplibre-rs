@@ -10,6 +10,7 @@ use include_dir::include_dir;
 use include_dir::Dir;
 
 use crate::coords::TileCoords;
+
 #[cfg(static_tiles_found)]
 static TILES: Dir = include_dir!("$OUT_DIR/extracted-tiles");
 #[cfg(not(static_tiles_found))]
