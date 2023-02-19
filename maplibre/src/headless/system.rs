@@ -55,10 +55,12 @@ impl System for WriteSurfaceBufferSystem {
                 let padded_buffer = buffer_slice.get_mapped_range();
 
                 if self.write_to_disk {
-                    buffered_texture.write_png(
-                        &padded_buffer,
-                        format!("frame_{}.png", current_frame).as_str(),
-                    );
+                    buffered_texture
+                        .write_png(
+                            &padded_buffer,
+                            format!("frame_{}.png", current_frame).as_str(),
+                        )
+                        .expect("Could save frame to disk");
                 }
 
                 // With the current interface, we have to make sure all mapped views are

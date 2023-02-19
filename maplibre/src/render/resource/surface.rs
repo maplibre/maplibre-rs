@@ -1,9 +1,10 @@
 //! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
-use std::{mem::size_of, num::NonZeroU32, sync::Arc};
-
 use log::debug;
+use std::{mem::size_of, num::NonZeroU32, sync::Arc};
+#[cfg(feature = "headless")]
+use thiserror::Error;
 
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
@@ -81,6 +82,15 @@ pub struct BufferedTextureHead {
 }
 
 #[cfg(feature = "headless")]
+#[derive(Error, Debug)]
+pub enum WriteImageError {
+    #[error("error while rendering to image")]
+    WriteImage(#[from] png::EncodingError),
+    #[error("could not create file to save as an image")]
+    CreateImageFileFailed(#[from] std::io::Error),
+}
+
+#[cfg(feature = "headless")]
 impl BufferedTextureHead {
     pub fn map_async(&self, device: &wgpu::Device) -> wgpu::BufferSlice {
         // Note that we're not calling `.await` here.
@@ -98,32 +108,32 @@ impl BufferedTextureHead {
         self.output_buffer.unmap();
     }
 
-    pub fn write_png<'a>(&self, padded_buffer: &wgpu::BufferView<'a>, png_output_path: &str) {
+    pub fn write_png<'a>(
+        &self,
+        padded_buffer: &wgpu::BufferView<'a>,
+        png_output_path: &str,
+    ) -> Result<(), WriteImageError> {
         use std::{fs::File, io::Write};
         let mut png_encoder = png::Encoder::new(
-            File::create(png_output_path).unwrap(), // TODO: Remove unwrap
+            File::create(png_output_path)?,
             self.buffer_dimensions.width as u32,
             self.buffer_dimensions.height as u32,
         );
         png_encoder.set_depth(png::BitDepth::Eight);
         png_encoder.set_color(png::ColorType::Rgba);
-        let mut png_writer = png_encoder
-            .write_header()
-            .unwrap() // TODO: Remove unwrap
-            .into_stream_writer_with_size(
-                self.buffer_dimensions.unpadded_bytes_per_row.get() as usize
-            )
-            .unwrap(); // TODO: Remove unwrap
+        let mut png_writer = png_encoder.write_header()?.into_stream_writer_with_size(
+            self.buffer_dimensions.unpadded_bytes_per_row.get() as usize,
+        )?;
 
         // from the padded_buffer we write just the unpadded bytes into the image
         for chunk in
             padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row.get() as usize)
         {
             png_writer
-                .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row.get() as usize])
-                .unwrap(); // TODO: Remove unwrap
+                .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row.get() as usize])?
         }
-        png_writer.finish().unwrap(); // TODO: Remove unwrap
+        png_writer.finish()?;
+        Ok(())
     }
 
     pub fn copy_texture(&self) -> wgpu::ImageCopyTexture<'_> {
