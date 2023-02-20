@@ -26,11 +26,19 @@ pub struct Style {
     pub zoom: Option<f64>,
     pub bearing: Option<f64>,
     pub pitch: Option<f64>,
+    //TODO pub light: Option<Light>,
+    //TODO pub terrain: Option<Terrain>,
     pub sources: HashMap<String, Source>,
     pub sprite: Option<String>,
     pub glyphs: Option<String>,
+    // TODO pub transition
+    
+    // TODO is this in the style spec?
     pub projection: Option<Map<String, Value>>,
+
     pub layers: Vec<StyleLayer>,
+
+    // this is metadata, and it's not in the spec
     pub created: Option<String>,
     pub modified: Option<String>,
     pub id: Option<String>,
@@ -39,6 +47,7 @@ pub struct Style {
     pub protected: Option<bool>,
     pub draft: Option<bool>,
 
+    // to allow for extra fields in the style
     #[serde(flatten)]
     pub extra: Map<String, Value>,
 }
@@ -51,10 +60,10 @@ pub struct Metadata {
 impl Default for Style {
     fn default() -> Self {
         Style {
+            extra: Default::default(),
             version: 8,
             name: "Default Style".to_string(),
             metadata: Default::default(),
-            extra: Default::default(),
             sources: Default::default(),
             center: Some([46.5197, 6.6323]),
             pitch: Some(0.0),
@@ -266,6 +275,12 @@ mod tests {
 
         let thestyle: Style = serde_json::from_str(style_json_str).unwrap();
         println!("{:#?}", thestyle);
+    }
+
+    #[test]
+    fn default_object() {
+        let style = Style::default();
+        println!("{:#?}", style);
     }
 
     #[test]
