@@ -31,7 +31,7 @@ pub struct Style {
     pub bearing: Option<f64>,
     pub pitch: Option<f64>,
     pub light: Option<Light>,
-    pub terrain: Map<String, Value>,
+    pub terrain: Option<Map<String, Value>>,
     pub sources: HashMap<String, Source>,
     pub sprite: Option<String>,
     pub glyphs: Option<String>,
@@ -53,7 +53,7 @@ pub struct Style {
 
     // to allow for extra fields in the style
     #[serde(flatten)]
-    pub extra: Map<String, Value>,
+    pub extra: Option<Map<String, Value>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
