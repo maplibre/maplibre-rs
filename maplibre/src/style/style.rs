@@ -31,11 +31,11 @@ pub struct Style {
     pub bearing: Option<f64>,
     pub pitch: Option<f64>,
     pub light: Option<Light>,
-    //TODO pub terrain: Option<Terrain>,
+    pub terrain: Map<String, Value>,
     pub sources: HashMap<String, Source>,
     pub sprite: Option<String>,
     pub glyphs: Option<String>,
-    // TODO pub transition: Option<Transition>,
+    pub transition: Option<Transition>,
     
     // TODO is this in the style spec?
     pub projection: Option<Map<String, Value>>,
@@ -113,6 +113,31 @@ impl Default for Anchor {
 }
 
 
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct Transition {
+    #[serde(default)]
+    delay: Delay,
+    #[serde(default)]
+    duration: Duration,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Delay(i32);
+impl Default for Delay{
+    fn default() -> Self {
+        Delay(0)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Duration(i32);
+impl Default for Duration{
+    fn default() -> Self {
+        Duration(0)
+    }
+}
+
+
 impl Default for Style {
     fn default() -> Self {
         Style {
@@ -136,6 +161,8 @@ impl Default for Style {
             modified: Some("2021-03-01T00:00:00Z".to_string()),
             owner: Default::default(),
             light: Some(Light::default()),
+            terrain: Default::default(),
+            transition: Some(Transition::default()),
             layers: vec![
                 StyleLayer {
                     index: 0,
