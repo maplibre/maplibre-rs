@@ -8,8 +8,8 @@ use csscolorparser::Color as CssColor;
 use serde::{Deserialize, Serialize};
 use serde_json::Map;
 use serde_json::Value;
-// use serde_json::Number;
 
+// use serde_json::Number;
 // use serde_json::json;
 
 
@@ -42,7 +42,7 @@ pub struct Style {
 
     pub layers: Vec<StyleLayer>,
 
-    // this is metadata, and it's not in the spec
+    // TODO this is metadata, and it's not in the spec
     pub created: Option<String>,
     pub modified: Option<String>,
     pub id: Option<String>,
@@ -61,9 +61,6 @@ pub struct Metadata {
     Value: String,
 }
 
-// type Expression = Value;
-
-
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Light {
     #[serde(default)]
@@ -76,41 +73,30 @@ pub struct Light {
     position: Position,
 }
 
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Color(u32);
+struct Color(String);
 impl Default for Color{
     fn default() -> Self {
-        Color(3)
+        Color("#ffffff".parse().unwrap())
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Intensity([u32;3]);
+struct Intensity(Vec<f32>);
 impl Default for Intensity{
     fn default() -> Self {
-        Intensity([9,9,9])
+        Intensity(vec![1.15,210.0,30.0])
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Position([u32;3]);
+struct Position(f32);
 impl Default for Position{
     fn default() -> Self {
-        Position([0,2,0])
+        Position(0.5)
     }
 }
-
-// fn default_light_color() -> Expression {
-//     Expression(json!([1.15,1.15,1.15]))
-// }
-
-// fn default_light_intensity() -> Expression {
-//     Expression(30)
-// }
-
-// fn default_light_position() -> Expression {
-//     Expression(20)
-// }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Anchor {
