@@ -1,0 +1,589 @@
+{
+  "version": 8,
+  "name": "Glow globe",
+  "metadata": {
+    "mapbox:autocomposite": true,
+    "mapbox:type": "template",
+    "mapbox:sdk-support": {
+      "android": "latest",
+      "ios": "latest",
+      "js": "latest"
+    },
+    "mapbox:groups": {
+      "Land & water, land": { "name": "Land & water, land", "collapsed": true },
+      "Land & water, water": {
+        "name": "Land & water, water",
+        "collapsed": true
+      },
+      "Land & water, built": {
+        "name": "Land & water, built",
+        "collapsed": true
+      },
+      "Place labels, place-labels": {
+        "collapsed": true,
+        "name": "Place labels, place-labels"
+      },
+      "Land, water, & sky, land": {
+        "collapsed": true,
+        "name": "Land, water, & sky, land"
+      },
+      "Land, water, & sky, water": {
+        "collapsed": true,
+        "name": "Land, water, & sky, water"
+      },
+      "Land, water, & sky, built": {
+        "collapsed": true,
+        "name": "Land, water, & sky, built"
+      }
+    }
+  },
+  "center": [-98.83605719768059, 36.93679701454569],
+  "zoom": 2.4269051381580415,
+  "bearing": 0,
+  "pitch": 0,
+  "fog": {
+    "color": "#aedb6b",
+    "space-color": "hsl(220, 20%, 15%)",
+    "high-color": "#008cff",
+    "star-intensity": 0.15,
+    "horizon-blend": ["interpolate", ["linear"], ["zoom"], 4, 0.05, 7, 0.01],
+    "range": [1, 20]
+  },
+  "sources": {
+    "composite": {
+      "url": "mapbox://mapbox.mapbox-bathymetry-v2,mapbox-map-design.graticules,mapbox.mapbox-streets-v8,mapbox.country-boundaries-v1",
+      "type": "vector"
+    }
+  },
+  "sprite": "mapbox://sprites/mapbox-map-design/cl4gxqwi5001415l381n7qwak/8bd6jn4hl1wv6td6xu9b5gpnu",
+  "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+  "projection": { "name": "globe" },
+  "layers": [
+    {
+      "id": "land",
+      "type": "background",
+      "layout": {},
+      "paint": {
+        "background-color": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          11,
+          "rgb(0, 79, 101)",
+          13,
+          "rgb(20, 60, 70)"
+        ]
+      },
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, land"
+      }
+    },
+    {
+      "id": "waterway",
+      "type": "line",
+      "source": "composite",
+      "source-layer": "waterway",
+      "minzoom": 8,
+      "layout": {
+        "line-cap": ["step", ["zoom"], "butt", 11, "round"],
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "hsl(193, 57%, 15%)",
+        "line-width": [
+          "interpolate",
+          ["exponential", 1.3],
+          ["zoom"],
+          9,
+          ["match", ["get", "class"], ["canal", "river"], 0.1, 0],
+          20,
+          ["match", ["get", "class"], ["canal", "river"], 8, 3]
+        ],
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0, 8.5, 1]
+      },
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, water"
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "composite",
+      "source-layer": "water",
+      "layout": {},
+      "paint": { "fill-color": "hsl(193, 57%, 15%)" },
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, water"
+      }
+    },
+    {
+      "layout": {},
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, water"
+      },
+      "maxzoom": 8,
+      "type": "fill",
+      "source": "composite",
+      "id": "water-depth",
+      "paint": {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          6,
+          [
+            "interpolate",
+            ["linear"],
+            ["get", "min_depth"],
+            0,
+            "hsla(193, 57%, 15%, 0.35)",
+            200,
+            "hsla(193, 57%, 14%, 0.35)",
+            7000,
+            "hsla(193, 57%, 12%, 0.35)"
+          ],
+          8,
+          [
+            "interpolate",
+            ["linear"],
+            ["get", "min_depth"],
+            0,
+            "hsla(193, 57%, 15%, 0)",
+            200,
+            "hsla(193, 57%, 14%, 0)",
+            7000,
+            "hsla(193, 57%, 11%, 0)"
+          ]
+        ]
+      },
+      "source-layer": "depth"
+    },
+    {
+      "minzoom": 13,
+      "layout": {},
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, built"
+      },
+      "filter": [
+        "all",
+        ["==", ["get", "class"], "land"],
+        ["==", ["geometry-type"], "Polygon"]
+      ],
+      "type": "fill",
+      "source": "composite",
+      "id": "land-structure-polygon",
+      "paint": { "fill-color": "rgb(20, 60, 70)" },
+      "source-layer": "structure"
+    },
+    {
+      "minzoom": 13,
+      "layout": { "line-cap": "square" },
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, built"
+      },
+      "filter": [
+        "all",
+        ["==", ["get", "class"], "land"],
+        ["==", ["geometry-type"], "LineString"]
+      ],
+      "type": "line",
+      "source": "composite",
+      "id": "land-structure-line",
+      "paint": {
+        "line-width": [
+          "interpolate",
+          ["exponential", 1.99],
+          ["zoom"],
+          14,
+          0.75,
+          20,
+          40
+        ],
+        "line-color": "rgb(20, 60, 70)"
+      },
+      "source-layer": "structure"
+    },
+    {
+      "minzoom": 2,
+      "layout": {
+        "text-line-height": 1.1,
+        "text-size": [
+          "interpolate",
+          ["cubic-bezier", 0.2, 0, 0.9, 1],
+          ["zoom"],
+          3,
+          [
+            "step",
+            ["get", "symbolrank"],
+            13.200000000000001,
+            9,
+            12.100000000000001,
+            10,
+            11.55,
+            12,
+            10.450000000000001,
+            14,
+            9.350000000000001,
+            16,
+            7.15,
+            17,
+            4.4
+          ],
+          13,
+          [
+            "step",
+            ["get", "symbolrank"],
+            25.3,
+            9,
+            23.1,
+            10,
+            20.900000000000002,
+            11,
+            18.700000000000003,
+            12,
+            17.6,
+            13,
+            16.5,
+            15,
+            14.3
+          ]
+        ],
+        "text-radial-offset": [
+          "step",
+          ["zoom"],
+          ["match", ["get", "capital"], 2, 0.6, 0.55],
+          8,
+          0
+        ],
+        "icon-image": [
+          "step",
+          ["zoom"],
+          [
+            "case",
+            ["==", ["get", "capital"], 2],
+            "border-dot-13",
+            ["step", ["get", "symbolrank"], "dot-11", 9, "dot-10", 11, "dot-9"]
+          ],
+          8,
+          ""
+        ],
+        "text-font": ["Overpass Mono Regular", "Arial Unicode MS Regular"],
+        "text-justify": "auto",
+        "text-anchor": ["step", ["zoom"], ["get", "text_anchor"], 8, "center"],
+        "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+        "text-max-width": 7
+      },
+      "metadata": {
+        "mapbox:featureComponent": "place-labels",
+        "mapbox:group": "Place labels, place-labels"
+      },
+      "maxzoom": 13,
+      "filter": [
+        "all",
+        ["<=", ["get", "filterrank"], 3],
+        [
+          "match",
+          ["get", "class"],
+          "settlement",
+          ["match", ["get", "worldview"], ["all", "US"], true, false],
+          "disputed_settlement",
+          [
+            "all",
+            ["==", ["get", "disputed"], "true"],
+            ["match", ["get", "worldview"], ["all", "US"], true, false]
+          ],
+          false
+        ],
+        [
+          "step",
+          ["zoom"],
+          [">", ["get", "symbolrank"], 6],
+          4,
+          [">=", ["get", "symbolrank"], 7],
+          6,
+          [">=", ["get", "symbolrank"], 8],
+          7,
+          [">=", ["get", "symbolrank"], 10],
+          10,
+          [">=", ["get", "symbolrank"], 11],
+          11,
+          [">=", ["get", "symbolrank"], 13],
+          12,
+          [">=", ["get", "symbolrank"], 15]
+        ]
+      ],
+      "type": "symbol",
+      "source": "composite",
+      "id": "settlement-minor-label",
+      "paint": {
+        "text-color": "rgb(217, 255, 26)",
+        "text-halo-color": "rgb(6, 21, 25)",
+        "text-halo-width": 1,
+        "text-halo-blur": 1
+      },
+      "source-layer": "place_label"
+    },
+    {
+      "minzoom": 2,
+      "layout": {
+        "text-line-height": 1.1,
+        "text-size": [
+          "interpolate",
+          ["cubic-bezier", 0.2, 0, 0.9, 1],
+          ["zoom"],
+          3,
+          ["step", ["get", "symbolrank"], 14.3, 6, 13.200000000000001],
+          6,
+          ["step", ["get", "symbolrank"], 17.6, 6, 16.5, 7, 15.400000000000002],
+          8,
+          [
+            "step",
+            ["get", "symbolrank"],
+            19.8,
+            9,
+            18.700000000000003,
+            10,
+            16.5
+          ],
+          15,
+          [
+            "step",
+            ["get", "symbolrank"],
+            25.3,
+            9,
+            24.200000000000003,
+            10,
+            22,
+            11,
+            19.8,
+            12,
+            17.6,
+            13,
+            16.5,
+            15,
+            14.3
+          ]
+        ],
+        "text-radial-offset": [
+          "step",
+          ["zoom"],
+          ["match", ["get", "capital"], 2, 0.6, 0.55],
+          8,
+          0
+        ],
+        "icon-image": [
+          "step",
+          ["zoom"],
+          [
+            "case",
+            ["==", ["get", "capital"], 2],
+            "border-dot-13",
+            ["step", ["get", "symbolrank"], "dot-11", 9, "dot-10", 11, "dot-9"]
+          ],
+          8,
+          ""
+        ],
+        "text-font": ["Overpass Mono Bold", "Arial Unicode MS Regular"],
+        "text-justify": [
+          "step",
+          ["zoom"],
+          [
+            "match",
+            ["get", "text_anchor"],
+            ["left", "bottom-left", "top-left"],
+            "left",
+            ["right", "bottom-right", "top-right"],
+            "right",
+            "center"
+          ],
+          8,
+          "center"
+        ],
+        "text-anchor": ["step", ["zoom"], ["get", "text_anchor"], 8, "center"],
+        "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+        "text-max-width": 7
+      },
+      "metadata": {
+        "mapbox:featureComponent": "place-labels",
+        "mapbox:group": "Place labels, place-labels"
+      },
+      "maxzoom": 15,
+      "filter": [
+        "all",
+        ["<=", ["get", "filterrank"], 3],
+        [
+          "match",
+          ["get", "class"],
+          "settlement",
+          ["match", ["get", "worldview"], ["all", "US"], true, false],
+          "disputed_settlement",
+          [
+            "all",
+            ["==", ["get", "disputed"], "true"],
+            ["match", ["get", "worldview"], ["all", "US"], true, false]
+          ],
+          false
+        ],
+        [
+          "step",
+          ["zoom"],
+          false,
+          2,
+          ["<=", ["get", "symbolrank"], 6],
+          4,
+          ["<", ["get", "symbolrank"], 7],
+          6,
+          ["<", ["get", "symbolrank"], 8],
+          7,
+          ["<", ["get", "symbolrank"], 10],
+          10,
+          ["<", ["get", "symbolrank"], 11],
+          11,
+          ["<", ["get", "symbolrank"], 13],
+          12,
+          ["<", ["get", "symbolrank"], 15],
+          13,
+          [">=", ["get", "symbolrank"], 11],
+          14,
+          [">=", ["get", "symbolrank"], 15]
+        ]
+      ],
+      "type": "symbol",
+      "source": "composite",
+      "id": "settlement-major-label",
+      "paint": {
+        "text-color": "rgb(217, 255, 26)",
+        "text-halo-color": "rgb(6, 21, 25)",
+        "text-halo-width": 1,
+        "text-halo-blur": 1
+      },
+      "source-layer": "place_label"
+    },
+    {
+      "minzoom": 0.75,
+      "layout": {
+        "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+        "text-line-height": 1.1,
+        "text-max-width": 6,
+        "text-font": ["Overpass Mono Bold", "Arial Unicode MS Regular"],
+        "text-size": [
+          "interpolate",
+          ["exponential", 0.5],
+          ["zoom"],
+          0,
+          10,
+          2.5,
+          15
+        ],
+        "text-transform": "uppercase",
+        "text-letter-spacing": 0.05
+      },
+      "metadata": {
+        "mapbox:featureComponent": "place-labels",
+        "mapbox:group": "Place labels, place-labels"
+      },
+      "maxzoom": 3,
+      "filter": ["==", ["get", "class"], "continent"],
+      "type": "symbol",
+      "source": "composite",
+      "id": "continent-label",
+      "paint": {
+        "text-color": "rgb(217, 255, 26)",
+        "text-halo-color": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          0,
+          "rgba(6, 21, 25, 0.75)",
+          3,
+          "rgb(6, 21, 25)"
+        ],
+        "text-halo-width": 1.5,
+        "text-opacity": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          0,
+          0.8,
+          1.5,
+          0.5,
+          2.5,
+          0
+        ]
+      },
+      "source-layer": "natural_label"
+    },
+    {
+      "id": "country-boundaries",
+      "type": "line",
+      "paint": {
+        "line-color": "#0a8d99",
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          0,
+          0.1,
+          5,
+          0.5,
+          22,
+          1
+        ]
+      },
+      "layout": {},
+      "source": "composite",
+      "source-layer": "country_boundaries",
+      "filter": ["match", ["get", "worldview"], ["all", "US"], true, false]
+    },
+    {
+      "filter": ["match", ["get", "type"], ["geographic line"], false, true],
+      "type": "line",
+      "source": "composite",
+      "id": "graticules_blur",
+      "paint": {
+        "line-color": "#02ed88",
+        "line-opacity": [
+          "case",
+          ["==", ["%", ["get", "degrees"], 30], 0],
+          0.5,
+          0
+        ],
+        "line-width": 5,
+        "line-blur": 10
+      },
+      "source-layer": "graticules"
+    },
+    {
+      "layout": {},
+      "filter": ["match", ["get", "type"], ["geographic line"], false, true],
+      "type": "line",
+      "source": "composite",
+      "id": "graticules",
+      "paint": {
+        "line-color": "#02ed88",
+        "line-opacity": [
+          "case",
+          ["==", ["%", ["get", "degrees"], 30], 0],
+          1,
+          ["==", ["%", ["get", "degrees"], 5], 0],
+          0.1,
+          0
+        ]
+      },
+      "source-layer": "graticules"
+    }
+  ],
+  "created": "2022-06-16T11:25:16.710Z",
+  "modified": "2022-06-23T09:38:35.853Z",
+  "id": "cl4gxqwi5001415l381n7qwak",
+  "owner": "mapbox-map-design",
+  "visibility": "public",
+  "protected": true,
+  "draft": false
+}

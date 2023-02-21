@@ -4,10 +4,14 @@
 use std::{collections::HashMap, str::FromStr};
 use std::{io, path::Path};
 
-use csscolorparser::Color;
+use csscolorparser::Color as CssColor;
 use serde::{Deserialize, Serialize};
 use serde_json::Map;
 use serde_json::Value;
+// use serde_json::Number;
+
+// use serde_json::json;
+
 
 use crate::style::{
     layer::{FillPaint, LayerPaint, LinePaint, StyleLayer},
@@ -26,12 +30,12 @@ pub struct Style {
     pub zoom: Option<f64>,
     pub bearing: Option<f64>,
     pub pitch: Option<f64>,
-    //TODO pub light: Option<Light>,
+    pub light: Option<Light>,
     //TODO pub terrain: Option<Terrain>,
     pub sources: HashMap<String, Source>,
     pub sprite: Option<String>,
     pub glyphs: Option<String>,
-    // TODO pub transition
+    // TODO pub transition: Option<Transition>,
     
     // TODO is this in the style spec?
     pub projection: Option<Map<String, Value>>,
@@ -57,6 +61,72 @@ pub struct Metadata {
     Value: String,
 }
 
+// type Expression = Value;
+
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct Light {
+    #[serde(default)]
+    anchor: Anchor,
+    #[serde(default)]
+    color: Color,
+    #[serde(default)]
+    intensity: Intensity,
+    #[serde(default)]
+    position: Position,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Color(u32);
+impl Default for Color{
+    fn default() -> Self {
+        Color(3)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Intensity([u32;3]);
+impl Default for Intensity{
+    fn default() -> Self {
+        Intensity([9,9,9])
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Position([u32;3]);
+impl Default for Position{
+    fn default() -> Self {
+        Position([0,2,0])
+    }
+}
+
+// fn default_light_color() -> Expression {
+//     Expression(json!([1.15,1.15,1.15]))
+// }
+
+// fn default_light_intensity() -> Expression {
+//     Expression(30)
+// }
+
+// fn default_light_position() -> Expression {
+//     Expression(20)
+// }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum Anchor {
+    #[serde(rename = "map")]
+    Map,
+    #[serde(rename = "viewport")]
+    Viewport,
+}
+
+impl Default for Anchor {
+    fn default() -> Self {
+        Anchor::Viewport
+    }
+}
+
+
 impl Default for Style {
     fn default() -> Self {
         Style {
@@ -79,6 +149,7 @@ impl Default for Style {
             protected: Some(false),
             modified: Some("2021-03-01T00:00:00Z".to_string()),
             owner: Default::default(),
+            light: Some(Light::default()),
             layers: vec![
                 StyleLayer {
                     index: 0,
@@ -88,7 +159,7 @@ impl Default for Style {
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(Color::from_str("#c8facc").unwrap()),
+                        fill_color: Some(CssColor::from_str("#c8facc").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("park".to_string()),
@@ -101,7 +172,7 @@ impl Default for Style {
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(Color::from_str("#e0dfdf").unwrap()),
+                        fill_color: Some(CssColor::from_str("#e0dfdf").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("landuse".to_string()),
@@ -114,7 +185,7 @@ impl Default for Style {
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(Color::from_str("#aedfa3").unwrap()),
+                        fill_color: Some(CssColor::from_str("#aedfa3").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("landcover".to_string()),
@@ -127,7 +198,7 @@ impl Default for Style {
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(Color::from_str("#ffffff").unwrap()),
+                        line_color: Some(CssColor::from_str("#ffffff").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("transportation".to_string()),
@@ -140,7 +211,7 @@ impl Default for Style {
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(Color::from_str("#d9d0c9").unwrap()),
+                        fill_color: Some(CssColor::from_str("#d9d0c9").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("building".to_string()),
@@ -153,7 +224,7 @@ impl Default for Style {
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(Color::from_str("#aad3df").unwrap()),
+                        fill_color: Some(CssColor::from_str("#aad3df").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("water".to_string()),
@@ -166,7 +237,7 @@ impl Default for Style {
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(Color::from_str("#aad3df").unwrap()),
+                        fill_color: Some(CssColor::from_str("#aad3df").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("waterway".to_string()),
@@ -179,7 +250,7 @@ impl Default for Style {
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(Color::from_str("black").unwrap()),
+                        line_color: Some(CssColor::from_str("black").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("boundary".to_string()),
@@ -193,6 +264,7 @@ impl Default for Style {
                     paint: Some(LayerPaint::Raster(RasterLayer::default())),
                     source: None,
                     source_layer: Some("raster".to_string()),
+                    typ: Some("raster".to_string()),
                 },
             ],
         }

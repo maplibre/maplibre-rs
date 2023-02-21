@@ -1,0 +1,328 @@
+{
+  "version": 8,
+  "name": "Bubble",
+  "metadata": {
+    "mapbox:autocomposite": true,
+    "mapbox:type": "template",
+    "mapbox:sdk-support": {
+      "android": "9.3.0",
+      "ios": "5.10.0",
+      "js": "2.0.0"
+    },
+    "mapbox:groups": {
+      "Land & water, built": {
+        "name": "Land & water, built",
+        "collapsed": true
+      },
+      "85556e260d95f57c7b8108adcae37edf": {
+        "name": "Grass",
+        "collapsed": true
+      },
+      "Land & water, land": { "name": "Land & water, land", "collapsed": true },
+      "Land, water, & sky, water": {
+        "name": "Land, water, & sky, water",
+        "collapsed": true
+      },
+      "Land, water, & sky, built": {
+        "name": "Land, water, & sky, built",
+        "collapsed": true
+      },
+      "04309c604b4c3cb8c8e6cbc3bcdcf6be": {
+        "name": "Terrain",
+        "collapsed": true
+      },
+      "Land, water, & sky, sky": { "name": "Land, water, & sky, sky" },
+      "Land, water, & sky, land": {
+        "name": "Land, water, & sky, land",
+        "collapsed": true
+      },
+      "Land & water, water": {
+        "name": "Land & water, water",
+        "collapsed": true
+      }
+    },
+    "mapbox:print": {
+      "units": "in",
+      "width": "16",
+      "height": "8.5",
+      "resolution": 300,
+      "format": "png"
+    },
+    "mapbox:trackposition": false
+  },
+  "center": [86.34, 27.21],
+  "zoom": 9.6,
+  "bearing": 0,
+  "pitch": 2,
+  "sources": {
+    "mapbox://mapbox.terrain-rgb": {
+      "url": "mapbox://mapbox.terrain-rgb",
+      "type": "raster-dem",
+      "tileSize": 256
+    },
+    "composite": {
+      "url": "mapbox://mapbox.mapbox-bathymetry-v2,mapbox.mapbox-streets-v8,mapbox.mapbox-terrain-v2",
+      "type": "vector"
+    }
+  },
+  "sprite": "mapbox://sprites/mapbox-map-design/cl4wxue5j000c14r17uqrjpqb/1l31lz4sk7ftn49g5aoyloyql",
+  "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "land",
+      "type": "background",
+      "layout": {},
+      "paint": { "background-color": "rgb(240, 236, 230)" },
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, land"
+      }
+    },
+    {
+      "id": "waterway",
+      "type": "line",
+      "source": "composite",
+      "source-layer": "waterway",
+      "minzoom": 8,
+      "layout": {
+        "line-cap": ["step", ["zoom"], "butt", 11, "round"],
+        "line-join": "round",
+        "visibility": "none"
+      },
+      "paint": {
+        "line-color": "#dbf3fa",
+        "line-width": [
+          "interpolate",
+          ["exponential", 1.3],
+          ["zoom"],
+          9,
+          ["match", ["get", "class"], ["canal", "river"], 0.1, 0],
+          20,
+          ["match", ["get", "class"], ["canal", "river"], 8, 3]
+        ],
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0, 8.5, 1]
+      },
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, water"
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "composite",
+      "source-layer": "water",
+      "layout": {},
+      "paint": { "fill-color": "#dbf3fa" },
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, water"
+      }
+    },
+    {
+      "layout": {},
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, water"
+      },
+      "maxzoom": 8,
+      "type": "fill",
+      "source": "composite",
+      "id": "water-depth",
+      "paint": {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          6,
+          [
+            "interpolate",
+            ["linear"],
+            ["get", "min_depth"],
+            200,
+            "#dbf3fa",
+            1000,
+            "hsla(195, 77%, 85%, 0.4)",
+            2000,
+            "hsla(197, 78%, 71%, 0.5)",
+            3000,
+            "hsla(198, 76%, 59%, 0.6)",
+            4000,
+            "hsla(198, 76%, 59%, 0.7)",
+            5000,
+            "hsla(198, 76%, 59%, 0.8)",
+            6000,
+            "hsl(198, 76%, 59%)"
+          ],
+          8,
+          [
+            "interpolate",
+            ["linear"],
+            ["get", "min_depth"],
+            200,
+            "hsla(194, 76%, 92%, 0)",
+            1000,
+            "hsla(195, 77%, 85%, 0)",
+            2000,
+            "hsla(197, 78%, 71%, 0)",
+            3000,
+            "hsla(198, 76%, 59%, 0)",
+            4000,
+            "hsla(198, 76%, 59%, 0)",
+            5000,
+            "hsla(198, 76%, 59%, 0)",
+            6000,
+            "hsla(198, 76%, 59%, 0)"
+          ]
+        ]
+      },
+      "source-layer": "depth"
+    },
+    {
+      "minzoom": 13,
+      "layout": { "visibility": "none" },
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, built"
+      },
+      "filter": [
+        "all",
+        ["==", ["get", "class"], "land"],
+        ["==", ["geometry-type"], "Polygon"]
+      ],
+      "type": "fill",
+      "source": "composite",
+      "id": "land-structure-polygon",
+      "paint": { "fill-color": "rgb(240, 236, 230)" },
+      "source-layer": "structure"
+    },
+    {
+      "minzoom": 13,
+      "layout": { "line-cap": "square", "visibility": "none" },
+      "metadata": {
+        "mapbox:featureComponent": "land-and-water",
+        "mapbox:group": "Land & water, built"
+      },
+      "filter": [
+        "all",
+        ["==", ["get", "class"], "land"],
+        ["==", ["geometry-type"], "LineString"]
+      ],
+      "type": "line",
+      "source": "composite",
+      "id": "land-structure-line",
+      "paint": {
+        "line-width": [
+          "interpolate",
+          ["exponential", 1.99],
+          ["zoom"],
+          14,
+          0.75,
+          20,
+          40
+        ],
+        "line-color": "rgb(240, 236, 230)"
+      },
+      "source-layer": "structure"
+    },
+    {
+      "id": "grass",
+      "type": "fill",
+      "source": "composite",
+      "source-layer": "landcover",
+      "filter": ["match", ["get", "class"], ["grass"], true, false],
+      "paint": {
+        "fill-color": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          0,
+          "hsl(111, 48%, 48%)",
+          9,
+          "hsl(68, 52%, 48%)"
+        ],
+        "fill-antialias": false,
+        "fill-opacity": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          0,
+          ["match", ["get", "class"], ["grass"], 0.4, 0],
+          9,
+          ["match", ["get", "class"], ["grass"], 0.1, 0],
+          9.1,
+          0
+        ]
+      },
+      "metadata": { "mapbox:group": "85556e260d95f57c7b8108adcae37edf" }
+    },
+    {
+      "id": "contour",
+      "type": "fill",
+      "metadata": { "mapbox:group": "04309c604b4c3cb8c8e6cbc3bcdcf6be" },
+      "source": "composite",
+      "source-layer": "contour",
+      "filter": [">=", ["get", "ele"], 0],
+      "layout": {},
+      "paint": {
+        "fill-color": [
+          "interpolate",
+          ["cubic-bezier", 0.5, 1, 1, 1],
+          ["get", "ele"],
+          0,
+          "#9fbbd6",
+          200,
+          "#a6d2d9",
+          400,
+          "#b0ded4",
+          800,
+          "#fedfb4",
+          1600,
+          "#fdb863",
+          3600,
+          "#ffffbd",
+          4000,
+          "#d7d9ea",
+          4400,
+          "#b3acd2",
+          5200,
+          "#ffffff"
+        ]
+      }
+    },
+    {
+      "id": "mapbox-terrain-rgb",
+      "type": "hillshade",
+      "metadata": { "mapbox:group": "04309c604b4c3cb8c8e6cbc3bcdcf6be" },
+      "source": "mapbox://mapbox.terrain-rgb",
+      "layout": {},
+      "paint": {
+        "hillshade-shadow-color": [
+          "step",
+          ["zoom"],
+          "hsl(304, 2%, 41%)",
+          9,
+          "hsla(304, 97%, 9%, 0.9)"
+        ],
+        "hillshade-highlight-color": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          8.99,
+          "hsl(306, 0%, 100%)",
+          9,
+          "hsla(306, 97%, 86%, 0.7)"
+        ],
+        "hillshade-accent-color": "#ffffff",
+        "hillshade-exaggeration": 0.7
+      }
+    }
+  ],
+  "created": "2022-06-27T16:12:18.366Z",
+  "modified": "2022-07-19T15:38:39.833Z",
+  "id": "cl4wxue5j000c14r17uqrjpqb",
+  "owner": "mapbox-map-design",
+  "visibility": "public",
+  "protected": true,
+  "draft": false
+}

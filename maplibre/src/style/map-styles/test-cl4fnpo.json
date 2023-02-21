@@ -1,0 +1,133 @@
+{
+  "version": 8,
+  "name": "NASA's Black Marble",
+  "metadata": {
+    "mapbox:autocomposite": true,
+    "mapbox:type": "template",
+    "mapbox:sdk-support": {
+      "android": "latest",
+      "ios": "latest",
+      "js": "latest"
+    },
+    "mapbox:groups": {}
+  },
+  "center": [46.004115911868325, 31.41407881790508],
+  "zoom": 2.0246963683742196,
+  "bearing": 0,
+  "pitch": 0,
+  "fog": {
+    "color": "hsl(228, 15%, 60%)",
+    "space-color": "#000000",
+    "star-intensity": 0.3,
+    "high-color": "hsl(210, 100%, 60%)",
+    "horizon-blend": 0.02
+  },
+  "sources": {
+    "mapbox://mapbox.satellite": {
+      "url": "mapbox://mapbox.satellite",
+      "type": "raster",
+      "tileSize": 256
+    },
+    "mapbox://mapbox-map-design.cdfar9a6": {
+      "url": "mapbox://mapbox-map-design.cdfar9a6",
+      "type": "raster",
+      "tileSize": 256
+    },
+    "composite": {
+      "url": "mapbox://mapbox-map-design.major_roads,mapbox.mapbox-bathymetry-v2,mapbox.mapbox-streets-v8,mapbox-map-design.genroads_v1",
+      "type": "vector"
+    }
+  },
+  "sprite": "mapbox://sprites/mapbox-map-design/cl4fnpof7000i15p8jvz3aw2r/ck2u8j60r58fu0sgyxrigm3cu",
+  "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+  "projection": { "name": "globe" },
+  "layers": [
+    {
+      "id": "mapbox-satellite",
+      "type": "raster",
+      "paint": {
+        "raster-fade-duration": 0,
+        "raster-saturation": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          7,
+          0.3,
+          14,
+          0.1
+        ],
+        "raster-contrast": 0.5,
+        "raster-brightness-min": 0.2,
+        "raster-brightness-max": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          7,
+          0.5,
+          14,
+          0.7
+        ]
+      },
+      "source": "mapbox://mapbox.satellite"
+    },
+    {
+      "id": "roads",
+      "type": "line",
+      "paint": {
+        "line-color": "#fdd4a5",
+        "line-width": 0.1,
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 7, 1, 10, 0]
+      },
+      "layout": {},
+      "source": "composite",
+      "source-layer": "genroads_v1"
+    },
+    {
+      "id": "blackMarble",
+      "type": "raster",
+      "paint": {
+        "raster-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.6, 10, 0],
+        "raster-fade-duration": 0,
+        "raster-hue-rotate": 330,
+        "raster-contrast": 0.3,
+        "raster-brightness-min": 0.1
+      },
+      "source": "mapbox://mapbox-map-design.cdfar9a6"
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "paint": {
+        "fill-color": "hsl(200, 80%, 20%)",
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 7, 1, 14, 0.5]
+      },
+      "source": "composite",
+      "source-layer": "water"
+    },
+    {
+      "id": "water-depth",
+      "type": "fill",
+      "paint": {
+        "fill-color": [
+          "interpolate",
+          ["exponential", 1],
+          ["get", "min_depth"],
+          0,
+          "hsl(200, 80%, 20%)",
+          7000,
+          "hsl(200, 100%, 10%)"
+        ],
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 7, 1, 10, 0]
+      },
+      "source": "composite",
+      "source-layer": "depth"
+    }
+  ],
+  "created": "2022-06-15T13:56:37.224Z",
+  "modified": "2022-06-23T10:00:58.378Z",
+  "id": "cl4fnpof7000i15p8jvz3aw2r",
+  "owner": "mapbox-map-design",
+  "visibility": "private",
+  "protected": true,
+  "draft": false
+}
