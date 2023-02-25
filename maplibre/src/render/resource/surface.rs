@@ -1,8 +1,9 @@
 //! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
-use log::debug;
 use std::{mem::size_of, num::NonZeroU32, sync::Arc};
+
+use log::debug;
 #[cfg(feature = "headless")]
 use thiserror::Error;
 
