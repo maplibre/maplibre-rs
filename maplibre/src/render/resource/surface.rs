@@ -4,8 +4,6 @@
 use std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
 use log::debug;
-#[cfg(feature = "headless")]
-use thiserror::Error;
 
 use crate::{
     render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
@@ -83,7 +81,7 @@ pub struct BufferedTextureHead {
 }
 
 #[cfg(feature = "headless")]
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum WriteImageError {
     #[error("error while rendering to image")]
     WriteImage(#[from] png::EncodingError),
