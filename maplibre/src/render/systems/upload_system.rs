@@ -11,9 +11,8 @@ use crate::{
 pub fn upload_system(
     MapContext {
         world,
-        style,
         view_state,
-        renderer: Renderer { device, queue, .. },
+        renderer: Renderer { queue, .. },
         ..
     }: &mut MapContext,
 ) {
