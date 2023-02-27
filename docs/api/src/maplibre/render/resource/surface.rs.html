@@ -316,6 +316,15 @@
 <span id="316">316</span>
 <span id="317">317</span>
 <span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
@@ -399,6 +408,15 @@
 }
 
 <span class="attribute">#[cfg(feature = <span class="string">&quot;headless&quot;</span>)]
+#[derive(thiserror::Error, Debug)]
+</span><span class="kw">pub enum </span>WriteImageError {
+    <span class="attribute">#[error(<span class="string">&quot;error while rendering to image&quot;</span>)]
+    </span>WriteImage(<span class="attribute">#[from] </span>png::EncodingError),
+    <span class="attribute">#[error(<span class="string">&quot;could not create file to save as an image&quot;</span>)]
+    </span>CreateImageFileFailed(<span class="attribute">#[from] </span>std::io::Error),
+}
+
+<span class="attribute">#[cfg(feature = <span class="string">&quot;headless&quot;</span>)]
 </span><span class="kw">impl </span>BufferedTextureHead {
     <span class="kw">pub fn </span>map_async(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; wgpu::BufferSlice {
         <span class="comment">// Note that we&#39;re not calling `.await` here.
@@ -416,33 +434,33 @@
         <span class="self">self</span>.output_buffer.unmap();
     }
 
-    <span class="kw">pub fn </span>write_png&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, padded_buffer: <span class="kw-2">&amp;</span>wgpu::BufferView&lt;<span class="lifetime">&#39;a</span>&gt;, png_output_path: <span class="kw-2">&amp;</span>str) {
+    <span class="kw">pub fn </span>write_png&lt;<span class="lifetime">&#39;a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        padded_buffer: <span class="kw-2">&amp;</span>wgpu::BufferView&lt;<span class="lifetime">&#39;a</span>&gt;,
+        png_output_path: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), WriteImageError&gt; {
         <span class="kw">use </span>std::{fs::File, io::Write};
         <span class="kw">let </span><span class="kw-2">mut </span>png_encoder = png::Encoder::new(
-            File::create(png_output_path).unwrap(), <span class="comment">// TODO: Remove unwrap
-            </span><span class="self">self</span>.buffer_dimensions.width <span class="kw">as </span>u32,
+            File::create(png_output_path)<span class="question-mark">?</span>,
+            <span class="self">self</span>.buffer_dimensions.width <span class="kw">as </span>u32,
             <span class="self">self</span>.buffer_dimensions.height <span class="kw">as </span>u32,
         );
         png_encoder.set_depth(png::BitDepth::Eight);
         png_encoder.set_color(png::ColorType::Rgba);
-        <span class="kw">let </span><span class="kw-2">mut </span>png_writer = png_encoder
-            .write_header()
-            .unwrap() <span class="comment">// TODO: Remove unwrap
-            </span>.into_stream_writer_with_size(
-                <span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row.get() <span class="kw">as </span>usize
-            )
-            .unwrap(); <span class="comment">// TODO: Remove unwrap
+        <span class="kw">let </span><span class="kw-2">mut </span>png_writer = png_encoder.write_header()<span class="question-mark">?</span>.into_stream_writer_with_size(
+            <span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row.get() <span class="kw">as </span>usize,
+        )<span class="question-mark">?</span>;
 
-        // from the padded_buffer we write just the unpadded bytes into the image
+        <span class="comment">// from the padded_buffer we write just the unpadded bytes into the image
         </span><span class="kw">for </span>chunk <span class="kw">in
             </span>padded_buffer.chunks(<span class="self">self</span>.buffer_dimensions.padded_bytes_per_row.get() <span class="kw">as </span>usize)
         {
             png_writer
-                .write_all(<span class="kw-2">&amp;</span>chunk[..<span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row.get() <span class="kw">as </span>usize])
-                .unwrap(); <span class="comment">// TODO: Remove unwrap
+                .write_all(<span class="kw-2">&amp;</span>chunk[..<span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row.get() <span class="kw">as </span>usize])<span class="question-mark">?
         </span>}
-        png_writer.finish().unwrap(); <span class="comment">// TODO: Remove unwrap
-    </span>}
+        png_writer.finish()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
 
     <span class="kw">pub fn </span>copy_texture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::ImageCopyTexture&lt;<span class="lifetime">&#39;_</span>&gt; {
         <span class="self">self</span>.texture.as_image_copy()
