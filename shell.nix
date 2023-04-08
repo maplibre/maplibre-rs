@@ -16,6 +16,8 @@ pkgs.mkShell {
     # Tools
     unstable.rustup
     unstable.just
+    unstable.nodejs
+    unstable.wasm-bindgen-cli
     unstable.tracy
     unstable.nixpkgs-fmt # To format this file: nixpkgs-fmt *.nix
     # System dependencies
