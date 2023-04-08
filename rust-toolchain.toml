@@ -3,4 +3,4 @@
 # The CI might use it though to build other Rust binaries, required for building maplibre-rs.
 # This file is here to give IDEs a hint about which Rust version to use.
 # The version is set here instead of using stable, so we can make sure that a predictable version is used.
-channel = "1.65"
+channel = "1.68"
