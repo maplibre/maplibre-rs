@@ -28,3 +28,5 @@ perf.data*
 *flamechart.svg
 
 frame_*.png
+
+.direnv/
