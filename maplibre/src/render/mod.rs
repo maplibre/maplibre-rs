@@ -124,11 +124,15 @@ impl RenderResources {
         }
     }
 
-    pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    pub fn recreate_surface<MW>(
+        &mut self,
+        window: &MW,
+        instance: &wgpu::Instance,
+    ) -> Result<(), RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        self.surface.recreate::<MW>(window, instance);
+        self.surface.recreate::<MW>(window, instance)
     }
 
     pub fn surface(&self) -> &Surface {
@@ -160,9 +164,12 @@ impl Renderer {
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            dx12_shader_compiler: Default::default(),
+        });
 
-        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw()) };
+        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw())? };
 
         let (adapter, device, queue) = Self::request_device(
             &instance,
@@ -202,7 +209,10 @@ impl Renderer {
     where
         MW: MapWindow,
     {
-        let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            dx12_shader_compiler: Default::default(),
+        });
 
         let (adapter, device, queue) = Self::request_device(
             &instance,
@@ -300,6 +310,9 @@ impl Renderer {
                 max_bind_groups: limits
                     .max_bind_groups
                     .min(constrained_limits.max_bind_groups),
+                max_bindings_per_bind_group: limits
+                    .max_bindings_per_bind_group
+                    .min(constrained_limits.max_bindings_per_bind_group),
                 max_dynamic_uniform_buffers_per_pipeline_layout: limits
                     .max_dynamic_uniform_buffers_per_pipeline_layout
                     .min(constrained_limits.max_dynamic_uniform_buffers_per_pipeline_layout),
@@ -448,7 +461,10 @@ mod tests {
         let graph = RenderGraph::default();
 
         let backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all());
-        let instance = wgpu::Instance::new(backends);
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends,
+            dx12_shader_compiler: Default::default(),
+        });
         let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
             .await
             .expect("Unable to initialize adapter");
@@ -468,13 +484,14 @@ mod tests {
         let render_state = RenderResources::new(Surface::from_image(
             &device,
             &HeadlessMapWindow {
-                size: WindowSize::new(100, 100).unwrap(),
+                size: WindowSize::new(100, 100).expect("invalid headless map size"),
             },
             &RendererSettings::default(),
         ));
 
         let world = World::default();
-        RenderGraphRunner::run(&graph, &device, &queue, &render_state, &world).unwrap();
+        RenderGraphRunner::run(&graph, &device, &queue, &render_state, &world)
+            .expect("failed to run graph runner");
     }
 }
 
@@ -534,7 +551,7 @@ impl<E: Environment> Plugin<E> for RenderPlugin {
         // Edges
         draw_graph
             .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
-            .unwrap();
+            .expect("main pass or draw node does not exist");
 
         graph.add_sub_graph(draw_graph::NAME, draw_graph);
         graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
@@ -544,7 +561,7 @@ impl<E: Environment> Plugin<E> for RenderPlugin {
                 main_graph::node::MAIN_PASS_DEPENDENCIES,
                 main_graph::node::MAIN_PASS_DRIVER,
             )
-            .unwrap();
+            .expect("main pass driver or dependencies do not exist");
 
         // render graph dependency
         resources.init::<RenderPhase<LayerItem>>();

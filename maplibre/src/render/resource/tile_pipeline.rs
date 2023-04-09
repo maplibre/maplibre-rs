@@ -16,7 +16,7 @@ pub struct TilePipeline {
     /// Force a write and ignore stencil
     debug_stencil: bool,
     wireframe: bool,
-    multisampling: bool,
+    msaa: bool,
     raster: bool,
     settings: RendererSettings,
 
@@ -43,7 +43,7 @@ impl TilePipeline {
             update_stencil,
             debug_stencil,
             wireframe,
-            multisampling,
+            msaa: multisampling,
             raster,
             settings,
             vertex_state,
@@ -132,7 +132,7 @@ impl RenderPipeline for TilePipeline {
                 })
             },
             multisample: wgpu::MultisampleState {
-                count: if self.multisampling {
+                count: if self.msaa {
                     self.settings.msaa.samples
                 } else {
                     1

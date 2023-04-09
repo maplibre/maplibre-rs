@@ -20,8 +20,8 @@ winit = { version = "0.27.2", default-features = false, features = ["x11", "wayl
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { version = "0.3.58", features = ["Window"] }
-wasm-bindgen = "0.2.81"
-wasm-bindgen-futures = "0.4.31"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
 
 [dependencies]
 maplibre = { path = "../maplibre", version = "0.1.0" }

@@ -94,6 +94,7 @@ impl Texture {
             dimension: wgpu::TextureDimension::D2,
             format,
             usage,
+            view_formats: &[format],
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         Self {

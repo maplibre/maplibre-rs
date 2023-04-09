@@ -89,13 +89,14 @@ pub struct Msaa {
 }
 
 impl Msaa {
-    pub fn is_active(&self) -> bool {
+    pub fn is_multisampling(&self) -> bool {
         self.samples > 1
     }
 }
 
 impl Default for Msaa {
     fn default() -> Self {
+        // By default we are trying to multisample
         Self { samples: 4 }
     }
 }

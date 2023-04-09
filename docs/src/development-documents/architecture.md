@@ -10,6 +10,10 @@ A simplified version is shown below:
 
 ![](./figures/render-stack.drawio.svg)
 
+A further simplified version:
+
+![](./figures/simplified-render-stack.drawio.svg)
+
 Notes:
 * wgpu is able to create an interface through which we can reach any device with a GPU.
 
