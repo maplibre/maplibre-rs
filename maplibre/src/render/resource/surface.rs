@@ -5,9 +5,9 @@ use std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
 use wgpu::TextureFormatFeatures;
 
-use crate::render::error::RenderError;
 use crate::{
     render::{
+        error::RenderError,
         eventually::HasChanged,
         resource::texture::TextureView,
         settings::{Msaa, RendererSettings},
