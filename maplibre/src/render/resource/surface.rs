@@ -5,6 +5,7 @@ use std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
 use wgpu::TextureFormatFeatures;
 
+use crate::render::error::RenderError;
 use crate::{
     render::{
         eventually::HasChanged,
@@ -68,11 +69,16 @@ impl WindowHead {
         self.surface.configure(device, &surface_config);
     }
 
-    pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    pub fn recreate_surface<MW>(
+        &mut self,
+        window: &MW,
+        instance: &wgpu::Instance,
+    ) -> Result<(), RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        self.surface = unsafe { instance.create_surface(window.raw()).unwrap() };
+        self.surface = unsafe { instance.create_surface(window.raw())? };
+        Ok(())
     }
 
     pub fn surface(&self) -> &wgpu::Surface {
@@ -305,18 +311,23 @@ impl Surface {
         }
     }
 
-    pub fn recreate<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    pub fn recreate<MW>(
+        &mut self,
+        window: &MW,
+        instance: &wgpu::Instance,
+    ) -> Result<(), RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
         match &mut self.head {
             Head::Headed(window_head) => {
                 if window_head.has_changed(&(self.size.width(), self.size.height())) {
-                    window_head.recreate_surface(window, instance);
+                    window_head.recreate_surface(window, instance)?;
                 }
             }
             Head::Headless(_) => {}
         }
+        Ok(())
     }
 
     pub fn head(&self) -> &Head {

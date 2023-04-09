@@ -124,11 +124,15 @@ impl RenderResources {
         }
     }
 
-    pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    pub fn recreate_surface<MW>(
+        &mut self,
+        window: &MW,
+        instance: &wgpu::Instance,
+    ) -> Result<(), RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        self.surface.recreate::<MW>(window, instance);
+        self.surface.recreate::<MW>(window, instance)
     }
 
     pub fn surface(&self) -> &Surface {
@@ -165,7 +169,7 @@ impl Renderer {
             dx12_shader_compiler: Default::default(),
         });
 
-        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw()).unwrap() };
+        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw())? };
 
         let (adapter, device, queue) = Self::request_device(
             &instance,
@@ -480,13 +484,14 @@ mod tests {
         let render_state = RenderResources::new(Surface::from_image(
             &device,
             &HeadlessMapWindow {
-                size: WindowSize::new(100, 100).unwrap(),
+                size: WindowSize::new(100, 100).expect("invalid headless map size"),
             },
             &RendererSettings::default(),
         ));
 
         let world = World::default();
-        RenderGraphRunner::run(&graph, &device, &queue, &render_state, &world).unwrap();
+        RenderGraphRunner::run(&graph, &device, &queue, &render_state, &world)
+            .expect("failed to run graph runner");
     }
 }
 
@@ -546,7 +551,7 @@ impl<E: Environment> Plugin<E> for RenderPlugin {
         // Edges
         draw_graph
             .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
-            .unwrap();
+            .expect("main pass or draw node does not exist");
 
         graph.add_sub_graph(draw_graph::NAME, draw_graph);
         graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
@@ -556,7 +561,7 @@ impl<E: Environment> Plugin<E> for RenderPlugin {
                 main_graph::node::MAIN_PASS_DEPENDENCIES,
                 main_graph::node::MAIN_PASS_DRIVER,
             )
-            .unwrap();
+            .expect("main pass driver or dependencies do not exist");
 
         // render graph dependency
         resources.init::<RenderPhase<LayerItem>>();
