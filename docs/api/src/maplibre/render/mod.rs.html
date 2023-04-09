@@ -580,6 +580,23 @@
 <span id="580">580</span>
 <span id="581">581</span>
 <span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -706,11 +723,15 @@
         }
     }
 
-    <span class="kw">pub fn </span>recreate_surface&lt;MW&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;</span>MW, instance: <span class="kw-2">&amp;</span>wgpu::Instance)
+    <span class="kw">pub fn </span>recreate_surface&lt;MW&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        window: <span class="kw-2">&amp;</span>MW,
+        instance: <span class="kw-2">&amp;</span>wgpu::Instance,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderError&gt;
     <span class="kw">where
         </span>MW: MapWindow + HeadedMapWindow,
     {
-        <span class="self">self</span>.surface.recreate::&lt;MW&gt;(window, instance);
+        <span class="self">self</span>.surface.recreate::&lt;MW&gt;(window, instance)
     }
 
     <span class="kw">pub fn </span>surface(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Surface {
@@ -742,9 +763,12 @@
     <span class="kw">where
         </span>MW: MapWindow + HeadedMapWindow,
     {
-        <span class="kw">let </span>instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+        <span class="kw">let </span>instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            dx12_shader_compiler: Default::default(),
+        });
 
-        <span class="kw">let </span>surface: wgpu::Surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw()) };
+        <span class="kw">let </span>surface: wgpu::Surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw())<span class="question-mark">? </span>};
 
         <span class="kw">let </span>(adapter, device, queue) = <span class="self">Self</span>::request_device(
             <span class="kw-2">&amp;</span>instance,
@@ -784,7 +808,10 @@
     <span class="kw">where
         </span>MW: MapWindow,
     {
-        <span class="kw">let </span>instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+        <span class="kw">let </span>instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            dx12_shader_compiler: Default::default(),
+        });
 
         <span class="kw">let </span>(adapter, device, queue) = <span class="self">Self</span>::request_device(
             <span class="kw-2">&amp;</span>instance,
@@ -882,6 +909,9 @@
                 max_bind_groups: limits
                     .max_bind_groups
                     .min(constrained_limits.max_bind_groups),
+                max_bindings_per_bind_group: limits
+                    .max_bindings_per_bind_group
+                    .min(constrained_limits.max_bindings_per_bind_group),
                 max_dynamic_uniform_buffers_per_pipeline_layout: limits
                     .max_dynamic_uniform_buffers_per_pipeline_layout
                     .min(constrained_limits.max_dynamic_uniform_buffers_per_pipeline_layout),
@@ -1030,7 +1060,10 @@
         <span class="kw">let </span>graph = RenderGraph::default();
 
         <span class="kw">let </span>backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all());
-        <span class="kw">let </span>instance = wgpu::Instance::new(backends);
+        <span class="kw">let </span>instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends,
+            dx12_shader_compiler: Default::default(),
+        });
         <span class="kw">let </span>adapter = wgpu::util::initialize_adapter_from_env_or_default(<span class="kw-2">&amp;</span>instance, backends, <span class="prelude-val">None</span>)
             .<span class="kw">await
             </span>.expect(<span class="string">&quot;Unable to initialize adapter&quot;</span>);
@@ -1050,13 +1083,14 @@
         <span class="kw">let </span>render_state = RenderResources::new(Surface::from_image(
             <span class="kw-2">&amp;</span>device,
             <span class="kw-2">&amp;</span>HeadlessMapWindow {
-                size: WindowSize::new(<span class="number">100</span>, <span class="number">100</span>).unwrap(),
+                size: WindowSize::new(<span class="number">100</span>, <span class="number">100</span>).expect(<span class="string">&quot;invalid headless map size&quot;</span>),
             },
             <span class="kw-2">&amp;</span>RendererSettings::default(),
         ));
 
         <span class="kw">let </span>world = World::default();
-        RenderGraphRunner::run(<span class="kw-2">&amp;</span>graph, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue, <span class="kw-2">&amp;</span>render_state, <span class="kw-2">&amp;</span>world).unwrap();
+        RenderGraphRunner::run(<span class="kw-2">&amp;</span>graph, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue, <span class="kw-2">&amp;</span>render_state, <span class="kw-2">&amp;</span>world)
+            .expect(<span class="string">&quot;failed to run graph runner&quot;</span>);
     }
 }
 
@@ -1116,7 +1150,7 @@
         <span class="comment">// Edges
         </span>draw_graph
             .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
-            .unwrap();
+            .expect(<span class="string">&quot;main pass or draw node does not exist&quot;</span>);
 
         graph.add_sub_graph(draw_graph::NAME, draw_graph);
         graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
@@ -1126,7 +1160,7 @@
                 main_graph::node::MAIN_PASS_DEPENDENCIES,
                 main_graph::node::MAIN_PASS_DRIVER,
             )
-            .unwrap();
+            .expect(<span class="string">&quot;main pass driver or dependencies do not exist&quot;</span>);
 
         <span class="comment">// render graph dependency
         </span>resources.init::&lt;RenderPhase&lt;LayerItem&gt;&gt;();

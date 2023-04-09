@@ -325,15 +325,67 @@
 <span id="325">325</span>
 <span id="326">326</span>
 <span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
 </span><span class="kw">use </span>std::{mem::size_of, num::NonZeroU32, sync::Arc};
 
-<span class="kw">use </span>log::debug;
+<span class="kw">use </span>wgpu::TextureFormatFeatures;
 
 <span class="kw">use crate</span>::{
-    render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
+    render::{
+        error::RenderError,
+        eventually::HasChanged,
+        resource::texture::TextureView,
+        settings::{Msaa, RendererSettings},
+    },
     window::{HeadedMapWindow, MapWindow, WindowSize},
 };
 
@@ -365,8 +417,10 @@
 <span class="kw">pub struct </span>WindowHead {
     surface: wgpu::Surface,
     size: WindowSize,
-    format: wgpu::TextureFormat,
+
+    texture_format: wgpu::TextureFormat,
     present_mode: wgpu::PresentMode,
+    texture_format_features: TextureFormatFeatures,
 }
 
 <span class="kw">impl </span>WindowHead {
@@ -379,20 +433,26 @@
         <span class="kw">let </span>surface_config = wgpu::SurfaceConfiguration {
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: <span class="self">self</span>.format,
+            format: <span class="self">self</span>.texture_format,
             width: <span class="self">self</span>.size.width(),
             height: <span class="self">self</span>.size.height(),
             present_mode: <span class="self">self</span>.present_mode,
+            view_formats: <span class="macro">vec!</span>[<span class="self">self</span>.texture_format],
         };
 
         <span class="self">self</span>.surface.configure(device, <span class="kw-2">&amp;</span>surface_config);
     }
 
-    <span class="kw">pub fn </span>recreate_surface&lt;MW&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;</span>MW, instance: <span class="kw-2">&amp;</span>wgpu::Instance)
+    <span class="kw">pub fn </span>recreate_surface&lt;MW&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        window: <span class="kw-2">&amp;</span>MW,
+        instance: <span class="kw-2">&amp;</span>wgpu::Instance,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderError&gt;
     <span class="kw">where
         </span>MW: MapWindow + HeadedMapWindow,
     {
-        <span class="self">self</span>.surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw()) };
+        <span class="self">self</span>.surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw())<span class="question-mark">? </span>};
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>surface(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Surface {
@@ -497,22 +557,25 @@
     {
         <span class="kw">let </span>size = window.size();
 
-        <span class="macro">debug!</span>(
-            <span class="string">&quot;supported formats by adapter: {:?}&quot;</span>,
-            surface.get_supported_formats(adapter)
-        );
+        <span class="kw">let </span>capabilities = surface.get_capabilities(adapter);
+        <span class="macro">log::info!</span>(<span class="string">&quot;adapter capabilities on surface: {:?}&quot;</span>, capabilities);
 
-        <span class="kw">let </span>format = settings
+        <span class="kw">let </span>texture_format = settings
             .texture_format
-            .or_else(|| surface.get_supported_formats(adapter).first().cloned())
+            .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
+        <span class="macro">log::info!</span>(<span class="string">&quot;format description: {:?}&quot;</span>, texture_format.describe());
+
+        <span class="kw">let </span>texture_format_features = adapter.get_texture_format_features(texture_format);
+        <span class="macro">log::info!</span>(<span class="string">&quot;format features: {:?}&quot;</span>, texture_format_features);
 
         <span class="self">Self </span>{
             size,
             head: Head::Headed(WindowHead {
                 surface,
                 size,
-                format,
+                texture_format,
+                texture_format_features,
                 present_mode: settings.present_mode,
             }),
         }
@@ -556,6 +619,7 @@
             dimension: wgpu::TextureDimension::D2,
             format,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: <span class="kw-2">&amp;</span>[format],
         };
         <span class="kw">let </span>texture = device.create_texture(<span class="kw-2">&amp;</span>texture_descriptor);
 
@@ -572,7 +636,7 @@
 
     <span class="kw">pub fn </span>surface_format(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::TextureFormat {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.head {
-            Head::Headed(headed) =&gt; headed.format,
+            Head::Headed(headed) =&gt; headed.texture_format,
             Head::Headless(headless) =&gt; headless.texture_format,
         }
     }
@@ -621,18 +685,23 @@
         }
     }
 
-    <span class="kw">pub fn </span>recreate&lt;MW&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;</span>MW, instance: <span class="kw-2">&amp;</span>wgpu::Instance)
+    <span class="kw">pub fn </span>recreate&lt;MW&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        window: <span class="kw-2">&amp;</span>MW,
+        instance: <span class="kw-2">&amp;</span>wgpu::Instance,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderError&gt;
     <span class="kw">where
         </span>MW: MapWindow + HeadedMapWindow,
     {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.head {
             Head::Headed(window_head) =&gt; {
                 <span class="kw">if </span>window_head.has_changed(<span class="kw-2">&amp;</span>(<span class="self">self</span>.size.width(), <span class="self">self</span>.size.height())) {
-                    window_head.recreate_surface(window, instance);
+                    window_head.recreate_surface(window, instance)<span class="question-mark">?</span>;
                 }
             }
             Head::Headless(<span class="kw">_</span>) =&gt; {}
         }
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>head(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Head {
@@ -641,6 +710,31 @@
 
     <span class="kw">pub fn </span>head_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Head {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.head
+    }
+
+    <span class="kw">pub fn </span>is_multisampling_supported(<span class="kw-2">&amp;</span><span class="self">self</span>, msaa: Msaa) -&gt; bool {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.head {
+            Head::Headed(headed) =&gt; {
+                <span class="kw">let </span>max_sample_count = {
+                    <span class="kw">let </span>flags = headed.texture_format_features.flags;
+                    <span class="kw">if </span>flags.contains(wgpu::TextureFormatFeatureFlags::MULTISAMPLE_X8) {
+                        <span class="number">8
+                    </span>} <span class="kw">else if </span>flags.contains(wgpu::TextureFormatFeatureFlags::MULTISAMPLE_X4) {
+                        <span class="number">4
+                    </span>} <span class="kw">else if </span>flags.contains(wgpu::TextureFormatFeatureFlags::MULTISAMPLE_X2) {
+                        <span class="number">2
+                    </span>} <span class="kw">else </span>{
+                        <span class="number">1
+                    </span>}
+                };
+                <span class="kw">let </span>is_supported = msaa.samples &lt;= max_sample_count;
+                <span class="kw">if </span>!is_supported {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Multisampling is not supported on surface&quot;</span>);
+                }
+                is_supported
+            }
+            Head::Headless(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>, <span class="comment">// TODO: support multisampling on headless
+        </span>}
     }
 }
 

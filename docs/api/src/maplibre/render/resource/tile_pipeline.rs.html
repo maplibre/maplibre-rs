@@ -161,7 +161,7 @@
     <span class="doccomment">/// Force a write and ignore stencil
     </span>debug_stencil: bool,
     wireframe: bool,
-    multisampling: bool,
+    msaa: bool,
     raster: bool,
     settings: RendererSettings,
 
@@ -188,7 +188,7 @@
             update_stencil,
             debug_stencil,
             wireframe,
-            multisampling,
+            msaa: multisampling,
             raster,
             settings,
             vertex_state,
@@ -277,7 +277,7 @@
                 })
             },
             multisample: wgpu::MultisampleState {
-                count: <span class="kw">if </span><span class="self">self</span>.multisampling {
+                count: <span class="kw">if </span><span class="self">self</span>.msaa {
                     <span class="self">self</span>.settings.msaa.samples
                 } <span class="kw">else </span>{
                     <span class="number">1

@@ -121,6 +121,7 @@
 <span id="121">121</span>
 <span id="122">122</span>
 <span id="123">123</span>
+<span id="124">124</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Settings for the renderer
 
 </span><span class="kw">use </span>std::borrow::Cow;
@@ -212,14 +213,15 @@
 }
 
 <span class="kw">impl </span>Msaa {
-    <span class="kw">pub fn </span>is_active(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="kw">pub fn </span>is_multisampling(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.samples &gt; <span class="number">1
     </span>}
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Msaa {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ samples: <span class="number">4 </span>}
+        <span class="comment">// By default we are trying to multisample
+        </span><span class="self">Self </span>{ samples: <span class="number">4 </span>}
     }
 }
 

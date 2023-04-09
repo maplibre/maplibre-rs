@@ -112,6 +112,7 @@
 <span id="112">112</span>
 <span id="113">113</span>
 <span id="114">114</span>
+<span id="115">115</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility for a texture view which can either be created by a [`TextureView`](wgpu::TextureView)
 //! or [`SurfaceTexture`](wgpu::SurfaceTexture)
 
@@ -208,6 +209,7 @@
             dimension: wgpu::TextureDimension::D2,
             format,
             usage,
+            view_formats: <span class="kw-2">&amp;</span>[format],
         });
         <span class="kw">let </span>view = texture.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default());
         <span class="self">Self </span>{

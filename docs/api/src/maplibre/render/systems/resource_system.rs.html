@@ -129,6 +129,13 @@
 <span id="129">129</span>
 <span id="130">130</span>
 <span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.
 
 </span><span class="kw">use </span>std::{borrow::Cow, mem};
@@ -138,6 +145,7 @@
     render::{
         eventually::Eventually,
         resource::{BackingBufferDescriptor, RenderPipeline, Texture, TilePipeline},
+        settings::Msaa,
         shaders,
         shaders::{Shader, ShaderTileMetadata},
         tile_view_pattern::{TileViewPattern, WgpuTileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
@@ -194,7 +202,11 @@
                     settings.depth_texture_format,
                     size.width(),
                     size.height(),
-                    settings.msaa,
+                    <span class="kw">if </span>surface.is_multisampling_supported(settings.msaa) {
+                        settings.msaa
+                    } <span class="kw">else </span>{
+                        Msaa { samples: <span class="number">1 </span>}
+                    },
                     wgpu::TextureUsages::RENDER_ATTACHMENT,
                 )
             },
@@ -203,7 +215,9 @@
 
         state.multisampling_texture.reinitialize(
             || {
-                <span class="kw">if </span>settings.msaa.is_active() {
+                <span class="kw">if </span>settings.msaa.is_multisampling()
+                    &amp;&amp; surface.is_multisampling_supported(settings.msaa)
+                {
                     <span class="prelude-val">Some</span>(Texture::new(
                         <span class="prelude-val">Some</span>(<span class="string">&quot;multisampling texture&quot;</span>),
                         device,
@@ -251,7 +265,7 @@
                 <span class="bool-val">true</span>,
                 <span class="bool-val">false</span>,
                 <span class="bool-val">false</span>,
-                <span class="bool-val">true</span>,
+                surface.is_multisampling_supported(settings.msaa),
                 <span class="bool-val">false</span>,
             )
             .describe_render_pipeline()

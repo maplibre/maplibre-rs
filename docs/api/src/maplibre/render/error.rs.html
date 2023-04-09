@@ -17,6 +17,8 @@
 <span id="17">17</span>
 <span id="18">18</span>
 <span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
 </pre><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use </span><span class="kw">crate</span>::render::graph::RenderGraphError;
@@ -25,6 +27,8 @@
 </span><span class="kw">pub enum </span>RenderError {
     <span class="attribute">#[error(<span class="string">&quot;error in surface&quot;</span>)]
     </span>Surface(<span class="attribute">#[from] </span>wgpu::SurfaceError),
+    <span class="attribute">#[error(<span class="string">&quot;error during surface creation&quot;</span>)]
+    </span>CreateSurfaceError(<span class="attribute">#[from] </span>wgpu::CreateSurfaceError),
     <span class="attribute">#[error(<span class="string">&quot;error in render graph&quot;</span>)]
     </span>Graph(<span class="attribute">#[from] </span>RenderGraphError),
     <span class="attribute">#[error(<span class="string">&quot;error while requesting device&quot;</span>)]
