@@ -1,7 +1,7 @@
 //! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
-use std::{mem::size_of, num::NonZeroU32, sync::Arc};
+use std::{mem::size_of, sync::Arc};
 
 use wgpu::TextureFormatFeatures;
 
@@ -18,8 +18,8 @@ use crate::{
 pub struct BufferDimensions {
     pub width: u32,
     pub height: u32,
-    pub unpadded_bytes_per_row: NonZeroU32,
-    pub padded_bytes_per_row: NonZeroU32,
+    pub unpadded_bytes_per_row: u32,
+    pub padded_bytes_per_row: u32,
 }
 
 impl BufferDimensions {
@@ -33,9 +33,8 @@ impl BufferDimensions {
         Self {
             width: size.width(),
             height: size.height(),
-            unpadded_bytes_per_row: NonZeroU32::new(unpadded_bytes_per_row)
-                .expect("can not be zero"), // expect is fine because this can never happen
-            padded_bytes_per_row: NonZeroU32::new(padded_bytes_per_row).expect("can not be zero"),
+            unpadded_bytes_per_row,
+            padded_bytes_per_row,
         }
     }
 }
@@ -133,16 +132,14 @@ impl BufferedTextureHead {
         );
         png_encoder.set_depth(png::BitDepth::Eight);
         png_encoder.set_color(png::ColorType::Rgba);
-        let mut png_writer = png_encoder.write_header()?.into_stream_writer_with_size(
-            self.buffer_dimensions.unpadded_bytes_per_row.get() as usize,
-        )?;
+        let mut png_writer = png_encoder
+            .write_header()?
+            .into_stream_writer_with_size(self.buffer_dimensions.unpadded_bytes_per_row as usize)?;
 
         // from the padded_buffer we write just the unpadded bytes into the image
-        for chunk in
-            padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row.get() as usize)
-        {
+        for chunk in padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row as usize) {
             png_writer
-                .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row.get() as usize])?
+                .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row as usize])?
         }
         png_writer.finish()?;
         Ok(())
@@ -156,7 +153,7 @@ impl BufferedTextureHead {
         &self.output_buffer
     }
 
-    pub fn bytes_per_row(&self) -> NonZeroU32 {
+    pub fn bytes_per_row(&self) -> u32 {
         self.buffer_dimensions.padded_bytes_per_row
     }
 }
@@ -223,7 +220,7 @@ impl Surface {
         // The output buffer lets us retrieve the data as an array
         let output_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("BufferedTextureHead buffer"),
-            size: (buffer_dimensions.padded_bytes_per_row.get() * buffer_dimensions.height) as u64,
+            size: (buffer_dimensions.padded_bytes_per_row * buffer_dimensions.height) as u64,
             usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
