@@ -190,7 +190,7 @@ impl Surface {
             .texture_format
             .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
-        log::info!("format description: {:?}", texture_format.describe());
+        log::info!("format description: {:?}", texture_format);
 
         let texture_format_features = adapter.get_texture_format_features(texture_format);
         log::info!("format features: {:?}", texture_format_features);
