@@ -19,7 +19,7 @@ Why are we doing this? What use cases does it support? What is the expected outc
 
 [guide-level-explanation]: #guide-level-explanation
 
-Explain the proposal as if it was already included in the project and you were teaching it to another maplibre-rs user.
+Explain the proposal as if it was already included in the project, and you were teaching it to another maplibre-rs user.
 That generally means:
 
 - Introducing new named concepts.
@@ -27,7 +27,7 @@ That generally means:
 - Explaining how maplibre-rs users should *think* about the feature, and how it should impact the way they use
   maplibre-rs. It should explain the impact as concretely as possible.
 - If applicable, provide sample error messages, deprecation warnings, or migration guidance.
-- If applicable, describe the differences between teaching this to existing maplibre-rs users and new maplibre-rs users.
+- If applicable, describe the differences between teaching this to the existing maplibre-rs users and new maplibre-rs users.
 
 For implementation-oriented RFCs (e.g. for internals), this section should focus on how maplibre-rs contributors should
 think about the change, and give examples of its concrete impact. For policy RFCs, this section should provide an

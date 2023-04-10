@@ -23,6 +23,6 @@ pub extern "system" fn Java_org_maplibre_1rs_MapLibreRs_android_1main(
     _class: JClass,
 ) {
     let tag = CString::new("maplibre").unwrap();
-    let message = CString::new("maplibre WOORKING").unwrap();
+    let message = CString::new("maplibre WORKING").unwrap();
     ndk_glue::android_log(Level::Warn, &tag, &message);
 }

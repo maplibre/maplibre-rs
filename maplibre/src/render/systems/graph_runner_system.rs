@@ -1,6 +1,6 @@
 //! Executes the [`RenderGraph`] current render graph.
 
-use std::borrow::Cow;
+use std::{borrow::Cow, error::Error};
 
 use log::error;
 
@@ -39,7 +39,7 @@ impl System for GraphRunnerSystem {
         if let Err(e) = RenderGraphRunner::run(render_graph, device, queue, state, world) {
             error!("Error running render graph:");
             {
-                let mut src: &dyn std::error::Error = &e;
+                let mut src: &dyn Error = &e;
                 loop {
                     error!("> {}", src);
                     match src.source() {

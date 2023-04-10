@@ -81,7 +81,7 @@ pub enum TileIndex {
 
 impl TileIndex {
     pub fn point_query(&self, inner_coords: InnerCoords) -> Vec<&IndexedGeometry<f64>> {
-        let point = geo_types::Point::new(inner_coords.x, inner_coords.y);
+        let point = Point::new(inner_coords.x, inner_coords.y);
         let coordinate: Coord<_> = point.into();
 
         // FIXME: Respect layer order of style

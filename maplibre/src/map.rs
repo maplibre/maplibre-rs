@@ -127,7 +127,7 @@ where
                             renderer,
                         });
                     }
-                    InitializationResult::Uninizalized(UninitializedRenderer { .. }) => {}
+                    InitializationResult::Uninitialized(UninitializedRenderer { .. }) => {}
                     _ => panic!("Rendering context gone"),
                 };
                 Ok(())

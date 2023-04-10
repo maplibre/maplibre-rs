@@ -17,9 +17,9 @@ fn embed_tiles_statically() {
 
     /// Tiles which can be used by StaticTileFetcher.
     fn clean_static_tiles() -> std::path::PathBuf {
-        let out_dir = std::env::var("OUT_DIR").unwrap();
+        let out_dir = env::var("OUT_DIR").unwrap();
 
-        let out = std::path::Path::new(&out_dir).join("extracted-tiles");
+        let out = Path::new(&out_dir).join("extracted-tiles");
 
         if out.exists() && out.is_dir() {
             std::fs::remove_dir_all(&out).unwrap()

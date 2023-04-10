@@ -84,7 +84,7 @@ pub enum RenderStageLabel {
     /// For example during this phase textures are created, buffers are allocated and written.
     Prepare,
 
-    /// Queues [PhaseItems](crate::render::render_phase::PhaseItem) that depend on
+    /// Queues [PhaseItems](render_phase::PhaseItem) that depend on
     /// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the
     /// [`Render`](RenderStageLabel::Render) stage.
     /// For example data is uploaded to the GPU in this stage.

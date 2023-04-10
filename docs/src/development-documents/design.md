@@ -5,19 +5,19 @@
 ## Domain Model
 
 <div  style="overflow: hidden; border-style: solid; width: 110%">
-<img src="./figures/domain-model.drawio.svg" class="diagram" />
+<img src="./figures/domain-model.drawio.svg" class="diagram" alt="diagram" />
 </div>
 
 ## Data Model
 
 <div  style="overflow: hidden; border-style: solid; width: 110%">
-<img src="./figures/data-model.drawio.svg" class="diagram" />
+<img src="./figures/data-model.drawio.svg" class="diagram" alt="diagram" />
 </div>
 
 ## Crate and Project Structure
 
 <div  style="overflow: hidden; border-style: solid; width: 110%">
-<img src="./figures/crate-and-projects-structure.drawio.svg" class="diagram" />
+<img src="./figures/crate-and-projects-structure.drawio.svg" class="diagram" alt="diagram" />
 </div>
 
 <script>
