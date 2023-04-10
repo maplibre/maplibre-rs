@@ -198,8 +198,8 @@
                 image,
                 wgpu::ImageDataLayout {
                     offset: <span class="number">0</span>,
-                    bytes_per_row: std::num::NonZeroU32::new(<span class="number">4 </span>* width),
-                    rows_per_image: std::num::NonZeroU32::new(height),
+                    bytes_per_row: <span class="prelude-val">Some</span>(<span class="number">4 </span>* width),
+                    rows_per_image: <span class="prelude-val">Some</span>(height),
                 },
                 texture.size,
             );

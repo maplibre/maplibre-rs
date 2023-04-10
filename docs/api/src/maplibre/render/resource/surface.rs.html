@@ -369,13 +369,10 @@
 <span id="369">369</span>
 <span id="370">370</span>
 <span id="371">371</span>
-<span id="372">372</span>
-<span id="373">373</span>
-<span id="374">374</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
-</span><span class="kw">use </span>std::{mem::size_of, num::NonZeroU32, sync::Arc};
+</span><span class="kw">use </span>std::{mem::size_of, sync::Arc};
 
 <span class="kw">use </span>wgpu::TextureFormatFeatures;
 
@@ -392,8 +389,8 @@
 <span class="kw">pub struct </span>BufferDimensions {
     <span class="kw">pub </span>width: u32,
     <span class="kw">pub </span>height: u32,
-    <span class="kw">pub </span>unpadded_bytes_per_row: NonZeroU32,
-    <span class="kw">pub </span>padded_bytes_per_row: NonZeroU32,
+    <span class="kw">pub </span>unpadded_bytes_per_row: u32,
+    <span class="kw">pub </span>padded_bytes_per_row: u32,
 }
 
 <span class="kw">impl </span>BufferDimensions {
@@ -407,9 +404,8 @@
         <span class="self">Self </span>{
             width: size.width(),
             height: size.height(),
-            unpadded_bytes_per_row: NonZeroU32::new(unpadded_bytes_per_row)
-                .expect(<span class="string">&quot;can not be zero&quot;</span>), <span class="comment">// expect is fine because this can never happen
-            </span>padded_bytes_per_row: NonZeroU32::new(padded_bytes_per_row).expect(<span class="string">&quot;can not be zero&quot;</span>),
+            unpadded_bytes_per_row,
+            padded_bytes_per_row,
         }
     }
 }
@@ -507,16 +503,14 @@
         );
         png_encoder.set_depth(png::BitDepth::Eight);
         png_encoder.set_color(png::ColorType::Rgba);
-        <span class="kw">let </span><span class="kw-2">mut </span>png_writer = png_encoder.write_header()<span class="question-mark">?</span>.into_stream_writer_with_size(
-            <span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row.get() <span class="kw">as </span>usize,
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>png_writer = png_encoder
+            .write_header()<span class="question-mark">?
+            </span>.into_stream_writer_with_size(<span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row <span class="kw">as </span>usize)<span class="question-mark">?</span>;
 
         <span class="comment">// from the padded_buffer we write just the unpadded bytes into the image
-        </span><span class="kw">for </span>chunk <span class="kw">in
-            </span>padded_buffer.chunks(<span class="self">self</span>.buffer_dimensions.padded_bytes_per_row.get() <span class="kw">as </span>usize)
-        {
+        </span><span class="kw">for </span>chunk <span class="kw">in </span>padded_buffer.chunks(<span class="self">self</span>.buffer_dimensions.padded_bytes_per_row <span class="kw">as </span>usize) {
             png_writer
-                .write_all(<span class="kw-2">&amp;</span>chunk[..<span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row.get() <span class="kw">as </span>usize])<span class="question-mark">?
+                .write_all(<span class="kw-2">&amp;</span>chunk[..<span class="self">self</span>.buffer_dimensions.unpadded_bytes_per_row <span class="kw">as </span>usize])<span class="question-mark">?
         </span>}
         png_writer.finish()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
@@ -530,7 +524,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.output_buffer
     }
 
-    <span class="kw">pub fn </span>bytes_per_row(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NonZeroU32 {
+    <span class="kw">pub fn </span>bytes_per_row(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.buffer_dimensions.padded_bytes_per_row
     }
 }
@@ -564,7 +558,7 @@
             .texture_format
             .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
-        <span class="macro">log::info!</span>(<span class="string">&quot;format description: {:?}&quot;</span>, texture_format.describe());
+        <span class="macro">log::info!</span>(<span class="string">&quot;format description: {:?}&quot;</span>, texture_format);
 
         <span class="kw">let </span>texture_format_features = adapter.get_texture_format_features(texture_format);
         <span class="macro">log::info!</span>(<span class="string">&quot;format features: {:?}&quot;</span>, texture_format_features);
@@ -597,7 +591,7 @@
         <span class="comment">// The output buffer lets us retrieve the data as an array
         </span><span class="kw">let </span>output_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
             label: <span class="prelude-val">Some</span>(<span class="string">&quot;BufferedTextureHead buffer&quot;</span>),
-            size: (buffer_dimensions.padded_bytes_per_row.get() * buffer_dimensions.height) <span class="kw">as </span>u64,
+            size: (buffer_dimensions.padded_bytes_per_row * buffer_dimensions.height) <span class="kw">as </span>u64,
             usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: <span class="bool-val">false</span>,
         });
