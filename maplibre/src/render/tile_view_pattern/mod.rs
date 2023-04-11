@@ -125,7 +125,7 @@ pub trait HasTile {
         world: &World,
         search_depth: usize,
     ) -> Option<Vec<WorldTileCoords>> {
-        let mut children = coords.get_children().to_vec();
+        let mut children = coords.get_children()?.to_vec();
 
         let mut output = Vec::new();
 
@@ -136,7 +136,7 @@ pub trait HasTile {
                 if self.has_tile(child, world) {
                     output.push(child);
                 } else {
-                    new_children.extend(child.get_children())
+                    new_children.extend(child.get_children().into_iter().flatten())
                 }
             }
 
