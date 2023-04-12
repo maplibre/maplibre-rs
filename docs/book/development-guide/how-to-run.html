@@ -150,8 +150,8 @@
 There are multiple demos of maplibre-rs for different targets. Some targets have prerequisites
 depending on your operating system.</p>
 <ul>
-<li><strong>maplibre-demo</strong> - targets Windows, MacOS and Linux, it is built directly with cargo.</li>
-<li><strong>apple</strong> - targets iOS and MacOS and relies on the xcode IDE.</li>
+<li><strong>maplibre-demo</strong> - targets Windows, macOS and Linux, it is built directly with cargo.</li>
+<li><strong>apple</strong> - targets iOS and macOS and relies on the xcode IDE.</li>
 <li><strong>android</strong> - targets Android devices and builds in Android Studio.</li>
 <li><strong>web</strong> - targets the web using a WASM binary.</li>
 <li><strong>maplibre-headless</strong> - <em>TBD</em></li>
@@ -162,7 +162,7 @@ depending on your operating system.</p>
 active toolchain. If you want to change the target of the build manually, use the cargo <code>--target</code> parameter.</p>
 </blockquote>
 <h2 id="maplibre-demo"><a class="header" href="#maplibre-demo">Maplibre-demo</a></h2>
-<h3 id="linuxmacos"><a class="header" href="#linuxmacos">Linux/MacOS</a></h3>
+<h3 id="linuxmacos"><a class="header" href="#linuxmacos">Linux/macOS</a></h3>
 <p>The build for desktop is very simple, you just have to run the following command from the root of the
 maplibre-rs project:</p>
 <pre><code class="language-bash">cargo run -p maplibre-demo
@@ -190,10 +190,10 @@ you to use C and C++ code with Android. You have to install manually the version
 <pre><code>ANDROID STUDIO -&gt; tools -&gt; SDK manager -&gt; SDK tools -&gt; tick show package details -&gt; ndk (side by side)
 </code></pre>
 <p>Open the project within <code>./android/gradle</code> and create a new virtual device with the device manager. Minimum SDK version
-should be 21. This was tested on a x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and 
+should be 21. This was tested on an x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and 
 run the maplibre-rs Android demo on it. Alternatively you can also run it on your own Android device.</p>
 <blockquote>
-<p>Note: If you are building for a x86 Android device, you probably need to install the following target using<br />
+<p>Note: If you are building for an x86 Android device, you probably need to install the following target using<br />
 rustup with the following command <code>rustup target add i686-linux-android</code>.</p>
 </blockquote>
 <blockquote>
@@ -213,13 +213,13 @@ Start by installing XCode and open the project within <code>./apple/xcode</code>
 <p>You can use XCode to run on a iOS Simulator or a real device. Install a simulator in XCode.
 Version 9 is the minimum version supported theoretically.</p>
 <p>Select the scheme called <em>example (iOS)</em> and click on run. This will start the iOS application.</p>
-<h3 id="macos"><a class="header" href="#macos">MacOS</a></h3>
+<h3 id="macos"><a class="header" href="#macos">macOS</a></h3>
 <p>As you might have seen in the maplibre-demo section, you can build Unix executables directly with Cargo.
-In order to build a proper MacOS application (in OSX terminology) you have to use the <code>./apple/xcode</code> project.</p>
+In order to build a proper macOS application (in OSX terminology) you have to use the <code>./apple/xcode</code> project.</p>
 <p>Open the project from the folder <code>./apple/xcode</code> with XCode. Select the scheme called <em>example (macOS)</em> and
-click on run. This will start the MacOS application. </p>
+click on run. This will start the macOS application. </p>
 <blockquote>
-<p>The minimum target OSX version for the MacOS build is defined inside <em>Build settings -&gt; Deployment -&gt; MacOS deployment target</em>.
+<p>The minimum target OSX version for the macOS build is defined inside <em>Build settings -&gt; Deployment -&gt; macOS deployment target</em>.
 If you are using a lower version of OSX, you will not be able to run the application on your computer.</p>
 </blockquote>
 <h2 id="web-webgl-webgpu"><a class="header" href="#web-webgl-webgpu">Web (WebGL, WebGPU)</a></h2>
@@ -236,7 +236,7 @@ with WebGPU:</p>
 <pre><code class="language-bash">just web-lib build --webgl # WebGL
 just web-lib build --webgl --multithreaded # WebGL + multithreaded
 </code></pre>
-<p>Instead of building it is also possible to watch for changes. The same flags like with <code>web-lib build</code> are supported:</p>
+<p>Instead of building it is also possible to watch for changes. The same flags as with <code>web-lib build</code> are supported:</p>
 <pre><code class="language-bash">just web-lib watch --webgl
 </code></pre>
 <p>After building the library you can run the demo server:</p>

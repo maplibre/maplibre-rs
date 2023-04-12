@@ -175,7 +175,7 @@
 
 <span class="kw">pub enum </span>InitializationResult {
     Initialized(InitializedRenderer),
-    Uninizalized(UninitializedRenderer),
+    Uninitialized(UninitializedRenderer),
     Gone,
 }
 
@@ -186,10 +186,10 @@
 }
 
 <span class="kw">impl </span>InitializationResult {
-    <span class="kw">pub fn </span>unwarp_renderer(<span class="self">self</span>) -&gt; InitializedRenderer {
+    <span class="kw">pub fn </span>unwrap_renderer(<span class="self">self</span>) -&gt; InitializedRenderer {
         <span class="kw">match </span><span class="self">self </span>{
             InitializationResult::Initialized(renderer) =&gt; renderer,
-            InitializationResult::Uninizalized(<span class="kw">_</span>) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Renderer is not initialized&quot;</span>),
+            InitializationResult::Uninitialized(<span class="kw">_</span>) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Renderer is not initialized&quot;</span>),
             InitializationResult::Gone =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Initialization context is gone&quot;</span>),
         }
     }
@@ -199,7 +199,7 @@
             InitializationResult::Initialized(InitializedRenderer { renderer, .. }) =&gt; {
                 <span class="prelude-val">Some</span>(renderer)
             }
-            InitializationResult::Uninizalized(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            InitializationResult::Uninitialized(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
             InitializationResult::Gone =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Initialization context is gone&quot;</span>),
         }
     }

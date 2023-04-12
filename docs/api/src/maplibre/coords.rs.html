@@ -779,7 +779,6 @@
 <span id="779">779</span>
 <span id="780">780</span>
 <span id="781">781</span>
-<span id="782">782</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Provides utilities related to coordinates.
 
 </span><span class="kw">use </span>std::{
@@ -840,7 +839,7 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Quadkey {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>key = <span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">let </span>ZoomLevel(level) = key[<span class="number">0</span>];
         <span class="kw">let </span>len = level <span class="kw">as </span>usize;
@@ -897,8 +896,8 @@
     }
 }
 
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>ZoomLevel {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl </span>Display <span class="kw">for </span>ZoomLevel {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
@@ -968,8 +967,8 @@
     }
 }
 
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>Zoom {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl </span>Display <span class="kw">for </span>Zoom {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, (<span class="self">self</span>.<span class="number">0 </span>* <span class="number">100.0</span>).round() / <span class="number">100.0</span>)
     }
 }
@@ -1017,8 +1016,7 @@
 }
 
 <span class="doccomment">/// Within each tile there is a separate coordinate system. Usually this coordinate system is
-/// within [`crate::coords::EXTENT`]. Therefore, `x` and `y` must be within the bounds of
-/// [`crate::coords::EXTENT`].
+/// within [`EXTENT`]. Therefore, `x` and `y` must be within the bounds of [`EXTENT`].
 ///
 /// # Coordinate System Origin
 ///
@@ -1030,7 +1028,7 @@
 }
 
 <span class="doccomment">/// Every tile has tile coordinates. These tile coordinates are also called
-/// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
+/// [Slippy map tile names](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 ///
 /// # Coordinate System Origin
 ///
@@ -1084,7 +1082,7 @@
 
 <span class="doccomment">/// Every tile has tile coordinates. Every tile coordinate can be mapped to a coordinate within
 /// the world. This provides the freedom to map from [TMS](https://wiki.openstreetmap.org/wiki/TMS)
-/// to [Slippy_map_tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
+/// to [Slippy map tile names](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 ///
 /// # Coordinate System Origin
 ///
@@ -1436,8 +1434,8 @@
     }
 }
 
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>TileCoords {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl </span>Display <span class="kw">for </span>TileCoords {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(
             f,
             <span class="string">&quot;T(x={x},y={y},z={z})&quot;</span>,
@@ -1448,8 +1446,8 @@
     }
 }
 
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>WorldTileCoords {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl </span>Display <span class="kw">for </span>WorldTileCoords {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(
             f,
             <span class="string">&quot;WT(x={x},y={y},z={z})&quot;</span>,
@@ -1459,8 +1457,8 @@
         )
     }
 }
-<span class="kw">impl </span>fmt::Display <span class="kw">for </span>WorldCoords {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+<span class="kw">impl </span>Display <span class="kw">for </span>WorldCoords {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(f, <span class="string">&quot;W(x={x},y={y})&quot;</span>, x = <span class="self">self</span>.x, y = <span class="self">self</span>.y,)
     }
 }

@@ -598,8 +598,8 @@
 <span class="attribute">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Camera {
     position: Point3&lt;f64&gt;, <span class="comment">// The z axis never changes, the zoom is used instead
-    </span>yaw: cgmath::Rad&lt;f64&gt;,
-    pitch: cgmath::Rad&lt;f64&gt;,
+    </span>yaw: Rad&lt;f64&gt;,
+    pitch: Rad&lt;f64&gt;,
 
     width: f64,
     height: f64,
@@ -650,7 +650,7 @@
         ViewProjection(FLIP_Y * perspective.current_projection * <span class="self">self</span>.calc_matrix())
     }
 
-    <span class="doccomment">/// A transform which can be used to transfrom between clip and window space.
+    <span class="doccomment">/// A transform which can be used to transform between clip and window space.
     /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle) (Direct3D).
     </span><span class="kw">fn </span>clip_to_window_transform(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Matrix4&lt;f64&gt; {
         <span class="kw">let </span>min_depth = <span class="number">0.0</span>;
@@ -881,7 +881,7 @@
         <span class="self">self</span>.position
     }
 
-    <span class="kw">pub fn </span>yaw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; cgmath::Rad&lt;f64&gt; {
+    <span class="kw">pub fn </span>yaw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rad&lt;f64&gt; {
         <span class="self">self</span>.yaw
     }
 
@@ -889,7 +889,7 @@
         <span class="self">self</span>.yaw += delta.into();
     }
 
-    <span class="kw">pub fn </span>pitch(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; cgmath::Rad&lt;f64&gt; {
+    <span class="kw">pub fn </span>pitch(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rad&lt;f64&gt; {
         <span class="self">self</span>.pitch
     }
 
