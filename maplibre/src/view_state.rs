@@ -65,7 +65,7 @@ impl ViewState {
 
     pub fn create_view_region(&self) -> Option<ViewRegion> {
         self.camera
-            .view_region_bounding_box(&self.view_projection().invert())
+            .view_region_bounding_box(&self.view_projection().invert()?)
             .map(|bounding_box| {
                 ViewRegion::new(
                     bounding_box,

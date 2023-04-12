@@ -28,8 +28,8 @@ pub struct ViewProjection(Matrix4<f64>);
 
 impl ViewProjection {
     #[tracing::instrument(skip_all)]
-    pub fn invert(&self) -> InvertedViewProjection {
-        InvertedViewProjection(self.0.invert().expect("Unable to invert view projection"))
+    pub fn invert(&self) -> Option<InvertedViewProjection> {
+        Some(InvertedViewProjection(self.0.invert()?))
     }
 
     pub fn project(&self, vector: Vector4<f64>) -> Vector4<f64> {
@@ -319,7 +319,7 @@ impl Camera {
             Point3::new(1.0, 1.0, 1.0),
         ));
 
-        let inverted_view_proj = view_proj.invert();
+        let inverted_view_proj = view_proj.invert()?;
 
         let from_ndc = Vector3::new(self.width, self.height, 1.0);
         let vec = points
