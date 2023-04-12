@@ -72,8 +72,8 @@ const MAX_PITCH: Rad<f64> = Rad(0.5);
 #[derive(Debug, Clone)]
 pub struct Camera {
     position: Point3<f64>, // The z axis never changes, the zoom is used instead
-    yaw: cgmath::Rad<f64>,
-    pitch: cgmath::Rad<f64>,
+    yaw: Rad<f64>,
+    pitch: Rad<f64>,
 
     width: f64,
     height: f64,
@@ -124,7 +124,7 @@ impl Camera {
         ViewProjection(FLIP_Y * perspective.current_projection * self.calc_matrix())
     }
 
-    /// A transform which can be used to transfrom between clip and window space.
+    /// A transform which can be used to transform between clip and window space.
     /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle) (Direct3D).
     fn clip_to_window_transform(&self) -> Matrix4<f64> {
         let min_depth = 0.0;
@@ -355,7 +355,7 @@ impl Camera {
         self.position
     }
 
-    pub fn yaw(&self) -> cgmath::Rad<f64> {
+    pub fn yaw(&self) -> Rad<f64> {
         self.yaw
     }
 
@@ -363,7 +363,7 @@ impl Camera {
         self.yaw += delta.into();
     }
 
-    pub fn pitch(&self) -> cgmath::Rad<f64> {
+    pub fn pitch(&self) -> Rad<f64> {
         self.pitch
     }
 

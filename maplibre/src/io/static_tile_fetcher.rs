@@ -66,12 +66,12 @@ impl StaticTileFetcher {
 
 #[cfg(test)]
 mod tests {
-    use super::StaticTileFetcher;
-    use crate::{coords::WorldTileCoords, style::source::TileAddressingScheme};
-
     #[cfg(static_tiles_found)]
     #[tokio::test]
     async fn test_tiles_available() {
+        use super::StaticTileFetcher;
+        use crate::{coords::WorldTileCoords, style::source::TileAddressingScheme};
+
         const MUNICH_X: i32 = 17425;
         const MUNICH_Y: i32 = 11365;
         const MUNICH_Z: u8 = 15;

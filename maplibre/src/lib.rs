@@ -4,7 +4,7 @@
 //!
 //! Maplibre-rs is a map renderer that can run natively on MacOS, Linux, Windows, Android, iOS and the web.
 //! It takes advantage of Lyon to tessellate vector tiles and WebGPU to display them efficiently.
-//! Maplibre-rs also has an headless mode (*work in progress*) that can generate rasters.
+//! Maplibre-rs also has an headless mode (*work in progress*) that can generate raster images.
 //!
 //! The official guide book can be found [here](https://maplibre.org/maplibre-rs/docs/book/).
 //!

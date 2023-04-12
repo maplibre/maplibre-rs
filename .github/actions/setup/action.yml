@@ -49,7 +49,7 @@ runs:
       shell: bash
       run: just nightly-targets ${{ inputs.targets }}
     - uses: Swatinem/rust-cache@v2
-    # Install just again because Swatinem/rust-cache might removed it while restoring the cache
+    # Install just again because Swatinem/rust-cache might remove it while restoring the cache
     - name: Install just
       uses: ./.github/actions/cargo-install
       with:

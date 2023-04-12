@@ -47,7 +47,7 @@ impl Default for RendererBuilder {
 
 pub enum InitializationResult {
     Initialized(InitializedRenderer),
-    Uninizalized(UninitializedRenderer),
+    Uninitialized(UninitializedRenderer),
     Gone,
 }
 
@@ -58,10 +58,10 @@ impl Default for InitializationResult {
 }
 
 impl InitializationResult {
-    pub fn unwarp_renderer(self) -> InitializedRenderer {
+    pub fn unwrap_renderer(self) -> InitializedRenderer {
         match self {
             InitializationResult::Initialized(renderer) => renderer,
-            InitializationResult::Uninizalized(_) => panic!("Renderer is not initialized"),
+            InitializationResult::Uninitialized(_) => panic!("Renderer is not initialized"),
             InitializationResult::Gone => panic!("Initialization context is gone"),
         }
     }
@@ -71,7 +71,7 @@ impl InitializationResult {
             InitializationResult::Initialized(InitializedRenderer { renderer, .. }) => {
                 Some(renderer)
             }
-            InitializationResult::Uninizalized(_) => None,
+            InitializationResult::Uninitialized(_) => None,
             InitializationResult::Gone => panic!("Initialization context is gone"),
         }
     }
