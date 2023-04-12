@@ -164,7 +164,8 @@ pub enum Head {
 }
 
 pub struct Surface {
-    size: WindowSize,
+    /// Only render if size is not None
+    size: Option<WindowSize>,
     head: Head,
 }
 
@@ -193,7 +194,7 @@ impl Surface {
         log::info!("format features: {:?}", texture_format_features);
 
         Self {
-            size,
+            size: Some(size),
             head: Head::Headed(WindowHead {
                 surface,
                 size,
@@ -247,7 +248,7 @@ impl Surface {
         let texture = device.create_texture(&texture_descriptor);
 
         Self {
-            size,
+            size: Some(size),
             head: Head::Headless(Arc::new(BufferedTextureHead {
                 texture,
                 texture_format: format,
@@ -289,22 +290,19 @@ impl Surface {
         }
     }
 
-    pub fn size(&self) -> WindowSize {
+    pub fn size(&self) -> Option<WindowSize> {
         self.size
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.size = WindowSize::new(width, height).expect("Invalid size for resizing the surface.");
+        self.size = WindowSize::new(width, height);
     }
 
     pub fn reconfigure(&mut self, device: &wgpu::Device) {
-        match &mut self.head {
-            Head::Headed(window) => {
-                if window.has_changed(&(self.size.width(), self.size.height())) {
-                    window.resize_and_configure(self.size.width(), self.size.height(), device);
-                }
+        if let (Some(size), Head::Headed(window_head)) = (self.size, &mut self.head) {
+            if window_head.has_changed(&(size.width(), size.height())) {
+                window_head.resize_and_configure(size.width(), size.height(), device);
             }
-            Head::Headless(_) => {}
         }
     }
 
@@ -316,13 +314,10 @@ impl Surface {
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        match &mut self.head {
-            Head::Headed(window_head) => {
-                if window_head.has_changed(&(self.size.width(), self.size.height())) {
-                    window_head.recreate_surface(window, instance)?;
-                }
+        if let (Some(size), Head::Headed(window_head)) = (self.size, &mut self.head) {
+            if window_head.has_changed(&(size.width(), size.height())) {
+                window_head.recreate_surface(window, instance)?;
             }
-            Head::Headless(_) => {}
         }
         Ok(())
     }

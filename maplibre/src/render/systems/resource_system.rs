@@ -48,7 +48,9 @@ impl System for ResourceSystem {
 
         let surface = &mut state.surface;
 
-        let size = surface.size();
+        let Some(size) = surface.size() else {
+            return;
+        };
 
         surface.reconfigure(device);
 

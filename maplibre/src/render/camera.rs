@@ -276,6 +276,10 @@ impl Camera {
         &self,
         inverted_view_proj: &InvertedViewProjection,
     ) -> Option<Aabb2<f64>> {
+        if self.width == 0. || self.height == 0. {
+            return None;
+        }
+
         let screen_bounding_box = [
             Vector2::new(0.0, 0.0),
             Vector2::new(self.width, 0.0),
