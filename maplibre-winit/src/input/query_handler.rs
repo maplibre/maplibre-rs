@@ -71,7 +71,7 @@ impl UpdateState for QueryHandler {
                 let z = view_state.zoom().zoom_level(DEFAULT_TILE_SIZE); // FIXME: can be wrong, if tiles of different z are visible
                 let zoom = view_state.zoom();
 
-                if let Some(coordinates) = view_state.camera().window_to_world_at_ground(
+                if let Some(coordinates) = view_state.window_to_world_at_ground(
                     &window_position,
                     &inverted_view_proj,
                     false,

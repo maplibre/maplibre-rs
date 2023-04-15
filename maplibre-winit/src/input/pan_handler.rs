@@ -28,12 +28,12 @@ impl UpdateState for PanHandler {
                 let inverted_view_proj = view_proj.invert();
 
                 let delta = if let (Some(start), Some(current)) = (
-                    reference_camera.window_to_world_at_ground(
+                    view_state.window_to_world_at_ground(
                         &start_window_position,
                         &inverted_view_proj,
                         false,
                     ),
-                    reference_camera.window_to_world_at_ground(
+                    view_state.window_to_world_at_ground(
                         &window_position,
                         &inverted_view_proj,
                         false,

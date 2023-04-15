@@ -24,7 +24,7 @@ impl UpdateState for ZoomHandler {
                 let view_proj = view_state.view_projection();
                 let inverted_view_proj = view_proj.invert();
 
-                if let Some(cursor_position) = view_state.camera().window_to_world_at_ground(
+                if let Some(cursor_position) = view_state.window_to_world_at_ground(
                     &window_position,
                     &inverted_view_proj,
                     false,
