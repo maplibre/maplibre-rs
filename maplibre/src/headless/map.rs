@@ -44,7 +44,7 @@ impl HeadlessMap {
             WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
             Zoom::default(),
             cgmath::Deg(0.0),
-            cgmath::Deg(110.0),
+            cgmath::Rad(0.6435011087932844),
         );
 
         let mut world = World::default();
