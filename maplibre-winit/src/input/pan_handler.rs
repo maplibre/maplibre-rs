@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
+use cgmath::{EuclideanSpace, Point2, Vector2, Zero};
 use maplibre::{context::MapContext, render::camera::Camera};
 use winit::event::{ElementState, MouseButton};
 
@@ -9,7 +9,7 @@ use super::UpdateState;
 pub struct PanHandler {
     window_position: Option<Vector2<f64>>,
     start_window_position: Option<Vector2<f64>>,
-    start_camera_position: Option<Vector3<f64>>,
+    start_camera_position: Option<Vector2<f64>>,
     reference_camera: Option<Camera>,
     is_panning: bool,
 }
@@ -41,7 +41,7 @@ impl UpdateState for PanHandler {
                 ) {
                     start - current
                 } else {
-                    Vector3::zero()
+                    Vector2::zero()
                 };
 
                 if self.start_camera_position.is_none() {
@@ -49,8 +49,8 @@ impl UpdateState for PanHandler {
                 }
 
                 if let Some(start_camera_position) = self.start_camera_position {
-                    view_state.camera_mut().move_to(Point3::from_vec(
-                        start_camera_position + Vector3::new(delta.x, delta.y, 0.0),
+                    view_state.camera_mut().move_to(Point2::from_vec(
+                        start_camera_position + Vector2::new(delta.x, delta.y),
                     ));
                 }
             }

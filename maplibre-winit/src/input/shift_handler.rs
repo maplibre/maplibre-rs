@@ -1,12 +1,12 @@
 use std::time::Duration;
 
-use cgmath::{Vector3, Zero};
+use cgmath::{Vector2, Zero};
 use maplibre::context::MapContext;
 
 use super::UpdateState;
 
 pub struct ShiftHandler {
-    camera_translate: Vector3<f64>,
+    camera_translate: Vector2<f64>,
 
     speed: f64,
     sensitivity: f64,
@@ -25,7 +25,7 @@ impl UpdateState for ShiftHandler {
 impl ShiftHandler {
     pub fn new(speed: f64, sensitivity: f64) -> Self {
         Self {
-            camera_translate: Vector3::zero(),
+            camera_translate: Vector2::zero(),
             speed,
             sensitivity,
         }

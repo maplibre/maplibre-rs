@@ -68,7 +68,7 @@ const MAX_PITCH: Rad<f64> = Rad(0.5);
 
 #[derive(Debug, Clone)]
 pub struct Camera {
-    position: Point3<f64>, // The z axis never changes, the zoom is used instead
+    position: Point2<f64>,
     yaw: Rad<f64>,
     pitch: Rad<f64>,
 }
@@ -84,7 +84,7 @@ impl SignificantlyDifferent for Camera {
 }
 
 impl Camera {
-    pub fn new<V: Into<Point3<f64>>, Y: Into<Rad<f64>>, P: Into<Rad<f64>>>(
+    pub fn new<V: Into<Point2<f64>>, Y: Into<Rad<f64>>, P: Into<Rad<f64>>>(
         position: V,
         yaw: Y,
         pitch: P,
@@ -96,15 +96,15 @@ impl Camera {
         }
     }
 
-    pub fn calc_matrix(&self) -> Matrix4<f64> {
+    pub fn calc_matrix(&self, camera_height: f64) -> Matrix4<f64> {
         Matrix4::look_to_rh(
-            self.position,
+            self.to_3d(camera_height),
             Vector3::new(self.yaw.cos(), self.pitch.sin(), self.yaw.sin()).normalize(),
             Vector3::unit_y(),
         )
     }
 
-    pub fn position(&self) -> Point3<f64> {
+    pub fn position(&self) -> Point2<f64> {
         self.position
     }
 
@@ -128,20 +128,20 @@ impl Camera {
         }
     }
 
-    pub fn move_relative(&mut self, delta: Vector3<f64>) {
+    pub fn move_relative(&mut self, delta: Vector2<f64>) {
         self.position += delta;
     }
 
-    pub fn move_to(&mut self, new_position: Point3<f64>) {
+    pub fn move_to(&mut self, new_position: Point2<f64>) {
         self.position = new_position;
     }
 
-    pub fn position_vector(&self) -> Vector3<f64> {
+    pub fn position_vector(&self) -> Vector2<f64> {
         self.position.to_vec()
     }
 
-    pub fn homogenous_position(&self) -> Vector4<f64> {
-        self.position.to_homogeneous()
+    pub fn to_3d(&self, camera_height: f64) -> Point3<f64> {
+        Point3::new(self.position.x, self.position.y, camera_height)
     }
 }
 

@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use cgmath::{Vector2, Vector3};
+use cgmath::Vector2;
 use maplibre::{context::MapContext, coords::Zoom};
 
 use super::UpdateState;
@@ -31,11 +31,8 @@ impl UpdateState for ZoomHandler {
                 ) {
                     let scale = current_zoom.scale_delta(&next_zoom);
 
-                    let delta = Vector3::new(
-                        cursor_position.x * scale,
-                        cursor_position.y * scale,
-                        cursor_position.z,
-                    ) - cursor_position;
+                    let delta = Vector2::new(cursor_position.x * scale, cursor_position.y * scale)
+                        - cursor_position;
 
                     view_state.camera_mut().move_relative(delta);
                 }

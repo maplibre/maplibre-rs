@@ -35,7 +35,7 @@ impl ViewState {
         pitch: P,
         fovy: F,
     ) -> Self {
-        let camera = Camera::new((position.x, position.y, 0.0), Deg(-90.0), pitch.into());
+        let camera = Camera::new((position.x, position.y), Deg(-90.0), pitch.into());
 
         let perspective = Perspective::new(fovy);
 
@@ -152,11 +152,9 @@ impl ViewState {
         perspective.z[0] = -offset.x * 2.0 / width;
         perspective.z[1] = offset.y * 2.0 / height;
 
-        // Move camera away from ground
         let view_projection = perspective
-            * Matrix4::from_translation(Vector3::new(0.0, 0.0, -camera_to_center_distance))
-            // Apply camera
-            * self.camera.calc_matrix();
+            // Apply camera and move camera away from ground
+            * self.camera.calc_matrix(camera_to_center_distance);
 
         // TODO for the below TODOs, check GitHub blame to get an idea of what these matrices are used for!
 
@@ -325,7 +323,7 @@ impl ViewState {
         window: &Vector2<f64>,
         inverted_view_proj: &InvertedViewProjection,
         bound: bool,
-    ) -> Option<Vector3<f64>> {
+    ) -> Option<Vector2<f64>> {
         let near_world =
             self.window_to_world(&Vector3::new(window.x, window.y, 0.0), inverted_view_proj);
 
@@ -336,7 +334,8 @@ impl ViewState {
         // Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf
         let u = -near_world.z / (far_world.z - near_world.z);
         if !bound || (0.0..=1.0).contains(&u) {
-            Some(near_world + u * (far_world - near_world))
+            let result = near_world + u * (far_world - near_world);
+            Some(Vector2::new(result.x, result.y))
         } else {
             None
         }
