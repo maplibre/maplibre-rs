@@ -1,16 +1,8 @@
 //! Main camera
 
-use std::f64::consts::PI;
+use cgmath::{num_traits::clamp, prelude::*, *};
 
-use cgmath::{
-    num_traits::clamp, prelude::*, AbsDiffEq, Matrix4, Point2, Point3, Rad, Vector2, Vector3,
-    Vector4,
-};
-
-use crate::util::{
-    math::{bounds_from_points, Aabb2, Aabb3, Plane},
-    SignificantlyDifferent,
-};
+use crate::util::SignificantlyDifferent;
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: Matrix4<f64> = Matrix4::new(
@@ -29,7 +21,7 @@ pub const FLIP_Y: Matrix4<f64> = Matrix4::new(
 );
 
 #[derive(Debug)]
-pub struct ViewProjection(Matrix4<f64>);
+pub struct ViewProjection(pub Matrix4<f64>);
 
 impl ViewProjection {
     #[tracing::instrument(skip_all)]
@@ -79,9 +71,6 @@ pub struct Camera {
     position: Point3<f64>, // The z axis never changes, the zoom is used instead
     yaw: Rad<f64>,
     pitch: Rad<f64>,
-
-    width: f64,
-    height: f64,
 }
 
 impl SignificantlyDifferent for Camera {
@@ -99,261 +88,20 @@ impl Camera {
         position: V,
         yaw: Y,
         pitch: P,
-        width: u32,
-        height: u32,
     ) -> Self {
         Self {
             position: position.into(),
             yaw: yaw.into(),
             pitch: pitch.into(),
-            width: width as f64,
-            height: height as f64,
         }
     }
 
-    pub fn resize(&mut self, width: u32, height: u32) {
-        self.width = width as f64;
-        self.height = height as f64;
-    }
-
-    fn calc_matrix(&self) -> Matrix4<f64> {
+    pub fn calc_matrix(&self) -> Matrix4<f64> {
         Matrix4::look_to_rh(
             self.position,
             Vector3::new(self.yaw.cos(), self.pitch.sin(), self.yaw.sin()).normalize(),
             Vector3::unit_y(),
         )
-    }
-
-    #[tracing::instrument(skip_all)]
-    pub fn calc_view_proj(&self, perspective: &Perspective) -> ViewProjection {
-        ViewProjection(FLIP_Y * perspective.current_projection * self.calc_matrix())
-    }
-
-    /// A transform which can be used to transform between clip and window space.
-    /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle) (Direct3D).
-    fn clip_to_window_transform(&self) -> Matrix4<f64> {
-        let min_depth = 0.0;
-        let max_depth = 1.0;
-        let x = 0.0;
-        let y = 0.0;
-        let ox = x + self.width / 2.0;
-        let oy = y + self.height / 2.0;
-        let oz = min_depth;
-        let pz = max_depth - min_depth;
-        Matrix4::from_cols(
-            Vector4::new(self.width / 2.0, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, -self.height / 2.0, 0.0, 0.0),
-            Vector4::new(0.0, 0.0, pz, 0.0),
-            Vector4::new(ox, oy, oz, 1.0),
-        )
-    }
-
-    /// Transforms coordinates in clip space to window coordinates.
-    ///
-    /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline) (Direct3D).
-    fn clip_to_window(&self, clip: &Vector4<f64>) -> Vector4<f64> {
-        #[rustfmt::skip]
-            let ndc = Vector4::new(
-            clip.x / clip.w,
-            clip.y / clip.w,
-            clip.z / clip.w,
-            1.0
-        );
-
-        self.clip_to_window_transform() * ndc
-    }
-    /// Alternative implementation to `clip_to_window`. Transforms coordinates in clip space to
-    /// window coordinates.
-    ///
-    /// Adopted from [here](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkViewport.html)
-    /// and [here](https://matthewwellings.com/blog/the-new-vulkan-coordinate-system/) (Vulkan).
-    fn clip_to_window_vulkan(&self, clip: &Vector4<f64>) -> Vector3<f64> {
-        #[rustfmt::skip]
-            let ndc = Vector4::new(
-            clip.x / clip.w,
-            clip.y / clip.w,
-            clip.z / clip.w,
-            1.0
-        );
-
-        let min_depth = 0.0;
-        let max_depth = 1.0;
-
-        let x = 0.0;
-        let y = 0.0;
-        let ox = x + self.width / 2.0;
-        let oy = y + self.height / 2.0;
-        let oz = min_depth;
-        let px = self.width;
-        let py = self.height;
-        let pz = max_depth - min_depth;
-        let xd = ndc.x;
-        let yd = ndc.y;
-        let zd = ndc.z;
-        Vector3::new(px / 2.0 * xd + ox, py / 2.0 * yd + oy, pz * zd + oz)
-    }
-
-    /// Order of transformations reversed: https://computergraphics.stackexchange.com/questions/6087/screen-space-coordinates-to-eye-space-conversion/6093
-    /// `w` is lost.
-    ///
-    /// OpenGL explanation: https://www.khronos.org/opengl/wiki/Compute_eye_space_from_window_space#From_window_to_ndc
-    fn window_to_world(
-        &self,
-        window: &Vector3<f64>,
-        inverted_view_proj: &InvertedViewProjection,
-    ) -> Vector3<f64> {
-        #[rustfmt::skip]
-        let fixed_window = Vector4::new(
-            window.x,
-            window.y,
-            window.z,
-            1.0
-        );
-
-        let ndc = self.clip_to_window_transform().invert().unwrap() * fixed_window;
-        let unprojected = inverted_view_proj.project(ndc);
-
-        Vector3::new(
-            unprojected.x / unprojected.w,
-            unprojected.y / unprojected.w,
-            unprojected.z / unprojected.w,
-        )
-    }
-
-    /// Alternative implementation to `window_to_world`
-    ///
-    /// Adopted from [here](https://docs.rs/nalgebra-glm/latest/src/nalgebra_glm/ext/matrix_projection.rs.html#164-181).
-    fn window_to_world_nalgebra(
-        window: &Vector3<f64>,
-        inverted_view_proj: &InvertedViewProjection,
-        width: f64,
-        height: f64,
-    ) -> Vector3<f64> {
-        let pt = Vector4::new(
-            2.0 * (window.x - 0.0) / width - 1.0,
-            2.0 * (height - window.y - 0.0) / height - 1.0,
-            window.z,
-            1.0,
-        );
-        let unprojected = inverted_view_proj.project(pt);
-
-        Vector3::new(
-            unprojected.x / unprojected.w,
-            unprojected.y / unprojected.w,
-            unprojected.z / unprojected.w,
-        )
-    }
-
-    /// Gets the world coordinates for the specified `window` coordinates on the `z=0` plane.
-    pub fn window_to_world_at_ground(
-        &self,
-        window: &Vector2<f64>,
-        inverted_view_proj: &InvertedViewProjection,
-        bound: bool,
-    ) -> Option<Vector3<f64>> {
-        let near_world =
-            self.window_to_world(&Vector3::new(window.x, window.y, 0.0), inverted_view_proj);
-
-        let far_world =
-            self.window_to_world(&Vector3::new(window.x, window.y, 1.0), inverted_view_proj);
-
-        // for z = 0 in world coordinates
-        // Idea comes from: https://dondi.lmu.build/share/cg/unproject-explained.pdf
-        let u = -near_world.z / (far_world.z - near_world.z);
-        if !bound || (0.0..=1.0).contains(&u) {
-            Some(near_world + u * (far_world - near_world))
-        } else {
-            None
-        }
-    }
-
-    /// Calculates an [`Aabb2`] bounding box which contains at least the visible area on the `z=0`
-    /// plane. One can think of it as being the bounding box of the geometry which forms the
-    /// intersection between the viewing frustum and the `z=0` plane.
-    ///
-    /// This implementation works in the world 3D space. It casts rays from the corners of the
-    /// window to calculate intersections points with the `z=0` plane. Then a bounding box is
-    /// calculated.
-    ///
-    /// *Note:* It is possible that no such bounding box exists. This is the case if the `z=0` plane
-    /// is not in view.
-    pub fn view_region_bounding_box(
-        &self,
-        inverted_view_proj: &InvertedViewProjection,
-    ) -> Option<Aabb2<f64>> {
-        let screen_bounding_box = [
-            Vector2::new(0.0, 0.0),
-            Vector2::new(self.width, 0.0),
-            Vector2::new(self.width, self.height),
-            Vector2::new(0.0, self.height),
-        ]
-        .map(|point| self.window_to_world_at_ground(&point, inverted_view_proj, false));
-
-        let (min, max) = bounds_from_points(
-            screen_bounding_box
-                .into_iter()
-                .flatten()
-                .map(|point| [point.x, point.y]),
-        )?;
-
-        Some(Aabb2::new(Point2::from(min), Point2::from(max)))
-    }
-    /// An alternative implementation for `view_bounding_box`.
-    ///
-    /// This implementation works in the NDC space. We are creating a plane in the world 3D space.
-    /// Then we are transforming it to the NDC space. In NDC space it is easy to calculate
-    /// the intersection points between an Aabb3 and a plane. The resulting Aabb2 is returned.
-    pub fn view_region_bounding_box_ndc(&self, perspective: &Perspective) -> Option<Aabb2<f64>> {
-        let view_proj = self.calc_view_proj(perspective);
-        let a = view_proj.project(Vector4::new(0.0, 0.0, 0.0, 1.0));
-        let b = view_proj.project(Vector4::new(1.0, 0.0, 0.0, 1.0));
-        let c = view_proj.project(Vector4::new(1.0, 1.0, 0.0, 1.0));
-
-        let a_ndc = self.clip_to_window(&a).truncate();
-        let b_ndc = self.clip_to_window(&b).truncate();
-        let c_ndc = self.clip_to_window(&c).truncate();
-        let to_ndc = Vector3::new(1.0 / self.width, 1.0 / self.height, 1.0);
-        let plane: Plane<f64> = Plane::from_points(
-            Point3::from_vec(a_ndc.mul_element_wise(to_ndc)),
-            Point3::from_vec(b_ndc.mul_element_wise(to_ndc)),
-            Point3::from_vec(c_ndc.mul_element_wise(to_ndc)),
-        )?;
-
-        let points = plane.intersection_points_aabb3(&Aabb3::new(
-            Point3::new(0.0, 0.0, 0.0),
-            Point3::new(1.0, 1.0, 1.0),
-        ));
-
-        let inverted_view_proj = view_proj.invert();
-
-        let from_ndc = Vector3::new(self.width, self.height, 1.0);
-        let vec = points
-            .iter()
-            .map(|point| {
-                self.window_to_world(&point.mul_element_wise(from_ndc), &inverted_view_proj)
-            })
-            .collect::<Vec<_>>();
-
-        let min_x = vec
-            .iter()
-            .map(|point| point.x)
-            .min_by(|a, b| a.partial_cmp(b).unwrap())?;
-        let min_y = vec
-            .iter()
-            .map(|point| point.y)
-            .min_by(|a, b| a.partial_cmp(b).unwrap())?;
-        let max_x = vec
-            .iter()
-            .map(|point| point.x)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())?;
-        let max_y = vec
-            .iter()
-            .map(|point| point.y)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())?;
-        Some(Aabb2::new(
-            Point2::new(min_x, min_y),
-            Point2::new(max_x, max_y),
-        ))
     }
 
     pub fn position(&self) -> Point3<f64> {
@@ -397,94 +145,50 @@ impl Camera {
     }
 }
 
+#[derive(PartialEq, Copy, Clone, Default)]
+pub struct EdgeInsets {
+    pub top: f64,
+    pub bottom: f64,
+    pub left: f64,
+    pub right: f64,
+}
+
+impl EdgeInsets {
+    /**
+     * Utility method that computes the new apprent center or vanishing point after applying insets.
+     * This is in pixels and with the top left being (0.0) and +y being downwards.
+     *
+     * @param {number} width the width
+     * @param {number} height the height
+     * @returns {Point} the point
+     * @memberof EdgeInsets
+     */
+    pub fn center(&self, width: f64, height: f64) -> Point2<f64> {
+        // Clamp insets so they never overflow width/height and always calculate a valid center
+        let x = clamp((self.left + width - self.right) / 2.0, 0.0, width);
+        let y = clamp((self.top + height - self.bottom) / 2.0, 0.0, height);
+
+        return Point2::new(x, y);
+    }
+}
+
 pub struct Perspective {
     fovy: Rad<f64>,
-
-    current_projection: Matrix4<f64>,
 }
 
 impl Perspective {
-    pub fn new<F: Into<Rad<f64>>>(width: u32, height: u32, fovy: F) -> Self {
+    pub fn new<F: Into<Rad<f64>>>(fovy: F) -> Self {
         let rad = fovy.into();
-        Self {
-            current_projection: Self::calc_matrix(
-                width as f64 / height as f64,
-                width as f64,
-                height as f64,
-                rad,
-            ),
-            fovy: rad,
-        }
+        Self { fovy: rad }
     }
 
-    pub fn resize(&mut self, width: u32, height: u32) {
-        self.current_projection = Self::calc_matrix(
-            width as f64 / height as f64,
-            width as f64,
-            height as f64,
-            self.fovy,
-        );
+    pub fn fovy(&self) -> Rad<f64> {
+        self.fovy
     }
 
     // Adopted from https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L827-L879
-    fn calc_matrix(aspect: f64, width: f64, height: f64, fovy: Rad<f64>) -> Matrix4<f64> {
-        let pitch = 0.0; // FIXME: We need pitch to calculate `furthest_distance`
-
-        let center_point = Point2::new(width / 2.0, height / 2.0);
-        let center_offset_y = center_point.y - height / 2.0;
-
-        let half_fov = fovy / 2.0;
-        let offset_y = center_offset_y;
-        let camera_to_center_distance = 0.5 / half_fov.tan() * height;
-
-        // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
-        // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
-        // 1 Z unit is equivalent to 1 horizontal px at the center of the map
-        // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
-        let ground_angle = PI / 2.0 + pitch;
-        let fov_above_center = fovy.0 * (0.5 + offset_y / height);
-        let top_half_surface_distance = fov_above_center.sin() * camera_to_center_distance
-            / clamp(PI - ground_angle - fov_above_center, 0.01, PI - 0.01).sin();
-
-        // Calculate z distance of the farthest fragment that should be rendered.
-        let furthest_distance =
-            (PI / 2.0 - pitch).cos() * top_half_surface_distance + camera_to_center_distance;
-        // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
-        let far_z = furthest_distance * 1.01;
-
-        // The larger the value of near_z is
-        // - the more depth precision is available for features (good)
-        // - clipping starts appearing sooner when the camera is close to 3d features (bad)
-        //
-        // Smaller values worked well for mapbox-gl-js but deckgl was encountering precision issues
-        // when rendering it's layers using custom layers. This value was experimentally chosen and
-        // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
-        //
-        // in tile.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
-        // This means that regardless of the `znear` value all layers will be rendered as part
-        // of the near plane.
-        // These values have been selected experimentally:
-        // https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
-        let near_z = height / 50.0;
-
-        let mut perspective = cgmath::perspective(fovy, aspect, near_z, far_z);
-
-        // TODO: https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L881-L883
-        // Apply center of perspective offset
-        // perspective.z[0] = -offset_x * 2.0 / width;
-        // perspective.z[1] = offset_y * 2.0 / height;
-
-        // TODO: https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L885-L889
-        //perspective = perspective * Matrix4::from_nonuniform_scale(1.0, -1.0, 1.0);
-        perspective = perspective
-            * Matrix4::from_translation(Vector3::new(0.0, 0.0, -camera_to_center_distance));
-        //mat4.rotateX(m, m, this._pitch);
-        //mat4.rotateZ(m, m, this.angle);
-        //mat4.translate(m, m, [-x, -y, 0]);
-
-        // TODO Missing: https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L895-L902
-
-        OPENGL_TO_WGPU_MATRIX * perspective
+    pub fn calc_matrix(&self, aspect: f64, near_z: f64, far_z: f64) -> Matrix4<f64> {
+        perspective(self.fovy, aspect, near_z, far_z)
     }
 }
 
@@ -493,7 +197,7 @@ mod tests {
     use cgmath::{AbsDiffEq, Vector2, Vector3, Vector4};
 
     use super::{Camera, Perspective};
-    use crate::render::camera::{InvertedViewProjection, ViewProjection};
+    use crate::render::camera::{EdgeInsets, InvertedViewProjection, ViewProjection};
 
     #[test]
     fn test() {
@@ -507,7 +211,7 @@ mod tests {
             height as u32,
         );
         // 4732.561319582916
-        let perspective = Perspective::new(width as u32, height as u32, cgmath::Deg(45.0));
+        let perspective = Perspective::new(width as u32, height as u32, cgmath::Deg(45.0), &camera);
         let view_proj: ViewProjection = camera.calc_view_proj(&perspective);
         let inverted_view_proj: InvertedViewProjection = view_proj.invert();
 
