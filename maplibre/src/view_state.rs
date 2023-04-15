@@ -71,6 +71,12 @@ impl ViewState {
                 )
             })
     }
+
+    /// This function matches how maplibre-gl-js implements perspective and cameras.
+    /// Therefore it has the same bugs as maplibre-gl-js (2023-04): https://github.com/maplibre/maplibre-gl-js/issues/1655
+    /// It implements also already some elevation based clipping. This is not used here.
+    ///
+    /// Last verified to match maplibre-gl-js on 2023-04-15.
     #[tracing::instrument(skip_all)]
     pub fn view_projection(&self) -> ViewProjection {
         let width = self.width;
@@ -90,8 +96,9 @@ impl ViewState {
 
         // TODO: labelPlaneMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L833-L836
         // TODO: glCoordMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L838-L842
+
         // TODO: cameraToSeaLevelDistance https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L844-L847
-        let lowest_plane = camera_to_center_distance; // TODO
+        let lowest_plane = camera_to_center_distance; // TODO const lowestPlane = this._elevation < 0 ? this.cameraToCenterDistance : this.cameraToSeaLevelDistance;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
@@ -142,7 +149,7 @@ impl ViewState {
 
         let mut perspective = self.perspective.calc_matrix(aspect, near_z, far_z);
 
-        // Apply center of perspective offset
+        // Apply center of perspective offset, in order to move the vanishing point
         perspective.z[0] = -offset.x * 2.0 / width;
         perspective.z[1] = offset.y * 2.0 / height;
 
