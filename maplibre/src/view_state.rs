@@ -1,7 +1,7 @@
 use cgmath::num_traits::clamp;
 use cgmath::prelude::*;
 use cgmath::*;
-use std::f64::consts::PI;
+use std::f64::consts::{FRAC_PI_2, PI};
 use std::ops::{Deref, DerefMut};
 
 use crate::render::camera::{EdgeInsets, InvertedViewProjection, FLIP_Y, OPENGL_TO_WGPU_MATRIX};
@@ -91,8 +91,8 @@ impl ViewState {
         let half_fov = fovy / 2.0;
         let camera_to_center_distance = 0.5 / half_fov.tan() * height;
 
-        // FIXME let center: LatLon = 0.0;
-        // FIXME let pixel_per_meter = center.mercatorZfromAltitude(1) * this.worldSize;
+        // TODO (only relevant for 3D terrain) let center: LatLon = 0.0;
+        // TODO (only relevant for 3D terrain) let pixel_per_meter = center.mercatorZfromAltitude(1) * this.worldSize;
 
         // TODO: labelPlaneMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L833-L836
         // TODO: glCoordMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L838-L842
@@ -104,7 +104,7 @@ impl ViewState {
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
-        let ground_angle = Rad(PI / 2.0) + pitch;
+        let ground_angle = Rad(FRAC_PI_2) + pitch;
         let fov_above_center = fovy * (0.5 + offset.y / height);
         let top_half_surface_distance = fov_above_center.sin() * camera_to_center_distance
             / clamp(
@@ -114,8 +114,7 @@ impl ViewState {
             )
             .sin();
 
-        let horizon =
-            (Rad(PI / 2.0) - self.camera.pitch()).tan() * camera_to_center_distance * 0.85;
+        let horizon = (Rad(FRAC_PI_2) - pitch).tan() * camera_to_center_distance * 0.85;
         let horizon_angle = Rad((horizon / camera_to_center_distance).atan());
         let fov_center_to_horizon = horizon_angle * 2.0 * (0.5 + offset.y / (horizon * 2.0));
         let top_half_surface_distance_horizon = (fov_center_to_horizon).sin() * lowest_plane
@@ -130,7 +129,7 @@ impl ViewState {
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
         let top_half_min_distance =
             top_half_surface_distance.min(top_half_surface_distance_horizon);
-        let far_z = ((Rad(PI / 2.0) - pitch).cos() * top_half_min_distance + lowest_plane) * 1.01;
+        let far_z = ((Rad(FRAC_PI_2) - pitch).cos() * top_half_min_distance + lowest_plane) * 1.01;
 
         // The larger the value of near_z is
         // - the more depth precision is available for features (good)
@@ -140,7 +139,7 @@ impl ViewState {
         // when rendering it's layers using custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
         //
-        // in tile.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
+        // In tile.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
         // This means that regardless of the `znear` value all layers will be rendered as part
         // of the near plane.
         // These values have been selected experimentally:
@@ -163,12 +162,12 @@ impl ViewState {
 
         // TODO mercatorMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L891-L893
 
-        // scale vertically to meters per pixel (inverse of ground resolution):
-        // TODO (probably only relevant for 3D terrain) mat4.scale(view_projection, view_projection, [1, 1, this._pixelPerMeter]);
+        // TODO scale vertically to meters per pixel (inverse of ground resolution):
+        // TODO (only relevant for 3D terrain) mat4.scale(view_projection, view_projection, [1, 1, this._pixelPerMeter]);
 
         // TODO pixelMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L898-L899
         // TODO invProjMatrix, projMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L901-L904
-        // TODO (probably only relevant for 3D terrain) pixelMatrix3D https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L906-L907
+        // TODO (only relevant for 3D terrain) pixelMatrix3D https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L906-L907
         // TODO alignedProjMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L909-L921
         // TODO pixelMatrixInverse https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L923-L926
 
