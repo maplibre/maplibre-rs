@@ -23,13 +23,14 @@ pub const FLIP_Y: Matrix4<f64> = Matrix4::new(
     0.0, 0.0, 0.0, 1.0,
 );
 
+/// Guaranteed to be invertible
 #[derive(Debug)]
 pub struct ViewProjection(Matrix4<f64>);
 
 impl ViewProjection {
     #[tracing::instrument(skip_all)]
-    pub fn invert(&self) -> Option<InvertedViewProjection> {
-        Some(InvertedViewProjection(self.0.invert()?))
+    pub fn invert(&self) -> InvertedViewProjection {
+        InvertedViewProjection(self.0.invert().expect("ViewProjections must be invertible."))
     }
 
     pub fn project(&self, vector: Vector4<f64>) -> Vector4<f64> {
@@ -69,6 +70,8 @@ impl ModelViewProjection {
 const MIN_PITCH: Rad<f64> = Rad(-0.5);
 const MAX_PITCH: Rad<f64> = Rad(0.5);
 
+/// A camera that is always valid and has a non-zero size. This means that the view projection is
+/// always invertible.
 #[derive(Debug, Clone)]
 pub struct Camera {
     position: Point3<f64>, // The z axis never changes, the zoom is used instead
@@ -106,7 +109,11 @@ impl Camera {
         }
     }
 
+    /// Panics:
+    ///     width and height must both be non-zero.
     pub fn resize(&mut self, width: u32, height: u32) {
+        assert_ne!(width, 0, "Cannot set camera width to zero");
+        assert_ne!(height, 0, "Cannot set camera height to zero");
         self.width = width as f64;
         self.height = height as f64;
     }
@@ -276,10 +283,6 @@ impl Camera {
         &self,
         inverted_view_proj: &InvertedViewProjection,
     ) -> Option<Aabb2<f64>> {
-        if self.width == 0. || self.height == 0. {
-            return None;
-        }
-
         let screen_bounding_box = [
             Vector2::new(0.0, 0.0),
             Vector2::new(self.width, 0.0),
@@ -323,7 +326,7 @@ impl Camera {
             Point3::new(1.0, 1.0, 1.0),
         ));
 
-        let inverted_view_proj = view_proj.invert()?;
+        let inverted_view_proj = view_proj.invert();
 
         let from_ndc = Vector3::new(self.width, self.height, 1.0);
         let vec = points
@@ -415,7 +418,11 @@ impl Perspective {
         }
     }
 
+    /// Panics:
+    ///     Panics if width or height are non-zero to ensure a valid projection
     pub fn resize(&mut self, width: u32, height: u32) {
+        assert_ne!(width, 0, "Cannot set perspective width to zero");
+        assert_ne!(height, 0, "Cannot set perspective height to zero");
         self.current_projection = Self::calc_matrix(
             width as f64 / height as f64,
             self.fovy,

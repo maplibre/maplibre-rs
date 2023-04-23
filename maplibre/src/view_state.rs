@@ -16,6 +16,9 @@ pub struct ViewState {
     zoom: ChangeObserver<Zoom>,
     camera: ChangeObserver<Camera>,
     perspective: Perspective,
+
+    // tracks if the view is currently valid
+    has_finite_size: bool
 }
 
 impl ViewState {
@@ -55,17 +58,25 @@ impl ViewState {
             zoom: ChangeObserver::new(zoom),
             camera: ChangeObserver::new(camera),
             perspective,
+            has_finite_size: true,
         }
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.perspective.resize(width, height);
-        self.camera.resize(width, height);
+        if width == 0 || height == 0 {
+            self.has_finite_size = false;
+        } else {
+            self.perspective.resize(width, height);
+            self.camera.resize(width, height);
+            self.has_finite_size = true;
+        }
     }
 
     pub fn create_view_region(&self) -> Option<ViewRegion> {
+        let view_proj = self.view_projection()?;
+
         self.camera
-            .view_region_bounding_box(&self.view_projection().invert()?)
+            .view_region_bounding_box(&view_proj.invert())
             .map(|bounding_box| {
                 ViewRegion::new(
                     bounding_box,
@@ -77,8 +88,13 @@ impl ViewState {
             })
     }
 
-    pub fn view_projection(&self) -> ViewProjection {
-        self.camera.calc_view_proj(&self.perspective)
+    pub fn view_projection(&self) -> Option<ViewProjection> {
+        if self.has_finite_size {
+            Some(self.camera.calc_view_proj(&self.perspective))
+        } else {
+            // Cannot create a valid view projection when the view is zero sized.
+            None
+        }
     }
 
     pub fn visible_level(&self) -> ZoomLevel {
@@ -113,5 +129,9 @@ impl ViewState {
     pub fn update_references(&mut self) {
         self.camera.update_reference();
         self.zoom.update_reference();
+    }
+
+    pub fn is_drawable(&self) -> bool {
+        self.has_finite_size
     }
 }

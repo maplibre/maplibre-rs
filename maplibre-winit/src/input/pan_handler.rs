@@ -24,10 +24,8 @@ impl UpdateState for PanHandler {
             if let (Some(window_position), Some(start_window_position)) =
                 (self.window_position, self.start_window_position)
             {
-                let view_proj = view_state.view_projection();
-                let Some(inverted_view_proj) = view_proj.invert() else {
-                    todo!("what to do here?")
-                };
+                let view_proj = view_state.view_projection().expect("View state must have a valid for pan handler.");
+                let inverted_view_proj = view_proj.invert();
 
                 let delta = if let (Some(start), Some(current)) = (
                     reference_camera.window_to_world_at_ground(
