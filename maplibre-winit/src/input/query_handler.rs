@@ -62,7 +62,9 @@ impl UpdateState for QueryHandler {
     ) {
         if self.clicking {
             if let Some(window_position) = self.window_position {
-                let view_proj = view_state.view_projection().expect("View projection must be valid for query handler.");
+                let view_proj = view_state
+                    .view_projection()
+                    .expect("View projection must be valid for query handler.");
                 let inverted_view_proj = view_proj.invert();
 
                 let z = view_state.visible_level(); // FIXME: can be wrong, if tiles of different z are visible

@@ -30,7 +30,11 @@ pub struct ViewProjection(Matrix4<f64>);
 impl ViewProjection {
     #[tracing::instrument(skip_all)]
     pub fn invert(&self) -> InvertedViewProjection {
-        InvertedViewProjection(self.0.invert().expect("ViewProjections must be invertible."))
+        InvertedViewProjection(
+            self.0
+                .invert()
+                .expect("ViewProjections must be invertible."),
+        )
     }
 
     pub fn project(&self, vector: Vector4<f64>) -> Vector4<f64> {

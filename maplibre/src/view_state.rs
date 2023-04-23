@@ -18,7 +18,7 @@ pub struct ViewState {
     perspective: Perspective,
 
     // tracks if the view is currently valid
-    has_finite_size: bool
+    has_finite_size: bool,
 }
 
 impl ViewState {

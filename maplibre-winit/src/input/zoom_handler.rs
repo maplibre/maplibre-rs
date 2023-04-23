@@ -21,7 +21,9 @@ impl UpdateState for ZoomHandler {
                 view_state.update_zoom(next_zoom);
                 self.zoom_delta = None;
 
-                let view_proj = view_state.view_projection().expect("View projection must be valid for zoom handler.");;
+                let view_proj = view_state
+                    .view_projection()
+                    .expect("View projection must be valid for zoom handler.");
                 let inverted_view_proj = view_proj.invert();
 
                 if let Some(cursor_position) = view_state.camera().window_to_world_at_ground(
