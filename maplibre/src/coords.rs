@@ -405,7 +405,7 @@ impl WorldTileCoords {
             return None;
         }
 
-        Some(Quadkey::new(z, x, y))
+        Some(Quadkey::new(self.z, x, y))
     }
 
     /// Adopted from [tilebelt](https://github.com/mapbox/tilebelt)
