@@ -391,8 +391,19 @@ impl WorldTileCoords {
     }
 
     pub fn build_quad_key(&self) -> Option<Quadkey> {
-        // check for out of bound access
-        let TileCoords { x, y, z } = self.into_tile(TileAddressingScheme::XYZ)?;
+        let max_coords = self.z.max_tile_coord();
+
+        if self.x < 0 || self.y < 0 {
+            // TODO: This is probably not the correct if x and y are allowed to be negative
+            return None;
+        }
+
+        let x = self.x as u32;
+        let y = self.y as u32;
+
+        if x > max_coords || y > max_coords {
+            return None;
+        }
 
         Some(Quadkey::new(z, x, y))
     }
