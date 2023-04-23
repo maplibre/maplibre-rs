@@ -23,12 +23,6 @@ pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
 pub const EXTENT: f64 = EXTENT_UINT as f64;
 pub const TILE_SIZE: f64 = 512.0;
 
-/// Maximal zoom level. Typically, the maximal zoom is 18 as described
-/// [here](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Zoom_levels).
-/// This implementation allows 30 because this covers all tile sizes that can be represented
-/// with signed 32-bit integers.
-const MAX_ZOOM: u8 = 30;
-
 /// Represents the position of a node within a quad tree using the zoom level and morton encoding.
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
 pub struct Quadkey {
@@ -83,13 +77,28 @@ impl fmt::Debug for Quadkey {
 pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
-    pub const fn new(z: u8) -> Self {
-        if z > MAX_ZOOM as u8 {
-            Self(MAX_ZOOM as u8)
+    /// Maximal zoom level. Typically, the maximal zoom is 18 as described
+    /// [here](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Zoom_levels).
+    /// This implementation allows 30 because this covers all tile sizes that can be represented
+    /// with signed 32-bit integers.
+    const MAX_VALUE: u8 = 30;
+
+    pub const fn new(z: u8) -> Option<Self> {
+        if z > Self::MAX_VALUE as u8 {
+            None
+        } else {
+            Some(Self(z))
+        }
+    }
+
+    pub const fn clamp_to_valid(z: u8) -> Self {
+        if z > Self::MAX_VALUE as u8 {
+            Self(Self::MAX_VALUE as u8)
         } else {
             Self(z)
         }
     }
+
     pub fn is_root(self) -> bool {
         self.0 == 0
     }
@@ -219,7 +228,7 @@ impl Zoom {
     }
 
     pub fn level(&self) -> ZoomLevel {
-        ZoomLevel::new(self.0.floor() as u8)
+        ZoomLevel::clamp_to_valid(self.0.floor() as u8)
     }
 }
 
