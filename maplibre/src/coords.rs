@@ -27,7 +27,7 @@ pub const TILE_SIZE: f64 = 512.0;
 /// [here](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Zoom_levels).
 /// This implementation allows 30 because this covers all tile sizes that can be represented
 /// with signed 32-bit integers.
-pub(crate) const MAX_ZOOM: u8 = 30;
+const MAX_ZOOM: u8 = 30;
 
 /// Represents the position of a node within a quad tree using the zoom level and morton encoding.
 #[derive(Ord, PartialOrd, Eq, PartialEq, Clone, Copy)]
@@ -94,7 +94,7 @@ impl ZoomLevel {
         self.0 == 0
     }
 
-    pub(crate) fn max_tile_coord(&self) -> u32 {
+    fn max_tile_coord(&self) -> u32 {
         (1 << self.0) - 1
     }
 
