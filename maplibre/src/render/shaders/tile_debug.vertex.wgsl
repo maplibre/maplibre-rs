@@ -21,7 +21,7 @@ fn main(
     let target_width = 1.0;
     let target_height = 1.0;
 
-    let WIDTH = EXTENT * zoom_factor / 1024.0;
+    let WIDTH = EXTENT / 256.0 * zoom_factor; // Width is 1/256 of a tile
 
     var VERTICES: array<vec3<f32>, 24> = array<vec3<f32>, 24>(
         // Debug lines vertices
@@ -71,6 +71,6 @@ fn main(
     );
 
     var final_position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>((scaling * vertex), 1.0);
-    final_position.z = 1.0;
+    final_position.z = 10.0;
     return VertexOutput(DEBUG_COLOR, final_position);
 }
