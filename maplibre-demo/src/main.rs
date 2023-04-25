@@ -1,6 +1,6 @@
 #![deny(unused_imports)]
 
-use std::io::ErrorKind;
+use std::{io::ErrorKind, path::Path};
 
 use clap::{Parser, Subcommand};
 use maplibre::coords::LatLon;
@@ -63,7 +63,7 @@ fn main() {
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match &cli.command {
-        Commands::Headed {} => run_headed_map(None),
+        Commands::Headed {} => run_headed_map(Path::new("./maplibre-cache")),
         #[cfg(feature = "headless")]
         Commands::Headless {
             tile_size,

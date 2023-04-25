@@ -16,8 +16,11 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
-    coords::WorldTileCoords, define_label, environment::OffscreenKernelEnvironment,
-    io::scheduler::Scheduler, style::Style,
+    coords::WorldTileCoords,
+    define_label,
+    environment::{OffscreenKernelEnvironment, OffscreenKernelEnvironmentConfig},
+    io::scheduler::Scheduler,
+    style::Style,
 };
 
 define_label!(MessageTag);
@@ -178,6 +181,7 @@ pub trait AsyncProcedureCall<K: OffscreenKernelEnvironment>: 'static {
         &self,
         input: Input,
         procedure: AsyncProcedure<K, Self::Context>,
+        config: &OffscreenKernelEnvironmentConfig,
     ) -> Result<(), CallError>;
 }
 
@@ -253,14 +257,17 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
         &self,
         input: Input,
         procedure: AsyncProcedure<K, Self::Context>,
+        config: &OffscreenKernelEnvironmentConfig,
     ) -> Result<(), CallError> {
         let sender = self.channel.0.clone();
+
+        let config = config.clone();
 
         self.scheduler
             .schedule(move || async move {
                 log::info!("Processing on thread: {:?}", std::thread::current().name());
 
-                procedure(input, SchedulerContext { sender }, K::create())
+                procedure(input, SchedulerContext { sender }, K::create(config))
                     .await
                     .unwrap();
             })

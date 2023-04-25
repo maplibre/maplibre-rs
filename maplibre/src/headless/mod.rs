@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{path::Path, rc::Rc};
 
 use crate::{
     headless::{
@@ -27,11 +27,11 @@ pub mod environment;
 pub mod map;
 pub mod window;
 
-pub async fn create_headless_renderer(
+pub async fn create_headless_renderer<P: AsRef<Path>>(
     tile_size: u32,
-    cache_path: Option<String>,
+    cache_path: P,
 ) -> (Kernel<HeadlessEnvironment>, Renderer) {
-    let client = ReqwestHttpClient::new(cache_path);
+    let client = ReqwestHttpClient::with_cache(cache_path);
     let kernel = KernelBuilder::new()
         .with_map_window_config(HeadlessMapWindowConfig::new(
             WindowSize::new(tile_size, tile_size).unwrap(),

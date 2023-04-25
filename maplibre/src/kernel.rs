@@ -1,5 +1,5 @@
 use crate::{
-    environment::Environment,
+    environment::{Environment, OffscreenKernelEnvironmentConfig},
     io::source_client::{HttpSourceClient, SourceClient},
 };
 
@@ -16,6 +16,7 @@ pub struct Kernel<E: Environment> {
     apc: E::AsyncProcedureCall,
     scheduler: E::Scheduler,
     source_client: SourceClient<E::HttpClient>,
+    offscreen_kernel_environment_config: OffscreenKernelEnvironmentConfig,
 }
 
 impl<E: Environment> Kernel<E> {
@@ -34,6 +35,10 @@ impl<E: Environment> Kernel<E> {
     pub fn source_client(&self) -> &SourceClient<E::HttpClient> {
         &self.source_client
     }
+
+    pub fn offscreen_kernel_environment_config(&self) -> &OffscreenKernelEnvironmentConfig {
+        &self.offscreen_kernel_environment_config
+    }
 }
 
 /// A convenient builder for [Kernels](Kernel).
@@ -42,6 +47,7 @@ pub struct KernelBuilder<E: Environment> {
     apc: Option<E::AsyncProcedureCall>,
     scheduler: Option<E::Scheduler>,
     http_client: Option<E::HttpClient>,
+    offscreen_kernel_environment_config: Option<OffscreenKernelEnvironmentConfig>,
 }
 
 impl<E: Environment> Default for KernelBuilder<E> {
@@ -57,6 +63,7 @@ impl<E: Environment> KernelBuilder<E> {
             apc: None,
             http_client: None,
             map_window_config: None,
+            offscreen_kernel_environment_config: None,
         }
     }
 
@@ -80,12 +87,21 @@ impl<E: Environment> KernelBuilder<E> {
         self
     }
 
+    pub fn with_offscreen_kernel_environment_config(
+        mut self,
+        offscreen_kernel_environment_config: OffscreenKernelEnvironmentConfig,
+    ) -> Self {
+        self.offscreen_kernel_environment_config = Some(offscreen_kernel_environment_config);
+        self
+    }
+
     pub fn build(self) -> Kernel<E> {
         Kernel {
             scheduler: self.scheduler.unwrap(), // TODO: Remove unwrap
             apc: self.apc.unwrap(),             // TODO: Remove unwrap
             source_client: SourceClient::new(HttpSourceClient::new(self.http_client.unwrap())), // TODO: Remove unwrap
             map_window_config: self.map_window_config.unwrap(), // TODO: Remove unwrap
+            offscreen_kernel_environment_config: self.offscreen_kernel_environment_config.unwrap(), // TODO: Remove unwrap
         }
     }
 }

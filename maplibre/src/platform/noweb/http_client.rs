@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use async_trait::async_trait;
 use reqwest::{Client, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
@@ -23,20 +25,28 @@ impl From<reqwest_middleware::Error> for SourceFetchError {
 }
 
 impl ReqwestHttpClient {
-    /// cache_path: Under which path should we cache requests.
-    // TODO: Use Into<Path> instead of String
-    pub fn new(cache_path: Option<String>) -> Self {
-        let mut builder = reqwest_middleware::ClientBuilder::new(Client::new());
-
-        if let Some(cache_path) = cache_path {
-            builder = builder.with(Cache {
-                mode: CacheMode::Default,
-                cache_manager: CACacheManager { path: cache_path },
-            });
-        }
-
+    pub fn new() -> Self {
         Self {
-            client: builder.build(),
+            client: reqwest_middleware::ClientBuilder::new(Client::new()).build(),
+        }
+    }
+
+    /// cache_path: Under which path should we cache requests.
+    pub fn with_cache<P: AsRef<Path>>(cache_path: P) -> Self {
+        Self {
+            client: reqwest_middleware::ClientBuilder::new(Client::new())
+                .with(Cache {
+                    mode: CacheMode::Default,
+                    cache_manager: CACacheManager {
+                        path: cache_path
+                            .as_ref()
+                            .as_os_str()
+                            .to_str()
+                            .expect("invalid path".into())
+                            .into(),
+                    },
+                })
+                .build(),
         }
     }
 }
