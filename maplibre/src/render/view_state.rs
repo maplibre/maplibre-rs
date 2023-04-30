@@ -16,7 +16,6 @@ use crate::{
 const VIEW_REGION_PADDING: i32 = 1;
 const MAX_N_TILES: usize = 128;
 
-/// Stores the camera configuration.
 pub struct ViewState {
     zoom: ChangeObserver<Zoom>,
     camera: ChangeObserver<Camera>,
@@ -24,7 +23,7 @@ pub struct ViewState {
 
     width: f64,
     height: f64,
-    pub edge_insets: EdgeInsets,
+    edge_insets: EdgeInsets,
 }
 
 impl ViewState {

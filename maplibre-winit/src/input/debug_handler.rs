@@ -13,7 +13,10 @@ impl UpdateState for DebugHandler {
         let dt = dt.as_secs_f64() * 10.0;
 
         let delta = self.inset_delta * dt;
-        view_state.edge_insets.left += delta;
+
+        let mut edge_insets = *view_state.edge_insets();
+        edge_insets.left += delta;
+        view_state.set_edge_insets(edge_insets);
         self.inset_delta -= delta;
     }
 }

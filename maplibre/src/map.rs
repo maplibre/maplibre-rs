@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use thiserror::Error;
 
+use crate::render::view_state::ViewState;
 use crate::{
     context::MapContext,
     coords::{LatLon, WorldCoords, Zoom},
@@ -18,7 +19,6 @@ use crate::{
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
-    view_state::ViewState,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
 
