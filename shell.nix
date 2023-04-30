@@ -17,6 +17,7 @@ pkgs.mkShell {
     unstable.rustup
     unstable.just
     unstable.nodejs
+    unstable.mdbook
     unstable.wasm-bindgen-cli
     unstable.tracy
     unstable.nixpkgs-fmt # To format this file: nixpkgs-fmt *.nix

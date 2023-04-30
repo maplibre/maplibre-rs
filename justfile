@@ -180,6 +180,9 @@ xcodebuild-xcframework:
   echo "$framework_args" | xargs xcodebuild -create-xcframework -output "$XC_FRAMEWORK_PATH"
   cat "$XC_FRAMEWORK_PATH/Info.plist"
 
+book-serve:
+  cd docs && ./generate-summary.sh && mdbook serve
+
 # language=bash
 extract-tiles:
   #!/usr/bin/env bash
