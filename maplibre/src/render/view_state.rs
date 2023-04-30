@@ -52,6 +52,13 @@ impl ViewState {
             },
         }
     }
+    pub fn set_edge_insets(&mut self, edge_insets: EdgeInsets) {
+        self.edge_insets = edge_insets;
+    }
+
+    pub fn edge_insets(&self) -> &EdgeInsets {
+        &self.edge_insets
+    }
 
     pub fn resize(&mut self, width: u32, height: u32) {
         self.width = width as f64;
@@ -71,11 +78,8 @@ impl ViewState {
             })
     }
 
-    /// This function matches how maplibre-gl-js implements perspective and cameras.
-    /// Therefore it has the same bugs as maplibre-gl-js (2023-04): https://github.com/maplibre/maplibre-gl-js/issues/1655
-    /// It implements also already some elevation based clipping. This is not used here.
-    ///
-    /// Last verified to match maplibre-gl-js on 2023-04-15.
+    /// This function matches how maplibre-gl-js implements perspective and cameras at the time
+    /// of the mapbox -> maplibre fork: [src/geo/transform.ts#L680](https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L680)
     #[tracing::instrument(skip_all)]
     pub fn view_projection(&self) -> ViewProjection {
         let width = self.width;
@@ -89,15 +93,6 @@ impl ViewState {
         let fovy = self.perspective.fovy();
         let half_fov = fovy / 2.0;
         let camera_to_center_distance = 0.5 / half_fov.tan() * height;
-
-        // TODO (only relevant for 3D terrain) let center: LatLon = 0.0;
-        // TODO (only relevant for 3D terrain) let pixel_per_meter = center.mercatorZfromAltitude(1) * this.worldSize;
-
-        // TODO: labelPlaneMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L833-L836
-        // TODO: glCoordMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L838-L842
-
-        // TODO: cameraToSeaLevelDistance https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L844-L847
-        let lowest_plane = camera_to_center_distance; // TODO const lowestPlane = this._elevation < 0 ? this.cameraToCenterDistance : this.cameraToSeaLevelDistance;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
@@ -113,22 +108,11 @@ impl ViewState {
             )
             .sin();
 
-        let horizon = (Rad(FRAC_PI_2) - pitch).tan() * camera_to_center_distance * 0.85;
-        let horizon_angle = Rad((horizon / camera_to_center_distance).atan());
-        let fov_center_to_horizon = horizon_angle * 2.0 * (0.5 + offset.y / (horizon * 2.0));
-        let top_half_surface_distance_horizon = (fov_center_to_horizon).sin() * lowest_plane
-            / (clamp(
-                Rad(PI) - ground_angle - fov_center_to_horizon,
-                Rad(0.01),
-                Rad(PI - 0.01),
-            ))
-            .sin();
-
         // Calculate z distance of the farthest fragment that should be rendered.
+        let furthest_distance =
+            (Rad(FRAC_PI_2) - pitch).cos() * top_half_surface_distance + camera_to_center_distance;
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
-        let top_half_min_distance =
-            top_half_surface_distance.min(top_half_surface_distance_horizon);
-        let far_z = ((Rad(FRAC_PI_2) - pitch).cos() * top_half_min_distance + lowest_plane) * 1.01;
+        let far_z = furthest_distance * 1.01;
 
         // The larger the value of near_z is
         // - the more depth precision is available for features (good)
@@ -157,16 +141,12 @@ impl ViewState {
 
         // TODO for the below TODOs, check GitHub blame to get an idea of what these matrices are used for!
 
-        // TODO mercatorMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L891-L893
-
-        // TODO scale vertically to meters per pixel (inverse of ground resolution):
-        // TODO (only relevant for 3D terrain) mat4.scale(view_projection, view_projection, [1, 1, this._pixelPerMeter]);
-
-        // TODO pixelMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L898-L899
-        // TODO invProjMatrix, projMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L901-L904
-        // TODO (only relevant for 3D terrain) pixelMatrix3D https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L906-L907
-        // TODO alignedProjMatrix https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L909-L921
-        // TODO pixelMatrixInverse https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L923-L926
+        // TODO mercatorMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L725-L727
+        // TODO scale vertically to meters per pixel (inverse of ground resolution): https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L729-L730
+        // TODO alignedProjMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L735-L747
+        // TODO labelPlaneMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L749-L752C14
+        // TODO glCoordMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L754-L758
+        // TODO pixelMatrix, pixelMatrixInverse https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L760-L761
 
         ViewProjection(FLIP_Y * OPENGL_TO_WGPU_MATRIX * view_projection)
     }
