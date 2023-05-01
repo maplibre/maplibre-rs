@@ -97,9 +97,11 @@ impl Camera {
     }
 
     pub fn calc_matrix(&self, camera_height: f64) -> Matrix4<f64> {
+        let (sin_pitch, cos_pitch) = self.pitch.sin_cos();
+        let (sin_yaw, cos_yaw) = self.yaw.sin_cos();
         Matrix4::look_to_rh(
             self.to_3d(camera_height),
-            Vector3::new(self.yaw.cos(), self.pitch.sin(), self.yaw.sin()).normalize(),
+            Vector3::new(cos_pitch * cos_yaw, sin_pitch, cos_pitch * sin_yaw).normalize(),
             Vector3::unit_y(),
         )
     }

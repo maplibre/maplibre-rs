@@ -85,13 +85,14 @@ impl ViewState {
         let width = self.width;
         let height = self.height;
         let aspect = width / height;
-        let pitch = self.camera.pitch();
+        let pitch = Rad(self.camera.pitch().0.abs());
 
         let center = self.edge_insets.center(width, height);
         let offset = center - Vector2::new(width, height) / 2.0;
 
         let fovy = self.perspective.fovy();
         let half_fov = fovy / 2.0;
+        // Camera height, such that given a certain field-of-view, exactly height/2 are visible on ground.
         let camera_to_center_distance = 0.5 / half_fov.tan() * height;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
@@ -99,7 +100,10 @@ impl ViewState {
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         let ground_angle = Rad(FRAC_PI_2) + pitch;
-        let fov_above_center = fovy * (0.5 + offset.y / height);
+        let fov_above_center = fovy * (0.5 + offset.y / height); // Similar to `half_fovy`, includes `offset`
+
+        // fov_above_center.sin() = camera_to_center_distance / flap
+        // law of sines: camera_to_center_distance(b) * sin(fov_above_center(alpha)) / sin(beta) = top_half_surface_distance
         let top_half_surface_distance = fov_above_center.sin() * camera_to_center_distance
             / clamp(
                 Rad(PI) - ground_angle - fov_above_center,
@@ -109,6 +113,8 @@ impl ViewState {
             .sin();
 
         // Calculate z distance of the farthest fragment that should be rendered.
+        // For pitch == 0, it is `camera_to_center_distance`. Everything further away will be clipped.
+        // For pitch > 0, we add TODO
         let furthest_distance =
             (Rad(FRAC_PI_2) - pitch).cos() * top_half_surface_distance + camera_to_center_distance;
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
@@ -135,9 +141,20 @@ impl ViewState {
         perspective.z[0] = -offset.x * 2.0 / width;
         perspective.z[1] = offset.y * 2.0 / height;
 
-        let view_projection = perspective
-            // Apply camera and move camera away from ground
-            * self.camera.calc_matrix(camera_to_center_distance);
+        //perspective = perspective * Matrix4::from_nonuniform_scale(1.0, -1.0, 1.0);
+        let pitch = self.camera.pitch();
+        perspective = perspective
+            * Matrix4::from_translation(Vector3::new(0.0, 0.0, -camera_to_center_distance))
+            * Matrix4::from_angle_x(pitch)
+            * Matrix4::from_translation(Vector3::new(
+                -self.camera.position().x,
+                -self.camera.position().y,
+                0.0,
+            ));
+
+        let view_projection = perspective;
+        // Apply camera and move camera away from ground
+        // let view_projection = perspective * self.camera.calc_matrix(camera_to_center_distance);
 
         // TODO for the below TODOs, check GitHub blame to get an idea of what these matrices are used for!
 
