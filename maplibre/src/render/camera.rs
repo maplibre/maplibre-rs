@@ -97,13 +97,9 @@ impl Camera {
     }
 
     pub fn calc_matrix(&self, camera_height: f64) -> Matrix4<f64> {
-        let (sin_pitch, cos_pitch) = self.pitch.sin_cos();
-        let (sin_yaw, cos_yaw) = self.yaw.sin_cos();
-        Matrix4::look_to_rh(
-            self.to_3d(camera_height),
-            Vector3::new(cos_pitch * cos_yaw, sin_pitch, cos_pitch * sin_yaw).normalize(),
-            Vector3::unit_y(),
-        )
+        Matrix4::from_translation(Vector3::new(0.0, 0.0, -camera_height))
+            * Matrix4::from_angle_x(self.pitch)
+            * Matrix4::from_translation(Vector3::new(-self.position.x, -self.position.y, 0.0))
     }
 
     pub fn position(&self) -> Point2<f64> {
