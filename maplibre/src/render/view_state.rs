@@ -84,11 +84,11 @@ impl ViewState {
     pub fn view_projection(&self) -> ViewProjection {
         let width = self.width;
         let height = self.height;
-        let aspect = width / height;
         let pitch = Rad(self.camera.pitch().0.abs());
 
         let center = self.edge_insets.center(width, height);
-        let offset = center - Vector2::new(width, height) / 2.0;
+        // Offset between wanted center and usual/normal center
+        let center_offset = center - Vector2::new(width, height) / 2.0;
 
         let fovy = self.perspective.fovy();
         let half_fov = fovy / 2.0;
@@ -133,29 +133,19 @@ impl ViewState {
         // https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
         let near_z = height / 50.0;
 
-        let mut perspective = self.perspective.calc_matrix(aspect, near_z, far_z);
+        let mut perspective =
+            self.perspective
+                .calc_matrix_with_center(width, height, near_z, far_z, center_offset);
 
+        //let mut perspective = self.perspective.calc_matrix(aspect, near_z, far_z);
         // Apply center of perspective offset, in order to move the vanishing point
-        perspective.z[0] = -offset.x * 2.0 / width;
-        perspective.z[1] = offset.y * 2.0 / height;
+        //perspective.z[0] = -offset.x * 2.0 / width;
+        //perspective.z[1] = offset.y * 2.0 / height;
 
-        //perspective = perspective * Matrix4::from_nonuniform_scale(1.0, -1.0, 1.0);
-        let pitch = self.camera.pitch();
-        perspective = perspective
-            * Matrix4::from_translation(Vector3::new(0.0, 0.0, -camera_to_center_distance))
-            * Matrix4::from_angle_x(pitch)
-            * Matrix4::from_translation(Vector3::new(
-                -self.camera.position().x,
-                -self.camera.position().y,
-                0.0,
-            ));
-
-        let view_projection = perspective;
         // Apply camera and move camera away from ground
-        // let view_projection = perspective * self.camera.calc_matrix(camera_to_center_distance);
+        let view_projection = perspective * self.camera.calc_matrix(camera_to_center_distance);
 
         // TODO for the below TODOs, check GitHub blame to get an idea of what these matrices are used for!
-
         // TODO mercatorMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L725-L727
         // TODO scale vertically to meters per pixel (inverse of ground resolution): https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L729-L730
         // TODO alignedProjMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L735-L747

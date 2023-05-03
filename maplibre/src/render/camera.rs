@@ -184,9 +184,37 @@ impl Perspective {
         self.fovy
     }
 
-    // Adopted from https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L827-L879
     pub fn calc_matrix(&self, aspect: f64, near_z: f64, far_z: f64) -> Matrix4<f64> {
         perspective(self.fovy, aspect, near_z, far_z)
+    }
+
+    pub fn calc_matrix_with_center(
+        &self,
+        width: f64,
+        height: f64,
+        near_z: f64,
+        far_z: f64,
+        center_offset: Point2<f64>,
+    ) -> Matrix4<f64> {
+        let aspect = width / height;
+
+        // from projection.rs
+        let angle = self.fovy / 2.0;
+        let ymax = near_z * Rad::tan(angle);
+        let xmax = ymax * aspect;
+
+        // https://webglfundamentals.org/webgl/lessons/webgl-qna-how-can-i-move-the-perspective-vanishing-point-from-the-center-of-the-canvas-.html
+        let off_x = -center_offset.x * (xmax * 2.0) / width;
+        let off_y = center_offset.y * (ymax * 2.0) / height;
+
+        frustum(
+            -xmax + off_x,
+            xmax + off_x,
+            -ymax + off_y,
+            ymax + off_y,
+            near_z,
+            far_z,
+        )
     }
 }
 
