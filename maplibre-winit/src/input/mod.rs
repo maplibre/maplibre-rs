@@ -6,10 +6,10 @@ use cgmath::Vector2;
 use maplibre::context::MapContext;
 use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
-use crate::input::debug_handler::DebugHandler;
 use crate::input::{
-    pan_handler::PanHandler, pinch_handler::PinchHandler, query_handler::QueryHandler,
-    shift_handler::ShiftHandler, tilt_handler::TiltHandler, zoom_handler::ZoomHandler,
+    debug_handler::DebugHandler, pan_handler::PanHandler, pinch_handler::PinchHandler,
+    query_handler::QueryHandler, shift_handler::ShiftHandler, tilt_handler::TiltHandler,
+    zoom_handler::ZoomHandler,
 };
 
 mod debug_handler;

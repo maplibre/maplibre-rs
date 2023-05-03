@@ -1,5 +1,8 @@
-use crate::render::view_state::ViewState;
-use crate::{render::Renderer, style::Style, tcs::world::World};
+use crate::{
+    render::{view_state::ViewState, Renderer},
+    style::Style,
+    tcs::world::World,
+};
 
 /// Stores the context of the map.
 ///

@@ -2,7 +2,6 @@ use std::rc::Rc;
 
 use thiserror::Error;
 
-use crate::render::view_state::ViewState;
 use crate::{
     context::MapContext,
     coords::{LatLon, WorldCoords, Zoom},
@@ -15,6 +14,7 @@ use crate::{
         },
         error::RenderError,
         graph::RenderGraphError,
+        view_state::ViewState,
     },
     schedule::{Schedule, Stage},
     style::Style,

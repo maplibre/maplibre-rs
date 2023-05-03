@@ -1,15 +1,20 @@
-use cgmath::num_traits::clamp;
-use cgmath::prelude::*;
-use cgmath::*;
-use std::f64::consts::{FRAC_PI_2, PI};
-use std::ops::{Deref, DerefMut};
+use std::{
+    f64::consts::{FRAC_PI_2, PI},
+    ops::{Deref, DerefMut},
+};
 
-use crate::render::camera::{EdgeInsets, InvertedViewProjection, FLIP_Y, OPENGL_TO_WGPU_MATRIX};
-use crate::util::math::{bounds_from_points, Aabb2, Aabb3, Plane};
+use cgmath::{num_traits::clamp, prelude::*, *};
+
 use crate::{
     coords::{ViewRegion, WorldCoords, Zoom, ZoomLevel},
-    render::camera::{Camera, Perspective, ViewProjection},
-    util::ChangeObserver,
+    render::camera::{
+        Camera, EdgeInsets, InvertedViewProjection, Perspective, ViewProjection, FLIP_Y,
+        OPENGL_TO_WGPU_MATRIX,
+    },
+    util::{
+        math::{bounds_from_points, Aabb2, Aabb3, Plane},
+        ChangeObserver,
+    },
     window::WindowSize,
 };
 
