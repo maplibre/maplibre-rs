@@ -32,7 +32,7 @@ impl DebugHandler {
         state: winit::event::ElementState,
     ) -> bool {
         let amount = if state == winit::event::ElementState::Pressed {
-            100.0 // left, right is the same as panning 1 degree
+            100.0
         } else {
             0.0
         };

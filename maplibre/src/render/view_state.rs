@@ -93,17 +93,15 @@ impl ViewState {
         let fovy = self.perspective.fovy();
         let half_fov = fovy / 2.0;
         // Camera height, such that given a certain field-of-view, exactly height/2 are visible on ground.
-        let camera_to_center_distance = 0.5 / half_fov.tan() * height;
+        let camera_to_center_distance = 0.5 / half_fov.tan() * height; // TODO: Not sure why it is height here and not width
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         let ground_angle = Rad(FRAC_PI_2) + pitch;
-        let fov_above_center = fovy * (0.5 + offset.y / height); // Similar to `half_fovy`, includes `offset`
+        let fov_above_center = fovy * (0.5/*+ offset.y / height*/); // TODO: Not sure why offset is added here: Similar to `half_fovy`
 
-        // fov_above_center.sin() = camera_to_center_distance / flap
-        // law of sines: camera_to_center_distance(b) * sin(fov_above_center(alpha)) / sin(beta) = top_half_surface_distance
         let top_half_surface_distance = fov_above_center.sin() * camera_to_center_distance
             / clamp(
                 Rad(PI) - ground_angle - fov_above_center,
@@ -128,7 +126,7 @@ impl ViewState {
         // when rendering it's layers using custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
         //
-        // In tile.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
+        // TODO remove: In tile.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
         // This means that regardless of the `znear` value all layers will be rendered as part
         // of the near plane.
         // These values have been selected experimentally:
