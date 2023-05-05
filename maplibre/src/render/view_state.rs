@@ -105,7 +105,7 @@ impl ViewState {
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         let ground_angle = Rad(FRAC_PI_2) + pitch;
-        let fov_above_center = fovy * (0.5/*+ offset.y / height*/); // TODO: Not sure why offset is added here: Similar to `half_fovy`
+        let fov_above_center = fovy / 2.0 + fovy * center_offset.y / height; // TODO: Not sure why offset is added here: Similar to `half_fovy`
 
         let top_half_surface_distance = fov_above_center.sin() * camera_to_center_distance
             / clamp(
@@ -142,10 +142,10 @@ impl ViewState {
             self.perspective
                 .calc_matrix_with_center(width, height, near_z, far_z, center_offset);
 
-        //let mut perspective = self.perspective.calc_matrix(aspect, near_z, far_z);
+        //let mut perspective = self.perspective.calc_matrix(width / height, near_z, far_z);
         // Apply center of perspective offset, in order to move the vanishing point
-        //perspective.z[0] = -offset.x * 2.0 / width;
-        //perspective.z[1] = offset.y * 2.0 / height;
+        //perspective.z[0] = -center_offset.x * 2.0 / width;
+        //perspective.z[1] = center_offset.y * 2.0 / height;
 
         // Apply camera and move camera away from ground
         let view_projection = perspective * self.camera.calc_matrix(camera_to_center_distance);

@@ -97,6 +97,7 @@ impl Camera {
     }
 
     pub fn calc_matrix(&self, camera_height: f64) -> Matrix4<f64> {
+        // Matrix4::from_nonuniform_scale(1.0, -1.0, 1.0) *
         Matrix4::from_translation(Vector3::new(0.0, 0.0, -camera_height))
             * Matrix4::from_angle_x(self.pitch)
             * Matrix4::from_translation(Vector3::new(-self.position.x, -self.position.y, 0.0))
@@ -204,8 +205,13 @@ impl Perspective {
         let xmax = ymax * aspect;
 
         // https://webglfundamentals.org/webgl/lessons/webgl-qna-how-can-i-move-the-perspective-vanishing-point-from-the-center-of-the-canvas-.html
-        let off_x = -center_offset.x * (xmax * 2.0) / width;
-        let off_y = center_offset.y * (ymax * 2.0) / height;
+        let near_width = xmax * 2.0;
+        let near_height = ymax * 2.0;
+        let screen_to_near_factor_x = near_width / width;
+        let screen_to_near_factor_y = near_height / height;
+
+        let off_x = -center_offset.x * screen_to_near_factor_x;
+        let off_y = center_offset.y * screen_to_near_factor_y;
 
         frustum(
             -xmax + off_x,
