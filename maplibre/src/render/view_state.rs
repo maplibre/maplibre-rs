@@ -39,7 +39,7 @@ impl ViewState {
         pitch: P,
         fovy: F,
     ) -> Self {
-        let camera = Camera::new((position.x, position.y), Deg(-90.0), pitch.into());
+        let camera = Camera::new((position.x, position.y), Deg(0.0), Deg(0.0));
 
         let perspective = Perspective::new(fovy);
 
@@ -83,29 +83,23 @@ impl ViewState {
             })
     }
 
-    /// This function matches how maplibre-gl-js implements perspective and cameras at the time
-    /// of the mapbox -> maplibre fork: [src/geo/transform.ts#L680](https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L680)
-    #[tracing::instrument(skip_all)]
-    pub fn view_projection(&self) -> ViewProjection {
-        let width = self.width;
+    fn calc_additional_height(
+        &self,
+        camera_to_center_distance: f64,
+        fov: Rad<f64>,
+        center_offset: Point2<f64>,
+    ) -> f64 {
         let height = self.height;
-        let pitch = Rad(self.camera.pitch().0.abs());
-
-        let center = self.edge_insets.center(width, height);
-        // Offset between wanted center and usual/normal center
-        let center_offset = center - Vector2::new(width, height) / 2.0;
-
-        let fovy = self.perspective.fovy();
-        let half_fov = fovy / 2.0;
-        // Camera height, such that given a certain field-of-view, exactly height/2 are visible on ground.
-        let camera_to_center_distance = 0.5 / half_fov.tan() * height; // TODO: Not sure why it is height here and not width
+        let width = self.width;
+        let pitch = Rad(self.camera.get_pitch().0.abs()); // TODO: abs() fine here?
+        let half_fov = fov / 2.0;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
         let ground_angle = Rad(FRAC_PI_2) + pitch;
-        let fov_above_center = fovy / 2.0 + fovy * center_offset.y / height; // TODO: Not sure why offset is added here: Similar to `half_fovy`
+        let fov_above_center = half_fov * (1.0 - center_offset.y * 2.0 / height); // TODO: Not sure why offset is added here: Similar to `half_fovy`
 
         let top_half_surface_distance = fov_above_center.sin() * camera_to_center_distance
             / clamp(
@@ -115,11 +109,39 @@ impl ViewState {
             )
             .sin();
 
+        //println!("top_half_surface_distance: {top_half_surface_distance}");
+
+        (Rad(FRAC_PI_2) - pitch).cos() * top_half_surface_distance
+    }
+
+    /// This function matches how maplibre-gl-js implements perspective and cameras at the time
+    /// of the mapbox -> maplibre fork: [src/geo/transform.ts#L680](https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L680)
+    #[tracing::instrument(skip_all)]
+    pub fn view_projection(&self) -> ViewProjection {
+        let width = self.width;
+        let height = self.height;
+
+        let center = self.edge_insets.center(width, height);
+        // Offset between wanted center and usual/normal center
+        let center_offset = center - Vector2::new(width, height) / 2.0;
+
+        let fovy = self.perspective.fovy();
+        let half_fovy = fovy / 2.0;
+        // Camera height, such that given a certain field-of-view, exactly height/2 are visible on ground.
+        let camera_to_center_distance = (height / 2.0) / (half_fovy.tan()); // TODO: Not sure why it is height here and not width
+
+        let additional_height =
+            self.calc_additional_height(camera_to_center_distance, fovy, center_offset);
+        let additional_height = self.calc_additional_height(
+            camera_to_center_distance,
+            fovy * (height / width),
+            center_offset,
+        );
+
         // Calculate z distance of the farthest fragment that should be rendered.
         // For pitch == 0, it is `camera_to_center_distance`. Everything further away will be clipped.
         // For pitch > 0, we add TODO
-        let furthest_distance =
-            (Rad(FRAC_PI_2) - pitch).cos() * top_half_surface_distance + camera_to_center_distance;
+        let furthest_distance = camera_to_center_distance + additional_height;
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
         let far_z = furthest_distance * 1.01;
 

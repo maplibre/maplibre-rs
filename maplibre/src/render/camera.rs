@@ -71,6 +71,7 @@ pub struct Camera {
     position: Point2<f64>,
     yaw: Rad<f64>,
     pitch: Rad<f64>,
+    roll: Rad<f64>,
 }
 
 impl SignificantlyDifferent for Camera {
@@ -80,6 +81,7 @@ impl SignificantlyDifferent for Camera {
         self.position.abs_diff_ne(&other.position, epsilon)
             || self.yaw.abs_diff_ne(&other.yaw, epsilon)
             || self.pitch.abs_diff_ne(&other.pitch, epsilon)
+            || self.roll.abs_diff_ne(&other.roll, epsilon)
     }
 }
 
@@ -93,13 +95,13 @@ impl Camera {
             position: position.into(),
             yaw: yaw.into(),
             pitch: pitch.into(),
+            roll: Rad::zero(), // TODO: initialize
         }
     }
 
     pub fn calc_matrix(&self, camera_height: f64) -> Matrix4<f64> {
-        // Matrix4::from_nonuniform_scale(1.0, -1.0, 1.0) *
         Matrix4::from_translation(Vector3::new(0.0, 0.0, -camera_height))
-            * Matrix4::from_angle_x(self.pitch)
+            * Matrix4::from_angle_y(self.pitch)
             * Matrix4::from_translation(Vector3::new(-self.position.x, -self.position.y, 0.0))
     }
 
@@ -107,19 +109,27 @@ impl Camera {
         self.position
     }
 
-    pub fn yaw(&self) -> Rad<f64> {
+    pub fn get_yaw(&self) -> Rad<f64> {
         self.yaw
     }
 
-    pub fn rotate<P: Into<Rad<f64>>>(&mut self, delta: P) {
+    pub fn yaw<P: Into<Rad<f64>>>(&mut self, delta: P) {
         self.yaw += delta.into();
     }
 
-    pub fn pitch(&self) -> Rad<f64> {
+    pub fn get_roll(&self) -> Rad<f64> {
+        self.yaw
+    }
+
+    pub fn roll<P: Into<Rad<f64>>>(&mut self, delta: P) {
+        self.roll += delta.into();
+    }
+
+    pub fn get_pitch(&self) -> Rad<f64> {
         self.pitch
     }
 
-    pub fn tilt<P: Into<Rad<f64>>>(&mut self, delta: P) {
+    pub fn pitch<P: Into<Rad<f64>>>(&mut self, delta: P) {
         let new_pitch = self.pitch + delta.into();
 
         if new_pitch <= MAX_PITCH && new_pitch >= MIN_PITCH {
@@ -201,7 +211,7 @@ impl Perspective {
 
         // from projection.rs
         let angle = self.fovy / 2.0;
-        let ymax = near_z * Rad::tan(angle);
+        let ymax = near_z * angle.tan();
         let xmax = ymax * aspect;
 
         // https://webglfundamentals.org/webgl/lessons/webgl-qna-how-can-i-move-the-perspective-vanishing-point-from-the-center-of-the-canvas-.html
@@ -213,11 +223,13 @@ impl Perspective {
         let off_x = -center_offset.x * screen_to_near_factor_x;
         let off_y = center_offset.y * screen_to_near_factor_y;
 
+        let offset_x = -center_offset.x * 2.0 / width;
+        let offset_y = center_offset.y * 2.0 / height;
         frustum(
-            -xmax + off_x,
-            xmax + off_x,
-            -ymax + off_y,
-            ymax + off_y,
+            xmax * (-1.0 + offset_x),
+            xmax * (1.0 + offset_x),
+            ymax * (-1.0 + offset_y),
+            ymax * (1.0 + offset_y),
             near_z,
             far_z,
         )
