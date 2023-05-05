@@ -1,6 +1,7 @@
 //! Main camera
 
 use cgmath::{num_traits::clamp, prelude::*, *};
+use std::convert::Into;
 
 use crate::util::SignificantlyDifferent;
 
@@ -63,8 +64,11 @@ impl ModelViewProjection {
     }
 }
 
-const MIN_PITCH: Rad<f64> = Rad(-0.5);
-const MAX_PITCH: Rad<f64> = Rad(0.5);
+const MIN_PITCH: Deg<f64> = Deg(-30.0);
+const MAX_PITCH: Deg<f64> = Deg(30.0);
+
+const MIN_YAW: Deg<f64> = Deg(-30.0);
+const MAX_YAW: Deg<f64> = Deg(30.0);
 
 #[derive(Debug, Clone)]
 pub struct Camera {
@@ -101,7 +105,9 @@ impl Camera {
 
     pub fn calc_matrix(&self, camera_height: f64) -> Matrix4<f64> {
         Matrix4::from_translation(Vector3::new(0.0, 0.0, -camera_height))
-            * Matrix4::from_angle_y(self.pitch)
+            * Matrix4::from_angle_x(self.pitch)
+            * Matrix4::from_angle_y(self.yaw)
+            * Matrix4::from_angle_z(self.roll)
             * Matrix4::from_translation(Vector3::new(-self.position.x, -self.position.y, 0.0))
     }
 
@@ -114,11 +120,15 @@ impl Camera {
     }
 
     pub fn yaw<P: Into<Rad<f64>>>(&mut self, delta: P) {
-        self.yaw += delta.into();
+        let new_yaw = self.yaw + delta.into();
+
+        if new_yaw <= MAX_YAW.into() && new_yaw >= MIN_YAW.into() {
+            self.yaw = new_yaw;
+        }
     }
 
     pub fn get_roll(&self) -> Rad<f64> {
-        self.yaw
+        self.roll
     }
 
     pub fn roll<P: Into<Rad<f64>>>(&mut self, delta: P) {
@@ -132,7 +142,7 @@ impl Camera {
     pub fn pitch<P: Into<Rad<f64>>>(&mut self, delta: P) {
         let new_pitch = self.pitch + delta.into();
 
-        if new_pitch <= MAX_PITCH && new_pitch >= MIN_PITCH {
+        if new_pitch <= MAX_PITCH.into() && new_pitch >= MIN_PITCH.into() {
             self.pitch = new_pitch;
         }
     }
@@ -214,19 +224,16 @@ impl Perspective {
         let ymax = near_z * angle.tan();
         let xmax = ymax * aspect;
 
-        // https://webglfundamentals.org/webgl/lessons/webgl-qna-how-can-i-move-the-perspective-vanishing-point-from-the-center-of-the-canvas-.html
-        let near_width = xmax * 2.0;
-        let near_height = ymax * 2.0;
-        let screen_to_near_factor_x = near_width / width;
-        let screen_to_near_factor_y = near_height / height;
-
-        let off_x = -center_offset.x * screen_to_near_factor_x;
-        let off_y = center_offset.y * screen_to_near_factor_y;
-
-        let offset_x = -center_offset.x * 2.0 / width;
+        let offset_x = center_offset.x * 2.0 / width; // TODO - or + does not matter
         let offset_y = center_offset.y * 2.0 / height;
         frustum(
-            xmax * (-1.0 + offset_x),
+            // https://webglfundamentals.org/webgl/lessons/webgl-qna-how-can-i-move-the-perspective-vanishing-point-from-the-center-of-the-canvas-.html
+            xmax * (-1.0 + offset_x), /* = xmax + (center_offset.x * screen_to_near_factor_x)
+                                                 where:
+                                                  screen_to_near_factor_x = near_width / width
+                                                  where:
+                                                    near_width = xmax * 2.0
+                                      */
             xmax * (1.0 + offset_x),
             ymax * (-1.0 + offset_y),
             ymax * (1.0 + offset_y),

@@ -19,7 +19,7 @@ use crate::{
 };
 
 const VIEW_REGION_PADDING: i32 = 1;
-const MAX_N_TILES: usize = 128;
+const MAX_N_TILES: usize = 512;
 
 pub struct ViewState {
     zoom: ChangeObserver<Zoom>,
@@ -39,7 +39,7 @@ impl ViewState {
         pitch: P,
         fovy: F,
     ) -> Self {
-        let camera = Camera::new((position.x, position.y), Deg(0.0), Deg(0.0));
+        let camera = Camera::new((position.x, position.y), Deg(0.0), pitch.into());
 
         let perspective = Perspective::new(fovy);
 
@@ -88,18 +88,32 @@ impl ViewState {
         camera_to_center_distance: f64,
         fov: Rad<f64>,
         center_offset: Point2<f64>,
+        is_y: bool,
     ) -> f64 {
         let height = self.height;
         let width = self.width;
-        let pitch = Rad(self.camera.get_pitch().0.abs()); // TODO: abs() fine here?
+        let pitch = self.camera.get_pitch();
+        let yaw = self.camera.get_yaw();
         let half_fov = fov / 2.0;
+
+        // TODO: abs() fine here?
+        // TODO: Is addition the correct operation?
+        let angle = Rad(pitch.0.abs() + yaw.0.abs());
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
         // 1 Z unit is equivalent to 1 horizontal px at the center of the map
         // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
-        let ground_angle = Rad(FRAC_PI_2) + pitch;
-        let fov_above_center = half_fov * (1.0 - center_offset.y * 2.0 / height); // TODO: Not sure why offset is added here: Similar to `half_fovy`
+        let ground_angle = Rad(FRAC_PI_2) + angle;
+
+        // TODO: This offset_ratio is black magic still
+        let offset_ratio = if is_y {
+            -pitch.0.signum() * center_offset.y * 2.0 / height
+        } else {
+            yaw.0.signum() * center_offset.x * 2.0 / width
+        };
+
+        let fov_above_center = half_fov * (1.0 + offset_ratio); // TODO: Not sure why offset is added here: Similar to `half_fovy`
 
         let top_half_surface_distance = fov_above_center.sin() * camera_to_center_distance
             / clamp(
@@ -109,9 +123,7 @@ impl ViewState {
             )
             .sin();
 
-        //println!("top_half_surface_distance: {top_half_surface_distance}");
-
-        (Rad(FRAC_PI_2) - pitch).cos() * top_half_surface_distance
+        (Rad(FRAC_PI_2) - angle).cos() * top_half_surface_distance
     }
 
     /// This function matches how maplibre-gl-js implements perspective and cameras at the time
@@ -130,18 +142,18 @@ impl ViewState {
         // Camera height, such that given a certain field-of-view, exactly height/2 are visible on ground.
         let camera_to_center_distance = (height / 2.0) / (half_fovy.tan()); // TODO: Not sure why it is height here and not width
 
-        let additional_height =
-            self.calc_additional_height(camera_to_center_distance, fovy, center_offset);
-        let additional_height = self.calc_additional_height(
-            camera_to_center_distance,
-            fovy * (height / width),
-            center_offset,
-        );
+        let additional_height_y =
+            self.calc_additional_height(camera_to_center_distance, fovy, center_offset, true);
+
+        let fovx = fovy * (width / height);
+        let additional_height_x =
+            self.calc_additional_height(camera_to_center_distance, fovx, center_offset, false);
 
         // Calculate z distance of the farthest fragment that should be rendered.
         // For pitch == 0, it is `camera_to_center_distance`. Everything further away will be clipped.
         // For pitch > 0, we add TODO
-        let furthest_distance = camera_to_center_distance + additional_height;
+        let furthest_distance =
+            camera_to_center_distance + additional_height_y.max(additional_height_x);
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
         let far_z = furthest_distance * 1.01;
 
