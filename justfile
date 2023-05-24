@@ -18,7 +18,7 @@ stable-override-toolchain: stable-toolchain
   rustup override set $STABLE_TOOLCHAIN
 
 stable-targets *FLAGS: stable-toolchain
-  rustup toolchain install $STABLE_TOOLCHAIN --target {{FLAGS}}
+  rustup toolchain install $STABLE_TOOLCHAIN --target {{ FLAGS }}
 
 stable-install-clippy: stable-toolchain
   rustup component add clippy --toolchain $STABLE_TOOLCHAIN
@@ -31,7 +31,7 @@ nightly-override-toolchain: nightly-toolchain
   rustup override set $NIGHTLY_TOOLCHAIN
 
 nightly-targets *FLAGS: nightly-toolchain
-  rustup toolchain install $NIGHTLY_TOOLCHAIN --target {{FLAGS}}
+  rustup toolchain install $NIGHTLY_TOOLCHAIN --target {{ FLAGS }}
   # We sometimes build the stdlib with nightly
   rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
 
@@ -61,13 +61,13 @@ fixup: nightly-toolchain
   # TODO check maplibre and maplibre-winit for apple targets
 
 check PROJECT ARCH: stable-install-clippy
-  cargo clippy --no-deps -p {{PROJECT}} --target {{ARCH}}
+  cargo clippy --no-deps -p {{ PROJECT }} --target {{ ARCH }}
 
 nightly-check PROJECT ARCH FEATURES: nightly-toolchain nightly-install-clippy
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo clippy --no-deps -p {{PROJECT}} --features "{{FEATURES}}" --target {{ARCH}}
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo clippy --no-deps -p {{ PROJECT }} --features "{{ FEATURES }}" --target {{ ARCH }}
 
 test PROJECT ARCH:
-  cargo test -p {{PROJECT}} --target {{ARCH}}
+  cargo test -p {{ PROJECT }} --target {{ ARCH }}
 
 benchmark:
   cargo criterion -p benchmarks
@@ -81,22 +81,22 @@ fmt-check: nightly-install-rustfmt
 
 
 web-install PROJECT:
-  cd web/{{PROJECT}} && npm install
+  cd web/{{ PROJECT }} && npm install
 
 # Example: just web-lib build
 # Example: just web-lib build-webgl
 # Example: just web-lib watch
 # Example: just web-lib watch-webgl
 web-lib TARGET *FLAGS: nightly-toolchain (nightly-targets "wasm32-unknown-unknown") (web-install "lib")
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{TARGET}} -- {{FLAGS}}
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{ TARGET }} -- {{ FLAGS }}
 
 # Example: just web-demo start
 # Example: just web-demo build
 web-demo TARGET *FLAGS: (web-install "demo")
-  cd web/demo && npm run {{TARGET}} -- {{FLAGS}}
+  cd web/demo && npm run {{ TARGET }} -- {{ FLAGS }}
 
 web-test FEATURES: nightly-toolchain (nightly-targets "wasm32-unknown-unknown")
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p web --features "{{FEATURES}}" --target wasm32-unknown-unknown
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p web --features "{{ FEATURES }}" --target wasm32-unknown-unknown
 
 #profile-bench:
 # cargo flamegraph --bench render -- --bench
@@ -115,7 +115,7 @@ install-android-demo: ensure-android-toolchain print-android-env
   cd android/gradle && ./gradlew :demo:installDebug
 
 test-android TARGET: nightly-toolchain print-android-env
-  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p maplibre-android --target {{TARGET}} -Z build-std=std,panic_abort
+  export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo test -p maplibre-android --target {{ TARGET }} -Z build-std=std,panic_abort
 
 # language=bash
 print-android-env:
@@ -135,35 +135,35 @@ BUILD_DIR := "./apple/build"
 ensure-apple-toolchain: stable-toolchain (stable-targets "aarch64-apple-darwin" "x86_64-apple-darwin" "aarch64-apple-ios" "aarch64-apple-ios-sim")
 
 xcodebuild-archive ARCH PLATFORM: ensure-apple-toolchain
-  xcodebuild ARCHS="{{ARCH}}" archive -project "{{PROJECT_DIR}}" \
+  xcodebuild ARCHS="{{ ARCH }}" archive -project "{{ PROJECT_DIR }}" \
                                     -scheme "maplibre-rs" \
-                                    -destination "generic/platform={{PLATFORM}}" \
-                                    -archivePath "{{BUILD_DIR}}/{{ARCH}}-apple-{{PLATFORM}}"
+                                    -destination "generic/platform={{ PLATFORM }}" \
+                                    -archivePath "{{ BUILD_DIR }}/{{ ARCH }}-apple-{{ PLATFORM }}"
 
 # language=bash
 xcodebuild-archive-fat EXISTING_ARCH EXISTING_PLATFORM ARCH: (xcodebuild-archive ARCH EXISTING_PLATFORM)
   #!/usr/bin/env bash
   set -euxo pipefail
-  archive="{{BUILD_DIR}}/{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
-  existing_archive="{{BUILD_DIR}}/{{EXISTING_ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
-  fat_archive="{{BUILD_DIR}}/{{EXISTING_ARCH}}-{{ARCH}}-apple-{{EXISTING_PLATFORM}}.xcarchive"
+  archive="{{ BUILD_DIR }}/{{ ARCH }}-apple-{{ EXISTING_PLATFORM }}.xcarchive"
+  existing_archive="{{ BUILD_DIR }}/{{ EXISTING_ARCH }}-apple-{{ EXISTING_PLATFORM }}.xcarchive"
+  fat_archive="{{ BUILD_DIR }}/{{ EXISTING_ARCH }}-{{ ARCH }}-apple-{{ EXISTING_PLATFORM }}.xcarchive"
 
   cp -R "$existing_archive" "$fat_archive"
-  inner="$archive/{{INNER_FRAMEWORK_PATH}}"
-  existing_inner="$existing_archive/{{INNER_FRAMEWORK_PATH}}"
-  fat_inner="$fat_archive/{{INNER_FRAMEWORK_PATH}}"
+  inner="$archive/{{ INNER_FRAMEWORK_PATH }}"
+  existing_inner="$existing_archive/{{ INNER_FRAMEWORK_PATH }}"
+  fat_inner="$fat_archive/{{ INNER_FRAMEWORK_PATH }}"
   
-  target_binary="$fat_inner/$(readlink -n "$fat_inner/{{BINARY_NAME}}")"
-  lipo -create  "$existing_inner/{{BINARY_NAME}}" \
-                "$inner/{{BINARY_NAME}}" \
+  target_binary="$fat_inner/$(readlink -n "$fat_inner/{{ BINARY_NAME }}")"
+  lipo -create  "$existing_inner/{{ BINARY_NAME }}" \
+                "$inner/{{ BINARY_NAME }}" \
                 -output "$target_binary"
-  cp -R $inner/Modules/{{BINARY_NAME}}.swiftmodule/* \
-        "$fat_inner/Modules/{{BINARY_NAME}}.swiftmodule/"
+  cp -R $inner/Modules/{{ BINARY_NAME }}.swiftmodule/* \
+        "$fat_inner/Modules/{{ BINARY_NAME }}.swiftmodule/"
   
 
 xcodebuild-clean:
-  rm -rf {{BUILD_DIR}}/*.xcarchive
-  rm -rf {{XC_FRAMEWORK_DIRECTORY}}/*.xcframework
+  rm -rf {{ BUILD_DIR }}/*.xcarchive
+  rm -rf {{ XC_FRAMEWORK_DIRECTORY }}/*.xcframework
 
 # language=bash
 xcodebuild-xcframework:
@@ -174,7 +174,7 @@ xcodebuild-xcframework:
     "arm64,iOS Simulator"
     "arm64-x86_64,macOS"
   )
-  framework_args=$(for i in "${tuples[@]}"; do IFS=","; set -- $i; echo -n "-framework \"{{BUILD_DIR}}/$1-apple-$2.xcarchive/{{INNER_FRAMEWORK_PATH}}\" "; done)
+  framework_args=$(for i in "${tuples[@]}"; do IFS=","; set -- $i; echo -n "-framework \"{{ BUILD_DIR }}/$1-apple-$2.xcarchive/{{ INNER_FRAMEWORK_PATH }}\" "; done)
   echo "framework_args: $framework_args"
   echo "XC_FRAMEWORK_PATH: $XC_FRAMEWORK_PATH"
   echo "$framework_args" | xargs xcodebuild -create-xcframework -output "$XC_FRAMEWORK_PATH"
