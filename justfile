@@ -5,6 +5,7 @@
 set shell := ["bash", "-c"]
 
 #  Also change the version in android/gradle/lib/build.gradle
+
 export NIGHTLY_TOOLCHAIN := "nightly-2023-03-29"
 export STABLE_TOOLCHAIN := "1.65"
 export CARGO_TERM_COLOR := "always"
@@ -71,6 +72,7 @@ benchmark:
 
 fmt: nightly-install-rustfmt
     export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo fmt
+    {{ just_executable() }} --fmt --unstable
 
 fmt-check: nightly-install-rustfmt
     export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cargo fmt -- --check
@@ -86,9 +88,7 @@ web-install PROJECT:
 web-lib TARGET *FLAGS: nightly-toolchain (nightly-targets "wasm32-unknown-unknown") (web-install "lib")
     export RUSTUP_TOOLCHAIN=$NIGHTLY_TOOLCHAIN && cd web/lib && npm run {{ TARGET }} -- {{ FLAGS }}
 
-# Example: just web-demo start
-
-# Example: just web-demo build
+# Examples:  just web-demo start   or   just web-demo build
 web-demo TARGET *FLAGS: (web-install "demo")
     cd web/demo && npm run {{ TARGET }} -- {{ FLAGS }}
 
