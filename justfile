@@ -67,7 +67,14 @@ nightly-check PROJECT ARCH FEATURES: nightly-toolchain nightly-install-clippy
 test PROJECT ARCH:
     cargo test -p {{ PROJECT }} --target {{ ARCH }}
 
+# language=bash
 benchmark:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    if ! command -v cargo-criterion &> /dev/null; then
+      echo "cargo criterion could not be found. Install it with 'cargo install cargo-criterion'"
+      exit 1
+    fi
     cargo criterion -p benchmarks
 
 fmt: nightly-install-rustfmt
@@ -180,8 +187,7 @@ xcodebuild-xcframework:
 extract-tiles:
     #!/usr/bin/env bash
     set -euxo pipefail
-    if ! command -v tilelive-copy &> /dev/null
-    then
+    if ! command -v tilelive-copy &> /dev/null; then
       echo "tilelive-copy could not be found. Install it with 'yarn global add @mapbox/tilelive @mapbox/mbtiles'"
       exit 1
     fi
