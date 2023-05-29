@@ -1,6 +1,6 @@
 {
   "name": "maplibre-rs",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "",
   "scripts": {
     "clean": "rm -rf dist && rm -rf src/wasm-pack",
