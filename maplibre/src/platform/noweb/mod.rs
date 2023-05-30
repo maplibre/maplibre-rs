@@ -22,7 +22,7 @@ pub fn run_multithreaded<F: Future>(future: F) -> F::Output {
         .thread_name_fn(|| {
             static ATOMIC_ID: AtomicUsize = AtomicUsize::new(0);
             let id = ATOMIC_ID.fetch_add(1, Ordering::SeqCst);
-            format!("maplibre-rs-pool-{}", id)
+            format!("maplibre-rs-pool-{id}")
         })
         .on_thread_start(|| {
             #[cfg(feature = "trace")]

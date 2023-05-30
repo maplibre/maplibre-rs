@@ -95,7 +95,7 @@ impl ViewState {
 
     pub fn update_zoom(&mut self, new_zoom: Zoom) {
         *self.zoom = new_zoom;
-        log::info!("zoom: {}", new_zoom);
+        log::info!("zoom: {new_zoom}");
     }
 
     pub fn camera(&self) -> &Camera {

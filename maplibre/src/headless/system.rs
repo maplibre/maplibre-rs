@@ -58,7 +58,7 @@ impl System for WriteSurfaceBufferSystem {
                     buffered_texture
                         .write_png(
                             &padded_buffer,
-                            format!("frame_{}.png", current_frame).as_str(),
+                            format!("frame_{current_frame}.png").as_str(),
                         )
                         .expect("Could save frame to disk");
                 }

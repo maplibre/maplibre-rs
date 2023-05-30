@@ -109,8 +109,7 @@ impl Context for PassingContext {
         }
 
         log::debug!(
-            "sending message ({:?}) with {}bytes to main thread",
-            tag,
+            "sending message ({tag:?}) with {}bytes to main thread",
             data.len()
         );
 
@@ -197,7 +196,7 @@ impl<K: OffscreenKernelEnvironment> AsyncProcedureCall<K> for PassingAsyncProced
             .expect("Failed to borrow in receive of APC")
             .pop()
         {
-            log::debug!("Data reached main thread: {:?}", &message);
+            log::debug!("Data reached main thread: {message:?}");
 
             if filter(&message) {
                 ret.push(message);

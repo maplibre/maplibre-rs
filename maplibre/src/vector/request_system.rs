@@ -74,8 +74,8 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                         .unwrap()
                         .insert(VectorLayersDataComponent::default());
 
-                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);
-                    log::info!("tile request started: {}", &coords);
+                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
+                    log::info!("tile request started: {coords}");
 
                     self.kernel
                         .apc()
@@ -150,7 +150,7 @@ pub fn fetch_vector_apc<
                     .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
                 }
                 Err(e) => {
-                    log::error!("{:?}", &e);
+                    log::error!("{e:?}");
                     for to_load in &fill_layers {
                         context
                             .send(<T as VectorTransferables>::LayerMissing::build_from(

@@ -507,10 +507,7 @@ impl RingIndex {
         inner_size: wgpu::BufferAddress,
     ) -> Range<wgpu::BufferAddress> {
         if new_data > inner_size {
-            panic!(
-                "can not allocate because backing buffer {:?} are too small",
-                typ
-            )
+            panic!("can not allocate because backing buffer {typ:?} are too small")
         }
 
         let mut available_gap = self.find_largest_gap(typ, inner_size);
@@ -674,7 +671,7 @@ mod tests {
             128 - 2 * 48 - 24,
             pool.available_space(BackingBufferType::Vertices)
         );
-        println!("{:?}", &pool.index);
+        println!("{:?}", pool.index);
 
         pool.allocate_layer_geometry(
             &queue,
@@ -685,7 +682,7 @@ mod tests {
             &[],
         );
         // appended now at the beginning
-        println!("{:?}", &pool.index);
+        println!("{:?}", pool.index);
         assert_eq!(24, pool.available_space(BackingBufferType::Vertices));
 
         pool.allocate_layer_geometry(
@@ -696,7 +693,7 @@ mod tests {
             2,
             &[],
         );
-        println!("{:?}", &pool.index);
+        println!("{:?}", pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::Vertices));
 
         pool.allocate_layer_geometry(
@@ -707,7 +704,7 @@ mod tests {
             2,
             &[],
         );
-        println!("{:?}", &pool.index);
+        println!("{:?}", pool.index);
         assert_eq!(24, pool.available_space(BackingBufferType::Vertices));
 
         pool.allocate_layer_geometry(
@@ -718,7 +715,7 @@ mod tests {
             2,
             &[],
         );
-        println!("{:?}", &pool.index);
+        println!("{:?}", pool.index);
         assert_eq!(0, pool.available_space(BackingBufferType::Vertices));
     }
 }

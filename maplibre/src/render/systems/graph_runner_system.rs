@@ -41,7 +41,7 @@ impl System for GraphRunnerSystem {
             {
                 let mut src: &dyn Error = &e;
                 loop {
-                    error!("> {}", src);
+                    error!("> {src}");
                     match src.source() {
                         Some(s) => src = s,
                         None => break,
@@ -51,7 +51,7 @@ impl System for GraphRunnerSystem {
 
             // TODO: Replace panic with a graceful exit in the event loop
             // if e.should_exit() { *control_flow = ControlFlow::Exit; }
-            panic!("Error running render graph: {:?}", e);
+            panic!("Error running render graph: {e:?}");
         }
 
         {
