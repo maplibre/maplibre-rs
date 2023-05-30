@@ -32,7 +32,7 @@ fn embed_tiles_statically() {
 
     let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-    let source = Path::new(&root_dir).join(format!("../test-data/munich-{}.mbtiles", MUNICH_Z));
+    let source = Path::new(&root_dir).join(format!("../test-data/munich-{MUNICH_Z}.mbtiles"));
 
     if source.exists() {
         println!("cargo:rustc-cfg=static_tiles_found");

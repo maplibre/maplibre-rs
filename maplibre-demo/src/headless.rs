@@ -42,7 +42,7 @@ pub async fn run_headless(tile_size: u32, min: LatLon, max: LatLon) {
 
     for (z, x, y) in GridIterator::new(10, 10, tile_limits) {
         let coords = WorldTileCoords::from((x as i32, y as i32, z.into()));
-        println!("Rendering {}", &coords);
+        println!("Rendering {coords}");
 
         let tile = map.fetch_tile(coords).await.expect("Failed to fetch!");
 

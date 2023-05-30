@@ -236,8 +236,8 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
         // TODO: (optimize) Using while instead of if means that we are processing all that is
         // TODO: available this might cause frame drops.
         while let Ok(message) = self.channel.1.try_recv() {
-            tracing::debug!("Data reached main thread: {:?}", &message);
-            log::debug!("Data reached main thread: {:?}", &message);
+            tracing::debug!("Data reached main thread: {message:?}");
+            log::debug!("Data reached main thread: {message:?}");
 
             if filter(&message) {
                 ret.push(message);
