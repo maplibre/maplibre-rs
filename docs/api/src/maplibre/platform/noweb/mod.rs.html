@@ -72,7 +72,7 @@
         .thread_name_fn(|| {
             <span class="kw">static </span>ATOMIC_ID: AtomicUsize = AtomicUsize::new(<span class="number">0</span>);
             <span class="kw">let </span>id = ATOMIC_ID.fetch_add(<span class="number">1</span>, Ordering::SeqCst);
-            <span class="macro">format!</span>(<span class="string">&quot;maplibre-rs-pool-{}&quot;</span>, id)
+            <span class="macro">format!</span>(<span class="string">&quot;maplibre-rs-pool-{id}&quot;</span>)
         })
         .on_thread_start(|| {
             <span class="attribute">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]

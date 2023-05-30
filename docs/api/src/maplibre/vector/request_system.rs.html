@@ -242,8 +242,8 @@
                         .unwrap()
                         .insert(VectorLayersDataComponent::default());
 
-                    <span class="macro">tracing::event!</span>(tracing::Level::ERROR, %coords, <span class="string">&quot;tile request started: {}&quot;</span>, <span class="kw-2">&amp;</span>coords);
-                    <span class="macro">log::info!</span>(<span class="string">&quot;tile request started: {}&quot;</span>, <span class="kw-2">&amp;</span>coords);
+                    <span class="macro">tracing::event!</span>(tracing::Level::ERROR, %coords, <span class="string">&quot;tile request started: {coords}&quot;</span>);
+                    <span class="macro">log::info!</span>(<span class="string">&quot;tile request started: {coords}&quot;</span>);
 
                     <span class="self">self</span>.kernel
                         .apc()
@@ -318,7 +318,7 @@
                     .map_err(|e| ProcedureError::Execution(Box::new(e)))<span class="question-mark">?</span>;
                 }
                 <span class="prelude-val">Err</span>(e) =&gt; {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="kw-2">&amp;</span>e);
+                    <span class="macro">log::error!</span>(<span class="string">&quot;{e:?}&quot;</span>);
                     <span class="kw">for </span>to_load <span class="kw">in </span><span class="kw-2">&amp;</span>fill_layers {
                         context
                             .send(&lt;T <span class="kw">as </span>VectorTransferables&gt;::LayerMissing::build_from(

@@ -115,7 +115,7 @@
             {
                 <span class="kw">let </span><span class="kw-2">mut </span>src: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Error = <span class="kw-2">&amp;</span>e;
                 <span class="kw">loop </span>{
-                    <span class="macro">error!</span>(<span class="string">&quot;&gt; {}&quot;</span>, src);
+                    <span class="macro">error!</span>(<span class="string">&quot;&gt; {src}&quot;</span>);
                     <span class="kw">match </span>src.source() {
                         <span class="prelude-val">Some</span>(s) =&gt; src = s,
                         <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
@@ -125,7 +125,7 @@
 
             <span class="comment">// TODO: Replace panic with a graceful exit in the event loop
             // if e.should_exit() { *control_flow = ControlFlow::Exit; }
-            </span><span class="macro">panic!</span>(<span class="string">&quot;Error running render graph: {:?}&quot;</span>, e);
+            </span><span class="macro">panic!</span>(<span class="string">&quot;Error running render graph: {e:?}&quot;</span>);
         }
 
         {

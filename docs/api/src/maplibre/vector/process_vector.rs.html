@@ -194,17 +194,6 @@
 <span id="194">194</span>
 <span id="195">195</span>
 <span id="196">196</span>
-<span id="197">197</span>
-<span id="198">198</span>
-<span id="199">199</span>
-<span id="200">200</span>
-<span id="201">201</span>
-<span id="202">202</span>
-<span id="203">203</span>
-<span id="204">204</span>
-<span id="205">205</span>
-<span id="206">206</span>
-<span id="207">207</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, marker::PhantomData};
 
 <span class="kw">use </span>geozero::{
@@ -266,12 +255,7 @@
         <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = layer.process(<span class="kw-2">&amp;mut </span>tessellator) {
             context.layer_missing(coords, layer_name)<span class="question-mark">?</span>;
 
-            <span class="macro">tracing::error!</span>(
-                <span class="string">&quot;layer {} at {} tesselation failed {:?}&quot;</span>,
-                layer_name,
-                <span class="kw-2">&amp;</span>coords,
-                e
-            );
+            <span class="macro">tracing::error!</span>(<span class="string">&quot;layer {layer_name} at {coords} tesselation failed {e:?}&quot;</span>);
         } <span class="kw">else </span>{
             context.layer_tesselation_finished(
                 coords,
@@ -294,12 +278,7 @@
 
     <span class="kw">for </span>missing_layer <span class="kw">in </span>tile_request.layers.difference(<span class="kw-2">&amp;</span>available_layers) {
         context.layer_missing(coords, missing_layer)<span class="question-mark">?</span>;
-
-        <span class="macro">tracing::info!</span>(
-            <span class="string">&quot;requested layer {} at {} not found in tile&quot;</span>,
-            missing_layer,
-            <span class="kw-2">&amp;</span>coords
-        );
+        <span class="macro">tracing::info!</span>(<span class="string">&quot;requested layer {missing_layer} at {coords} not found in tile&quot;</span>);
     }
 
     <span class="comment">// Indexing
@@ -314,8 +293,7 @@
 
     <span class="comment">// End
 
-    </span><span class="macro">tracing::info!</span>(<span class="string">&quot;tile tessellated at {} finished&quot;</span>, <span class="kw-2">&amp;</span>coords);
-
+    </span><span class="macro">tracing::info!</span>(<span class="string">&quot;tile tessellated at {coords} finished&quot;</span>);
     context.tile_finished(coords)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())

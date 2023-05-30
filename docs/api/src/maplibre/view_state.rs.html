@@ -212,7 +212,7 @@
 
     <span class="kw">pub fn </span>update_zoom(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_zoom: Zoom) {
         <span class="kw-2">*</span><span class="self">self</span>.zoom = new_zoom;
-        <span class="macro">log::info!</span>(<span class="string">&quot;zoom: {}&quot;</span>, new_zoom);
+        <span class="macro">log::info!</span>(<span class="string">&quot;zoom: {new_zoom}&quot;</span>);
     }
 
     <span class="kw">pub fn </span>camera(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Camera {

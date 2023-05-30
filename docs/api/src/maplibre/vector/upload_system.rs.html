@@ -358,7 +358,7 @@
                 })
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-            <span class="macro">log::debug!</span>(<span class="string">&quot;Allocating geometry at {}&quot;</span>, <span class="kw-2">&amp;</span>coords);
+            <span class="macro">log::debug!</span>(<span class="string">&quot;Allocating geometry at {coords}&quot;</span>);
             buffer_pool.allocate_layer_geometry(
                 queue,
                 <span class="kw-2">*</span>coords,

@@ -308,9 +308,6 @@
 <span id="308">308</span>
 <span id="309">309</span>
 <span id="310">310</span>
-<span id="311">311</span>
-<span id="312">312</span>
-<span id="313">313</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>downcast_rs::{impl_downcast, Downcast};
@@ -415,7 +412,7 @@
         <span class="kw">let </span>label: Box&lt;<span class="kw">dyn </span>StageLabel&gt; = Box::new(label);
         <span class="self">self</span>.stage_order.push(label.clone());
         <span class="kw">let </span>prev = <span class="self">self</span>.stages.insert(label.clone(), Box::new(stage));
-        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {:?}.&quot;</span>, label);
+        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {label:?}.&quot;</span>);
         <span class="self">self
     </span>}
 
@@ -451,11 +448,11 @@
             .enumerate()
             .find(|(_i, stage_label)| <span class="kw-2">&amp;***</span>stage_label == target)
             .map(|(i, <span class="kw">_</span>)| i)
-            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {:?}.&quot;</span>, target));
+            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {target:?}.&quot;</span>));
 
         <span class="self">self</span>.stage_order.insert(target_index + <span class="number">1</span>, label.clone());
         <span class="kw">let </span>prev = <span class="self">self</span>.stages.insert(label.clone(), Box::new(stage));
-        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {:?}.&quot;</span>, label);
+        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {label:?}.&quot;</span>);
         <span class="self">self
     </span>}
 
@@ -485,11 +482,11 @@
             .enumerate()
             .find(|(_i, stage_label)| <span class="kw-2">&amp;***</span>stage_label == target)
             .map(|(i, <span class="kw">_</span>)| i)
-            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {:?}.&quot;</span>, target));
+            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {target:?}.&quot;</span>));
 
         <span class="self">self</span>.stage_order.insert(target_index, label.clone());
         <span class="kw">let </span>prev = <span class="self">self</span>.stages.insert(label.clone(), Box::new(stage));
-        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {:?}.&quot;</span>, label);
+        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {label:?}.&quot;</span>);
         <span class="self">self
     </span>}
 
@@ -523,7 +520,7 @@
         func: F,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span>stage = <span class="self">self</span>.get_stage_mut::&lt;T&gt;(<span class="kw-2">&amp;</span>label).unwrap_or_else(<span class="kw">move </span>|| {
-            <span class="macro">panic!</span>(<span class="string">&quot;stage &#39;{:?}&#39; does not exist or is the wrong type&quot;</span>, label)
+            <span class="macro">panic!</span>(<span class="string">&quot;stage &#39;{label:?}&#39; does not exist or is the wrong type&quot;</span>)
         });
         func(stage);
         <span class="self">self
@@ -609,10 +606,7 @@
         <span class="kw">let </span>stage = <span class="self">self
             </span>.get_stage_mut::&lt;SystemStage&gt;(<span class="kw-2">&amp;</span>stage_label)
             .unwrap_or_else(<span class="kw">move </span>|| {
-                <span class="macro">panic!</span>(
-                    <span class="string">&quot;Stage &#39;{:?}&#39; does not exist or is not a SystemStage&quot;</span>,
-                    stage_label
-                )
+                <span class="macro">panic!</span>(<span class="string">&quot;Stage &#39;{stage_label:?}&#39; does not exist or is not a SystemStage&quot;</span>)
             });
         stage.add_system(system);
         <span class="self">self

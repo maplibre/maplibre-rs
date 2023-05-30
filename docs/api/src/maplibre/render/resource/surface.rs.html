@@ -552,16 +552,16 @@
         <span class="kw">let </span>size = window.size();
 
         <span class="kw">let </span>capabilities = surface.get_capabilities(adapter);
-        <span class="macro">log::info!</span>(<span class="string">&quot;adapter capabilities on surface: {:?}&quot;</span>, capabilities);
+        <span class="macro">log::info!</span>(<span class="string">&quot;adapter capabilities on surface: {capabilities:?}&quot;</span>);
 
         <span class="kw">let </span>texture_format = settings
             .texture_format
             .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
-        <span class="macro">log::info!</span>(<span class="string">&quot;format description: {:?}&quot;</span>, texture_format);
+        <span class="macro">log::info!</span>(<span class="string">&quot;format description: {texture_format:?}&quot;</span>);
 
         <span class="kw">let </span>texture_format_features = adapter.get_texture_format_features(texture_format);
-        <span class="macro">log::info!</span>(<span class="string">&quot;format features: {:?}&quot;</span>, texture_format_features);
+        <span class="macro">log::info!</span>(<span class="string">&quot;format features: {texture_format_features:?}&quot;</span>);
 
         <span class="self">Self </span>{
             size,

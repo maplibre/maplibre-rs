@@ -324,9 +324,6 @@
 <span id="324">324</span>
 <span id="325">325</span>
 <span id="326">326</span>
-<span id="327">327</span>
-<span id="328">328</span>
-<span id="329">329</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     any,
     any::TypeId,
@@ -417,10 +414,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = coords.build_quad_key().map(|key| components.entry(key)) {
             <span class="kw">match </span>entry {
                 btree_map::Entry::Vacant(_entry) =&gt; {
-                    <span class="macro">panic!</span>(
-                        <span class="string">&quot;Can not add a component at {}. Entity does not exist.&quot;</span>,
-                        coords
-                    )
+                    <span class="macro">panic!</span>(<span class="string">&quot;Can not add a component at {coords}. Entity does not exist.&quot;</span>,)
                 }
                 btree_map::Entry::Occupied(<span class="kw-2">mut </span>entry) =&gt; {
                     entry.get_mut().push(UnsafeCell::new(Box::new(component)));

@@ -844,7 +844,7 @@
         <span class="kw">let </span>ZoomLevel(level) = key[<span class="number">0</span>];
         <span class="kw">let </span>len = level <span class="kw">as </span>usize;
         <span class="kw">for </span>part <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>..len] {
-            <span class="macro">write!</span>(f, <span class="string">&quot;{:?}&quot;</span>, part)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(f, <span class="string">&quot;{part:?}&quot;</span>)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -1482,7 +1482,7 @@
         <span class="kw">let </span>tile = WorldTileCoords::from(tile);
         <span class="kw">let </span>p1 = tile.transform_for_zoom(zoom) * TOP_LEFT;
         <span class="kw">let </span>p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT;
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}\n{:?}&quot;</span>, p1, p2);
+        <span class="macro">println!</span>(<span class="string">&quot;{p1:?}\n{p2:?}&quot;</span>);
 
         <span class="macro">assert_eq!</span>(
             WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.level(), zoom),
@@ -1556,7 +1556,7 @@
         )
         .iter()
         {
-            <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, tile_coords);
+            <span class="macro">println!</span>(<span class="string">&quot;{tile_coords}&quot;</span>);
         }
     }
 }

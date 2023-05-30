@@ -986,13 +986,13 @@
         <span class="kw">let </span>origin_clip_space = view_proj.project(Vector4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
         <span class="macro">println!</span>(<span class="string">&quot;origin w in clip space: {:?}&quot;</span>, origin_clip_space.w);
 
-        <span class="macro">println!</span>(<span class="string">&quot;world_pos: {:?}&quot;</span>, world_pos);
-        <span class="macro">println!</span>(<span class="string">&quot;clip: {:?}&quot;</span>, clip);
+        <span class="macro">println!</span>(<span class="string">&quot;world_pos: {world_pos:?}&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;clip: {clip:?}&quot;</span>);
         <span class="macro">println!</span>(<span class="string">&quot;world_pos: {:?}&quot;</span>, view_proj.invert().project(clip));
 
         <span class="macro">println!</span>(<span class="string">&quot;window: {:?}&quot;</span>, camera.clip_to_window_vulkan(<span class="kw-2">&amp;</span>clip));
         <span class="kw">let </span>window = camera.clip_to_window(<span class="kw-2">&amp;</span>clip);
-        <span class="macro">println!</span>(<span class="string">&quot;window (matrix): {:?}&quot;</span>, window);
+        <span class="macro">println!</span>(<span class="string">&quot;window (matrix): {window:?}&quot;</span>);
 
         <span class="comment">// --------- nalgebra
 
@@ -1024,9 +1024,9 @@
 
         <span class="comment">// for z = 0 in world coordinates
         </span><span class="kw">let </span>u = -near_world.z / (far_world.z - near_world.z);
-        <span class="macro">println!</span>(<span class="string">&quot;u: {:?}&quot;</span>, u);
+        <span class="macro">println!</span>(<span class="string">&quot;u: {u:?}&quot;</span>);
         <span class="kw">let </span>unprojected = near_world + u * (far_world - near_world);
-        <span class="macro">println!</span>(<span class="string">&quot;unprojected: {:?}&quot;</span>, unprojected);
+        <span class="macro">println!</span>(<span class="string">&quot;unprojected: {unprojected:?}&quot;</span>);
         <span class="macro">assert!</span>(Vector3::new(world_pos.x, world_pos.y, world_pos.z).abs_diff_eq(<span class="kw-2">&amp;</span>unprojected, <span class="number">0.05</span>));
 
         <span class="comment">// ---- test for unproject
@@ -1042,9 +1042,9 @@
 
         <span class="comment">// for z = 0 in world coordinates
         </span><span class="kw">let </span>u = -near_world.z / (far_world.z - near_world.z);
-        <span class="macro">println!</span>(<span class="string">&quot;u: {:?}&quot;</span>, u);
+        <span class="macro">println!</span>(<span class="string">&quot;u: {u:?}&quot;</span>);
         <span class="kw">let </span>unprojected = near_world + u * (far_world - near_world);
-        <span class="macro">println!</span>(<span class="string">&quot;unprojected: {:?}&quot;</span>, unprojected);
+        <span class="macro">println!</span>(<span class="string">&quot;unprojected: {unprojected:?}&quot;</span>);
         <span class="comment">// ----
 
         //assert!(reverse_world.abs_diff_eq(&amp;world_pos, 0.05))

@@ -1367,10 +1367,10 @@
         <span class="kw">pub fn </span>new(inputs: usize, outputs: usize) -&gt; <span class="self">Self </span>{
             TestNode {
                 inputs: (<span class="number">0</span>..inputs)
-                    .map(|i| SlotInfo::new(<span class="macro">format!</span>(<span class="string">&quot;in_{}&quot;</span>, i), SlotType::TextureView))
+                    .map(|i| SlotInfo::new(<span class="macro">format!</span>(<span class="string">&quot;in_{i}&quot;</span>), SlotType::TextureView))
                     .collect(),
                 outputs: (<span class="number">0</span>..outputs)
-                    .map(|i| SlotInfo::new(<span class="macro">format!</span>(<span class="string">&quot;out_{}&quot;</span>, i), SlotType::TextureView))
+                    .map(|i| SlotInfo::new(<span class="macro">format!</span>(<span class="string">&quot;out_{i}&quot;</span>), SlotType::TextureView))
                     .collect(),
             }
         }
