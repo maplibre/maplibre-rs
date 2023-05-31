@@ -13,10 +13,10 @@ authors.workspace = true
 [dependencies]
 maplibre = { path = "../maplibre", features = ["thread-safe-futures"] }
 maplibre-winit = { path = "../maplibre-winit", version = "0.1.0"  }
-env_logger = "0.10.0"
-log = "0.4.17"
-ndk-glue = "0.7.0"  # version is required by winit
-jni = "0.20.0"
+env_logger.workspace = true
+log.workspace = true
+ndk-glue.workspace = true
+jni.workspace = true
 
 [lib]
 #name = "maplibre_android" Currently not supported: https://github.com/rust-windowing/android-ndk-rs/issues/136

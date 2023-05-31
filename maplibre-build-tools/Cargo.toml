@@ -14,9 +14,9 @@ authors.workspace = true
 sqlite = ["rusqlite"]
 
 [dependencies]
-naga = { version = "*", features = ["wgsl-in"] }
-walkdir = "2.3.2"
-log = "0.4.17"
-rusqlite = { version = "0.28.0", optional = true }
-serde_json = "1.0.82"
-flate2 = "1.0.24"
+naga.workspace = true
+walkdir.workspace = true
+log.workspace = true
+rusqlite = { workspace = true, optional = true }
+serde_json.workspace = true
+flate2.workspace = true

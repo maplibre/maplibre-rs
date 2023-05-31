@@ -21,8 +21,63 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.65"
 license = "MIT OR Apache-2.0"
-keywords = ["graphics"]
+keywords = ["graphics", "science::geo"]
 authors = ["Maximilian Ammann <max@maxammann.org>"]
+
+[workspace.dependencies]
+async-trait = "0.1.57"
+bytemuck = "1.12.1"
+bytemuck_derive = "1.2.1"
+cgmath = "0.18.0"
+cint = "0.3.1"
+clap = { version = "4.1.1", features = ["derive"] }
+console_error_panic_hook = "0.1.7"
+console_log = { version = "0.2.0", features = ["color"] }
+criterion = { version = "0.4.0", features = ["async_tokio"] }
+csscolorparser = { version = "0.6.2", features = ["serde", "cint"] }
+downcast-rs = "1.2.0"
+env_logger = "0.10.0"
+flatbuffers = "22.10.26"
+flatc-rust = "0.2.0"
+flate2 = "1.0.24"
+geo = "0.23.1"
+geo-types = { version = "0.7.6", features = ["use-rstar_0_9"] }
+geozero = { version = "0.9.8", default-features = false, features = ["with-mvt", "with-geo"] }
+image = { version = "0.24", default-features = false, features = ["jpeg", "webp", "png"] }
+include_dir = "0.7.2"
+instant = { version = "0.1.12", features = ["wasm-bindgen"] }  # TODO: Untrusted dependency
+jni = "0.20.0"
+js-sys = "0.3.58"
+log = "0.4.17"
+lyon = { version = "1.0.0", features = [] }
+naga = { version = "*", features = ["wgsl-in"] }
+ndk-glue = "0.7.0"  # version is required by winit
+png = { version = "0.17.5" }
+rand = { version = "0.7", features = ["wasm-bindgen"] }
+raw-window-handle = "0.5.0"
+reqwest = { version = "0.11.11", default-features = false, features = ["rustls-tls", "gzip"] }  # Use rusttls on android because cross compiling is difficult
+reqwest-middleware = "0.1.6"  # FIXME: Untrusted dependency
+reqwest-middleware-cache = "0.1.1"  # FIXME: Untrusted dependency
+rstar = "0.9.3"
+rusqlite = { version = "0.28.0" }
+serde = { version = "1.0.144", features = ["derive"] }
+serde_json = "1.0.85"
+smallvec = "1.9.0"
+thiserror = "1.0"
+tile-grid = "0.3.0"
+tokio = "1.19.2"  # Individual features are customized in each crate
+tokio-util = { version = "0.7.1", features = ["rt"] }
+tracing = "0.1.36"
+tracing-subscriber = "0.3.15"
+tracing-tracy = "0.10"
+tracing-wasm = "0.2.1"  # TODO: Low quality dependency (remove in a separate PR!)
+walkdir = "2.3.2"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+wasm-bindgen-test = "0.3"
+web-sys = "0.3.58"  # Individual features are customized in each crate
+wgpu = "0.16.0"
+winit = { version = "0.27.2", default-features = false }
 
 [profile.release]
 lto = true
