@@ -108,7 +108,7 @@ impl ZoomLevel {
     }
 
     pub const fn zoom_in(&self) -> Option<ZoomLevel> {
-        if self.0 == MAX_ZOOM {
+        if self.0 == Self::MAX_VALUE {
             None
         } else {
             Some(Self(self.0 + 1))
