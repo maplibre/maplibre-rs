@@ -57,7 +57,7 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
         tracing::trace!(
             "Drawing layer {:?} at {}",
             entry.style_layer.source_layer,
-            &entry.coords
+            entry.coords
         );
 
         let index_range = entry.indices_buffer_range();

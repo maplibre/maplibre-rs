@@ -273,13 +273,13 @@ mod tests {
         let origin_clip_space = view_proj.project(Vector4::new(0.0, 0.0, 0.0, 1.0));
         println!("origin w in clip space: {:?}", origin_clip_space.w);
 
-        println!("world_pos: {:?}", world_pos);
-        println!("clip: {:?}", clip);
+        println!("world_pos: {world_pos:?}");
+        println!("clip: {clip:?}");
         println!("world_pos: {:?}", view_proj.invert().project(clip));
 
         println!("window: {:?}", camera.clip_to_window_vulkan(&clip));
         let window = camera.clip_to_window(&clip);
-        println!("window (matrix): {:?}", window);
+        println!("window (matrix): {window:?}");
 
         // --------- nalgebra
 
@@ -311,9 +311,9 @@ mod tests {
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);
-        println!("u: {:?}", u);
+        println!("u: {u:?}");
         let unprojected = near_world + u * (far_world - near_world);
-        println!("unprojected: {:?}", unprojected);
+        println!("unprojected: {unprojected:?}");
         assert!(Vector3::new(world_pos.x, world_pos.y, world_pos.z).abs_diff_eq(&unprojected, 0.05));
 
         // ---- test for unproject
@@ -329,9 +329,9 @@ mod tests {
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);
-        println!("u: {:?}", u);
+        println!("u: {u:?}");
         let unprojected = near_world + u * (far_world - near_world);
-        println!("unprojected: {:?}", unprojected);
+        println!("unprojected: {unprojected:?}");
         // ----
 
         //assert!(reverse_world.abs_diff_eq(&world_pos, 0.05))

@@ -76,8 +76,8 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
                         .unwrap()
                         .insert(RasterLayersDataComponent::default());
 
-                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);
-                    log::info!("tile request started: {}", &coords);
+                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
+                    log::info!("tile request started: {coords}");
 
                     self.kernel
                         .apc()
@@ -144,7 +144,7 @@ pub fn fetch_raster_apc<
                         .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
                 }
                 Err(e) => {
-                    log::error!("{:?}", &e);
+                    log::error!("{e:?}");
 
                     context
                         .send(<T as RasterTransferables>::LayerRasterMissing::build_from(

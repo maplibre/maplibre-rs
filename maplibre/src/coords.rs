@@ -63,7 +63,7 @@ impl fmt::Debug for Quadkey {
         let ZoomLevel(level) = key[0];
         let len = level as usize;
         for part in &self.0[0..len] {
-            write!(f, "{:?}", part)?;
+            write!(f, "{part:?}")?;
         }
         Ok(())
     }
@@ -740,7 +740,7 @@ mod tests {
         let tile = WorldTileCoords::from(tile);
         let p1 = tile.transform_for_zoom(zoom) * TOP_LEFT;
         let p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT;
-        println!("{:?}\n{:?}", p1, p2);
+        println!("{p1:?}\n{p2:?}");
 
         assert_eq!(
             WorldCoords::from((p1.x, p1.y))
@@ -815,7 +815,7 @@ mod tests {
         )
         .iter()
         {
-            println!("{}", tile_coords);
+            println!("{tile_coords}");
         }
     }
 }

@@ -60,7 +60,7 @@ impl<T> Eventually<T> {
     pub fn expect_initialized_mut(&mut self, message: &str) -> &mut T {
         match self {
             Eventually::Initialized(value) => value,
-            Eventually::Uninitialized => panic!("{}", message),
+            Eventually::Uninitialized => panic!("{message}"),
         }
     }
 }

@@ -70,7 +70,7 @@ pub fn validate_project_wgsl() {
                                 "cargo:warning={}{}",
                                 path.to_str().unwrap(),
                                 match err {
-                                    WgslError::ValidationErr(error) => format!(": {:?}", error),
+                                    WgslError::ValidationErr(error) => format!(": {error:?}"),
                                     WgslError::ParserErr { error, location } =>
                                         if let Some(SourceLocation {
                                             line_number,
@@ -78,11 +78,11 @@ pub fn validate_project_wgsl() {
                                             ..
                                         }) = location
                                         {
-                                            format!(":{}:{} {}", line_number, line_position, error)
+                                            format!(":{line_number}:{line_position} {error}")
                                         } else {
                                             error
                                         },
-                                    WgslError::IoErr(error) => format!(": {:?}", error),
+                                    WgslError::IoErr(error) => format!(": {error:?}"),
                                 }
                             );
                             exit(1);
@@ -91,7 +91,7 @@ pub fn validate_project_wgsl() {
                 }
             }
             Err(error) => {
-                println!("cargo:warning={:?}", error);
+                println!("cargo:warning={error:?}");
                 exit(1);
             }
         }

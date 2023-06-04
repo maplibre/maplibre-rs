@@ -102,7 +102,7 @@ impl Schedule {
         let label: Box<dyn StageLabel> = Box::new(label);
         self.stage_order.push(label.clone());
         let prev = self.stages.insert(label.clone(), Box::new(stage));
-        assert!(prev.is_none(), "Stage already exists: {:?}.", label);
+        assert!(prev.is_none(), "Stage already exists: {label:?}.");
         self
     }
 
@@ -138,11 +138,11 @@ impl Schedule {
             .enumerate()
             .find(|(_i, stage_label)| &***stage_label == target)
             .map(|(i, _)| i)
-            .unwrap_or_else(|| panic!("Target stage does not exist: {:?}.", target));
+            .unwrap_or_else(|| panic!("Target stage does not exist: {target:?}."));
 
         self.stage_order.insert(target_index + 1, label.clone());
         let prev = self.stages.insert(label.clone(), Box::new(stage));
-        assert!(prev.is_none(), "Stage already exists: {:?}.", label);
+        assert!(prev.is_none(), "Stage already exists: {label:?}.");
         self
     }
 
@@ -172,11 +172,11 @@ impl Schedule {
             .enumerate()
             .find(|(_i, stage_label)| &***stage_label == target)
             .map(|(i, _)| i)
-            .unwrap_or_else(|| panic!("Target stage does not exist: {:?}.", target));
+            .unwrap_or_else(|| panic!("Target stage does not exist: {target:?}."));
 
         self.stage_order.insert(target_index, label.clone());
         let prev = self.stages.insert(label.clone(), Box::new(stage));
-        assert!(prev.is_none(), "Stage already exists: {:?}.", label);
+        assert!(prev.is_none(), "Stage already exists: {label:?}.");
         self
     }
 
@@ -210,7 +210,7 @@ impl Schedule {
         func: F,
     ) -> &mut Self {
         let stage = self.get_stage_mut::<T>(&label).unwrap_or_else(move || {
-            panic!("stage '{:?}' does not exist or is the wrong type", label)
+            panic!("stage '{label:?}' does not exist or is the wrong type")
         });
         func(stage);
         self
@@ -296,10 +296,7 @@ impl Schedule {
         let stage = self
             .get_stage_mut::<SystemStage>(&stage_label)
             .unwrap_or_else(move || {
-                panic!(
-                    "Stage '{:?}' does not exist or is not a SystemStage",
-                    stage_label
-                )
+                panic!("Stage '{stage_label:?}' does not exist or is not a SystemStage")
             });
         stage.add_system(system);
         self

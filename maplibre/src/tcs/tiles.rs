@@ -88,10 +88,7 @@ impl<'w> TileSpawnResult<'w> {
         if let Some(entry) = coords.build_quad_key().map(|key| components.entry(key)) {
             match entry {
                 btree_map::Entry::Vacant(_entry) => {
-                    panic!(
-                        "Can not add a component at {}. Entity does not exist.",
-                        coords
-                    )
+                    panic!("Can not add a component at {coords}. Entity does not exist.",)
                 }
                 btree_map::Entry::Occupied(mut entry) => {
                     entry.get_mut().push(UnsafeCell::new(Box::new(component)));

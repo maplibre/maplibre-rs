@@ -174,7 +174,7 @@ fn upload_tesselated_layer(
                 })
                 .collect::<Vec<_>>();
 
-            log::debug!("Allocating geometry at {}", &coords);
+            log::debug!("Allocating geometry at {coords}");
             buffer_pool.allocate_layer_geometry(
                 queue,
                 *coords,
