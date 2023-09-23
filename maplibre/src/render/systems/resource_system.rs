@@ -38,13 +38,12 @@ impl System for ResourceSystem {
             ..
         }: &mut MapContext,
     ) {
-        let Some((
-            tile_view_pattern,
-            mask_pipeline
-        )) = world.resources.query_mut::<(
+        let Some((tile_view_pattern, mask_pipeline)) = world.resources.query_mut::<(
             &mut Eventually<WgpuTileViewPattern>,
             &mut Eventually<MaskPipeline>,
-        )>() else { return; };
+        )>() else {
+            return;
+        };
 
         let surface = &mut state.surface;
 
