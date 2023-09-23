@@ -465,7 +465,7 @@ mod tests {
             backends,
             dx12_shader_compiler: Default::default(),
         });
-        let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
+        let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, None)
             .await
             .expect("Unable to initialize adapter");
 
