@@ -19,9 +19,10 @@ impl<P: PhaseItem> RenderCommand<P> for SetVectorTilePipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(pipeline)) = world
-            .resources
-            .get::<Eventually<VectorPipeline>>() else { return RenderCommandResult::Failure; };
+        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<VectorPipeline>>()
+        else {
+            return RenderCommandResult::Failure;
+        };
 
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
@@ -35,19 +36,25 @@ impl RenderCommand<LayerItem> for DrawVectorTile {
         item: &LayerItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some((
-            Initialized(buffer_pool),
-            Initialized(tile_view_pattern),
-        )) = world.resources.query::<(
-            &Eventually<VectorBufferPool>,
-            &Eventually<WgpuTileViewPattern>
-        )>() else { return RenderCommandResult::Failure; };
+        let Some((Initialized(buffer_pool), Initialized(tile_view_pattern))) =
+            world.resources.query::<(
+                &Eventually<VectorBufferPool>,
+                &Eventually<WgpuTileViewPattern>,
+            )>()
+        else {
+            return RenderCommandResult::Failure;
+        };
 
-        let Some(vector_layers) = buffer_pool.index().get_layers(item.tile.coords) else { return RenderCommandResult::Failure; };
+        let Some(vector_layers) = buffer_pool.index().get_layers(item.tile.coords) else {
+            return RenderCommandResult::Failure;
+        };
 
         let Some(entry) = vector_layers
             .iter()
-            .find(|entry| entry.style_layer.id == item.style_layer) else { return RenderCommandResult::Failure; };
+            .find(|entry| entry.style_layer.id == item.style_layer)
+        else {
+            return RenderCommandResult::Failure;
+        };
 
         let source_shape = &item.source_shape;
 

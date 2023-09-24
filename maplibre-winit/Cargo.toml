@@ -7,6 +7,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 keywords.workspace = true
+categories.workspace = true
 authors.workspace = true
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]

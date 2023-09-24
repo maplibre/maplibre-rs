@@ -28,15 +28,15 @@ pub enum WebError {
 impl From<JsValue> for WebError {
     fn from(value: JsValue) -> Self {
         if let Some(error) = value.dyn_ref::<TypeError>() {
-            let Some(message) = error
-                .message()
-                .as_string() else { return WebError::InvalidMessage; };
+            let Some(message) = error.message().as_string() else {
+                return WebError::InvalidMessage;
+            };
 
             WebError::TypeError(message.into())
         } else if let Some(error) = value.dyn_ref::<js_sys::Error>() {
-            let Some(message) = error
-                .message()
-                .as_string() else { return WebError::InvalidMessage; };
+            let Some(message) = error.message().as_string() else {
+                return WebError::InvalidMessage;
+            };
 
             WebError::GenericError(message.into())
         } else {

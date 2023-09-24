@@ -16,13 +16,16 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
         mask_phase,
-        layer_item_phase
+        layer_item_phase,
     )) = world.resources.query_mut::<(
         &mut Eventually<WgpuTileViewPattern>,
         &mut Eventually<VectorBufferPool>,
         &mut RenderPhase<TileMaskItem>,
         &mut RenderPhase<LayerItem>,
-    )>() else { return; };
+    )>()
+    else {
+        return;
+    };
 
     let buffer_pool_index = buffer_pool.index();
 

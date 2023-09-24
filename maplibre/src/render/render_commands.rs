@@ -18,7 +18,9 @@ impl<P: PhaseItem> RenderCommand<P> for SetMaskPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<MaskPipeline>>() else { return RenderCommandResult::Failure; };
+        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<MaskPipeline>>() else {
+            return RenderCommandResult::Failure;
+        };
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
     }
@@ -31,9 +33,11 @@ impl RenderCommand<TileMaskItem> for DrawMask {
         item: &TileMaskItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(tile_view_pattern)) = world
-            .resources
-            .get::<Eventually<WgpuTileViewPattern>>() else { return RenderCommandResult::Failure; };
+        let Some(Initialized(tile_view_pattern)) =
+            world.resources.get::<Eventually<WgpuTileViewPattern>>()
+        else {
+            return RenderCommandResult::Failure;
+        };
 
         let tile_mask = &item.source_shape;
 

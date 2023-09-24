@@ -27,7 +27,10 @@ pub fn resource_system(
 ) {
     let Some(raster_resources) = world
         .resources
-        .query_mut::<&mut Eventually<RasterResources>>() else { return; };
+        .query_mut::<&mut Eventually<RasterResources>>()
+    else {
+        return;
+    };
 
     raster_resources.initialize(|| {
         let shader = shaders::RasterTileShader {

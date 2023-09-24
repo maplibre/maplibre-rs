@@ -4,10 +4,12 @@
 
 set shell := ["bash", "-c"]
 
-#  Also change the version in android/gradle/lib/build.gradle
+# Keep this in sync with `android/gradle/lib/build.gradle`
+export NIGHTLY_TOOLCHAIN := "nightly-2023-09-23"
 
-export NIGHTLY_TOOLCHAIN := "nightly-2023-03-29"
-export STABLE_TOOLCHAIN := "1.65"
+# Keep this in sync with `rust-toolchain.toml` and `Cargo.toml`.
+# Make sure the above is newer than this.
+export STABLE_TOOLCHAIN := "1.72.1"
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
 

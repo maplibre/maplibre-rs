@@ -18,9 +18,9 @@ impl<P: PhaseItem> RenderCommand<P> for SetDebugPipeline {
         _item: &P,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(pipeline)) = world
-            .resources
-            .get::<Eventually<DebugPipeline>>() else { return RenderCommandResult::Failure; };
+        let Some(Initialized(pipeline)) = world.resources.get::<Eventually<DebugPipeline>>() else {
+            return RenderCommandResult::Failure;
+        };
 
         pass.set_render_pipeline(pipeline);
         RenderCommandResult::Success
@@ -34,9 +34,11 @@ impl RenderCommand<TileDebugItem> for DrawDebugOutline {
         item: &TileDebugItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(Initialized(tile_view_pattern)) = world
-            .resources
-            .get::<Eventually<WgpuTileViewPattern>>() else { return RenderCommandResult::Failure; };
+        let Some(Initialized(tile_view_pattern)) =
+            world.resources.get::<Eventually<WgpuTileViewPattern>>()
+        else {
+            return RenderCommandResult::Failure;
+        };
 
         let source_shape = &item.source_shape;
 
