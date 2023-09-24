@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["cleanup_system",""]]};
+window.SIDEBAR_ITEMS = {"fn":["cleanup_system"]};

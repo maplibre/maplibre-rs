@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["RenderError",""]]};
+window.SIDEBAR_ITEMS = {"enum":["RenderError"]};

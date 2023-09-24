@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["run_multithreaded",""]],"mod":[["http_client",""],["scheduler",""],["trace",""]],"struct":[["ReqwestOffscreenKernelEnvironment",""]]};
+window.SIDEBAR_ITEMS = {"fn":["run_multithreaded"],"mod":["http_client","scheduler","trace"],"struct":["ReqwestOffscreenKernelEnvironment"]};

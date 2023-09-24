@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Eventually","Wrapper around a resource which can be initialized or uninitialized. Uninitialized resourced can be initialized by calling [`Eventually::initialize()`]."]],"trait":[["HasChanged",""]]};
+window.SIDEBAR_ITEMS = {"enum":["Eventually"],"trait":["HasChanged"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["MIN_WEBGL_BUFFER_SIZE","Minimum WebGPU buffer size"]],"fn":[["run_multithreaded",""]],"mod":[["http_client","Http client for non-web targets."],["noweb","Module which is used target platform is not web related."],["scheduler","Scheduler for non-web targets."],["trace",""]],"struct":[["ReqwestOffscreenKernelEnvironment",""]]};
+window.SIDEBAR_ITEMS = {"constant":["MIN_WEBGL_BUFFER_SIZE"],"fn":["run_multithreaded"],"mod":["http_client","noweb","scheduler","trace"],"struct":["ReqwestOffscreenKernelEnvironment"]};

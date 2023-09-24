@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["CHILDREN_SEARCH_DEPTH",""],["DEFAULT_TILE_VIEW_PATTERN_SIZE",""]],"struct":[["BackingBuffer",""],["TileViewPattern","The tile mask pattern assigns each tile a value which can be used for stencil testing."]]};
+window.SIDEBAR_ITEMS = {"constant":["CHILDREN_SEARCH_DEPTH","DEFAULT_TILE_VIEW_PATTERN_SIZE"],"struct":["BackingBuffer","TileViewPattern"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["zero_tessellator","Tessellator implementation."]],"struct":[["OverAlignedVertexBuffer","Vertex buffer which includes additional padding to fulfill the `wgpu::COPY_BUFFER_ALIGNMENT`."],["VertexConstructor","Constructor for Fill and Stroke vertices."]],"type":[["IndexDataType","Vertex buffers index data type."]]};
+window.SIDEBAR_ITEMS = {"mod":["zero_tessellator"],"struct":["OverAlignedVertexBuffer","VertexConstructor"],"type":["IndexDataType"]};

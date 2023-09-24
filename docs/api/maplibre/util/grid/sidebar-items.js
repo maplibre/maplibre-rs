@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["google_mercator",""],["tile_coordinates_bavaria","Returns coordinates for tiles within bavaria according to the specified grid. The grid is responsible for defining the coordinate system. For example whether Slippy map tilenames (also known as XYZ) or TMS is used."]]};
+window.SIDEBAR_ITEMS = {"fn":["google_mercator","tile_coordinates_bavaria"]};

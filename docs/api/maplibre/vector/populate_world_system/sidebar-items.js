@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["PopulateWorldSystem",""]]};
+window.SIDEBAR_ITEMS = {"struct":["PopulateWorldSystem"]};

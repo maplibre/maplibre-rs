@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Style","Stores the style for a multi-layered map."]]};
+window.SIDEBAR_ITEMS = {"struct":["Style"]};

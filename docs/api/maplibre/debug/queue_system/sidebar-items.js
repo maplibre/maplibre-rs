@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["queue_system",""]]};
+window.SIDEBAR_ITEMS = {"fn":["queue_system"]};

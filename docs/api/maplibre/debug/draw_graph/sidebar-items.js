@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["NAME",""]],"mod":[["input",""],["node",""]]};
+window.SIDEBAR_ITEMS = {"constant":["NAME"],"mod":["input","node"]};

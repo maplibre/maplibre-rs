@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["io","Re-export of the io module."],["tessellation","Re-export of the tessellation module."]]};
+window.SIDEBAR_ITEMS = {"mod":["io","tessellation"]};

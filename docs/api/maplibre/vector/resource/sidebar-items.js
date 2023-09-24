@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["buffer_pool","A ring-buffer like pool of buffers."]]};
+window.SIDEBAR_ITEMS = {"mod":["buffer_pool"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["RasterResampling",""]],"struct":[["RasterLayer",""]]};
+window.SIDEBAR_ITEMS = {"enum":["RasterResampling"],"struct":["RasterLayer"]};

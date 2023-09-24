@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["fetch_vector_apc",""]],"struct":[["RequestSystem",""]]};
+window.SIDEBAR_ITEMS = {"fn":["fetch_vector_apc"],"struct":["RequestSystem"]};

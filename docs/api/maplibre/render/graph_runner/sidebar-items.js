@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["RenderGraphRunnerError",""]],"struct":[["RenderGraphRunner",""]]};
+window.SIDEBAR_ITEMS = {"enum":["RenderGraphRunnerError"],"struct":["RenderGraphRunner"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["apc",""],["geometry_index","Geometry index."],["scheduler","Scheduling."],["source_client","HTTP client."],["source_type",""]],"struct":[["RawLayer","Layers are described in section 4.1 of the specification"]]};
+window.SIDEBAR_ITEMS = {"mod":["apc","geometry_index","scheduler","source_client","source_type"],"struct":["RawLayer"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Kernel","Holds references to core constructs of maplibre. Based on the compile-time initialization different implementations for handling windows, asynchronous work, or data sources are provided through a [`Kernel`]."],["KernelBuilder","A convenient builder for Kernels."]]};
+window.SIDEBAR_ITEMS = {"struct":["Kernel","KernelBuilder"]};

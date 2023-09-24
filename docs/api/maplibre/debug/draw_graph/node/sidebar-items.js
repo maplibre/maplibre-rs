@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["DEBUG_PASS",""],["MAIN_PASS",""]]};
+window.SIDEBAR_ITEMS = {"constant":["DEBUG_PASS","MAIN_PASS"]};

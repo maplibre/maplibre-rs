@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["GeomType","GeomType is described in section 4.3.4 of the specification"]],"struct":[["Feature","Features are described in section 4.2 of the specification"],["Layer","Layers are described in section 4.1 of the specification"],["Value","Variant type encoding The use of values is described in section 4.1 of the specification"]]};
+window.SIDEBAR_ITEMS = {"enum":["GeomType"],"struct":["Feature","Layer","Value"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["upload_raster_layer",""],["upload_system",""]]};
+window.SIDEBAR_ITEMS = {"fn":["upload_raster_layer","upload_system"]};

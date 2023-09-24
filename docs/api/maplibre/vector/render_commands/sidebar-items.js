@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["DrawVectorTile",""],["SetVectorTilePipeline",""]],"type":[["DrawVectorTiles",""]]};
+window.SIDEBAR_ITEMS = {"struct":["DrawVectorTile","SetVectorTilePipeline"],"type":["DrawVectorTiles"]};

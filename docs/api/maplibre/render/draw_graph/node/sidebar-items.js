@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["MAIN_PASS",""]]};
+window.SIDEBAR_ITEMS = {"constant":["MAIN_PASS"]};

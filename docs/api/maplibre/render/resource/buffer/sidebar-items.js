@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["BackingBufferDescriptor",""]]};
+window.SIDEBAR_ITEMS = {"struct":["BackingBufferDescriptor"]};

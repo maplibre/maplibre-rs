@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["TokioScheduler","Multi-threading with Tokio."]]};
+window.SIDEBAR_ITEMS = {"struct":["TokioScheduler"]};

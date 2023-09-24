@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["TextureView","Describes a [`TextureView`]."]],"struct":[["Texture",""]]};
+window.SIDEBAR_ITEMS = {"enum":["TextureView"],"struct":["Texture"]};

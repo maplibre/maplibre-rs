@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["resource_system",""]]};
+window.SIDEBAR_ITEMS = {"fn":["resource_system"]};

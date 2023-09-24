@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":[["impl_resource_query",""]],"struct":[["Resources",""]],"trait":[["Resource",""],["ResourceQuery",""],["ResourceQueryMut",""],["ResourceQueryUnsafe",""]]};
+window.SIDEBAR_ITEMS = {"macro":["impl_resource_query"],"struct":["Resources"],"trait":["Resource","ResourceQuery","ResourceQueryMut","ResourceQueryUnsafe"]};

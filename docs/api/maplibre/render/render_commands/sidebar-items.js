@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["DrawMask",""],["SetMaskPipeline",""]],"type":[["DrawMasks",""]]};
+window.SIDEBAR_ITEMS = {"struct":["DrawMask","SetMaskPipeline"],"type":["DrawMasks"]};

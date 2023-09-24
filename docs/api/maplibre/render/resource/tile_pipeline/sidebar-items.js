@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["TilePipeline",""]]};
+window.SIDEBAR_ITEMS = {"struct":["TilePipeline"]};

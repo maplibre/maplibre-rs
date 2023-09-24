@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["DebugPassNode","Pass which renders debug information on top of the map."]]};
+window.SIDEBAR_ITEMS = {"struct":["DebugPassNode"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["SendEventError","When sending events to an event loop errors can occur."]],"trait":[["EventLoop",""],["EventLoopConfig",""],["EventLoopProxy",""]]};
+window.SIDEBAR_ITEMS = {"enum":["SendEventError"],"trait":["EventLoop","EventLoopConfig","EventLoopProxy"]};

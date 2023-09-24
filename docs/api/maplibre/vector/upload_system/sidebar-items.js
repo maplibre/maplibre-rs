@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["upload_system",""],["upload_tesselated_layer",""]]};
+window.SIDEBAR_ITEMS = {"fn":["upload_system","upload_tesselated_layer"]};

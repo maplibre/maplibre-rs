@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["RenderPipelineDescriptor",""]],"trait":[["RenderPipeline",""]]};
+window.SIDEBAR_ITEMS = {"struct":["RenderPipelineDescriptor"],"trait":["RenderPipeline"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["MAIN_PASS_DEPENDENCIES",""],["MAIN_PASS_DRIVER",""]]};
+window.SIDEBAR_ITEMS = {"constant":["MAIN_PASS_DEPENDENCIES","MAIN_PASS_DRIVER"]};

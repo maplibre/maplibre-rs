@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Source",""],["TileAddressingScheme","Tiles can be positioned using either the xyz coordinates or the TMS (Tile Map Service) protocol."]],"struct":[["VectorSource","Source properties for tiles or rasters."]],"type":[["TileJSONUrl","String url to a JSON tile."],["TileUrl","String url to a tile."]]};
+window.SIDEBAR_ITEMS = {"enum":["Source","TileAddressingScheme"],"struct":["VectorSource"],"type":["TileJSONUrl","TileUrl"]};

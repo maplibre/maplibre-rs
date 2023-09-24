@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["raster",""]]};
+window.SIDEBAR_ITEMS = {"mod":["raster"]};
