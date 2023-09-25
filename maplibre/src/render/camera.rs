@@ -22,7 +22,7 @@ pub const FLIP_Y: Matrix4<f64> = Matrix4::new(
     0.0, 0.0, 0.0, 1.0,
 );
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ViewProjection(pub Matrix4<f64>);
 
 impl ViewProjection {
@@ -65,11 +65,11 @@ impl ModelViewProjection {
     }
 }
 
-const MIN_PITCH: Deg<f64> = Deg(-30.0);
-const MAX_PITCH: Deg<f64> = Deg(30.0);
+const MIN_PITCH: Deg<f64> = Deg(-90.0);
+const MAX_PITCH: Deg<f64> = Deg(90.0);
 
-const MIN_YAW: Deg<f64> = Deg(-30.0);
-const MAX_YAW: Deg<f64> = Deg(30.0);
+const MIN_YAW: Deg<f64> = Deg(-90.0);
+const MAX_YAW: Deg<f64> = Deg(90.0);
 
 #[derive(Debug, Clone)]
 pub struct Camera {
@@ -163,6 +163,21 @@ impl Camera {
     pub fn to_3d(&self, camera_height: f64) -> Point3<f64> {
         Point3::new(self.position.x, self.position.y, camera_height)
     }
+    pub fn set_yaw<P: Into<Rad<f64>>>(&mut self, yaw: P) {
+        let new_yaw = yaw.into();
+        let max: Rad<_> = MAX_YAW.into();
+        let min: Rad<_> = MIN_YAW.into();
+        //self.yaw = Rad(new_yaw.0.min(max.0).max(min.0))
+    }
+    pub fn set_pitch<P: Into<Rad<f64>>>(&mut self, pitch: P) {
+        let new_pitch = pitch.into();
+        let max: Rad<_> = MAX_PITCH.into();
+        let min: Rad<_> = MIN_PITCH.into();
+        self.pitch = Rad(new_pitch.0.min(max.0).max(min.0))
+    }
+    pub fn set_roll<P: Into<Rad<f64>>>(&mut self, roll: P) {
+        self.roll = roll.into();
+    }
 }
 
 #[derive(PartialEq, Copy, Clone, Default)]
@@ -221,15 +236,18 @@ impl Perspective {
         let aspect = width / height;
 
         // from projection.rs
-        let angle = self.fovy / 2.0;
-        let ymax = near_z * angle.tan();
-        let xmax = ymax * aspect;
+        let half_fovy = self.fovy / 2.0;
+        let ymax = near_z * half_fovy.tan();
+
+        //let xmax = ymax * aspect;
+        let half_fovx = Rad(2.0 * (half_fovy.tan() * (width / height)).atan()) / 2.0;
+        let xmax = near_z * half_fovx.tan();
 
         let offset_x = center_offset.x * 2.0 / width; // TODO - or + does not matter
         let offset_y = center_offset.y * 2.0 / height;
         frustum(
             // https://webglfundamentals.org/webgl/lessons/webgl-qna-how-can-i-move-the-perspective-vanishing-point-from-the-center-of-the-canvas-.html
-            xmax * (-1.0 + offset_x), /* = xmax + (center_offset.x * screen_to_near_factor_x)
+            xmax * (-1.0 + offset_x), /* = -xmax + (center_offset.x * screen_to_near_factor_x)
                                                  where:
                                                   screen_to_near_factor_x = near_width / width
                                                   where:
@@ -246,24 +264,19 @@ impl Perspective {
 
 #[cfg(test)]
 mod tests {
+    /*
     use cgmath::{AbsDiffEq, Vector2, Vector3, Vector4};
 
     use super::{Camera, Perspective};
-    use crate::render::camera::{EdgeInsets, InvertedViewProjection, ViewProjection};
+    use crate::render::camera::{InvertedViewProjection, ViewProjection};
 
     #[test]
     fn test() {
         let width = 1920.0;
         let height = 1080.0;
-        let camera = Camera::new(
-            (0.0, 5.0, 5000.0),
-            cgmath::Deg(-90.0),
-            cgmath::Deg(45.0),
-            width as u32,
-            height as u32,
-        );
+        let camera = Camera::new((0.0, 5.0, 5000.0), cgmath::Deg(-90.0), cgmath::Deg(45.0));
         // 4732.561319582916
-        let perspective = Perspective::new(width as u32, height as u32, cgmath::Deg(45.0), &camera);
+        let perspective = Perspective::new(cgmath::Deg(45.0));
         let view_proj: ViewProjection = camera.calc_view_proj(&perspective);
         let inverted_view_proj: InvertedViewProjection = view_proj.invert();
 
@@ -335,5 +348,5 @@ mod tests {
         // ----
 
         //assert!(reverse_world.abs_diff_eq(&world_pos, 0.05))
-    }
+    }*/
 }

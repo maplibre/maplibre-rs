@@ -184,7 +184,7 @@ xcodebuild-xcframework:
     cat "$XC_FRAMEWORK_PATH/Info.plist"
 
 book-serve:
-  cd docs && ./generate-summary.sh && mdbook serve
+    cd docs && ./generate-summary.sh && mdbook serve
 
 # language=bash
 extract-tiles:

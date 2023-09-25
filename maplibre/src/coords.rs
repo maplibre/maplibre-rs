@@ -729,6 +729,7 @@ mod tests {
         coords::{
             Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
         },
+        render::tile_view_pattern::DEFAULT_TILE_SIZE,
         style::source::TileAddressingScheme,
         util::math::Aabb2,
     };

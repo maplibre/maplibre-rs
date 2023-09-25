@@ -46,7 +46,7 @@ impl InputController {
             pinch_handler: PinchHandler::new(),
             pan_handler: PanHandler::new(),
             zoom_handler: ZoomHandler::new(zoom_sensitivity),
-            camera_handler: CameraHandler::new(speed, sensitivity),
+            camera_handler: CameraHandler::new(sensitivity),
             shift_handler: ShiftHandler::new(speed, sensitivity),
             query_handler: QueryHandler::new(),
             debug_handler: DebugHandler::new(),
@@ -69,6 +69,8 @@ impl InputController {
                     .process_window_position(&Vector2::from(position), false);
                 self.zoom_handler
                     .process_window_position(&Vector2::from(position), false);
+                self.camera_handler
+                    .process_window_position(&Vector2::from(position), false);
                 true
             }
             WindowEvent::KeyboardInput {
@@ -81,17 +83,17 @@ impl InputController {
                 ..
             } => {
                 if !self.shift_handler.process_key_press(*key, *state) {
-                    if !self.camera_handler.process_key_press(*key, *state) {
+                    if !self.debug_handler.process_key_press(*key, *state) {
                         if !self.zoom_handler.process_key_press(*key, *state) {
-                            self.debug_handler.process_key_press(*key, *state)
-                        } else {
                             false
+                        } else {
+                            true
                         }
                     } else {
-                        false
+                        true
                     }
                 } else {
-                    false
+                    true
                 }
             }
             WindowEvent::Touch(touch) => match touch.phase {
@@ -115,6 +117,8 @@ impl InputController {
                         .process_window_position(&Vector2::from(position), true);
                     self.zoom_handler
                         .process_window_position(&Vector2::from(position), true);
+                    self.camera_handler
+                        .process_window_position(&Vector2::from(position), true);
                     true
                 }
                 TouchPhase::Cancelled => false,
@@ -126,7 +130,9 @@ impl InputController {
             }
             WindowEvent::MouseInput { button, state, .. } => {
                 self.pan_handler.process_mouse_key_press(button, state);
-                self.query_handler.process_mouse_key_press(button, state)
+                self.query_handler.process_mouse_key_press(button, state);
+                self.camera_handler.process_mouse_key_press(button, state);
+                true
             }
             _ => false,
         }
