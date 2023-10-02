@@ -65,11 +65,11 @@ impl ModelViewProjection {
     }
 }
 
-const MIN_PITCH: Deg<f64> = Deg(-90.0);
-const MAX_PITCH: Deg<f64> = Deg(90.0);
+const MIN_PITCH: Deg<f64> = Deg(-30.0);
+const MAX_PITCH: Deg<f64> = Deg(30.0);
 
-const MIN_YAW: Deg<f64> = Deg(-90.0);
-const MAX_YAW: Deg<f64> = Deg(90.0);
+const MIN_YAW: Deg<f64> = Deg(-30.0);
+const MAX_YAW: Deg<f64> = Deg(30.0);
 
 #[derive(Debug, Clone)]
 pub struct Camera {
@@ -167,7 +167,7 @@ impl Camera {
         let new_yaw = yaw.into();
         let max: Rad<_> = MAX_YAW.into();
         let min: Rad<_> = MIN_YAW.into();
-        //self.yaw = Rad(new_yaw.0.min(max.0).max(min.0))
+        self.yaw = Rad(new_yaw.0.min(max.0).max(min.0))
     }
     pub fn set_pitch<P: Into<Rad<f64>>>(&mut self, pitch: P) {
         let new_pitch = pitch.into();
