@@ -131,6 +131,10 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         }
                     }
                     Event::RedrawRequested(_) => {
+                        if !map.has_renderer() {
+                            return;
+                        }
+
                         let now = Instant::now();
                         let dt = now - last_render_time;
                         last_render_time = now;
@@ -153,6 +157,8 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                     }
                     Event::Suspended => {
                         // FIXME unimplemented!()
+                        log::info!("Suspending and dropping render state.");
+                        map.remove_renderer()
                     }
                     Event::Resumed => {
                         // FIXME unimplemented!()

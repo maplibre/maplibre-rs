@@ -67,6 +67,7 @@ js-sys = "0.3.64"
 log = "0.4.20"
 lyon = { version = "1.0.1", features = [] }
 naga = { version = "0.13.0", features = ["wgsl-in"] }
+android-activity = "0.4.3"
 android_logger = "0.13.3"
 png = { version = "0.17.10" }
 raw-window-handle = "0.5.2"

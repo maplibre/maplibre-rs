@@ -8,12 +8,14 @@ use maplibre_winit::run_headed_map;
 compile_error!("android works only on android.");
 
 #[no_mangle]
-pub fn android_main() {
-    android_logger::init_once(android_logger::Config::default());
-    env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
-
+pub fn android_main(app: android_activity::AndroidApp) {
+    android_logger::init_once(
+        android_logger::Config::default().with_max_level(log::LevelFilter::Info),
+    );
+    log::log!(Level::Warn, "maplibre warn");
+    log::log!(Level::Info, "maplibre info");
     // TODO: Maybe requires: Some(Backends::VULKAN)
-    run_headed_map(None);
+    run_headed_map(None, app);
 }
 
 #[no_mangle]

@@ -12,15 +12,15 @@ use crate::{
 /// A Kernel lives as long as a [Map](crate::map::Map) usually. It is shared through out various
 /// components of the maplibre library.
 pub struct Kernel<E: Environment> {
-    map_window_config: E::MapWindowConfig,
+    map_window_config: Option<E::MapWindowConfig>,
     apc: E::AsyncProcedureCall,
     scheduler: E::Scheduler,
     source_client: SourceClient<E::HttpClient>,
 }
 
 impl<E: Environment> Kernel<E> {
-    pub fn map_window_config(&self) -> &E::MapWindowConfig {
-        &self.map_window_config
+    pub fn take_map_window_config(&mut self) -> E::MapWindowConfig {
+        self.map_window_config.take().unwrap()
     }
 
     pub fn apc(&self) -> &E::AsyncProcedureCall {
@@ -85,7 +85,7 @@ impl<E: Environment> KernelBuilder<E> {
             scheduler: self.scheduler.unwrap(), // TODO: Remove unwrap
             apc: self.apc.unwrap(),             // TODO: Remove unwrap
             source_client: SourceClient::new(HttpSourceClient::new(self.http_client.unwrap())), // TODO: Remove unwrap
-            map_window_config: self.map_window_config.unwrap(), // TODO: Remove unwrap
+            map_window_config: self.map_window_config, // TODO: Remove unwrap
         }
     }
 }

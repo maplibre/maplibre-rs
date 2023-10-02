@@ -27,7 +27,7 @@ pub trait HeadedMapWindow: MapWindow {
 pub trait MapWindowConfig: 'static {
     type MapWindow: MapWindow;
 
-    fn create(&self) -> Self::MapWindow;
+    fn create(self) -> Self::MapWindow;
 }
 
 /// Window size with a width and an height in pixels.
