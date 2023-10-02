@@ -18,7 +18,10 @@ tokio.workspace = true
 #winit.wokrspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
-winit = { workspace = true, features = ["x11", "wayland", "android-native-activity"] }
+winit = { workspace = true, features = ["x11", "wayland"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+winit = { workspace = true, features = ["android-native-activity"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { workspace = true, features = ["Window"] }

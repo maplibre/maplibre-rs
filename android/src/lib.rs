@@ -9,7 +9,7 @@ compile_error!("android works only on android.");
 
 #[no_mangle]
 pub fn android_main() {
-    android_logger::init_once(android_logger::Config::default().with_min_level(Level::Info));
+    android_logger::init_once(android_logger::Config::default());
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
     // TODO: Maybe requires: Some(Backends::VULKAN)
