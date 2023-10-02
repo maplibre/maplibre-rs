@@ -91,6 +91,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                                     E::OffscreenKernelEnvironment,
                                 >>::Context,
                             >,
+                            self.kernel.offscreen_kernel_environment_config(),
                         )
                         .unwrap(); // TODO: Remove unwrap
                 }

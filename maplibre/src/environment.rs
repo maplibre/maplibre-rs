@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::{
     io::{
         apc::AsyncProcedureCall,
@@ -27,9 +29,15 @@ pub trait Environment: 'static {
     type OffscreenKernelEnvironment: OffscreenKernelEnvironment;
 }
 
+#[derive(Clone)]
+pub struct OffscreenKernelEnvironmentConfig {
+    pub cache_path: PathBuf,
+}
+
 pub trait OffscreenKernelEnvironment: Send + Sync + 'static {
     type HttpClient: HttpClient;
-    fn create() -> Self;
+
+    fn create(config: OffscreenKernelEnvironmentConfig) -> Self;
 
     fn source_client(&self) -> SourceClient<Self::HttpClient>;
 }
