@@ -264,6 +264,92 @@ impl ViewState {
         furthest_distance
     }
 
+    pub fn get_intersection_time(
+        ray_origin: Vector3<f64>,
+        ray_direction: Vector3<f64>,
+        plane_origin: Vector3<f64>,
+        plane_normal: Vector3<f64>,
+    ) -> f64 {
+        let m = plane_origin - ray_origin;
+        let distance = (m).dot(plane_normal);
+
+        let approach_speed = ray_direction.dot(plane_normal);
+
+        println!("d: {}", distance);
+        println!("a: {}", approach_speed);
+
+        // Returns an infinity if the ray is
+        // parallel to the plane and never intersects,
+        // or NaN if the ray is in the plane
+        // and intersects everywhere.
+        return distance / approach_speed;
+
+        // Otherwise returns t such that
+        // ray_origin + t * rayDirection
+        // is in the plane, to within rounding error.
+    }
+
+    pub fn furthest_distance_ray(
+        &self,
+        camera_height: f64,
+        center_offset: Point2<f64>,
+        camera_matrix: Matrix4<f64>,
+        point2: Point2<f64>,
+    ) -> f64 {
+        let fovy = self.perspective.fovy();
+        let half_fovy = fovy / 2.0;
+        let width = self.width;
+        let height = self.height;
+        let aspect = width / height;
+
+        let mut ray1 = Vector4::new(1.0 * aspect * half_fovy.tan(), half_fovy.tan(), 1.0, 1.0);
+        let mut ray2 = Vector4::new(-1.0 * aspect * half_fovy.tan(), half_fovy.tan(), 1.0, 1.0);
+        let mut ray3 = Vector4::new(1.0 * aspect * half_fovy.tan(), -half_fovy.tan(), 1.0, 1.0);
+        let mut ray4 = Vector4::new(-1.0 * aspect * half_fovy.tan(), -half_fovy.tan(), 1.0, 1.0);
+
+        //let ray_origin = camera_matrix * Vector4::new(0.0, 0.0, 0.0, 1.0);
+        let ray_origin = Vector4::new(-point2.x, -point2.y, -camera_height, 1.0);
+
+        //let plane_origin = Vector3::new(0.0, 0.0, 0.0);
+        //let plane_normal = Vector3::new(0.0, 0.0, 1.0);
+
+        let pt = Matrix4::from_angle_x(self.camera.get_pitch())
+            * Matrix4::from_angle_y(self.camera.get_yaw())
+            * Matrix4::from_angle_z(self.camera.get_roll());
+
+        let plane_origin = Vector3::new(-point2.x, -point2.y, 0.0);
+        //let plane_normal = Vector4::new(-point2.x, -point2.y, 1.0, 1.0);
+        let plane_normal = pt * Vector4::new(0.0, 0.0, 1.0, 1.0);
+
+        let t1 = Self::get_intersection_time(
+            ray_origin.truncate(),
+            ray1.truncate(),
+            plane_origin,
+            plane_normal.truncate(),
+        );
+        let t2 = Self::get_intersection_time(
+            ray_origin.truncate(),
+            ray2.truncate(),
+            plane_origin,
+            plane_normal.truncate(),
+        );
+        let t3 = Self::get_intersection_time(
+            ray_origin.truncate(),
+            ray3.truncate(),
+            plane_origin,
+            plane_normal.truncate(),
+        );
+        let t4 = Self::get_intersection_time(
+            ray_origin.truncate(),
+            ray4.truncate(),
+            plane_origin,
+            plane_normal.truncate(),
+        );
+        let r = t2.max(t1).max(t3).max(t4) - 15.0;
+        println!("{}", r);
+        r
+    }
+
     /// This function matches how maplibre-gl-js implements perspective and cameras at the time
     /// of the mapbox -> maplibre fork: [src/geo/transform.ts#L680](https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L680)
     #[tracing::instrument(skip_all)]
@@ -277,8 +363,16 @@ impl ViewState {
 
         let camera_to_center_distance = self.camera_to_center_distance();
 
+        let camera_matrix = self.camera.calc_matrix(camera_to_center_distance);
+
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
-        let far_z = self.furthest_distance(camera_to_center_distance, center_offset) * 1.00;
+        //let far_z = self.furthest_distance(camera_to_center_distance, center_offset) * 1.00;
+        let far_z = self.furthest_distance_ray(
+            camera_to_center_distance,
+            center_offset,
+            camera_matrix,
+            self.camera.position(),
+        ) * 1.00;
 
         // The larger the value of near_z is
         // - the more depth precision is available for features (good)
@@ -305,7 +399,7 @@ impl ViewState {
         //perspective.z[1] = center_offset.y * 2.0 / height;
 
         // Apply camera and move camera away from ground
-        let view_projection = perspective * self.camera.calc_matrix(camera_to_center_distance);
+        let view_projection = perspective * camera_matrix;
 
         // TODO for the below TODOs, check GitHub blame to get an idea of what these matrices are used for!
         // TODO mercatorMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L725-L727
@@ -316,12 +410,12 @@ impl ViewState {
         // TODO pixelMatrix, pixelMatrixInverse https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L760-L761
 
         let projection = ViewProjection(FLIP_Y * OPENGL_TO_WGPU_MATRIX * view_projection);
-        let bottom_left = self
-            .window_to_world_at_ground(&Vector2::new(0.0, 0.0), &projection.invert(), true)
-            .unwrap();
-        let x = projection.project(Vector4::new(bottom_left.x, bottom_left.y, 0.0, 1.0));
-        let ndc1 = self.clip_to_window(&x);
-        println!("{:?}", ndc1);
+        //let bottom_left = self
+        //    .window_to_world_at_ground(&Vector2::new(0.0, 0.0), &projection.invert(), true)
+        //    .unwrap();
+        //let x = projection.project(Vector4::new(bottom_left.x, bottom_left.y, 0.0, 1.0));
+        //let ndc1 = self.clip_to_window(&x);
+        //println!("{:?}", ndc1);
         projection
     }
 
