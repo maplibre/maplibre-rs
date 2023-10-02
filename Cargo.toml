@@ -37,7 +37,7 @@ rand = { version = "0.7.3", features = ["wasm-bindgen"] }
 reqwest-middleware = "0.1.6"
 
 # TODO: Upgrade to 0.28+ and remove ndk-glue. See https://github.com/rust-windowing/winit#android
-winit = { version = "0.27.5", default-features = false, features = [] }
+winit = { version = "0.28.7", default-features = false, features = [] }
 
 #
 # These dependencies should be updated to the latest version
@@ -68,7 +68,8 @@ js-sys = "0.3.64"
 log = "0.4.20"
 lyon = { version = "1.0.1", features = [] }
 naga = { version = "0.13.0", features = ["wgsl-in"] }
-ndk-glue = "0.7.0"  # version is required by winit. This might for winit 0.28+, see https://github.com/rust-windowing/winit#Android
+android-activity = "0.4.0"  # version is required by winit, see https://github.com/rust-windowing/winit#Android
+android_logger = "0.13.3"
 png = { version = "0.17.10" }
 raw-window-handle = "0.5.2"
 reqwest = { version = "0.11.20", default-features = false, features = ["rustls-tls", "gzip"] }  # Use rusttls on android because cross compiling is difficult
