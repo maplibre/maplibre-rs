@@ -26,7 +26,10 @@ pub fn upload_system(
 ) {
     let Some(Initialized(raster_resources)) = world
         .resources
-        .query_mut::<&mut Eventually<RasterResources>>() else { return; };
+        .query_mut::<&mut Eventually<RasterResources>>()
+    else {
+        return;
+    };
     let view_region =
         view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 
@@ -56,23 +59,24 @@ fn upload_raster_layer(
             continue;
         }
 
-        let Some(raster_layers) =
-            tiles.query::<&RasterLayersDataComponent>(coords) else { continue; };
+        let Some(raster_layers) = tiles.query::<&RasterLayersDataComponent>(coords) else {
+            continue;
+        };
 
         for style_layer in &style.layers {
             let style_source_layer = style_layer.source_layer.as_ref().unwrap(); // FIXME: Remove unwrap
 
-            let Some(AvailableRasterLayerData {
-                coords,
-                image,
-                ..
-            }) = raster_layers.layers
+            let Some(AvailableRasterLayerData { coords, image, .. }) = raster_layers
+                .layers
                 .iter()
                 .flat_map(|data| match data {
                     RasterLayerData::Available(data) => Some(data),
                     RasterLayerData::Missing(_) => None,
                 })
-                .find(|layer| style_source_layer.as_str() == layer.source_layer) else { continue; };
+                .find(|layer| style_source_layer.as_str() == layer.source_layer)
+            else {
+                continue;
+            };
 
             let (width, height) = image.dimensions();
 

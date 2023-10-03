@@ -112,8 +112,8 @@ pub fn fetch_raster_apc<
     kernel: K,
 ) -> AsyncProcedureFuture {
     Box::pin(async move {
-        let Input::TileRequest {coords, style} = input else {
-            return Err(ProcedureError::IncompatibleInput)
+        let Input::TileRequest { coords, style } = input else {
+            return Err(ProcedureError::IncompatibleInput);
         };
 
         let raster_layers: HashSet<String> = style
