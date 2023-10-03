@@ -98,7 +98,11 @@ impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
     }
 }
 
-pub fn run_headed_map(cache_path: Option<String>, window_config: WinitMapWindowConfig<()>) {
+pub fn run_headed_map(
+    cache_path: Option<String>,
+    window_config: WinitMapWindowConfig<()>,
+    wgpu_settings: WgpuSettings,
+) {
     run_multithreaded(async {
         type Environment<S, HC, APC> =
             WinitEnvironment<S, HC, ReqwestOffscreenKernelEnvironment, APC, ()>;
@@ -112,10 +116,7 @@ pub fn run_headed_map(cache_path: Option<String>, window_config: WinitMapWindowC
             .with_scheduler(TokioScheduler::new())
             .build();
 
-        let renderer_builder = RendererBuilder::new().with_wgpu_settings(WgpuSettings {
-            backends: Some(maplibre::render::settings::Backends::all()),
-            ..WgpuSettings::default()
-        });
+        let renderer_builder = RendererBuilder::new().with_wgpu_settings(wgpu_settings);
 
         let mut map = Map::new(
             Style::default(),

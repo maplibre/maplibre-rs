@@ -2,6 +2,7 @@
 
 use jni::{objects::JClass, JNIEnv};
 use log::Level;
+use maplibre::render::settings::WgpuSettings;
 use maplibre_winit::{run_headed_map, WinitMapWindowConfig};
 
 #[cfg(not(any(no_pendantic_os_check, target_os = "android")))]
@@ -13,7 +14,14 @@ pub fn android_main(app: android_activity::AndroidApp) {
         android_logger::Config::default().with_max_level(log::LevelFilter::Info),
     );
     log::log!(Level::Info, "maplibre starting");
-    run_headed_map(None, WinitMapWindowConfig::new("maplibre".to_string(), app));
+    run_headed_map(
+        None,
+        WinitMapWindowConfig::new("maplibre".to_string(), app),
+        WgpuSettings {
+            backends: Some(maplibre::render::settings::Backends::GL),
+            ..WgpuSettings::default()
+        },
+    );
 }
 
 #[no_mangle]
