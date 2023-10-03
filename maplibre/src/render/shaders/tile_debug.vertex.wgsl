@@ -71,6 +71,6 @@ fn main(
     );
 
     var final_position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>((scaling * vertex), 1.0);
-    final_position.z = 10.0;
+    final_position.z = 1.0;
     return VertexOutput(DEBUG_COLOR, final_position);
 }

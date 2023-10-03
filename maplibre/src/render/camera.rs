@@ -240,7 +240,7 @@ impl Perspective {
         let ymax = near_z * half_fovy.tan();
 
         //let xmax = ymax * aspect;
-        let half_fovx = Rad(2.0 * (half_fovy.tan() * (width / height)).atan()) / 2.0;
+        let half_fovx = Rad(2.0 * (half_fovy.tan() * aspect).atan()) / 2.0;
         let xmax = near_z * half_fovx.tan();
 
         let offset_x = center_offset.x * 2.0 / width; // TODO - or + does not matter

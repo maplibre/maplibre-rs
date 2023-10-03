@@ -1,9 +1,6 @@
-use std::{
-    f64::consts::{FRAC_PI_2, PI},
-    ops::{Deref, DerefMut},
-};
+use std::ops::{Deref, DerefMut};
 
-use cgmath::{num_traits::clamp, prelude::*, *};
+use cgmath::{prelude::*, *};
 
 use crate::{
     coords::{ViewRegion, WorldCoords, Zoom, ZoomLevel},
@@ -109,22 +106,39 @@ impl ViewState {
         &self,
         camera_height: f64,
         center_offset: Point2<f64>,
-        camera_matrix: Matrix4<f64>,
-        point2: Point2<f64>,
+        camera_position: Point2<f64>,
     ) -> f64 {
         let fovy = self.perspective.fovy();
         let half_fovy = fovy / 2.0;
         let width = self.width;
         let height = self.height;
         let aspect = width / height;
+        let near_z = height / 50.0;
 
-        let mut ray1 = Vector4::new(1.0 * aspect * half_fovy.tan(), half_fovy.tan(), 1.0, 1.0);
-        let mut ray2 = Vector4::new(-1.0 * aspect * half_fovy.tan(), half_fovy.tan(), 1.0, 1.0);
-        let mut ray3 = Vector4::new(1.0 * aspect * half_fovy.tan(), -half_fovy.tan(), 1.0, 1.0);
-        let mut ray4 = Vector4::new(-1.0 * aspect * half_fovy.tan(), -half_fovy.tan(), 1.0, 1.0);
+        // --
+
+        let aspect = width / height;
+
+        // from projection.rs
+        let half_fovy = fovy / 2.0;
+        let ymax = half_fovy.tan();
+
+        //let xmax = ymax * aspect;
+        let half_fovx = Rad(2.0 * (half_fovy.tan() * aspect).atan()) / 2.0;
+        let xmax = half_fovx.tan();
+
+        let offset_x = -center_offset.x * 2.0 / width; // TODO - or + does not matter
+        let offset_y = -center_offset.y * 2.0 / height;
+
+        //
+
+        let ray1 = Vector4::new(xmax * (1.0 + offset_x), ymax * (1.0 + offset_y), 1.0, 1.0);
+        let ray2 = Vector4::new(xmax * (-1.0 + offset_x), ymax * (1.0 + offset_y), 1.0, 1.0);
+        let ray3 = Vector4::new(xmax * (1.0 + offset_x), ymax * (-1.0 + offset_y), 1.0, 1.0);
+        let ray4 = Vector4::new(xmax * (-1.0 + offset_x), ymax * (-1.0 + offset_y), 1.0, 1.0);
 
         //let ray_origin = camera_matrix * Vector4::new(0.0, 0.0, 0.0, 1.0);
-        let ray_origin = Vector4::new(-point2.x, -point2.y, -camera_height, 1.0);
+        let ray_origin = Vector4::new(-camera_position.x, -camera_position.y, -camera_height, 1.0);
 
         //let plane_origin = Vector3::new(0.0, 0.0, 0.0);
         //let plane_normal = Vector3::new(0.0, 0.0, 1.0);
@@ -133,7 +147,7 @@ impl ViewState {
             * Matrix4::from_angle_y(self.camera.get_yaw())
             * Matrix4::from_angle_z(self.camera.get_roll());
 
-        let plane_origin = Vector3::new(-point2.x, -point2.y, 0.0);
+        let plane_origin = Vector3::new(-camera_position.x, -camera_position.y, 0.0);
         //let plane_normal = Vector4::new(-point2.x, -point2.y, 1.0, 1.0);
         let plane_normal = pt * Vector4::new(0.0, 0.0, 1.0, 1.0);
 
@@ -161,7 +175,18 @@ impl ViewState {
             plane_origin,
             plane_normal.truncate(),
         );
-        t2.max(t1).max(t3).max(t4) // - 50.0
+        t2.max(t1).max(t3).max(t4)
+    }
+
+    pub fn camera_to_center_distance(&self) -> f64 {
+        let height = self.height;
+
+        let fovy = self.perspective.fovy();
+        let half_fovy = fovy / 2.0;
+
+        // Camera height, such that given a certain field-of-view, exactly height/2 are visible on ground.
+        let camera_to_center_distance = (height / 2.0) / (half_fovy.tan()); // TODO: Not sure why it is height here and not width
+        camera_to_center_distance
     }
 
     /// This function matches how maplibre-gl-js implements perspective and cameras at the time
@@ -183,7 +208,6 @@ impl ViewState {
         let far_z = self.furthest_distance_ray(
             camera_to_center_distance,
             center_offset,
-            camera_matrix,
             self.camera.position(),
         ) * 1.01;
 
