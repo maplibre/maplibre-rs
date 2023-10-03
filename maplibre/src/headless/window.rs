@@ -13,7 +13,7 @@ impl HeadlessMapWindowConfig {
 impl MapWindowConfig for HeadlessMapWindowConfig {
     type MapWindow = HeadlessMapWindow;
 
-    fn create(&self) -> Self::MapWindow {
+    fn create(self) -> Self::MapWindow {
         Self::MapWindow { size: self.size }
     }
 }
