@@ -510,7 +510,7 @@ impl ViewState {
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{Deg, Matrix4, Point2, Vector2, Vector4};
+    use cgmath::{Deg, Matrix4, Vector2, Vector4};
 
     use crate::{
         coords::{WorldCoords, Zoom},
