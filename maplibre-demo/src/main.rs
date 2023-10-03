@@ -4,7 +4,7 @@ use std::io::ErrorKind;
 
 use clap::{Parser, Subcommand};
 use maplibre::coords::LatLon;
-use maplibre_winit::run_headed_map;
+use maplibre_winit::{run_headed_map, WinitMapWindowConfig};
 
 #[cfg(feature = "headless")]
 mod headless;
@@ -63,7 +63,9 @@ fn main() {
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     match &cli.command {
-        Commands::Headed {} => run_headed_map(None),
+        Commands::Headed {} => {
+            run_headed_map(None, WinitMapWindowConfig::new("maplibre".to_string()))
+        }
         #[cfg(feature = "headless")]
         Commands::Headless {
             tile_size,

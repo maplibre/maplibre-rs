@@ -23,7 +23,7 @@ impl<ET: 'static> WinitMapWindowConfig<ET> {
 impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
-    fn create(&self) -> Self::MapWindow {
+    fn create(self) -> Self::MapWindow {
         let raw_event_loop = winit::event_loop::EventLoopBuilder::<ET>::with_user_event().build();
 
         let window: winit::window::Window = WindowBuilder::new()

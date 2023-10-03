@@ -33,8 +33,8 @@ pub struct WinitMapWindowConfig<ET> {
     phantom_et: PhantomData<ET>,
 }
 
+#[cfg(target_os = "android")]
 impl<ET> WinitMapWindowConfig<ET> {
-    #[cfg(target_os = "android")]
     pub fn new(title: String, android_app: winit::platform::android::activity::AndroidApp) -> Self {
         Self {
             title,
@@ -42,7 +42,10 @@ impl<ET> WinitMapWindowConfig<ET> {
             phantom_et: Default::default(),
         }
     }
-    #[cfg(not(target_os = "android"))]
+}
+
+#[cfg(not(target_os = "android"))]
+impl<ET> WinitMapWindowConfig<ET> {
     pub fn new(title: String) -> Self {
         Self {
             title,
@@ -71,11 +74,15 @@ impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
     fn create(self) -> Self::MapWindow {
+        let mut raw_event_loop_builder =
+            winit::event_loop::EventLoopBuilder::<ET>::with_user_event();
+
         #[cfg(target_os = "android")]
         use winit::platform::android::EventLoopBuilderExtAndroid;
-        let mut raw_event_loop = winit::event_loop::EventLoopBuilder::<ET>::with_user_event()
-            .with_android_app(self.android_app)
-            .build();
+        #[cfg(target_os = "android")]
+        let mut raw_event_loop_builder = raw_event_loop_builder.with_android_app(self.android_app);
+
+        let raw_event_loop = raw_event_loop_builder.build();
 
         let window = WindowBuilder::new()
             .with_title(&self.title)
@@ -91,10 +98,7 @@ impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
     }
 }
 
-pub fn run_headed_map(
-    cache_path: Option<String>,
-    android_app: winit::platform::android::activity::AndroidApp,
-) {
+pub fn run_headed_map(cache_path: Option<String>, window_config: WinitMapWindowConfig<()>) {
     run_multithreaded(async {
         type Environment<S, HC, APC> =
             WinitEnvironment<S, HC, ReqwestOffscreenKernelEnvironment, APC, ()>;
@@ -102,10 +106,7 @@ pub fn run_headed_map(
         let client = ReqwestHttpClient::new(cache_path);
 
         let kernel: Kernel<Environment<_, _, _>> = KernelBuilder::new()
-            .with_map_window_config(WinitMapWindowConfig::new(
-                "maplibre".to_string(),
-                android_app,
-            ))
+            .with_map_window_config(window_config)
             .with_http_client(client.clone())
             .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new()))
             .with_scheduler(TokioScheduler::new())
