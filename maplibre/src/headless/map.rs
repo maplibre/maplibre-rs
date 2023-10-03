@@ -12,7 +12,7 @@ use crate::{
     kernel::Kernel,
     map::MapError,
     plugin::Plugin,
-    render::{eventually::Eventually, Renderer},
+    render::{eventually::Eventually, view_state::ViewState, Renderer},
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
@@ -21,7 +21,6 @@ use crate::{
         LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
         VectorLayersDataComponent, VectorTileRequest, VectorTransferables,
     },
-    view_state::ViewState,
 };
 
 pub struct HeadlessMap {
