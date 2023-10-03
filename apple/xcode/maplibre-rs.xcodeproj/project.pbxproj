@@ -16,8 +16,24 @@
 		0B85D596281291A400906D21 /* maplibre_rs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D56B2812903700906D21 /* maplibre_rs.framework */; };
 		0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D56B2812903700906D21 /* maplibre_rs.framework */; };
 		0B85D5A42812991100906D21 /* libmaplibre_apple.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D5A32812987B00906D21 /* libmaplibre_apple.a */; };
-		5015FE4B2ACCB3D900F8E4B6 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */; platformFilters = (ios, maccatalyst, macos, tvos, ); };
+		5015FE4C2ACCB64600F8E4B6 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */; };
+		5015FE522ACCB8F200F8E4B6 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */; platformFilters = (ios, maccatalyst, macos, tvos, ); };
+		5015FE532ACCB8F200F8E4B6 /* SystemConfiguration.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */; platformFilters = (ios, maccatalyst, macos, tvos, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		5015FE542ACCB8F200F8E4B6 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				5015FE532ACCB8F200F8E4B6 /* SystemConfiguration.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0B85D56B2812903700906D21 /* maplibre_rs.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = maplibre_rs.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -39,7 +55,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5015FE4B2ACCB3D900F8E4B6 /* SystemConfiguration.framework in Frameworks */,
+				5015FE522ACCB8F200F8E4B6 /* SystemConfiguration.framework in Frameworks */,
 				0B85D5A42812991100906D21 /* libmaplibre_apple.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -56,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5015FE4C2ACCB64600F8E4B6 /* SystemConfiguration.framework in Frameworks */,
 				0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -144,6 +161,7 @@
 				0B85D5672812903700906D21 /* Sources */,
 				0B85D5682812903700906D21 /* Frameworks */,
 				0B85D5692812903700906D21 /* Resources */,
+				5015FE542ACCB8F200F8E4B6 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
