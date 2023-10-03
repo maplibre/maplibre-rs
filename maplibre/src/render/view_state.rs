@@ -83,187 +83,6 @@ impl ViewState {
             })
     }
 
-    fn calc_additional_height(
-        &self,
-        camera_to_center_distance: f64,
-        fov: Rad<f64>,
-        center_offset: Point2<f64>,
-        is_y: bool,
-        angle: Rad<f64>,
-    ) -> f64 {
-        let height = self.height;
-        let width = self.width;
-        let half_fov = fov / 2.0;
-
-        // TODO: abs() fine here?
-        // TODO: Is addition the correct operation?
-        let angle = Rad(angle.0.abs());
-
-        // The near plane rectangle has been moved by center_offset. So we increase/decrease the fov angle proportionally
-        let offset_adjusted_half_fov_alt = Rad(if is_y {
-            let near_z = 50.0;
-            let offset = center_offset.y.abs() * 2.0 / width;
-            let ymax = near_z * half_fov.tan();
-            let top = ymax * (1.0 + offset);
-            (top / near_z).atan()
-        } else {
-            let near_z = 50.0;
-            let offset = center_offset.x.abs() * 2.0 / width;
-            let xmax = near_z * half_fov.tan();
-            let right = xmax * (1.0 + offset);
-            (right / near_z).atan()
-        }); // TODO: Not sure why offset is added here: Similar to `half_fovy`
-
-        let offset_ratio = if is_y {
-            center_offset.y.abs() * 2.0 / height
-        } else {
-            center_offset.x.abs() * 2.0 / width
-        };
-
-        let offset_adjusted_half_fov = half_fov * (1.0 + offset_ratio);
-
-        //assert_abs_diff_eq!(offset_adjusted_half_fov_alt, offset_adjusted_half_fov);
-
-        // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
-        // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
-        // 1 Z unit is equivalent to 1 horizontal px at the center of the map
-        // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
-        let ground_angle = Rad(FRAC_PI_2) + angle;
-
-        let top_half_surface_distance = offset_adjusted_half_fov.sin() * camera_to_center_distance
-            / clamp(
-                Rad(PI) - ground_angle - offset_adjusted_half_fov,
-                Rad(0.01),
-                Rad(PI - 0.01),
-            )
-            .sin();
-
-        (Rad(FRAC_PI_2) - angle).cos() * top_half_surface_distance
-    }
-
-    fn calc_additional_height_together(
-        &self,
-        camera_to_center_distance: f64,
-        fov: Rad<f64>,
-        center_offset: Point2<f64>,
-    ) -> f64 {
-        let height = self.height;
-        let width = self.width;
-        let pitch = self.camera.get_pitch();
-        let yaw = self.camera.get_yaw();
-        let half_fov = fov / 2.0;
-
-        let angle = Rad(pitch.0.abs() + yaw.0.abs());
-
-        let offset_adjusted_half_fov = Rad({
-            let near_z = 50.0;
-            let offset = center_offset.y.abs() * 2.0 / width;
-            let ymax = near_z * half_fov.tan();
-            let top = ymax * (1.0 + offset);
-            (top / near_z).atan()
-        }
-        .max({
-            let near_z = 50.0;
-            let offset = center_offset.x.abs() * 2.0 / width;
-            let xmax = near_z * half_fov.tan();
-            let right = xmax * (1.0 + offset);
-            (right / near_z).atan()
-        })); // TODO: Not sure why offset is added here: Similar to `half_fovy`
-
-        //let offset_adjusted_half_fov = half_fov;
-
-        //assert_abs_diff_eq!(offset_adjusted_half_fov_alt, offset_adjusted_half_fov);
-
-        // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
-        // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.
-        // 1 Z unit is equivalent to 1 horizontal px at the center of the map
-        // (the distance between[width/2, height/2] and [width/2 + 1, height/2])
-        let ground_angle = Rad(FRAC_PI_2) + angle;
-
-        let top_half_surface_distance = offset_adjusted_half_fov.sin() * camera_to_center_distance
-            / clamp(
-                Rad(PI) - ground_angle - offset_adjusted_half_fov,
-                Rad(0.01),
-                Rad(PI - 0.01),
-            )
-            .sin();
-
-        (Rad(FRAC_PI_2) - angle).cos() * top_half_surface_distance
-    }
-
-    pub fn camera_to_center_distance(&self) -> f64 {
-        let height = self.height;
-
-        let fovy = self.perspective.fovy();
-        let half_fovy = fovy / 2.0;
-
-        // Camera height, such that given a certain field-of-view, exactly height/2 are visible on ground.
-        let camera_to_center_distance = (height / 2.0) / (half_fovy.tan()); // TODO: Not sure why it is height here and not width
-        camera_to_center_distance
-    }
-
-    pub fn furthest_distance(
-        &self,
-        camera_to_center_distance: f64,
-        center_offset: Point2<f64>,
-    ) -> f64 {
-        let width = self.width;
-        let height = self.height;
-
-        let fovy = self.perspective.fovy();
-        let half_fovy = fovy / 2.0;
-        let fovx = Rad(2.0 * (half_fovy.tan() * (width / height)).atan());
-
-        let additional_height_pitch_y = self.calc_additional_height(
-            camera_to_center_distance,
-            fovy,
-            center_offset,
-            true,
-            self.camera.get_pitch(),
-        );
-
-        let additional_height_pitch_x = self.calc_additional_height(
-            camera_to_center_distance,
-            fovx,
-            center_offset,
-            false,
-            self.camera.get_pitch(),
-        );
-
-        let additional_height_yaw_y = self.calc_additional_height(
-            camera_to_center_distance,
-            fovy,
-            center_offset,
-            true,
-            self.camera.get_yaw(),
-        );
-
-        let additional_height_yaw_x = self.calc_additional_height(
-            camera_to_center_distance,
-            fovx,
-            center_offset,
-            false,
-            self.camera.get_yaw(),
-        );
-
-        let additional_height = self.calc_additional_height_together(
-            camera_to_center_distance,
-            Rad(fovy.0.max(fovx.0)),
-            center_offset,
-        );
-
-        // Calculate z distance of the farthest fragment that should be rendered.
-        // For pitch == 0, it is `camera_to_center_distance`. Everything further away will be clipped.
-        // For pitch > 0, we add TODO
-        let furthest_distance = camera_to_center_distance
-            //    + additional_height_yaw_y.max(additional_height_yaw_x)
-            //   + additional_height_pitch_y.max(additional_height_pitch_x)
-            //   + additional_height_pitch_y + additional_height_yaw_x;
-            + additional_height;
-
-        furthest_distance
-    }
-
     pub fn get_intersection_time(
         ray_origin: Vector3<f64>,
         ray_direction: Vector3<f64>,
@@ -274,9 +93,6 @@ impl ViewState {
         let distance = (m).dot(plane_normal);
 
         let approach_speed = ray_direction.dot(plane_normal);
-
-        println!("d: {}", distance);
-        println!("a: {}", approach_speed);
 
         // Returns an infinity if the ray is
         // parallel to the plane and never intersects,
@@ -345,9 +161,7 @@ impl ViewState {
             plane_origin,
             plane_normal.truncate(),
         );
-        let r = t2.max(t1).max(t3).max(t4) - 15.0;
-        println!("{}", r);
-        r
+        t2.max(t1).max(t3).max(t4) // - 50.0
     }
 
     /// This function matches how maplibre-gl-js implements perspective and cameras at the time
@@ -366,13 +180,12 @@ impl ViewState {
         let camera_matrix = self.camera.calc_matrix(camera_to_center_distance);
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
-        //let far_z = self.furthest_distance(camera_to_center_distance, center_offset) * 1.00;
         let far_z = self.furthest_distance_ray(
             camera_to_center_distance,
             center_offset,
             camera_matrix,
             self.camera.position(),
-        ) * 1.00;
+        ) * 1.01;
 
         // The larger the value of near_z is
         // - the more depth precision is available for features (good)
@@ -409,14 +222,7 @@ impl ViewState {
         // TODO glCoordMatrix https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L754-L758
         // TODO pixelMatrix, pixelMatrixInverse https://github.com/maplibre/maplibre-gl-js/blob/e78ad7944ef768e67416daa4af86b0464bd0f617/src/geo/transform.ts#L760-L761
 
-        let projection = ViewProjection(FLIP_Y * OPENGL_TO_WGPU_MATRIX * view_projection);
-        //let bottom_left = self
-        //    .window_to_world_at_ground(&Vector2::new(0.0, 0.0), &projection.invert(), true)
-        //    .unwrap();
-        //let x = projection.project(Vector4::new(bottom_left.x, bottom_left.y, 0.0, 1.0));
-        //let ndc1 = self.clip_to_window(&x);
-        //println!("{:?}", ndc1);
-        projection
+        ViewProjection(FLIP_Y * OPENGL_TO_WGPU_MATRIX * view_projection)
     }
 
     pub fn zoom(&self) -> Zoom {
