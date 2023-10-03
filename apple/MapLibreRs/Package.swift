@@ -32,7 +32,7 @@ let package = Package(
         ),
         .binaryTarget(
             name: "MapLibreRs",
-            path: "MapLibreRs.xcframework"
+            path: "MapLibreRs.xcframework",
         ),
     ]
 )
