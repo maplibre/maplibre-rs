@@ -553,11 +553,7 @@ mod tests {
 
         state.camera.set_pitch(Deg(30.0));
         //state.camera.set_yaw(Deg(-30.0));
-        let target = state.calc_additional_height_together(
-            state.camera_to_center_distance(),
-            fov.into(),
-            Point2::new(0.0, 0.0),
-        );
-        println!("target {:?}", target);
+
+        // TODO: verify far distance plane calculation
     }
 }
