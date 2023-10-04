@@ -144,14 +144,16 @@ where
         &self.window
     }
 
-    pub fn has_renderer(&self) -> bool {
+    pub fn is_initialized(&self) -> bool {
         match &self.map_context {
             CurrentMapContext::Ready(_) => true,
             CurrentMapContext::Pending { .. } => false,
         }
     }
 
-    pub fn remove_renderer(&mut self) {
+    /// Resets the complete state of this map - a new renderer and schedule needs to be created.
+    /// The complete state of the app is reset.
+    pub fn reset(&mut self) {
         self.schedule.clear();
         match &self.map_context {
             CurrentMapContext::Ready(c) => {

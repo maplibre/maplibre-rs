@@ -81,7 +81,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         self.event_loop
             .run(move |event, _window_target, control_flow| {
                 #[cfg(target_os = "android")]
-                if !map.has_renderer() && event == Event::Resumed {
+                if !map.is_initialized() && event == Event::Resumed {
                     use tokio::{runtime::Handle, task};
 
                     task::block_in_place(|| {
@@ -131,7 +131,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         }
                     }
                     Event::RedrawRequested(_) => {
-                        if !map.has_renderer() {
+                        if !map.is_initialized() {
                             return;
                         }
 
@@ -143,7 +143,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                             input_controller.update_state(map_context, dt);
                         }
 
-                        // TODO: Maybe handle gracefully
+                        // TODO: Handle gracefully
                         map.run_schedule().expect("Failed to run schedule!");
 
                         if let Some(max_frames) = max_frames {
@@ -156,9 +156,8 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         }
                     }
                     Event::Suspended => {
-                        // FIXME unimplemented!()
                         log::info!("Suspending and dropping render state.");
-                        map.remove_renderer()
+                        map.reset() // TODO: Instead of resetting the whole map (incl. the renderer) only reset the renderer
                     }
                     Event::Resumed => {
                         // FIXME unimplemented!()
