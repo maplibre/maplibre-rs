@@ -41,7 +41,7 @@ pub async fn create_headless_renderer(
         .with_scheduler(TokioScheduler::new())
         .build();
 
-    let mwc: HeadlessMapWindowConfig = kernel.take_map_window_config();
+    let mwc: &HeadlessMapWindowConfig = kernel.map_window_config();
     let window: HeadlessMapWindow = mwc.create();
 
     let renderer = RendererBuilder::new()

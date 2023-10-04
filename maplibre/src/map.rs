@@ -64,7 +64,7 @@ where
     ) -> Result<Self, MapError> {
         let schedule = Schedule::default();
 
-        let window = kernel.take_map_window_config().create();
+        let window = kernel.map_window_config().create();
 
         let kernel = Rc::new(kernel);
 

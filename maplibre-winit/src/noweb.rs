@@ -25,6 +25,7 @@ use winit::window::WindowBuilder;
 use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
 
+#[derive(Clone)]
 pub struct WinitMapWindowConfig<ET> {
     title: String,
     #[cfg(target_os = "android")]
@@ -70,17 +71,18 @@ impl<ET> MapWindow for WinitMapWindow<ET> {
     }
 }
 
-impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
+impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
-    fn create(self) -> Self::MapWindow {
+    fn create(&self) -> Self::MapWindow {
         let mut raw_event_loop_builder =
             winit::event_loop::EventLoopBuilder::<ET>::with_user_event();
 
         #[cfg(target_os = "android")]
         use winit::platform::android::EventLoopBuilderExtAndroid;
         #[cfg(target_os = "android")]
-        let mut raw_event_loop_builder = raw_event_loop_builder.with_android_app(self.android_app);
+        let mut raw_event_loop_builder =
+            raw_event_loop_builder.with_android_app(self.android_app.clone());
 
         let raw_event_loop = raw_event_loop_builder.build();
 

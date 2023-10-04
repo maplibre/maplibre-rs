@@ -209,7 +209,7 @@ impl<
         HC: HttpClient,
         K: OffscreenKernelEnvironment,
         APC: AsyncProcedureCall<K>,
-        ET: 'static,
+        ET: 'static + Clone,
     > Environment for WinitEnvironment<S, HC, K, APC, ET>
 {
     type MapWindowConfig = WinitMapWindowConfig<ET>;
