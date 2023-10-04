@@ -1,4 +1,7 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    f64,
+    ops::{Deref, DerefMut},
+};
 
 use cgmath::{prelude::*, *};
 
@@ -102,80 +105,35 @@ impl ViewState {
         // is in the plane, to within rounding error.
     }
 
-    pub fn furthest_distance_ray(
-        &self,
-        camera_height: f64,
-        center_offset: Point2<f64>,
-        camera_position: Point2<f64>,
-    ) -> f64 {
-        let fovy = self.perspective.fovy();
-        let half_fovy = fovy / 2.0;
+    pub fn furthest_distance(&self, camera_height: f64, center_offset: Point2<f64>) -> f64 {
+        let perspective = &self.perspective;
         let width = self.width;
         let height = self.height;
-        let aspect = width / height;
-        let near_z = height / 50.0;
+        let camera = self.camera.position();
 
-        // --
+        let y = perspective.y_tan();
+        let x = perspective.x_tan(width, height);
+        let offset_x = perspective.offset_x(center_offset, width);
+        let offset_y = perspective.offset_y(center_offset, height);
 
-        let aspect = width / height;
-
-        // from projection.rs
-        let half_fovy = fovy / 2.0;
-        let ymax = half_fovy.tan();
-
-        //let xmax = ymax * aspect;
-        let half_fovx = Rad(2.0 * (half_fovy.tan() * aspect).atan()) / 2.0;
-        let xmax = half_fovx.tan();
-
-        let offset_x = -center_offset.x * 2.0 / width; // TODO - or + does not matter
-        let offset_y = -center_offset.y * 2.0 / height;
-
-        //
-
-        let ray1 = Vector4::new(xmax * (1.0 + offset_x), ymax * (1.0 + offset_y), 1.0, 1.0);
-        let ray2 = Vector4::new(xmax * (-1.0 + offset_x), ymax * (1.0 + offset_y), 1.0, 1.0);
-        let ray3 = Vector4::new(xmax * (1.0 + offset_x), ymax * (-1.0 + offset_y), 1.0, 1.0);
-        let ray4 = Vector4::new(xmax * (-1.0 + offset_x), ymax * (-1.0 + offset_y), 1.0, 1.0);
-
-        //let ray_origin = camera_matrix * Vector4::new(0.0, 0.0, 0.0, 1.0);
-        let ray_origin = Vector4::new(-camera_position.x, -camera_position.y, -camera_height, 1.0);
-
-        //let plane_origin = Vector3::new(0.0, 0.0, 0.0);
-        //let plane_normal = Vector3::new(0.0, 0.0, 1.0);
-
-        let pt = Matrix4::from_angle_x(self.camera.get_pitch())
+        let rotation = Matrix4::from_angle_x(self.camera.get_pitch())
             * Matrix4::from_angle_y(self.camera.get_yaw())
             * Matrix4::from_angle_z(self.camera.get_roll());
 
-        let plane_origin = Vector3::new(-camera_position.x, -camera_position.y, 0.0);
-        //let plane_normal = Vector4::new(-point2.x, -point2.y, 1.0, 1.0);
-        let plane_normal = pt * Vector4::new(0.0, 0.0, 1.0, 1.0);
+        let rays = [
+            Vector3::new(x * (1.0 - offset_x), y * (1.0 - offset_y), 1.0),
+            Vector3::new(x * (-1.0 - offset_x), y * (1.0 - offset_y), 1.0),
+            Vector3::new(x * (1.0 - offset_x), y * (-1.0 - offset_y), 1.0),
+            Vector3::new(x * (-1.0 - offset_x), y * (-1.0 - offset_y), 1.0),
+        ];
+        let ray_origin = Vector3::new(-camera.x, -camera.y, -camera_height);
 
-        let t1 = Self::get_intersection_time(
-            ray_origin.truncate(),
-            ray1.truncate(),
-            plane_origin,
-            plane_normal.truncate(),
-        );
-        let t2 = Self::get_intersection_time(
-            ray_origin.truncate(),
-            ray2.truncate(),
-            plane_origin,
-            plane_normal.truncate(),
-        );
-        let t3 = Self::get_intersection_time(
-            ray_origin.truncate(),
-            ray3.truncate(),
-            plane_origin,
-            plane_normal.truncate(),
-        );
-        let t4 = Self::get_intersection_time(
-            ray_origin.truncate(),
-            ray4.truncate(),
-            plane_origin,
-            plane_normal.truncate(),
-        );
-        t2.max(t1).max(t3).max(t4)
+        let plane_origin = Vector3::new(-camera.x, -camera.y, 0.0);
+        let plane_normal = (rotation * Vector4::new(0.0, 0.0, 1.0, 1.0)).truncate();
+
+        rays.iter()
+            .map(|ray| Self::get_intersection_time(ray_origin, *ray, plane_origin, plane_normal))
+            .fold(0. / 0., f64::max)
     }
 
     pub fn camera_to_center_distance(&self) -> f64 {
@@ -205,11 +163,7 @@ impl ViewState {
         let camera_matrix = self.camera.calc_matrix(camera_to_center_distance);
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthest_distance`
-        let far_z = self.furthest_distance_ray(
-            camera_to_center_distance,
-            center_offset,
-            self.camera.position(),
-        ) * 1.01;
+        let far_z = self.furthest_distance(camera_to_center_distance, center_offset) * 1.01;
 
         // The larger the value of near_z is
         // - the more depth precision is available for features (good)

@@ -220,6 +220,27 @@ impl Perspective {
     pub fn fovy(&self) -> Rad<f64> {
         self.fovy
     }
+    pub fn fovx(&self, width: f64, height: f64) -> Rad<f64> {
+        let aspect = width / height;
+        Rad(2.0 * ((self.fovy / 2.0).tan() * aspect).atan())
+    }
+
+    pub fn y_tan(&self) -> f64 {
+        let half_fovy = self.fovy / 2.0;
+        half_fovy.tan()
+    }
+    pub fn x_tan(&self, width: f64, height: f64) -> f64 {
+        let half_fovx = self.fovx(width, height) / 2.0;
+        half_fovx.tan()
+    }
+
+    pub fn offset_x(&self, center_offset: Point2<f64>, width: f64) -> f64 {
+        center_offset.x * 2.0 / width
+    }
+
+    pub fn offset_y(&self, center_offset: Point2<f64>, height: f64) -> f64 {
+        center_offset.y * 2.0 / height
+    }
 
     pub fn calc_matrix(&self, aspect: f64, near_z: f64, far_z: f64) -> Matrix4<f64> {
         perspective(self.fovy, aspect, near_z, far_z)
@@ -233,18 +254,13 @@ impl Perspective {
         far_z: f64,
         center_offset: Point2<f64>,
     ) -> Matrix4<f64> {
-        let aspect = width / height;
+        let ymax = near_z * self.y_tan();
 
-        // from projection.rs
-        let half_fovy = self.fovy / 2.0;
-        let ymax = near_z * half_fovy.tan();
+        //TODO maybe just: let xmax = ymax * aspect;
+        let xmax = near_z * self.x_tan(width, height);
 
-        //let xmax = ymax * aspect;
-        let half_fovx = Rad(2.0 * (half_fovy.tan() * aspect).atan()) / 2.0;
-        let xmax = near_z * half_fovx.tan();
-
-        let offset_x = center_offset.x * 2.0 / width; // TODO - or + does not matter
-        let offset_y = center_offset.y * 2.0 / height;
+        let offset_x = self.offset_x(center_offset, width);
+        let offset_y = self.offset_y(center_offset, height);
         frustum(
             // https://webglfundamentals.org/webgl/lessons/webgl-qna-how-can-i-move-the-perspective-vanishing-point-from-the-center-of-the-canvas-.html
             xmax * (-1.0 + offset_x), /* = -xmax + (center_offset.x * screen_to_near_factor_x)
@@ -260,93 +276,4 @@ impl Perspective {
             far_z,
         )
     }
-}
-
-#[cfg(test)]
-mod tests {
-    /*
-    use cgmath::{AbsDiffEq, Vector2, Vector3, Vector4};
-
-    use super::{Camera, Perspective};
-    use crate::render::camera::{InvertedViewProjection, ViewProjection};
-
-    #[test]
-    fn test() {
-        let width = 1920.0;
-        let height = 1080.0;
-        let camera = Camera::new((0.0, 5.0, 5000.0), cgmath::Deg(-90.0), cgmath::Deg(45.0));
-        // 4732.561319582916
-        let perspective = Perspective::new(cgmath::Deg(45.0));
-        let view_proj: ViewProjection = camera.calc_view_proj(&perspective);
-        let inverted_view_proj: InvertedViewProjection = view_proj.invert();
-
-        let world_pos: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
-        let clip = view_proj.project(world_pos);
-
-        let origin_clip_space = view_proj.project(Vector4::new(0.0, 0.0, 0.0, 1.0));
-        println!("origin w in clip space: {:?}", origin_clip_space.w);
-
-        println!("world_pos: {world_pos:?}");
-        println!("clip: {clip:?}");
-        println!("world_pos: {:?}", view_proj.invert().project(clip));
-
-        println!("window: {:?}", camera.clip_to_window_vulkan(&clip));
-        let window = camera.clip_to_window(&clip);
-        println!("window (matrix): {window:?}");
-
-        // --------- nalgebra
-
-        println!(
-            "r world (nalgebra): {:?}",
-            Camera::window_to_world_nalgebra(
-                &window.truncate(),
-                &inverted_view_proj,
-                width,
-                height
-            )
-        );
-
-        // -------- far vs. near plane trick
-
-        let near_world = Camera::window_to_world_nalgebra(
-            &Vector3::new(window.x, window.y, 0.0),
-            &inverted_view_proj,
-            width,
-            height,
-        );
-
-        let far_world = Camera::window_to_world_nalgebra(
-            &Vector3::new(window.x, window.y, 1.0),
-            &inverted_view_proj,
-            width,
-            height,
-        );
-
-        // for z = 0 in world coordinates
-        let u = -near_world.z / (far_world.z - near_world.z);
-        println!("u: {u:?}");
-        let unprojected = near_world + u * (far_world - near_world);
-        println!("unprojected: {unprojected:?}");
-        assert!(Vector3::new(world_pos.x, world_pos.y, world_pos.z).abs_diff_eq(&unprojected, 0.05));
-
-        // ---- test for unproject
-
-        let window = Vector2::new(960.0, 631.0); // 0, 4096: passt nicht
-                                                 //let window = Vector2::new(962.0, 1.0); // 0, 300: passt nicht
-                                                 //let window = Vector2::new(960.0, 540.0); // 0, 0 passt
-        let near_world =
-            camera.window_to_world(&Vector3::new(window.x, window.y, 0.0), &inverted_view_proj);
-
-        let far_world =
-            camera.window_to_world(&Vector3::new(window.x, window.y, 1.0), &inverted_view_proj);
-
-        // for z = 0 in world coordinates
-        let u = -near_world.z / (far_world.z - near_world.z);
-        println!("u: {u:?}");
-        let unprojected = near_world + u * (far_world - near_world);
-        println!("unprojected: {unprojected:?}");
-        // ----
-
-        //assert!(reverse_world.abs_diff_eq(&world_pos, 0.05))
-    }*/
 }
