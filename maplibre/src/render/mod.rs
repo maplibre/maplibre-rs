@@ -423,6 +423,7 @@ mod tests {
         window::{MapWindow, MapWindowConfig, WindowSize},
     };
 
+    #[derive(Clone)]
     pub struct HeadlessMapWindowConfig {
         size: WindowSize,
     }
@@ -430,7 +431,7 @@ mod tests {
     impl MapWindowConfig for HeadlessMapWindowConfig {
         type MapWindow = HeadlessMapWindow;
 
-        fn create(self) -> Self::MapWindow {
+        fn create(&self) -> Self::MapWindow {
             Self::MapWindow { size: self.size }
         }
     }
