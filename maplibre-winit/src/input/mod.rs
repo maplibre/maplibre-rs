@@ -126,6 +126,7 @@ impl InputController {
 }
 
 pub trait UpdateState {
+    /// Assumes that the view state is drawable. Implementations may panic otherwise.
     fn update_state(&mut self, state: &mut MapContext, dt: Duration);
 }
 

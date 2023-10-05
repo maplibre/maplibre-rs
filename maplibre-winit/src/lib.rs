@@ -140,7 +140,11 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         last_render_time = now;
 
                         if let Ok(map_context) =  map.context_mut() {
-                            input_controller.update_state(map_context, dt);
+                            if map_context.view_state.is_drawable() {
+                                input_controller.update_state(map_context, dt);
+                            } else {
+                                log::trace!("Re-draw requested although map context is not drawable.");
+                            }
                         }
 
                         // TODO: Handle gracefully
