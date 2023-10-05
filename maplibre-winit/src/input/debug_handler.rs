@@ -4,6 +4,7 @@ use maplibre::context::MapContext;
 
 use super::UpdateState;
 
+#[derive(Default)]
 pub struct DebugHandler {
     top_delta: f64,
     bottom_delta: f64,
@@ -34,15 +35,6 @@ impl UpdateState for DebugHandler {
 }
 
 impl DebugHandler {
-    pub fn new() -> Self {
-        Self {
-            top_delta: 0.0,
-            bottom_delta: 0.0,
-            left_delta: 0.0,
-            right_delta: 0.0,
-        }
-    }
-
     pub fn process_key_press(
         &mut self,
         key: winit::event::VirtualKeyCode,

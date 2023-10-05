@@ -6,6 +6,7 @@ use winit::event::{ElementState, MouseButton};
 
 use super::UpdateState;
 
+#[derive(Default)]
 pub struct PanHandler {
     window_position: Option<Vector2<f64>>,
     start_window_position: Option<Vector2<f64>>,
@@ -52,15 +53,6 @@ impl UpdateState for PanHandler {
 }
 
 impl PanHandler {
-    pub fn new() -> Self {
-        Self {
-            window_position: None,
-            start_window_position: None,
-            start_camera_position: None,
-            is_panning: false,
-        }
-    }
-
     pub fn process_touch_start(&mut self, window_position: &Vector2<f64>) -> bool {
         self.is_panning = true;
         self.start_window_position = Some(*window_position);

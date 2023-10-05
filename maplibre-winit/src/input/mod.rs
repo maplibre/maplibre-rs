@@ -43,13 +43,13 @@ impl InputController {
     ///
     pub fn new(speed: f64, sensitivity: f64, zoom_sensitivity: f64) -> Self {
         Self {
-            pinch_handler: PinchHandler::new(),
-            pan_handler: PanHandler::new(),
+            pinch_handler: PinchHandler::default(),
+            pan_handler: PanHandler::default(),
             zoom_handler: ZoomHandler::new(zoom_sensitivity),
             camera_handler: CameraHandler::new(sensitivity),
             shift_handler: ShiftHandler::new(speed, sensitivity),
             query_handler: QueryHandler::new(),
-            debug_handler: DebugHandler::new(),
+            debug_handler: DebugHandler::default(),
         }
     }
 
@@ -63,14 +63,12 @@ impl InputController {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
                 let position: (f64, f64) = position.to_owned().into();
-                self.pan_handler
-                    .process_window_position(&Vector2::from(position), false);
-                self.query_handler
-                    .process_window_position(&Vector2::from(position), false);
-                self.zoom_handler
-                    .process_window_position(&Vector2::from(position), false);
+                let position = Vector2::from(position);
+                self.pan_handler.process_window_position(&position, false);
+                self.query_handler.process_window_position(&position, false);
+                self.zoom_handler.process_window_position(&position, false);
                 self.camera_handler
-                    .process_window_position(&Vector2::from(position), false);
+                    .process_window_position(&position, false);
                 true
             }
             WindowEvent::KeyboardInput {
@@ -82,19 +80,9 @@ impl InputController {
                     },
                 ..
             } => {
-                if !self.shift_handler.process_key_press(*key, *state) {
-                    if !self.debug_handler.process_key_press(*key, *state) {
-                        if !self.zoom_handler.process_key_press(*key, *state) {
-                            false
-                        } else {
-                            true
-                        }
-                    } else {
-                        true
-                    }
-                } else {
-                    true
-                }
+                self.shift_handler.process_key_press(*key, *state)
+                    || self.debug_handler.process_key_press(*key, *state)
+                    || self.zoom_handler.process_key_press(*key, *state)
             }
             WindowEvent::Touch(touch) => match touch.phase {
                 TouchPhase::Started => {
