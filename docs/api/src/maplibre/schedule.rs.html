@@ -308,6 +308,11 @@
 <a href="#308" id="308">308</a>
 <a href="#309" id="309">309</a>
 <a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>downcast_rs::{impl_downcast, Downcast};
@@ -574,6 +579,11 @@
             <span class="kw">let </span>stage = <span class="self">self</span>.stages.get_mut(label).unwrap(); <span class="comment">// TODO: Remove unwrap
             </span>stage.run(context);
         }
+    }
+
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.stage_order.clear();
+        <span class="self">self</span>.stages.clear();
     }
 
     <span class="doccomment">/// Iterates over all of schedule&#39;s stages and their labels, in execution order.

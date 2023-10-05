@@ -178,6 +178,25 @@
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::rc::Rc;
 
 <span class="kw">use </span>thiserror::Error;
@@ -207,6 +226,8 @@
     <span class="doccomment">/// No need to set renderer again
     </span><span class="attr">#[error(<span class="string">&quot;renderer was already set for this map&quot;</span>)]
     </span>RendererAlreadySet,
+    <span class="attr">#[error(<span class="string">&quot;renderer is not fully initialized&quot;</span>)]
+    </span>RendererNotReady,
     <span class="attr">#[error(<span class="string">&quot;initializing render graph failed&quot;</span>)]
     </span>RenderGraphInit(RenderGraphError),
     <span class="attr">#[error(<span class="string">&quot;initializing device failed&quot;</span>)]
@@ -236,15 +257,15 @@
 {
     <span class="kw">pub fn </span>new(
         style: Style,
-        kernel: Kernel&lt;E&gt;,
+        <span class="kw-2">mut </span>kernel: Kernel&lt;E&gt;,
         renderer_builder: RendererBuilder,
         plugins: Vec&lt;Box&lt;<span class="kw">dyn </span>Plugin&lt;E&gt;&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, MapError&gt; {
         <span class="kw">let </span>schedule = Schedule::default();
 
-        <span class="kw">let </span>kernel = Rc::new(kernel);
-
         <span class="kw">let </span>window = kernel.map_window_config().create();
+
+        <span class="kw">let </span>kernel = Rc::new(kernel);
 
         <span class="kw">let </span>map = <span class="self">Self </span>{
             kernel,
@@ -322,10 +343,27 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.window
     }
 
-    <span class="kw">pub fn </span>has_renderer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="kw">pub fn </span>is_initialized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.map_context {
             CurrentMapContext::Ready(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
             CurrentMapContext::Pending { .. } =&gt; <span class="bool-val">false</span>,
+        }
+    }
+
+    <span class="doccomment">/// Resets the complete state of this map - a new renderer and schedule needs to be created.
+    /// The complete state of the app is reset.
+    </span><span class="kw">pub fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.schedule.clear();
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.map_context {
+            CurrentMapContext::Ready(c) =&gt; {
+                <span class="self">self</span>.map_context = CurrentMapContext::Pending {
+                    style: c.style.clone(),
+                    renderer_builder: RendererBuilder::new()
+                        .with_renderer_settings(c.renderer.settings.clone())
+                        .with_wgpu_settings(c.renderer.wgpu_settings.clone()),
+                }
+            }
+            CurrentMapContext::Pending { .. } =&gt; {}
         }
     }
 
@@ -336,21 +374,21 @@
                 <span class="self">self</span>.schedule.run(map_context);
                 <span class="prelude-val">Ok</span>(())
             }
-            CurrentMapContext::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererNotReady),
         }
     }
 
     <span class="kw">pub fn </span>context(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>MapContext, MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.map_context {
             CurrentMapContext::Ready(map_context) =&gt; <span class="prelude-val">Ok</span>(map_context),
-            CurrentMapContext::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererNotReady),
         }
     }
 
     <span class="kw">pub fn </span>context_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>MapContext, MapError&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.map_context {
             CurrentMapContext::Ready(map_context) =&gt; <span class="prelude-val">Ok</span>(map_context),
-            CurrentMapContext::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending { .. } =&gt; <span class="prelude-val">Err</span>(MapError::RendererNotReady),
         }
     }
 

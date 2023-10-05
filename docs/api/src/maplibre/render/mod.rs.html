@@ -597,6 +597,7 @@
 <a href="#597" id="597">597</a>
 <a href="#598" id="598">598</a>
 <a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -1022,7 +1023,8 @@
         window::{MapWindow, MapWindowConfig, WindowSize},
     };
 
-    <span class="kw">pub struct </span>HeadlessMapWindowConfig {
+    <span class="attr">#[derive(Clone)]
+    </span><span class="kw">pub struct </span>HeadlessMapWindowConfig {
         size: WindowSize,
     }
 
