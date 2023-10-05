@@ -423,6 +423,7 @@ mod tests {
         window::{MapWindow, MapWindowConfig, WindowSize},
     };
 
+    #[derive(Clone)]
     pub struct HeadlessMapWindowConfig {
         size: WindowSize,
     }

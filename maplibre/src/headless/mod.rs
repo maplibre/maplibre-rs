@@ -32,7 +32,7 @@ pub async fn create_headless_renderer(
     cache_path: Option<String>,
 ) -> (Kernel<HeadlessEnvironment>, Renderer) {
     let client = ReqwestHttpClient::new(cache_path);
-    let kernel = KernelBuilder::new()
+    let mut kernel = KernelBuilder::new()
         .with_map_window_config(HeadlessMapWindowConfig::new(
             WindowSize::new(tile_size, tile_size).unwrap(),
         ))
