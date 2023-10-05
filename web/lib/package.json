@@ -4,8 +4,6 @@
   "description": "",
   "scripts": {
     "clean": "rm -rf dist && rm -rf src/wasm-pack",
-    "watch": "node build.mjs --esm --watch",
-    "watch-webgl": "node build.mjs --esm --webgl --watch",
     "build": "node build.mjs",
     "build-webgl": "node build.mjs --webgl"
   },
@@ -21,9 +19,8 @@
     "wasm-feature-detect": "^1.3.0"
   },
   "devDependencies": {
-    "@chialab/esbuild-plugin-meta-url": "^0.17.2",
-    "chokidar": "^3.5.3",
-    "esbuild": "^0.15.13",
+    "@chialab/esbuild-plugin-meta-url": "^0.17.7",
+    "esbuild": "^0.19.4",
     "esbuild-plugin-inline-worker": "^0.1.1",
     "typescript": "^4.9.5",
     "yargs": "^17.7.2"
