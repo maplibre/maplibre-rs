@@ -81,7 +81,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         self.event_loop
             .run(move |event, _window_target, control_flow| {
                 #[cfg(target_os = "android")]
-                if !map.has_renderer() && event == Event::Resumed {
+                if !map.is_initialized() && event == Event::Resumed {
                     use tokio::{runtime::Handle, task};
 
                     task::block_in_place(|| {
@@ -131,6 +131,10 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         }
                     }
                     Event::RedrawRequested(_) => {
+                        if !map.is_initialized() {
+                            return;
+                        }
+
                         let now = Instant::now();
                         let dt = now - last_render_time;
                         last_render_time = now;
@@ -143,7 +147,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                             }
                         }
 
-                        // TODO: Maybe handle gracefully
+                        // TODO: Handle gracefully
                         map.run_schedule().expect("Failed to run schedule!");
 
                         if let Some(max_frames) = max_frames {
@@ -156,7 +160,8 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         }
                     }
                     Event::Suspended => {
-                        // FIXME unimplemented!()
+                        log::info!("Suspending and dropping render state.");
+                        map.reset() // TODO: Instead of resetting the whole map (incl. the renderer) only reset the renderer
                     }
                     Event::Resumed => {
                         // FIXME unimplemented!()
@@ -208,7 +213,7 @@ impl<
         HC: HttpClient,
         K: OffscreenKernelEnvironment,
         APC: AsyncProcedureCall<K>,
-        ET: 'static,
+        ET: 'static + Clone,
     > Environment for WinitEnvironment<S, HC, K, APC, ET>
 {
     type MapWindowConfig = WinitMapWindowConfig<ET>;

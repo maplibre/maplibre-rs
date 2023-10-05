@@ -17,9 +17,9 @@ fn embed_tiles_statically() {
 
     /// Tiles which can be used by StaticTileFetcher.
     fn clean_static_tiles() -> std::path::PathBuf {
-        let out_dir = std::env::var("OUT_DIR").unwrap();
+        let out_dir = env::var("OUT_DIR").unwrap();
 
-        let out = std::path::Path::new(&out_dir).join("extracted-tiles");
+        let out = Path::new(&out_dir).join("extracted-tiles");
 
         if out.exists() && out.is_dir() {
             std::fs::remove_dir_all(&out).unwrap()
@@ -32,7 +32,7 @@ fn embed_tiles_statically() {
 
     let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-    let source = Path::new(&root_dir).join(format!("../test-data/munich-{}.mbtiles", MUNICH_Z));
+    let source = Path::new(&root_dir).join(format!("../test-data/munich-{MUNICH_Z}.mbtiles"));
 
     if source.exists() {
         println!("cargo:rustc-cfg=static_tiles_found");

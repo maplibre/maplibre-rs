@@ -58,12 +58,12 @@ impl Quadkey {
 }
 
 impl fmt::Debug for Quadkey {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let key = self.0;
         let ZoomLevel(level) = key[0];
         let len = level as usize;
         for part in &self.0[0..len] {
-            write!(f, "{:?}", part)?;
+            write!(f, "{part:?}")?;
         }
         Ok(())
     }
@@ -115,8 +115,8 @@ impl std::ops::Sub<u8> for ZoomLevel {
     }
 }
 
-impl fmt::Display for ZoomLevel {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for ZoomLevel {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -186,8 +186,8 @@ impl Default for Zoom {
     }
 }
 
-impl fmt::Display for Zoom {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for Zoom {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", (self.0 * 100.0).round() / 100.0)
     }
 }
@@ -235,8 +235,7 @@ impl SignificantlyDifferent for Zoom {
 }
 
 /// Within each tile there is a separate coordinate system. Usually this coordinate system is
-/// within [`crate::coords::EXTENT`]. Therefore, `x` and `y` must be within the bounds of
-/// [`crate::coords::EXTENT`].
+/// within [`EXTENT`]. Therefore, `x` and `y` must be within the bounds of [`EXTENT`].
 ///
 /// # Coordinate System Origin
 ///
@@ -248,7 +247,7 @@ pub struct InnerCoords {
 }
 
 /// Every tile has tile coordinates. These tile coordinates are also called
-/// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
+/// [Slippy map tile names](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 ///
 /// # Coordinate System Origin
 ///
@@ -302,7 +301,7 @@ impl From<(u32, u32, ZoomLevel)> for TileCoords {
 
 /// Every tile has tile coordinates. Every tile coordinate can be mapped to a coordinate within
 /// the world. This provides the freedom to map from [TMS](https://wiki.openstreetmap.org/wiki/TMS)
-/// to [Slippy_map_tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
+/// to [Slippy map tile names](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 ///
 /// # Coordinate System Origin
 ///
@@ -654,8 +653,8 @@ impl ViewRegion {
     }
 }
 
-impl fmt::Display for TileCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for TileCoords {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "T(x={x},y={y},z={z})",
@@ -666,8 +665,8 @@ impl fmt::Display for TileCoords {
     }
 }
 
-impl fmt::Display for WorldTileCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for WorldTileCoords {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "WT(x={x},y={y},z={z})",
@@ -677,8 +676,8 @@ impl fmt::Display for WorldTileCoords {
         )
     }
 }
-impl fmt::Display for WorldCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for WorldCoords {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "W(x={x},y={y})", x = self.x, y = self.y,)
     }
 }
@@ -702,7 +701,7 @@ mod tests {
         let tile = WorldTileCoords::from(tile);
         let p1 = tile.transform_for_zoom(zoom) * TOP_LEFT;
         let p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT;
-        println!("{:?}\n{:?}", p1, p2);
+        println!("{p1:?}\n{p2:?}");
 
         assert_eq!(
             WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.level(), zoom),
@@ -776,7 +775,7 @@ mod tests {
         )
         .iter()
         {
-            println!("{}", tile_coords);
+            println!("{tile_coords}");
         }
     }
 }

@@ -102,9 +102,9 @@ makes it through the entire process to implementation is considered
 Retain the current informal RFC process. The newly proposed RFC process is
 designed to improve over the informal process in the following ways:
 
-* Discourage unactionable or vague RFCs
+* Discourage non-actionable or vague RFCs
 * Ensure that all serious RFCs are considered equally
-* Give confidence to those with a stake in maplibre-rs's development that they
+* Give confidence to those with a stake in maplibre-rs development that they
   understand why new features are being merged
 
 As an alternative, we could adopt an even stricter RFC process than the one proposed here. 

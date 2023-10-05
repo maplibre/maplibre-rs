@@ -24,7 +24,7 @@ pub trait HeadedMapWindow: MapWindow {
 
 /// A configuration for a window which determines the corresponding implementation of a
 /// [`MapWindow`] and is able to create it.
-pub trait MapWindowConfig: 'static {
+pub trait MapWindowConfig: 'static + Clone {
     type MapWindow: MapWindow;
 
     fn create(&self) -> Self::MapWindow;

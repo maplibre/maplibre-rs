@@ -24,11 +24,12 @@ pub fn resource_system(
         ..
     }: &mut MapContext,
 ) {
-    let Some(
-        debug_pipeline
-    ) = world.resources.query_mut::<
-        &mut Eventually<DebugPipeline>,
-    >() else { return; };
+    let Some(debug_pipeline) = world
+        .resources
+        .query_mut::<&mut Eventually<DebugPipeline>>()
+    else {
+        return;
+    };
 
     debug_pipeline.initialize(|| {
         let mask_shader = shaders::TileMaskShader {

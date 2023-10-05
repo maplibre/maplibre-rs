@@ -13,11 +13,12 @@ use crate::{
 };
 
 pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
-    let Some((
-        Initialized(tile_view_pattern),
-    )) = world.resources.query::<(
-        &Eventually<WgpuTileViewPattern>,
-    )>() else { return; };
+    let Some((Initialized(tile_view_pattern),)) = world
+        .resources
+        .query::<(&Eventually<WgpuTileViewPattern>,)>()
+    else {
+        return;
+    };
 
     let mut items = Vec::new();
 
@@ -49,7 +50,10 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
 
     let Some((layer_item_phase, tile_mask_phase)) = world
         .resources
-        .query_mut::<(&mut RenderPhase<LayerItem>, &mut RenderPhase<TileMaskItem>,)>() else { return; };
+        .query_mut::<(&mut RenderPhase<LayerItem>, &mut RenderPhase<TileMaskItem>)>()
+    else {
+        return;
+    };
 
     for (layer, mask) in items {
         layer_item_phase.add(layer);

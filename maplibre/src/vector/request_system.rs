@@ -74,8 +74,8 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                         .unwrap()
                         .insert(VectorLayersDataComponent::default());
 
-                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);
-                    log::info!("tile request started: {}", &coords);
+                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
+                    log::info!("tile request started: {coords}");
 
                     self.kernel
                         .apc()
@@ -111,8 +111,8 @@ pub fn fetch_vector_apc<
     kernel: K,
 ) -> AsyncProcedureFuture {
     Box::pin(async move {
-        let Input::TileRequest {coords, style} = input else {
-            return Err(ProcedureError::IncompatibleInput)
+        let Input::TileRequest { coords, style } = input else {
+            return Err(ProcedureError::IncompatibleInput);
         };
 
         let fill_layers: HashSet<String> = style
@@ -150,7 +150,7 @@ pub fn fetch_vector_apc<
                     .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
                 }
                 Err(e) => {
-                    log::error!("{:?}", &e);
+                    log::error!("{e:?}");
                     for to_load in &fill_layers {
                         context
                             .send(<T as VectorTransferables>::LayerMissing::build_from(

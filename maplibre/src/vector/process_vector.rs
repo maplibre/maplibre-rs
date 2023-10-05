@@ -59,12 +59,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
         if let Err(e) = layer.process(&mut tessellator) {
             context.layer_missing(coords, layer_name)?;
 
-            tracing::error!(
-                "layer {} at {} tesselation failed {:?}",
-                layer_name,
-                &coords,
-                e
-            );
+            tracing::error!("layer {layer_name} at {coords} tesselation failed {e:?}");
         } else {
             context.layer_tesselation_finished(
                 coords,
@@ -87,12 +82,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 
     for missing_layer in tile_request.layers.difference(&available_layers) {
         context.layer_missing(coords, missing_layer)?;
-
-        tracing::info!(
-            "requested layer {} at {} not found in tile",
-            missing_layer,
-            &coords
-        );
+        tracing::info!("requested layer {missing_layer} at {coords} not found in tile");
     }
 
     // Indexing
@@ -107,8 +97,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 
     // End
 
-    tracing::info!("tile tessellated at {} finished", &coords);
-
+    tracing::info!("tile tessellated at {coords} finished");
     context.tile_finished(coords)?;
 
     Ok(())

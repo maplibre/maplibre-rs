@@ -182,16 +182,16 @@ impl Surface {
         let size = window.size();
 
         let capabilities = surface.get_capabilities(adapter);
-        log::info!("adapter capabilities on surface: {:?}", capabilities);
+        log::info!("adapter capabilities on surface: {capabilities:?}");
 
         let texture_format = settings
             .texture_format
             .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
-        log::info!("format description: {:?}", texture_format);
+        log::info!("format description: {texture_format:?}");
 
         let texture_format_features = adapter.get_texture_format_features(texture_format);
-        log::info!("format features: {:?}", texture_format_features);
+        log::info!("format features: {texture_format_features:?}");
 
         Self {
             size: Some(size),

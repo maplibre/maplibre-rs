@@ -84,7 +84,7 @@ pub enum RenderStageLabel {
     /// For example during this phase textures are created, buffers are allocated and written.
     Prepare,
 
-    /// Queues [PhaseItems](crate::render::render_phase::PhaseItem) that depend on
+    /// Queues [PhaseItems](render_phase::PhaseItem) that depend on
     /// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the
     /// [`Render`](RenderStageLabel::Render) stage.
     /// For example data is uploaded to the GPU in this stage.
@@ -423,6 +423,7 @@ mod tests {
         window::{MapWindow, MapWindowConfig, WindowSize},
     };
 
+    #[derive(Clone)]
     pub struct HeadlessMapWindowConfig {
         size: WindowSize,
     }
@@ -465,7 +466,7 @@ mod tests {
             backends,
             dx12_shader_compiler: Default::default(),
         });
-        let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
+        let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, None)
             .await
             .expect("Unable to initialize adapter");
 

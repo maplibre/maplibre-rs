@@ -1,5 +1,6 @@
 use crate::window::{MapWindow, MapWindowConfig, WindowSize};
 
+#[derive(Clone)]
 pub struct HeadlessMapWindowConfig {
     size: WindowSize,
 }

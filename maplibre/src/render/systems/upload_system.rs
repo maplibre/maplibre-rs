@@ -21,11 +21,12 @@ pub fn upload_system(
         return;
     };
 
-    let Some(
-        Initialized(tile_view_pattern)
-    ) = world.resources.query_mut::<
-        &mut Eventually<WgpuTileViewPattern>
-    >() else { return; };
+    let Some(Initialized(tile_view_pattern)) = world
+        .resources
+        .query_mut::<&mut Eventually<WgpuTileViewPattern>>()
+    else {
+        return;
+    };
 
     tile_view_pattern.upload_pattern(queue, &view_proj);
 }
