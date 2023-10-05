@@ -5,7 +5,7 @@ on:
 
 jobs:
   library-apple:
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         name:
@@ -71,7 +71,7 @@ jobs:
 
   library-apple-test-xcode-project:
     name: Test XCode project
-    runs-on: macos-12
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v3
       - name: Setup
@@ -86,7 +86,7 @@ jobs:
 
   library-apple-bundle:
     name: Bundle
-    runs-on: macos-12
+    runs-on: macos-13
     needs:
       - library-apple
     steps:
