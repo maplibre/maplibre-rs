@@ -1,43 +1,40 @@
 use std::future::Future;
 
-use crate::io::scheduler::{ScheduleError, Scheduler};
+use tokio_util::task::LocalPoolHandle;
+
+use crate::io::scheduler::{ScheduleError, ScheduleMethod};
 
 /// Multi-threading with Tokio.
-pub struct TokioScheduler;
+pub struct TokioScheduleMethod {
+    pool: LocalPoolHandle,
+}
 
-impl TokioScheduler {
+impl TokioScheduleMethod {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            pool: LocalPoolHandle::new(4),
+        }
     }
 }
 
-impl Scheduler for TokioScheduler {
-    #[cfg(feature = "thread-safe-futures")]
+impl ScheduleMethod for TokioScheduleMethod {
     fn schedule<T>(
         &self,
-        future_factory: impl FnOnce() -> T + Send + 'static,
-    ) -> Result<(), ScheduleError>
-    where
-        T: Future<Output = ()> + Send + 'static,
-    {
-        tokio::task::spawn((future_factory)());
-        Ok(())
-    }
-
-    // FIXME: Provide a working implementation
-    #[cfg(not(feature = "thread-safe-futures"))]
-    fn schedule<T>(
-        &self,
-        _future_factory: impl FnOnce() -> T + 'static,
+        future_factory: impl FnOnce() -> T + 'static + Send,
     ) -> Result<(), ScheduleError>
     where
         T: Future<Output = ()> + 'static,
     {
+        self.pool.spawn_pinned(|| {
+            let unsend_data = (future_factory)();
+
+            async move { unsend_data.await }
+        });
         Ok(())
     }
 }
 
-impl Default for TokioScheduler {
+impl Default for TokioScheduleMethod {
     fn default() -> Self {
         Self::new()
     }

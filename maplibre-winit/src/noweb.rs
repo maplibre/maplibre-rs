@@ -12,7 +12,7 @@ use maplibre::{
     kernel::{Kernel, KernelBuilder},
     map::Map,
     platform::{
-        http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler,
+        http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduleMethod,
         ReqwestOffscreenKernelEnvironment,
     },
     raster::{DefaultRasterTransferables, RasterPlugin},
@@ -114,8 +114,8 @@ pub fn run_headed_map(
         let kernel: Kernel<Environment<_, _, _>> = KernelBuilder::new()
             .with_map_window_config(window_config)
             .with_http_client(client.clone())
-            .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new()))
-            .with_scheduler(TokioScheduler::new())
+            .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduleMethod::new()))
+            .with_scheduler(TokioScheduleMethod::new())
             .build();
 
         let renderer_builder = RendererBuilder::new().with_wgpu_settings(wgpu_settings);

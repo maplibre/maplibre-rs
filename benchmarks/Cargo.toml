@@ -12,7 +12,7 @@ categories.workspace = true
 authors.workspace = true
 
 [dependencies]
-maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles", "thread-safe-futures"] }
+maplibre = { path = "../maplibre", features = ["headless", "embed-static-tiles"] }
 
 [dev-dependencies]
 criterion.workspace = true

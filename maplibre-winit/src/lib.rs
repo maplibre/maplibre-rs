@@ -6,7 +6,7 @@ use instant::Instant;
 use maplibre::{
     environment::{Environment, OffscreenKernelEnvironment},
     event_loop::{EventLoop, EventLoopProxy, SendEventError},
-    io::{apc::AsyncProcedureCall, scheduler::Scheduler, source_client::HttpClient},
+    io::{apc::AsyncProcedureCall, scheduler::ScheduleMethod, source_client::HttpClient},
     map::Map,
     window::{HeadedMapWindow, MapWindowConfig},
 };
@@ -191,7 +191,7 @@ impl<ET: 'static> EventLoopProxy<ET> for WinitEventLoopProxy<ET> {
 }
 
 pub struct WinitEnvironment<
-    S: Scheduler,
+    S: ScheduleMethod,
     HC: HttpClient,
     K: OffscreenKernelEnvironment,
     APC: AsyncProcedureCall<K>,
@@ -205,7 +205,7 @@ pub struct WinitEnvironment<
 }
 
 impl<
-        S: Scheduler,
+        S: ScheduleMethod,
         HC: HttpClient,
         K: OffscreenKernelEnvironment,
         APC: AsyncProcedureCall<K>,

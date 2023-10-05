@@ -17,7 +17,7 @@ authors.workspace = true
 default = ["raster"]
 web-webgl = ["wgpu/webgl"]
 # Enable tracing using tracy on desktop/mobile and the chrome profiler on web
-trace = ["tracing-subscriber", "tracing-tracy", "tracy-client"]
+trace = ["tracing-subscriber", "tracing-tracy"]
 embed-static-tiles = ["maplibre-build-tools/sqlite"]
 headless = ["png"]
 raster = ["image"]
@@ -26,7 +26,6 @@ raster = ["image"]
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
 tokio-util.workspace = true
-tokio-util = { version = "0.7.1", features = ["rt"] }
 env_logger.workspace = true
 reqwest.workspace = true
 reqwest-middleware-cache.workspace = true
