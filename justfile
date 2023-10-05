@@ -4,10 +4,14 @@
 
 set shell := ["bash", "-c"]
 
-#  Also change the version in android/gradle/lib/build.gradle
+# Keep this in sync with `android/gradle/lib/build.gradle`
 
-export NIGHTLY_TOOLCHAIN := "nightly-2023-03-29"
-export STABLE_TOOLCHAIN := "1.65"
+export NIGHTLY_TOOLCHAIN := "nightly-2023-09-23"
+
+# Keep this in sync with `rust-toolchain.toml` and `Cargo.toml`.
+# Make sure the above is newer than this.
+
+export STABLE_TOOLCHAIN := "1.72.1"
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
 
@@ -67,7 +71,14 @@ nightly-check PROJECT ARCH FEATURES: nightly-toolchain nightly-install-clippy
 test PROJECT ARCH:
     cargo test -p {{ PROJECT }} --target {{ ARCH }}
 
+# language=bash
 benchmark:
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    if ! command -v cargo-criterion &> /dev/null; then
+      echo "cargo criterion could not be found. Install it with 'cargo install cargo-criterion'"
+      exit 1
+    fi
     cargo criterion -p benchmarks
 
 fmt: nightly-install-rustfmt
@@ -180,8 +191,7 @@ xcodebuild-xcframework:
 extract-tiles:
     #!/usr/bin/env bash
     set -euxo pipefail
-    if ! command -v tilelive-copy &> /dev/null
-    then
+    if ! command -v tilelive-copy &> /dev/null; then
       echo "tilelive-copy could not be found. Install it with 'yarn global add @mapbox/tilelive @mapbox/mbtiles'"
       exit 1
     fi

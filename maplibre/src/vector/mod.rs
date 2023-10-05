@@ -71,9 +71,10 @@ struct VectorTilesDone;
 
 impl HasTile for VectorTilesDone {
     fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
-        let Some(vector_layers_indices) = world
-            .tiles
-            .query::<&VectorLayersDataComponent>(coords) else { return false; };
+        let Some(vector_layers_indices) = world.tiles.query::<&VectorLayersDataComponent>(coords)
+        else {
+            return false;
+        };
 
         vector_layers_indices.done
     }

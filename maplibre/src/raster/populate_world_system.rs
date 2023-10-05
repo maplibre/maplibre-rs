@@ -40,8 +40,11 @@ impl<E: Environment, T: RasterTransferables> System for PopulateWorldSystem<E, T
             if message.has_tag(T::LayerRaster::message_tag()) {
                 let message = message.into_transferable::<T::LayerRaster>();
                 let Some(component) = world
-                        .tiles
-                        .query_mut::<&mut RasterLayersDataComponent>(message.coords()) else { continue; };
+                    .tiles
+                    .query_mut::<&mut RasterLayersDataComponent>(message.coords())
+                else {
+                    continue;
+                };
 
                 component
                     .layers
@@ -50,7 +53,10 @@ impl<E: Environment, T: RasterTransferables> System for PopulateWorldSystem<E, T
                 let message = message.into_transferable::<T::LayerRasterMissing>();
                 let Some(component) = world
                     .tiles
-                    .query_mut::<&mut RasterLayersDataComponent>(message.coords()) else { continue; };
+                    .query_mut::<&mut RasterLayersDataComponent>(message.coords())
+                else {
+                    continue;
+                };
 
                 component
                     .layers

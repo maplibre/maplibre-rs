@@ -7,6 +7,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 keywords.workspace = true
+categories.workspace = true
 authors.workspace = true
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
@@ -18,6 +19,9 @@ tokio.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
 winit = { workspace = true, features = ["x11", "wayland"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+winit = { workspace = true, features = ["android-native-activity"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { workspace = true, features = ["Window"] }

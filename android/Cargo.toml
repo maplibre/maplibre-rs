@@ -8,6 +8,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 keywords.workspace = true
+categories.workspace = true
 authors.workspace = true
 
 [dependencies]
@@ -15,7 +16,8 @@ maplibre = { path = "../maplibre", features = ["thread-safe-futures"] }
 maplibre-winit = { path = "../maplibre-winit", version = "0.1.0"  }
 env_logger.workspace = true
 log.workspace = true
-ndk-glue.workspace = true
+android_logger.workspace = true
+android-activity.workspace = true
 jni.workspace = true
 
 [lib]

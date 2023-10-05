@@ -34,7 +34,8 @@ cargo {
     libname = "maplibre_android"
     targetDirectory = "${module}/../target"
     profile = "debug"
-    rustupChannel = "nightly-2023-03-29" // Also change the version in justfile
+    // This should be in sync with the justfile
+    rustupChannel = "nightly-2023-09-23"
     
 
     features {
