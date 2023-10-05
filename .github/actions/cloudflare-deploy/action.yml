@@ -1,5 +1,5 @@
 name: deploy
-description: Deploy on maxammann.org
+description: Deploy on cloudflare
 
 inputs:
   project:
@@ -23,4 +23,4 @@ runs:
       with:
         apiToken: ${{ inputs.CF_API_TOKEN }}
         accountId: ${{ inputs.CF_ACCOUNT_ID }}
-        command: pages publish --branch production --project-name=${{ inputs.project }} ${{ inputs.source }}
+        command: pages publish --branch main --project-name=${{ inputs.project }} ${{ inputs.source }}

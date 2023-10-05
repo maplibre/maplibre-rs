@@ -2,9 +2,8 @@
 
 use std::borrow::Cow;
 
+use wgpu::PresentMode;
 pub use wgpu::{Backends, Features, Limits, PowerPreference, TextureFormat};
-
-use crate::platform::COLOR_TEXTURE_FORMAT;
 
 /// Provides configuration for renderer initialization. Use [`Device::features`](crate::renderer::Device::features),
 /// [`Device::limits`](crate::renderer::Device::limits), and the [`WgpuAdapterInfo`](crate::render_resource::WgpuAdapterInfo)
@@ -30,7 +29,7 @@ pub struct WgpuSettings {
 
 impl Default for WgpuSettings {
     fn default() -> Self {
-        let backends = Some(wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all()));
+        let backends = Some(wgpu::util::backend_bits_from_env().unwrap_or(Backends::all()));
 
         let limits = if cfg!(feature = "web-webgl") {
             Limits {
@@ -54,11 +53,13 @@ impl Default for WgpuSettings {
             }
         };
 
+        let features = Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES;
+
         Self {
             device_label: Default::default(),
             backends,
             power_preference: PowerPreference::HighPerformance,
-            features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
+            features,
             disabled_features: None,
             limits,
             constrained_limits: None,
@@ -88,28 +89,36 @@ pub struct Msaa {
 }
 
 impl Msaa {
-    pub fn is_active(&self) -> bool {
+    pub fn is_multisampling(&self) -> bool {
         self.samples > 1
     }
 }
 
 impl Default for Msaa {
     fn default() -> Self {
+        // By default we are trying to multisample
         Self { samples: 4 }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct RendererSettings {
     pub msaa: Msaa,
-    pub texture_format: TextureFormat,
+    /// Explicitly set a texture format or let the renderer automatically choose one
+    pub texture_format: Option<TextureFormat>,
+    pub depth_texture_format: TextureFormat,
+    /// Present mode for surfaces if a surface is used.
+    pub present_mode: PresentMode,
 }
 
 impl Default for RendererSettings {
     fn default() -> Self {
         Self {
             msaa: Msaa::default(),
-            texture_format: COLOR_TEXTURE_FORMAT,
+            texture_format: None,
+
+            depth_texture_format: TextureFormat::Depth24PlusStencil8,
+            present_mode: PresentMode::AutoVsync,
         }
     }
 }

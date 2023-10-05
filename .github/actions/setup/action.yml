@@ -1,0 +1,60 @@
+name: setup
+description: Setup
+
+
+inputs:
+  nightly:
+    required: false
+    description: If true stable will be installed, if false nightly
+  targets:
+    required: false
+    description: space separated list of rustc targets
+
+runs:
+  using: "composite"
+  steps:
+    # The Rust version from rust-toolchain.toml is used for the first steps. Later the Rust version is changed
+    # by setting another version in "Set XYZ toolchain".
+    - name: Setup default toolchain
+      shell: bash
+      run: rustup show # Installs toolchain specified in rust-toolchain.toml
+    - name: Install just
+      uses: ./.github/actions/cargo-install
+      with:
+        name: just
+    - name: Install stable toolchain
+      if: ${{ !inputs.nightly }}
+      shell: bash
+      run: just stable-toolchain
+    - name: Install nightly toolchain
+      if: ${{ inputs.nightly }}
+      shell: bash
+      run: just nightly-toolchain
+    # We are now setting the toolchains using override. That way e.g. Swatinem/rust-cache will pick up the right rustc
+    # version
+    - name: Set stable toolchain
+      if: ${{ !inputs.nightly }}
+      shell: bash
+      run: just stable-override-toolchain
+    - name: Set nightly toolchain
+      if: ${{ inputs.nightly }}
+      shell: bash
+      run: just nightly-override-toolchain
+    - name: Install targets
+      if: ${{ inputs.targets && !inputs.nightly  }}
+      shell: bash
+      run: just stable-targets ${{ inputs.targets }}
+    - name: Install targets
+      if: ${{ inputs.targets && inputs.nightly  }}
+      shell: bash
+      run: just nightly-targets ${{ inputs.targets }}
+    - uses: Swatinem/rust-cache@v2
+    # Install just again because Swatinem/rust-cache might remove it while restoring the cache
+    - name: Install just
+      uses: ./.github/actions/cargo-install
+      with:
+        name: just
+    - name: Install cargo-criterion
+      uses: ./.github/actions/cargo-install
+      with:
+        name: cargo-criterion

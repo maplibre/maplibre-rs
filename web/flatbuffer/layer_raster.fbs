@@ -1,0 +1,12 @@
+include "basic.fbs";
+
+table FlatLayerRaster {
+    coords: FlatWorldTileCoords;
+    layer_name: string;
+
+    image_data: [ubyte];
+    width: uint;
+    height: uint;
+}
+
+root_type FlatLayerRaster;

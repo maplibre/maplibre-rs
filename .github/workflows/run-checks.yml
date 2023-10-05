@@ -6,14 +6,11 @@ on:
 jobs:
   run-checks:
     name: Check
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
-      - name: Install toolchain
-        shell: bash
-        run: just default-toolchain
-      - uses: Swatinem/rust-cache@v1
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
       - name: Format
         shell: bash
         run: just fmt-check

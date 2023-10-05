@@ -27,12 +27,17 @@ pub trait Shader {
 pub struct TileMaskShader {
     pub format: wgpu::TextureFormat,
     pub draw_colors: bool,
+    pub debug_lines: bool,
 }
 
 impl Shader for TileMaskShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
-            source: include_str!("tile_mask.vertex.wgsl"),
+            source: if self.debug_lines {
+                include_str!("tile_debug.vertex.wgsl")
+            } else {
+                include_str!("tile_mask.vertex.wgsl")
+            },
             entry_point: "main",
             buffers: vec![VertexBufferLayout {
                 array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
@@ -59,6 +64,12 @@ impl Shader for TileMaskShader {
                         format: wgpu::VertexFormat::Float32x4,
                         shader_location: 7,
                     },
+                    // zoom factor
+                    wgpu::VertexAttribute {
+                        offset: 4 * wgpu::VertexFormat::Float32x4.size(),
+                        format: wgpu::VertexFormat::Float32,
+                        shader_location: 9,
+                    },
                 ],
             }],
         }
@@ -66,7 +77,7 @@ impl Shader for TileMaskShader {
 
     fn describe_fragment(&self) -> FragmentState {
         FragmentState {
-            source: include_str!("tile_mask.fragment.wgsl"),
+            source: include_str!("basic.fragment.wgsl"),
             entry_point: "main",
             targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
@@ -81,11 +92,11 @@ impl Shader for TileMaskShader {
     }
 }
 
-pub struct TileShader {
+pub struct VectorTileShader {
     pub format: wgpu::TextureFormat,
 }
 
-impl Shader for TileShader {
+impl Shader for VectorTileShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
             source: include_str!("tile.vertex.wgsl"),
@@ -176,22 +187,10 @@ impl Shader for TileShader {
 
     fn describe_fragment(&self) -> FragmentState {
         FragmentState {
-            source: include_str!("tile.fragment.wgsl"),
+            source: include_str!("basic.fragment.wgsl"),
             entry_point: "main",
             targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
-                /*blend: Some(wgpu::BlendState {
-                    color: wgpu::BlendComponent {
-                        src_factor: wgpu::BlendFactor::SrcAlpha,
-                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                        operation: wgpu::BlendOperation::Add,
-                    },
-                    alpha: wgpu::BlendComponent {
-                        src_factor: wgpu::BlendFactor::SrcAlpha,
-                        dst_factor: wgpu::BlendFactor::OneMinusSrcAlpha,
-                        operation: wgpu::BlendOperation::Add,
-                    },
-                }),*/
                 blend: None,
                 write_mask: wgpu::ColorWrites::ALL,
             })],
@@ -287,6 +286,105 @@ impl ShaderTileMetadata {
         Self {
             transform,
             zoom_factor,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct ShaderTextureVertex {
+    pub position: Vec2f32,
+    pub tex_coords: Vec2f32,
+}
+
+impl ShaderTextureVertex {
+    pub fn new(position: Vec2f32, tex_coords: Vec2f32) -> Self {
+        Self {
+            position,
+            tex_coords,
+        }
+    }
+}
+
+impl Default for ShaderTextureVertex {
+    fn default() -> Self {
+        ShaderTextureVertex::new([0.0, 0.0], [0.0, 0.0])
+    }
+}
+
+pub struct RasterTileShader {
+    pub format: wgpu::TextureFormat,
+}
+
+impl Shader for RasterTileShader {
+    fn describe_vertex(&self) -> VertexState {
+        VertexState {
+            source: include_str!("tile_raster.vertex.wgsl"),
+            entry_point: "main",
+            buffers: vec![
+                // tile metadata
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderTileMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: vec![
+                        // translate
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 4,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 1 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 5,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 2 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 6,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 3 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32x4,
+                            shader_location: 7,
+                        },
+                        // zoom_factor
+                        wgpu::VertexAttribute {
+                            offset: 4 * wgpu::VertexFormat::Float32x4.size(),
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 9,
+                        },
+                    ],
+                },
+                // layer metadata
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<ShaderLayerMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: vec![
+                        // z_index
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 10,
+                        },
+                    ],
+                },
+            ],
+        }
+    }
+
+    fn describe_fragment(&self) -> FragmentState {
+        FragmentState {
+            source: include_str!("tile_raster.fragment.wgsl"),
+            entry_point: "main",
+            targets: vec![Some(wgpu::ColorTargetState {
+                format: self.format,
+                blend: Some(wgpu::BlendState {
+                    color: wgpu::BlendComponent::REPLACE,
+                    alpha: wgpu::BlendComponent::REPLACE,
+                }),
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
         }
     }
 }

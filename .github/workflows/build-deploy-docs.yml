@@ -11,31 +11,31 @@ on:
 jobs:
   build-docs:
     name: Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
-      - name: Install toolchain
-        shell: bash
-        run: just default-toolchain
-      - uses: Swatinem/rust-cache@v1
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v1
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Install mdbook
+        uses: ./.github/actions/cargo-install
+        with:
+          name: mdbook
       - name: Install Dependencies
-        shell: bash
-        run: sudo apt-get install -y libwayland-dev libxkbcommon-dev # Required for winit
+        uses: ./.github/actions/install-system-dependencies
       - name: Build
         working-directory: docs
         shell: bash
-        run: mdbook build
+        run: |
+          ./generate-summary.sh
+          mdbook build
       - name: API Documentation
         shell: bash
         run: cargo doc -p maplibre --no-deps --lib --document-private-items
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: api-docs
           path: target/doc/
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: book
           path: docs/book/
@@ -43,16 +43,16 @@ jobs:
     needs: build-docs
     if: inputs.deploy
     name: Deploy
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download api-docs
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: api-docs
           path: artifacts/api
       - name: Download book
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: book
           path: artifacts/book

@@ -4,11 +4,12 @@ use std::collections::{BTreeMap, HashMap};
 
 use cgmath::{num_traits::Signed, Bounded};
 use geo::prelude::*;
-use geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
+use geo_types::{Coord, CoordFloat, Geometry, LineString, Point, Polygon};
 use geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
 };
+use log::debug;
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
 use crate::{
@@ -62,6 +63,12 @@ impl GeometryIndex {
     }
 }
 
+impl Default for GeometryIndex {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Index of tiles which can be of two types: spatial or linear.
 /// Spatial tiles are stored in a multi-dimentional tree which represents their position in the tile.
 /// Linear tiles are simply stored in a vector.
@@ -74,8 +81,8 @@ pub enum TileIndex {
 
 impl TileIndex {
     pub fn point_query(&self, inner_coords: InnerCoords) -> Vec<&IndexedGeometry<f64>> {
-        let point = geo_types::Point::new(inner_coords.x, inner_coords.y);
-        let coordinate: Coordinate<_> = point.into();
+        let point = Point::new(inner_coords.x, inner_coords.y);
+        let coordinate: Coord<_> = point.into();
 
         // FIXME: Respect layer order of style
         match self {
@@ -198,12 +205,21 @@ impl IndexProcessor {
     }
 }
 
+impl Default for IndexProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GeomProcessor for IndexProcessor {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.xy(x, y, idx)
     }
     fn point_begin(&mut self, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.point_begin(idx)
+    }
+    fn point_end(&mut self, idx: usize) -> Result<(), GeozeroError> {
+        self.geo_writer.point_end(idx)
     }
     fn multipoint_begin(&mut self, size: usize, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.multipoint_begin(size, idx)
@@ -233,6 +249,9 @@ impl GeomProcessor for IndexProcessor {
     }
     fn multipolygon_begin(&mut self, size: usize, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.multipolygon_begin(size, idx)
+    }
+    fn multipolygon_end(&mut self, idx: usize) -> Result<(), GeozeroError> {
+        self.geo_writer.multipolygon_end(idx)
     }
 }
 
@@ -283,17 +302,29 @@ impl FeatureProcessor for IndexProcessor {
     }
     /// End of feature geometry processing.
     fn geometry_end(&mut self) -> Result<(), GeozeroError> {
-        let geometry = self.geo_writer.take_geometry().unwrap();
+        let geometry = self.geo_writer.take_geometry();
 
         match geometry {
-            Geometry::Polygon(polygon) => self.geometries.push(
+            Some(Geometry::Polygon(polygon)) => self.geometries.push(
                 IndexedGeometry::from_polygon(polygon, self.properties.take().unwrap()).unwrap(),
             ),
-            Geometry::LineString(linestring) => self.geometries.push(
+            Some(Geometry::LineString(linestring)) => self.geometries.push(
                 IndexedGeometry::from_linestring(linestring, self.properties.take().unwrap())
                     .unwrap(),
             ),
-            _ => {}
+            Some(Geometry::Point(_)) => debug!("Unsupported Point geometry in index"),
+            Some(Geometry::Line(_)) => debug!("Unsupported Line geometry in index"),
+            Some(Geometry::MultiPoint(_)) => debug!("Unsupported MultiPoint geometry in index"),
+            Some(Geometry::MultiLineString(_)) => {
+                debug!("Unsupported MultiLineString geometry in index")
+            }
+            Some(Geometry::MultiPolygon(_)) => debug!("Unsupported MultiPolygon geometry in index"),
+            Some(Geometry::GeometryCollection(_)) => {
+                debug!("Unsupported GeometryCollection geometry in index")
+            }
+            Some(Geometry::Rect(_)) => debug!("Unsupported Rect geometry in index"),
+            Some(Geometry::Triangle(_)) => debug!("Unsupported Triangle geometry in index"),
+            None => debug!("No geometry in index"),
         };
 
         Ok(())

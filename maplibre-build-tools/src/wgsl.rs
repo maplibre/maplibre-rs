@@ -26,13 +26,13 @@ impl From<std::io::Error> for WgslError {
 impl WgslError {
     pub fn from_parse_err(err: ParseError, src: &str) -> Self {
         let location = err.location(src);
-        let error = err.emit_to_string(src);
+        let error = err.message().to_string();
         Self::ParserErr { error, location }
     }
 }
 
 fn validate_wgsl(validator: &mut Validator, path: &Path) -> Result<(), WgslError> {
-    let shader = std::fs::read_to_string(&path).map_err(WgslError::from)?;
+    let shader = std::fs::read_to_string(path).map_err(WgslError::from)?;
     let module = wgsl::parse_str(&shader).map_err(|err| WgslError::from_parse_err(err, &shader))?;
 
     if let Err(err) = validator.validate(&module) {
@@ -51,7 +51,7 @@ pub fn validate_project_wgsl() {
         let path = e.path();
 
         if !path.is_dir() {
-            path.extension().map(|ext| &*ext == "wgsl").unwrap_or(false)
+            path.extension().map(|ext| ext == "wgsl").unwrap_or(false)
         } else {
             true
         }
@@ -70,7 +70,7 @@ pub fn validate_project_wgsl() {
                                 "cargo:warning={}{}",
                                 path.to_str().unwrap(),
                                 match err {
-                                    WgslError::ValidationErr(error) => format!(": {:?}", error),
+                                    WgslError::ValidationErr(error) => format!(": {error:?}"),
                                     WgslError::ParserErr { error, location } =>
                                         if let Some(SourceLocation {
                                             line_number,
@@ -78,11 +78,11 @@ pub fn validate_project_wgsl() {
                                             ..
                                         }) = location
                                         {
-                                            format!(":{}:{} {}", line_number, line_position, error)
+                                            format!(":{line_number}:{line_position} {error}")
                                         } else {
-                                            format!("{}", error)
+                                            error
                                         },
-                                    WgslError::IoErr(error) => format!(": {:?}", error),
+                                    WgslError::IoErr(error) => format!(": {error:?}"),
                                 }
                             );
                             exit(1);
@@ -91,7 +91,7 @@ pub fn validate_project_wgsl() {
                 }
             }
             Err(error) => {
-                println!("cargo:warning={:?}", error);
+                println!("cargo:warning={error:?}");
                 exit(1);
             }
         }

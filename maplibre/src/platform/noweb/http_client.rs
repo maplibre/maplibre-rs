@@ -3,26 +3,28 @@ use reqwest::{Client, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use reqwest_middleware_cache::{managers::CACacheManager, Cache, CacheMode};
 
-use crate::{error::Error, HttpClient};
+use crate::io::source_client::{HttpClient, SourceFetchError};
 
 #[derive(Clone)]
 pub struct ReqwestHttpClient {
     client: ClientWithMiddleware,
 }
-impl From<reqwest::Error> for Error {
+
+impl From<reqwest::Error> for SourceFetchError {
     fn from(err: reqwest::Error) -> Self {
-        Error::Network(err.to_string())
+        SourceFetchError(Box::new(err))
     }
 }
 
-impl From<reqwest_middleware::Error> for Error {
+impl From<reqwest_middleware::Error> for SourceFetchError {
     fn from(err: reqwest_middleware::Error) -> Self {
-        Error::Network(err.to_string())
+        SourceFetchError(Box::new(err))
     }
 }
 
 impl ReqwestHttpClient {
     /// cache_path: Under which path should we cache requests.
+    // TODO: Use Into<Path> instead of String
     pub fn new(cache_path: Option<String>) -> Self {
         let mut builder = reqwest_middleware::ClientBuilder::new(Client::new());
 
@@ -41,7 +43,7 @@ impl ReqwestHttpClient {
 
 #[async_trait(?Send)]
 impl HttpClient for ReqwestHttpClient {
-    async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error> {
+    async fn fetch(&self, url: &str) -> Result<Vec<u8>, SourceFetchError> {
         let response = self.client.get(url).send().await?;
         match response.error_for_status() {
             Ok(response) => {
@@ -50,9 +52,10 @@ impl HttpClient for ReqwestHttpClient {
                 }
 
                 let body = response.bytes().await?;
+
                 Ok(Vec::from(body.as_ref()))
             }
-            Err(e) => Err(Error::Network(e.to_string())),
+            Err(e) => Err(SourceFetchError(Box::new(e))),
         }
     }
 }

@@ -11,7 +11,7 @@ module it can resolve WebAssembly files or WebWorkers dynamically.
 The following syntax is used to resolve referenced WebWorkers:
 
 ```ts
-new Worker(new URL("./pool.worker.ts", import.meta.url), {
+new Worker(new URL("./multithreaded-pool.worker.ts", import.meta.url), {
     type: 'module'
 });
 ```
@@ -35,7 +35,7 @@ Both assets could be inlined theoretically. This is common for WebWorkers, but n
 
 ### UMD
 
-> UMD modules are needed when creating a library which should run in Node as well as browsers. This is not a usecase
+> UMD modules are needed when creating a library which should run in Node as well as browsers. This is not a use case
 > for maplibre-rs. If we support node, then we probably would ship a separate package called "maplibre-rs-node" which
 > bundles to CJS directly.
 
@@ -107,7 +107,7 @@ See config in `web/lib/build.mjs` for an example usage.
 ### Babel & TypeScript
 
 Babel and TypeScript both can produce ESM modules, but they **fail with transforming references within the source code**
-like `new URL("./pool.worker.ts", import.meta.url)`. There exist some Babel plugins, but none of them is stable.
+like `new URL("./multithreaded-pool.worker.ts", import.meta.url)`. There exist some Babel plugins, but none of them is stable.
 Therefore, we actually need a proper bundler which supports outputting ESM modules.
 The only stable solution to this is Parcel. Parcel also has good documentation around the bundling of WebWorkers.
 

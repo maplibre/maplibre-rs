@@ -2,35 +2,37 @@
 
 use std::future::Future;
 
-use crate::error::Error;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum ScheduleError {
+    #[error("scheduling work failed")]
+    Scheduling(Box<dyn std::error::Error>),
+    #[error("scheduler is not implemented on this platform")]
+    NotImplemented,
+}
 
 /// Async/await scheduler.
-pub struct Scheduler<SM>
-where
-    SM: ScheduleMethod,
-{
-    schedule_method: SM,
-}
-
-impl<SM> Scheduler<SM>
-where
-    SM: ScheduleMethod,
-{
-    pub fn new(schedule_method: SM) -> Self {
-        Self { schedule_method }
-    }
-
-    pub fn schedule_method(&self) -> &SM {
-        &self.schedule_method
-    }
-}
-
 /// Can schedule a task from a future factory and a shared state.
 pub trait ScheduleMethod: 'static {
     fn schedule<T>(
         &self,
         future_factory: impl (FnOnce() -> T) + Send + 'static,
-    ) -> Result<(), Error>
+    ) -> Result<(), ScheduleError>
     where
         T: Future<Output = ()> + 'static;
+}
+
+pub struct NopScheduler;
+
+impl Scheduler for NopScheduler {
+    fn schedule<T>(
+        &self,
+        _future_factory: impl FnOnce() -> T + Send + 'static,
+    ) -> Result<(), ScheduleError>
+    where
+        T: Future<Output = ()> + 'static,
+    {
+        Err(ScheduleError::NotImplemented)
+    }
 }

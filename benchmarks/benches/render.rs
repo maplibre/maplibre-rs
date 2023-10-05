@@ -1,65 +1,40 @@
-use std::collections::HashSet;
-
 use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
     coords::{WorldTileCoords, ZoomLevel},
-    error::Error,
-    headless::{utils::HeadlessPipelineProcessor, HeadlessMapWindowConfig},
-    io::{
-        pipeline::{PipelineContext, Processable},
-        source_client::HttpSourceClient,
-        tile_pipelines::build_vector_tile_pipeline,
-        TileRequest,
-    },
-    platform::{
-        http_client::ReqwestHttpClient, run_multithreaded, schedule_method::TokioScheduleMethod,
-    },
-    render::settings::{RendererSettings, TextureFormat},
-    window::WindowSize,
-    MapBuilder,
+    headless::{create_headless_renderer, map::HeadlessMap, HeadlessPlugin},
+    platform::run_multithreaded,
+    plugin::Plugin,
+    render::RenderPlugin,
+    style::Style,
+    vector::{DefaultVectorTransferables, VectorPlugin},
 };
 
 fn headless_render(c: &mut Criterion) {
     c.bench_function("headless_render", |b| {
-        let mut map = run_multithreaded(async {
-            let mut map = MapBuilder::new()
-                .with_map_window_config(HeadlessMapWindowConfig {
-                    size: WindowSize::new(1000, 1000).unwrap(),
-                })
-                .with_http_client(ReqwestHttpClient::new(None))
-                .with_schedule_method(TokioScheduleMethod::new())
-                .with_renderer_settings(RendererSettings {
-                    texture_format: TextureFormat::Rgba8UnormSrgb,
-                    ..RendererSettings::default()
-                })
-                .build()
-                .initialize_headless()
-                .await;
+        let (mut map, layer) = run_multithreaded(async {
+            let (kernel, renderer) = create_headless_renderer(1000, None).await;
+            let style = Style::default();
 
-            map.map_schedule
-                .fetch_process(&WorldTileCoords::from((0, 0, ZoomLevel::default())))
+            let plugins: Vec<Box<dyn Plugin<_>>> = vec![
+                Box::new(RenderPlugin::default()),
+                Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
+                Box::new(HeadlessPlugin::new(false)),
+            ];
+
+            let map = HeadlessMap::new(style, renderer, kernel, plugins).unwrap();
+
+            let tile = map
+                .fetch_tile(WorldTileCoords::from((0, 0, ZoomLevel::default())))
                 .await
-                .expect("Failed to fetch and process!");
+                .expect("Failed to fetch!");
 
-            map
+            let tile = map.process_tile(tile, &["water"]).await;
+
+            (map, tile)
         });
 
-        b.to_async(
-            tokio::runtime::Builder::new_multi_thread()
-                .enable_all()
-                .build()
-                .unwrap(),
-        )
-        .iter(|| {
-            match map.map_schedule_mut().update_and_redraw() {
-                Ok(_) => {}
-                Err(Error::Render(e)) => {
-                    eprintln!("{}", e);
-                    if e.should_exit() {}
-                }
-                e => eprintln!("{:?}", e),
-            };
-            async {}
+        b.iter(|| {
+            map.render_tile(layer.clone());
         });
     });
 }

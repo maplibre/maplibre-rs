@@ -1,6 +1,6 @@
 plugins {
-    id 'com.android.application' version '7.0.4' apply true
-    id 'org.jetbrains.kotlin.android' version '1.6.21' apply true
+    id 'com.android.application' version '7.2.0' apply true
+    id 'org.jetbrains.kotlin.android' version '1.7.20' apply true
 }
 
 android {
@@ -34,6 +34,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    namespace 'com.example.demo'
 }
 
 dependencies {

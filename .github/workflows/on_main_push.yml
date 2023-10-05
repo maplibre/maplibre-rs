@@ -24,9 +24,28 @@ jobs:
     secrets: inherit
   library-android:
     uses: ./.github/workflows/library-android.yml
-  library-web:
+  library-web-webgl:
     uses: ./.github/workflows/library-web.yml
     with:
+      name: maplibre-rs-demo-webgl
+      webgl: true
+      multithreaded: false
+      deploy: true
+    secrets: inherit
+  library-web-webgl-multithreaded:
+    uses: ./.github/workflows/library-web.yml
+    with:
+      name: maplibre-rs-demo-webgl-multithreaded
+      webgl: true
+      multithreaded: true
+      deploy: true
+    secrets: inherit
+  library-web-webgpu:
+    uses: ./.github/workflows/library-web.yml
+    with:
+      name: maplibre-rs-demo-webgpu
+      webgl: false
+      multithreaded: false
       deploy: true
     secrets: inherit
   library-apple:

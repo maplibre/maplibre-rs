@@ -1,0 +1,10 @@
+include "basic.fbs";
+
+//namespace transferables;
+
+table FlatLayerIndexed {
+    coords: FlatWorldTileCoords;
+}
+
+root_type FlatLayerIndexed;
+

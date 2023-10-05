@@ -8,14 +8,13 @@ jobs:
     name: Build
     runs-on: macos-12
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install toolchain
-        shell: bash
-        run: just default-toolchain
-      - uses: Swatinem/rust-cache@v1
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          targets: x86_64-apple-darwin
+      - name: Install Dependencies
+        uses: ./.github/actions/install-system-dependencies
       - name: Build
         shell: bash
         run: cd apple/xcode && xcodebuild -scheme "example (macOS)" build CODE_SIGNING_ALLOWED=NO MACOSX_DEPLOYMENT_TARGET=10.9 -derivedDataPath build

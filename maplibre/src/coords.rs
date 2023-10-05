@@ -1,8 +1,14 @@
 //! Provides utilities related to coordinates.
 
-use std::{f64::consts::PI, fmt};
+use std::{
+    f64::consts::PI,
+    fmt,
+    fmt::{Display, Formatter},
+};
 
-use cgmath::{num_traits::Pow, AbsDiffEq, Matrix4, Point3, Vector3};
+use bytemuck_derive::{Pod, Zeroable};
+use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     style::source::TileAddressingScheme,
@@ -26,7 +32,7 @@ const fn create_zoom_bounds<const DIM: usize>() -> [u32; DIM] {
     let mut result: [u32; DIM] = [0; DIM];
     let mut i = 0;
     while i < DIM {
-        result[i as usize] = 2u32.pow(i as u32);
+        result[i] = 2u32.pow(i as u32);
         i += 1;
     }
     result
@@ -52,18 +58,34 @@ impl Quadkey {
 }
 
 impl fmt::Debug for Quadkey {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let key = self.0;
         let ZoomLevel(level) = key[0];
         let len = level as usize;
         for part in &self.0[0..len] {
-            write!(f, "{:?}", part)?;
+            write!(f, "{part:?}")?;
         }
         Ok(())
     }
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Copy, Clone, Debug, Default)]
+// FIXME: does Pod and Zeroable make sense?
+#[derive(
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Hash,
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    Serialize,
+    Deserialize,
+    Pod,
+    Zeroable,
+)]
+#[repr(C)]
 pub struct ZoomLevel(u8);
 
 impl ZoomLevel {
@@ -79,7 +101,7 @@ impl std::ops::Add<u8> for ZoomLevel {
     type Output = ZoomLevel;
 
     fn add(self, rhs: u8) -> Self::Output {
-        let zoom_level = self.0.checked_add(rhs).unwrap();
+        let zoom_level = self.0.checked_add(rhs).expect("zoom level overflowed");
         ZoomLevel(zoom_level)
     }
 }
@@ -88,13 +110,13 @@ impl std::ops::Sub<u8> for ZoomLevel {
     type Output = ZoomLevel;
 
     fn sub(self, rhs: u8) -> Self::Output {
-        let zoom_level = self.0.checked_sub(rhs).unwrap();
+        let zoom_level = self.0.checked_sub(rhs).expect("zoom level underflowed");
         ZoomLevel(zoom_level)
     }
 }
 
-impl fmt::Display for ZoomLevel {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for ZoomLevel {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
@@ -105,24 +127,39 @@ impl From<u8> for ZoomLevel {
     }
 }
 
-impl Into<u8> for ZoomLevel {
-    fn into(self) -> u8 {
-        self.0
+impl From<ZoomLevel> for u8 {
+    fn from(val: ZoomLevel) -> Self {
+        val.0
     }
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct LatLon(f64, f64);
+pub struct LatLon {
+    pub latitude: f64,
+    pub longitude: f64,
+}
 
 impl LatLon {
     pub fn new(latitude: f64, longitude: f64) -> Self {
-        LatLon(latitude, longitude)
+        LatLon {
+            latitude,
+            longitude,
+        }
     }
 }
 
 impl Default for LatLon {
     fn default() -> Self {
-        LatLon(0.0, 0.0)
+        LatLon {
+            latitude: 0.0,
+            longitude: 0.0,
+        }
+    }
+}
+
+impl Display for LatLon {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{},{}", self.latitude, self.longitude)
     }
 }
 
@@ -149,8 +186,8 @@ impl Default for Zoom {
     }
 }
 
-impl fmt::Display for Zoom {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for Zoom {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", (self.0 * 100.0).round() / 100.0)
     }
 }
@@ -198,8 +235,7 @@ impl SignificantlyDifferent for Zoom {
 }
 
 /// Within each tile there is a separate coordinate system. Usually this coordinate system is
-/// within [`crate::coords::EXTENT`]. Therefore, `x` and `y` must be within the bounds of
-/// [`crate::coords::EXTENT`].
+/// within [`EXTENT`]. Therefore, `x` and `y` must be within the bounds of [`EXTENT`].
 ///
 /// # Coordinate System Origin
 ///
@@ -211,7 +247,7 @@ pub struct InnerCoords {
 }
 
 /// Every tile has tile coordinates. These tile coordinates are also called
-/// [Slippy map tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
+/// [Slippy map tile names](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 ///
 /// # Coordinate System Origin
 ///
@@ -265,12 +301,27 @@ impl From<(u32, u32, ZoomLevel)> for TileCoords {
 
 /// Every tile has tile coordinates. Every tile coordinate can be mapped to a coordinate within
 /// the world. This provides the freedom to map from [TMS](https://wiki.openstreetmap.org/wiki/TMS)
-/// to [Slippy_map_tilenames](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
+/// to [Slippy map tile names](https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 ///
 /// # Coordinate System Origin
 ///
 /// The origin of the coordinate system is in the upper-left corner.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+// FIXME: does Zeroable make sense?
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Default,
+    Serialize,
+    Deserialize,
+    Zeroable,
+)]
+#[repr(C)]
 pub struct WorldTileCoords {
     pub x: i32,
     pub y: i32,
@@ -404,6 +455,20 @@ impl WorldTileCoords {
             z: self.z - 1,
         })
     }
+
+    /// Returns unique stencil reference values for WorldTileCoords which are 3D.
+    /// Tiles from arbitrary `z` can lie next to each other, because we mix tiles from
+    /// different levels based on availability.
+    pub fn stencil_reference_value_3d(&self) -> u8 {
+        const CASES: u8 = 4;
+        let z = u8::from(self.z);
+        match (self.x % 2 == 0, self.y % 2 == 0) {
+            (true, true) => z * CASES,
+            (true, false) => 1 + z * CASES,
+            (false, true) => 2 + z * CASES,
+            (false, false) => 3 + z * CASES,
+        }
+    }
 }
 
 impl From<(i32, i32, ZoomLevel)> for WorldTileCoords {
@@ -469,18 +534,14 @@ pub struct WorldCoords {
     pub y: f64,
 }
 
-fn tiles_with_z(z: u8) -> f64 {
-    2.0.pow(z)
-}
-
 impl WorldCoords {
     pub fn from_lat_lon(lat_lon: LatLon, zoom: Zoom) -> WorldCoords {
         let tile_size = TILE_SIZE * 2.0_f64.powf(zoom.0);
         // Get x value
-        let x = (lat_lon.1 + 180.0) * (tile_size / 360.0);
+        let x = (lat_lon.longitude + 180.0) * (tile_size / 360.0);
 
         // Convert from degrees to radians
-        let lat_rad = (lat_lon.0 * PI) / 180.0;
+        let lat_rad = (lat_lon.latitude * PI) / 180.0;
 
         // get y value
         let merc_n = f64::ln(f64::tan((PI / 4.0) + (lat_rad / 2.0)));
@@ -592,8 +653,8 @@ impl ViewRegion {
     }
 }
 
-impl fmt::Display for TileCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for TileCoords {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "T(x={x},y={y},z={z})",
@@ -604,8 +665,8 @@ impl fmt::Display for TileCoords {
     }
 }
 
-impl fmt::Display for WorldTileCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for WorldTileCoords {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "WT(x={x},y={y},z={z})",
@@ -615,8 +676,8 @@ impl fmt::Display for WorldTileCoords {
         )
     }
 }
-impl fmt::Display for WorldCoords {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for WorldCoords {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "W(x={x},y={y})", x = self.x, y = self.y,)
     }
 }
@@ -640,7 +701,7 @@ mod tests {
         let tile = WorldTileCoords::from(tile);
         let p1 = tile.transform_for_zoom(zoom) * TOP_LEFT;
         let p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT;
-        println!("{:?}\n{:?}", p1, p2);
+        println!("{p1:?}\n{p2:?}");
 
         assert_eq!(
             WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.level(), zoom),
@@ -714,7 +775,7 @@ mod tests {
         )
         .iter()
         {
-            println!("{}", tile_coords);
+            println!("{tile_coords}");
         }
     }
 }

@@ -1,0 +1,73 @@
+name: cargo-install
+description: Install a dependency from cargo
+
+inputs:
+  name:
+    required: true
+    description: Name of the dependency
+
+runs:
+  using: "composite"
+  steps:
+    - name:  Install binstall
+      run: |
+        if command -v cargo-binstall &> /dev/null; then
+          echo "binstall already found at $(command -v cargo-binstall)"
+          exit 0
+        fi
+        
+        FILE=""
+        
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          FILE="cargo-binstall-x86_64-unknown-linux-gnu.tgz"
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          FILE="cargo-binstall-x86_64-pc-windows-msvc.zip"
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          if [ "$RUNNER_ARCH" == "ARM64" ]; then
+            FILE="cargo-binstall-aarch64-apple-darwin.zip"
+          elif [ "$RUNNER_ARCH" == "X64" ]; then
+            FILE="cargo-binstall-x86_64-apple-darwin.zip"
+          else
+            echo "Unable to install on arch: $RUNNER_ARCH"
+            exit 1
+          fi
+        else
+          # Install with debug profile -> faster compilation
+          cargo install --debug cargo-binstall
+        fi
+        
+        if [ "$FILE" != "" ]; then 
+          URL="https://github.com/cargo-bins/cargo-binstall/releases/download/v0.16.0/$FILE"
+        
+          echo "Downloading binstall: $URL"
+        
+          curl -L -o /tmp/binstall.bin "$URL"
+        
+          echo "Installing binstall"
+          INSTALL_PATH="~/.binstall/"
+          mkdir -p "$INSTALL_PATH"
+          if [[ $FILE == *"zip"* ]]; then
+            unzip -o /tmp/binstall.bin -d "$INSTALL_PATH"
+          elif [[ $FILE == *"tgz"* ]]; then
+            tar xf /tmp/binstall.bin -C "$INSTALL_PATH"
+          else
+            echo "Unknown format: $FILE"
+            exit 1
+          fi
+        
+          # Temporary include binstall in path
+          export PATH="$INSTALL_PATH:$PATH"
+        else
+          echo "Skipping binary install"
+        fi
+        
+        # Upgrade binstall to latest version
+        # Do not use symlinks because they behave weird on Windows(+Bash)
+        cargo binstall --no-confirm --force --no-symlinks cargo-binstall
+        # Use latest version to reinstall binstall
+        cargo binstall --no-confirm --force --no-symlinks cargo-binstall
+      shell: bash
+    - name: Install ${{ inputs.name }}
+      shell: bash
+      # Do not use symlinks because they behave weird on Windows(+Bash)
+      run: cargo binstall --no-confirm --force --no-symlinks ${{ inputs.name }}

@@ -1,15 +1,15 @@
-<h1 align="center">
+<h1 style="text-align:center">
   <img width="350px" alt="maplibre-rs" src="./docs/logo/maplibre-rs-with-text.svg">
 </h1>
 
-<div align="center">
+<div style="text-align:center">
   <strong>Native Maps for Web, Mobile and Linux</strong>
 </div>
-<div align="center">
+<div style="text-align:center">
   A map rendering library written in Rust.
 </div>
 
-<div align="center">
+<div style="text-align:center">
   <img src="https://img.shields.io/badge/stability-experimental-orange.svg?style=flat-square"
       alt="Stability" />
   <a href="https://github.com/maplibre/maplibre-rs/actions/workflows/on_main_push.yml">
@@ -22,18 +22,17 @@
   </a>
 </div>
 
-<div align="center">
+<div style="text-align:center">
   <h3>
-    <a href="https://maplibre-rs-demos.pages.dev/webgl">
+    <a href="https://webgl.demo.maplibre-rs.maplibre.org">
       WebGL Demo
-    </a>
-    <span> | </span>
+    </a> |
     <a href="https://maplibre.org/maplibre-rs/docs/book/">
       Book
-    </a> | </span>
+    </a> |
     <a href="https://maplibre.org/maplibre-rs/docs/api/maplibre/">
       API
-    </a> | </span>
+    </a> |
     <a href="https://matrix.to/#/#maplibre:matrix.org">
       Chat in Matrix Space
     </a>
@@ -47,6 +46,8 @@ The Rust ecosystem is suited very well for this project.
 
 In the future, this project could be adopted and supported by [Maplibre](https://github.com/maplibre) to implement a
 next-gen mapping solution.
+
+📰 We recently released a paper about maplibre-rs called [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
 
 ## Description
 
@@ -73,6 +74,12 @@ graphics are achievable using the current stack.
 ([External Link](https://media.ccc.de/v/mch2022-265-world-in-vectors-cross-platform-map-rendering-using-rust))
 
 ([Older Talk on YouTube](https://www.youtube.com/watch?v=KFk8bOtJzCM))
+
+## Demos
+
+- [WebGL](https://webgl.demo.maplibre-rs.maplibre.org)
+- [WebGL with multithreading](https://webgl-multithreaded.demo.maplibre-rs.maplibre.org) - Does not work on Safari right now
+- [WebGPU](https://webgpu.demo.maplibre-rs.maplibre.org) - Only works with development versions of Firefox and Chrome
 
 ## Current Features
 
@@ -124,7 +131,7 @@ Install [rustup](https://rustup.rs/) because this is the recommended way of sett
 The toolchain will be automatically downloaded when building this project.
 See [./rust-toolchain.toml](./rust-toolchain.toml) for more details about the toolchain.
 
-## Documentation
+## API Documentation
 
 This generates the documentation for this crate and opens the browser. This also includes the documentation of every
 dependency.
@@ -134,6 +141,33 @@ cargo doc --open
 ```
 
 You can also view the up-to-date documentation [here](https://maplibre.org/maplibre-rs/docs/api/maplibre/).
+
+## Book
+
+The maplibre-rs [book](https://maplibre.org/maplibre-rs/docs/book/) features a high-level overview over the project from a user and development perspective.
+
+## RFCs
+
+We established an RFC process which must be used to describe major changes to maplibre-rs.
+Current RFCs can be browsed in the [book](https://maplibre.org/maplibre-rs/docs/book/rfc/0001-rfc-process.html).
+
+
+## Citing
+
+If you wish to cite this project in a scientific publication use the following format:
+
+```bibtex
+@article{maplibre_rs,
+	title        = {maplibre-rs: toward portable map renderers},
+	author       = {Ammann, M. and Drabble, A. and Ingensand, J. and Chapuis, B.},
+	year         = 2022,
+	journal      = {The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
+	volume       = {XLVIII-4/W1-2022},
+	pages        = {35--42},
+	doi          = {10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022},
+	url          = {https://www.int-arch-photogramm-remote-sens-spatial-inf-sci.net/XLVIII-4-W1-2022/35/2022/}
+}
+```
 
 ## Acknowledgements
 

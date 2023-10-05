@@ -6,14 +6,15 @@ on:
 jobs:
   run-tests:
     name: Test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: extractions/setup-just@v1
-      - name: Install toolchain
-        shell: bash
-        run: just default-toolchain
-      - uses: Swatinem/rust-cache@v1
+      - uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          targets: x86_64-unknown-linux-gnu
+      - name: Install Dependencies
+        uses: ./.github/actions/install-system-dependencies
       - name: Install GPU Drivers
         uses: ./.github/actions/install-driver
       - name: Test Vulkan

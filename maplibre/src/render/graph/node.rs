@@ -7,7 +7,7 @@ use super::{
     Edge, InputSlotError, OutputSlotError, RenderGraphContext, RenderGraphError, RunSubGraphError,
     SlotInfo, SlotInfos,
 };
-use crate::render::RenderState;
+use crate::{render::RenderResources, tcs::world::World};
 
 /// The context with all information required to interact with the GPU.
 ///
@@ -57,8 +57,8 @@ pub trait Node: Downcast + Send + Sync + 'static {
         Vec::new()
     }
 
-    /// Updates internal node state using the current [`RenderState`] prior to the run method.
-    fn update(&mut self, _state: &mut RenderState) {}
+    /// Updates internal node state using the current [`RenderResources`] prior to the run method.
+    fn update(&mut self, _state: &mut RenderResources) {}
 
     /// Runs the graph node logic, issues draw calls, updates the output slots and
     /// optionally queues up subgraphs for execution. The graph data, input and output values are
@@ -67,7 +67,8 @@ pub trait Node: Downcast + Send + Sync + 'static {
         &self,
         graph: &mut RenderGraphContext,
         render_context: &mut RenderContext,
-        state: &RenderState,
+        resources: &RenderResources,
+        world: &World,
     ) -> Result<(), NodeRunError>;
 }
 
@@ -329,7 +330,8 @@ impl Node for EmptyNode {
         &self,
         _graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
-        _state: &RenderState,
+        _state: &RenderResources,
+        _world: &World,
     ) -> Result<(), NodeRunError> {
         Ok(())
     }

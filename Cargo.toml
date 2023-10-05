@@ -15,12 +15,89 @@ members = [
     "benchmarks",
 ]
 
+[workspace.package]
+description = "Maps for Desktop, Mobile and Web"
+version = "0.1.0"
+edition = "2021"
+# Keep this in sync with `rust-toolchain.toml` and `justfile`
+rust-version = "1.72.1"
+license = "MIT OR Apache-2.0"
+keywords = ["graphics", "maps", "webgl", "tiles"]
+categories = ["graphics", "science::geo"]
+authors = ["Maximilian Ammann <max@maxammann.org>"]
+
+[workspace.dependencies]
+#
+# These dependencies are kept back due to some issues
+#
+# TODO: Not yet upgraded because wasm-bindgen feature was later removed
+rand = { version = "0.7.3", features = ["wasm-bindgen"] }
+
+# FIXME: Untrusted dependency, 0.2.x doesn't compile with cache middleware
+reqwest-middleware = "0.1.6"
+
+winit = { version = "0.28.7", default-features = false }
+
+#
+# These dependencies should be updated to the latest version
+#
+async-trait = "0.1.73"
+bytemuck = "1.14.0"
+bytemuck_derive = "1.5.0"
+cgmath = "0.18.0"
+cint = "0.3.1"
+clap = { version = "4.3.24", features = ["derive"] }
+console_error_panic_hook = "0.1.7"
+console_log = { version = "1.0.0", features = ["color"] }
+criterion = { version = "0.5.1", features = ["async_tokio"] }
+csscolorparser = { version = "0.6.2", features = ["serde", "cint"] }
+downcast-rs = "1.2.0"
+env_logger = "0.10.0"
+flatbuffers = "23.5.26"
+flatc-rust = "0.2.0"
+flate2 = "1.0.27"
+geo = "0.26.0"
+geo-types = { version = "0.7.11", features = ["use-rstar_0_9"] }
+geozero = { version = "0.11.0", default-features = false, features = ["with-mvt", "with-geo"] }
+image = { version = "0.24", default-features = false, features = ["jpeg", "webp", "png"] }
+include_dir = "0.7.3"
+instant = { version = "0.1.12", features = ["wasm-bindgen"] }  # TODO: Untrusted dependency
+jni = "0.21.1"
+js-sys = "0.3.64"
+log = "0.4.20"
+lyon = { version = "1.0.1", features = [] }
+naga = { version = "0.13.0", features = ["wgsl-in"] }
+android-activity = "0.4.3"
+android_logger = "0.13.3"
+png = { version = "0.17.10" }
+raw-window-handle = "0.5.2"
+reqwest = { version = "0.11.20", default-features = false, features = ["rustls-tls", "gzip"] }  # Use rusttls on android because cross compiling is difficult
+reqwest-middleware-cache = "0.1.1"  # FIXME: Untrusted dependency
+rstar = "0.11.0"
+rusqlite = { version = "0.29.0" }
+serde = { version = "1.0.188", features = ["derive"] }
+serde_json = "1.0.107"
+smallvec = "1.11.1"
+thiserror = "1.0.48"
+tile-grid = "0.5"
+tokio = "1.32.0"  # Individual features are customized in each crate
+tokio-util = { version = "0.7.9", features = ["rt"] }
+tracing = "0.1.37"
+tracing-subscriber = "0.3.17"
+tracing-tracy = "0.10"
+tracing-wasm = "0.2.1"  # TODO: Low quality dependency (remove in a separate PR!)
+walkdir = "2.4.0"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+wasm-bindgen-test = "0.3"
+web-sys = "0.3.64"  # Individual features are customized in each crate
+wgpu = "0.17.0"
+
 [profile.release]
 lto = true
 codegen-units = 1
 opt-level = 's'
 panic = "abort"
-
 strip = "debuginfo"
 
 [profile.bench]

@@ -1,6 +1,6 @@
 //! Main camera
 
-use cgmath::{prelude::*, AbsDiffEq, Matrix4, Point2, Point3, Vector2, Vector3, Vector4};
+use cgmath::{prelude::*, AbsDiffEq, Matrix4, Point2, Point3, Rad, Vector2, Vector3, Vector4};
 
 use crate::util::{
     math::{bounds_from_points, Aabb2, Aabb3, Plane},
@@ -66,14 +66,17 @@ impl ModelViewProjection {
     }
 }
 
+const MIN_PITCH: Rad<f64> = Rad(-0.5);
+const MAX_PITCH: Rad<f64> = Rad(0.5);
+
 #[derive(Debug, Clone)]
 pub struct Camera {
-    pub position: Point3<f64>, // The z axis never changes, the zoom is used instead
-    pub yaw: cgmath::Rad<f64>,
-    pub pitch: cgmath::Rad<f64>,
+    position: Point3<f64>, // The z axis never changes, the zoom is used instead
+    yaw: Rad<f64>,
+    pitch: Rad<f64>,
 
-    pub width: f64,
-    pub height: f64,
+    width: f64,
+    height: f64,
 }
 
 impl SignificantlyDifferent for Camera {
@@ -87,7 +90,7 @@ impl SignificantlyDifferent for Camera {
 }
 
 impl Camera {
-    pub fn new<V: Into<Point3<f64>>, Y: Into<cgmath::Rad<f64>>, P: Into<cgmath::Rad<f64>>>(
+    pub fn new<V: Into<Point3<f64>>, Y: Into<Rad<f64>>, P: Into<Rad<f64>>>(
         position: V,
         yaw: Y,
         pitch: P,
@@ -121,7 +124,7 @@ impl Camera {
         ViewProjection(FLIP_Y * perspective.current_projection * self.calc_matrix())
     }
 
-    /// A transform which can be used to transfrom between clip and window space.
+    /// A transform which can be used to transform between clip and window space.
     /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle) (Direct3D).
     fn clip_to_window_transform(&self) -> Matrix4<f64> {
         let min_depth = 0.0;
@@ -133,8 +136,8 @@ impl Camera {
         let oz = min_depth;
         let pz = max_depth - min_depth;
         Matrix4::from_cols(
-            Vector4::new(self.width as f64 / 2.0, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, -self.height as f64 / 2.0, 0.0, 0.0),
+            Vector4::new(self.width / 2.0, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, -self.height / 2.0, 0.0, 0.0),
             Vector4::new(0.0, 0.0, pz, 0.0),
             Vector4::new(ox, oy, oz, 1.0),
         )
@@ -173,11 +176,11 @@ impl Camera {
 
         let x = 0.0;
         let y = 0.0;
-        let ox = x + self.width as f64 / 2.0;
-        let oy = y + self.height as f64 / 2.0;
+        let ox = x + self.width / 2.0;
+        let oy = y + self.height / 2.0;
         let oz = min_depth;
-        let px = self.width as f64;
-        let py = self.height as f64;
+        let px = self.width;
+        let py = self.height;
         let pz = max_depth - min_depth;
         let xd = ndc.x;
         let yd = ndc.y;
@@ -347,10 +350,50 @@ impl Camera {
             Point2::new(max_x, max_y),
         ))
     }
+
+    pub fn position(&self) -> Point3<f64> {
+        self.position
+    }
+
+    pub fn yaw(&self) -> Rad<f64> {
+        self.yaw
+    }
+
+    pub fn rotate<P: Into<Rad<f64>>>(&mut self, delta: P) {
+        self.yaw += delta.into();
+    }
+
+    pub fn pitch(&self) -> Rad<f64> {
+        self.pitch
+    }
+
+    pub fn tilt<P: Into<Rad<f64>>>(&mut self, delta: P) {
+        let new_pitch = self.pitch + delta.into();
+
+        if new_pitch <= MAX_PITCH && new_pitch >= MIN_PITCH {
+            self.pitch = new_pitch;
+        }
+    }
+
+    pub fn move_relative(&mut self, delta: Vector3<f64>) {
+        self.position += delta;
+    }
+
+    pub fn move_to(&mut self, new_position: Point3<f64>) {
+        self.position = new_position;
+    }
+
+    pub fn position_vector(&self) -> Vector3<f64> {
+        self.position.to_vec()
+    }
+
+    pub fn homogenous_position(&self) -> Vector4<f64> {
+        self.position.to_homogeneous()
+    }
 }
 
 pub struct Perspective {
-    fovy: cgmath::Rad<f64>,
+    fovy: Rad<f64>,
     znear: f64,
     zfar: f64,
 
@@ -358,13 +401,7 @@ pub struct Perspective {
 }
 
 impl Perspective {
-    pub fn new<F: Into<cgmath::Rad<f64>>>(
-        width: u32,
-        height: u32,
-        fovy: F,
-        znear: f64,
-        zfar: f64,
-    ) -> Self {
+    pub fn new<F: Into<Rad<f64>>>(width: u32, height: u32, fovy: F, znear: f64, zfar: f64) -> Self {
         let rad = fovy.into();
         Self {
             current_projection: Self::calc_matrix(width as f64 / height as f64, rad, znear, zfar),
@@ -383,7 +420,7 @@ impl Perspective {
         );
     }
 
-    fn calc_matrix(aspect: f64, fovy: cgmath::Rad<f64>, znear: f64, zfar: f64) -> Matrix4<f64> {
+    fn calc_matrix(aspect: f64, fovy: Rad<f64>, znear: f64, zfar: f64) -> Matrix4<f64> {
         OPENGL_TO_WGPU_MATRIX * cgmath::perspective(fovy, aspect, znear, zfar)
     }
 }
@@ -423,13 +460,13 @@ mod tests {
         let origin_clip_space = view_proj.project(Vector4::new(0.0, 0.0, 0.0, 1.0));
         println!("origin w in clip space: {:?}", origin_clip_space.w);
 
-        println!("world_pos: {:?}", world_pos);
-        println!("clip: {:?}", clip);
+        println!("world_pos: {world_pos:?}");
+        println!("clip: {clip:?}");
         println!("world_pos: {:?}", view_proj.invert().project(clip));
 
         println!("window: {:?}", camera.clip_to_window_vulkan(&clip));
         let window = camera.clip_to_window(&clip);
-        println!("window (matrix): {:?}", window);
+        println!("window (matrix): {window:?}");
 
         // --------- nalgebra
 
@@ -461,9 +498,9 @@ mod tests {
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);
-        println!("u: {:?}", u);
+        println!("u: {u:?}");
         let unprojected = near_world + u * (far_world - near_world);
-        println!("unprojected: {:?}", unprojected);
+        println!("unprojected: {unprojected:?}");
         assert!(Vector3::new(world_pos.x, world_pos.y, world_pos.z).abs_diff_eq(&unprojected, 0.05));
 
         // ---- test for unproject
@@ -479,9 +516,9 @@ mod tests {
 
         // for z = 0 in world coordinates
         let u = -near_world.z / (far_world.z - near_world.z);
-        println!("u: {:?}", u);
+        println!("u: {u:?}");
         let unprojected = near_world + u * (far_world - near_world);
-        println!("unprojected: {:?}", unprojected);
+        println!("unprojected: {unprojected:?}");
         // ----
 
         //assert!(reverse_world.abs_diff_eq(&world_pos, 0.05))

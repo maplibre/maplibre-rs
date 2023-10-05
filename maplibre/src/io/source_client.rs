@@ -1,8 +1,9 @@
 //! HTTP client.
 
 use async_trait::async_trait;
+use thiserror::Error;
 
-use crate::{coords::WorldTileCoords, error::Error, style::source::TileAddressingScheme};
+use crate::{coords::WorldTileCoords, io::source_type::SourceType};
 
 /// A closure that returns a HTTP client.
 pub type HttpClientFactory<HC> = dyn Fn() -> HC;
@@ -12,7 +13,7 @@ pub type HttpClientFactory<HC> = dyn Fn() -> HC;
 // https://github.com/dtolnay/async-trait/blob/b70720c4c1cc0d810b7446efda44f81310ee7bf2/README.md#non-threadsafe-futures
 #[async_trait(?Send)]
 pub trait HttpClient: Clone + Sync + Send + 'static {
-    async fn fetch(&self, url: &str) -> Result<Vec<u8>, Error>;
+    async fn fetch(&self, url: &str) -> Result<Vec<u8>, SourceFetchError>;
 }
 
 /// Gives access to the HTTP client which can be of multiple types,
@@ -25,28 +26,34 @@ where
     inner_client: HC,
 }
 
+#[derive(Error, Debug)]
+#[error("failed to fetch from source")]
+pub struct SourceFetchError(#[source] pub Box<dyn std::error::Error>);
+
 /// Defines the different types of HTTP clients such as basic HTTP and Mbtiles.
 /// More types might be coming such as S3 and other cloud http clients.
 #[derive(Clone)]
-pub enum SourceClient<HC>
+pub struct SourceClient<HC>
 where
     HC: HttpClient,
 {
-    Http(HttpSourceClient<HC>),
-    Mbtiles {
-        // TODO
-    },
+    http: HttpSourceClient<HC>,
 }
 
 impl<HC> SourceClient<HC>
 where
     HC: HttpClient,
 {
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
-        match self {
-            SourceClient::Http(client) => client.fetch(coords).await,
-            SourceClient::Mbtiles { .. } => unimplemented!(),
-        }
+    pub fn new(http: HttpSourceClient<HC>) -> Self {
+        Self { http }
+    }
+
+    pub async fn fetch(
+        &self,
+        coords: &WorldTileCoords,
+        source_type: &SourceType,
+    ) -> Result<Vec<u8>, SourceFetchError> {
+        self.http.fetch(coords, source_type).await
     }
 }
 
@@ -60,18 +67,13 @@ where
         }
     }
 
-    pub async fn fetch(&self, coords: &WorldTileCoords) -> Result<Vec<u8>, Error> {
-        let tile_coords = coords.into_tile(TileAddressingScheme::TMS).unwrap();
+    pub async fn fetch(
+        &self,
+        coords: &WorldTileCoords,
+        source_type: &SourceType,
+    ) -> Result<Vec<u8>, SourceFetchError> {
         self.inner_client
-            .fetch(
-                format!(
-                    "https://maps.tuerantuer.org/europe_germany/{z}/{x}/{y}.pbf",
-                    x = tile_coords.x,
-                    y = tile_coords.y,
-                    z = tile_coords.z
-                )
-                .as_str(),
-            )
+            .fetch(source_type.format(coords).as_str())
             .await
     }
 }

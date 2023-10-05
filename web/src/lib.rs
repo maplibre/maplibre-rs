@@ -1,17 +1,26 @@
-use std::panic;
+#![deny(unused_imports)]
 
-use maplibre::{io::scheduler::Scheduler, MapBuilder};
-use maplibre_winit::winit::WinitMapWindowConfig;
+use maplibre::{
+    environment::OffscreenKernelEnvironment,
+    event_loop::EventLoop,
+    io::source_client::{HttpSourceClient, SourceClient},
+    kernel::{Kernel, KernelBuilder},
+    map::Map,
+    render::builder::RendererBuilder,
+    style::Style,
+};
+use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
 
-use crate::platform::{
-    http_client::WHATWGFetchHttpClient, schedule_method::WebWorkerPoolScheduleMethod,
+use crate::{
+    error::JSError,
+    platform::{http_client::WHATWGFetchHttpClient, UsedOffscreenKernelEnvironment},
 };
 
 mod error;
 mod platform;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(no_pendantic_os_check, target_arch = "wasm32")))]
 compile_error!("web works only on wasm32.");
 
 #[cfg(feature = "trace")]
@@ -32,37 +41,97 @@ pub fn wasm_bindgen_start() {
     if console_log::init_with_level(log::Level::Info).is_err() {
         // Failed to initialize logging. No need to log a message.
     }
-    panic::set_hook(Box::new(console_error_panic_hook::hook));
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
     #[cfg(any(feature = "trace"))]
     enable_tracing();
 }
 
-#[wasm_bindgen]
-pub fn create_pool_scheduler(
-    new_worker: js_sys::Function,
-) -> *mut Scheduler<WebWorkerPoolScheduleMethod> {
-    let scheduler = Box::new(Scheduler::new(WebWorkerPoolScheduleMethod::new(new_worker)));
+pub struct WHATWGOffscreenKernelEnvironment;
 
-    Box::into_raw(scheduler)
+impl OffscreenKernelEnvironment for WHATWGOffscreenKernelEnvironment {
+    type HttpClient = WHATWGFetchHttpClient;
+
+    fn create() -> Self {
+        WHATWGOffscreenKernelEnvironment
+    }
+
+    fn source_client(&self) -> SourceClient<Self::HttpClient> {
+        SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::default()))
+    }
 }
 
+#[cfg(not(target_feature = "atomics"))]
+type CurrentEnvironment = WinitEnvironment<
+    maplibre::io::scheduler::NopScheduler,
+    WHATWGFetchHttpClient,
+    UsedOffscreenKernelEnvironment,
+    platform::singlethreaded::apc::PassingAsyncProcedureCall,
+    (),
+>;
+
+#[cfg(target_feature = "atomics")]
+type CurrentEnvironment = WinitEnvironment<
+    platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
+    WHATWGFetchHttpClient,
+    UsedOffscreenKernelEnvironment,
+    maplibre::io::apc::SchedulerAsyncProcedureCall<
+        UsedOffscreenKernelEnvironment,
+        platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler,
+    >,
+    (),
+>;
+
+pub type MapType = Map<CurrentEnvironment>;
+
 #[wasm_bindgen]
-pub async fn run(scheduler_ptr: *mut Scheduler<WebWorkerPoolScheduleMethod>) {
-    let scheduler: Box<Scheduler<WebWorkerPoolScheduleMethod>> =
-        unsafe { Box::from_raw(scheduler_ptr) };
-
-    // Either call forget or the main loop to keep worker loop alive
-    MapBuilder::new()
+pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
+    let mut kernel_builder = KernelBuilder::new()
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
-        .with_http_client(WHATWGFetchHttpClient::new())
-        .with_existing_scheduler(*scheduler)
-        .build()
-        .initialize()
-        .await
-        .run();
+        .with_http_client(WHATWGFetchHttpClient::default());
 
-    // std::mem::forget(scheduler);
+    #[cfg(target_feature = "atomics")]
+    {
+        kernel_builder = kernel_builder
+            .with_apc(maplibre::io::apc::SchedulerAsyncProcedureCall::new(
+                platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(
+                    new_worker.clone(),
+                )?,
+            ))
+            .with_scheduler(
+                platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(new_worker)?,
+            );
+    }
+
+    #[cfg(not(target_feature = "atomics"))]
+    {
+        kernel_builder = kernel_builder
+            .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4)?)
+            .with_scheduler(maplibre::io::scheduler::NopScheduler);
+    }
+
+    let kernel: Kernel<WinitEnvironment<_, _, UsedOffscreenKernelEnvironment, _, ()>> =
+        kernel_builder.build();
+
+    let mut map: MapType = Map::new(
+        Style::default(),
+        kernel,
+        RendererBuilder::new(),
+        vec![
+            Box::<maplibre::render::RenderPlugin>::default(),
+            Box::<maplibre::vector::VectorPlugin<platform::UsedVectorTransferables>>::default(),
+            // Box::new(RasterPlugin::<platform::UsedRasterTransferables>::default()),
+        ],
+    )
+    .unwrap();
+    map.initialize_renderer().await.unwrap();
+
+    map.window_mut()
+        .take_event_loop()
+        .expect("Event loop is not available")
+        .run(map, None);
+
+    Ok(())
 }
 
 #[cfg(test)]

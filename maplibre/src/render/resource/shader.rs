@@ -12,7 +12,7 @@ pub struct VertexBufferLayout {
 }
 
 /// Describes the fragment process in a render pipeline.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FragmentState {
     /// The shader source
     pub source: &'static str,

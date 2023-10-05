@@ -1,0 +1,8 @@
+include "basic.fbs";
+
+table FlatLayerMissing {
+    coords: FlatWorldTileCoords;
+    layer_name: string;
+}
+
+root_type FlatLayerMissing;
