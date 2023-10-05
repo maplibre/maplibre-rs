@@ -22,7 +22,7 @@
     "@chialab/esbuild-plugin-meta-url": "^0.17.7",
     "esbuild": "^0.19.4",
     "esbuild-plugin-inline-worker": "^0.1.1",
-    "typescript": "^4.9.5",
+    "typescript": "^5.2.2",
     "yargs": "^17.7.2"
   },
   "repository": {

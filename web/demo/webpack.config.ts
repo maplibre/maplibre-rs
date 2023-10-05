@@ -22,7 +22,7 @@ const config: (env: any) => webpack.Configuration = (env) => ({
     },
     devServer: {
         server: {
-            type: 'https',
+            type: 'http',
         },
         allowedHosts: 'all',
         host: '0.0.0.0',
