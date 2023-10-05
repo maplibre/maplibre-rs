@@ -6,6 +6,7 @@ use winit::{platform::web::WindowBuilderExtWebSys, window::WindowBuilder};
 use super::WinitMapWindow;
 use crate::WinitEventLoop;
 
+#[derive(Clone)]
 pub struct WinitMapWindowConfig<ET> {
     canvas_id: String,
     phantom_et: PhantomData<ET>,
@@ -20,7 +21,7 @@ impl<ET: 'static> WinitMapWindowConfig<ET> {
     }
 }
 
-impl<ET: 'static> MapWindowConfig for WinitMapWindowConfig<ET> {
+impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
     fn create(&self) -> Self::MapWindow {

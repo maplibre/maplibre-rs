@@ -20,6 +20,9 @@ tokio.workspace = true
 [target.'cfg(target_os = "linux")'.dependencies]
 winit = { workspace = true, features = ["x11", "wayland"] }
 
+[target.'cfg(target_os = "android")'.dependencies]
+winit = { workspace = true, features = ["android-native-activity"] }
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { workspace = true, features = ["Window"] }
 wasm-bindgen = "0.2"
