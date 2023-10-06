@@ -166,6 +166,8 @@
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
 <a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view
 
 </span><span class="kw">use </span>std::{borrow::Cow, collections::HashSet, marker::PhantomData, rc::Rc};
@@ -178,6 +180,7 @@
         source_type::{SourceType, TessellateSource},
     },
     kernel::Kernel,
+    render::tile_view_pattern::DEFAULT_TILE_SIZE,
     style::layer::LayerPaint,
     tcs::system::System,
     vector::{
@@ -216,7 +219,8 @@
         }: <span class="kw-2">&amp;mut </span>MapContext,
     ) {
         <span class="kw">let </span>_tiles = <span class="kw-2">&amp;mut </span>world.tiles;
-        <span class="kw">let </span>view_region = view_state.create_view_region();
+        <span class="kw">let </span>view_region =
+            view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 
         <span class="kw">if </span>view_state.did_camera_change() || view_state.did_zoom_change() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(view_region) = <span class="kw-2">&amp;</span>view_region {

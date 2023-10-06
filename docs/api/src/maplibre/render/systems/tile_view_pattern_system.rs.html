@@ -38,13 +38,14 @@
 <a href="#38" id="38">38</a>
 <a href="#39" id="39">39</a>
 <a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Extracts data from the current state.
 
 </span><span class="kw">use crate</span>::{
     context::MapContext,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
+        tile_view_pattern::{ViewTileSources, WgpuTileViewPattern, DEFAULT_TILE_SIZE},
     },
 };
 
@@ -59,7 +60,8 @@
     <span class="kw">else </span>{
         <span class="kw">return</span>;
     };
-    <span class="kw">let </span>view_region = view_state.create_view_region();
+    <span class="kw">let </span>view_region =
+        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(view_region) = <span class="kw-2">&amp;</span>view_region {
         <span class="kw">let </span>zoom = view_state.zoom();

@@ -779,6 +779,47 @@
 <a href="#779" id="779">779</a>
 <a href="#780" id="780">780</a>
 <a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Provides utilities related to coordinates.
 
 </span><span class="kw">use </span>std::{
@@ -927,6 +968,32 @@
             longitude,
         }
     }
+
+    <span class="doccomment">/// Approximate radius of the earth in meters.
+    /// Uses the WGS-84 approximation. The radius at the equator is ~6378137 and at the poles is ~6356752. https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84
+    /// 6371008.8 is one published &quot;average radius&quot; see https://en.wikipedia.org/wiki/Earth_radius#Mean_radius, or ftp://athena.fsv.cvut.cz/ZFG/grs80-Moritz.pdf p.4
+    </span><span class="kw">const </span>EARTH_RADIUS: f64 = <span class="number">6371008.8</span>;
+
+    <span class="doccomment">/// The average circumference of the world in meters.
+
+    </span><span class="kw">const </span>EARTH_CIRCUMFRENCE: f64 = <span class="number">2.0 </span>* PI * <span class="self">Self</span>::EARTH_RADIUS; <span class="comment">// meters
+
+    </span><span class="doccomment">/// The circumference at a line of latitude in meters.
+    </span><span class="kw">fn </span>circumference_at_latitude(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f64 {
+        <span class="self">Self</span>::EARTH_CIRCUMFRENCE * (<span class="self">self</span>.latitude * PI / <span class="number">180.0</span>).cos()
+    }
+
+    <span class="kw">fn </span>mercator_x_from_lng(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f64 {
+        (<span class="number">180.0 </span>+ <span class="self">self</span>.longitude) / <span class="number">360.0
+    </span>}
+
+    <span class="kw">fn </span>mercator_y_from_lat(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f64 {
+        (<span class="number">180.0 </span>- (<span class="number">180.0 </span>/ PI * ((PI / <span class="number">4.0 </span>+ <span class="self">self</span>.latitude * PI / <span class="number">360.0</span>).tan()).ln())) / <span class="number">360.0
+    </span>}
+
+    <span class="kw">fn </span>mercator_z_from_altitude(<span class="kw-2">&amp;</span><span class="self">self</span>, altitude: f64) -&gt; f64 {
+        altitude / <span class="self">self</span>.circumference_at_latitude()
+    }
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>LatLon {
@@ -1002,8 +1069,19 @@
         <span class="number">2.0_f64</span>.powf(zoom.<span class="number">0 </span>- <span class="self">self</span>.<span class="number">0</span>)
     }
 
-    <span class="kw">pub fn </span>level(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ZoomLevel {
-        ZoomLevel::from(<span class="self">self</span>.<span class="number">0</span>.floor() <span class="kw">as </span>u8)
+    <span class="doccomment">/// Adopted from
+    /// [Transform::coveringZoomLevel](https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L279-L288)
+    ///
+    /// This function calculates which ZoomLevel to show at this zoom.
+    ///
+    /// The `tile_size` is the size of the tile like specified in the source definition,
+    /// For example raster tiles can be 512px or 256px. If it is 256px, then 2x as many tiles are
+    /// displayed. If the raster tile is 512px then exactly as many raster tiles like vector
+    /// tiles would be displayed.
+    </span><span class="kw">pub fn </span>zoom_level(<span class="kw-2">&amp;</span><span class="self">self</span>, tile_size: f64) -&gt; ZoomLevel {
+        <span class="comment">// TODO: Also support round() instead of floor() here
+        </span><span class="kw">let </span>z = (<span class="self">self</span>.<span class="number">0 </span><span class="kw">as </span>f64 + (TILE_SIZE / tile_size).ln() / <span class="number">2.0_f64</span>.ln()).floor() <span class="kw">as </span>u8;
+        <span class="kw">return </span>ZoomLevel(z.max(<span class="number">0</span>));
     }
 }
 
@@ -1137,7 +1215,9 @@
         })
     }
 
-    <span class="attr">#[tracing::instrument(skip_all)]
+    <span class="doccomment">/// Adopted from
+    /// [Transform::calculatePosMatrix](https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L719-L731)
+    </span><span class="attr">#[tracing::instrument(skip_all)]
     </span><span class="kw">pub fn </span>transform_for_zoom(<span class="kw-2">&amp;</span><span class="self">self</span>, zoom: Zoom) -&gt; Matrix4&lt;f64&gt; {
         <span class="comment">/*
            For tile.z = zoom:
@@ -1471,6 +1551,7 @@
         coords::{
             Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
         },
+        render::tile_view_pattern::DEFAULT_TILE_SIZE,
         style::source::TileAddressingScheme,
         util::math::Aabb2,
     };
@@ -1485,7 +1566,8 @@
         <span class="macro">println!</span>(<span class="string">&quot;{p1:?}\n{p2:?}&quot;</span>);
 
         <span class="macro">assert_eq!</span>(
-            WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.level(), zoom),
+            WorldCoords::from((p1.x, p1.y))
+                .into_world_tile(zoom.zoom_level(DEFAULT_TILE_SIZE), zoom),
             tile
         );
     }

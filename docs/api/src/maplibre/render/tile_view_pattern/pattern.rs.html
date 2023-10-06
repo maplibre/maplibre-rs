@@ -152,6 +152,10 @@
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 
 <span class="kw">use crate</span>::{
@@ -165,7 +169,11 @@
     tcs::world::World,
 };
 
-<span class="kw">pub const </span>DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = <span class="number">32 </span>* <span class="number">4</span>;
+<span class="comment">// FIXME: If network is very slow, this pattern size can
+// increase dramatically.
+// E.g. imagine if a pattern for zoom level 18 is drawn
+// when completely zoomed out.
+</span><span class="kw">pub const </span>DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = <span class="number">512</span>;
 <span class="kw">pub const </span>CHILDREN_SEARCH_DEPTH: usize = <span class="number">4</span>;
 
 <span class="attr">#[derive(Debug)]
@@ -300,7 +308,7 @@
         <span class="kw">let </span>raw_buffer = bytemuck::cast_slice(buffer.as_slice());
         <span class="kw">if </span>raw_buffer.len() <span class="kw">as </span>wgpu::BufferAddress &gt; <span class="self">self</span>.view_tiles_buffer.inner_size {
             <span class="comment">/* TODO: We need to avoid this case by either choosing a proper size
-            TODO: (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */
+            TODO: (DEFAULT_TILE_VIEW_PATTERN_SIZE), or resizing the buffer */
             </span><span class="macro">panic!</span>(<span class="string">&quot;Buffer is too small to store the tile pattern!&quot;</span>);
         }
         queue.write_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.view_tiles_buffer.inner, <span class="number">0</span>, raw_buffer);

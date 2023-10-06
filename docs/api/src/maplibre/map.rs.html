@@ -213,11 +213,11 @@
         },
         error::RenderError,
         graph::RenderGraphError,
+        view_state::ViewState,
     },
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
-    view_state::ViewState,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
 
@@ -303,7 +303,7 @@
                     WorldCoords::from_lat_lon(LatLon::new(center[<span class="number">0</span>], center[<span class="number">1</span>]), initial_zoom),
                     initial_zoom,
                     cgmath::Deg::&lt;f64&gt;(style.pitch.unwrap_or_default()),
-                    cgmath::Deg(<span class="number">110.0</span>),
+                    cgmath::Rad(<span class="number">0.6435011087932844</span>),
                 );
 
                 <span class="kw">let </span><span class="kw-2">mut </span>world = World::default();

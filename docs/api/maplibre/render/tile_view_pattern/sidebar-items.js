@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["DEFAULT_TILE_VIEW_PATTERN_SIZE"],"enum":["SourceShapes"],"mod":["pattern"],"struct":["QueryHasTile","TileShape","TileViewPattern","ViewTile","ViewTileSources"],"trait":["HasTile"],"type":["WgpuTileViewPattern"]};
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_TILE_SIZE","DEFAULT_TILE_VIEW_PATTERN_SIZE"],"enum":["SourceShapes"],"mod":["pattern"],"struct":["QueryHasTile","TileShape","TileViewPattern","ViewTile","ViewTileSources"],"trait":["HasTile"],"type":["WgpuTileViewPattern"]};
