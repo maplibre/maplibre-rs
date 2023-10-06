@@ -11,7 +11,11 @@ use crate::{
     tcs::world::World,
 };
 
-pub const DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = 32 * 4;
+// FIXME: If network is very slow, this pattern size can
+// increase dramatically.
+// E.g. imagine if a pattern for zoom level 18 is drawn
+// when completely zoomed out.
+pub const DEFAULT_TILE_VIEW_PATTERN_SIZE: wgpu::BufferAddress = 512;
 pub const CHILDREN_SEARCH_DEPTH: usize = 4;
 
 #[derive(Debug)]
@@ -146,7 +150,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         let raw_buffer = bytemuck::cast_slice(buffer.as_slice());
         if raw_buffer.len() as wgpu::BufferAddress > self.view_tiles_buffer.inner_size {
             /* TODO: We need to avoid this case by either choosing a proper size
-            TODO: (DEFAULT_TILE_VIEW_SIZE), or resizing the buffer */
+            TODO: (DEFAULT_TILE_VIEW_PATTERN_SIZE), or resizing the buffer */
             panic!("Buffer is too small to store the tile pattern!");
         }
         queue.write_buffer(&self.view_tiles_buffer.inner, 0, raw_buffer);

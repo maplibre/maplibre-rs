@@ -36,8 +36,6 @@ fn main(
     //}
 
     var final_position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(position + normal * width, z, 1.0);
-    // FIXME: how to fix z-fighting?
-    final_position.z = z_index;
 
     return VertexOutput(color, final_position);
 }

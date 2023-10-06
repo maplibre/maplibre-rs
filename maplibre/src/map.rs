@@ -14,11 +14,11 @@ use crate::{
         },
         error::RenderError,
         graph::RenderGraphError,
+        view_state::ViewState,
     },
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
-    view_state::ViewState,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
 
@@ -104,7 +104,7 @@ where
                     WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), initial_zoom),
                     initial_zoom,
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
-                    cgmath::Deg(110.0),
+                    cgmath::Rad(0.6435011087932844),
                 );
 
                 let mut world = World::default();

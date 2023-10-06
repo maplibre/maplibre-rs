@@ -146,6 +146,32 @@ impl LatLon {
             longitude,
         }
     }
+
+    /// Approximate radius of the earth in meters.
+    /// Uses the WGS-84 approximation. The radius at the equator is ~6378137 and at the poles is ~6356752. https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84
+    /// 6371008.8 is one published "average radius" see https://en.wikipedia.org/wiki/Earth_radius#Mean_radius, or ftp://athena.fsv.cvut.cz/ZFG/grs80-Moritz.pdf p.4
+    const EARTH_RADIUS: f64 = 6371008.8;
+
+    /// The average circumference of the world in meters.
+
+    const EARTH_CIRCUMFRENCE: f64 = 2.0 * PI * Self::EARTH_RADIUS; // meters
+
+    /// The circumference at a line of latitude in meters.
+    fn circumference_at_latitude(&self) -> f64 {
+        Self::EARTH_CIRCUMFRENCE * (self.latitude * PI / 180.0).cos()
+    }
+
+    fn mercator_x_from_lng(&self) -> f64 {
+        (180.0 + self.longitude) / 360.0
+    }
+
+    fn mercator_y_from_lat(&self) -> f64 {
+        (180.0 - (180.0 / PI * ((PI / 4.0 + self.latitude * PI / 360.0).tan()).ln())) / 360.0
+    }
+
+    fn mercator_z_from_altitude(&self, altitude: f64) -> f64 {
+        altitude / self.circumference_at_latitude()
+    }
 }
 
 impl Default for LatLon {
@@ -221,8 +247,19 @@ impl Zoom {
         2.0_f64.powf(zoom.0 - self.0)
     }
 
-    pub fn level(&self) -> ZoomLevel {
-        ZoomLevel::from(self.0.floor() as u8)
+    /// Adopted from
+    /// [Transform::coveringZoomLevel](https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L279-L288)
+    ///
+    /// This function calculates which ZoomLevel to show at this zoom.
+    ///
+    /// The `tile_size` is the size of the tile like specified in the source definition,
+    /// For example raster tiles can be 512px or 256px. If it is 256px, then 2x as many tiles are
+    /// displayed. If the raster tile is 512px then exactly as many raster tiles like vector
+    /// tiles would be displayed.
+    pub fn zoom_level(&self, tile_size: f64) -> ZoomLevel {
+        // TODO: Also support round() instead of floor() here
+        let z = (self.0 as f64 + (TILE_SIZE / tile_size).ln() / 2.0_f64.ln()).floor() as u8;
+        return ZoomLevel(z.max(0));
     }
 }
 
@@ -356,6 +393,8 @@ impl WorldTileCoords {
         })
     }
 
+    /// Adopted from
+    /// [Transform::calculatePosMatrix](https://github.com/maplibre/maplibre-gl-js/blob/80e232a64716779bfff841dbc18fddc1f51535ad/src/geo/transform.ts#L719-L731)
     #[tracing::instrument(skip_all)]
     pub fn transform_for_zoom(&self, zoom: Zoom) -> Matrix4<f64> {
         /*
@@ -690,6 +729,7 @@ mod tests {
         coords::{
             Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
         },
+        render::tile_view_pattern::DEFAULT_TILE_SIZE,
         style::source::TileAddressingScheme,
         util::math::Aabb2,
     };
@@ -704,7 +744,8 @@ mod tests {
         println!("{p1:?}\n{p2:?}");
 
         assert_eq!(
-            WorldCoords::from((p1.x, p1.y)).into_world_tile(zoom.level(), zoom),
+            WorldCoords::from((p1.x, p1.y))
+                .into_world_tile(zoom.zoom_level(DEFAULT_TILE_SIZE), zoom),
             tile
         );
     }
