@@ -8,6 +8,7 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata, Vec4f32},
+        tile_view_pattern::DEFAULT_TILE_SIZE,
         Renderer,
     },
     style::Style,
@@ -26,13 +27,15 @@ pub fn upload_system(
         ..
     }: &mut MapContext,
 ) {
-    let Some(
-        Initialized(buffer_pool)
-    ) = world.resources.query_mut::<
-        &mut Eventually<VectorBufferPool>,
-    >() else { return; };
+    let Some(Initialized(buffer_pool)) = world
+        .resources
+        .query_mut::<&mut Eventually<VectorBufferPool>>()
+    else {
+        return;
+    };
 
-    let view_region = view_state.create_view_region();
+    let view_region =
+        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 
     if let Some(view_region) = &view_region {
         upload_tesselated_layer(
@@ -128,7 +131,9 @@ fn upload_tesselated_layer(
 ) {
     // Upload all tessellated layers which are in view
     for coords in view_region.iter() {
-        let Some(vector_layers) = tiles.query_mut::<&VectorLayersDataComponent>(coords) else { continue; };
+        let Some(vector_layers) = tiles.query_mut::<&VectorLayersDataComponent>(coords) else {
+            continue;
+        };
 
         let loaded_layers = buffer_pool
             .get_loaded_source_layers_at(coords)
@@ -148,13 +153,16 @@ fn upload_tesselated_layer(
             let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Unwrap
 
             let Some(AvailableVectorLayerData {
-                         coords,
-                         feature_indices,
-                         buffer,
-                         ..
-                     }) = available_layers
+                coords,
+                feature_indices,
+                buffer,
+                ..
+            }) = available_layers
                 .iter()
-                .find(|layer| source_layer.as_str() == layer.source_layer) else { continue; };
+                .find(|layer| source_layer.as_str() == layer.source_layer)
+            else {
+                continue;
+            };
 
             let color: Option<Vec4f32> = style_layer
                 .paint
@@ -172,7 +180,7 @@ fn upload_tesselated_layer(
                 })
                 .collect::<Vec<_>>();
 
-            log::debug!("Allocating geometry at {}", &coords);
+            log::debug!("Allocating geometry at {coords}");
             buffer_pool.allocate_layer_geometry(
                 queue,
                 *coords,

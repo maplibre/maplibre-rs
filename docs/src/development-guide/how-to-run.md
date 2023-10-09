@@ -4,8 +4,8 @@ During development, you will want to run the maplibre demos on your local machin
 There are multiple demos of maplibre-rs for different targets. Some targets have prerequisites
 depending on your operating system.
 
-* **maplibre-demo** - targets Windows, MacOS and Linux, it is built directly with cargo.
-* **apple** - targets iOS and MacOS and relies on the xcode IDE.
+* **maplibre-demo** - targets Windows, macOS and Linux, it is built directly with cargo.
+* **apple** - targets iOS and macOS and relies on the xcode IDE.
 * **android** - targets Android devices and builds in Android Studio.
 * **web** - targets the web using a WASM binary.
 * **maplibre-headless** - *TBD*
@@ -17,7 +17,7 @@ All the targets below require you to install [rustup](https://rustup.rs/) to man
 
 ## Maplibre-demo
 
-### Linux/MacOS
+### Linux/macOS
 
 The build for desktop is very simple, you just have to run the following command from the root of the
 maplibre-rs project:
@@ -63,10 +63,10 @@ ANDROID STUDIO -> tools -> SDK manager -> SDK tools -> tick show package details
 ```
 
 Open the project within `./android/gradle` and create a new virtual device with the device manager. Minimum SDK version
-should be 21. This was tested on a x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and 
+should be 21. This was tested on an x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and 
 run the maplibre-rs Android demo on it. Alternatively you can also run it on your own Android device.
 
-> Note: If you are building for a x86 Android device, you probably need to install the following target using  
+> Note: If you are building for an x86 Android device, you probably need to install the following target using  
 > rustup with the following command `rustup target add i686-linux-android`.
 
 > Note: Android is configured to support OpenGL ES 3.1 (This API specification is supported by Android 5.0 (API level 21) and higher).
@@ -89,15 +89,15 @@ Version 9 is the minimum version supported theoretically.
 
 Select the scheme called *example (iOS)* and click on run. This will start the iOS application.
 
-### MacOS
+### macOS
 
 As you might have seen in the maplibre-demo section, you can build Unix executables directly with Cargo.
-In order to build a proper MacOS application (in OSX terminology) you have to use the `./apple/xcode` project.
+In order to build a proper macOS application (in OSX terminology) you have to use the `./apple/xcode` project.
 
 Open the project from the folder `./apple/xcode` with XCode. Select the scheme called *example (macOS)* and
-click on run. This will start the MacOS application. 
+click on run. This will start the macOS application. 
 
-> The minimum target OSX version for the MacOS build is defined inside *Build settings -> Deployment -> MacOS deployment target*.
+> The minimum target OSX version for the macOS build is defined inside *Build settings -> Deployment -> macOS deployment target*.
 > If you are using a lower version of OSX, you will not be able to run the application on your computer.
 
 ## Web (WebGL, WebGPU)
@@ -123,7 +123,7 @@ just web-lib build --webgl # WebGL
 just web-lib build --webgl --multithreaded # WebGL + multithreaded
 ```
 
-Instead of building it is also possible to watch for changes. The same flags like with `web-lib build` are supported:
+Instead of building it is also possible to watch for changes. The same flags as with `web-lib build` are supported:
 
 ```bash
 just web-lib watch --webgl

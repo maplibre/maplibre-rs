@@ -24,13 +24,12 @@ pub fn resource_system(
         ..
     }: &mut MapContext,
 ) {
-    let Some((
-        buffer_pool,
-        vector_pipeline
-    )) = world.resources.query_mut::<(
+    let Some((buffer_pool, vector_pipeline)) = world.resources.query_mut::<(
         &mut Eventually<VectorBufferPool>,
-        &mut Eventually<VectorPipeline>
-    )>() else { return; };
+        &mut Eventually<VectorPipeline>,
+    )>() else {
+        return;
+    };
 
     buffer_pool.initialize(|| BufferPool::from_device(device));
 
@@ -48,7 +47,7 @@ pub fn resource_system(
             false,
             false,
             false,
-            true,
+            surface.is_multisampling_supported(settings.msaa),
             false,
         )
         .describe_render_pipeline()

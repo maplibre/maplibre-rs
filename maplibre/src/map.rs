@@ -14,11 +14,11 @@ use crate::{
         },
         error::RenderError,
         graph::RenderGraphError,
+        view_state::ViewState,
     },
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
-    view_state::ViewState,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig},
 };
 
@@ -27,6 +27,8 @@ pub enum MapError {
     /// No need to set renderer again
     #[error("renderer was already set for this map")]
     RendererAlreadySet,
+    #[error("renderer is not fully initialized")]
+    RendererNotReady,
     #[error("initializing render graph failed")]
     RenderGraphInit(RenderGraphError),
     #[error("initializing device failed")]
@@ -56,15 +58,15 @@ where
 {
     pub fn new(
         style: Style,
-        kernel: Kernel<E>,
+        mut kernel: Kernel<E>,
         renderer_builder: RendererBuilder,
         plugins: Vec<Box<dyn Plugin<E>>>,
     ) -> Result<Self, MapError> {
         let schedule = Schedule::default();
 
-        let kernel = Rc::new(kernel);
-
         let window = kernel.map_window_config().create();
+
+        let kernel = Rc::new(kernel);
 
         let map = Self {
             kernel,
@@ -102,7 +104,7 @@ where
                     WorldCoords::from_lat_lon(LatLon::new(center[0], center[1]), initial_zoom),
                     initial_zoom,
                     cgmath::Deg::<f64>(style.pitch.unwrap_or_default()),
-                    cgmath::Deg(110.0),
+                    cgmath::Rad(0.6435011087932844),
                 );
 
                 let mut world = World::default();
@@ -127,7 +129,7 @@ where
                             renderer,
                         });
                     }
-                    InitializationResult::Uninizalized(UninitializedRenderer { .. }) => {}
+                    InitializationResult::Uninitialized(UninitializedRenderer { .. }) => {}
                     _ => panic!("Rendering context gone"),
                 };
                 Ok(())
@@ -142,10 +144,27 @@ where
         &self.window
     }
 
-    pub fn has_renderer(&self) -> bool {
+    pub fn is_initialized(&self) -> bool {
         match &self.map_context {
             CurrentMapContext::Ready(_) => true,
             CurrentMapContext::Pending { .. } => false,
+        }
+    }
+
+    /// Resets the complete state of this map - a new renderer and schedule needs to be created.
+    /// The complete state of the app is reset.
+    pub fn reset(&mut self) {
+        self.schedule.clear();
+        match &self.map_context {
+            CurrentMapContext::Ready(c) => {
+                self.map_context = CurrentMapContext::Pending {
+                    style: c.style.clone(),
+                    renderer_builder: RendererBuilder::new()
+                        .with_renderer_settings(c.renderer.settings.clone())
+                        .with_wgpu_settings(c.renderer.wgpu_settings.clone()),
+                }
+            }
+            CurrentMapContext::Pending { .. } => {}
         }
     }
 
@@ -156,21 +175,21 @@ where
                 self.schedule.run(map_context);
                 Ok(())
             }
-            CurrentMapContext::Pending { .. } => Err(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending { .. } => Err(MapError::RendererNotReady),
         }
     }
 
     pub fn context(&self) -> Result<&MapContext, MapError> {
         match &self.map_context {
             CurrentMapContext::Ready(map_context) => Ok(map_context),
-            CurrentMapContext::Pending { .. } => Err(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending { .. } => Err(MapError::RendererNotReady),
         }
     }
 
     pub fn context_mut(&mut self) -> Result<&mut MapContext, MapError> {
         match &mut self.map_context {
             CurrentMapContext::Ready(map_context) => Ok(map_context),
-            CurrentMapContext::Pending { .. } => Err(MapError::RendererAlreadySet),
+            CurrentMapContext::Pending { .. } => Err(MapError::RendererNotReady),
         }
     }
 

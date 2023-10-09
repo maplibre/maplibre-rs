@@ -1,16 +1,16 @@
 use std::time::Duration;
 
-use cgmath::{EuclideanSpace, Point3, Vector2, Vector3, Zero};
-use maplibre::{context::MapContext, render::camera::Camera};
+use cgmath::{EuclideanSpace, Point2, Vector2, Zero};
+use maplibre::context::MapContext;
 use winit::event::{ElementState, MouseButton};
 
 use super::UpdateState;
 
+#[derive(Default)]
 pub struct PanHandler {
     window_position: Option<Vector2<f64>>,
     start_window_position: Option<Vector2<f64>>,
-    start_camera_position: Option<Vector3<f64>>,
-    reference_camera: Option<Camera>,
+    start_camera_position: Option<Vector2<f64>>,
     is_panning: bool,
 }
 
@@ -20,57 +20,39 @@ impl UpdateState for PanHandler {
             return;
         }
 
-        if let Some(reference_camera) = &self.reference_camera {
-            if let (Some(window_position), Some(start_window_position)) =
-                (self.window_position, self.start_window_position)
-            {
-                let view_proj = view_state.view_projection();
-                let inverted_view_proj = view_proj.invert();
+        if let (Some(window_position), Some(start_window_position)) =
+            (self.window_position, self.start_window_position)
+        {
+            let view_proj = view_state.view_projection();
+            let inverted_view_proj = view_proj.invert();
 
-                let delta = if let (Some(start), Some(current)) = (
-                    reference_camera.window_to_world_at_ground(
-                        &start_window_position,
-                        &inverted_view_proj,
-                        false,
-                    ),
-                    reference_camera.window_to_world_at_ground(
-                        &window_position,
-                        &inverted_view_proj,
-                        false,
-                    ),
-                ) {
-                    start - current
-                } else {
-                    Vector3::zero()
-                };
+            let delta = if let (Some(start), Some(current)) = (
+                view_state.window_to_world_at_ground(
+                    &start_window_position,
+                    &inverted_view_proj,
+                    false,
+                ),
+                view_state.window_to_world_at_ground(&window_position, &inverted_view_proj, false),
+            ) {
+                start - current
+            } else {
+                Vector2::zero()
+            };
 
-                if self.start_camera_position.is_none() {
-                    self.start_camera_position = Some(view_state.camera().position().to_vec());
-                }
-
-                if let Some(start_camera_position) = self.start_camera_position {
-                    view_state.camera_mut().move_to(Point3::from_vec(
-                        start_camera_position + Vector3::new(delta.x, delta.y, 0.0),
-                    ));
-                }
+            if self.start_camera_position.is_none() {
+                self.start_camera_position = Some(view_state.camera().position().to_vec());
             }
-        } else {
-            self.reference_camera = Some(view_state.camera().clone());
+
+            if let Some(start_camera_position) = self.start_camera_position {
+                view_state.camera_mut().move_to(Point2::from_vec(
+                    start_camera_position + Vector2::new(delta.x, delta.y),
+                ));
+            }
         }
     }
 }
 
 impl PanHandler {
-    pub fn new() -> Self {
-        Self {
-            window_position: None,
-            start_window_position: None,
-            start_camera_position: None,
-            reference_camera: None,
-            is_panning: false,
-        }
-    }
-
     pub fn process_touch_start(&mut self, window_position: &Vector2<f64>) -> bool {
         self.is_panning = true;
         self.start_window_position = Some(*window_position);
@@ -81,7 +63,6 @@ impl PanHandler {
         self.start_camera_position = None;
         self.start_window_position = None;
         self.window_position = None;
-        self.reference_camera = None;
         self.is_panning = false;
         true
     }
@@ -110,7 +91,6 @@ impl PanHandler {
             self.start_camera_position = None;
             self.start_window_position = None;
             self.window_position = None;
-            self.reference_camera = None;
             self.is_panning = false;
         }
         true

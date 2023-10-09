@@ -12,7 +12,7 @@ use crate::{
     kernel::Kernel,
     map::MapError,
     plugin::Plugin,
-    render::{eventually::Eventually, Renderer},
+    render::{eventually::Eventually, view_state::ViewState, Renderer},
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
@@ -21,7 +21,6 @@ use crate::{
         LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
         VectorLayersDataComponent, VectorTileRequest, VectorTransferables,
     },
-    view_state::ViewState,
 };
 
 pub struct HeadlessMap {
@@ -44,7 +43,7 @@ impl HeadlessMap {
             WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
             Zoom::default(),
             cgmath::Deg(0.0),
-            cgmath::Deg(110.0),
+            cgmath::Rad(0.6435011087932844),
         );
 
         let mut world = World::default();

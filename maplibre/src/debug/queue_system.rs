@@ -10,13 +10,12 @@ use crate::{
 };
 
 pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
-    let Some((
-        Initialized(tile_view_pattern),
-        tile_debug_phase,
-    )) = world.resources.query_mut::<(
+    let Some((Initialized(tile_view_pattern), tile_debug_phase)) = world.resources.query_mut::<(
         &mut Eventually<WgpuTileViewPattern>,
         &mut RenderPhase<TileDebugItem>,
-    )>() else { return; };
+    )>() else {
+        return;
+    };
 
     for view_tile in tile_view_pattern.iter() {
         let coords = &view_tile.coords();

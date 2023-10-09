@@ -1,20 +1,25 @@
 //! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
-use std::{mem::size_of, num::NonZeroU32, sync::Arc};
+use std::{mem::size_of, sync::Arc};
 
-use log::debug;
+use wgpu::TextureFormatFeatures;
 
 use crate::{
-    render::{eventually::HasChanged, resource::texture::TextureView, settings::RendererSettings},
+    render::{
+        error::RenderError,
+        eventually::HasChanged,
+        resource::texture::TextureView,
+        settings::{Msaa, RendererSettings},
+    },
     window::{HeadedMapWindow, MapWindow, WindowSize},
 };
 
 pub struct BufferDimensions {
     pub width: u32,
     pub height: u32,
-    pub unpadded_bytes_per_row: NonZeroU32,
-    pub padded_bytes_per_row: NonZeroU32,
+    pub unpadded_bytes_per_row: u32,
+    pub padded_bytes_per_row: u32,
 }
 
 impl BufferDimensions {
@@ -28,9 +33,8 @@ impl BufferDimensions {
         Self {
             width: size.width(),
             height: size.height(),
-            unpadded_bytes_per_row: NonZeroU32::new(unpadded_bytes_per_row)
-                .expect("can not be zero"), // expect is fine because this can never happen
-            padded_bytes_per_row: NonZeroU32::new(padded_bytes_per_row).expect("can not be zero"),
+            unpadded_bytes_per_row,
+            padded_bytes_per_row,
         }
     }
 }
@@ -38,8 +42,10 @@ impl BufferDimensions {
 pub struct WindowHead {
     surface: wgpu::Surface,
     size: WindowSize,
-    format: wgpu::TextureFormat,
+
+    texture_format: wgpu::TextureFormat,
     present_mode: wgpu::PresentMode,
+    texture_format_features: TextureFormatFeatures,
 }
 
 impl WindowHead {
@@ -52,20 +58,26 @@ impl WindowHead {
         let surface_config = wgpu::SurfaceConfiguration {
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: self.format,
+            format: self.texture_format,
             width: self.size.width(),
             height: self.size.height(),
             present_mode: self.present_mode,
+            view_formats: vec![self.texture_format],
         };
 
         self.surface.configure(device, &surface_config);
     }
 
-    pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    pub fn recreate_surface<MW>(
+        &mut self,
+        window: &MW,
+        instance: &wgpu::Instance,
+    ) -> Result<(), RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        self.surface = unsafe { instance.create_surface(window.raw()) };
+        self.surface = unsafe { instance.create_surface(window.raw())? };
+        Ok(())
     }
 
     pub fn surface(&self) -> &wgpu::Surface {
@@ -78,6 +90,15 @@ pub struct BufferedTextureHead {
     texture_format: wgpu::TextureFormat,
     output_buffer: wgpu::Buffer,
     buffer_dimensions: BufferDimensions,
+}
+
+#[cfg(feature = "headless")]
+#[derive(thiserror::Error, Debug)]
+pub enum WriteImageError {
+    #[error("error while rendering to image")]
+    WriteImage(#[from] png::EncodingError),
+    #[error("could not create file to save as an image")]
+    CreateImageFileFailed(#[from] std::io::Error),
 }
 
 #[cfg(feature = "headless")]
@@ -98,32 +119,30 @@ impl BufferedTextureHead {
         self.output_buffer.unmap();
     }
 
-    pub fn write_png<'a>(&self, padded_buffer: &wgpu::BufferView<'a>, png_output_path: &str) {
+    pub fn write_png<'a>(
+        &self,
+        padded_buffer: &wgpu::BufferView<'a>,
+        png_output_path: &str,
+    ) -> Result<(), WriteImageError> {
         use std::{fs::File, io::Write};
         let mut png_encoder = png::Encoder::new(
-            File::create(png_output_path).unwrap(), // TODO: Remove unwrap
+            File::create(png_output_path)?,
             self.buffer_dimensions.width as u32,
             self.buffer_dimensions.height as u32,
         );
         png_encoder.set_depth(png::BitDepth::Eight);
         png_encoder.set_color(png::ColorType::Rgba);
         let mut png_writer = png_encoder
-            .write_header()
-            .unwrap() // TODO: Remove unwrap
-            .into_stream_writer_with_size(
-                self.buffer_dimensions.unpadded_bytes_per_row.get() as usize
-            )
-            .unwrap(); // TODO: Remove unwrap
+            .write_header()?
+            .into_stream_writer_with_size(self.buffer_dimensions.unpadded_bytes_per_row as usize)?;
 
         // from the padded_buffer we write just the unpadded bytes into the image
-        for chunk in
-            padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row.get() as usize)
-        {
+        for chunk in padded_buffer.chunks(self.buffer_dimensions.padded_bytes_per_row as usize) {
             png_writer
-                .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row.get() as usize])
-                .unwrap(); // TODO: Remove unwrap
+                .write_all(&chunk[..self.buffer_dimensions.unpadded_bytes_per_row as usize])?
         }
-        png_writer.finish().unwrap(); // TODO: Remove unwrap
+        png_writer.finish()?;
+        Ok(())
     }
 
     pub fn copy_texture(&self) -> wgpu::ImageCopyTexture<'_> {
@@ -134,7 +153,7 @@ impl BufferedTextureHead {
         &self.output_buffer
     }
 
-    pub fn bytes_per_row(&self) -> NonZeroU32 {
+    pub fn bytes_per_row(&self) -> u32 {
         self.buffer_dimensions.padded_bytes_per_row
     }
 }
@@ -161,22 +180,25 @@ impl Surface {
     {
         let size = window.size();
 
-        debug!(
-            "supported formats by adapter: {:?}",
-            surface.get_supported_formats(adapter)
-        );
+        let capabilities = surface.get_capabilities(adapter);
+        log::info!("adapter capabilities on surface: {capabilities:?}");
 
-        let format = settings
+        let texture_format = settings
             .texture_format
-            .or_else(|| surface.get_supported_formats(adapter).first().cloned())
+            .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
+        log::info!("format description: {texture_format:?}");
+
+        let texture_format_features = adapter.get_texture_format_features(texture_format);
+        log::info!("format features: {texture_format_features:?}");
 
         Self {
             size,
             head: Head::Headed(WindowHead {
                 surface,
                 size,
-                format,
+                texture_format,
+                texture_format_features,
                 present_mode: settings.present_mode,
             }),
         }
@@ -198,7 +220,7 @@ impl Surface {
         // The output buffer lets us retrieve the data as an array
         let output_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("BufferedTextureHead buffer"),
-            size: (buffer_dimensions.padded_bytes_per_row.get() * buffer_dimensions.height) as u64,
+            size: (buffer_dimensions.padded_bytes_per_row * buffer_dimensions.height) as u64,
             usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -220,6 +242,7 @@ impl Surface {
             dimension: wgpu::TextureDimension::D2,
             format,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[format],
         };
         let texture = device.create_texture(&texture_descriptor);
 
@@ -236,7 +259,7 @@ impl Surface {
 
     pub fn surface_format(&self) -> wgpu::TextureFormat {
         match &self.head {
-            Head::Headed(headed) => headed.format,
+            Head::Headed(headed) => headed.texture_format,
             Head::Headless(headless) => headless.texture_format,
         }
     }
@@ -285,18 +308,23 @@ impl Surface {
         }
     }
 
-    pub fn recreate<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    pub fn recreate<MW>(
+        &mut self,
+        window: &MW,
+        instance: &wgpu::Instance,
+    ) -> Result<(), RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
         match &mut self.head {
             Head::Headed(window_head) => {
                 if window_head.has_changed(&(self.size.width(), self.size.height())) {
-                    window_head.recreate_surface(window, instance);
+                    window_head.recreate_surface(window, instance)?;
                 }
             }
             Head::Headless(_) => {}
         }
+        Ok(())
     }
 
     pub fn head(&self) -> &Head {
@@ -305,6 +333,31 @@ impl Surface {
 
     pub fn head_mut(&mut self) -> &mut Head {
         &mut self.head
+    }
+
+    pub fn is_multisampling_supported(&self, msaa: Msaa) -> bool {
+        match &self.head {
+            Head::Headed(headed) => {
+                let max_sample_count = {
+                    let flags = headed.texture_format_features.flags;
+                    if flags.contains(wgpu::TextureFormatFeatureFlags::MULTISAMPLE_X8) {
+                        8
+                    } else if flags.contains(wgpu::TextureFormatFeatureFlags::MULTISAMPLE_X4) {
+                        4
+                    } else if flags.contains(wgpu::TextureFormatFeatureFlags::MULTISAMPLE_X2) {
+                        2
+                    } else {
+                        1
+                    }
+                };
+                let is_supported = msaa.samples <= max_sample_count;
+                if !is_supported {
+                    log::debug!("Multisampling is not supported on surface");
+                }
+                is_supported
+            }
+            Head::Headless(_) => false, // TODO: support multisampling on headless
+        }
     }
 }
 

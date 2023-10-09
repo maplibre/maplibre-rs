@@ -1,15 +1,15 @@
-<h1 align="center">
+<h1 style="text-align:center">
   <img width="350px" alt="maplibre-rs" src="./docs/logo/maplibre-rs-with-text.svg">
 </h1>
 
-<div align="center">
+<div style="text-align:center">
   <strong>Native Maps for Web, Mobile and Linux</strong>
 </div>
-<div align="center">
+<div style="text-align:center">
   A map rendering library written in Rust.
 </div>
 
-<div align="center">
+<div style="text-align:center">
   <img src="https://img.shields.io/badge/stability-experimental-orange.svg?style=flat-square"
       alt="Stability" />
   <a href="https://github.com/maplibre/maplibre-rs/actions/workflows/on_main_push.yml">
@@ -22,18 +22,17 @@
   </a>
 </div>
 
-<div align="center">
+<div style="text-align:center">
   <h3>
     <a href="https://webgl.demo.maplibre-rs.maplibre.org">
       WebGL Demo
-    </a>
-    <span> | </span>
+    </a> |
     <a href="https://maplibre.org/maplibre-rs/docs/book/">
       Book
-    </a> | </span>
+    </a> |
     <a href="https://maplibre.org/maplibre-rs/docs/api/maplibre/">
       API
-    </a> | </span>
+    </a> |
     <a href="https://matrix.to/#/#maplibre:matrix.org">
       Chat in Matrix Space
     </a>

@@ -80,8 +80,7 @@ pub unsafe fn singlethreaded_main_entry(
     let tag = WebMessageTag::from_u32(tag).map_err(|e| CallError::Deserialize(Box::new(e)))?;
 
     log::debug!(
-        "received message ({:?}) with {}bytes on main thread",
-        tag,
+        "received message ({tag:?}) with {}bytes on main thread",
         buffer.byte_length()
     );
 

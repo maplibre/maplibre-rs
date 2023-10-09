@@ -10,6 +10,7 @@ use crate::{
         source_type::{SourceType, TessellateSource},
     },
     kernel::Kernel,
+    render::tile_view_pattern::DEFAULT_TILE_SIZE,
     style::layer::LayerPaint,
     tcs::system::System,
     vector::{
@@ -48,7 +49,8 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
         }: &mut MapContext,
     ) {
         let _tiles = &mut world.tiles;
-        let view_region = view_state.create_view_region();
+        let view_region =
+            view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
@@ -74,8 +76,8 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                         .unwrap()
                         .insert(VectorLayersDataComponent::default());
 
-                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {}", &coords);
-                    log::info!("tile request started: {}", &coords);
+                    tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
+                    log::info!("tile request started: {coords}");
 
                     self.kernel
                         .apc()
@@ -111,8 +113,8 @@ pub fn fetch_vector_apc<
     kernel: K,
 ) -> AsyncProcedureFuture {
     Box::pin(async move {
-        let Input::TileRequest {coords, style} = input else {
-            return Err(ProcedureError::IncompatibleInput)
+        let Input::TileRequest { coords, style } = input else {
+            return Err(ProcedureError::IncompatibleInput);
         };
 
         let fill_layers: HashSet<String> = style
@@ -150,7 +152,7 @@ pub fn fetch_vector_apc<
                     .map_err(|e| ProcedureError::Execution(Box::new(e)))?;
                 }
                 Err(e) => {
-                    log::error!("{:?}", &e);
+                    log::error!("{e:?}");
                     for to_load in &fill_layers {
                         context
                             .send(<T as VectorTransferables>::LayerMissing::build_from(

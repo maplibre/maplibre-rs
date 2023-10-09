@@ -39,15 +39,21 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
             if message.has_tag(T::TileTessellated::message_tag()) {
                 let message = message.into_transferable::<T::TileTessellated>();
                 let Some(component) = world
-                       .tiles
-                       .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
+                    .tiles
+                    .query_mut::<&mut VectorLayersDataComponent>(message.coords())
+                else {
+                    continue;
+                };
 
                 component.done = true;
             } else if message.has_tag(T::LayerMissing::message_tag()) {
                 let message = message.into_transferable::<T::LayerMissing>();
                 let Some(component) = world
-                        .tiles
-                        .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
+                    .tiles
+                    .query_mut::<&mut VectorLayersDataComponent>(message.coords())
+                else {
+                    continue;
+                };
 
                 component
                     .layers
@@ -60,8 +66,11 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
                 }*/
 
                 let Some(component) = world
-                        .tiles
-                        .query_mut::<&mut VectorLayersDataComponent>(message.coords()) else { continue; };
+                    .tiles
+                    .query_mut::<&mut VectorLayersDataComponent>(message.coords())
+                else {
+                    continue;
+                };
 
                 component
                     .layers

@@ -41,8 +41,6 @@ fn main(
     );
     let tex_coords = TEX_COORDS[vertex_idx];
 
-    var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(vertex, 1.0);
-    position.z = z_index;
-
-    return VertexOutput(tex_coords, position);
+    var final_position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(vertex, 1.0);
+    return VertexOutput(tex_coords, final_position);
 }

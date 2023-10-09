@@ -21,7 +21,6 @@ gradle-app.setting
 .classpath
 
 *.iml
-.gradle
 /local.properties
 /.idea/caches
 /.idea/libraries

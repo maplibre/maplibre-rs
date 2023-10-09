@@ -11,13 +11,11 @@ pub mod singlethreaded;
 #[cfg(target_feature = "atomics")]
 pub type UsedRasterTransferables = maplibre::raster::DefaultRasterTransferables;
 #[cfg(not(target_feature = "atomics"))]
-pub type UsedRasterTransferables =
-    crate::platform::singlethreaded::transferables::FlatTransferables;
+pub type UsedRasterTransferables = singlethreaded::transferables::FlatTransferables;
 
 #[cfg(target_feature = "atomics")]
 pub type UsedVectorTransferables = maplibre::vector::DefaultVectorTransferables;
 #[cfg(not(target_feature = "atomics"))]
-pub type UsedVectorTransferables =
-    crate::platform::singlethreaded::transferables::FlatTransferables;
+pub type UsedVectorTransferables = singlethreaded::transferables::FlatTransferables;
 
 pub type UsedOffscreenKernelEnvironment = WHATWGOffscreenKernelEnvironment;
