@@ -27,7 +27,7 @@ fn main(
     @location(10) z_index: f32,
     @builtin(instance_index) instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
-    let z = 0.0;
+    let z = -z_index;
     let width = 3.0 * zoom_factor;
 
     // The following code moves all "invisible" vertices to (0, 0, 0)
