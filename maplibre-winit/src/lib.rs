@@ -8,7 +8,7 @@ use maplibre::{
     event_loop::{EventLoop, EventLoopProxy, SendEventError},
     io::{apc::AsyncProcedureCall, scheduler::Scheduler, source_client::HttpClient},
     map::Map,
-    window::{HeadedMapWindow, MapWindowConfig},
+    window::{HeadedMapWindow, MapWindowConfig, PhysicalSize},
 };
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -77,6 +77,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         let mut current_frame: u64 = 0;
 
         let mut input_controller = InputController::new(0.2, 100.0, 0.1);
+        let mut scale_factor = 1.0;
 
         self.event_loop
             .run(move |event, _window_target, control_flow| {
@@ -104,7 +105,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         ref event,
                         window_id,
                     } if window_id == map.window().id().into() => {
-                        if !input_controller.window_input(event) {
+                        if !input_controller.window_input(event, scale_factor) {
                             match event {
                                 WindowEvent::CloseRequested
                                 | WindowEvent::KeyboardInput {
@@ -116,14 +117,17 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                                     },
                                     ..
                                 } => *control_flow = ControlFlow::Exit,
-                                WindowEvent::Resized(physical_size) => {
-                                    if let Ok(map_context) =  map.context_mut() {
-                                        map_context.resize(physical_size.width, physical_size.height);
+                                WindowEvent::Resized(winit::dpi::PhysicalSize { width, height}) => {
+                                    if let Ok(map_context) = map.context_mut() {
+                                        let size = PhysicalSize::new(*width, *height).expect("window values should not be zero");
+                                        map_context.resize(size, scale_factor);
                                     }
                                 }
-                                WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                                WindowEvent::ScaleFactorChanged { new_inner_size: winit::dpi::PhysicalSize { width, height}, scale_factor: new_scale_factor } => {
                                     if let Ok(map_context) =  map.context_mut() {
-                                        map_context.resize(new_inner_size.width, new_inner_size.height);
+                                        scale_factor = *new_scale_factor;
+                                        let size = PhysicalSize::new(*width, *height).expect("window values should not be zero");
+                                        map_context.resize(size, scale_factor);
                                     }
                                 }
                                 _ => {}
@@ -178,6 +182,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         }
     }
 }
+
 pub struct WinitEventLoopProxy<ET: 'static> {
     proxy: RawEventLoopProxy<ET>,
 }

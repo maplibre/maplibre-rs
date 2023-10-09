@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use maplibre::window::{MapWindow, MapWindowConfig, WindowSize};
+use maplibre::window::{MapWindow, MapWindowConfig, PhysicalSize};
 use winit::{platform::web::WindowBuilderExtWebSys, window::WindowBuilder};
 
 use super::WinitMapWindow;
@@ -44,10 +44,10 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
 }
 
 impl<ET: 'static> MapWindow for WinitMapWindow<ET> {
-    fn size(&self) -> WindowSize {
+    fn size(&self) -> PhysicalSize {
         let size = self.window.inner_size();
 
-        WindowSize::new(size.width, size.height).expect("failed to get window dimensions.")
+        PhysicalSize::new(size.width, size.height).expect("failed to get window dimensions.")
     }
 }
 

@@ -59,11 +59,11 @@ impl InputController {
 
     /// Process the given winit `[winit::event::WindowEvent]`.
     /// Returns true if the event has been processed and false otherwise.
-    pub fn window_input(&mut self, event: &WindowEvent) -> bool {
+    pub fn window_input(&mut self, event: &WindowEvent, scale_factor: f64) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
                 let position: (f64, f64) = position.to_owned().into();
-                let position = Vector2::from(position);
+                let position = Vector2::from(position) / scale_factor;
                 self.pan_handler.process_window_position(&position, false);
                 self.query_handler.process_window_position(&position, false);
                 self.zoom_handler.process_window_position(&position, false);
@@ -99,14 +99,11 @@ impl InputController {
                 }
                 TouchPhase::Moved => {
                     let position: (f64, f64) = touch.location.to_owned().into();
-                    self.pan_handler
-                        .process_window_position(&Vector2::from(position), true);
-                    self.query_handler
-                        .process_window_position(&Vector2::from(position), true);
-                    self.zoom_handler
-                        .process_window_position(&Vector2::from(position), true);
-                    self.camera_handler
-                        .process_window_position(&Vector2::from(position), true);
+                    let position = Vector2::from(position) / scale_factor;
+                    self.pan_handler.process_window_position(&position, true);
+                    self.query_handler.process_window_position(&position, true);
+                    self.zoom_handler.process_window_position(&position, true);
+                    self.camera_handler.process_window_position(&position, true);
                     true
                 }
                 TouchPhase::Cancelled => false,
