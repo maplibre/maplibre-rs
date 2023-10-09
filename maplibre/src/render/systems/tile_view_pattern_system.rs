@@ -36,6 +36,8 @@ pub fn tile_view_pattern_system(
             return;
         };
 
+        log::trace!("Tiles in view: {}", view_tiles.len());
+
         tile_view_pattern.update_pattern(view_tiles);
     }
 }
