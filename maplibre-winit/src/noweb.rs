@@ -14,7 +14,6 @@ use maplibre::{
         http_client::ReqwestHttpClient, run_multithreaded, scheduler::TokioScheduler,
         ReqwestOffscreenKernelEnvironment,
     },
-    raster::{DefaultRasterTransferables, RasterPlugin},
     render::{builder::RendererBuilder, settings::WgpuSettings, RenderPlugin},
     style::Style,
     window::{MapWindow, MapWindowConfig, WindowSize},
@@ -125,8 +124,12 @@ pub fn run_headed_map(
             renderer_builder,
             vec![
                 Box::new(RenderPlugin::default()),
-                //Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
-                Box::new(RasterPlugin::<DefaultRasterTransferables>::default()),
+                Box::new(maplibre::vector::VectorPlugin::<
+                    maplibre::vector::DefaultVectorTransferables,
+                >::default()),
+                // Box::new(maplibre::raster::RasterPlugin::<
+                //     maplibre::raster::DefaultRasterTransferables,
+                // >::default()),
                 #[cfg(debug_assertions)]
                 Box::new(maplibre::debug::DebugPlugin::default()),
             ],
