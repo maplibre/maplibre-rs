@@ -17,7 +17,7 @@ pub struct MapContext {
 
 impl MapContext {
     pub fn resize(&mut self, width: u32, height: u32) {
-        self.view_state.resize(width, height);
+        self.view_state.resize(width / 2, height / 2);
         self.renderer.resize_surface(width, height)
     }
 }
