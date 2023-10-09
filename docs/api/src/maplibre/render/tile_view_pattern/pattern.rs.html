@@ -156,7 +156,18 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, marker::PhantomData};
 
 <span class="kw">use crate</span>::{
     coords::{ViewRegion, Zoom},
@@ -219,8 +230,9 @@
         world: <span class="kw-2">&amp;</span>World,
     ) -&gt; Vec&lt;ViewTile&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>view_tiles = Vec::with_capacity(<span class="self">self</span>.view_tiles.len());
+        <span class="kw">let </span><span class="kw-2">mut </span>source_tiles = HashSet::new(); <span class="comment">// TODO: Optimization potential: Replace wit a bitmap, that allows false-negative matches
 
-        <span class="kw">for </span>coords <span class="kw">in </span>view_region.iter() {
+        </span><span class="kw">for </span>coords <span class="kw">in </span>view_region.iter() {
             <span class="kw">if </span>coords.build_quad_key().is_none() {
                 <span class="kw">continue</span>;
             }
@@ -230,6 +242,16 @@
                     SourceShapes::SourceEqTarget(TileShape::new(coords, zoom))
                 } <span class="kw">else if let </span><span class="prelude-val">Some</span>(parent_coords) = container.get_available_parent(coords, world) {
                     <span class="macro">log::debug!</span>(<span class="string">&quot;Could not find data at {coords}. Falling back to {parent_coords}&quot;</span>);
+
+                    <span class="kw">if </span>source_tiles.contains(<span class="kw-2">&amp;</span>parent_coords) {
+                        <span class="comment">// Performance optimization: Suppose the map only offers zoom levels 0-14.
+                        // If we build the pattern for z=18, we won&#39;t find tiles. Thus we start
+                        // looking for parents. We might find multiple times the same parent from
+                        // tiles on z=18.
+                        </span><span class="kw">continue</span>;
+                    }
+
+                    source_tiles.insert(parent_coords);
 
                     SourceShapes::Parent(TileShape::new(parent_coords, zoom))
                 } <span class="kw">else if let </span><span class="prelude-val">Some</span>(children_coords) =

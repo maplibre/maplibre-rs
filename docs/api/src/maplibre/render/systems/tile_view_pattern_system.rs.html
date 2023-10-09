@@ -39,6 +39,8 @@
 <a href="#39" id="39">39</a>
 <a href="#40" id="40">40</a>
 <a href="#41" id="41">41</a>
+<a href="#42" id="42">42</a>
+<a href="#43" id="43">43</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Extracts data from the current state.
 
 </span><span class="kw">use crate</span>::{
@@ -76,6 +78,8 @@
         <span class="kw">else </span>{
             <span class="kw">return</span>;
         };
+
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Tiles in view: {}&quot;</span>, view_tiles.len());
 
         tile_view_pattern.update_pattern(view_tiles);
     }

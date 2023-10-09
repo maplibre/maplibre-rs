@@ -157,7 +157,6 @@
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
 <a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view
 
 </span><span class="kw">use </span>std::{borrow::Cow, collections::HashSet, marker::PhantomData, rc::Rc};
@@ -208,7 +207,6 @@
             ..
         }: <span class="kw-2">&amp;mut </span>MapContext,
     ) {
-        <span class="kw">let </span>_tiles = <span class="kw-2">&amp;mut </span>world.tiles;
         <span class="kw">let </span>view_region =
             view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 

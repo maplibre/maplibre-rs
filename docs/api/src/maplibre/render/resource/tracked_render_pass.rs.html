@@ -208,29 +208,9 @@
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
 <a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A render pass which allows tracking, for example using a tracing framework.
 
 </span><span class="kw">use </span>std::ops::Range;
-
-<span class="kw">use </span>log::trace;
 
 <span class="doccomment">/// A [`RenderPass`], which tracks the current pipeline state to ensure all draw calls are valid.
 /// It is used to set the current [`RenderPipeline`], [`BindGroups`](BindGroup) and buffers.
@@ -249,7 +229,6 @@
     ///
     /// Subsequent draw calls will exhibit the behavior defined by the `pipeline`.
     </span><span class="kw">pub fn </span>set_render_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgpu::RenderPipeline) {
-        <span class="macro">trace!</span>(<span class="string">&quot;set pipeline: {pipeline:?}&quot;</span>);
         <span class="self">self</span>.pass.set_pipeline(pipeline);
     }
 
@@ -292,7 +271,6 @@
     ///
     /// The active vertex buffer(s) can be set with [`TrackedRenderPass::set_vertex_buffer`].
     </span><span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
-        <span class="macro">trace!</span>(<span class="string">&quot;draw: {vertices:?} {instances:?}&quot;</span>);
         <span class="self">self</span>.pass.draw(vertices, instances);
     }
 
@@ -301,7 +279,6 @@
     /// The active index buffer can be set with [`TrackedRenderPass::set_index_buffer`], while the
     /// active vertex buffer(s) can be set with [`TrackedRenderPass::set_vertex_buffer`].
     </span><span class="kw">pub fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
-        <span class="macro">trace!</span>(<span class="string">&quot;draw indexed: {indices:?} {base_vertex} {instances:?}&quot;</span>);
         <span class="self">self</span>.pass.draw_indexed(indices, base_vertex, instances);
     }
 
@@ -322,7 +299,6 @@
     /// }
     /// ```
     </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgpu::Buffer, indirect_offset: u64) {
-        <span class="macro">trace!</span>(<span class="string">&quot;draw indirect: {indirect_buffer:?} {indirect_offset}&quot;</span>);
         <span class="self">self</span>.pass.draw_indirect(indirect_buffer, indirect_offset);
     }
 
@@ -350,7 +326,6 @@
         indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgpu::Buffer,
         indirect_offset: u64,
     ) {
-        <span class="macro">trace!</span>(<span class="string">&quot;draw indexed indirect: {indirect_buffer:?} {indirect_offset}&quot;</span>);
         <span class="self">self</span>.pass
             .draw_indexed_indirect(indirect_buffer, indirect_offset);
     }
@@ -359,7 +334,6 @@
     ///
     /// Subsequent stencil tests will test against this value.
     </span><span class="kw">pub fn </span>set_stencil_reference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, reference: u32) {
-        <span class="macro">trace!</span>(<span class="string">&quot;set stencil reference: {reference}&quot;</span>);
         <span class="self">self</span>.pass.set_stencil_reference(reference);
     }
 
@@ -367,7 +341,6 @@
     ///
     /// Subsequent draw calls will discard any fragments that fall outside this region.
     </span><span class="kw">pub fn </span>set_scissor_rect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: u32, y: u32, width: u32, height: u32) {
-        <span class="macro">trace!</span>(<span class="string">&quot;set_scissor_rect: {x} {y} {width} {height}&quot;</span>);
         <span class="self">self</span>.pass.set_scissor_rect(x, y, width, height);
     }
 
@@ -375,10 +348,6 @@
     ///
     /// `Features::PUSH_CONSTANTS` must be enabled on the device in order to call these functions.
     </span><span class="kw">pub fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgpu::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
-        <span class="macro">trace!</span>(
-            <span class="string">&quot;set push constants: {stages:?} offset: {offset} data.len: {}&quot;</span>,
-            data.len()
-        );
         <span class="self">self</span>.pass.set_push_constants(stages, offset, data);
     }
 
@@ -394,7 +363,6 @@
         min_depth: f32,
         max_depth: f32,
     ) {
-        <span class="macro">trace!</span>(<span class="string">&quot;set viewport: {x} {y} {width} {height} {min_depth} {max_depth}&quot;</span>);
         <span class="self">self</span>.pass
             .set_viewport(x, y, width, height, min_depth, max_depth);
     }
@@ -403,7 +371,6 @@
     ///
     /// This is a GPU debugging feature. This has no effect on the rendering itself.
     </span><span class="kw">pub fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
-        <span class="macro">trace!</span>(<span class="string">&quot;insert debug marker: {label}&quot;</span>);
         <span class="self">self</span>.pass.insert_debug_marker(label);
     }
 
@@ -428,7 +395,6 @@
     /// [`push_debug_group`]: TrackedRenderPass::push_debug_group
     /// [`pop_debug_group`]: TrackedRenderPass::pop_debug_group
     </span><span class="kw">pub fn </span>push_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
-        <span class="macro">trace!</span>(<span class="string">&quot;push_debug_group marker: {label}&quot;</span>);
         <span class="self">self</span>.pass.push_debug_group(label);
     }
 
@@ -445,12 +411,10 @@
     /// [`push_debug_group`]: TrackedRenderPass::push_debug_group
     /// [`pop_debug_group`]: TrackedRenderPass::pop_debug_group
     </span><span class="kw">pub fn </span>pop_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="macro">trace!</span>(<span class="string">&quot;pop_debug_group&quot;</span>);
         <span class="self">self</span>.pass.pop_debug_group();
     }
 
     <span class="kw">pub fn </span>set_blend_constant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: wgpu::Color) {
-        <span class="macro">trace!</span>(<span class="string">&quot;set blend constant: {color:?}&quot;</span>);
         <span class="self">self</span>.pass.set_blend_constant(color);
     }
 }
