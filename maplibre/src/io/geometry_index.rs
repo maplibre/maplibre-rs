@@ -9,7 +9,6 @@ use geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
 };
-use log::debug;
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
 use crate::{
@@ -312,19 +311,19 @@ impl FeatureProcessor for IndexProcessor {
                 IndexedGeometry::from_linestring(linestring, self.properties.take().unwrap())
                     .unwrap(),
             ),
-            Some(Geometry::Point(_)) => debug!("Unsupported Point geometry in index"),
-            Some(Geometry::Line(_)) => debug!("Unsupported Line geometry in index"),
-            Some(Geometry::MultiPoint(_)) => debug!("Unsupported MultiPoint geometry in index"),
-            Some(Geometry::MultiLineString(_)) => {
-                debug!("Unsupported MultiLineString geometry in index")
+            Some(Geometry::Point(_))
+            | Some(Geometry::Line(_))
+            | Some(Geometry::MultiPoint(_))
+            | Some(Geometry::MultiLineString(_))
+            | Some(Geometry::MultiPolygon(_))
+            | Some(Geometry::GeometryCollection(_))
+            | Some(Geometry::Rect(_))
+            | Some(Geometry::Triangle(_)) => {
+                log::debug!("Unsupported geometry in index")
             }
-            Some(Geometry::MultiPolygon(_)) => debug!("Unsupported MultiPolygon geometry in index"),
-            Some(Geometry::GeometryCollection(_)) => {
-                debug!("Unsupported GeometryCollection geometry in index")
+            None => {
+                log::debug!("No geometry in index")
             }
-            Some(Geometry::Rect(_)) => debug!("Unsupported Rect geometry in index"),
-            Some(Geometry::Triangle(_)) => debug!("Unsupported Triangle geometry in index"),
-            None => debug!("No geometry in index"),
         };
 
         Ok(())
