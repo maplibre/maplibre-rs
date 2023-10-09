@@ -258,7 +258,7 @@ impl Zoom {
     /// tiles would be displayed.
     pub fn zoom_level(&self, tile_size: f64) -> ZoomLevel {
         // TODO: Also support round() instead of floor() here
-        let z = (self.0 as f64 + (TILE_SIZE / tile_size).ln() / 2.0_f64.ln()).floor() as u8;
+        let z = (self.0 + (TILE_SIZE / tile_size).ln() / 2.0_f64.ln()).floor() as u8;
         return ZoomLevel(z.max(0));
     }
 }

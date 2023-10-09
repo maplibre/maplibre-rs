@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{collections::HashSet, marker::PhantomData};
 
 use crate::{
     coords::{ViewRegion, Zoom},
@@ -61,6 +61,7 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
         world: &World,
     ) -> Vec<ViewTile> {
         let mut view_tiles = Vec::with_capacity(self.view_tiles.len());
+        let mut source_tiles = HashSet::new(); // TODO: Optimization potential: Replace wit a bitmap, that allows false-negative matches
 
         for coords in view_region.iter() {
             if coords.build_quad_key().is_none() {
@@ -72,6 +73,16 @@ impl<Q: Queue<B>, B> TileViewPattern<Q, B> {
                     SourceShapes::SourceEqTarget(TileShape::new(coords, zoom))
                 } else if let Some(parent_coords) = container.get_available_parent(coords, world) {
                     log::debug!("Could not find data at {coords}. Falling back to {parent_coords}");
+
+                    if source_tiles.contains(&parent_coords) {
+                        // Performance optimization: Suppose the map only offers zoom levels 0-14.
+                        // If we build the pattern for z=18, we won't find tiles. Thus we start
+                        // looking for parents. We might find multiple times the same parent from
+                        // tiles on z=18.
+                        continue;
+                    }
+
+                    source_tiles.insert(parent_coords);
 
                     SourceShapes::Parent(TileShape::new(parent_coords, zoom))
                 } else if let Some(children_coords) =
