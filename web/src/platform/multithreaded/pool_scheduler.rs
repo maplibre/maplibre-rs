@@ -1,6 +1,6 @@
 use std::future::Future;
 
-use maplibre::{benchmarking::io::scheduler::ScheduleError, io::scheduler::Scheduler};
+use maplibre::{benchmarking::io::scheduler::ScheduleError, io::scheduler::ScheduleMethod};
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Worker;
 
@@ -27,7 +27,7 @@ impl WebWorkerPoolScheduler {
     }
 }
 
-impl Scheduler for WebWorkerPoolScheduler {
+impl ScheduleMethod for WebWorkerPoolScheduler {
     fn schedule<T>(
         &self,
         future_factory: impl (FnOnce() -> T) + Send + 'static,
