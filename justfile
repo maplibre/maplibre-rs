@@ -11,7 +11,7 @@ export NIGHTLY_TOOLCHAIN := "nightly-2023-09-23"
 # Keep this in sync with `rust-toolchain.toml` and `Cargo.toml`.
 # Make sure the above is newer than this.
 
-export STABLE_TOOLCHAIN := "1.72.1"
+export STABLE_TOOLCHAIN := "1.73"
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
 
@@ -186,6 +186,9 @@ xcodebuild-xcframework:
     echo "XC_FRAMEWORK_PATH: $XC_FRAMEWORK_PATH"
     echo "$framework_args" | xargs xcodebuild -create-xcframework -output "$XC_FRAMEWORK_PATH"
     cat "$XC_FRAMEWORK_PATH/Info.plist"
+
+book-serve:
+    cd docs && ./generate-summary.sh && mdbook serve
 
 # language=bash
 extract-tiles:

@@ -51,7 +51,6 @@ pub mod kernel;
 pub mod map;
 pub mod plugin;
 pub mod tcs;
-pub mod view_state;
 
 // Plugins
 pub mod debug;
