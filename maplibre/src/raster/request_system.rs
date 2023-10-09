@@ -48,7 +48,6 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
             ..
         }: &mut MapContext,
     ) {
-        let _tiles = &mut world.tiles;
         let view_region =
             view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 
