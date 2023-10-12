@@ -103,6 +103,8 @@
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Utilities for the window system.
 
 </span><span class="kw">use </span>std::num::NonZeroU32;
@@ -123,6 +125,8 @@
 
     <span class="comment">// TODO: Can we avoid this?
     </span><span class="kw">fn </span>request_redraw(<span class="kw-2">&amp;</span><span class="self">self</span>);
+
+    <span class="kw">fn </span>scale_factor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f64;
 
     <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64;
 }
