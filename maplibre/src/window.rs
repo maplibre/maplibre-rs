@@ -19,6 +19,8 @@ pub trait HeadedMapWindow: MapWindow {
     // TODO: Can we avoid this?
     fn request_redraw(&self);
 
+    fn scale_factor(&self) -> f64;
+
     fn id(&self) -> u64;
 }
 
