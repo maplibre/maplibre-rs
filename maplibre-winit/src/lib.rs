@@ -56,6 +56,10 @@ impl<ET> HeadedMapWindow for WinitMapWindow<ET> {
         self.window.request_redraw()
     }
 
+    fn scale_factor(&self) -> f64 {
+        self.window.scale_factor()
+    }
+
     fn id(&self) -> u64 {
         self.window.id().into()
     }
@@ -77,7 +81,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         let mut current_frame: u64 = 0;
 
         let mut input_controller = InputController::new(0.2, 100.0, 0.1);
-        let mut scale_factor = 1.0;
+        let mut scale_factor = map.window().scale_factor();
 
         self.event_loop
             .run(move |event, _window_target, control_flow| {
@@ -125,6 +129,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                                 }
                                 WindowEvent::ScaleFactorChanged { new_inner_size: winit::dpi::PhysicalSize { width, height}, scale_factor: new_scale_factor } => {
                                     if let Ok(map_context) =  map.context_mut() {
+                                        log::info!("New scaling factor: {}", new_scale_factor);
                                         scale_factor = *new_scale_factor;
                                         let size = PhysicalSize::new(*width, *height).expect("window values should not be zero");
                                         map_context.resize(size, scale_factor);

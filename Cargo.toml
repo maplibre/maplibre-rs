@@ -63,7 +63,7 @@ image = { version = "0.24", default-features = false, features = ["jpeg", "webp"
 include_dir = "0.7.3"
 instant = { version = "0.1.12", features = ["wasm-bindgen"] }  # TODO: Untrusted dependency
 jni = "0.21.1"
-js-sys = "0.3.64"
+js-sys = "0.3"
 log = "0.4.20"
 lyon = { version = "1.0.1", features = [] }
 naga = { version = "0.13.0", features = ["wgsl-in"] }
@@ -87,10 +87,10 @@ tracing-subscriber = "0.3.17"
 tracing-tracy = "0.10"
 tracing-wasm = "0.2.1"  # TODO: Low quality dependency (remove in a separate PR!)
 walkdir = "2.4.0"
-wasm-bindgen = "0.2"
+wasm-bindgen = "=0.2.87"
 wasm-bindgen-futures = "0.4"
 wasm-bindgen-test = "0.3"
-web-sys = "0.3.64"  # Individual features are customized in each crate
+web-sys = "0.3"  # Individual features are customized in each crate
 wgpu = "0.17.0"
 
 [profile.release]
