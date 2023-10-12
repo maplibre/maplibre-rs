@@ -528,7 +528,7 @@
         math::{bounds_from_points, Aabb2, Aabb3, Plane},
         ChangeObserver,
     },
-    window::WindowSize,
+    window::{LogicalSize, PhysicalSize},
 };
 
 <span class="kw">const </span>VIEW_REGION_PADDING: i32 = <span class="number">1</span>;
@@ -546,7 +546,7 @@
 
 <span class="kw">impl </span>ViewState {
     <span class="kw">pub fn </span>new&lt;F: Into&lt;Rad&lt;f64&gt;&gt;, P: Into&lt;Deg&lt;f64&gt;&gt;&gt;(
-        window_size: WindowSize,
+        window_size: PhysicalSize,
         position: WorldCoords,
         zoom: Zoom,
         pitch: P,
@@ -578,9 +578,9 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.edge_insets
     }
 
-    <span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32) {
-        <span class="self">self</span>.width = width <span class="kw">as </span>f64;
-        <span class="self">self</span>.height = height <span class="kw">as </span>f64;
+    <span class="kw">pub fn </span>resize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: LogicalSize) {
+        <span class="self">self</span>.width = size.width() <span class="kw">as </span>f64;
+        <span class="self">self</span>.height = size.height() <span class="kw">as </span>f64;
     }
 
     <span class="kw">pub fn </span>create_view_region(<span class="kw-2">&amp;</span><span class="self">self</span>, visible_level: ZoomLevel) -&gt; <span class="prelude-ty">Option</span>&lt;ViewRegion&gt; {
@@ -982,14 +982,14 @@
     <span class="kw">use crate</span>::{
         coords::{WorldCoords, Zoom},
         render::view_state::ViewState,
-        window::WindowSize,
+        window::PhysicalSize,
     };
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>conform_transformation() {
         <span class="kw">let </span>fov = Deg(<span class="number">60.0</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>state = ViewState::new(
-            WindowSize::new(<span class="number">800</span>, <span class="number">600</span>).unwrap(),
+            PhysicalSize::new(<span class="number">800</span>, <span class="number">600</span>).unwrap(),
             WorldCoords::at_ground(<span class="number">0.0</span>, <span class="number">0.0</span>),
             Zoom::new(<span class="number">10.0</span>),
             Deg(<span class="number">0.0</span>),

@@ -599,6 +599,9 @@
 <a href="#599" id="599">599</a>
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -668,10 +671,13 @@
 
 <span class="kw">pub use </span>shaders::ShaderVertex;
 
-<span class="kw">use </span><span class="kw">crate</span>::render::{
-    render_phase::{LayerItem, RenderPhase, TileMaskItem},
-    systems::{graph_runner_system::GraphRunnerSystem, upload_system::upload_system},
-    tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
+<span class="kw">use crate</span>::{
+    render::{
+        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        systems::{graph_runner_system::GraphRunnerSystem, upload_system::upload_system},
+        tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
+    },
+    window::PhysicalSize,
 };
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; <span class="comment">// Must match IndexDataType
@@ -841,8 +847,8 @@
         })
     }
 
-    <span class="kw">pub fn </span>resize_surface(<span class="kw-2">&amp;mut </span><span class="self">self</span>, width: u32, height: u32) {
-        <span class="self">self</span>.resources.surface.resize(width, height)
+    <span class="kw">pub fn </span>resize_surface(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: PhysicalSize) {
+        <span class="self">self</span>.resources.surface.resize(size)
     }
 
     <span class="doccomment">/// Requests a device
@@ -1022,12 +1028,12 @@
 </span><span class="kw">mod </span>tests {
     <span class="kw">use crate</span>::{
         tcs::world::World,
-        window::{MapWindow, MapWindowConfig, WindowSize},
+        window::{MapWindow, MapWindowConfig, PhysicalSize},
     };
 
     <span class="attr">#[derive(Clone)]
     </span><span class="kw">pub struct </span>HeadlessMapWindowConfig {
-        size: WindowSize,
+        size: PhysicalSize,
     }
 
     <span class="kw">impl </span>MapWindowConfig <span class="kw">for </span>HeadlessMapWindowConfig {
@@ -1039,11 +1045,11 @@
     }
 
     <span class="kw">pub struct </span>HeadlessMapWindow {
-        size: WindowSize,
+        size: PhysicalSize,
     }
 
     <span class="kw">impl </span>MapWindow <span class="kw">for </span>HeadlessMapWindow {
-        <span class="kw">fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WindowSize {
+        <span class="kw">fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PhysicalSize {
             <span class="self">self</span>.size
         }
     }
@@ -1087,7 +1093,7 @@
         <span class="kw">let </span>render_state = RenderResources::new(Surface::from_image(
             <span class="kw-2">&amp;</span>device,
             <span class="kw-2">&amp;</span>HeadlessMapWindow {
-                size: WindowSize::new(<span class="number">100</span>, <span class="number">100</span>).expect(<span class="string">&quot;invalid headless map size&quot;</span>),
+                size: PhysicalSize::new(<span class="number">100</span>, <span class="number">100</span>).expect(<span class="string">&quot;invalid headless map size&quot;</span>),
             },
             <span class="kw-2">&amp;</span>RendererSettings::default(),
         ));

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["WindowSize"],"trait":["HeadedMapWindow","MapWindow","MapWindowConfig"]};
+window.SIDEBAR_ITEMS = {"struct":["LogicalSize","PhysicalSize"],"trait":["HeadedMapWindow","MapWindow","MapWindowConfig"]};
