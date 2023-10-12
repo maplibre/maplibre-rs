@@ -16,7 +16,7 @@ use maplibre::{
     },
     render::{builder::RendererBuilder, settings::WgpuSettings, RenderPlugin},
     style::Style,
-    window::{MapWindow, MapWindowConfig, WindowSize},
+    window::{MapWindow, MapWindowConfig, PhysicalSize},
 };
 use winit::window::WindowBuilder;
 
@@ -54,17 +54,17 @@ impl<ET> WinitMapWindowConfig<ET> {
 }
 
 impl<ET> MapWindow for WinitMapWindow<ET> {
-    fn size(&self) -> WindowSize {
+    fn size(&self) -> PhysicalSize {
         let size = self.window.inner_size();
         #[cfg(target_os = "android")]
         // On android we can not get the dimensions of the window initially. Therefore, we use a
         // fallback until the window is ready to deliver its correct bounds.
-        let window_size =
-            WindowSize::new(size.width, size.height).unwrap_or(WindowSize::new(100, 100).unwrap());
+        let window_size = PhysicalSize::new(size.width, size.height)
+            .unwrap_or(PhysicalSize::new(100, 100).unwrap());
 
         #[cfg(not(target_os = "android"))]
         let window_size =
-            WindowSize::new(size.width, size.height).expect("failed to get window dimensions.");
+            PhysicalSize::new(size.width, size.height).expect("failed to get window dimensions.");
         window_size
     }
 }
