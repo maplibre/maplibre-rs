@@ -15,7 +15,7 @@ use crate::{
         math::{bounds_from_points, Aabb2, Aabb3, Plane},
         ChangeObserver,
     },
-    window::WindowSize,
+    window::{LogicalSize, PhysicalSize},
 };
 
 const VIEW_REGION_PADDING: i32 = 1;
@@ -33,7 +33,7 @@ pub struct ViewState {
 
 impl ViewState {
     pub fn new<F: Into<Rad<f64>>, P: Into<Deg<f64>>>(
-        window_size: WindowSize,
+        window_size: PhysicalSize,
         position: WorldCoords,
         zoom: Zoom,
         pitch: P,
@@ -65,9 +65,9 @@ impl ViewState {
         &self.edge_insets
     }
 
-    pub fn resize(&mut self, width: u32, height: u32) {
-        self.width = width as f64;
-        self.height = height as f64;
+    pub fn resize(&mut self, size: LogicalSize) {
+        self.width = size.width() as f64;
+        self.height = size.height() as f64;
     }
 
     pub fn create_view_region(&self, visible_level: ZoomLevel) -> Option<ViewRegion> {
@@ -469,14 +469,14 @@ mod tests {
     use crate::{
         coords::{WorldCoords, Zoom},
         render::view_state::ViewState,
-        window::WindowSize,
+        window::PhysicalSize,
     };
 
     #[test]
     fn conform_transformation() {
         let fov = Deg(60.0);
         let mut state = ViewState::new(
-            WindowSize::new(800, 600).unwrap(),
+            PhysicalSize::new(800, 600).unwrap(),
             WorldCoords::at_ground(0.0, 0.0),
             Zoom::new(10.0),
             Deg(0.0),

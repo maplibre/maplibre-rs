@@ -17,7 +17,7 @@ use crate::{
     },
     schedule::Schedule,
     tcs::{system::SystemContainer, world::World},
-    window::{MapWindowConfig, WindowSize},
+    window::{MapWindowConfig, PhysicalSize},
 };
 
 mod graph_node;
@@ -34,7 +34,7 @@ pub async fn create_headless_renderer(
     let client = ReqwestHttpClient::new(cache_path);
     let mut kernel = KernelBuilder::new()
         .with_map_window_config(HeadlessMapWindowConfig::new(
-            WindowSize::new(tile_size, tile_size).unwrap(),
+            PhysicalSize::new(tile_size, tile_size).unwrap(),
         ))
         .with_http_client(client.clone())
         .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new()))

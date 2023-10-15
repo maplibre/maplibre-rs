@@ -12,7 +12,7 @@ use crate::{
         resource::texture::TextureView,
         settings::{Msaa, RendererSettings},
     },
-    window::{HeadedMapWindow, MapWindow, WindowSize},
+    window::{HeadedMapWindow, MapWindow, PhysicalSize},
 };
 
 pub struct BufferDimensions {
@@ -23,7 +23,7 @@ pub struct BufferDimensions {
 }
 
 impl BufferDimensions {
-    fn new(size: WindowSize) -> Self {
+    fn new(size: PhysicalSize) -> Self {
         let bytes_per_pixel = size_of::<u32>() as u32;
         let unpadded_bytes_per_row = size.width() * bytes_per_pixel;
 
@@ -41,7 +41,7 @@ impl BufferDimensions {
 
 pub struct WindowHead {
     surface: wgpu::Surface,
-    size: WindowSize,
+    size: PhysicalSize,
 
     texture_format: wgpu::TextureFormat,
     present_mode: wgpu::PresentMode,
@@ -50,7 +50,7 @@ pub struct WindowHead {
 
 impl WindowHead {
     pub fn resize_and_configure(&mut self, width: u32, height: u32, device: &wgpu::Device) {
-        self.size = WindowSize::new(width, height).unwrap();
+        self.size = PhysicalSize::new(width, height).unwrap();
         self.configure(device);
     }
 
@@ -164,7 +164,7 @@ pub enum Head {
 }
 
 pub struct Surface {
-    size: WindowSize,
+    size: PhysicalSize,
     head: Head,
 }
 
@@ -289,12 +289,12 @@ impl Surface {
         }
     }
 
-    pub fn size(&self) -> WindowSize {
+    pub fn size(&self) -> PhysicalSize {
         self.size
     }
 
-    pub fn resize(&mut self, width: u32, height: u32) {
-        self.size = WindowSize::new(width, height).expect("Invalid size for resizing the surface.");
+    pub fn resize(&mut self, size: PhysicalSize) {
+        self.size = size;
     }
 
     pub fn reconfigure(&mut self, device: &wgpu::Device) {

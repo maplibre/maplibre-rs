@@ -65,16 +65,6 @@ vector map renderers like Google Maps, Apple Maps or MapLibre. The current imple
 of the used technology stack. It is unclear whether the high-performance requirements of rendering maps using vector
 graphics are achievable using the current stack.
 
-## Talk: World in Vectors
-
-[![](https://static.media.ccc.de/media/events/MCH2022/265-6919a16c-0dcf-56af-ae0b-5fe0187bc896_preview.jpg)
-](https://media.ccc.de/v/mch2022-265-world-in-vectors-cross-platform-map-rendering-using-rust)
-
-
-([External Link](https://media.ccc.de/v/mch2022-265-world-in-vectors-cross-platform-map-rendering-using-rust))
-
-([Older Talk on YouTube](https://www.youtube.com/watch?v=KFk8bOtJzCM))
-
 ## Demos
 
 - [WebGL](https://webgl.demo.maplibre-rs.maplibre.org)
