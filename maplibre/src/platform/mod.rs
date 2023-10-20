@@ -2,6 +2,11 @@
 //! parts of this module are used.
 
 #[cfg(not(target_arch = "wasm32"))]
+pub use noweb::run_multithreaded;
+#[cfg(not(target_arch = "wasm32"))]
+pub use noweb::ReqwestOffscreenKernelEnvironment;
+
+#[cfg(not(target_arch = "wasm32"))]
 mod noweb;
 
 /// Http client for non-web targets.
@@ -20,9 +25,6 @@ pub mod trace {
     #[cfg(not(target_arch = "wasm32"))]
     pub use super::noweb::trace::*;
 }
-
-#[cfg(not(target_arch = "wasm32"))]
-pub use noweb::run_multithreaded;
 
 /// Minimum WebGPU buffer size
 ///

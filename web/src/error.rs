@@ -2,11 +2,10 @@
 
 use std::{
     borrow::Cow,
-    error::Error,
     fmt::{Display, Formatter},
 };
 
-use js_sys::{Error as JSError, TypeError};
+use js_sys::TypeError;
 use maplibre::io::apc::{CallError, ProcedureError};
 use thiserror::Error;
 use wasm_bindgen::{JsCast, JsValue};
@@ -29,15 +28,15 @@ pub enum WebError {
 impl From<JsValue> for WebError {
     fn from(value: JsValue) -> Self {
         if let Some(error) = value.dyn_ref::<TypeError>() {
-            let Some(message) = error
-                .message()
-                .as_string() else { return WebError::InvalidMessage; };
+            let Some(message) = error.message().as_string() else {
+                return WebError::InvalidMessage;
+            };
 
             WebError::TypeError(message.into())
-        } else if let Some(error) = value.dyn_ref::<JSError>() {
-            let Some(message) = error
-                .message()
-                .as_string() else { return WebError::InvalidMessage; };
+        } else if let Some(error) = value.dyn_ref::<js_sys::Error>() {
+            let Some(message) = error.message().as_string() else {
+                return WebError::InvalidMessage;
+            };
 
             WebError::GenericError(message.into())
         } else {
@@ -48,41 +47,25 @@ impl From<JsValue> for WebError {
 
 /// Wraps several unrelated errors and implements Into<JSValue>. This should be used in Rust
 /// functions called from JS-land as return error type.
-#[derive(Debug)]
-pub enum WrappedError {
-    ProcedureError(ProcedureError),
-    CallError(CallError),
-    WebError(WebError),
+#[derive(Error, Debug)]
+pub enum JSError {
+    Procedure(#[from] ProcedureError),
+    Call(#[from] CallError),
+    Web(#[from] WebError),
 }
 
-impl Display for WrappedError {
+impl Display for JSError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Error from Rust: {:?}", self)
+        match self {
+            JSError::Procedure(inner) => inner.fmt(f),
+            JSError::Call(inner) => inner.fmt(f),
+            JSError::Web(inner) => inner.fmt(f),
+        }
     }
 }
 
-impl Error for WrappedError {}
-
-impl From<WrappedError> for JsValue {
-    fn from(val: WrappedError) -> Self {
+impl From<JSError> for JsValue {
+    fn from(val: JSError) -> Self {
         JsValue::from_str(&val.to_string())
-    }
-}
-
-impl From<CallError> for WrappedError {
-    fn from(e: CallError) -> Self {
-        WrappedError::CallError(e)
-    }
-}
-
-impl From<ProcedureError> for WrappedError {
-    fn from(e: ProcedureError) -> Self {
-        WrappedError::ProcedureError(e)
-    }
-}
-
-impl From<WebError> for WrappedError {
-    fn from(e: WebError) -> Self {
-        WrappedError::WebError(e)
     }
 }

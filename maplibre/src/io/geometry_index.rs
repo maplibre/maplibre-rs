@@ -4,12 +4,11 @@ use std::collections::{BTreeMap, HashMap};
 
 use cgmath::{num_traits::Signed, Bounded};
 use geo::prelude::*;
-use geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
+use geo_types::{Coord, CoordFloat, Geometry, LineString, Point, Polygon};
 use geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
 };
-use log::warn;
 use rstar::{Envelope, PointDistance, RTree, RTreeObject, AABB};
 
 use crate::{
@@ -81,8 +80,8 @@ pub enum TileIndex {
 
 impl TileIndex {
     pub fn point_query(&self, inner_coords: InnerCoords) -> Vec<&IndexedGeometry<f64>> {
-        let point = geo_types::Point::new(inner_coords.x, inner_coords.y);
-        let coordinate: Coordinate<_> = point.into();
+        let point = Point::new(inner_coords.x, inner_coords.y);
+        let coordinate: Coord<_> = point.into();
 
         // FIXME: Respect layer order of style
         match self {
@@ -312,8 +311,18 @@ impl FeatureProcessor for IndexProcessor {
                 IndexedGeometry::from_linestring(linestring, self.properties.take().unwrap())
                     .unwrap(),
             ),
-            _ => {
-                warn!("Unknown geometry in index")
+            Some(Geometry::Point(_))
+            | Some(Geometry::Line(_))
+            | Some(Geometry::MultiPoint(_))
+            | Some(Geometry::MultiLineString(_))
+            | Some(Geometry::MultiPolygon(_))
+            | Some(Geometry::GeometryCollection(_))
+            | Some(Geometry::Rect(_))
+            | Some(Geometry::Triangle(_)) => {
+                log::debug!("Unsupported geometry in index")
+            }
+            None => {
+                log::debug!("No geometry in index")
             }
         };
 

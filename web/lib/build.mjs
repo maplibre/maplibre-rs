@@ -3,16 +3,11 @@ import metaUrlPlugin from '@chialab/esbuild-plugin-meta-url';
 import inlineWorker from 'esbuild-plugin-inline-worker';
 import yargs from "yargs";
 import process from "process";
-import chokidar from "chokidar";
 import {spawnSync} from "child_process"
 import {dirname} from "path";
 import {fileURLToPath} from "url";
 
 let argv = yargs(process.argv.slice(2))
-    .option('watch', {
-        type: 'boolean',
-        description: 'Enable watching'
-    })
     .option('release', {
         type: 'boolean',
         description: 'Release mode'
@@ -73,12 +68,12 @@ let baseConfig = {
 let config = {
     ...baseConfig,
     entryPoints: ['src/index.ts'],
-    incremental: argv.watch,
     plugins: [
         inlineWorker({
             ...baseConfig,
             format: "cjs",
             target: 'es2022',
+            // workerName: 'worker' Supported when the follow commit is released: https://github.com/mitschabaude/esbuild-plugin-inline-worker/commit/d1aaffc721a62a3fe33f59f8f69b462c7dd05f45
         }),
         metaUrlPlugin()
     ],
@@ -187,49 +182,9 @@ const wasmPack = () => {
     }
 }
 
-const watchResult = async (result) => {
-    const watcher = chokidar.watch(['**/*.ts', '**/*.js', '**/*.rs'], {
-        cwd: getProjectDirectory(),
-        ignored: /dist|node_modules|target/,
-        ignoreInitial: true,
-        disableGlobbing: false,
-        followSymlinks: false,
-    });
-
-    const update = async (path) => {
-        try {
-            console.log(`Updating: ${path}`)
-            if (path.endsWith(".rs")) {
-                console.log("Rebuilding Rust...")
-                wasmPack();
-            }
-
-            console.log("Rebuilding...")
-            await result.rebuild();
-
-            console.log("Emitting TypeScript types...")
-            emitTypeScript();
-        } catch (e) {
-            console.error("Error while updating:")
-            console.error(e)
-        }
-    }
-
-    console.log("Watching...")
-    watcher
-        .on('ready', () => console.log('Initial scan complete. Ready for changes'))
-        .on('add', update)
-        .on('change', update)
-        .on('unlink', update);
-}
-
 const esbuild = async (name, globalName = undefined) => {
     let result = await build({...config, format: name, globalName, outfile: `dist/esbuild-${name}/module.js`,});
-
-    if (argv.watch) {
-        console.log("Watching is enabled.")
-        await watchResult(result)
-    }
+    console.log(result.errors.length === 0 ? "No errors." : "Found errors.")
 }
 
 const start = async () => {

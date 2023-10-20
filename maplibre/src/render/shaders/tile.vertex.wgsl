@@ -27,7 +27,7 @@ fn main(
     @location(10) z_index: f32,
     @builtin(instance_index) instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
-    let z = 0.0;
+    let z = -z_index;
     let width = 3.0 * zoom_factor;
 
     // The following code moves all "invisible" vertices to (0, 0, 0)
@@ -35,9 +35,7 @@ fn main(
     //   return VertexOutput(color, vec4<f32>(0.0, 0.0, 0.0, 1.0));
     //}
 
-    var position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(position + normal * width, z, 1.0);
-    // FIXME: how to fix z-fighting?
-    position.z = z_index;
+    var final_position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(position + normal * width, z, 1.0);
 
-    return VertexOutput(color, position);
+    return VertexOutput(color, final_position);
 }

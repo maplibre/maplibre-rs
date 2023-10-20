@@ -16,6 +16,7 @@
 		0B85D596281291A400906D21 /* maplibre_rs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D56B2812903700906D21 /* maplibre_rs.framework */; };
 		0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D56B2812903700906D21 /* maplibre_rs.framework */; };
 		0B85D5A42812991100906D21 /* libmaplibre_apple.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D5A32812987B00906D21 /* libmaplibre_apple.a */; };
+		5015FE4C2ACCB64600F8E4B6 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,8 @@
 		0B85D5942812913700906D21 /* maplibre.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = maplibre.swift; sourceTree = "<group>"; };
 		0B85D5A32812987B00906D21 /* libmaplibre_apple.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmaplibre_apple.a; sourceTree = SOURCE_ROOT; };
 		0BE452D62812EEA8003BD2A5 /* example--iOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "example--iOS--Info.plist"; sourceTree = "<group>"; };
+		5015FE472ACCA77900F8E4B6 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.0.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
+		5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +55,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5015FE4C2ACCB64600F8E4B6 /* SystemConfiguration.framework in Frameworks */,
 				0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -93,6 +97,8 @@
 		0B85D573281290D400906D21 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				5015FE472ACCA77900F8E4B6 /* SystemConfiguration.framework */,
+				5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */,
 				0B85D5A32812987B00906D21 /* libmaplibre_apple.a */,
 			);
 			name = Frameworks;

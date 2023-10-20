@@ -12,10 +12,10 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        sudo apt-get install -y \
+        sudo apt-get update -y -qq && sudo apt-get install -y \
           protobuf-compiler \
           libwayland-dev libxkbcommon-dev # Required for winit
-    - name: Install System Dependencies (Ubuntu)
+    - name: Install System Dependencies (macOS)
       if: runner.os == 'macOS'
       shell: bash
       run: brew install protobuf

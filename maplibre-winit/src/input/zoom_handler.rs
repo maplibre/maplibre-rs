@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use cgmath::{Vector2, Vector3};
-use maplibre::{context::MapContext, coords::Zoom, world::World};
+use cgmath::Vector2;
+use maplibre::{context::MapContext, coords::Zoom};
 
 use super::UpdateState;
 
@@ -12,14 +12,7 @@ pub struct ZoomHandler {
 }
 
 impl UpdateState for ZoomHandler {
-    fn update_state(
-        &mut self,
-        MapContext {
-            world: World { view_state, .. },
-            ..
-        }: &mut MapContext,
-        _dt: Duration,
-    ) {
+    fn update_state(&mut self, MapContext { view_state, .. }: &mut MapContext, _dt: Duration) {
         if let Some(zoom_delta) = self.zoom_delta {
             if let Some(window_position) = self.window_position {
                 let current_zoom = view_state.zoom();
@@ -31,18 +24,15 @@ impl UpdateState for ZoomHandler {
                 let view_proj = view_state.view_projection();
                 let inverted_view_proj = view_proj.invert();
 
-                if let Some(cursor_position) = view_state.camera().window_to_world_at_ground(
+                if let Some(cursor_position) = view_state.window_to_world_at_ground(
                     &window_position,
                     &inverted_view_proj,
                     false,
                 ) {
                     let scale = current_zoom.scale_delta(&next_zoom);
 
-                    let delta = Vector3::new(
-                        cursor_position.x * scale,
-                        cursor_position.y * scale,
-                        cursor_position.z,
-                    ) - cursor_position;
+                    let delta = Vector2::new(cursor_position.x * scale, cursor_position.y * scale)
+                        - cursor_position;
 
                     view_state.camera_mut().move_relative(delta);
                 }

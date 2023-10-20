@@ -7,13 +7,10 @@ use web_sys::{Request, RequestInit, Response, WorkerGlobalScope};
 
 use crate::error::WebError;
 
-pub struct WHATWGFetchHttpClient {}
+#[derive(Default)]
+pub struct WHATWGFetchHttpClient;
 
 impl WHATWGFetchHttpClient {
-    pub fn new() -> Self {
-        Self {}
-    }
-
     async fn fetch_array_buffer(url: &str) -> Result<JsValue, WebError> {
         let mut opts = RequestInit::new();
         opts.method("GET");

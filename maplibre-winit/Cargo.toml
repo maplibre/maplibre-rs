@@ -7,25 +7,30 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 keywords.workspace = true
+categories.workspace = true
 authors.workspace = true
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
-tokio = { version = "1.19.2", features = ["rt"] }
+tokio.workspace = true
 
-[target.'cfg(target_os = "android")'.dependencies]
-winit = { version = "0.27.2", default-features = false }
+# FIXME: is this section needed?  Seems to be identical to the default
+#[target.'cfg(target_os = "android")'.dependencies]
+#winit.wokrspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
-winit = { version = "0.27.2", default-features = false, features = ["x11", "wayland"] }
+winit = { workspace = true, features = ["x11", "wayland"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+winit = { workspace = true, features = ["android-native-activity"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3.58", features = ["Window"] }
-wasm-bindgen = "0.2.81"
-wasm-bindgen-futures = "0.4.31"
+web-sys = { workspace = true, features = ["Window"] }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
 
 [dependencies]
 maplibre = { path = "../maplibre", version = "0.1.0" }
-winit = { version = "0.27.2", default-features = false }
-cgmath = "0.18.0"
-instant = { version = "0.1.12", features = ["wasm-bindgen"] } # TODO: Untrusted dependency
-log = "0.4.17"
+winit.workspace = true
+cgmath.workspace = true
+instant.workspace = true
+log.workspace = true

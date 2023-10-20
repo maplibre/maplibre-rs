@@ -4,7 +4,10 @@ use super::{
     Edge, EdgeExistence, Node, NodeId, NodeLabel, NodeRunError, NodeState, RenderGraphContext,
     RenderGraphError, SlotInfo, SlotLabel,
 };
-use crate::render::{graph::RenderContext, RenderState};
+use crate::{
+    render::{graph::RenderContext, RenderResources},
+    tcs::world::World,
+};
 
 /// The render graph configures the modular, parallel and re-usable render logic.
 /// It is a retained and stateless (nodes itself my have their internal state) structure,
@@ -26,12 +29,17 @@ use crate::render::{graph::RenderContext, RenderState};
 /// Here is a simple render graph example with two nodes connected by a node edge.
 /// ```
 /// #
-/// # use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
-/// # use maplibre::render::{RenderState};
+/// # use maplibre::tcs::world::World;
+/// use maplibre::render::graph::{Node, NodeRunError, RenderContext, RenderGraph, RenderGraphContext};
+/// # use maplibre::render::{RenderResources};
 /// # struct MyNode;
 /// #
 /// # impl Node for MyNode {
-/// #     fn run(&self, graph: &mut RenderGraphContext, render_context: &mut RenderContext, state: &RenderState) -> Result<(), NodeRunError> {
+/// #     fn run(&self,
+/// #               graph: &mut RenderGraphContext,
+/// #               render_context: &mut RenderContext,
+/// #               state: &RenderResources,
+/// #               world: &World) -> Result<(), NodeRunError> {
 /// #         unimplemented!()
 /// #     }
 /// # }
@@ -56,7 +64,7 @@ impl RenderGraph {
     pub const INPUT_NODE_NAME: &'static str = "GraphInputNode";
 
     /// Updates all nodes and sub graphs of the render graph. Should be called before executing it.
-    pub fn update(&mut self, state: &mut RenderState) {
+    pub fn update(&mut self, state: &mut RenderResources) {
         for node in self.nodes.values_mut() {
             node.node.update(state);
         }
@@ -556,7 +564,8 @@ impl Node for GraphInputNode {
         &self,
         graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
-        _state: &RenderState,
+        _state: &RenderResources,
+        _world: &World,
     ) -> Result<(), NodeRunError> {
         for i in 0..graph.inputs().len() {
             let input = graph.inputs()[i].clone();
@@ -574,9 +583,12 @@ mod tests {
         Edge, Node, NodeId, NodeRunError, RenderGraph, RenderGraphContext, RenderGraphError,
         SlotInfo,
     };
-    use crate::render::{
-        graph::{RenderContext, SlotType},
-        RenderState,
+    use crate::{
+        render::{
+            graph::{RenderContext, SlotType},
+            RenderResources,
+        },
+        tcs::world::World,
     };
 
     #[derive(Debug)]
@@ -589,10 +601,10 @@ mod tests {
         pub fn new(inputs: usize, outputs: usize) -> Self {
             TestNode {
                 inputs: (0..inputs)
-                    .map(|i| SlotInfo::new(format!("in_{}", i), SlotType::TextureView))
+                    .map(|i| SlotInfo::new(format!("in_{i}"), SlotType::TextureView))
                     .collect(),
                 outputs: (0..outputs)
-                    .map(|i| SlotInfo::new(format!("out_{}", i), SlotType::TextureView))
+                    .map(|i| SlotInfo::new(format!("out_{i}"), SlotType::TextureView))
                     .collect(),
             }
         }
@@ -611,7 +623,8 @@ mod tests {
             &self,
             _graph: &mut RenderGraphContext,
             _render_context: &mut RenderContext,
-            _state: &RenderState,
+            _state: &RenderResources,
+            _world: &World,
         ) -> Result<(), NodeRunError> {
             Ok(())
         }
@@ -646,28 +659,33 @@ mod tests {
         }
 
         assert!(input_nodes("A", &graph).is_empty(), "A has no inputs");
-        assert!(
-            output_nodes("A", &graph) == HashSet::from_iter(vec![c_id]),
+        assert_eq!(
+            output_nodes("A", &graph),
+            HashSet::from_iter(vec![c_id]),
             "A outputs to C"
         );
 
         assert!(input_nodes("B", &graph).is_empty(), "B has no inputs");
-        assert!(
-            output_nodes("B", &graph) == HashSet::from_iter(vec![c_id]),
+        assert_eq!(
+            output_nodes("B", &graph),
+            HashSet::from_iter(vec![c_id]),
             "B outputs to C"
         );
 
-        assert!(
-            input_nodes("C", &graph) == HashSet::from_iter(vec![a_id, b_id]),
+        assert_eq!(
+            input_nodes("C", &graph),
+            HashSet::from_iter(vec![a_id, b_id]),
             "A and B input to C"
         );
-        assert!(
-            output_nodes("C", &graph) == HashSet::from_iter(vec![d_id]),
+        assert_eq!(
+            output_nodes("C", &graph),
+            HashSet::from_iter(vec![d_id]),
             "C outputs to D"
         );
 
-        assert!(
-            input_nodes("D", &graph) == HashSet::from_iter(vec![c_id]),
+        assert_eq!(
+            input_nodes("D", &graph),
+            HashSet::from_iter(vec![c_id]),
             "C inputs to D"
         );
         assert!(output_nodes("D", &graph).is_empty(), "D has no outputs");
@@ -684,7 +702,8 @@ mod tests {
                 &self,
                 _graph: &mut RenderGraphContext,
                 _render_context: &mut RenderContext,
-                _state: &RenderState,
+                _state: &RenderResources,
+                _world: &World,
             ) -> Result<(), NodeRunError> {
                 Ok(())
             }

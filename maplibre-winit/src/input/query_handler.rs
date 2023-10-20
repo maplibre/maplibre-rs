@@ -2,7 +2,8 @@ use std::time::Duration;
 
 use cgmath::Vector2;
 use maplibre::{
-    context::MapContext, coords::WorldCoords, io::geometry_index::IndexedGeometry, world::World,
+    context::MapContext, coords::WorldCoords, io::geometry_index::IndexedGeometry,
+    render::tile_view_pattern::DEFAULT_TILE_SIZE,
 };
 use winit::event::{ElementState, MouseButton};
 
@@ -58,13 +59,7 @@ impl UpdateState for QueryHandler {
     fn update_state(
         &mut self,
         MapContext {
-            world:
-                World {
-                    view_state,
-                    geometry_index,
-                    ..
-                },
-            ..
+            view_state, world, ..
         }: &mut MapContext,
         _dt: Duration,
     ) {
@@ -73,15 +68,17 @@ impl UpdateState for QueryHandler {
                 let view_proj = view_state.view_projection();
                 let inverted_view_proj = view_proj.invert();
 
-                let z = view_state.visible_level(); // FIXME: can be wrong, if tiles of different z are visible
+                let z = view_state.zoom().zoom_level(DEFAULT_TILE_SIZE); // FIXME: can be wrong, if tiles of different z are visible
                 let zoom = view_state.zoom();
 
-                if let Some(coordinates) = view_state.camera().window_to_world_at_ground(
+                if let Some(coordinates) = view_state.window_to_world_at_ground(
                     &window_position,
                     &inverted_view_proj,
                     false,
                 ) {
-                    if let Some(geometries) = geometry_index
+                    if let Some(geometries) = world
+                        .tiles
+                        .geometry_index
                         .query_point(
                             &WorldCoords {
                                 x: coordinates.x,

@@ -1,11 +1,12 @@
-use crate::window::{MapWindow, MapWindowConfig, WindowSize};
+use crate::window::{MapWindow, MapWindowConfig, PhysicalSize};
 
+#[derive(Clone)]
 pub struct HeadlessMapWindowConfig {
-    size: WindowSize,
+    size: PhysicalSize,
 }
 
 impl HeadlessMapWindowConfig {
-    pub fn new(size: WindowSize) -> Self {
+    pub fn new(size: PhysicalSize) -> Self {
         Self { size }
     }
 }
@@ -19,11 +20,11 @@ impl MapWindowConfig for HeadlessMapWindowConfig {
 }
 
 pub struct HeadlessMapWindow {
-    size: WindowSize,
+    size: PhysicalSize,
 }
 
 impl MapWindow for HeadlessMapWindow {
-    fn size(&self) -> WindowSize {
+    fn size(&self) -> PhysicalSize {
         self.size
     }
 }

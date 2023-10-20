@@ -7,24 +7,27 @@ use maplibre::context::MapContext;
 use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
 
 use crate::input::{
-    pan_handler::PanHandler, pinch_handler::PinchHandler, query_handler::QueryHandler,
-    shift_handler::ShiftHandler, tilt_handler::TiltHandler, zoom_handler::ZoomHandler,
+    camera_handler::CameraHandler, debug_handler::DebugHandler, pan_handler::PanHandler,
+    pinch_handler::PinchHandler, query_handler::QueryHandler, shift_handler::ShiftHandler,
+    zoom_handler::ZoomHandler,
 };
 
+mod camera_handler;
+mod debug_handler;
 mod pan_handler;
 mod pinch_handler;
 mod query_handler;
 mod shift_handler;
-mod tilt_handler;
 mod zoom_handler;
 
 pub struct InputController {
     pinch_handler: PinchHandler,
     pan_handler: PanHandler,
     zoom_handler: ZoomHandler,
-    tilt_handler: TiltHandler,
+    camera_handler: CameraHandler,
     shift_handler: ShiftHandler,
     query_handler: QueryHandler,
+    debug_handler: DebugHandler,
 }
 
 impl InputController {
@@ -40,12 +43,13 @@ impl InputController {
     ///
     pub fn new(speed: f64, sensitivity: f64, zoom_sensitivity: f64) -> Self {
         Self {
-            pinch_handler: PinchHandler::new(),
-            pan_handler: PanHandler::new(),
+            pinch_handler: PinchHandler::default(),
+            pan_handler: PanHandler::default(),
             zoom_handler: ZoomHandler::new(zoom_sensitivity),
-            tilt_handler: TiltHandler::new(speed, sensitivity),
+            camera_handler: CameraHandler::new(sensitivity),
             shift_handler: ShiftHandler::new(speed, sensitivity),
             query_handler: QueryHandler::new(),
+            debug_handler: DebugHandler::default(),
         }
     }
 
@@ -55,16 +59,16 @@ impl InputController {
 
     /// Process the given winit `[winit::event::WindowEvent]`.
     /// Returns true if the event has been processed and false otherwise.
-    pub fn window_input(&mut self, event: &WindowEvent) -> bool {
+    pub fn window_input(&mut self, event: &WindowEvent, scale_factor: f64) -> bool {
         match event {
             WindowEvent::CursorMoved { position, .. } => {
                 let position: (f64, f64) = position.to_owned().into();
-                self.pan_handler
-                    .process_window_position(&Vector2::from(position), false);
-                self.query_handler
-                    .process_window_position(&Vector2::from(position), false);
-                self.zoom_handler
-                    .process_window_position(&Vector2::from(position), false);
+                let position = Vector2::from(position) / scale_factor;
+                self.pan_handler.process_window_position(&position, false);
+                self.query_handler.process_window_position(&position, false);
+                self.zoom_handler.process_window_position(&position, false);
+                self.camera_handler
+                    .process_window_position(&position, false);
                 true
             }
             WindowEvent::KeyboardInput {
@@ -76,15 +80,9 @@ impl InputController {
                     },
                 ..
             } => {
-                if !self.shift_handler.process_key_press(*key, *state) {
-                    if !self.tilt_handler.process_key_press(*key, *state) {
-                        self.zoom_handler.process_key_press(*key, *state)
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
+                self.shift_handler.process_key_press(*key, *state)
+                    || self.debug_handler.process_key_press(*key, *state)
+                    || self.zoom_handler.process_key_press(*key, *state)
             }
             WindowEvent::Touch(touch) => match touch.phase {
                 TouchPhase::Started => {
@@ -101,12 +99,11 @@ impl InputController {
                 }
                 TouchPhase::Moved => {
                     let position: (f64, f64) = touch.location.to_owned().into();
-                    self.pan_handler
-                        .process_window_position(&Vector2::from(position), true);
-                    self.query_handler
-                        .process_window_position(&Vector2::from(position), true);
-                    self.zoom_handler
-                        .process_window_position(&Vector2::from(position), true);
+                    let position = Vector2::from(position) / scale_factor;
+                    self.pan_handler.process_window_position(&position, true);
+                    self.query_handler.process_window_position(&position, true);
+                    self.zoom_handler.process_window_position(&position, true);
+                    self.camera_handler.process_window_position(&position, true);
                     true
                 }
                 TouchPhase::Cancelled => false,
@@ -118,7 +115,9 @@ impl InputController {
             }
             WindowEvent::MouseInput { button, state, .. } => {
                 self.pan_handler.process_mouse_key_press(button, state);
-                self.query_handler.process_mouse_key_press(button, state)
+                self.query_handler.process_mouse_key_press(button, state);
+                self.camera_handler.process_mouse_key_press(button, state);
+                true
             }
             _ => false,
         }
@@ -134,8 +133,9 @@ impl UpdateState for InputController {
         self.pan_handler.update_state(map_context, dt);
         self.pinch_handler.update_state(map_context, dt);
         self.zoom_handler.update_state(map_context, dt);
-        self.tilt_handler.update_state(map_context, dt);
+        self.camera_handler.update_state(map_context, dt);
         self.shift_handler.update_state(map_context, dt);
         self.query_handler.update_state(map_context, dt);
+        self.debug_handler.update_state(map_context, dt);
     }
 }
