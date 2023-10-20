@@ -63,13 +63,17 @@ pub mod render_commands;
 pub mod render_phase;
 pub mod settings;
 pub mod tile_view_pattern;
+pub mod view_state;
 
 pub use shaders::ShaderVertex;
 
-use crate::render::{
-    render_phase::{LayerItem, RenderPhase, TileMaskItem},
-    systems::{graph_runner_system::GraphRunnerSystem, upload_system::upload_system},
-    tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
+use crate::{
+    render::{
+        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        systems::{graph_runner_system::GraphRunnerSystem, upload_system::upload_system},
+        tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
+    },
+    window::PhysicalSize,
 };
 
 pub(crate) const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
@@ -239,8 +243,8 @@ impl Renderer {
         })
     }
 
-    pub fn resize_surface(&mut self, width: u32, height: u32) {
-        self.resources.surface.resize(width, height)
+    pub fn resize_surface(&mut self, size: PhysicalSize) {
+        self.resources.surface.resize(size)
     }
 
     /// Requests a device
@@ -420,12 +424,12 @@ impl Renderer {
 mod tests {
     use crate::{
         tcs::world::World,
-        window::{MapWindow, MapWindowConfig, WindowSize},
+        window::{MapWindow, MapWindowConfig, PhysicalSize},
     };
 
     #[derive(Clone)]
     pub struct HeadlessMapWindowConfig {
-        size: WindowSize,
+        size: PhysicalSize,
     }
 
     impl MapWindowConfig for HeadlessMapWindowConfig {
@@ -437,11 +441,11 @@ mod tests {
     }
 
     pub struct HeadlessMapWindow {
-        size: WindowSize,
+        size: PhysicalSize,
     }
 
     impl MapWindow for HeadlessMapWindow {
-        fn size(&self) -> WindowSize {
+        fn size(&self) -> PhysicalSize {
             self.size
         }
     }
@@ -485,7 +489,7 @@ mod tests {
         let render_state = RenderResources::new(Surface::from_image(
             &device,
             &HeadlessMapWindow {
-                size: WindowSize::new(100, 100).expect("invalid headless map size"),
+                size: PhysicalSize::new(100, 100).expect("invalid headless map size"),
             },
             &RendererSettings::default(),
         ));

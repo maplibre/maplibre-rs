@@ -15,6 +15,12 @@ use crate::{
 
 pub type WgpuTileViewPattern = TileViewPattern<wgpu::Queue, wgpu::Buffer>;
 
+/// If not otherwise specified, raster tiles usually are 512.0 by 512.0 pixel.
+/// In order to support 256.0 x 256.0 raster tiles 256.0 must be used.
+///
+/// Vector tiles always have a size of 512.0.
+pub const DEFAULT_TILE_SIZE: f64 = 512.0;
+
 /// This defines the source tile shaped from which the content for the `target` is taken.
 /// For example if the target is `(0, 0, 1)` (of [`ViewTile`]) , we might use
 /// `SourceShapes::Parent((0, 0, 0))` as source.

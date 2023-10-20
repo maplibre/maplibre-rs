@@ -15,6 +15,7 @@ use crate::{
         transferables::{LayerRasterMissing, RasterTransferables},
         RasterLayersDataComponent,
     },
+    render::tile_view_pattern::DEFAULT_TILE_SIZE,
     style::layer::LayerPaint,
     tcs::system::System,
 };
@@ -47,8 +48,8 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
             ..
         }: &mut MapContext,
     ) {
-        let _tiles = &mut world.tiles;
-        let view_region = view_state.create_view_region();
+        let view_region =
+            view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {

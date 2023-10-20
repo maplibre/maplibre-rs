@@ -4,9 +4,9 @@ use std::num::NonZeroU32;
 
 use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
 
-/// Window of a certain [`WindowSize`]. This can either be a proper window or a headless one.
+/// Window of a certain [`PhysicalSize`]. This can either be a proper window or a headless one.
 pub trait MapWindow {
-    fn size(&self) -> WindowSize;
+    fn size(&self) -> PhysicalSize;
 }
 
 /// Window which references a physical `RawWindow`. This is only implemented by headed windows and
@@ -18,6 +18,8 @@ pub trait HeadedMapWindow: MapWindow {
 
     // TODO: Can we avoid this?
     fn request_redraw(&self);
+
+    fn scale_factor(&self) -> f64;
 
     fn id(&self) -> u64;
 }
@@ -31,13 +33,13 @@ pub trait MapWindowConfig: 'static + Clone {
 }
 
 /// Window size with a width and an height in pixels.
-#[derive(Clone, Copy, Eq, PartialEq)]
-pub struct WindowSize {
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub struct PhysicalSize {
     width: NonZeroU32,
     height: NonZeroU32,
 }
 
-impl WindowSize {
+impl PhysicalSize {
     pub fn new(width: u32, height: u32) -> Option<Self> {
         Some(Self {
             width: NonZeroU32::new(width)?,
@@ -59,5 +61,47 @@ impl WindowSize {
 
     pub fn height_non_zero(&self) -> NonZeroU32 {
         self.height
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub struct LogicalSize {
+    width: NonZeroU32,
+    height: NonZeroU32,
+}
+
+impl LogicalSize {
+    pub fn new(width: u32, height: u32) -> Option<Self> {
+        Some(Self {
+            width: NonZeroU32::new(width)?,
+            height: NonZeroU32::new(height)?,
+        })
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width.get()
+    }
+
+    pub fn width_non_zero(&self) -> NonZeroU32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height.get()
+    }
+
+    pub fn height_non_zero(&self) -> NonZeroU32 {
+        self.height
+    }
+}
+
+impl PhysicalSize {
+    pub fn to_logical(&self, scale_factor: f64) -> LogicalSize {
+        let width = self.width.get() as f64 / scale_factor;
+        let height = self.height.get() as f64 / scale_factor;
+        LogicalSize {
+            width: NonZeroU32::new(width as u32).expect("impossible to reach"),
+            height: NonZeroU32::new(height as u32).expect("impossible to reach"),
+        }
     }
 }

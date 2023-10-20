@@ -1,4 +1,9 @@
-use crate::{render::Renderer, style::Style, tcs::world::World, view_state::ViewState};
+use crate::{
+    render::{view_state::ViewState, Renderer},
+    style::Style,
+    tcs::world::World,
+    window::PhysicalSize,
+};
 
 /// Stores the context of the map.
 ///
@@ -12,8 +17,8 @@ pub struct MapContext {
 }
 
 impl MapContext {
-    pub fn resize(&mut self, width: u32, height: u32) {
-        self.view_state.resize(width, height);
-        self.renderer.resize_surface(width, height)
+    pub fn resize(&mut self, size: PhysicalSize, scale_factor: f64) {
+        self.view_state.resize(size.to_logical(scale_factor));
+        self.renderer.resize_surface(size)
     }
 }
