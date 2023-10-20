@@ -3,16 +3,11 @@ import metaUrlPlugin from '@chialab/esbuild-plugin-meta-url';
 import inlineWorker from 'esbuild-plugin-inline-worker';
 import yargs from "yargs";
 import process from "process";
-import chokidar from "chokidar";
 import {spawnSync} from "child_process"
 import {dirname} from "path";
 import {fileURLToPath} from "url";
 
 let argv = yargs(process.argv.slice(2))
-    .option('watch', {
-        type: 'boolean',
-        description: 'Enable watching'
-    })
     .option('release', {
         type: 'boolean',
         description: 'Release mode'
@@ -72,13 +67,13 @@ let baseConfig = {
 
 let config = {
     ...baseConfig,
-    entryPoints:['src/index.ts'],
-    incremental: argv.watch,
+    entryPoints: ['src/index.ts'],
     plugins: [
         inlineWorker({
             ...baseConfig,
             format: "cjs",
             target: 'es2022',
+            // workerName: 'worker' Supported when the follow commit is released: https://github.com/mitschabaude/esbuild-plugin-inline-worker/commit/d1aaffc721a62a3fe33f59f8f69b462c7dd05f45
         }),
         metaUrlPlugin()
     ],
@@ -108,21 +103,26 @@ const getLibDirectory = () => {
 const emitTypeScript = () => {
     let outDirectory = `${getLibDirectory()}/dist/ts`;
 
-    let child = spawnSync('npm', ["exec",
+    let child = spawnTool('npm', ["exec",
         "tsc",
         "--",
         "-m", "es2022",
         "-outDir", outDirectory,
         "--declaration",
         "--emitDeclarationOnly"
-    ], {
-        cwd: '.',
-        stdio: 'inherit',
-    });
+    ]);
 
     if (child.status !== 0) {
         throw new Error("Failed to execute tsc")
     }
+}
+
+const spawnTool = (program, args) => {
+    console.debug(`Executing: ${program} ${args.join(" ")}`)
+    return spawnSync(program, args, {
+        cwd: '.',
+        stdio: 'inherit',
+    })
 }
 
 // TODO: Do not continue if one step fails
@@ -140,7 +140,7 @@ const wasmPack = () => {
         "-C", "link-args=--shared-memory --import-memory --max-memory=209715200"
     ]`
 
-    let cargo = spawnSync('cargo', [
+    let cargo = spawnTool('cargo', [
         ...(multithreaded ? ["--config", multithreaded_config] : []),
         "build",
         "-p", "web", "--lib",
@@ -148,26 +148,20 @@ const wasmPack = () => {
         "--profile", profile,
         "--features", `${webgl ? "web-webgl," : ""}`,
         ...(multithreaded ? ["-Z", "build-std=std,panic_abort"] : []),
-    ], {
-        cwd: '.',
-        stdio: 'inherit',
-    });
+    ]);
 
     if (cargo.status !== 0) {
         throw new Error("Failed to execute cargo build")
     }
 
-    let wasmbindgen = spawnSync('wasm-bindgen', [
+    let wasmbindgen = spawnTool('wasm-bindgen', [
         `${getProjectDirectory()}/target/wasm32-unknown-unknown/${profile}/web.wasm`,
         "--out-name", "maplibre",
         "--out-dir", outDirectory,
         "--typescript",
         "--target", "web",
         "--debug",
-    ], {
-        cwd: '.',
-        stdio: 'inherit',
-    });
+    ]);
 
     if (wasmbindgen.status !== 0) {
         throw new Error("Failed to execute wasm-bindgen")
@@ -175,15 +169,12 @@ const wasmPack = () => {
 
     if (release) {
         console.log("Running wasm-opt")
-        let wasmOpt = spawnSync('npm', ["exec",
+        let wasmOpt = spawnTool('npm', ["exec",
             "wasm-opt", "--",
             `${outDirectory}/maplibre_bg.wasm`,
             "-o", `${outDirectory}/maplibre_bg.wasm`,
             "-O"
-        ], {
-            cwd: '.',
-            stdio: 'inherit',
-        });
+        ]);
 
         if (wasmOpt.status !== 0) {
             throw new Error("Failed to execute wasm-opt")
@@ -191,73 +182,33 @@ const wasmPack = () => {
     }
 }
 
-const watchResult = async (result) => {
-    const watcher = chokidar.watch(['**/*.ts', '**/*.js', '**/*.rs'], {
-        cwd: getProjectDirectory(),
-        ignored: /dist|node_modules|target/,
-        ignoreInitial: true,
-        disableGlobbing: false,
-        followSymlinks: false,
-    });
-
-    const update = async (path) => {
-        try {
-            console.log(`Updating: ${path}`)
-            if (path.endsWith(".rs")) {
-                console.log("Rebuilding Rust...")
-                wasmPack();
-            }
-
-            console.log("Rebuilding...")
-            await result.rebuild();
-
-            console.log("Emitting TypeScript types...")
-            emitTypeScript();
-        } catch (e) {
-            console.error("Error while updating:")
-            console.error(e)
-        }
-    }
-
-    console.log("Watching...")
-    watcher
-        .on('ready', () => console.log('Initial scan complete. Ready for changes'))
-        .on('add', update)
-        .on('change', update)
-        .on('unlink', update);
-}
-
 const esbuild = async (name, globalName = undefined) => {
     let result = await build({...config, format: name, globalName, outfile: `dist/esbuild-${name}/module.js`,});
-
-    if (argv.watch) {
-        console.log("Watching is enabled.")
-        await watchResult(result)
-    }
+    console.log(result.errors.length === 0 ? "No errors." : "Found errors.")
 }
 
 const start = async () => {
     try {
-    console.log("Creating WASM...")
-    wasmPack();
+        console.log("Creating WASM...")
+        wasmPack();
 
-    if (esm) {
-        console.log("Building esm bundle...")
-        await esbuild("esm")
-    }
+        if (esm) {
+            console.log("Building esm bundle...")
+            await esbuild("esm")
+        }
 
-    if (cjs) {
-        console.log("Building cjs bundle...")
-        await esbuild("cjs")
-    }
+        if (cjs) {
+            console.log("Building cjs bundle...")
+            await esbuild("cjs")
+        }
 
-    if (iife) {
-        console.log("Building iife bundle...")
-        await esbuild("iife", "maplibre")
-    }
+        if (iife) {
+            console.log("Building iife bundle...")
+            await esbuild("iife", "maplibre")
+        }
 
-    console.log("Emitting TypeScript types...")
-    emitTypeScript();
+        console.log("Emitting TypeScript types...")
+        emitTypeScript();
     } catch (e) {
         console.error("Failed to start building: " + e.message)
         process.exit(1)

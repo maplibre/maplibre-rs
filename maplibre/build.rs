@@ -5,43 +5,21 @@
 
 use maplibre_build_tools::wgsl::validate_project_wgsl;
 
-const MUNICH_X: u32 = 17425;
-const MUNICH_Y: u32 = 11365;
-const MUNICH_Z: u8 = 15;
-
-/*use std::fs::File;
-use std::io::BufReader;
-use serde_json::Value;*/
-
-fn generate_type_def() -> Option<u32> {
-    /*    let f = File::open("style-spec-v8.json").unwrap();
-    let mut reader = BufReader::new(f);
-    let result = serde_json::from_reader::<_, Value>(&mut reader).unwrap();
-
-    let spec_root = result.as_object()?;
-    let version = &spec_root["$version"].as_i64()?;
-    let root = &spec_root["$root"].as_object()?;
-
-    for x in spec_root {
-
-    }
-
-    println!("cargo:warning={:?}", version);*/
-
-    Some(5)
-}
-
 #[cfg(feature = "embed-static-tiles")]
 fn embed_tiles_statically() {
     use std::{env, path::Path};
 
     use maplibre_build_tools::mbtiles::extract;
 
+    const MUNICH_X: u32 = 17425;
+    const MUNICH_Y: u32 = 11365;
+    const MUNICH_Z: u8 = 15;
+
     /// Tiles which can be used by StaticTileFetcher.
     fn clean_static_tiles() -> std::path::PathBuf {
-        let out_dir = std::env::var("OUT_DIR").unwrap();
+        let out_dir = env::var("OUT_DIR").unwrap();
 
-        let out = std::path::Path::new(&out_dir).join("extracted-tiles");
+        let out = Path::new(&out_dir).join("extracted-tiles");
 
         if out.exists() && out.is_dir() {
             std::fs::remove_dir_all(&out).unwrap()
@@ -54,7 +32,7 @@ fn embed_tiles_statically() {
 
     let root_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-    let source = Path::new(&root_dir).join(format!("../test-data/munich-{}.mbtiles", MUNICH_Z));
+    let source = Path::new(&root_dir).join(format!("../test-data/munich-{MUNICH_Z}.mbtiles"));
 
     if source.exists() {
         println!("cargo:rustc-cfg=static_tiles_found");

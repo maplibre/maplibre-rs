@@ -1,234 +1,230 @@
-use std::{cell::RefCell, mem, rc::Rc};
+use std::{cell::RefCell, rc::Rc, vec::IntoIter};
 
-use js_sys::Uint8Array;
-use log::info;
+use js_sys::{ArrayBuffer, Uint8Array};
+use log::error;
 use maplibre::{
-    error::Error,
+    environment::OffscreenKernelEnvironment,
     io::{
-        apc::{AsyncProcedure, AsyncProcedureCall, Context, Input, Message},
-        source_client::{HttpSourceClient, SourceClient},
-        transferables::Transferables,
+        apc::{
+            AsyncProcedure, AsyncProcedureCall, CallError, Context, Input, IntoMessage, Message,
+            MessageTag, SendError,
+        },
+        source_client::SourceClient,
     },
 };
-use wasm_bindgen::{prelude::*, JsCast, JsValue};
+use rand::{prelude::SliceRandom, thread_rng};
+use thiserror::Error;
+use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
 
 use crate::{
-    platform::singlethreaded::transferables::{
-        InnerData, LinearTessellatedLayer, LinearTransferables,
+    error::WebError,
+    platform::singlethreaded::{
+        transferables::FlatBufferTransferable, UsedContext, UsedHttpClient,
     },
-    WHATWGFetchHttpClient,
 };
 
-type UsedTransferables = LinearTransferables;
-type UsedHttpClient = WHATWGFetchHttpClient;
-type UsedContext = PassingContext;
+/// Error which happens during serialization or deserialization of the tag
+#[derive(Error, Debug)]
+#[error("failed to deserialize message tag")]
+pub struct MessageTagDeserializeError;
 
-#[derive(Debug)]
-enum SerializedMessageTag {
+impl MessageTag for WebMessageTag {
+    fn dyn_clone(&self) -> Box<dyn MessageTag> {
+        Box::new(*self)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+pub enum WebMessageTag {
     TileTessellated = 1,
-    UnavailableLayer = 2,
-    TessellatedLayer = 3,
+    LayerMissing = 2,
+    LayerTessellated = 3,
+    LayerIndexed = 4,
+    LayerRaster = 5,
+    LayerRasterMissing = 6,
 }
 
-impl SerializedMessageTag {
-    fn from_u32(tag: u32) -> Option<Self> {
-        match tag {
-            x if x == SerializedMessageTag::UnavailableLayer as u32 => {
-                Some(SerializedMessageTag::UnavailableLayer)
-            }
-            x if x == SerializedMessageTag::TessellatedLayer as u32 => {
-                Some(SerializedMessageTag::TessellatedLayer)
-            }
-            x if x == SerializedMessageTag::TileTessellated as u32 => {
-                Some(SerializedMessageTag::TileTessellated)
-            }
-            _ => None,
-        }
-    }
-}
-
-trait SerializableMessage {
-    fn serialize(&self) -> &[u8];
-
-    fn deserialize(tag: SerializedMessageTag, data: Uint8Array) -> Message<UsedTransferables>;
-
-    fn tag(&self) -> SerializedMessageTag;
-}
-
-impl SerializableMessage for Message<LinearTransferables> {
-    fn serialize(&self) -> &[u8] {
+impl WebMessageTag {
+    pub fn to_static(&self) -> &'static WebMessageTag {
         match self {
-            Message::TileTessellated(data) => bytemuck::bytes_of(data),
-            Message::UnavailableLayer(data) => bytemuck::bytes_of(data),
-            Message::TessellatedLayer(data) => bytemuck::bytes_of(data.data.as_ref()),
+            WebMessageTag::LayerRaster => &WebMessageTag::LayerRaster,
+            WebMessageTag::LayerMissing => &WebMessageTag::LayerMissing,
+            WebMessageTag::LayerIndexed => &WebMessageTag::LayerIndexed,
+            WebMessageTag::TileTessellated => &WebMessageTag::TileTessellated,
+            WebMessageTag::LayerTessellated => &WebMessageTag::LayerTessellated,
+            WebMessageTag::LayerRasterMissing => &WebMessageTag::LayerRasterMissing,
         }
     }
 
-    fn deserialize(tag: SerializedMessageTag, data: Uint8Array) -> Message<UsedTransferables> {
+    pub fn from_u32(tag: u32) -> Result<Self, MessageTagDeserializeError> {
         match tag {
-            SerializedMessageTag::TileTessellated => {
-                Message::<UsedTransferables>::TileTessellated(*bytemuck::from_bytes::<
-                    <UsedTransferables as Transferables>::TileTessellated,
-                >(&data.to_vec()))
+            x if x == WebMessageTag::LayerMissing as u32 => Ok(WebMessageTag::LayerMissing),
+            x if x == WebMessageTag::LayerTessellated as u32 => Ok(WebMessageTag::LayerTessellated),
+            x if x == WebMessageTag::TileTessellated as u32 => Ok(WebMessageTag::TileTessellated),
+            x if x == WebMessageTag::LayerIndexed as u32 => Ok(WebMessageTag::LayerIndexed),
+            x if x == WebMessageTag::LayerRaster as u32 => Ok(WebMessageTag::LayerRaster),
+            x if x == WebMessageTag::LayerRasterMissing as u32 => {
+                Ok(WebMessageTag::LayerRasterMissing)
             }
-            SerializedMessageTag::UnavailableLayer => {
-                Message::<UsedTransferables>::UnavailableLayer(*bytemuck::from_bytes::<
-                    <UsedTransferables as Transferables>::UnavailableLayer,
-                >(&data.to_vec()))
-            }
-            SerializedMessageTag::TessellatedLayer => {
-                Message::<UsedTransferables>::TessellatedLayer(LinearTessellatedLayer {
-                    data: unsafe {
-                        let mut uninit = Box::<InnerData>::new_zeroed();
-                        data.raw_copy_to_ptr(uninit.as_mut_ptr() as *mut u8);
-
-                        uninit.assume_init()
-                    },
-                })
-            }
+            _ => Err(MessageTagDeserializeError),
         }
     }
+}
 
-    fn tag(&self) -> SerializedMessageTag {
-        match self {
-            Message::TileTessellated(_) => SerializedMessageTag::TileTessellated,
-            Message::UnavailableLayer(_) => SerializedMessageTag::UnavailableLayer,
-            Message::TessellatedLayer(_) => SerializedMessageTag::TessellatedLayer,
-        }
+impl From<WebMessageTag> for u32 {
+    fn from(val: WebMessageTag) -> Self {
+        val as u32
     }
 }
 
 #[derive(Clone)]
 pub struct PassingContext {
-    source_client: SourceClient<UsedHttpClient>,
+    pub source_client: SourceClient<UsedHttpClient>,
 }
 
-impl Context<UsedTransferables, UsedHttpClient> for PassingContext {
-    fn send(&self, data: Message<UsedTransferables>) -> Result<(), Error> {
-        let tag = data.tag();
-        let serialized = data.serialize();
+impl Context for PassingContext {
+    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+        let message = message.into();
+        let tag = if WebMessageTag::LayerRaster.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerRaster
+        } else if WebMessageTag::LayerTessellated.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerTessellated
+        } else if WebMessageTag::TileTessellated.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::TileTessellated
+        } else if WebMessageTag::LayerMissing.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerMissing
+        } else if WebMessageTag::LayerIndexed.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::LayerIndexed
+        } else {
+            unreachable!()
+        };
+        let transferable = message.into_transferable::<FlatBufferTransferable>();
+        let data = transferable.data();
 
-        let serialized_array_buffer = js_sys::ArrayBuffer::new(serialized.len() as u32);
-        let serialized_array = js_sys::Uint8Array::new(&serialized_array_buffer);
+        let buffer = ArrayBuffer::new(data.len() as u32);
+        let byte_buffer = Uint8Array::new(&buffer);
         unsafe {
-            serialized_array.set(&Uint8Array::view(serialized), 0);
+            byte_buffer.set(&Uint8Array::view(data), 0);
         }
 
-        let global: DedicatedWorkerGlobalScope =
-            js_sys::global().dyn_into().map_err(|_e| Error::APC)?;
-        let array = js_sys::Array::new();
-        array.push(&JsValue::from(tag as u32));
-        array.push(&serialized_array_buffer);
-        global.post_message(&array).map_err(|_e| Error::APC)
-    }
+        log::debug!(
+            "sending message ({tag:?}) with {}bytes to main thread",
+            data.len()
+        );
 
-    fn source_client(&self) -> &SourceClient<UsedHttpClient> {
-        &self.source_client
+        let global: DedicatedWorkerGlobalScope = js_sys::global()
+            .dyn_into()
+            .map_err(|_e| SendError::Transmission)?;
+        global
+            .post_message_with_transfer(
+                &js_sys::Array::of2(&JsValue::from(*tag as u32), &buffer),
+                &js_sys::Array::of1(&buffer),
+            )
+            .map_err(|_e| SendError::Transmission)
     }
 }
 
-type ReceivedType = RefCell<Vec<Message<UsedTransferables>>>;
+pub type ReceivedType = RefCell<Vec<Message>>;
 
 pub struct PassingAsyncProcedureCall {
-    new_worker: Box<dyn Fn() -> Worker>,
     workers: Vec<Worker>,
 
-    received: Rc<ReceivedType>, // FIXME (wasm-executor): Is RefCell fine?
+    buffer: RefCell<Vec<Message>>,
+
+    received: Rc<ReceivedType>, // FIXME: Is RefCell fine?
 }
 
 impl PassingAsyncProcedureCall {
-    pub fn new(new_worker: js_sys::Function, initial_workers: u8) -> Self {
+    pub fn new(new_worker: js_sys::Function, initial_workers: usize) -> Result<Self, WebError> {
         let received = Rc::new(RefCell::new(vec![]));
         let received_ref = received.clone();
 
-        let create_new_worker = Box::new(move || {
+        let create_new_worker = || {
             new_worker
                 .call1(
                     &JsValue::undefined(),
                     &JsValue::from(Rc::into_raw(received_ref.clone()) as u32),
                 )
-                .unwrap() // FIXME (wasm-executor): Remove unwrap
+                .map_err(WebError::from)?
                 .dyn_into::<Worker>()
-                .unwrap() // FIXME (wasm-executor): Remove unwrap
-        });
+                .map_err(|_e| WebError::TypeError("Unable to cast to Worker".into()))
+        };
 
-        let workers = (0..initial_workers)
-            .map(|_| {
-                let worker: Worker = create_new_worker();
+        let mut workers = Vec::with_capacity(initial_workers);
 
-                let array = js_sys::Array::new();
-                array.push(&wasm_bindgen::module());
-                worker.post_message(&array).unwrap(); // FIXME (wasm-executor): Remove unwrap
-                worker
-            })
-            .collect::<Vec<_>>();
+        for _ in 0..initial_workers {
+            let worker: Worker = create_new_worker()?;
 
-        Self {
-            new_worker: create_new_worker,
-            workers,
-            received,
+            let array = js_sys::Array::of1(&wasm_bindgen::module());
+            worker.post_message(&array).map_err(WebError::from)?;
+            workers.push(worker);
         }
+
+        Ok(Self {
+            workers,
+            buffer: RefCell::new(Vec::default()),
+            received,
+        })
     }
 }
 
-impl AsyncProcedureCall<UsedHttpClient> for PassingAsyncProcedureCall {
+impl<K: OffscreenKernelEnvironment> AsyncProcedureCall<K> for PassingAsyncProcedureCall {
     type Context = UsedContext;
-    type Transferables = UsedTransferables;
+    type ReceiveIterator<F: FnMut(&Message) -> bool> = IntoIter<Message>;
 
-    fn receive(&self) -> Option<Message<UsedTransferables>> {
-        self.received.borrow_mut().pop()
+    fn receive<F: FnMut(&Message) -> bool>(&self, mut filter: F) -> Self::ReceiveIterator<F> {
+        let mut buffer = self.buffer.borrow_mut();
+        let mut ret = Vec::new();
+
+        // FIXME tcs: Verify this!
+        let mut index = 0usize;
+        let mut max_len = buffer.len();
+        while index < max_len {
+            if filter(&buffer[index]) {
+                ret.push(buffer.swap_remove(index));
+                max_len -= 1;
+            }
+            index += 1;
+        }
+
+        // TODO: (optimize) Using while instead of if means that we are processing all that is
+        // TODO available this might cause frame drops.
+        while let Some(message) = self
+            .received
+            .try_borrow_mut()
+            .expect("Failed to borrow in receive of APC")
+            .pop()
+        {
+            log::debug!("Data reached main thread: {message:?}");
+
+            if filter(&message) {
+                ret.push(message);
+            } else {
+                buffer.push(message)
+            }
+        }
+
+        ret.into_iter()
     }
 
-    fn call(&self, input: Input, procedure: AsyncProcedure<Self::Context>) {
-        let procedure_ptr = procedure as *mut AsyncProcedure<Self::Context> as u32; // FIXME (wasm-executor): is u32 fine, define an overflow safe function?
-        let input = serde_json::to_string(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
+    fn call(
+        &self,
+        input: Input,
+        procedure: AsyncProcedure<K, UsedContext>,
+    ) -> Result<(), CallError> {
+        let procedure_ptr = procedure as *mut AsyncProcedure<K, UsedContext> as u32; // FIXME: is u32 fine, define an overflow safe function?
+        let input = serde_json::to_string(&input).map_err(|e| CallError::Serialize(Box::new(e)))?;
 
-        let array = js_sys::Array::new();
-        array.push(&JsValue::from(procedure_ptr));
-        array.push(&JsValue::from(input));
+        let message = js_sys::Array::of2(&JsValue::from(procedure_ptr), &JsValue::from(input));
 
-        self.workers[0].post_message(&array).unwrap(); // FIXME (wasm-executor): Remove unwrap
+        let worker = self
+            .workers
+            .choose(&mut thread_rng())
+            .ok_or(CallError::Schedule)?;
+
+        worker
+            .post_message(&message)
+            .map_err(|_e| CallError::Schedule)
     }
-}
-
-/// Entry point invoked by the worker.
-#[wasm_bindgen]
-pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> Result<(), JsValue> {
-    let procedure: AsyncProcedure<UsedContext> = unsafe { std::mem::transmute(procedure_ptr) };
-
-    let input = serde_json::from_str::<Input>(&input).unwrap(); // FIXME (wasm-executor): Remove unwrap
-
-    let context = PassingContext {
-        source_client: SourceClient::new(HttpSourceClient::new(WHATWGFetchHttpClient::new())),
-    };
-
-    (procedure)(input, context).await;
-
-    Ok(())
-}
-
-/// Entry point invoked by the main thread.
-#[wasm_bindgen]
-pub unsafe fn singlethreaded_main_entry(
-    received_ptr: *const ReceivedType,
-    type_id: u32,
-    data: Uint8Array,
-) -> Result<(), JsValue> {
-    // FIXME (wasm-executor): Can we make this call safe? check if it was cloned before?
-    let received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
-
-    let message = Message::<UsedTransferables>::deserialize(
-        SerializedMessageTag::from_u32(type_id).unwrap(),
-        data,
-    );
-
-    info!("singlethreaded_main_entry {:?}", message.tag());
-
-    // MAJOR FIXME: Fix mutability
-    received.borrow_mut().push(message);
-
-    mem::forget(received); // FIXME (wasm-executor): Enforce this somehow
-
-    Ok(())
 }

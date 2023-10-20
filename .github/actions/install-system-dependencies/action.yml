@@ -1,0 +1,32 @@
+name: install-system-dependencies
+description: Install system dependencies
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install System Dependencies (Windows)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: pacman -S --noconfirm mingw-w64-x86_64-protobuf
+    - name: Install System Dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update -y -qq && sudo apt-get install -y \
+          protobuf-compiler \
+          libwayland-dev libxkbcommon-dev # Required for winit
+    - name: Install System Dependencies (macOS)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: brew install protobuf
+
+    - name: Check Dependencies
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        protoc --version
+    - name: Check Dependencies
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        protoc.exe --version

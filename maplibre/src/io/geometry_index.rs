@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use cgmath::{num_traits::Signed, Bounded};
 use geo::prelude::*;
-use geo_types::{CoordFloat, Coordinate, Geometry, LineString, Point, Polygon};
+use geo_types::{Coord, CoordFloat, Geometry, LineString, Point, Polygon};
 use geozero::{
     error::GeozeroError, geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor,
     PropertyProcessor,
@@ -80,8 +80,8 @@ pub enum TileIndex {
 
 impl TileIndex {
     pub fn point_query(&self, inner_coords: InnerCoords) -> Vec<&IndexedGeometry<f64>> {
-        let point = geo_types::Point::new(inner_coords.x, inner_coords.y);
-        let coordinate: Coordinate<_> = point.into();
+        let point = Point::new(inner_coords.x, inner_coords.y);
+        let coordinate: Coord<_> = point.into();
 
         // FIXME: Respect layer order of style
         match self {
@@ -217,6 +217,9 @@ impl GeomProcessor for IndexProcessor {
     fn point_begin(&mut self, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.point_begin(idx)
     }
+    fn point_end(&mut self, idx: usize) -> Result<(), GeozeroError> {
+        self.geo_writer.point_end(idx)
+    }
     fn multipoint_begin(&mut self, size: usize, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.multipoint_begin(size, idx)
     }
@@ -245,6 +248,9 @@ impl GeomProcessor for IndexProcessor {
     }
     fn multipolygon_begin(&mut self, size: usize, idx: usize) -> Result<(), GeozeroError> {
         self.geo_writer.multipolygon_begin(size, idx)
+    }
+    fn multipolygon_end(&mut self, idx: usize) -> Result<(), GeozeroError> {
+        self.geo_writer.multipolygon_end(idx)
     }
 }
 
@@ -295,17 +301,29 @@ impl FeatureProcessor for IndexProcessor {
     }
     /// End of feature geometry processing.
     fn geometry_end(&mut self) -> Result<(), GeozeroError> {
-        let geometry = self.geo_writer.take_geometry().unwrap();
+        let geometry = self.geo_writer.take_geometry();
 
         match geometry {
-            Geometry::Polygon(polygon) => self.geometries.push(
+            Some(Geometry::Polygon(polygon)) => self.geometries.push(
                 IndexedGeometry::from_polygon(polygon, self.properties.take().unwrap()).unwrap(),
             ),
-            Geometry::LineString(linestring) => self.geometries.push(
+            Some(Geometry::LineString(linestring)) => self.geometries.push(
                 IndexedGeometry::from_linestring(linestring, self.properties.take().unwrap())
                     .unwrap(),
             ),
-            _ => {}
+            Some(Geometry::Point(_))
+            | Some(Geometry::Line(_))
+            | Some(Geometry::MultiPoint(_))
+            | Some(Geometry::MultiLineString(_))
+            | Some(Geometry::MultiPolygon(_))
+            | Some(Geometry::GeometryCollection(_))
+            | Some(Geometry::Rect(_))
+            | Some(Geometry::Triangle(_)) => {
+                log::debug!("Unsupported geometry in index")
+            }
+            None => {
+                log::debug!("No geometry in index")
+            }
         };
 
         Ok(())

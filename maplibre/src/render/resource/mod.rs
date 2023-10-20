@@ -1,21 +1,21 @@
 //! Utilities which holds references to GPU-owned. Usually a resource is a wrapper which makes using
 //! buffers or textures simpler.
 
-mod buffer_pool;
-mod globals;
-mod pipeline;
-mod shader;
-mod surface;
-mod texture;
-mod tracked_render_pass;
-
-pub use buffer_pool::*;
-pub use globals::*;
+pub use buffer::*;
 pub use pipeline::*;
 pub use shader::*;
 pub use surface::*;
 pub use texture::*;
+pub use tile_pipeline::*;
 pub use tracked_render_pass::*;
+
+mod buffer;
+mod pipeline;
+mod shader;
+mod surface;
+mod texture;
+mod tile_pipeline;
+mod tracked_render_pass;
 
 pub trait Queue<B> {
     fn write_buffer(&self, buffer: &B, offset: wgpu::BufferAddress, data: &[u8]);

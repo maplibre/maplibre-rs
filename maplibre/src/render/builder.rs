@@ -1,12 +1,13 @@
 use crate::{
-    error::Error,
     render::{
+        error::RenderError,
         settings::{RendererSettings, WgpuSettings},
         Renderer,
     },
     window::{HeadedMapWindow, MapWindowConfig},
 };
 
+#[derive(Clone)]
 pub struct RendererBuilder {
     wgpu_settings: Option<WgpuSettings>,
     renderer_settings: Option<RendererSettings>,
@@ -46,7 +47,7 @@ impl Default for RendererBuilder {
 
 pub enum InitializationResult {
     Initialized(InitializedRenderer),
-    Uninizalized(UninitializedRenderer),
+    Uninitialized(UninitializedRenderer),
     Gone,
 }
 
@@ -57,10 +58,10 @@ impl Default for InitializationResult {
 }
 
 impl InitializationResult {
-    pub fn unwarp_renderer(self) -> InitializedRenderer {
+    pub fn unwrap_renderer(self) -> InitializedRenderer {
         match self {
             InitializationResult::Initialized(renderer) => renderer,
-            InitializationResult::Uninizalized(_) => panic!("Renderer is not initialized"),
+            InitializationResult::Uninitialized(_) => panic!("Renderer is not initialized"),
             InitializationResult::Gone => panic!("Initialization context is gone"),
         }
     }
@@ -70,7 +71,7 @@ impl InitializationResult {
             InitializationResult::Initialized(InitializedRenderer { renderer, .. }) => {
                 Some(renderer)
             }
-            InitializationResult::Uninizalized(_) => None,
+            InitializationResult::Uninitialized(_) => None,
             InitializationResult::Gone => panic!("Initialization context is gone"),
         }
     }
@@ -87,7 +88,7 @@ impl UninitializedRenderer {
     pub async fn initialize_renderer<MWC>(
         self,
         existing_window: &MWC::MapWindow,
-    ) -> Result<InitializationResult, Error>
+    ) -> Result<InitializationResult, RenderError>
     where
         MWC: MapWindowConfig,
         <MWC as MapWindowConfig>::MapWindow: HeadedMapWindow,
@@ -109,16 +110,16 @@ impl UninitializedRenderer {
     pub(crate) async fn initialize_headless<MWC>(
         self,
         existing_window: &MWC::MapWindow,
-    ) -> Result<Renderer, Error>
+    ) -> Result<Renderer, RenderError>
     where
         MWC: MapWindowConfig,
     {
-        Ok(Renderer::initialize_headless(
+        Renderer::initialize_headless(
             existing_window,
             self.wgpu_settings.clone(),
             self.renderer_settings,
         )
-        .await?)
+        .await
     }
 }
 

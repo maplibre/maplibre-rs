@@ -5,25 +5,17 @@
 
 use std::ops::Deref;
 
-use crate::render::{
-    draw_graph,
-    graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-    render_commands::{DrawMasks, DrawTiles},
-    render_phase::RenderCommand,
-    resource::TrackedRenderPass,
-    Eventually::Initialized,
-    RenderState,
+use crate::{
+    render::{
+        draw_graph,
+        graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
+        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        resource::TrackedRenderPass,
+        Eventually::Initialized,
+        RenderResources,
+    },
+    tcs::world::World,
 };
-
-pub mod graph {
-    // Labels for input nodes
-    pub mod input {}
-    // Labels for non-input nodes
-    pub mod node {
-        pub const MAIN_PASS_DEPENDENCIES: &str = "main_pass_dependencies";
-        pub const MAIN_PASS_DRIVER: &str = "main_pass_driver";
-    }
-}
 
 pub struct MainPassNode {}
 
@@ -38,25 +30,22 @@ impl Node for MainPassNode {
         vec![]
     }
 
-    fn update(&mut self, _state: &mut RenderState) {}
+    fn update(&mut self, _state: &mut RenderResources) {}
 
     fn run(
         &self,
         _graph: &mut RenderGraphContext,
         render_context: &mut RenderContext,
-        state: &RenderState,
+        state: &RenderResources,
+        world: &World,
     ) -> Result<(), NodeRunError> {
-        let (render_target, multisampling_texture, depth_texture) = if let (
-            Initialized(render_target),
-            Initialized(multisampling_texture),
-            Initialized(depth_texture),
-        ) = (
-            &state.render_target,
-            &state.multisampling_texture,
-            &state.depth_texture,
-        ) {
-            (render_target, multisampling_texture, depth_texture)
-        } else {
+        let Initialized(render_target) = &state.render_target else {
+            return Ok(());
+        };
+        let Initialized(multisampling_texture) = &state.multisampling_texture else {
+            return Ok(());
+        };
+        let Initialized(depth_texture) = &state.depth_texture else {
             return Ok(());
         };
 
@@ -84,7 +73,7 @@ impl Node for MainPassNode {
             render_context
                 .command_encoder
                 .begin_render_pass(&wgpu::RenderPassDescriptor {
-                    label: None,
+                    label: Some("main_pass"),
                     color_attachments: &[Some(color_attachment)],
                     depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                         view: &depth_texture.view,
@@ -101,13 +90,20 @@ impl Node for MainPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
-        for item in &state.mask_phase.items {
-            DrawMasks::render(state, item, &mut tracked_pass);
+        if let Some(mask_items) = world.resources.get::<RenderPhase<TileMaskItem>>() {
+            log::trace!("RenderPhase<TileMaskItem>::size() = {}", mask_items.size());
+            for item in mask_items {
+                item.draw_function.draw(&mut tracked_pass, world, item);
+            }
         }
 
-        for item in &state.tile_phase.items {
-            DrawTiles::render(state, item, &mut tracked_pass);
+        if let Some(layer_items) = world.resources.get::<RenderPhase<LayerItem>>() {
+            log::trace!("RenderPhase<LayerItem>::size() = {}", layer_items.size());
+            for item in layer_items {
+                item.draw_function.draw(&mut tracked_pass, world, item);
+            }
         }
+
         Ok(())
     }
 }
@@ -119,7 +115,8 @@ impl Node for MainPassDriverNode {
         &self,
         graph: &mut RenderGraphContext,
         _render_context: &mut RenderContext,
-        _state: &RenderState,
+        _resources: &RenderResources,
+        _world: &World,
     ) -> Result<(), NodeRunError> {
         graph.run_sub_graph(draw_graph::NAME, vec![])?;
 

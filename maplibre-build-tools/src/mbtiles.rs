@@ -36,16 +36,14 @@ pub fn extract<P: AsRef<Path>, R: AsRef<Path>>(
     let input_path = input_mbtiles.as_ref().to_path_buf();
     if !input_path.is_file() {
         return Err(Error::IO(format!(
-            "Input file {:?} is not a file",
-            input_path
+            "Input file {input_path:?} is not a file",
         )));
     }
 
     let output_path = output_dir.as_ref().to_path_buf();
     if output_path.exists() {
         return Err(Error::IO(format!(
-            "Output directory {:?} already exists",
-            output_path
+            "Output directory {output_path:?} already exists"
         )));
     }
     let connection = Connection::open(input_path)?;
@@ -92,11 +90,11 @@ fn extract_tile(tile: &Row, output_path: &Path) -> Result<(), Error> {
     // Flip vertical axis
     y = flip_vertical_axis(z, y);
 
-    let tile_dir = output_path.join(format!("{}/{}", z, x));
+    let tile_dir = output_path.join(format!("{z}/{x}"));
 
     fs::create_dir_all(&tile_dir)?;
 
-    let tile_path = tile_dir.join(format!("{}.{}", y, "pbf"));
+    let tile_path = tile_dir.join(format!("{y}.pbf"));
     let tile_data = tile.get::<_, Vec<u8>>(3)?;
     let mut decoder = GzDecoder::new(tile_data.as_ref());
 

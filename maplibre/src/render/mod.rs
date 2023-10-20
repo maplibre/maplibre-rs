@@ -18,125 +18,129 @@
 //! We appreciate the design and implementation work which as gone into it.
 //!
 
-use std::sync::Arc;
-
-use log::info;
+use std::{ops::Deref, rc::Rc, sync::Arc};
 
 use crate::{
+    environment::Environment,
+    kernel::Kernel,
+    plugin::Plugin,
     render::{
+        error::RenderError,
         eventually::Eventually,
-        render_phase::RenderPhase,
-        resource::{BufferPool, Globals, Head, IndexEntry, Surface, Texture, TextureView},
+        graph::{EmptyNode, RenderGraph},
+        main_pass::{MainPassDriverNode, MainPassNode},
+        resource::{Head, Surface, Texture, TextureView},
         settings::{RendererSettings, WgpuSettings},
-        shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        tile_view_pattern::{TileInView, TileShape, TileViewPattern},
+        systems::{
+            cleanup_system::cleanup_system, resource_system::ResourceSystem,
+            sort_phase_system::sort_phase_system,
+            tile_view_pattern_system::tile_view_pattern_system,
+        },
     },
-    tessellation::IndexDataType,
+    schedule::{Schedule, StageLabel},
+    tcs::{
+        system::{stage::SystemStage, SystemContainer},
+        world::World,
+    },
+    window::{HeadedMapWindow, MapWindow},
 };
 
 pub mod graph;
 pub mod resource;
-pub mod stages;
+mod systems;
 
 // Rendering internals
 mod graph_runner;
 mod main_pass;
-mod render_commands;
-mod render_phase;
-mod shaders;
-mod tile_pipeline;
-mod tile_view_pattern;
+pub mod shaders; // TODO: Make private
 
 // Public API
 pub mod builder;
 pub mod camera;
 pub mod error;
 pub mod eventually;
+pub mod render_commands;
+pub mod render_phase;
 pub mod settings;
+pub mod tile_view_pattern;
+pub mod view_state;
 
 pub use shaders::ShaderVertex;
-pub use stages::register_default_render_stages;
 
 use crate::{
     render::{
-        graph::{EmptyNode, RenderGraph, RenderGraphError},
-        main_pass::{MainPassDriverNode, MainPassNode},
+        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        systems::{graph_runner_system::GraphRunnerSystem, upload_system::upload_system},
+        tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
     },
-    window::{HeadedMapWindow, MapWindow},
+    window::PhysicalSize,
 };
 
-const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
+pub(crate) const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
-pub struct RenderState {
-    render_target: Eventually<TextureView>,
+/// The labels of the default App rendering stages.
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub enum RenderStageLabel {
+    /// Extract data from the world.
+    Extract,
 
-    buffer_pool: Eventually<
-        BufferPool<
-            wgpu::Queue,
-            wgpu::Buffer,
-            ShaderVertex,
-            IndexDataType,
-            ShaderLayerMetadata,
-            ShaderFeatureStyle,
-        >,
-    >,
-    tile_view_pattern: Eventually<TileViewPattern<wgpu::Queue, wgpu::Buffer>>,
+    /// Prepare render resources from the extracted data for the GPU.
+    /// For example during this phase textures are created, buffers are allocated and written.
+    Prepare,
 
-    tile_pipeline: Eventually<wgpu::RenderPipeline>,
-    mask_pipeline: Eventually<wgpu::RenderPipeline>,
+    /// Queues [PhaseItems](render_phase::PhaseItem) that depend on
+    /// [`Prepare`](RenderStageLabel::Prepare) data and queue up draw calls to run during the
+    /// [`Render`](RenderStageLabel::Render) stage.
+    /// For example data is uploaded to the GPU in this stage.
+    Queue,
 
-    globals_bind_group: Eventually<Globals>,
+    /// Sort the [`RenderPhases`](crate::render_phase::RenderPhase) here.
+    PhaseSort,
 
-    depth_texture: Eventually<Texture>,
-    multisampling_texture: Eventually<Option<Texture>>,
+    /// Actual rendering happens here.
+    /// In most cases, only the render backend should insert resources here.
+    Render,
 
-    surface: Surface,
-
-    mask_phase: RenderPhase<TileInView>,
-    tile_phase: RenderPhase<(IndexEntry, TileShape)>,
+    /// Cleanup render resources here.
+    Cleanup,
 }
 
-impl RenderState {
+impl StageLabel for RenderStageLabel {
+    fn dyn_clone(&self) -> Box<dyn StageLabel> {
+        Box::new(self.clone())
+    }
+}
+
+pub struct RenderResources {
+    pub surface: Surface,
+    pub render_target: Eventually<TextureView>,
+    pub depth_texture: Eventually<Texture>,
+    pub multisampling_texture: Eventually<Option<Texture>>,
+}
+
+impl RenderResources {
     pub fn new(surface: Surface) -> Self {
         Self {
             render_target: Default::default(),
-            buffer_pool: Default::default(),
-            tile_view_pattern: Default::default(),
-            tile_pipeline: Default::default(),
-            mask_pipeline: Default::default(),
-            globals_bind_group: Default::default(),
             depth_texture: Default::default(),
             multisampling_texture: Default::default(),
             surface,
-            mask_phase: Default::default(),
-            tile_phase: Default::default(),
         }
     }
 
-    pub fn recreate_surface<MW>(&mut self, window: &MW, instance: &wgpu::Instance)
+    pub fn recreate_surface<MW>(
+        &mut self,
+        window: &MW,
+        instance: &wgpu::Instance,
+    ) -> Result<(), RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        self.surface.recreate::<MW>(window, instance);
+        self.surface.recreate::<MW>(window, instance)
     }
 
     pub fn surface(&self) -> &Surface {
         &self.surface
-    }
-
-    pub fn buffer_pool_mut(
-        &mut self,
-    ) -> &mut Eventually<
-        BufferPool<
-            wgpu::Queue,
-            wgpu::Buffer,
-            ShaderVertex,
-            IndexDataType,
-            ShaderLayerMetadata,
-            ShaderFeatureStyle,
-        >,
-    > {
-        &mut self.buffer_pool
     }
 }
 
@@ -144,12 +148,13 @@ pub struct Renderer {
     pub instance: wgpu::Instance,
     pub device: Arc<wgpu::Device>, // TODO: Arc is needed for headless rendering. Is there a simpler solution?
     pub queue: wgpu::Queue,
-    pub adapter_info: wgpu::AdapterInfo,
+    pub adapter: wgpu::Adapter,
 
     pub wgpu_settings: WgpuSettings,
     pub settings: RendererSettings,
 
-    pub state: RenderState,
+    pub resources: RenderResources,
+    pub render_graph: RenderGraph,
 }
 
 impl Renderer {
@@ -159,29 +164,29 @@ impl Renderer {
         window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -> Result<Self, wgpu::RequestDeviceError>
+    ) -> Result<Self, RenderError>
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            dx12_shader_compiler: Default::default(),
+        });
 
-        let surface = Surface::from_window(&instance, window, &settings);
+        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw())? };
 
-        let compatible_surface = match &surface.head() {
-            Head::Headed(window_head) => Some(window_head.surface()),
-            Head::Headless(_) => None,
-        };
-
-        let (device, queue, adapter_info) = Self::request_device(
+        let (adapter, device, queue) = Self::request_device(
             &instance,
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
                 power_preference: wgpu_settings.power_preference,
                 force_fallback_adapter: false,
-                compatible_surface,
+                compatible_surface: Some(&surface),
             },
         )
         .await?;
+
+        let surface = Surface::from_surface(surface, &adapter, window, &settings);
 
         match surface.head() {
             Head::Headed(window) => window.configure(&device),
@@ -192,10 +197,11 @@ impl Renderer {
             instance,
             device: Arc::new(device),
             queue,
-            adapter_info,
+            adapter,
             wgpu_settings,
             settings,
-            state: RenderState::new(surface),
+            resources: RenderResources::new(surface),
+            render_graph: Default::default(),
         })
     }
 
@@ -203,13 +209,16 @@ impl Renderer {
         window: &MW,
         wgpu_settings: WgpuSettings,
         settings: RendererSettings,
-    ) -> Result<Self, wgpu::RequestDeviceError>
+    ) -> Result<Self, RenderError>
     where
         MW: MapWindow,
     {
-        let instance = wgpu::Instance::new(wgpu_settings.backends.unwrap_or(wgpu::Backends::all()));
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            dx12_shader_compiler: Default::default(),
+        });
 
-        let (device, queue, adapter_info) = Self::request_device(
+        let (adapter, device, queue) = Self::request_device(
             &instance,
             &wgpu_settings,
             &wgpu::RequestAdapterOptions {
@@ -226,15 +235,16 @@ impl Renderer {
             instance,
             device: Arc::new(device),
             queue,
-            adapter_info,
+            adapter,
             wgpu_settings,
             settings,
-            state: RenderState::new(surface),
+            resources: RenderResources::new(surface),
+            render_graph: Default::default(),
         })
     }
 
-    pub fn resize(&mut self, width: u32, height: u32) {
-        self.state.surface.resize(width, height)
+    pub fn resize_surface(&mut self, size: PhysicalSize) {
+        self.resources.surface.resize(size)
     }
 
     /// Requests a device
@@ -242,14 +252,13 @@ impl Renderer {
         instance: &wgpu::Instance,
         settings: &WgpuSettings,
         request_adapter_options: &wgpu::RequestAdapterOptions<'_>,
-    ) -> Result<(wgpu::Device, wgpu::Queue, wgpu::AdapterInfo), wgpu::RequestDeviceError> {
+    ) -> Result<(wgpu::Adapter, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError> {
         let adapter = instance
             .request_adapter(request_adapter_options)
             .await
-            .expect("Unable to find a GPU! Make sure you have installed required drivers!");
+            .ok_or(wgpu::RequestDeviceError)?;
 
         let adapter_info = adapter.get_info();
-        info!("{:?}", adapter_info);
 
         #[cfg(not(target_arch = "wasm32"))]
         let trace_path = if settings.record_trace {
@@ -305,6 +314,9 @@ impl Renderer {
                 max_bind_groups: limits
                     .max_bind_groups
                     .min(constrained_limits.max_bind_groups),
+                max_bindings_per_bind_group: limits
+                    .max_bindings_per_bind_group
+                    .min(constrained_limits.max_bindings_per_bind_group),
                 max_dynamic_uniform_buffers_per_pipeline_layout: limits
                     .max_dynamic_uniform_buffers_per_pipeline_layout
                     .min(constrained_limits.max_dynamic_uniform_buffers_per_pipeline_layout),
@@ -387,7 +399,7 @@ impl Renderer {
                 trace_path,
             )
             .await?;
-        Ok((device, queue, adapter_info))
+        Ok((adapter, device, queue))
     }
 
     pub fn instance(&self) -> &wgpu::Instance {
@@ -399,20 +411,25 @@ impl Renderer {
     pub fn queue(&self) -> &wgpu::Queue {
         &self.queue
     }
-    pub fn state(&self) -> &RenderState {
-        &self.state
+    pub fn state(&self) -> &RenderResources {
+        &self.resources
     }
     pub fn surface(&self) -> &Surface {
-        &self.state.surface
+        &self.resources.surface
     }
 }
 
 #[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
 mod tests {
-    use crate::window::{MapWindow, MapWindowConfig, WindowSize};
+    use crate::{
+        tcs::world::World,
+        window::{MapWindow, MapWindowConfig, PhysicalSize},
+    };
 
+    #[derive(Clone)]
     pub struct HeadlessMapWindowConfig {
-        size: WindowSize,
+        size: PhysicalSize,
     }
 
     impl MapWindowConfig for HeadlessMapWindowConfig {
@@ -424,23 +441,22 @@ mod tests {
     }
 
     pub struct HeadlessMapWindow {
-        size: WindowSize,
+        size: PhysicalSize,
     }
 
     impl MapWindow for HeadlessMapWindow {
-        fn size(&self) -> WindowSize {
+        fn size(&self) -> PhysicalSize {
             self.size
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     #[tokio::test]
     async fn test_render() {
         use log::LevelFilter;
 
         use crate::render::{
-            graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface, RenderState,
-            RendererSettings,
+            graph::RenderGraph, graph_runner::RenderGraphRunner, resource::Surface,
+            RenderResources, RendererSettings,
         };
 
         let _ = env_logger::builder()
@@ -450,10 +466,13 @@ mod tests {
         let graph = RenderGraph::default();
 
         let backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all());
-        let instance = wgpu::Instance::new(backends);
-        let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, backends, None)
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends,
+            dx12_shader_compiler: Default::default(),
+        });
+        let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, None)
             .await
-            .unwrap();
+            .expect("Unable to initialize adapter");
 
         let (device, queue) = adapter
             .request_device(
@@ -465,18 +484,19 @@ mod tests {
                 None,
             )
             .await
-            .ok()
-            .unwrap();
+            .expect("Unable to request device");
 
-        let render_state = RenderState::new(Surface::from_image(
+        let render_state = RenderResources::new(Surface::from_image(
             &device,
             &HeadlessMapWindow {
-                size: WindowSize::new(100, 100).unwrap(),
+                size: PhysicalSize::new(100, 100).expect("invalid headless map size"),
             },
             &RendererSettings::default(),
         ));
 
-        RenderGraphRunner::run(&graph, &device, &queue, &render_state).unwrap();
+        let world = World::default();
+        RenderGraphRunner::run(&graph, &device, &queue, &render_state, &world)
+            .expect("failed to run graph runner");
     }
 }
 
@@ -495,33 +515,90 @@ pub mod main_graph {
 }
 
 /// Labels for the "draw" graph
-pub mod draw_graph {
+mod draw_graph {
     pub const NAME: &str = "draw";
     // Labels for input nodes
     pub mod input {}
     // Labels for non-input nodes
     pub mod node {
         pub const MAIN_PASS: &str = "main_pass";
-        #[cfg(feature = "headless")]
-        pub const COPY: &str = "copy";
     }
 }
 
-pub fn create_default_render_graph() -> Result<RenderGraph, RenderGraphError> {
-    let mut graph = RenderGraph::default();
+pub struct MaskPipeline(pub wgpu::RenderPipeline);
+impl Deref for MaskPipeline {
+    type Target = wgpu::RenderPipeline;
 
-    let mut draw_graph = RenderGraph::default();
-    draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
-    let input_node_id = draw_graph.set_input(vec![]);
-    draw_graph.add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)?;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
-    graph.add_sub_graph(draw_graph::NAME, draw_graph);
-    graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
-    graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
-    graph.add_node_edge(
-        main_graph::node::MAIN_PASS_DEPENDENCIES,
-        main_graph::node::MAIN_PASS_DRIVER,
-    )?;
+// TODO: Do we really want a render plugin or do we want to statically do this setup?
+#[derive(Default)]
+pub struct RenderPlugin;
 
-    Ok(graph)
+impl<E: Environment> Plugin<E> for RenderPlugin {
+    fn build(
+        &self,
+        schedule: &mut Schedule,
+        _kernel: Rc<Kernel<E>>,
+        world: &mut World,
+        graph: &mut RenderGraph,
+    ) {
+        let resources = &mut world.resources;
+
+        let mut draw_graph = RenderGraph::default();
+        // Draw nodes
+        draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+        // Input node
+        let input_node_id = draw_graph.set_input(vec![]);
+        // Edges
+        draw_graph
+            .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
+            .expect("main pass or draw node does not exist");
+
+        graph.add_sub_graph(draw_graph::NAME, draw_graph);
+        graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
+        graph.add_node(main_graph::node::MAIN_PASS_DRIVER, MainPassDriverNode);
+        graph
+            .add_node_edge(
+                main_graph::node::MAIN_PASS_DEPENDENCIES,
+                main_graph::node::MAIN_PASS_DRIVER,
+            )
+            .expect("main pass driver or dependencies do not exist");
+
+        // render graph dependency
+        resources.init::<RenderPhase<LayerItem>>();
+        resources.init::<RenderPhase<TileMaskItem>>();
+        // tile_view_pattern:
+        resources.insert(Eventually::<WgpuTileViewPattern>::Uninitialized);
+        resources.init::<ViewTileSources>();
+        // masks
+        resources.insert(Eventually::<MaskPipeline>::Uninitialized);
+
+        schedule.add_stage(RenderStageLabel::Extract, SystemStage::default());
+        schedule.add_stage(
+            RenderStageLabel::Prepare,
+            SystemStage::default().with_system(SystemContainer::new(ResourceSystem)),
+        );
+        schedule.add_stage(
+            RenderStageLabel::Queue,
+            SystemStage::default()
+                .with_system(tile_view_pattern_system)
+                .with_system(upload_system),
+        );
+        schedule.add_stage(
+            RenderStageLabel::PhaseSort,
+            SystemStage::default().with_system(sort_phase_system),
+        );
+        schedule.add_stage(
+            RenderStageLabel::Render,
+            SystemStage::default().with_system(SystemContainer::new(GraphRunnerSystem)),
+        );
+        schedule.add_stage(
+            RenderStageLabel::Cleanup,
+            SystemStage::default().with_system(cleanup_system),
+        );
+    }
 }

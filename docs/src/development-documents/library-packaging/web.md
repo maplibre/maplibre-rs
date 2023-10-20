@@ -35,7 +35,7 @@ Both assets could be inlined theoretically. This is common for WebWorkers, but n
 
 ### UMD
 
-> UMD modules are needed when creating a library which should run in Node as well as browsers. This is not a usecase
+> UMD modules are needed when creating a library which should run in Node as well as browsers. This is not a use case
 > for maplibre-rs. If we support node, then we probably would ship a separate package called "maplibre-rs-node" which
 > bundles to CJS directly.
 

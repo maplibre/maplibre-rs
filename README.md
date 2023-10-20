@@ -1,15 +1,15 @@
-<h1 align="center">
+<h1 style="text-align:center">
   <img width="350px" alt="maplibre-rs" src="./docs/logo/maplibre-rs-with-text.svg">
 </h1>
 
-<div align="center">
+<div style="text-align:center">
   <strong>Native Maps for Web, Mobile and Linux</strong>
 </div>
-<div align="center">
+<div style="text-align:center">
   A map rendering library written in Rust.
 </div>
 
-<div align="center">
+<div style="text-align:center">
   <img src="https://img.shields.io/badge/stability-experimental-orange.svg?style=flat-square"
       alt="Stability" />
   <a href="https://github.com/maplibre/maplibre-rs/actions/workflows/on_main_push.yml">
@@ -22,18 +22,17 @@
   </a>
 </div>
 
-<div align="center">
+<div style="text-align:center">
   <h3>
     <a href="https://webgl.demo.maplibre-rs.maplibre.org">
       WebGL Demo
-    </a>
-    <span> | </span>
+    </a> |
     <a href="https://maplibre.org/maplibre-rs/docs/book/">
       Book
-    </a> | </span>
+    </a> |
     <a href="https://maplibre.org/maplibre-rs/docs/api/maplibre/">
       API
-    </a> | </span>
+    </a> |
     <a href="https://matrix.to/#/#maplibre:matrix.org">
       Chat in Matrix Space
     </a>
@@ -65,16 +64,6 @@ The goal of maplibre-rs is to render maps to visualize data. Right now the goal 
 vector map renderers like Google Maps, Apple Maps or MapLibre. The current implementation serves as a proof-of-concept
 of the used technology stack. It is unclear whether the high-performance requirements of rendering maps using vector
 graphics are achievable using the current stack.
-
-## Talk: World in Vectors
-
-[![](https://static.media.ccc.de/media/events/MCH2022/265-6919a16c-0dcf-56af-ae0b-5fe0187bc896_preview.jpg)
-](https://media.ccc.de/v/mch2022-265-world-in-vectors-cross-platform-map-rendering-using-rust)
-
-
-([External Link](https://media.ccc.de/v/mch2022-265-world-in-vectors-cross-platform-map-rendering-using-rust))
-
-([Older Talk on YouTube](https://www.youtube.com/watch?v=KFk8bOtJzCM))
 
 ## Demos
 

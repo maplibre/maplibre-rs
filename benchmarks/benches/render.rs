@@ -1,46 +1,40 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use maplibre::{
     coords::{WorldTileCoords, ZoomLevel},
-    error::Error,
-    headless::{create_headless_renderer, map::HeadlessMap},
+    headless::{create_headless_renderer, map::HeadlessMap, HeadlessPlugin},
     platform::run_multithreaded,
+    plugin::Plugin,
+    render::RenderPlugin,
     style::Style,
+    vector::{DefaultVectorTransferables, VectorPlugin},
 };
 
 fn headless_render(c: &mut Criterion) {
     c.bench_function("headless_render", |b| {
-        let (mut map, tile) = run_multithreaded(async {
+        let (mut map, layer) = run_multithreaded(async {
             let (kernel, renderer) = create_headless_renderer(1000, None).await;
             let style = Style::default();
-            let map = HeadlessMap::new(style, renderer, kernel).unwrap();
+
+            let plugins: Vec<Box<dyn Plugin<_>>> = vec![
+                Box::new(RenderPlugin::default()),
+                Box::new(VectorPlugin::<DefaultVectorTransferables>::default()),
+                Box::new(HeadlessPlugin::new(false)),
+            ];
+
+            let map = HeadlessMap::new(style, renderer, kernel, plugins).unwrap();
 
             let tile = map
-                .fetch_tile(
-                    WorldTileCoords::from((0, 0, ZoomLevel::default())),
-                    &["water"],
-                )
+                .fetch_tile(WorldTileCoords::from((0, 0, ZoomLevel::default())))
                 .await
-                .expect("Failed to fetch and process!");
+                .expect("Failed to fetch!");
+
+            let tile = map.process_tile(tile, &["water"]).await;
 
             (map, tile)
         });
 
-        b.to_async(
-            tokio::runtime::Builder::new_multi_thread()
-                .enable_all()
-                .build()
-                .unwrap(),
-        )
-        .iter(|| {
-            match map.render_tile(tile.clone()) {
-                Ok(_) => {}
-                Err(Error::Render(e)) => {
-                    eprintln!("{}", e);
-                    if e.should_exit() {}
-                }
-                e => eprintln!("{:?}", e),
-            };
-            async {}
+        b.iter(|| {
+            map.render_tile(layer.clone());
         });
     });
 }

@@ -4,12 +4,11 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use instant::Instant;
 use maplibre::{
-    environment::Environment,
-    error::Error,
-    event_loop::{EventLoop, EventLoopProxy},
+    environment::{Environment, OffscreenKernelEnvironment},
+    event_loop::{EventLoop, EventLoopProxy, SendEventError},
     io::{apc::AsyncProcedureCall, scheduler::Scheduler, source_client::HttpClient},
     map::Map,
-    window::{HeadedMapWindow, MapWindowConfig},
+    window::{HeadedMapWindow, MapWindowConfig, PhysicalSize},
 };
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -57,6 +56,10 @@ impl<ET> HeadedMapWindow for WinitMapWindow<ET> {
         self.window.request_redraw()
     }
 
+    fn scale_factor(&self) -> f64 {
+        self.window.scale_factor()
+    }
+
     fn id(&self) -> u64 {
         self.window.id().into()
     }
@@ -78,22 +81,17 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         let mut current_frame: u64 = 0;
 
         let mut input_controller = InputController::new(0.2, 100.0, 0.1);
+        let mut scale_factor = map.window().scale_factor();
 
         self.event_loop
             .run(move |event, _window_target, control_flow| {
                 #[cfg(target_os = "android")]
-                if !map.has_renderer() && event == Event::Resumed {
+                if !map.is_initialized() && event == Event::Resumed {
                     use tokio::{runtime::Handle, task};
-                    use maplibre::render::settings::WgpuSettings;
-                    use maplibre::render::builder::RendererBuilder;
 
                     task::block_in_place(|| {
                         Handle::current().block_on(async {
-                            map.initialize_renderer(RendererBuilder::new()
-                                .with_wgpu_settings(WgpuSettings {
-                                    backends: Some(maplibre::render::settings::Backends::VULKAN), // FIXME: Change
-                                    ..WgpuSettings::default()
-                                })).await.unwrap();
+                            map.initialize_renderer().await.unwrap();
                         })
                     });
                     return;
@@ -111,7 +109,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         ref event,
                         window_id,
                     } if window_id == map.window().id().into() => {
-                        if !input_controller.window_input(event) {
+                        if !input_controller.window_input(event, scale_factor) {
                             match event {
                                 WindowEvent::CloseRequested
                                 | WindowEvent::KeyboardInput {
@@ -123,14 +121,18 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                                     },
                                     ..
                                 } => *control_flow = ControlFlow::Exit,
-                                WindowEvent::Resized(physical_size) => {
-                                    if let Ok(map_context) =  map.context_mut() {
-                                        map_context.resize(physical_size.width, physical_size.height);
+                                WindowEvent::Resized(winit::dpi::PhysicalSize { width, height}) => {
+                                    if let Ok(map_context) = map.context_mut() {
+                                        let size = PhysicalSize::new(*width, *height).expect("window values should not be zero");
+                                        map_context.resize(size, scale_factor);
                                     }
                                 }
-                                WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                                WindowEvent::ScaleFactorChanged { new_inner_size: winit::dpi::PhysicalSize { width, height}, scale_factor: new_scale_factor } => {
                                     if let Ok(map_context) =  map.context_mut() {
-                                        map_context.resize(new_inner_size.width, new_inner_size.height);
+                                        log::info!("New scaling factor: {}", new_scale_factor);
+                                        scale_factor = *new_scale_factor;
+                                        let size = PhysicalSize::new(*width, *height).expect("window values should not be zero");
+                                        map_context.resize(size, scale_factor);
                                     }
                                 }
                                 _ => {}
@@ -138,24 +140,20 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         }
                     }
                     Event::RedrawRequested(_) => {
+                        if !map.is_initialized() {
+                            return;
+                        }
+
                         let now = Instant::now();
                         let dt = now - last_render_time;
                         last_render_time = now;
 
                         if let Ok(map_context) =  map.context_mut() {
-                            input_controller.update_state(map_context.world.view_state_mut(), dt);
+                            input_controller.update_state(map_context, dt);
                         }
 
-                        match map.run_schedule() {
-                            Ok(_) => {}
-                            Err(Error::Render(e)) => {
-                                eprintln!("{}", e);
-                                if e.should_exit() {
-                                    *control_flow = ControlFlow::Exit;
-                                }
-                            }
-                            e => eprintln!("{:?}", e)
-                        };
+                        // TODO: Handle gracefully
+                        map.run_schedule().expect("Failed to run schedule!");
 
                         if let Some(max_frames) = max_frames {
                             if current_frame >= max_frames {
@@ -167,7 +165,8 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         }
                     }
                     Event::Suspended => {
-                        // FIXME unimplemented!()
+                        log::info!("Suspending and dropping render state.");
+                        map.reset() // TODO: Instead of resetting the whole map (incl. the renderer) only reset the renderer
                     }
                     Event::Resumed => {
                         // FIXME unimplemented!()
@@ -188,28 +187,44 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         }
     }
 }
+
 pub struct WinitEventLoopProxy<ET: 'static> {
     proxy: RawEventLoopProxy<ET>,
 }
 
 impl<ET: 'static> EventLoopProxy<ET> for WinitEventLoopProxy<ET> {
-    fn send_event(&self, event: ET) {
-        self.proxy.send_event(event); // FIXME: Handle unwrap
+    fn send_event(&self, event: ET) -> Result<(), SendEventError> {
+        self.proxy
+            .send_event(event)
+            .map_err(|_e| SendEventError::Closed)
     }
 }
 
-pub struct WinitEnvironment<S: Scheduler, HC: HttpClient, APC: AsyncProcedureCall<HC>, ET> {
+pub struct WinitEnvironment<
+    S: Scheduler,
+    HC: HttpClient,
+    K: OffscreenKernelEnvironment,
+    APC: AsyncProcedureCall<K>,
+    ET,
+> {
     phantom_s: PhantomData<S>,
     phantom_hc: PhantomData<HC>,
+    phantom_k: PhantomData<K>,
     phantom_apc: PhantomData<APC>,
     phantom_et: PhantomData<ET>,
 }
 
-impl<S: Scheduler, HC: HttpClient, APC: AsyncProcedureCall<HC>, ET: 'static> Environment
-    for WinitEnvironment<S, HC, APC, ET>
+impl<
+        S: Scheduler,
+        HC: HttpClient,
+        K: OffscreenKernelEnvironment,
+        APC: AsyncProcedureCall<K>,
+        ET: 'static + Clone,
+    > Environment for WinitEnvironment<S, HC, K, APC, ET>
 {
     type MapWindowConfig = WinitMapWindowConfig<ET>;
     type AsyncProcedureCall = APC;
     type Scheduler = S;
     type HttpClient = HC;
+    type OffscreenKernelEnvironment = K;
 }
