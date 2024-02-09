@@ -211,15 +211,15 @@ you will have to add to the SQLITE3_LIB_DIR environment variable.</p>
 <pre><code class="language-bash">cargo run -p maplibre-demo
 </code></pre>
 <h2 id="android"><a class="header" href="#android">Android</a></h2>
-<p>Start by installing the 
+<p>Start by installing the
 <a href="https://developer.android.com/studio?gclid=CjwKCAjwj42UBhAAEiwACIhADmF7uHXnEHGnmOgFnjp0Z6n-TnBvutC5faGA89lwouMIXiR6OXK4hBoCq78QAvD_BwE&amp;gclsrc=aw.ds">Android Studio IDE</a>.</p>
-<p>Make sure the NDK is installed. The Native Development Kit (NDK) is a set of tools that allows 
-you to use C and C++ code with Android. You have to install manually the version that is used in 
+<p>Make sure the NDK is installed. The Native Development Kit (NDK) is a set of tools that allows
+you to use C and C++ code with Android. You have to install manually the version that is used in
 <code>./android/gradle/lib/build.gradle</code>.</p>
 <pre><code>ANDROID STUDIO -&gt; tools -&gt; SDK manager -&gt; SDK tools -&gt; tick show package details -&gt; ndk (side by side)
 </code></pre>
 <p>Open the project within <code>./android/gradle</code> and create a new virtual device with the device manager. Minimum SDK version
-should be 21. This was tested on an x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and 
+should be 21. This was tested on an x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and
 run the maplibre-rs Android demo on it. Alternatively you can also run it on your own Android device.</p>
 <blockquote>
 <p>Note: If you are building for an x86 Android device, you probably need to install the following target using<br />
@@ -227,8 +227,8 @@ rustup with the following command <code>rustup target add i686-linux-android</co
 </blockquote>
 <blockquote>
 <p>Note: Android is configured to support OpenGL ES 3.1 (This API specification is supported by Android 5.0 (API level 21) and higher).
-Your Android device is required to support OpenGL ES 3.1 at least. There are some issues 
-<a href="https://stackoverflow.com/questions/40797975/android-emulator-and-opengl-es3-egl-bad-config">here</a> and 
+Your Android device is required to support OpenGL ES 3.1 at least. There are some issues
+<a href="https://stackoverflow.com/questions/40797975/android-emulator-and-opengl-es3-egl-bad-config">here</a> and
 <a href="https://www.reddit.com/r/Arcore/comments/8squbo/opengl_es_31_is_required_for_android_emulator_to/">here</a> that
 discuss configuration of Android Studio for OpenGL ES 3.1 support in emulators.</p>
 </blockquote>
@@ -246,16 +246,16 @@ Version 9 is the minimum version supported theoretically.</p>
 <p>As you might have seen in the maplibre-demo section, you can build Unix executables directly with Cargo.
 In order to build a proper macOS application (in OSX terminology) you have to use the <code>./apple/xcode</code> project.</p>
 <p>Open the project from the folder <code>./apple/xcode</code> with XCode. Select the scheme called <em>example (macOS)</em> and
-click on run. This will start the macOS application. </p>
+click on run. This will start the macOS application.</p>
 <blockquote>
 <p>The minimum target OSX version for the macOS build is defined inside <em>Build settings -&gt; Deployment -&gt; macOS deployment target</em>.
 If you are using a lower version of OSX, you will not be able to run the application on your computer.</p>
 </blockquote>
 <h2 id="web-webgl-webgpu"><a class="header" href="#web-webgl-webgpu">Web (WebGL, WebGPU)</a></h2>
 <p>You need to first build the library for WebGL or WebGPU. Optionally, you can also enabled multi-threading support,
-which requires that the library is used in a secure environment: 
+which requires that the library is used in a secure environment:
 <a href="https://developer.mozilla.org/en-US/docs/Web/API/isSecureContext">isSecureContext</a>
-and <a href="https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated">crossOriginIsolated</a>. 
+and <a href="https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated">crossOriginIsolated</a>.
 The demo runs this such an environment.</p>
 <p>If you have a browser which already supports a recent version of the WebGPU specification then you can build the library
 with WebGPU:</p>

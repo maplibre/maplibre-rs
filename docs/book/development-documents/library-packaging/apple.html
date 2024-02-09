@@ -1189,60 +1189,60 @@ to run before the linking phase (drag and drop it to the top).</p>
 the <code>$ARCHS</code>
 environment variable, as the others seem unreliable. Note that this can include multiple architectures, unless the build
 setting <code>ONLY_ACTIVE_ARCH</code> is set to <code>YES</code>.</p>
-<pre><code class="language-bash">arch=&quot;unknown&quot;
-vendor=&quot;apple&quot;
-os_type=&quot;unknown&quot;
-environment_type=&quot;&quot;
+<pre><code class="language-bash">arch="unknown"
+vendor="apple"
+os_type="unknown"
+environment_type=""
 
-mode=&quot;&quot;
+mode=""
 
-echo &quot;ARCH: $ARCHS&quot;
+echo "ARCH: $ARCHS"
 
-if [[ $CONFIGURATION == &quot;Release&quot; ]]
+if [[ $CONFIGURATION == "Release" ]]
 then
-    mode=&quot;--release&quot;
+    mode="--release"
 fi
 
-if [[ $ARCHS == &quot;x86_64&quot; ]]
+if [[ $ARCHS == "x86_64" ]]
 then
-    arch=&quot;x86_64&quot;
-elif [[ $ARCHS == &quot;arm64&quot; ]]
+    arch="x86_64"
+elif [[ $ARCHS == "arm64" ]]
 then
-    arch=&quot;aarch64&quot;
+    arch="aarch64"
 fi
 
-if [[ $SDK_NAME == *&quot;iphoneos&quot;* ]]
+if [[ $SDK_NAME == *"iphoneos"* ]]
 then
-    os_type=&quot;ios&quot;
-elif [[ $SDK_NAME == *&quot;macos&quot;* ]]
+    os_type="ios"
+elif [[ $SDK_NAME == *"macos"* ]]
 then
-    os_type=&quot;darwin&quot;
-elif [[ $SDK_NAME == *&quot;iphonesimulator&quot;* ]]
+    os_type="darwin"
+elif [[ $SDK_NAME == *"iphonesimulator"* ]]
 then
-    os_type=&quot;ios&quot;
-    if [[ $ARCHS == &quot;arm64&quot; ]]
+    os_type="ios"
+    if [[ $ARCHS == "arm64" ]]
     then
-        environment_type=&quot;sim&quot;
+        environment_type="sim"
     fi
 fi
 
 
-triplet=&quot;$arch-$vendor-$os_type&quot;
+triplet="$arch-$vendor-$os_type"
 
-if [ -n &quot;$environment_type&quot; ]
+if [ -n "$environment_type" ]
 then
-    triplet=&quot;$triplet-$environment_type&quot;
+    triplet="$triplet-$environment_type"
 fi
 
-echo &quot;Mode: $mode&quot;
-echo &quot;Triplet: $triplet&quot;
-echo &quot;Shell: $SHELL&quot;
+echo "Mode: $mode"
+echo "Triplet: $triplet"
+echo "Shell: $SHELL"
 
-cmd=&quot;export HOME=$HOME &amp;&amp; . $HOME/.cargo/env &amp;&amp; cargo build -p apple $mode --target $triplet --lib&quot;
+cmd="export HOME=$HOME &amp;&amp; . $HOME/.cargo/env &amp;&amp; cargo build -p apple $mode --target $triplet --lib"
 
-echo &quot;Command: $cmd&quot;
+echo "Command: $cmd"
 
-env -i /bin/bash -c &quot;$cmd&quot;
+env -i /bin/bash -c "$cmd"
 </code></pre>
 <h3 id="build-settings"><a class="header" href="#build-settings">Build Settings</a></h3>
 <div class="d2h-file-wrapper" data-lang="pbxproj">
@@ -2665,7 +2665,7 @@ env -i /bin/bash -c &quot;$cmd&quot;
 <li><code>DEVELOPMENT_TEAM</code>: No development team is set</li>
 <li><code>LIBRARY_SEARCH_PATHS[sdk=x][arch=y]</code>: We set the path for the <code>libmaplibre_apple.a</code> lies</li>
 <li><code>MACH_O_TYPE</code> / <code>SKIP_INSTALL</code>: If this is not set to <code>staticlib</code> and <code>NO</code>, then the <code>libmaplibre_apple.a</code> binary is not included in the final framework xcarchive.</li>
-<li><code>SUPPORTED_PLATFORMS</code>: Explicitly says that this library works on any platform. </li>
+<li><code>SUPPORTED_PLATFORMS</code>: Explicitly says that this library works on any platform.</li>
 <li><code>SUPPORTS_MACCATALYST</code>: Explicitly says that this library works on Mac Catalyst.</li>
 </ul>
 <p>The same settings are done for Release and Debug.</p>

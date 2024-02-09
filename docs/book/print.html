@@ -177,9 +177,9 @@
                     <main>
                         <p><img src="./logo/maplibre-rs-with-text.svg" alt="" /></p>
 <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>maplibre-rs is a portable and performant vector maps renderer. </p>
+<p>maplibre-rs is a portable and performant vector maps renderer.</p>
 <h2 id="name"><a class="header" href="#name">Name</a></h2>
-<p>The name of the library is &quot;maplibre-rs&quot;. The camel-case version of it is &quot;MapLibreRs&quot;.</p>
+<p>The name of the library is "maplibre-rs". The camel-case version of it is "MapLibreRs".</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="supported-platforms"><a class="header" href="#supported-platforms">Supported Platforms</a></h1>
 <p>For development the following platforms are recommended:</p>
 <ul>
@@ -270,15 +270,15 @@ you will have to add to the SQLITE3_LIB_DIR environment variable.</p>
 <pre><code class="language-bash">cargo run -p maplibre-demo
 </code></pre>
 <h2 id="android"><a class="header" href="#android">Android</a></h2>
-<p>Start by installing the 
+<p>Start by installing the
 <a href="https://developer.android.com/studio?gclid=CjwKCAjwj42UBhAAEiwACIhADmF7uHXnEHGnmOgFnjp0Z6n-TnBvutC5faGA89lwouMIXiR6OXK4hBoCq78QAvD_BwE&amp;gclsrc=aw.ds">Android Studio IDE</a>.</p>
-<p>Make sure the NDK is installed. The Native Development Kit (NDK) is a set of tools that allows 
-you to use C and C++ code with Android. You have to install manually the version that is used in 
+<p>Make sure the NDK is installed. The Native Development Kit (NDK) is a set of tools that allows
+you to use C and C++ code with Android. You have to install manually the version that is used in
 <code>./android/gradle/lib/build.gradle</code>.</p>
 <pre><code>ANDROID STUDIO -&gt; tools -&gt; SDK manager -&gt; SDK tools -&gt; tick show package details -&gt; ndk (side by side)
 </code></pre>
 <p>Open the project within <code>./android/gradle</code> and create a new virtual device with the device manager. Minimum SDK version
-should be 21. This was tested on an x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and 
+should be 21. This was tested on an x86_64 emulator. Finally, run the demo configuration. It should open your virtual device and
 run the maplibre-rs Android demo on it. Alternatively you can also run it on your own Android device.</p>
 <blockquote>
 <p>Note: If you are building for an x86 Android device, you probably need to install the following target using<br />
@@ -286,8 +286,8 @@ rustup with the following command <code>rustup target add i686-linux-android</co
 </blockquote>
 <blockquote>
 <p>Note: Android is configured to support OpenGL ES 3.1 (This API specification is supported by Android 5.0 (API level 21) and higher).
-Your Android device is required to support OpenGL ES 3.1 at least. There are some issues 
-<a href="https://stackoverflow.com/questions/40797975/android-emulator-and-opengl-es3-egl-bad-config">here</a> and 
+Your Android device is required to support OpenGL ES 3.1 at least. There are some issues
+<a href="https://stackoverflow.com/questions/40797975/android-emulator-and-opengl-es3-egl-bad-config">here</a> and
 <a href="https://www.reddit.com/r/Arcore/comments/8squbo/opengl_es_31_is_required_for_android_emulator_to/">here</a> that
 discuss configuration of Android Studio for OpenGL ES 3.1 support in emulators.</p>
 </blockquote>
@@ -305,16 +305,16 @@ Version 9 is the minimum version supported theoretically.</p>
 <p>As you might have seen in the maplibre-demo section, you can build Unix executables directly with Cargo.
 In order to build a proper macOS application (in OSX terminology) you have to use the <code>./apple/xcode</code> project.</p>
 <p>Open the project from the folder <code>./apple/xcode</code> with XCode. Select the scheme called <em>example (macOS)</em> and
-click on run. This will start the macOS application. </p>
+click on run. This will start the macOS application.</p>
 <blockquote>
 <p>The minimum target OSX version for the macOS build is defined inside <em>Build settings -&gt; Deployment -&gt; macOS deployment target</em>.
 If you are using a lower version of OSX, you will not be able to run the application on your computer.</p>
 </blockquote>
 <h2 id="web-webgl-webgpu"><a class="header" href="#web-webgl-webgpu">Web (WebGL, WebGPU)</a></h2>
 <p>You need to first build the library for WebGL or WebGPU. Optionally, you can also enabled multi-threading support,
-which requires that the library is used in a secure environment: 
+which requires that the library is used in a secure environment:
 <a href="https://developer.mozilla.org/en-US/docs/Web/API/isSecureContext">isSecureContext</a>
-and <a href="https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated">crossOriginIsolated</a>. 
+and <a href="https://developer.mozilla.org/en-US/docs/Web/API/crossOriginIsolated">crossOriginIsolated</a>.
 The demo runs this such an environment.</p>
 <p>If you have a browser which already supports a recent version of the WebGPU specification then you can build the library
 with WebGPU:</p>
@@ -375,7 +375,7 @@ just web-lib build --webgl --multithreaded # WebGL + multithreaded
 <p>Notes:</p>
 <ul>
 <li>The ability to use shared memory or the atomic instruction set of WASM comes by enabling compilation features.</li>
-<li><code>threads</code> support here does not introduce threads like we know them from Linux. It introduces </li>
+<li><code>threads</code> support here does not introduce threads like we know them from Linux. It introduces</li>
 <li><a href="https://github.com/WebAssembly/threads/blob/main/proposals/threads/Overview.md">support for atomics</a> like
 specified in a working draft to WebAssembly. Threads are simulated using WebWorkers by the browser.</li>
 </ul>
@@ -1466,60 +1466,60 @@ to run before the linking phase (drag and drop it to the top).</p>
 the <code>$ARCHS</code>
 environment variable, as the others seem unreliable. Note that this can include multiple architectures, unless the build
 setting <code>ONLY_ACTIVE_ARCH</code> is set to <code>YES</code>.</p>
-<pre><code class="language-bash">arch=&quot;unknown&quot;
-vendor=&quot;apple&quot;
-os_type=&quot;unknown&quot;
-environment_type=&quot;&quot;
+<pre><code class="language-bash">arch="unknown"
+vendor="apple"
+os_type="unknown"
+environment_type=""
 
-mode=&quot;&quot;
+mode=""
 
-echo &quot;ARCH: $ARCHS&quot;
+echo "ARCH: $ARCHS"
 
-if [[ $CONFIGURATION == &quot;Release&quot; ]]
+if [[ $CONFIGURATION == "Release" ]]
 then
-    mode=&quot;--release&quot;
+    mode="--release"
 fi
 
-if [[ $ARCHS == &quot;x86_64&quot; ]]
+if [[ $ARCHS == "x86_64" ]]
 then
-    arch=&quot;x86_64&quot;
-elif [[ $ARCHS == &quot;arm64&quot; ]]
+    arch="x86_64"
+elif [[ $ARCHS == "arm64" ]]
 then
-    arch=&quot;aarch64&quot;
+    arch="aarch64"
 fi
 
-if [[ $SDK_NAME == *&quot;iphoneos&quot;* ]]
+if [[ $SDK_NAME == *"iphoneos"* ]]
 then
-    os_type=&quot;ios&quot;
-elif [[ $SDK_NAME == *&quot;macos&quot;* ]]
+    os_type="ios"
+elif [[ $SDK_NAME == *"macos"* ]]
 then
-    os_type=&quot;darwin&quot;
-elif [[ $SDK_NAME == *&quot;iphonesimulator&quot;* ]]
+    os_type="darwin"
+elif [[ $SDK_NAME == *"iphonesimulator"* ]]
 then
-    os_type=&quot;ios&quot;
-    if [[ $ARCHS == &quot;arm64&quot; ]]
+    os_type="ios"
+    if [[ $ARCHS == "arm64" ]]
     then
-        environment_type=&quot;sim&quot;
+        environment_type="sim"
     fi
 fi
 
 
-triplet=&quot;$arch-$vendor-$os_type&quot;
+triplet="$arch-$vendor-$os_type"
 
-if [ -n &quot;$environment_type&quot; ]
+if [ -n "$environment_type" ]
 then
-    triplet=&quot;$triplet-$environment_type&quot;
+    triplet="$triplet-$environment_type"
 fi
 
-echo &quot;Mode: $mode&quot;
-echo &quot;Triplet: $triplet&quot;
-echo &quot;Shell: $SHELL&quot;
+echo "Mode: $mode"
+echo "Triplet: $triplet"
+echo "Shell: $SHELL"
 
-cmd=&quot;export HOME=$HOME &amp;&amp; . $HOME/.cargo/env &amp;&amp; cargo build -p apple $mode --target $triplet --lib&quot;
+cmd="export HOME=$HOME &amp;&amp; . $HOME/.cargo/env &amp;&amp; cargo build -p apple $mode --target $triplet --lib"
 
-echo &quot;Command: $cmd&quot;
+echo "Command: $cmd"
 
-env -i /bin/bash -c &quot;$cmd&quot;
+env -i /bin/bash -c "$cmd"
 </code></pre>
 <h3 id="build-settings"><a class="header" href="#build-settings">Build Settings</a></h3>
 <div class="d2h-file-wrapper" data-lang="pbxproj">
@@ -2942,7 +2942,7 @@ env -i /bin/bash -c &quot;$cmd&quot;
 <li><code>DEVELOPMENT_TEAM</code>: No development team is set</li>
 <li><code>LIBRARY_SEARCH_PATHS[sdk=x][arch=y]</code>: We set the path for the <code>libmaplibre_apple.a</code> lies</li>
 <li><code>MACH_O_TYPE</code> / <code>SKIP_INSTALL</code>: If this is not set to <code>staticlib</code> and <code>NO</code>, then the <code>libmaplibre_apple.a</code> binary is not included in the final framework xcarchive.</li>
-<li><code>SUPPORTED_PLATFORMS</code>: Explicitly says that this library works on any platform. </li>
+<li><code>SUPPORTED_PLATFORMS</code>: Explicitly says that this library works on any platform.</li>
 <li><code>SUPPORTS_MACCATALYST</code>: Explicitly says that this library works on Mac Catalyst.</li>
 </ul>
 <p>The same settings are done for Release and Debug.</p>
@@ -4081,7 +4081,7 @@ This native activity is referenced in the ´AndroidManifest.xml` by defining the
 <p>The ESM module format is the standard nowadays which should be followed. If a JS bundler encounters an ESM
 module it can resolve WebAssembly files or WebWorkers dynamically.
 The following syntax is used to resolve referenced WebWorkers:</p>
-<pre><code class="language-ts">new Worker(new URL(&quot;./multithreaded-pool.worker.ts&quot;, import.meta.url), {
+<pre><code class="language-ts">new Worker(new URL("./multithreaded-pool.worker.ts", import.meta.url), {
     type: 'module'
 });
 </code></pre>
@@ -4090,7 +4090,7 @@ The following syntax is used to resolve referenced WebWorkers:</p>
 </code></pre>
 <h3 id="iife-immediately-invoked-function-expression"><a class="header" href="#iife-immediately-invoked-function-expression">IIFE (immediately-invoked function expression)</a></h3>
 <blockquote>
-<p>This format is used when including maplibre-rs in a <code>&lt;script&gt;</code> tag. The library is &quot;written&quot; onto the window/global
+<p>This format is used when including maplibre-rs in a <code>&lt;script&gt;</code> tag. The library is "written" onto the window/global
 object. This allows quick prototyping/playgrounds/experiments using maplibre-rs.</p>
 </blockquote>
 <p>In order to support this we need to create a bundle which works on any modern browser. Additionally, a WASM file and
@@ -4100,7 +4100,7 @@ these libraries have to specify where WASM or non-inlined WebWorkers are located
 <h3 id="umd"><a class="header" href="#umd">UMD</a></h3>
 <blockquote>
 <p>UMD modules are needed when creating a library which should run in Node as well as browsers. This is not a use case
-for maplibre-rs. If we support node, then we probably would ship a separate package called &quot;maplibre-rs-node&quot; which
+for maplibre-rs. If we support node, then we probably would ship a separate package called "maplibre-rs-node" which
 bundles to CJS directly.</p>
 </blockquote>
 <h3 id="cjscommonjs"><a class="header" href="#cjscommonjs">CJS/CommonJS</a></h3>
@@ -4156,14 +4156,14 @@ all other bundlers.</p>
 <ul>
 <li>IIFI: The esbuild bundler translates to <code>new URL('index_bg.wasm', import.meta.url);</code> to
 <pre><code class="language-js">var __currentScriptUrl__ = document.currentScript &amp;&amp; document.currentScript.src || document.baseURI;
-new URL(&quot;./assets/index_bg.wasm?emit=file&quot;, __currentScriptUrl__);
+new URL("./assets/index_bg.wasm?emit=file", __currentScriptUrl__);
 </code></pre>
 </li>
 </ul>
 <p>See config in <code>web/lib/build.mjs</code> for an example usage.</p>
 <h3 id="babel--typescript"><a class="header" href="#babel--typescript">Babel &amp; TypeScript</a></h3>
 <p>Babel and TypeScript both can produce ESM modules, but they <strong>fail with transforming references within the source code</strong>
-like <code>new URL(&quot;./multithreaded-pool.worker.ts&quot;, import.meta.url)</code>. There exist some Babel plugins, but none of them is stable.
+like <code>new URL("./multithreaded-pool.worker.ts", import.meta.url)</code>. There exist some Babel plugins, but none of them is stable.
 Therefore, we actually need a proper bundler which supports outputting ESM modules.
 The only stable solution to this is Parcel. Parcel also has good documentation around the bundling of WebWorkers.</p>
 <h3 id="webpack"><a class="header" href="#webpack">WebPack</a></h3>
@@ -4176,23 +4176,23 @@ for WebPack makes including Cargo projects easy.</p>
 </ul>
 <p>Example scripts for <code>package.json</code>:</p>
 <pre><code class="language-json">{
-  &quot;scripts&quot;: {
-    &quot;webpack&quot;: &quot;webpack --mode=development&quot;,
-    &quot;webpack-webgl&quot;: &quot;npm run build -- --env webgl&quot;,
-    &quot;webpack-production&quot;: &quot;webpack --mode=production&quot;,
-    &quot;webpack-webgl-production&quot;: &quot;npm run production-build -- --env webgl&quot;
+  "scripts": {
+    "webpack": "webpack --mode=development",
+    "webpack-webgl": "npm run build -- --env webgl",
+    "webpack-production": "webpack --mode=production",
+    "webpack-webgl-production": "npm run production-build -- --env webgl"
   }
 }
 </code></pre>
 <p>Example config:</p>
-<pre><code class="language-js">const path = require(&quot;path&quot;);
-const webpack = require(&quot;webpack&quot;);
-const WasmPackPlugin = require(&quot;@wasm-tool/wasm-pack-plugin&quot;);
+<pre><code class="language-js">const path = require("path");
+const webpack = require("webpack");
+const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 let dist = path.join(__dirname, 'dist/maplibre-rs');
 module.exports = (env) =&gt; ({
-    mode: &quot;development&quot;,
-    entry: &quot;./src/index.ts&quot;,
+    mode: "development",
+    entry: "./src/index.ts",
     experiments: {
         syncWebAssembly: true,
     },
@@ -4202,7 +4202,7 @@ module.exports = (env) =&gt; ({
     },
     output: {
         path: dist,
-        filename: &quot;maplibre-rs.js&quot;,
+        filename: "maplibre-rs.js",
         library: {
             name: 'maplibre_rs',
             type: 'umd',
@@ -4244,14 +4244,14 @@ module.exports = (env) =&gt; ({
             // Optional array of absolute paths to directories, changes to which
             // will trigger the build.
             // watchDirectories: [
-            //   path.resolve(__dirname, &quot;another-crate/src&quot;)
+            //   path.resolve(__dirname, "another-crate/src")
             // ],
 
             // The same as the `--out-dir` option for `wasm-pack`
             outDir: path.resolve(__dirname, 'src/wasm-pack'),
 
             // The same as the `--out-name` option for `wasm-pack`
-            // outName: &quot;index&quot;,
+            // outName: "index",
 
             // If defined, `forceWatch` will force activate/deactivate watch mode for
             // `.rs` files.
@@ -4266,7 +4266,7 @@ module.exports = (env) =&gt; ({
             //
             // the mode `development` makes `wasm-pack` build in `debug` mode.
             // the mode `production` makes `wasm-pack` build in `release` mode.
-            // forceMode: &quot;production&quot;,
+            // forceMode: "production",
 
             // Controls plugin output verbosity, either 'info' or 'error'.
             // Defaults to 'info'.
@@ -4280,38 +4280,38 @@ module.exports = (env) =&gt; ({
 bundlers documentations around this feature is missing. In the latest Parcel version inlining WebWorkers is not working.</p>
 <ul>
 <li>CJS: The Parcel bundler translates to <code>new URL('index_bg.wasm', import.meta.url);</code>
-to <code>new URL(&quot;index_bg.wasm&quot;, &quot;file:&quot; + __filename);</code>
+to <code>new URL("index_bg.wasm", "file:" + __filename);</code>
 While depending on <code>file:</code> and <code>filename</code> works for NodeJS, it is unsupported in the browser.</li>
 </ul>
 <p>Example scripts for <code>package.json</code>:</p>
 <pre><code class="language-json">{
-  &quot;scripts&quot;: {
-    &quot;parcel&quot;: &quot;npm run clean &amp;&amp; npm run wasm-pack &amp;&amp; WEBGL=false parcel build --no-cache src/index.ts&quot;,
-    &quot;parcel-webgl&quot;: &quot;npm run clean &amp;&amp; FEATURES=web-webgl npm run wasm-pack &amp;&amp; WEBGL=true parcel build --no-cache src/index.ts&quot;
+  "scripts": {
+    "parcel": "npm run clean &amp;&amp; npm run wasm-pack &amp;&amp; WEBGL=false parcel build --no-cache src/index.ts",
+    "parcel-webgl": "npm run clean &amp;&amp; FEATURES=web-webgl npm run wasm-pack &amp;&amp; WEBGL=true parcel build --no-cache src/index.ts"
   }
 }
 </code></pre>
 <p>Example config in `package.json:</p>
 <pre><code class="language-json">{
-  &quot;module&quot;: &quot;dist/parcel-esm/module.js&quot;,
-  &quot;main&quot;: &quot;dist/parcel-cjs/main.js&quot;,
-  &quot;types&quot;: &quot;dist/parcel/types.d.ts&quot;,
-  &quot;targets&quot;: {
-    &quot;main&quot;: {
-      &quot;distDir&quot;: &quot;./dist/parcel-cjs&quot;,
-      &quot;context&quot;: &quot;browser&quot;,
-      &quot;outputFormat&quot;: &quot;commonjs&quot;
+  "module": "dist/parcel-esm/module.js",
+  "main": "dist/parcel-cjs/main.js",
+  "types": "dist/parcel/types.d.ts",
+  "targets": {
+    "main": {
+      "distDir": "./dist/parcel-cjs",
+      "context": "browser",
+      "outputFormat": "commonjs"
     },
-    &quot;module&quot;: {
-      &quot;distDir&quot;: &quot;./dist/parcel-esm&quot;,
-      &quot;context&quot;: &quot;browser&quot;,
-      &quot;outputFormat&quot;: &quot;esmodule&quot;
+    "module": {
+      "distDir": "./dist/parcel-esm",
+      "context": "browser",
+      "outputFormat": "esmodule"
     }
   },
-  &quot;@parcel/transformer-js&quot;: {
-    &quot;inlineFS&quot;: false,
-    &quot;inlineEnvironment&quot;: [
-      &quot;WEBGL&quot;
+  "@parcel/transformer-js": {
+    "inlineFS": false,
+    "inlineEnvironment": [
+      "WEBGL"
     ]
   }
 }
@@ -4352,7 +4352,7 @@ While depending on <code>file:</code> and <code>filename</code> works for NodeJS
 <li>Very simple text rendering</li>
 <li>Cache tessellation results
 <ul>
-<li>We have three &quot;caches&quot;: downloaded tiles, tessellated tiles, gpu tiles</li>
+<li>We have three "caches": downloaded tiles, tessellated tiles, gpu tiles</li>
 </ul>
 </li>
 <li>Handle missing tiles</li>
@@ -4392,7 +4392,7 @@ Because the data is probably not available this is a very hard challenge.</p>
 <ul>
 <li><a href="https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection">Google Maps Projection</a></li>
 <li><a href="https://gist.github.com/maptiler/fddb5ce33ba995d5523de9afdf8ef118">Grid Calculation Examples</a></li>
-<li><a href="https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames">Slippy map tilenames</a> (also known as XYZ) </li>
+<li><a href="https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames">Slippy map tilenames</a> (also known as XYZ)</li>
 <li><a href="https://wiki.osgeo.org/wiki/Tile_Map_Service_Specification#TileMap_Diagram">TMS</a></li>
 <li><a href="https://www.mapbox.com/blog/adaptive-projections">Mapbox Adaptive Projections</a></li>
 <li><a href="https://docs.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system">Bing Map Tile System</a></li>
@@ -4508,7 +4508,7 @@ Because the data is probably not available this is a very hard challenge.</p>
 <li>maplibre-rs Issue: N/A</li>
 </ul>
 <h1 id="summary"><a class="header" href="#summary">Summary</a></h1>
-<p>The &quot;RFC&quot; (request for comments) process is intended to provide a
+<p>The "RFC" (request for comments) process is intended to provide a
 consistent and controlled path for new features to enter the map renderer
 and standard libraries, so that all stakeholders can be confident about
 the direction the map renderer is evolving in.</p>
@@ -4525,12 +4525,12 @@ followed consistently to introduce features to maplibre-rs.</p>
 <h1 id="detailed-design"><a class="header" href="#detailed-design">Detailed design</a></h1>
 <p>Many changes, including bug fixes and documentation improvements can be
 implemented and reviewed via the normal GitHub pull request workflow.</p>
-<p>Some changes though are &quot;substantial&quot;, and we ask that these be put
+<p>Some changes though are "substantial", and we ask that these be put
 through a bit of a design process and produce a consensus among the maplibre-rs
 community.</p>
 <h2 id="when-you-need-to-follow-this-process"><a class="header" href="#when-you-need-to-follow-this-process">When you need to follow this process</a></h2>
-<p>You need to follow this process if you intend to make &quot;substantial&quot;
-changes to the maplibre-rs distribution. What constitutes a &quot;substantial&quot;
+<p>You need to follow this process if you intend to make "substantial"
+changes to the maplibre-rs distribution. What constitutes a "substantial"
 change is evolving based on community norms, but may include the following.</p>
 <ul>
 <li>Any semantic or syntactic change to the map renderer that is not a bugfix.</li>
@@ -4538,8 +4538,8 @@ change is evolving based on community norms, but may include the following.</p>
 </ul>
 <p>Some changes do not require an RFC:</p>
 <ul>
-<li>Rephrasing, reorganizing, refactoring, or otherwise &quot;changing shape
-does not change meaning&quot;.</li>
+<li>Rephrasing, reorganizing, refactoring, or otherwise "changing shape
+does not change meaning".</li>
 <li>Additions that strictly improve objective, numerical quality
 criteria (warning removal, speedup, better platform coverage, more
 parallelism, trap more errors, etc.)</li>
@@ -4597,7 +4597,7 @@ designed to improve over the informal process in the following ways:</p>
 <li>Give confidence to those with a stake in maplibre-rs development that they
 understand why new features are being merged</li>
 </ul>
-<p>As an alternative, we could adopt an even stricter RFC process than the one proposed here. 
+<p>As an alternative, we could adopt an even stricter RFC process than the one proposed here.
 If desired, we should likely look to Python's <a href="http://legacy.python.org/dev/peps/pep-0001/">PEP</a> process for inspiration.</p>
 <h1 id="unresolved-questions"><a class="header" href="#unresolved-questions">Unresolved questions</a></h1>
 <ol>
@@ -4676,7 +4676,7 @@ way. Try to use this section as a tool to more fully consider all possible
 interactions with the project and renderer in your proposal.
 Also consider how this all fits into the roadmap for the project
 and of the relevant sub-team.</p>
-<p>This is also a good place to &quot;dump ideas&quot;, if they are out of scope for the
+<p>This is also a good place to "dump ideas", if they are out of scope for the
 RFC you are writing but otherwise related.</p>
 <p>If you have tried and cannot think of any future possibilities,
 you may simply state that you cannot think of anything.</p>
@@ -4690,7 +4690,7 @@ The section merely provides additional information.</p>
 <li>maplibre-rs Issue: N/A</li>
 </ul>
 <h1 id="summary-2"><a class="header" href="#summary-2">Summary</a></h1>
-<p>The &quot;RFC&quot; (request for comments) process is intended to provide a
+<p>The "RFC" (request for comments) process is intended to provide a
 consistent and controlled path for new features to enter the map renderer
 and standard libraries, so that all stakeholders can be confident about
 the direction the map renderer is evolving in.</p>
@@ -4707,12 +4707,12 @@ followed consistently to introduce features to maplibre-rs.</p>
 <h1 id="detailed-design-1"><a class="header" href="#detailed-design-1">Detailed design</a></h1>
 <p>Many changes, including bug fixes and documentation improvements can be
 implemented and reviewed via the normal GitHub pull request workflow.</p>
-<p>Some changes though are &quot;substantial&quot;, and we ask that these be put
+<p>Some changes though are "substantial", and we ask that these be put
 through a bit of a design process and produce a consensus among the maplibre-rs
 community.</p>
 <h2 id="when-you-need-to-follow-this-process-1"><a class="header" href="#when-you-need-to-follow-this-process-1">When you need to follow this process</a></h2>
-<p>You need to follow this process if you intend to make &quot;substantial&quot;
-changes to the maplibre-rs distribution. What constitutes a &quot;substantial&quot;
+<p>You need to follow this process if you intend to make "substantial"
+changes to the maplibre-rs distribution. What constitutes a "substantial"
 change is evolving based on community norms, but may include the following.</p>
 <ul>
 <li>Any semantic or syntactic change to the map renderer that is not a bugfix.</li>
@@ -4720,8 +4720,8 @@ change is evolving based on community norms, but may include the following.</p>
 </ul>
 <p>Some changes do not require an RFC:</p>
 <ul>
-<li>Rephrasing, reorganizing, refactoring, or otherwise &quot;changing shape
-does not change meaning&quot;.</li>
+<li>Rephrasing, reorganizing, refactoring, or otherwise "changing shape
+does not change meaning".</li>
 <li>Additions that strictly improve objective, numerical quality
 criteria (warning removal, speedup, better platform coverage, more
 parallelism, trap more errors, etc.)</li>
@@ -4779,7 +4779,7 @@ designed to improve over the informal process in the following ways:</p>
 <li>Give confidence to those with a stake in maplibre-rs development that they
 understand why new features are being merged</li>
 </ul>
-<p>As an alternative, we could adopt an even stricter RFC process than the one proposed here. 
+<p>As an alternative, we could adopt an even stricter RFC process than the one proposed here.
 If desired, we should likely look to Python's <a href="http://legacy.python.org/dev/peps/pep-0001/">PEP</a> process for inspiration.</p>
 <h1 id="unresolved-questions-2"><a class="header" href="#unresolved-questions-2">Unresolved questions</a></h1>
 <ol>

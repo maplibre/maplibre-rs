@@ -181,7 +181,7 @@
 <p>The ESM module format is the standard nowadays which should be followed. If a JS bundler encounters an ESM
 module it can resolve WebAssembly files or WebWorkers dynamically.
 The following syntax is used to resolve referenced WebWorkers:</p>
-<pre><code class="language-ts">new Worker(new URL(&quot;./multithreaded-pool.worker.ts&quot;, import.meta.url), {
+<pre><code class="language-ts">new Worker(new URL("./multithreaded-pool.worker.ts", import.meta.url), {
     type: 'module'
 });
 </code></pre>
@@ -190,7 +190,7 @@ The following syntax is used to resolve referenced WebWorkers:</p>
 </code></pre>
 <h3 id="iife-immediately-invoked-function-expression"><a class="header" href="#iife-immediately-invoked-function-expression">IIFE (immediately-invoked function expression)</a></h3>
 <blockquote>
-<p>This format is used when including maplibre-rs in a <code>&lt;script&gt;</code> tag. The library is &quot;written&quot; onto the window/global
+<p>This format is used when including maplibre-rs in a <code>&lt;script&gt;</code> tag. The library is "written" onto the window/global
 object. This allows quick prototyping/playgrounds/experiments using maplibre-rs.</p>
 </blockquote>
 <p>In order to support this we need to create a bundle which works on any modern browser. Additionally, a WASM file and
@@ -200,7 +200,7 @@ these libraries have to specify where WASM or non-inlined WebWorkers are located
 <h3 id="umd"><a class="header" href="#umd">UMD</a></h3>
 <blockquote>
 <p>UMD modules are needed when creating a library which should run in Node as well as browsers. This is not a use case
-for maplibre-rs. If we support node, then we probably would ship a separate package called &quot;maplibre-rs-node&quot; which
+for maplibre-rs. If we support node, then we probably would ship a separate package called "maplibre-rs-node" which
 bundles to CJS directly.</p>
 </blockquote>
 <h3 id="cjscommonjs"><a class="header" href="#cjscommonjs">CJS/CommonJS</a></h3>
@@ -256,14 +256,14 @@ all other bundlers.</p>
 <ul>
 <li>IIFI: The esbuild bundler translates to <code>new URL('index_bg.wasm', import.meta.url);</code> to
 <pre><code class="language-js">var __currentScriptUrl__ = document.currentScript &amp;&amp; document.currentScript.src || document.baseURI;
-new URL(&quot;./assets/index_bg.wasm?emit=file&quot;, __currentScriptUrl__);
+new URL("./assets/index_bg.wasm?emit=file", __currentScriptUrl__);
 </code></pre>
 </li>
 </ul>
 <p>See config in <code>web/lib/build.mjs</code> for an example usage.</p>
 <h3 id="babel--typescript"><a class="header" href="#babel--typescript">Babel &amp; TypeScript</a></h3>
 <p>Babel and TypeScript both can produce ESM modules, but they <strong>fail with transforming references within the source code</strong>
-like <code>new URL(&quot;./multithreaded-pool.worker.ts&quot;, import.meta.url)</code>. There exist some Babel plugins, but none of them is stable.
+like <code>new URL("./multithreaded-pool.worker.ts", import.meta.url)</code>. There exist some Babel plugins, but none of them is stable.
 Therefore, we actually need a proper bundler which supports outputting ESM modules.
 The only stable solution to this is Parcel. Parcel also has good documentation around the bundling of WebWorkers.</p>
 <h3 id="webpack"><a class="header" href="#webpack">WebPack</a></h3>
@@ -276,23 +276,23 @@ for WebPack makes including Cargo projects easy.</p>
 </ul>
 <p>Example scripts for <code>package.json</code>:</p>
 <pre><code class="language-json">{
-  &quot;scripts&quot;: {
-    &quot;webpack&quot;: &quot;webpack --mode=development&quot;,
-    &quot;webpack-webgl&quot;: &quot;npm run build -- --env webgl&quot;,
-    &quot;webpack-production&quot;: &quot;webpack --mode=production&quot;,
-    &quot;webpack-webgl-production&quot;: &quot;npm run production-build -- --env webgl&quot;
+  "scripts": {
+    "webpack": "webpack --mode=development",
+    "webpack-webgl": "npm run build -- --env webgl",
+    "webpack-production": "webpack --mode=production",
+    "webpack-webgl-production": "npm run production-build -- --env webgl"
   }
 }
 </code></pre>
 <p>Example config:</p>
-<pre><code class="language-js">const path = require(&quot;path&quot;);
-const webpack = require(&quot;webpack&quot;);
-const WasmPackPlugin = require(&quot;@wasm-tool/wasm-pack-plugin&quot;);
+<pre><code class="language-js">const path = require("path");
+const webpack = require("webpack");
+const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 let dist = path.join(__dirname, 'dist/maplibre-rs');
 module.exports = (env) =&gt; ({
-    mode: &quot;development&quot;,
-    entry: &quot;./src/index.ts&quot;,
+    mode: "development",
+    entry: "./src/index.ts",
     experiments: {
         syncWebAssembly: true,
     },
@@ -302,7 +302,7 @@ module.exports = (env) =&gt; ({
     },
     output: {
         path: dist,
-        filename: &quot;maplibre-rs.js&quot;,
+        filename: "maplibre-rs.js",
         library: {
             name: 'maplibre_rs',
             type: 'umd',
@@ -344,14 +344,14 @@ module.exports = (env) =&gt; ({
             // Optional array of absolute paths to directories, changes to which
             // will trigger the build.
             // watchDirectories: [
-            //   path.resolve(__dirname, &quot;another-crate/src&quot;)
+            //   path.resolve(__dirname, "another-crate/src")
             // ],
 
             // The same as the `--out-dir` option for `wasm-pack`
             outDir: path.resolve(__dirname, 'src/wasm-pack'),
 
             // The same as the `--out-name` option for `wasm-pack`
-            // outName: &quot;index&quot;,
+            // outName: "index",
 
             // If defined, `forceWatch` will force activate/deactivate watch mode for
             // `.rs` files.
@@ -366,7 +366,7 @@ module.exports = (env) =&gt; ({
             //
             // the mode `development` makes `wasm-pack` build in `debug` mode.
             // the mode `production` makes `wasm-pack` build in `release` mode.
-            // forceMode: &quot;production&quot;,
+            // forceMode: "production",
 
             // Controls plugin output verbosity, either 'info' or 'error'.
             // Defaults to 'info'.
@@ -380,38 +380,38 @@ module.exports = (env) =&gt; ({
 bundlers documentations around this feature is missing. In the latest Parcel version inlining WebWorkers is not working.</p>
 <ul>
 <li>CJS: The Parcel bundler translates to <code>new URL('index_bg.wasm', import.meta.url);</code>
-to <code>new URL(&quot;index_bg.wasm&quot;, &quot;file:&quot; + __filename);</code>
+to <code>new URL("index_bg.wasm", "file:" + __filename);</code>
 While depending on <code>file:</code> and <code>filename</code> works for NodeJS, it is unsupported in the browser.</li>
 </ul>
 <p>Example scripts for <code>package.json</code>:</p>
 <pre><code class="language-json">{
-  &quot;scripts&quot;: {
-    &quot;parcel&quot;: &quot;npm run clean &amp;&amp; npm run wasm-pack &amp;&amp; WEBGL=false parcel build --no-cache src/index.ts&quot;,
-    &quot;parcel-webgl&quot;: &quot;npm run clean &amp;&amp; FEATURES=web-webgl npm run wasm-pack &amp;&amp; WEBGL=true parcel build --no-cache src/index.ts&quot;
+  "scripts": {
+    "parcel": "npm run clean &amp;&amp; npm run wasm-pack &amp;&amp; WEBGL=false parcel build --no-cache src/index.ts",
+    "parcel-webgl": "npm run clean &amp;&amp; FEATURES=web-webgl npm run wasm-pack &amp;&amp; WEBGL=true parcel build --no-cache src/index.ts"
   }
 }
 </code></pre>
 <p>Example config in `package.json:</p>
 <pre><code class="language-json">{
-  &quot;module&quot;: &quot;dist/parcel-esm/module.js&quot;,
-  &quot;main&quot;: &quot;dist/parcel-cjs/main.js&quot;,
-  &quot;types&quot;: &quot;dist/parcel/types.d.ts&quot;,
-  &quot;targets&quot;: {
-    &quot;main&quot;: {
-      &quot;distDir&quot;: &quot;./dist/parcel-cjs&quot;,
-      &quot;context&quot;: &quot;browser&quot;,
-      &quot;outputFormat&quot;: &quot;commonjs&quot;
+  "module": "dist/parcel-esm/module.js",
+  "main": "dist/parcel-cjs/main.js",
+  "types": "dist/parcel/types.d.ts",
+  "targets": {
+    "main": {
+      "distDir": "./dist/parcel-cjs",
+      "context": "browser",
+      "outputFormat": "commonjs"
     },
-    &quot;module&quot;: {
-      &quot;distDir&quot;: &quot;./dist/parcel-esm&quot;,
-      &quot;context&quot;: &quot;browser&quot;,
-      &quot;outputFormat&quot;: &quot;esmodule&quot;
+    "module": {
+      "distDir": "./dist/parcel-esm",
+      "context": "browser",
+      "outputFormat": "esmodule"
     }
   },
-  &quot;@parcel/transformer-js&quot;: {
-    &quot;inlineFS&quot;: false,
-    &quot;inlineEnvironment&quot;: [
-      &quot;WEBGL&quot;
+  "@parcel/transformer-js": {
+    "inlineFS": false,
+    "inlineEnvironment": [
+      "WEBGL"
     ]
   }
 }
