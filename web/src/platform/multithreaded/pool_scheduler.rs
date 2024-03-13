@@ -1,7 +1,7 @@
 use std::future::Future;
 
 use maplibre::{benchmarking::io::scheduler::ScheduleError, io::scheduler::Scheduler};
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::prelude::*;
 use web_sys::Worker;
 
 use super::pool::WorkerPool;
