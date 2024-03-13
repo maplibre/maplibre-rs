@@ -5,4 +5,4 @@
 # The version is set here instead of using stable, so we can make sure that a predictable version is used.
 #
 # Keep this in sync with `justfile` and `Cargo.toml`
-channel = "1.73"
+channel = "1.76"

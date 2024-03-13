@@ -21,11 +21,6 @@ pub mod scheduler {
     pub use super::noweb::scheduler::*;
 }
 
-pub mod trace {
-    #[cfg(not(target_arch = "wasm32"))]
-    pub use super::noweb::trace::*;
-}
-
 /// Minimum WebGPU buffer size
 ///
 /// FIXME: This limit is enforced by WebGL. Actually this makes sense!
