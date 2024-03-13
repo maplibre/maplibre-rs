@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/coords.rs`."><title>coords.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../maplibre/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/coords.rs`."><title>coords.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -846,7 +847,7 @@
 <span class="kw">pub const </span>TILE_SIZE: f64 = <span class="number">512.0</span>;
 <span class="kw">pub const </span>MAX_ZOOM: usize = <span class="number">32</span>;
 
-<span class="comment">// FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn&#39;t fit in u32 or i32
+<span class="comment">// FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn't fit in u32 or i32
 // Bounds are generated 0..=31
 </span><span class="kw">pub const </span>ZOOM_BOUNDS: [u32; MAX_ZOOM] = create_zoom_bounds::&lt;MAX_ZOOM&gt;();
 
@@ -880,12 +881,12 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Quadkey {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="kw">let </span>key = <span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">let </span>ZoomLevel(level) = key[<span class="number">0</span>];
         <span class="kw">let </span>len = level <span class="kw">as </span>usize;
         <span class="kw">for </span>part <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>..len] {
-            <span class="macro">write!</span>(f, <span class="string">&quot;{part:?}&quot;</span>)<span class="question-mark">?</span>;
+            <span class="macro">write!</span>(f, <span class="string">"{part:?}"</span>)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -923,7 +924,7 @@
     <span class="kw">type </span>Output = ZoomLevel;
 
     <span class="kw">fn </span>add(<span class="self">self</span>, rhs: u8) -&gt; <span class="self">Self</span>::Output {
-        <span class="kw">let </span>zoom_level = <span class="self">self</span>.<span class="number">0</span>.checked_add(rhs).expect(<span class="string">&quot;zoom level overflowed&quot;</span>);
+        <span class="kw">let </span>zoom_level = <span class="self">self</span>.<span class="number">0</span>.checked_add(rhs).expect(<span class="string">"zoom level overflowed"</span>);
         ZoomLevel(zoom_level)
     }
 }
@@ -932,14 +933,14 @@
     <span class="kw">type </span>Output = ZoomLevel;
 
     <span class="kw">fn </span>sub(<span class="self">self</span>, rhs: u8) -&gt; <span class="self">Self</span>::Output {
-        <span class="kw">let </span>zoom_level = <span class="self">self</span>.<span class="number">0</span>.checked_sub(rhs).expect(<span class="string">&quot;zoom level underflowed&quot;</span>);
+        <span class="kw">let </span>zoom_level = <span class="self">self</span>.<span class="number">0</span>.checked_sub(rhs).expect(<span class="string">"zoom level underflowed"</span>);
         ZoomLevel(zoom_level)
     }
 }
 
 <span class="kw">impl </span>Display <span class="kw">for </span>ZoomLevel {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
@@ -971,7 +972,7 @@
 
     <span class="doccomment">/// Approximate radius of the earth in meters.
     /// Uses the WGS-84 approximation. The radius at the equator is ~6378137 and at the poles is ~6356752. https://en.wikipedia.org/wiki/World_Geodetic_System#WGS84
-    /// 6371008.8 is one published &quot;average radius&quot; see https://en.wikipedia.org/wiki/Earth_radius#Mean_radius, or ftp://athena.fsv.cvut.cz/ZFG/grs80-Moritz.pdf p.4
+    /// 6371008.8 is one published "average radius" see https://en.wikipedia.org/wiki/Earth_radius#Mean_radius, or ftp://athena.fsv.cvut.cz/ZFG/grs80-Moritz.pdf p.4
     </span><span class="kw">const </span>EARTH_RADIUS: f64 = <span class="number">6371008.8</span>;
 
     <span class="doccomment">/// The average circumference of the world in meters.
@@ -1006,8 +1007,8 @@
 }
 
 <span class="kw">impl </span>Display <span class="kw">for </span>LatLon {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;{},{}&quot;</span>, <span class="self">self</span>.latitude, <span class="self">self</span>.longitude)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"{},{}"</span>, <span class="self">self</span>.latitude, <span class="self">self</span>.longitude)
     }
 }
 
@@ -1035,8 +1036,8 @@
 }
 
 <span class="kw">impl </span>Display <span class="kw">for </span>Zoom {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, (<span class="self">self</span>.<span class="number">0 </span>* <span class="number">100.0</span>).round() / <span class="number">100.0</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, (<span class="self">self</span>.<span class="number">0 </span>* <span class="number">100.0</span>).round() / <span class="number">100.0</span>)
     }
 }
 
@@ -1127,7 +1128,7 @@
     /// The [`TileCoords`] `T(x=5,y=5,z=0)` exceeds its bounds because there is no tile
     /// `x=5,y=5` at zoom level `z=0`.
     </span><span class="kw">pub fn </span>into_world_tile(<span class="self">self</span>, scheme: TileAddressingScheme) -&gt; <span class="prelude-ty">Option</span>&lt;WorldTileCoords&gt; {
-        <span class="comment">// FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn&#39;t fit in u32 or i32
+        <span class="comment">// FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn't fit in u32 or i32
         // Note that unlike WorldTileCoords, values are signed (no idea why)
         </span><span class="kw">let </span>bounds = ZOOM_BOUNDS[<span class="self">self</span>.z.<span class="number">0 </span><span class="kw">as </span>usize] <span class="kw">as </span>i32;
         <span class="kw">let </span>x = <span class="self">self</span>.x <span class="kw">as </span>i32;
@@ -1196,7 +1197,7 @@
     /// The [`WorldTileCoords`] `WT(x=5,y=5,z=0)` exceeds its bounds because there is no tile
     /// `x=5,y=5` at zoom level `z=0`.
     </span><span class="kw">pub fn </span>into_tile(<span class="self">self</span>, scheme: TileAddressingScheme) -&gt; <span class="prelude-ty">Option</span>&lt;TileCoords&gt; {
-        <span class="comment">// FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn&#39;t fit in u32 or i32
+        <span class="comment">// FIXME: MAX_ZOOM is 32, which means max bound is 2^32, which wouldn't fit in u32 or i32
         </span><span class="kw">let </span>bounds = ZOOM_BOUNDS[<span class="self">self</span>.z.<span class="number">0 </span><span class="kw">as </span>usize];
         <span class="kw">let </span>x = <span class="self">self</span>.x <span class="kw">as </span>u32;
         <span class="kw">let </span>y = <span class="self">self</span>.y <span class="kw">as </span>u32;
@@ -1502,7 +1503,7 @@
             &amp;&amp; world_coords.z == <span class="self">self</span>.zoom_level
     }
 
-    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = WorldTileCoords&gt; + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = WorldTileCoords&gt; + <span class="lifetime">'_ </span>{
         (<span class="self">self</span>.min_tile.x - <span class="self">self</span>.padding..<span class="self">self</span>.max_tile.x + <span class="number">1 </span>+ <span class="self">self</span>.padding)
             .flat_map(<span class="kw">move </span>|x| {
                 (<span class="self">self</span>.min_tile.y - <span class="self">self</span>.padding..<span class="self">self</span>.max_tile.y + <span class="number">1 </span>+ <span class="self">self</span>.padding).map(<span class="kw">move </span>|y| {
@@ -1515,10 +1516,10 @@
 }
 
 <span class="kw">impl </span>Display <span class="kw">for </span>TileCoords {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(
             f,
-            <span class="string">&quot;T(x={x},y={y},z={z})&quot;</span>,
+            <span class="string">"T(x={x},y={y},z={z})"</span>,
             x = <span class="self">self</span>.x,
             y = <span class="self">self</span>.y,
             z = <span class="self">self</span>.z
@@ -1527,10 +1528,10 @@
 }
 
 <span class="kw">impl </span>Display <span class="kw">for </span>WorldTileCoords {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="macro">write!</span>(
             f,
-            <span class="string">&quot;WT(x={x},y={y},z={z})&quot;</span>,
+            <span class="string">"WT(x={x},y={y},z={z})"</span>,
             x = <span class="self">self</span>.x,
             y = <span class="self">self</span>.y,
             z = <span class="self">self</span>.z
@@ -1538,8 +1539,8 @@
     }
 }
 <span class="kw">impl </span>Display <span class="kw">for </span>WorldCoords {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;W(x={x},y={y})&quot;</span>, x = <span class="self">self</span>.x, y = <span class="self">self</span>.y,)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"W(x={x},y={y})"</span>, x = <span class="self">self</span>.x, y = <span class="self">self</span>.y,)
     }
 }
 
@@ -1563,7 +1564,7 @@
         <span class="kw">let </span>tile = WorldTileCoords::from(tile);
         <span class="kw">let </span>p1 = tile.transform_for_zoom(zoom) * TOP_LEFT;
         <span class="kw">let </span>p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT;
-        <span class="macro">println!</span>(<span class="string">&quot;{p1:?}\n{p2:?}&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"{p1:?}\n{p2:?}"</span>);
 
         <span class="macro">assert_eq!</span>(
             WorldCoords::from((p1.x, p1.y))
@@ -1638,7 +1639,7 @@
         )
         .iter()
         {
-            <span class="macro">println!</span>(<span class="string">&quot;{tile_coords}&quot;</span>);
+            <span class="macro">println!</span>(<span class="string">"{tile_coords}"</span>);
         }
     }
 }

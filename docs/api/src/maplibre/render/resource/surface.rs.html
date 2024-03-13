@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/resource/surface.rs`."><title>surface.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/resource/surface.rs`."><title>surface.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -463,19 +464,19 @@
     buffer_dimensions: BufferDimensions,
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;headless&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"headless"</span>)]
 #[derive(thiserror::Error, Debug)]
 </span><span class="kw">pub enum </span>WriteImageError {
-    <span class="attr">#[error(<span class="string">&quot;error while rendering to image&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"error while rendering to image"</span>)]
     </span>WriteImage(<span class="attr">#[from] </span>png::EncodingError),
-    <span class="attr">#[error(<span class="string">&quot;could not create file to save as an image&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"could not create file to save as an image"</span>)]
     </span>CreateImageFileFailed(<span class="attr">#[from] </span>std::io::Error),
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;headless&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"headless"</span>)]
 </span><span class="kw">impl </span>BufferedTextureHead {
     <span class="kw">pub fn </span>map_async(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; wgpu::BufferSlice {
-        <span class="comment">// Note that we&#39;re not calling `.await` here.
+        <span class="comment">// Note that we're not calling `.await` here.
         </span><span class="kw">let </span>buffer_slice = <span class="self">self</span>.output_buffer.slice(..);
         buffer_slice.map_async(wgpu::MapMode::Read, |<span class="kw">_</span>| ());
 
@@ -490,9 +491,9 @@
         <span class="self">self</span>.output_buffer.unmap();
     }
 
-    <span class="kw">pub fn </span>write_png&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">pub fn </span>write_png&lt;<span class="lifetime">'a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        padded_buffer: <span class="kw-2">&amp;</span>wgpu::BufferView&lt;<span class="lifetime">&#39;a</span>&gt;,
+        padded_buffer: <span class="kw-2">&amp;</span>wgpu::BufferView&lt;<span class="lifetime">'a</span>&gt;,
         png_output_path: <span class="kw-2">&amp;</span>str,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), WriteImageError&gt; {
         <span class="kw">use </span>std::{fs::File, io::Write};
@@ -516,7 +517,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>copy_texture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::ImageCopyTexture&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">pub fn </span>copy_texture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::ImageCopyTexture&lt;<span class="lifetime">'_</span>&gt; {
         <span class="self">self</span>.texture.as_image_copy()
     }
 
@@ -552,16 +553,16 @@
         <span class="kw">let </span>size = window.size();
 
         <span class="kw">let </span>capabilities = surface.get_capabilities(adapter);
-        <span class="macro">log::info!</span>(<span class="string">&quot;adapter capabilities on surface: {capabilities:?}&quot;</span>);
+        <span class="macro">log::info!</span>(<span class="string">"adapter capabilities on surface: {capabilities:?}"</span>);
 
         <span class="kw">let </span>texture_format = settings
             .texture_format
             .or_else(|| capabilities.formats.first().cloned())
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
-        <span class="macro">log::info!</span>(<span class="string">&quot;format description: {texture_format:?}&quot;</span>);
+        <span class="macro">log::info!</span>(<span class="string">"format description: {texture_format:?}"</span>);
 
         <span class="kw">let </span>texture_format_features = adapter.get_texture_format_features(texture_format);
-        <span class="macro">log::info!</span>(<span class="string">&quot;format features: {texture_format_features:?}&quot;</span>);
+        <span class="macro">log::info!</span>(<span class="string">"format features: {texture_format_features:?}"</span>);
 
         <span class="self">Self </span>{
             size,
@@ -590,7 +591,7 @@
 
         <span class="comment">// The output buffer lets us retrieve the data as an array
         </span><span class="kw">let </span>output_buffer = device.create_buffer(<span class="kw-2">&amp;</span>wgpu::BufferDescriptor {
-            label: <span class="prelude-val">Some</span>(<span class="string">&quot;BufferedTextureHead buffer&quot;</span>),
+            label: <span class="prelude-val">Some</span>(<span class="string">"BufferedTextureHead buffer"</span>),
             size: (buffer_dimensions.padded_bytes_per_row * buffer_dimensions.height) <span class="kw">as </span>u64,
             usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: <span class="bool-val">false</span>,
@@ -602,7 +603,7 @@
             .unwrap_or(wgpu::TextureFormat::Rgba8Unorm);
 
         <span class="kw">let </span>texture_descriptor = wgpu::TextureDescriptor {
-            label: <span class="prelude-val">Some</span>(<span class="string">&quot;Surface texture&quot;</span>),
+            label: <span class="prelude-val">Some</span>(<span class="string">"Surface texture"</span>),
             size: wgpu::Extent3d {
                 width: size.width(),
                 height: size.height(),
@@ -635,7 +636,7 @@
         }
     }
 
-    <span class="attr">#[tracing::instrument(name = <span class="string">&quot;create_view&quot;</span>, skip_all)]
+    <span class="attr">#[tracing::instrument(name = <span class="string">"create_view"</span>, skip_all)]
     </span><span class="kw">pub fn </span>create_view(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; TextureView {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.head {
             Head::Headed(window) =&gt; {
@@ -643,13 +644,13 @@
                 <span class="kw">let </span>frame = <span class="kw">match </span>surface.get_current_texture() {
                     <span class="prelude-val">Ok</span>(view) =&gt; view,
                     <span class="prelude-val">Err</span>(wgpu::SurfaceError::Outdated) =&gt; {
-                        <span class="macro">log::warn!</span>(<span class="string">&quot;surface outdated&quot;</span>);
+                        <span class="macro">log::warn!</span>(<span class="string">"surface outdated"</span>);
                         window.configure(device);
                         surface
                             .get_current_texture()
-                            .expect(<span class="string">&quot;Error reconfiguring surface&quot;</span>)
+                            .expect(<span class="string">"Error reconfiguring surface"</span>)
                     }
-                    err =&gt; err.expect(<span class="string">&quot;Failed to acquire next swap chain texture!&quot;</span>),
+                    err =&gt; err.expect(<span class="string">"Failed to acquire next swap chain texture!"</span>),
                 };
                 frame.into()
             }
@@ -723,7 +724,7 @@
                 };
                 <span class="kw">let </span>is_supported = msaa.samples &lt;= max_sample_count;
                 <span class="kw">if </span>!is_supported {
-                    <span class="macro">log::debug!</span>(<span class="string">&quot;Multisampling is not supported on surface&quot;</span>);
+                    <span class="macro">log::debug!</span>(<span class="string">"Multisampling is not supported on surface"</span>);
                 }
                 is_supported
             }

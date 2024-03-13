@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/graph/graph.rs`."><title>graph.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../maplibre/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/graph/graph.rs`."><title>graph.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -811,15 +812,15 @@
 /// # }
 /// #
 /// let mut graph = RenderGraph::default();
-/// graph.add_node(&quot;input_node&quot;, MyNode);
-/// graph.add_node(&quot;output_node&quot;, MyNode);
-/// graph.add_node_edge(&quot;output_node&quot;, &quot;input_node&quot;).unwrap();
+/// graph.add_node("input_node", MyNode);
+/// graph.add_node("output_node", MyNode);
+/// graph.add_node_edge("output_node", "input_node").unwrap();
 /// ```
 </span><span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>RenderGraph {
     nodes: HashMap&lt;NodeId, NodeState&gt;,
-    node_names: HashMap&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;, NodeId&gt;,
-    sub_graphs: HashMap&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;, RenderGraph&gt;,
+    node_names: HashMap&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;, NodeId&gt;,
+    sub_graphs: HashMap&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;, RenderGraph&gt;,
     input_node: <span class="prelude-ty">Option</span>&lt;NodeId&gt;,
 
     current_id: usize,
@@ -827,7 +828,7 @@
 
 <span class="kw">impl </span>RenderGraph {
     <span class="doccomment">/// The name of the [`GraphInputNode`] of this graph. Used to connect other nodes to it.
-    </span><span class="kw">pub const </span>INPUT_NODE_NAME: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;GraphInputNode&quot;</span>;
+    </span><span class="kw">pub const </span>INPUT_NODE_NAME: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = <span class="string">"GraphInputNode"</span>;
 
     <span class="doccomment">/// Updates all nodes and sub graphs of the render graph. Should be called before executing it.
     </span><span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>RenderResources) {
@@ -842,9 +843,9 @@
 
     <span class="doccomment">/// Creates an [`GraphInputNode`] with the specified slots if not already present.
     </span><span class="kw">pub fn </span>set_input(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inputs: Vec&lt;SlotInfo&gt;) -&gt; NodeId {
-        <span class="macro">assert!</span>(<span class="self">self</span>.input_node.is_none(), <span class="string">&quot;Graph already has an input node&quot;</span>);
+        <span class="macro">assert!</span>(<span class="self">self</span>.input_node.is_none(), <span class="string">"Graph already has an input node"</span>);
 
-        <span class="kw">let </span>id = <span class="self">self</span>.add_node(<span class="string">&quot;GraphInputNode&quot;</span>, GraphInputNode { inputs });
+        <span class="kw">let </span>id = <span class="self">self</span>.add_node(<span class="string">"GraphInputNode"</span>, GraphInputNode { inputs });
         <span class="self">self</span>.input_node = <span class="prelude-val">Some</span>(id);
         id
     }
@@ -857,7 +858,7 @@
 
     <span class="doccomment">/// Adds the `node` with the `name` to the graph.
     /// If the name is already present replaces it instead.
-    </span><span class="kw">pub fn </span>add_node&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;, node: T) -&gt; NodeId
+    </span><span class="kw">pub fn </span>add_node&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;, node: T) -&gt; NodeId
     <span class="kw">where
         </span>T: Node,
     {
@@ -875,13 +876,13 @@
     /// If the name is does not exist, nothing happens.
     </span><span class="kw">pub fn </span>remove_node(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+        name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderGraphError&gt; {
         <span class="kw">let </span>name = name.into();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.node_names.remove(<span class="kw-2">&amp;</span>name) {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(node_state) = <span class="self">self</span>.nodes.remove(<span class="kw-2">&amp;</span>id) {
-                <span class="comment">// Remove all edges from other nodes to this one. Note that as we&#39;re removing this
-                // node, we don&#39;t need to remove its input edges
+                <span class="comment">// Remove all edges from other nodes to this one. Note that as we're removing this
+                // node, we don't need to remove its input edges
                 </span><span class="kw">for </span>input_edge <span class="kw">in </span>node_state.edges.input_edges().iter() {
                     <span class="kw">match </span>input_edge {
                         Edge::SlotEdge {
@@ -904,8 +905,8 @@
                         }
                     }
                 }
-                <span class="comment">// Remove all edges from this node to other nodes. Note that as we&#39;re removing this
-                // node, we don&#39;t need to remove its output edges
+                <span class="comment">// Remove all edges from this node to other nodes. Note that as we're removing this
+                // node, we don't need to remove its output edges
                 </span><span class="kw">for </span>output_edge <span class="kw">in </span>node_state.edges.output_edges().iter() {
                     <span class="kw">match </span>output_edge {
                         Edge::SlotEdge {
@@ -1278,13 +1279,13 @@
 
     <span class="doccomment">/// Adds the `sub_graph` with the `name` to the graph.
     /// If the name is already present replaces it instead.
-    </span><span class="kw">pub fn </span>add_sub_graph(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;, sub_graph: RenderGraph) {
+    </span><span class="kw">pub fn </span>add_sub_graph(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;, sub_graph: RenderGraph) {
         <span class="self">self</span>.sub_graphs.insert(name.into(), sub_graph);
     }
 
     <span class="doccomment">/// Removes the `sub_graph` with the `name` from the graph.
     /// If the name does not exist then nothing happens.
-    </span><span class="kw">pub fn </span>remove_sub_graph(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;) {
+    </span><span class="kw">pub fn </span>remove_sub_graph(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw">impl </span>Into&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;) {
         <span class="self">self</span>.sub_graphs.remove(<span class="kw-2">&amp;</span>name.into());
     }
 
@@ -1300,11 +1301,11 @@
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>RenderGraph {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
         <span class="kw">for </span>node <span class="kw">in </span><span class="self">self</span>.iter_nodes() {
-            <span class="macro">writeln!</span>(f, <span class="string">&quot;{:?}&quot;</span>, node.id)<span class="question-mark">?</span>;
-            <span class="macro">writeln!</span>(f, <span class="string">&quot;  in: {:?}&quot;</span>, node.input_slots)<span class="question-mark">?</span>;
-            <span class="macro">writeln!</span>(f, <span class="string">&quot;  out: {:?}&quot;</span>, node.output_slots)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(f, <span class="string">"{:?}"</span>, node.id)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(f, <span class="string">"  in: {:?}"</span>, node.input_slots)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(f, <span class="string">"  out: {:?}"</span>, node.output_slots)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1367,10 +1368,10 @@
         <span class="kw">pub fn </span>new(inputs: usize, outputs: usize) -&gt; <span class="self">Self </span>{
             TestNode {
                 inputs: (<span class="number">0</span>..inputs)
-                    .map(|i| SlotInfo::new(<span class="macro">format!</span>(<span class="string">&quot;in_{i}&quot;</span>), SlotType::TextureView))
+                    .map(|i| SlotInfo::new(<span class="macro">format!</span>(<span class="string">"in_{i}"</span>), SlotType::TextureView))
                     .collect(),
                 outputs: (<span class="number">0</span>..outputs)
-                    .map(|i| SlotInfo::new(<span class="macro">format!</span>(<span class="string">&quot;out_{i}&quot;</span>), SlotType::TextureView))
+                    .map(|i| SlotInfo::new(<span class="macro">format!</span>(<span class="string">"out_{i}"</span>), SlotType::TextureView))
                     .collect(),
             }
         }
@@ -1399,16 +1400,16 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_graph_edges() {
         <span class="kw">let </span><span class="kw-2">mut </span>graph = RenderGraph::default();
-        <span class="kw">let </span>a_id = graph.add_node(<span class="string">&quot;A&quot;</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
-        <span class="kw">let </span>b_id = graph.add_node(<span class="string">&quot;B&quot;</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
-        <span class="kw">let </span>c_id = graph.add_node(<span class="string">&quot;C&quot;</span>, TestNode::new(<span class="number">1</span>, <span class="number">1</span>));
-        <span class="kw">let </span>d_id = graph.add_node(<span class="string">&quot;D&quot;</span>, TestNode::new(<span class="number">1</span>, <span class="number">0</span>));
+        <span class="kw">let </span>a_id = graph.add_node(<span class="string">"A"</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
+        <span class="kw">let </span>b_id = graph.add_node(<span class="string">"B"</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
+        <span class="kw">let </span>c_id = graph.add_node(<span class="string">"C"</span>, TestNode::new(<span class="number">1</span>, <span class="number">1</span>));
+        <span class="kw">let </span>d_id = graph.add_node(<span class="string">"D"</span>, TestNode::new(<span class="number">1</span>, <span class="number">0</span>));
 
-        graph.add_slot_edge(<span class="string">&quot;A&quot;</span>, <span class="string">&quot;out_0&quot;</span>, <span class="string">&quot;C&quot;</span>, <span class="string">&quot;in_0&quot;</span>).unwrap();
-        graph.add_node_edge(<span class="string">&quot;B&quot;</span>, <span class="string">&quot;C&quot;</span>).unwrap();
-        graph.add_slot_edge(<span class="string">&quot;C&quot;</span>, <span class="number">0</span>, <span class="string">&quot;D&quot;</span>, <span class="number">0</span>).unwrap();
+        graph.add_slot_edge(<span class="string">"A"</span>, <span class="string">"out_0"</span>, <span class="string">"C"</span>, <span class="string">"in_0"</span>).unwrap();
+        graph.add_node_edge(<span class="string">"B"</span>, <span class="string">"C"</span>).unwrap();
+        graph.add_slot_edge(<span class="string">"C"</span>, <span class="number">0</span>, <span class="string">"D"</span>, <span class="number">0</span>).unwrap();
 
-        <span class="kw">fn </span>input_nodes(name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, graph: <span class="kw-2">&amp;</span>RenderGraph) -&gt; HashSet&lt;NodeId&gt; {
+        <span class="kw">fn </span>input_nodes(name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, graph: <span class="kw-2">&amp;</span>RenderGraph) -&gt; HashSet&lt;NodeId&gt; {
             graph
                 .iter_node_inputs(name)
                 .unwrap()
@@ -1416,7 +1417,7 @@
                 .collect::&lt;HashSet&lt;NodeId&gt;&gt;()
         }
 
-        <span class="kw">fn </span>output_nodes(name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, graph: <span class="kw-2">&amp;</span>RenderGraph) -&gt; HashSet&lt;NodeId&gt; {
+        <span class="kw">fn </span>output_nodes(name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, graph: <span class="kw-2">&amp;</span>RenderGraph) -&gt; HashSet&lt;NodeId&gt; {
             graph
                 .iter_node_outputs(name)
                 .unwrap()
@@ -1424,37 +1425,37 @@
                 .collect::&lt;HashSet&lt;NodeId&gt;&gt;()
         }
 
-        <span class="macro">assert!</span>(input_nodes(<span class="string">&quot;A&quot;</span>, <span class="kw-2">&amp;</span>graph).is_empty(), <span class="string">&quot;A has no inputs&quot;</span>);
+        <span class="macro">assert!</span>(input_nodes(<span class="string">"A"</span>, <span class="kw-2">&amp;</span>graph).is_empty(), <span class="string">"A has no inputs"</span>);
         <span class="macro">assert_eq!</span>(
-            output_nodes(<span class="string">&quot;A&quot;</span>, <span class="kw-2">&amp;</span>graph),
+            output_nodes(<span class="string">"A"</span>, <span class="kw-2">&amp;</span>graph),
             HashSet::from_iter(<span class="macro">vec!</span>[c_id]),
-            <span class="string">&quot;A outputs to C&quot;
+            <span class="string">"A outputs to C"
         </span>);
 
-        <span class="macro">assert!</span>(input_nodes(<span class="string">&quot;B&quot;</span>, <span class="kw-2">&amp;</span>graph).is_empty(), <span class="string">&quot;B has no inputs&quot;</span>);
+        <span class="macro">assert!</span>(input_nodes(<span class="string">"B"</span>, <span class="kw-2">&amp;</span>graph).is_empty(), <span class="string">"B has no inputs"</span>);
         <span class="macro">assert_eq!</span>(
-            output_nodes(<span class="string">&quot;B&quot;</span>, <span class="kw-2">&amp;</span>graph),
+            output_nodes(<span class="string">"B"</span>, <span class="kw-2">&amp;</span>graph),
             HashSet::from_iter(<span class="macro">vec!</span>[c_id]),
-            <span class="string">&quot;B outputs to C&quot;
+            <span class="string">"B outputs to C"
         </span>);
 
         <span class="macro">assert_eq!</span>(
-            input_nodes(<span class="string">&quot;C&quot;</span>, <span class="kw-2">&amp;</span>graph),
+            input_nodes(<span class="string">"C"</span>, <span class="kw-2">&amp;</span>graph),
             HashSet::from_iter(<span class="macro">vec!</span>[a_id, b_id]),
-            <span class="string">&quot;A and B input to C&quot;
+            <span class="string">"A and B input to C"
         </span>);
         <span class="macro">assert_eq!</span>(
-            output_nodes(<span class="string">&quot;C&quot;</span>, <span class="kw-2">&amp;</span>graph),
+            output_nodes(<span class="string">"C"</span>, <span class="kw-2">&amp;</span>graph),
             HashSet::from_iter(<span class="macro">vec!</span>[d_id]),
-            <span class="string">&quot;C outputs to D&quot;
+            <span class="string">"C outputs to D"
         </span>);
 
         <span class="macro">assert_eq!</span>(
-            input_nodes(<span class="string">&quot;D&quot;</span>, <span class="kw-2">&amp;</span>graph),
+            input_nodes(<span class="string">"D"</span>, <span class="kw-2">&amp;</span>graph),
             HashSet::from_iter(<span class="macro">vec!</span>[c_id]),
-            <span class="string">&quot;C inputs to D&quot;
+            <span class="string">"C inputs to D"
         </span>);
-        <span class="macro">assert!</span>(output_nodes(<span class="string">&quot;D&quot;</span>, <span class="kw-2">&amp;</span>graph).is_empty(), <span class="string">&quot;D has no outputs&quot;</span>);
+        <span class="macro">assert!</span>(output_nodes(<span class="string">"D"</span>, <span class="kw-2">&amp;</span>graph).is_empty(), <span class="string">"D has no outputs"</span>);
     }
 
     <span class="attr">#[test]
@@ -1477,16 +1478,16 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>graph = RenderGraph::default();
 
-        graph.add_node(<span class="string">&quot;A&quot;</span>, MyNode { value: <span class="number">42 </span>});
+        graph.add_node(<span class="string">"A"</span>, MyNode { value: <span class="number">42 </span>});
 
-        <span class="kw">let </span>node: <span class="kw-2">&amp;</span>MyNode = graph.get_node(<span class="string">&quot;A&quot;</span>).unwrap();
-        <span class="macro">assert_eq!</span>(node.value, <span class="number">42</span>, <span class="string">&quot;node value matches&quot;</span>);
+        <span class="kw">let </span>node: <span class="kw-2">&amp;</span>MyNode = graph.get_node(<span class="string">"A"</span>).unwrap();
+        <span class="macro">assert_eq!</span>(node.value, <span class="number">42</span>, <span class="string">"node value matches"</span>);
 
-        <span class="kw">let </span>result: <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>TestNode, RenderGraphError&gt; = graph.get_node(<span class="string">&quot;A&quot;</span>);
+        <span class="kw">let </span>result: <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>TestNode, RenderGraphError&gt; = graph.get_node(<span class="string">"A"</span>);
         <span class="macro">assert_eq!</span>(
             result.unwrap_err(),
             RenderGraphError::WrongNodeType,
-            <span class="string">&quot;expect a wrong node type error&quot;
+            <span class="string">"expect a wrong node type error"
         </span>);
     }
 
@@ -1494,19 +1495,19 @@
     </span><span class="kw">fn </span>test_slot_already_occupied() {
         <span class="kw">let </span><span class="kw-2">mut </span>graph = RenderGraph::default();
 
-        graph.add_node(<span class="string">&quot;A&quot;</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
-        graph.add_node(<span class="string">&quot;B&quot;</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
-        graph.add_node(<span class="string">&quot;C&quot;</span>, TestNode::new(<span class="number">1</span>, <span class="number">1</span>));
+        graph.add_node(<span class="string">"A"</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
+        graph.add_node(<span class="string">"B"</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
+        graph.add_node(<span class="string">"C"</span>, TestNode::new(<span class="number">1</span>, <span class="number">1</span>));
 
-        graph.add_slot_edge(<span class="string">&quot;A&quot;</span>, <span class="number">0</span>, <span class="string">&quot;C&quot;</span>, <span class="number">0</span>).unwrap();
+        graph.add_slot_edge(<span class="string">"A"</span>, <span class="number">0</span>, <span class="string">"C"</span>, <span class="number">0</span>).unwrap();
         <span class="macro">assert_eq!</span>(
-            graph.add_slot_edge(<span class="string">&quot;B&quot;</span>, <span class="number">0</span>, <span class="string">&quot;C&quot;</span>, <span class="number">0</span>),
+            graph.add_slot_edge(<span class="string">"B"</span>, <span class="number">0</span>, <span class="string">"C"</span>, <span class="number">0</span>),
             <span class="prelude-val">Err</span>(RenderGraphError::NodeInputSlotAlreadyOccupied {
-                node: graph.get_node_id(<span class="string">&quot;C&quot;</span>).unwrap(),
+                node: graph.get_node_id(<span class="string">"C"</span>).unwrap(),
                 input_slot: <span class="number">0</span>,
-                occupied_by_node: graph.get_node_id(<span class="string">&quot;A&quot;</span>).unwrap(),
+                occupied_by_node: graph.get_node_id(<span class="string">"A"</span>).unwrap(),
             }),
-            <span class="string">&quot;Adding to a slot that is already occupied should return an error&quot;
+            <span class="string">"Adding to a slot that is already occupied should return an error"
         </span>);
     }
 
@@ -1514,19 +1515,19 @@
     </span><span class="kw">fn </span>test_edge_already_exists() {
         <span class="kw">let </span><span class="kw-2">mut </span>graph = RenderGraph::default();
 
-        graph.add_node(<span class="string">&quot;A&quot;</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
-        graph.add_node(<span class="string">&quot;B&quot;</span>, TestNode::new(<span class="number">1</span>, <span class="number">0</span>));
+        graph.add_node(<span class="string">"A"</span>, TestNode::new(<span class="number">0</span>, <span class="number">1</span>));
+        graph.add_node(<span class="string">"B"</span>, TestNode::new(<span class="number">1</span>, <span class="number">0</span>));
 
-        graph.add_slot_edge(<span class="string">&quot;A&quot;</span>, <span class="number">0</span>, <span class="string">&quot;B&quot;</span>, <span class="number">0</span>).unwrap();
+        graph.add_slot_edge(<span class="string">"A"</span>, <span class="number">0</span>, <span class="string">"B"</span>, <span class="number">0</span>).unwrap();
         <span class="macro">assert_eq!</span>(
-            graph.add_slot_edge(<span class="string">&quot;A&quot;</span>, <span class="number">0</span>, <span class="string">&quot;B&quot;</span>, <span class="number">0</span>),
+            graph.add_slot_edge(<span class="string">"A"</span>, <span class="number">0</span>, <span class="string">"B"</span>, <span class="number">0</span>),
             <span class="prelude-val">Err</span>(RenderGraphError::EdgeAlreadyExists(Edge::SlotEdge {
-                output_node: graph.get_node_id(<span class="string">&quot;A&quot;</span>).unwrap(),
+                output_node: graph.get_node_id(<span class="string">"A"</span>).unwrap(),
                 output_index: <span class="number">0</span>,
-                input_node: graph.get_node_id(<span class="string">&quot;B&quot;</span>).unwrap(),
+                input_node: graph.get_node_id(<span class="string">"B"</span>).unwrap(),
                 input_index: <span class="number">0</span>,
             })),
-            <span class="string">&quot;Adding to a duplicate edge should return an error&quot;
+            <span class="string">"Adding to a duplicate edge should return an error"
         </span>);
     }
 }

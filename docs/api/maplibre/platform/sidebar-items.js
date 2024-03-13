@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["MIN_WEBGL_BUFFER_SIZE"],"fn":["run_multithreaded"],"mod":["http_client","noweb","scheduler","trace"],"struct":["ReqwestOffscreenKernelEnvironment"]};
+window.SIDEBAR_ITEMS = {"constant":["MIN_WEBGL_BUFFER_SIZE"],"fn":["run_multithreaded"],"mod":["http_client","noweb","scheduler"],"struct":["ReqwestOffscreenKernelEnvironment"]};

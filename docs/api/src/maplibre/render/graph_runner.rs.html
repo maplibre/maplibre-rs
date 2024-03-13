@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/graph_runner.rs`."><title>graph_runner.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/graph_runner.rs`."><title>graph_runner.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -249,19 +250,19 @@
 </span><span class="kw">pub enum </span>RenderGraphRunnerError {
     <span class="attr">#[error(transparent)]
     </span>NodeRunError(<span class="attr">#[from] </span>NodeRunError),
-    <span class="attr">#[error(<span class="string">&quot;node output slot not set (index {slot_index}, name {slot_name})&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"node output slot not set (index {slot_index}, name {slot_name})"</span>)]
     </span>EmptyNodeOutputSlot {
-        type_name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+        type_name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
         slot_index: usize,
-        slot_name: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
+        slot_name: Cow&lt;<span class="lifetime">'static</span>, str&gt;,
     },
-    <span class="attr">#[error(<span class="string">&quot;graph (name: &#39;{graph_name:?}&#39;) could not be run because slot &#39;{slot_name}&#39; at index {slot_index} has no value&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"graph (name: '{graph_name:?}') could not be run because slot '{slot_name}' at index {slot_index} has no value"</span>)]
     </span>MissingInput {
         slot_index: usize,
-        slot_name: Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;,
-        graph_name: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+        slot_name: Cow&lt;<span class="lifetime">'static</span>, str&gt;,
+        graph_name: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;,
     },
-    <span class="attr">#[error(<span class="string">&quot;attempted to use the wrong type for input slot&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"attempted to use the wrong type for input slot"</span>)]
     </span>MismatchedInputSlotType {
         slot_index: usize,
         label: SlotLabel,
@@ -287,8 +288,8 @@
 
         <span class="self">Self</span>::run_graph(graph, <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut </span>render_context, state, world, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
         {
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-            </span><span class="kw">let </span>_span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;submit_graph_commands&quot;</span>).entered();
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+            </span><span class="kw">let </span>_span = <span class="macro">tracing::info_span!</span>(<span class="string">"submit_graph_commands"</span>).entered();
             queue.submit(<span class="macro">vec!</span>[render_context.command_encoder.finish()]);
         }
         <span class="prelude-val">Ok</span>(())
@@ -296,20 +297,20 @@
 
     <span class="kw">fn </span>run_graph(
         graph: <span class="kw-2">&amp;</span>RenderGraph,
-        graph_name: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">&#39;static</span>, str&gt;&gt;,
+        graph_name: <span class="prelude-ty">Option</span>&lt;Cow&lt;<span class="lifetime">'static</span>, str&gt;&gt;,
         render_context: <span class="kw-2">&amp;mut </span>RenderContext,
         state: <span class="kw-2">&amp;</span>RenderResources,
         world: <span class="kw-2">&amp;</span>World,
         inputs: <span class="kw-2">&amp;</span>[SlotValue],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderGraphRunnerError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>node_outputs: HashMap&lt;NodeId, SmallVec&lt;[SlotValue; <span class="number">4</span>]&gt;&gt; = HashMap::default();
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">let </span>span = <span class="kw">if let </span><span class="prelude-val">Some</span>(name) = <span class="kw-2">&amp;</span>graph_name {
-            <span class="macro">tracing::info_span!</span>(<span class="string">&quot;run_graph&quot;</span>, name = name.as_ref())
+            <span class="macro">tracing::info_span!</span>(<span class="string">"run_graph"</span>, name = name.as_ref())
         } <span class="kw">else </span>{
-            <span class="macro">tracing::info_span!</span>(<span class="string">&quot;run_graph&quot;</span>, name = <span class="string">&quot;main_graph&quot;</span>)
+            <span class="macro">tracing::info_span!</span>(<span class="string">"run_graph"</span>, name = <span class="string">"main_graph"</span>)
         };
-        <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
         </span><span class="kw">let </span>_guard = span.enter();
 
         <span class="comment">// Queue up nodes without inputs, which can be run immediately
@@ -344,12 +345,12 @@
 
             node_outputs.insert(input_node.id, input_values);
 
-            <span class="kw">for </span>(<span class="kw">_</span>, node_state) <span class="kw">in </span>graph.iter_node_outputs(input_node.id).expect(<span class="string">&quot;node exists&quot;</span>) {
+            <span class="kw">for </span>(<span class="kw">_</span>, node_state) <span class="kw">in </span>graph.iter_node_outputs(input_node.id).expect(<span class="string">"node exists"</span>) {
                 node_queue.push_front(node_state);
             }
         }
 
-        <span class="lifetime">&#39;handle_node</span>: <span class="kw">while let </span><span class="prelude-val">Some</span>(node_state) = node_queue.pop_back() {
+        <span class="lifetime">'handle_node</span>: <span class="kw">while let </span><span class="prelude-val">Some</span>(node_state) = node_queue.pop_back() {
             <span class="comment">// skip nodes that are already processed
             </span><span class="kw">if </span>node_outputs.contains_key(<span class="kw-2">&amp;</span>node_state.id) {
                 <span class="kw">continue</span>;
@@ -359,7 +360,7 @@
             <span class="comment">// check if all dependencies have finished running
             </span><span class="kw">for </span>(edge, input_node) <span class="kw">in </span>graph
                 .iter_node_inputs(node_state.id)
-                .expect(<span class="string">&quot;node is in graph&quot;</span>)
+                .expect(<span class="string">"node is in graph"</span>)
             {
                 <span class="kw">match </span>edge {
                     Edge::SlotEdge {
@@ -372,13 +373,13 @@
                                 .push((<span class="kw-2">*</span>input_index, outputs[<span class="kw-2">*</span>output_index].clone()));
                         } <span class="kw">else </span>{
                             node_queue.push_front(node_state);
-                            <span class="kw">continue </span><span class="lifetime">&#39;handle_node</span>;
+                            <span class="kw">continue </span><span class="lifetime">'handle_node</span>;
                         }
                     }
                     Edge::NodeEdge { .. } =&gt; {
                         <span class="kw">if </span>!node_outputs.contains_key(<span class="kw-2">&amp;</span>input_node.id) {
                             node_queue.push_front(node_state);
-                            <span class="kw">continue </span><span class="lifetime">&#39;handle_node</span>;
+                            <span class="kw">continue </span><span class="lifetime">'handle_node</span>;
                         }
                     }
                 }
@@ -398,8 +399,8 @@
             {
                 <span class="kw">let </span><span class="kw-2">mut </span>context = RenderGraphContext::new(graph, node_state, <span class="kw-2">&amp;</span>inputs, <span class="kw-2">&amp;mut </span>outputs);
                 {
-                    <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-                    </span><span class="kw">let </span>_span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;node&quot;</span>, name = node_state.type_name).entered();
+                    <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+                    </span><span class="kw">let </span>_span = <span class="macro">tracing::info_span!</span>(<span class="string">"node"</span>, name = node_state.type_name).entered();
 
                     node_state
                         .node
@@ -409,7 +410,7 @@
                 <span class="kw">for </span>run_sub_graph <span class="kw">in </span>context.finish() {
                     <span class="kw">let </span>sub_graph = graph
                         .get_sub_graph(<span class="kw-2">&amp;</span>run_sub_graph.name)
-                        .expect(<span class="string">&quot;sub graph exists because it was validated when queued.&quot;</span>);
+                        .expect(<span class="string">"sub graph exists because it was validated when queued."</span>);
                     <span class="self">Self</span>::run_graph(
                         sub_graph,
                         <span class="prelude-val">Some</span>(run_sub_graph.name),
@@ -436,7 +437,7 @@
             }
             node_outputs.insert(node_state.id, values);
 
-            <span class="kw">for </span>(<span class="kw">_</span>, node_state) <span class="kw">in </span>graph.iter_node_outputs(node_state.id).expect(<span class="string">&quot;node exists&quot;</span>) {
+            <span class="kw">for </span>(<span class="kw">_</span>, node_state) <span class="kw">in </span>graph.iter_node_outputs(node_state.id).expect(<span class="string">"node exists"</span>) {
                 node_queue.push_front(node_state);
             }
         }

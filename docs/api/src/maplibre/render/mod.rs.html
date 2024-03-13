@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../maplibre/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/render/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -855,7 +856,7 @@
     </span><span class="kw">async fn </span>request_device(
         instance: <span class="kw-2">&amp;</span>wgpu::Instance,
         settings: <span class="kw-2">&amp;</span>WgpuSettings,
-        request_adapter_options: <span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions&lt;<span class="lifetime">&#39;_</span>&gt;,
+        request_adapter_options: <span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(wgpu::Adapter, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError&gt; {
         <span class="kw">let </span>adapter = instance
             .request_adapter(request_adapter_options)
@@ -864,9 +865,9 @@
 
         <span class="kw">let </span>adapter_info = adapter.get_info();
 
-        <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+        <span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
         </span><span class="kw">let </span>trace_path = <span class="kw">if </span>settings.record_trace {
-            <span class="kw">let </span>path = std::path::Path::new(<span class="string">&quot;wgpu_trace&quot;</span>);
+            <span class="kw">let </span>path = std::path::Path::new(<span class="string">"wgpu_trace"</span>);
             <span class="comment">// ignore potential error, wgpu will log it
             </span><span class="kw">let _ </span>= std::fs::create_dir(path);
             <span class="prelude-val">Some</span>(path)
@@ -874,7 +875,7 @@
             <span class="prelude-val">None
         </span>};
 
-        <span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+        <span class="attr">#[cfg(target_arch = <span class="string">"wasm32"</span>)]
         </span><span class="kw">let </span>trace_path = <span class="prelude-val">None</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>features =
@@ -897,11 +898,11 @@
 
         <span class="comment">// Enforce the limit constraints
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(constrained_limits) = settings.constrained_limits.as_ref() {
-            <span class="comment">// NOTE: Respect the configured limits as an &#39;upper bound&#39;. This means for &#39;max&#39; limits, we
+            <span class="comment">// NOTE: Respect the configured limits as an 'upper bound'. This means for 'max' limits, we
             // take the minimum of the calculated limits according to the adapter/backend and the
-            // specified max_limits. For &#39;min&#39; limits, take the maximum instead. This is intended to
-            // err on the side of being conservative. We can&#39;t claim &#39;higher&#39; limits that are supported
-            // but we can constrain to &#39;lower&#39; limits.
+            // specified max_limits. For 'min' limits, take the maximum instead. This is intended to
+            // err on the side of being conservative. We can't claim 'higher' limits that are supported
+            // but we can constrain to 'lower' limits.
             </span>limits = wgpu::Limits {
                 max_texture_dimension_1d: limits
                     .max_texture_dimension_1d
@@ -1024,7 +1025,7 @@
 }
 
 <span class="attr">#[cfg(test)]
-#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use crate</span>::{
         tcs::world::World,
@@ -1076,7 +1077,7 @@
         });
         <span class="kw">let </span>adapter = wgpu::util::initialize_adapter_from_env_or_default(<span class="kw-2">&amp;</span>instance, <span class="prelude-val">None</span>)
             .<span class="kw">await
-            </span>.expect(<span class="string">&quot;Unable to initialize adapter&quot;</span>);
+            </span>.expect(<span class="string">"Unable to initialize adapter"</span>);
 
         <span class="kw">let </span>(device, queue) = adapter
             .request_device(
@@ -1088,44 +1089,44 @@
                 <span class="prelude-val">None</span>,
             )
             .<span class="kw">await
-            </span>.expect(<span class="string">&quot;Unable to request device&quot;</span>);
+            </span>.expect(<span class="string">"Unable to request device"</span>);
 
         <span class="kw">let </span>render_state = RenderResources::new(Surface::from_image(
             <span class="kw-2">&amp;</span>device,
             <span class="kw-2">&amp;</span>HeadlessMapWindow {
-                size: PhysicalSize::new(<span class="number">100</span>, <span class="number">100</span>).expect(<span class="string">&quot;invalid headless map size&quot;</span>),
+                size: PhysicalSize::new(<span class="number">100</span>, <span class="number">100</span>).expect(<span class="string">"invalid headless map size"</span>),
             },
             <span class="kw-2">&amp;</span>RendererSettings::default(),
         ));
 
         <span class="kw">let </span>world = World::default();
         RenderGraphRunner::run(<span class="kw-2">&amp;</span>graph, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue, <span class="kw-2">&amp;</span>render_state, <span class="kw-2">&amp;</span>world)
-            .expect(<span class="string">&quot;failed to run graph runner&quot;</span>);
+            .expect(<span class="string">"failed to run graph runner"</span>);
     }
 }
 
 <span class="comment">// Contributors to the RenderGraph should use the following label conventions:
 // 1. Graph modules should have a NAME, input module, and node module (where relevant)
-// 2. The &quot;main_graph&quot; graph is the root.
-// 3. &quot;sub graph&quot; modules should be nested beneath their parent graph module
+// 2. The "main_graph" graph is the root.
+// 3. "sub graph" modules should be nested beneath their parent graph module
 </span><span class="kw">pub mod </span>main_graph {
     <span class="comment">// Labels for input nodes
     </span><span class="kw">pub mod </span>input {}
     <span class="comment">// Labels for non-input nodes
     </span><span class="kw">pub mod </span>node {
-        <span class="kw">pub const </span>MAIN_PASS_DEPENDENCIES: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass_dependencies&quot;</span>;
-        <span class="kw">pub const </span>MAIN_PASS_DRIVER: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass_driver&quot;</span>;
+        <span class="kw">pub const </span>MAIN_PASS_DEPENDENCIES: <span class="kw-2">&amp;</span>str = <span class="string">"main_pass_dependencies"</span>;
+        <span class="kw">pub const </span>MAIN_PASS_DRIVER: <span class="kw-2">&amp;</span>str = <span class="string">"main_pass_driver"</span>;
     }
 }
 
-<span class="doccomment">/// Labels for the &quot;draw&quot; graph
+<span class="doccomment">/// Labels for the "draw" graph
 </span><span class="kw">mod </span>draw_graph {
-    <span class="kw">pub const </span>NAME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;draw&quot;</span>;
+    <span class="kw">pub const </span>NAME: <span class="kw-2">&amp;</span>str = <span class="string">"draw"</span>;
     <span class="comment">// Labels for input nodes
     </span><span class="kw">pub mod </span>input {}
     <span class="comment">// Labels for non-input nodes
     </span><span class="kw">pub mod </span>node {
-        <span class="kw">pub const </span>MAIN_PASS: <span class="kw-2">&amp;</span>str = <span class="string">&quot;main_pass&quot;</span>;
+        <span class="kw">pub const </span>MAIN_PASS: <span class="kw-2">&amp;</span>str = <span class="string">"main_pass"</span>;
     }
 }
 
@@ -1160,7 +1161,7 @@
         <span class="comment">// Edges
         </span>draw_graph
             .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
-            .expect(<span class="string">&quot;main pass or draw node does not exist&quot;</span>);
+            .expect(<span class="string">"main pass or draw node does not exist"</span>);
 
         graph.add_sub_graph(draw_graph::NAME, draw_graph);
         graph.add_node(main_graph::node::MAIN_PASS_DEPENDENCIES, EmptyNode);
@@ -1170,7 +1171,7 @@
                 main_graph::node::MAIN_PASS_DEPENDENCIES,
                 main_graph::node::MAIN_PASS_DRIVER,
             )
-            .expect(<span class="string">&quot;main pass driver or dependencies do not exist&quot;</span>);
+            .expect(<span class="string">"main pass driver or dependencies do not exist"</span>);
 
         <span class="comment">// render graph dependency
         </span>resources.init::&lt;RenderPhase&lt;LayerItem&gt;&gt;();

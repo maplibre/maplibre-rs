@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/schedule.rs`."><title>schedule.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../maplibre/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `maplibre/src/schedule.rs`."><title>schedule.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -411,19 +412,19 @@
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// schedule.add_stage(&quot;my_stage&quot;, NopStage);
+    /// schedule.add_stage("my_stage", NopStage);
     /// ```
     </span><span class="kw">pub fn </span>add_stage&lt;S: Stage&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw">impl </span>StageLabel, stage: S) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span>label: Box&lt;<span class="kw">dyn </span>StageLabel&gt; = Box::new(label);
         <span class="self">self</span>.stage_order.push(label.clone());
         <span class="kw">let </span>prev = <span class="self">self</span>.stages.insert(label.clone(), Box::new(stage));
-        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {label:?}.&quot;</span>);
+        <span class="macro">assert!</span>(prev.is_none(), <span class="string">"Stage already exists: {label:?}."</span>);
         <span class="self">self
     </span>}
 
     <span class="kw">pub fn </span>remove_stage(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw">impl </span>StageLabel) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span>remove: Box&lt;<span class="kw">dyn </span>StageLabel&gt; = Box::new(label);
-        <span class="self">self</span>.stages.remove(<span class="kw-2">&amp;</span>remove).expect(<span class="string">&quot;stage not found&quot;</span>);
+        <span class="self">self</span>.stages.remove(<span class="kw-2">&amp;</span>remove).expect(<span class="string">"stage not found"</span>);
         <span class="self">self</span>.stage_order.retain(|label| label != <span class="kw-2">&amp;</span>remove);
         <span class="self">self
     </span>}
@@ -436,8 +437,8 @@
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage(&quot;target_stage&quot;, NopStage);
-    /// schedule.add_stage_after(&quot;target_stage&quot;, &quot;my_stage&quot;, NopStage);
+    /// # schedule.add_stage("target_stage", NopStage);
+    /// schedule.add_stage_after("target_stage", "my_stage", NopStage);
     /// ```
     </span><span class="kw">pub fn </span>add_stage_after&lt;S: Stage&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -453,11 +454,11 @@
             .enumerate()
             .find(|(_i, stage_label)| <span class="kw-2">&amp;***</span>stage_label == target)
             .map(|(i, <span class="kw">_</span>)| i)
-            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {target:?}.&quot;</span>));
+            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">"Target stage does not exist: {target:?}."</span>));
 
         <span class="self">self</span>.stage_order.insert(target_index + <span class="number">1</span>, label.clone());
         <span class="kw">let </span>prev = <span class="self">self</span>.stages.insert(label.clone(), Box::new(stage));
-        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {label:?}.&quot;</span>);
+        <span class="macro">assert!</span>(prev.is_none(), <span class="string">"Stage already exists: {label:?}."</span>);
         <span class="self">self
     </span>}
 
@@ -469,9 +470,9 @@
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage(&quot;target_stage&quot;, NopStage);
+    /// # schedule.add_stage("target_stage", NopStage);
     /// #
-    /// schedule.add_stage_before(&quot;target_stage&quot;, &quot;my_stage&quot;, NopStage);
+    /// schedule.add_stage_before("target_stage", "my_stage", NopStage);
     /// ```
     </span><span class="kw">pub fn </span>add_stage_before&lt;S: Stage&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -487,11 +488,11 @@
             .enumerate()
             .find(|(_i, stage_label)| <span class="kw-2">&amp;***</span>stage_label == target)
             .map(|(i, <span class="kw">_</span>)| i)
-            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">&quot;Target stage does not exist: {target:?}.&quot;</span>));
+            .unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">"Target stage does not exist: {target:?}."</span>));
 
         <span class="self">self</span>.stage_order.insert(target_index, label.clone());
         <span class="kw">let </span>prev = <span class="self">self</span>.stages.insert(label.clone(), Box::new(stage));
-        <span class="macro">assert!</span>(prev.is_none(), <span class="string">&quot;Stage already exists: {label:?}.&quot;</span>);
+        <span class="macro">assert!</span>(prev.is_none(), <span class="string">"Stage already exists: {label:?}."</span>);
         <span class="self">self
     </span>}
 
@@ -508,9 +509,9 @@
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// # let mut schedule = Schedule::default();
     ///
-    /// # schedule.add_stage(&quot;my_stage&quot;, NopStage);
+    /// # schedule.add_stage("my_stage", NopStage);
     /// #
-    /// schedule.stage(&quot;my_stage&quot;, |stage: &amp;mut NopStage| {
+    /// schedule.stage("my_stage", |stage: &amp;mut NopStage| {
     ///     // modify stage
     ///     stage
     /// });
@@ -518,14 +519,14 @@
     ///
     /// # Panics
     ///
-    /// Panics if `label` refers to a non-existing stage, or if it&#39;s not of type `T`.
+    /// Panics if `label` refers to a non-existing stage, or if it's not of type `T`.
     </span><span class="kw">pub fn </span>stage&lt;T: Stage, F: FnOnce(<span class="kw-2">&amp;mut </span>T) -&gt; <span class="kw-2">&amp;mut </span>T&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         label: <span class="kw">impl </span>StageLabel,
         func: F,
     ) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
         <span class="kw">let </span>stage = <span class="self">self</span>.get_stage_mut::&lt;T&gt;(<span class="kw-2">&amp;</span>label).unwrap_or_else(<span class="kw">move </span>|| {
-            <span class="macro">panic!</span>(<span class="string">&quot;stage &#39;{label:?}&#39; does not exist or is the wrong type&quot;</span>)
+            <span class="macro">panic!</span>(<span class="string">"stage '{label:?}' does not exist or is the wrong type"</span>)
         });
         func(stage);
         <span class="self">self
@@ -541,9 +542,9 @@
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage(&quot;my_stage&quot;, NopStage);
+    /// # schedule.add_stage("my_stage", NopStage);
     /// #
-    /// let stage = schedule.get_stage::&lt;NopStage&gt;(&amp;&quot;my_stage&quot;).unwrap();
+    /// let stage = schedule.get_stage::&lt;NopStage&gt;(&amp;"my_stage").unwrap();
     /// ```
     </span><span class="kw">pub fn </span>get_stage&lt;T: Stage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="kw">dyn </span>StageLabel) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>T&gt; {
         <span class="self">self</span>.stages
@@ -561,9 +562,9 @@
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage(&quot;my_stage&quot;, NopStage);
+    /// # schedule.add_stage("my_stage", NopStage);
     /// #
-    /// let stage = schedule.get_stage_mut::&lt;NopStage&gt;(&amp;&quot;my_stage&quot;).unwrap();
+    /// let stage = schedule.get_stage_mut::&lt;NopStage&gt;(&amp;"my_stage").unwrap();
     /// ```
     </span><span class="kw">pub fn </span>get_stage_mut&lt;T: Stage&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="kw">dyn </span>StageLabel) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>T&gt; {
         <span class="self">self</span>.stages
@@ -574,8 +575,8 @@
     <span class="doccomment">/// Executes each [`Stage`] contained in the schedule, one at a time.
     </span><span class="kw">pub fn </span>run_once(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>MapContext) {
         <span class="kw">for </span>label <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.stage_order {
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-            </span><span class="kw">let </span>_stage_span = <span class="macro">tracing::info_span!</span>(<span class="string">&quot;stage&quot;</span>, name = <span class="question-mark">?</span>label).entered();
+            <span class="attr">#[cfg(feature = <span class="string">"trace"</span>)]
+            </span><span class="kw">let </span>_stage_span = <span class="macro">tracing::info_span!</span>(<span class="string">"stage"</span>, name = <span class="question-mark">?</span>label).entered();
             <span class="kw">let </span>stage = <span class="self">self</span>.stages.get_mut(label).unwrap(); <span class="comment">// TODO: Remove unwrap
             </span>stage.run(context);
         }
@@ -586,7 +587,7 @@
         <span class="self">self</span>.stages.clear();
     }
 
-    <span class="doccomment">/// Iterates over all of schedule&#39;s stages and their labels, in execution order.
+    <span class="doccomment">/// Iterates over all of schedule's stages and their labels, in execution order.
     </span><span class="kw">pub fn </span>iter_stages(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span><span class="kw">dyn </span>StageLabel, <span class="kw-2">&amp;</span><span class="kw">dyn </span>Stage)&gt; {
         <span class="self">self</span>.stage_order
             .iter()
@@ -603,10 +604,10 @@
     /// # use maplibre::schedule::{Schedule, NopStage};
     /// #
     /// # let mut schedule = Schedule::default();
-    /// # schedule.add_stage(&quot;my_stage&quot;, SystemStage::default());
+    /// # schedule.add_stage("my_stage", SystemStage::default());
     /// # fn my_system(context: &amp;mut MapContext) {}
     /// #
-    /// schedule.add_system_to_stage(&quot;my_stage&quot;, my_system);
+    /// schedule.add_system_to_stage("my_stage", my_system);
     /// ```
     </span><span class="kw">pub fn </span>add_system_to_stage(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -616,7 +617,7 @@
         <span class="kw">let </span>stage = <span class="self">self
             </span>.get_stage_mut::&lt;SystemStage&gt;(<span class="kw-2">&amp;</span>stage_label)
             .unwrap_or_else(<span class="kw">move </span>|| {
-                <span class="macro">panic!</span>(<span class="string">&quot;Stage &#39;{stage_label:?}&#39; does not exist or is not a SystemStage&quot;</span>)
+                <span class="macro">panic!</span>(<span class="string">"Stage '{stage_label:?}' does not exist or is not a SystemStage"</span>)
             });
         stage.add_system(system);
         <span class="self">self
