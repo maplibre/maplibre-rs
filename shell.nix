@@ -24,6 +24,15 @@ pkgs.mkShell {
     # System dependencies
     unstable.flatbuffers
     unstable.protobuf
+
+    unstable.xorg.libXrandr
+    unstable.xorg.libXi
+    unstable.xorg.libXcursor
+    unstable.xorg.libX11
+    unstable.libxkbcommon
+    unstable.sqlite
+    unstable.wayland
+    unstable.pkg-config
   ]
   ++ lib.optionals stdenv.isDarwin [
     unstable.libiconv
@@ -31,4 +40,11 @@ pkgs.mkShell {
     pkgs.darwin.apple_sdk.frameworks.CoreVideo
     pkgs.darwin.apple_sdk.frameworks.AppKit
   ];
+  shellHook = ''
+    # Vulkan
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.vulkan-loader ] }";
+    # EGL
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.libglvnd ] }";
+  '';
+
 }
