@@ -91,7 +91,7 @@ wasm-bindgen = "=0.2.92"
 wasm-bindgen-futures = "0.4"
 wasm-bindgen-test = "0.3"
 web-sys = "0.3"  # Individual features are customized in each crate
-wgpu = "0.17.0"
+wgpu = "0.18.0"
 
 [profile.release]
 lto = true

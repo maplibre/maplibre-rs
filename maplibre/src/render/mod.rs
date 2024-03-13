@@ -170,7 +170,9 @@ impl Renderer {
     {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            flags: Default::default(),
             dx12_shader_compiler: Default::default(),
+            gles_minor_version: Default::default(),
         });
 
         let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw())? };
@@ -215,7 +217,9 @@ impl Renderer {
     {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            flags: Default::default(),
             dx12_shader_compiler: Default::default(),
+            gles_minor_version: Default::default(),
         });
 
         let (adapter, device, queue) = Self::request_device(
@@ -256,7 +260,7 @@ impl Renderer {
         let adapter = instance
             .request_adapter(request_adapter_options)
             .await
-            .ok_or(wgpu::RequestDeviceError)?;
+            .expect("TODO handle");
 
         let adapter_info = adapter.get_info();
 
@@ -386,6 +390,9 @@ impl Renderer {
                 max_buffer_size: limits
                     .max_buffer_size
                     .min(constrained_limits.max_buffer_size),
+                max_non_sampler_bindings: limits
+                    .max_non_sampler_bindings
+                    .min(constrained_limits.max_non_sampler_bindings),
             };
         }
 
