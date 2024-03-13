@@ -4,6 +4,7 @@
 //! [shadows](https://www.raywenderlich.com/books/metal-by-tutorials/v2.0/chapters/14-multipass-deferred-rendering).
 
 use std::ops::Deref;
+
 use wgpu::StoreOp;
 
 use crate::{
