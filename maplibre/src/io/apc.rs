@@ -17,7 +17,7 @@ use thiserror::Error;
 
 use crate::{
     coords::WorldTileCoords, define_label, environment::OffscreenKernelEnvironment,
-    io::scheduler::Scheduler, style::Style,
+    io::scheduler::ScheduleMethod, style::Style,
 };
 
 define_label!(MessageTag);
@@ -99,10 +99,6 @@ pub enum ProcedureError {
     Send(SendError),
 }
 
-#[cfg(feature = "thread-safe-futures")]
-pub type AsyncProcedureFuture =
-    Pin<Box<(dyn Future<Output = Result<(), ProcedureError>> + Send + 'static)>>;
-#[cfg(not(feature = "thread-safe-futures"))]
 pub type AsyncProcedureFuture =
     Pin<Box<(dyn Future<Output = Result<(), ProcedureError>> + 'static)>>;
 
@@ -194,14 +190,14 @@ impl Context for SchedulerContext {
     }
 }
 
-pub struct SchedulerAsyncProcedureCall<K: OffscreenKernelEnvironment, S: Scheduler> {
+pub struct SchedulerAsyncProcedureCall<K: OffscreenKernelEnvironment, S: ScheduleMethod> {
     channel: (Sender<Message>, Receiver<Message>),
     buffer: RefCell<Vec<Message>>,
     scheduler: S,
     phantom_k: PhantomData<K>,
 }
 
-impl<K: OffscreenKernelEnvironment, S: Scheduler> SchedulerAsyncProcedureCall<K, S> {
+impl<K: OffscreenKernelEnvironment, S: ScheduleMethod> SchedulerAsyncProcedureCall<K, S> {
     pub fn new(scheduler: S) -> Self {
         Self {
             channel: mpsc::channel(),
@@ -212,7 +208,7 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> SchedulerAsyncProcedureCall<K,
     }
 }
 
-impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
+impl<K: OffscreenKernelEnvironment, S: ScheduleMethod> AsyncProcedureCall<K>
     for SchedulerAsyncProcedureCall<K, S>
 {
     type Context = SchedulerContext;

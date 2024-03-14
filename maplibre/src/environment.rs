@@ -1,7 +1,7 @@
 use crate::{
     io::{
         apc::AsyncProcedureCall,
-        scheduler::Scheduler,
+        scheduler::ScheduleMethod,
         source_client::{HttpClient, SourceClient},
     },
     window::MapWindowConfig,
@@ -20,7 +20,7 @@ pub trait Environment: 'static {
 
     type AsyncProcedureCall: AsyncProcedureCall<Self::OffscreenKernelEnvironment>;
 
-    type Scheduler: Scheduler;
+    type Scheduler: ScheduleMethod;
 
     type HttpClient: HttpClient;
 

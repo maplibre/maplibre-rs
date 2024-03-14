@@ -9,7 +9,7 @@ use crate::{
     },
     io::apc::SchedulerAsyncProcedureCall,
     kernel::{Kernel, KernelBuilder},
-    platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduler},
+    platform::{http_client::ReqwestHttpClient, scheduler::TokioScheduleMethod},
     plugin::Plugin,
     render::{
         builder::RendererBuilder, graph::RenderGraph, tile_view_pattern::ViewTileSources,
@@ -37,8 +37,8 @@ pub async fn create_headless_renderer(
             PhysicalSize::new(tile_size, tile_size).unwrap(),
         ))
         .with_http_client(client.clone())
-        .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new()))
-        .with_scheduler(TokioScheduler::new())
+        .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduleMethod::new()))
+        .with_scheduler(TokioScheduleMethod::new())
         .build();
 
     let mwc: &HeadlessMapWindowConfig = kernel.map_window_config();
