@@ -256,11 +256,11 @@ impl Renderer {
         instance: &wgpu::Instance,
         settings: &WgpuSettings,
         request_adapter_options: &wgpu::RequestAdapterOptions<'_>,
-    ) -> Result<(wgpu::Adapter, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError> {
+    ) -> Result<(wgpu::Adapter, wgpu::Device, wgpu::Queue), RenderError> {
         let adapter = instance
             .request_adapter(request_adapter_options)
             .await
-            .expect("TODO handle");
+            .ok_or(RenderError::RequestAdaptor)?;
 
         let adapter_info = adapter.get_info();
 
@@ -475,7 +475,9 @@ mod tests {
         let backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all());
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends,
+            flags: Default::default(),
             dx12_shader_compiler: Default::default(),
+            gles_minor_version: Default::default(),
         });
         let adapter = wgpu::util::initialize_adapter_from_env_or_default(&instance, None)
             .await

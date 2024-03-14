@@ -12,6 +12,8 @@ pub enum RenderError {
     Graph(#[from] RenderGraphError),
     #[error("error while requesting device")]
     RequestDevice(#[from] wgpu::RequestDeviceError),
+    #[error("error while requesting adaptor")]
+    RequestAdaptor,
 }
 
 impl RenderError {
