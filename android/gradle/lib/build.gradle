@@ -7,7 +7,7 @@ plugins {
 apply plugin: 'kotlin-android'
 
 android {
-    ndkVersion "23.2.8568313"
+    ndkVersion "25.2.9519653"
 
     compileSdkVersion 31
     
@@ -35,7 +35,7 @@ cargo {
     targetDirectory = "${module}/../target"
     profile = "debug"
     // This should be in sync with the justfile
-    rustupChannel = "nightly-2023-09-23"
+    rustupChannel = "nightly-2024-03-12"
     
 
     features {

@@ -39,9 +39,9 @@ jobs:
       - name: Install wasm-bindgen
         uses: ./.github/actions/cargo-install
         # Install wasm-bindgen with test runner
-        # We want the latest version, as Cargo uses the latest version of wasm-bindgen
+        # We want a specific, as Cargo uses a pinned version of wasm-bindgen as dependency of the web crate
         with:
-          name: wasm-bindgen-cli
+          name: wasm-bindgen-cli@0.2.92
       - name: Build lib
         shell: bash
         run: just web-lib build --release ${{ inputs.webgl && '--webgl' || '' }} ${{ inputs.multithreaded && '--multithreaded' || '' }}

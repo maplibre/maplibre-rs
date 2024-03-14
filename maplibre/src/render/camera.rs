@@ -1,7 +1,5 @@
 //! Main camera
 
-use std::convert::Into;
-
 use cgmath::{num_traits::clamp, prelude::*, *};
 
 use crate::util::SignificantlyDifferent;

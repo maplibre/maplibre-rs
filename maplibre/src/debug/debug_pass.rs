@@ -1,5 +1,7 @@
 use std::ops::Deref;
 
+use wgpu::StoreOp;
+
 use crate::{
     debug::TileDebugItem,
     render::{
@@ -44,7 +46,7 @@ impl Node for DebugPassNode {
             ops: wgpu::Operations {
                 // Draws on-top of previously rendered data
                 load: wgpu::LoadOp::Load,
-                store: true,
+                store: StoreOp::Store,
             },
             resolve_target: None,
         };
@@ -56,6 +58,8 @@ impl Node for DebugPassNode {
                     label: Some("debug_pass"),
                     color_attachments: &[Some(color_attachment)],
                     depth_stencil_attachment: None,
+                    timestamp_writes: None,
+                    occlusion_query_set: None,
                 });
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);

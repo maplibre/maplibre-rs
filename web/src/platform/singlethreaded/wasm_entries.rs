@@ -11,7 +11,7 @@ use maplibre::{
     io::apc::CallError,
 };
 use thiserror::Error;
-use wasm_bindgen::{prelude::*, JsCast};
+use wasm_bindgen::prelude::*;
 use web_sys::DedicatedWorkerGlobalScope;
 
 use crate::{

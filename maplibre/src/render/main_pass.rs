@@ -5,6 +5,8 @@
 
 use std::ops::Deref;
 
+use wgpu::StoreOp;
+
 use crate::{
     render::{
         draw_graph,
@@ -54,7 +56,7 @@ impl Node for MainPassNode {
                 view: &texture.view,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
-                    store: true,
+                    store: StoreOp::Store,
                 },
                 resolve_target: Some(render_target.deref()),
             }
@@ -63,7 +65,7 @@ impl Node for MainPassNode {
                 view: render_target.deref(),
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
-                    store: true,
+                    store: StoreOp::Store,
                 },
                 resolve_target: None,
             }
@@ -79,13 +81,15 @@ impl Node for MainPassNode {
                         view: &depth_texture.view,
                         depth_ops: Some(wgpu::Operations {
                             load: wgpu::LoadOp::Clear(0.0),
-                            store: true,
+                            store: StoreOp::Store,
                         }),
                         stencil_ops: Some(wgpu::Operations {
                             load: wgpu::LoadOp::Clear(0),
-                            store: true,
+                            store: StoreOp::Store,
                         }),
                     }),
+                    timestamp_writes: None,
+                    occlusion_query_set: None,
                 });
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
