@@ -74,7 +74,13 @@
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
 <a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Deref;
+
+<span class="kw">use </span>wgpu::StoreOp;
 
 <span class="kw">use crate</span>::{
     debug::TileDebugItem,
@@ -120,7 +126,7 @@
             ops: wgpu::Operations {
                 <span class="comment">// Draws on-top of previously rendered data
                 </span>load: wgpu::LoadOp::Load,
-                store: <span class="bool-val">true</span>,
+                store: StoreOp::Store,
             },
             resolve_target: <span class="prelude-val">None</span>,
         };
@@ -132,6 +138,8 @@
                     label: <span class="prelude-val">Some</span>(<span class="string">"debug_pass"</span>),
                     color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(color_attachment)],
                     depth_stencil_attachment: <span class="prelude-val">None</span>,
+                    timestamp_writes: <span class="prelude-val">None</span>,
+                    occlusion_query_set: <span class="prelude-val">None</span>,
                 });
 
         <span class="kw">let </span><span class="kw-2">mut </span>tracked_pass = TrackedRenderPass::new(render_pass);

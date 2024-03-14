@@ -124,12 +124,18 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The main render pass for this application.
 //!
 //! Right now there is only one render graph. A use case for multiple render passes would be
 //! [shadows](https://www.raywenderlich.com/books/metal-by-tutorials/v2.0/chapters/14-multipass-deferred-rendering).
 
 </span><span class="kw">use </span>std::ops::Deref;
+
+<span class="kw">use </span>wgpu::StoreOp;
 
 <span class="kw">use crate</span>::{
     render::{
@@ -180,7 +186,7 @@
                 view: <span class="kw-2">&amp;</span>texture.view,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
-                    store: <span class="bool-val">true</span>,
+                    store: StoreOp::Store,
                 },
                 resolve_target: <span class="prelude-val">Some</span>(render_target.deref()),
             }
@@ -189,7 +195,7 @@
                 view: render_target.deref(),
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
-                    store: <span class="bool-val">true</span>,
+                    store: StoreOp::Store,
                 },
                 resolve_target: <span class="prelude-val">None</span>,
             }
@@ -205,13 +211,15 @@
                         view: <span class="kw-2">&amp;</span>depth_texture.view,
                         depth_ops: <span class="prelude-val">Some</span>(wgpu::Operations {
                             load: wgpu::LoadOp::Clear(<span class="number">0.0</span>),
-                            store: <span class="bool-val">true</span>,
+                            store: StoreOp::Store,
                         }),
                         stencil_ops: <span class="prelude-val">Some</span>(wgpu::Operations {
                             load: wgpu::LoadOp::Clear(<span class="number">0</span>),
-                            store: <span class="bool-val">true</span>,
+                            store: StoreOp::Store,
                         }),
                     }),
+                    timestamp_writes: <span class="prelude-val">None</span>,
+                    occlusion_query_set: <span class="prelude-val">None</span>,
                 });
 
         <span class="kw">let </span><span class="kw-2">mut </span>tracked_pass = TrackedRenderPass::new(render_pass);

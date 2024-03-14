@@ -603,6 +603,15 @@
 <a href="#602" id="602">602</a>
 <a href="#603" id="603">603</a>
 <a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -775,7 +784,9 @@
     {
         <span class="kw">let </span>instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            flags: Default::default(),
             dx12_shader_compiler: Default::default(),
+            gles_minor_version: Default::default(),
         });
 
         <span class="kw">let </span>surface: wgpu::Surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw())<span class="question-mark">? </span>};
@@ -820,7 +831,9 @@
     {
         <span class="kw">let </span>instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu_settings.backends.unwrap_or(wgpu::Backends::all()),
+            flags: Default::default(),
             dx12_shader_compiler: Default::default(),
+            gles_minor_version: Default::default(),
         });
 
         <span class="kw">let </span>(adapter, device, queue) = <span class="self">Self</span>::request_device(
@@ -857,11 +870,11 @@
         instance: <span class="kw-2">&amp;</span>wgpu::Instance,
         settings: <span class="kw-2">&amp;</span>WgpuSettings,
         request_adapter_options: <span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions&lt;<span class="lifetime">'_</span>&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(wgpu::Adapter, wgpu::Device, wgpu::Queue), wgpu::RequestDeviceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(wgpu::Adapter, wgpu::Device, wgpu::Queue), RenderError&gt; {
         <span class="kw">let </span>adapter = instance
             .request_adapter(request_adapter_options)
             .<span class="kw">await
-            </span>.ok_or(wgpu::RequestDeviceError)<span class="question-mark">?</span>;
+            </span>.ok_or(RenderError::RequestAdaptor)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>adapter_info = adapter.get_info();
 
@@ -991,6 +1004,9 @@
                 max_buffer_size: limits
                     .max_buffer_size
                     .min(constrained_limits.max_buffer_size),
+                max_non_sampler_bindings: limits
+                    .max_non_sampler_bindings
+                    .min(constrained_limits.max_non_sampler_bindings),
             };
         }
 
@@ -1073,7 +1089,9 @@
         <span class="kw">let </span>backends = wgpu::util::backend_bits_from_env().unwrap_or(wgpu::Backends::all());
         <span class="kw">let </span>instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends,
+            flags: Default::default(),
             dx12_shader_compiler: Default::default(),
+            gles_minor_version: Default::default(),
         });
         <span class="kw">let </span>adapter = wgpu::util::initialize_adapter_from_env_or_default(<span class="kw-2">&amp;</span>instance, <span class="prelude-val">None</span>)
             .<span class="kw">await
