@@ -1,18 +1,17 @@
 //! Default vector tile styles configuration.
 // use std::env;
 
-use std::{collections::HashMap, io, path::Path, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
+use std::{io, path::Path};
 
-use csscolorparser::Color as CssColor;
+use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Map;
+use serde_json::Value;
 
-// use serde_json::Number;
-// use serde_json::json;
 use crate::style::{
-    layer::{FillPaint, LayerPaint, LinePaint, StyleLayer},
-    raster::RasterLayer,
-    source::Source,
+    layer::{LayerPaint, LinePaint, StyleLayer},
+    sourcedraft::Source,
 };
 
 /// Stores the style for a multi-layered map.
@@ -21,35 +20,20 @@ pub struct Style {
     pub version: u16,
     pub name: String,
     pub metadata: Map<String, Value>,
-    pub center: Option<[f64; 2]>,
-    // pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
-    pub zoom: Option<f64>,
-    pub bearing: Option<f64>,
-    pub pitch: Option<f64>,
-    pub light: Option<Light>,
-    pub terrain: Option<Map<String, Value>>,
-    pub sources: HashMap<String, Source>,
-    pub sprite: Option<String>,
-    pub glyphs: Option<String>,
-    pub transition: Option<Transition>,
 
-    // TODO is this in the style spec?
-    pub projection: Option<Map<String, Value>>,
-
-    pub layers: Vec<StyleLayer>,
-
-    // TODO this is metadata, and it's not in the spec
-    pub created: Option<String>,
-    pub modified: Option<String>,
-    pub id: Option<String>,
-    pub owner: Option<String>,
-    pub visibility: Option<String>,
-    pub protected: Option<bool>,
-    pub draft: Option<bool>,
-
-    // to allow for extra fields in the style
     #[serde(flatten)]
-    pub extra: Option<Map<String, Value>>,
+    pub extra: Map<String, Value>,
+
+    pub sources: HashMap<String, Source>,
+    pub layers: Vec<StyleLayer>,
+    pub center: Option<[f64; 2]>, // TODO: Use LatLon type here
+    pub zoom: Option<f64>,
+    pub pitch: Option<f64>,
+    pub bearing: Option<f64>,
+    pub created: Option<String>,
+    pub draft: Option<bool>,
+    pub glyphs: Option<String>,
+    pub id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -57,89 +41,15 @@ pub struct Metadata {
     Value: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct Light {
-    #[serde(default)]
-    anchor: Anchor,
-    #[serde(default)]
-    color: Color,
-    #[serde(default)]
-    intensity: Intensity,
-    #[serde(default)]
-    position: Position,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct Color(String);
-impl Default for Color {
-    fn default() -> Self {
-        Color("#ffffff".parse().unwrap())
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct Intensity(Vec<f32>);
-impl Default for Intensity {
-    fn default() -> Self {
-        Intensity(vec![1.15, 210.0, 30.0])
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct Position(f32);
-impl Default for Position {
-    fn default() -> Self {
-        Position(0.5)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum Anchor {
-    #[serde(rename = "map")]
-    Map,
-    #[serde(rename = "viewport")]
-    Viewport,
-}
-
-impl Default for Anchor {
-    fn default() -> Self {
-        Anchor::Viewport
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct Transition {
-    #[serde(default)]
-    delay: Delay,
-    #[serde(default)]
-    duration: Duration,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct Delay(i32);
-impl Default for Delay {
-    fn default() -> Self {
-        Delay(0)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct Duration(i32);
-impl Default for Duration {
-    fn default() -> Self {
-        Duration(0)
-    }
-}
-
 impl Default for Style {
     fn default() -> Self {
         Style {
-            extra: Default::default(),
             version: 8,
             name: "Default Style".to_string(),
             metadata: Default::default(),
+            extra: Default::default(),
             sources: Default::default(),
-            center: Some([50.85045, 4.34878]),
+            center: Some([46.5197, 6.6323]),
             pitch: Some(0.0),
             zoom: Some(13.0),
             bearing: Some(0.0),
@@ -147,25 +57,16 @@ impl Default for Style {
             draft: Some(false),
             glyphs: Some("genericmap://fonts/genericmap/{fontstack}/{range}.pbf".to_string()),
             id: Some("genericmap".to_string()),
-            sprite: Some("genericmap://sprites/genericmap".to_string()),
-            projection: Default::default(),
-            visibility: Some("public".to_string()),
-            protected: Some(false),
-            modified: Some("2021-03-01T00:00:00Z".to_string()),
-            owner: Default::default(),
-            light: Some(Light::default()),
-            terrain: Default::default(),
-            transition: Some(Transition::default()),
             layers: vec![
                 StyleLayer {
                     index: 0,
                     id: "park".to_string(),
-                    typ: Some("fill".to_string()),
+                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(CssColor::from_str("#c8facc").unwrap()),
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("#c8facc").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("park".to_string()),
@@ -173,12 +74,12 @@ impl Default for Style {
                 StyleLayer {
                     index: 1,
                     id: "landuse".to_string(),
-                    typ: Some("fill".to_string()),
+                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(CssColor::from_str("#e0dfdf").unwrap()),
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("#e0dfdf").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("landuse".to_string()),
@@ -186,12 +87,12 @@ impl Default for Style {
                 StyleLayer {
                     index: 2,
                     id: "landcover".to_string(),
-                    typ: Some("fill".to_string()),
+                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(CssColor::from_str("#aedfa3").unwrap()),
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("#aedfa3").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("landcover".to_string()),
@@ -199,12 +100,12 @@ impl Default for Style {
                 StyleLayer {
                     index: 3,
                     id: "transportation".to_string(),
-                    typ: Some("line".to_string()),
+                    typ: "line".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(CssColor::from_str("#ffffff").unwrap()),
+                        line_color: Some(Color::from_str("#ffffff").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("transportation".to_string()),
@@ -212,12 +113,12 @@ impl Default for Style {
                 StyleLayer {
                     index: 4,
                     id: "building".to_string(),
-                    typ: Some("fill".to_string()),
+                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(CssColor::from_str("#d9d0c9").unwrap()),
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("#d9d0c9").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("building".to_string()),
@@ -225,12 +126,12 @@ impl Default for Style {
                 StyleLayer {
                     index: 4,
                     id: "water".to_string(),
-                    typ: Some("fill".to_string()),
+                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(CssColor::from_str("#aad3df").unwrap()),
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("#aad3df").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("water".to_string()),
@@ -238,12 +139,12 @@ impl Default for Style {
                 StyleLayer {
                     index: 6,
                     id: "waterway".to_string(),
-                    typ: Some("fill".to_string()),
+                    typ: "fill".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Fill(FillPaint {
-                        fill_color: Some(CssColor::from_str("#aad3df").unwrap()),
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(Color::from_str("#aad3df").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("waterway".to_string()),
@@ -251,26 +152,15 @@ impl Default for Style {
                 StyleLayer {
                     index: 7,
                     id: "boundary".to_string(),
-                    typ: Some("line".to_string()),
+                    typ: "line".to_string(),
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
                     paint: Some(LayerPaint::Line(LinePaint {
-                        line_color: Some(CssColor::from_str("black").unwrap()),
+                        line_color: Some(Color::from_str("black").unwrap()),
                     })),
                     source: None,
                     source_layer: Some("boundary".to_string()),
-                },
-                StyleLayer {
-                    index: 8,
-                    id: "raster".to_string(),
-                    maxzoom: None,
-                    minzoom: None,
-                    metadata: None,
-                    paint: Some(LayerPaint::Raster(RasterLayer::default())),
-                    source: None,
-                    source_layer: Some("raster".to_string()),
-                    typ: Some("raster".to_string()),
                 },
             ],
         }
@@ -279,7 +169,7 @@ impl Default for Style {
 
 #[derive(Debug)]
 pub enum StyleModuleError {
-    Io(io::Error),
+    Io(std::io::Error),
     Json(serde_json::Error),
 }
 
@@ -356,16 +246,13 @@ mod tests {
     }
 
     #[test]
-    fn default_object() {
-        let style = Style::default();
+    fn load_sample_data() {
+        // let dir = env::current_dir().unwrap();
+        // println!("{:#?}", dir);
+        let reader = load_model("./src/style/test-data/cl4.json").unwrap();
+        // println!("{:#?}", reader);
+        let style: crate::style::styledraft::Style = serde_json::from_str(&reader).unwrap();
         println!("{:#?}", style);
-    }
-
-    #[test]
-    fn load_test() {
-        let reader = load_model("./src/style/tests/test-data/cl4.json").unwrap();
-        let style: crate::style::style::Style = serde_json::from_str(&reader).unwrap();
-        println!("{:#?}", style);
-        println!("test works");
+        println!("helloooo");
     }
 }

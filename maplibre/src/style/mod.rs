@@ -1,5 +1,4 @@
 //! Vector tile format styling.
-
 pub use cint::*;
 pub use style::*;
 

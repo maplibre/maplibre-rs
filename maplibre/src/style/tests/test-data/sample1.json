@@ -1,0 +1,49 @@
+{
+    "version": 8,
+    "name": "Test Kim",
+    "metadata": {},
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "url": "https://maps.tuerantuer.org/europe_germany/tiles.json"
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "rgb(239,239,239)"
+            }
+        },
+        {
+            "id": "transportation",
+            "type": "line",
+            "source": "openmaptiles",
+            "source-layer": "transportation",
+            "paint": {
+                "line-color": "#3D3D3D"
+            }
+        },
+        {
+            "id": "boundary",
+            "type": "line",
+            "source": "openmaptiles",
+            "source-layer": "boundary",
+            "paint": {
+                "line-color": "#3D3D3D"
+            }
+        },
+        {
+            "id": "building",
+            "minzoom": 14,
+            "maxzoom": 15,
+            "type": "fill",
+            "source": "openmaptiles",
+            "source-layer": "building",
+            "paint": {
+                "line-color": "#3D3D3D"
+            }
+        }
+    ]
+}
