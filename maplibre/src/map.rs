@@ -58,7 +58,7 @@ where
 {
     pub fn new(
         style: Style,
-        mut kernel: Kernel<E>,
+        kernel: Kernel<E>,
         renderer_builder: RendererBuilder,
         plugins: Vec<Box<dyn Plugin<E>>>,
     ) -> Result<Self, MapError> {

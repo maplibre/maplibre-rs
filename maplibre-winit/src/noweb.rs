@@ -82,7 +82,7 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
         let mut raw_event_loop_builder =
             raw_event_loop_builder.with_android_app(self.android_app.clone());
 
-        let raw_event_loop = raw_event_loop_builder.build();
+        let raw_event_loop = raw_event_loop_builder.build().unwrap(); // TODO
 
         let window = WindowBuilder::new()
             .with_title(&self.title)

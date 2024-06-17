@@ -2,7 +2,7 @@
 
 use std::num::NonZeroU32;
 
-use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
+use wgpu::rwh::{HasDisplayHandle, HasWindowHandle};
 
 /// Window of a certain [`PhysicalSize`]. This can either be a proper window or a headless one.
 pub trait MapWindow {
@@ -12,9 +12,9 @@ pub trait MapWindow {
 /// Window which references a physical `RawWindow`. This is only implemented by headed windows and
 /// not by headless windows.
 pub trait HeadedMapWindow: MapWindow {
-    type RawWindow: HasRawWindowHandle + HasRawDisplayHandle;
+    type WindowHandle: HasWindowHandle + HasDisplayHandle + Sync;
 
-    fn raw(&self) -> &Self::RawWindow;
+    fn handle(&self) -> &Self::WindowHandle;
 
     // TODO: Can we avoid this?
     fn request_redraw(&self);

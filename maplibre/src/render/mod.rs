@@ -175,7 +175,7 @@ impl Renderer {
             gles_minor_version: Default::default(),
         });
 
-        let surface: wgpu::Surface = unsafe { instance.create_surface(window.raw())? };
+        let surface: wgpu::Surface = unsafe { instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window.handle())?)? };
 
         let (adapter, device, queue) = Self::request_device(
             &instance,
@@ -255,7 +255,7 @@ impl Renderer {
     async fn request_device(
         instance: &wgpu::Instance,
         settings: &WgpuSettings,
-        request_adapter_options: &wgpu::RequestAdapterOptions<'_>,
+        request_adapter_options: &wgpu::RequestAdapterOptions<'_, '_>,
     ) -> Result<(wgpu::Adapter, wgpu::Device, wgpu::Queue), RenderError> {
         let adapter = instance
             .request_adapter(request_adapter_options)
@@ -400,8 +400,8 @@ impl Renderer {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: settings.device_label.as_ref().map(|a| a.as_ref()),
-                    features,
-                    limits,
+                    required_features: features,
+                    required_limits: limits,
                 },
                 trace_path,
             )

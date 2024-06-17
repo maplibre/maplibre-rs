@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{Vector2, Zero};
+use winit::keyboard::{KeyCode, PhysicalKey};
 use maplibre::context::MapContext;
 
 use super::UpdateState;
@@ -43,7 +44,7 @@ impl ShiftHandler {
 
     pub fn process_key_press(
         &mut self,
-        key: winit::event::VirtualKeyCode,
+        key: PhysicalKey,
         state: winit::event::ElementState,
     ) -> bool {
         let amount = if state == winit::event::ElementState::Pressed {
@@ -52,19 +53,19 @@ impl ShiftHandler {
             0.0
         };
         match key {
-            winit::event::VirtualKeyCode::W | winit::event::VirtualKeyCode::Up => {
+            PhysicalKey::Code(KeyCode::KeyW) | PhysicalKey::Code(KeyCode::ArrowUp) => {
                 self.camera_translate.y -= amount;
                 true
             }
-            winit::event::VirtualKeyCode::S | winit::event::VirtualKeyCode::Down => {
+            PhysicalKey::Code(KeyCode::KeyS) | PhysicalKey::Code(KeyCode::ArrowDown) => {
                 self.camera_translate.y += amount;
                 true
             }
-            winit::event::VirtualKeyCode::A | winit::event::VirtualKeyCode::Left => {
+            PhysicalKey::Code(KeyCode::KeyA) | PhysicalKey::Code(KeyCode::ArrowLeft) => {
                 self.camera_translate.x -= amount;
                 true
             }
-            winit::event::VirtualKeyCode::D | winit::event::VirtualKeyCode::Right => {
+            PhysicalKey::Code(KeyCode::KeyD) | PhysicalKey::Code(KeyCode::ArrowRight) => {
                 self.camera_translate.x += amount;
                 true
             }

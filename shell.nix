@@ -41,6 +41,7 @@ pkgs.mkShell {
     pkgs.darwin.apple_sdk.frameworks.AppKit
   ];
   shellHook = ''
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ unstable.libxkbcommon ] }";
     # Vulkan
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.vulkan-loader ] }";
     # EGL

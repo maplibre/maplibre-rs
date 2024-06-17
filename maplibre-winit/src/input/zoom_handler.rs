@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
+use winit::keyboard::{KeyCode, PhysicalKey};
 use maplibre::{context::MapContext, coords::Zoom};
 
 use super::UpdateState;
@@ -79,7 +80,7 @@ impl ZoomHandler {
 
     pub fn process_key_press(
         &mut self,
-        key: winit::event::VirtualKeyCode,
+        key: PhysicalKey,
         state: winit::event::ElementState,
     ) -> bool {
         let amount = if state == winit::event::ElementState::Pressed {
@@ -89,11 +90,11 @@ impl ZoomHandler {
         };
 
         match key {
-            winit::event::VirtualKeyCode::Plus | winit::event::VirtualKeyCode::I => {
+            PhysicalKey::Code(KeyCode::KeyI)=> {
                 self.update_zoom(amount);
                 true
             }
-            winit::event::VirtualKeyCode::Minus | winit::event::VirtualKeyCode::K => {
+            PhysicalKey::Code(KeyCode::KeyK) => {
                 self.update_zoom(-amount);
                 true
             }

@@ -11,9 +11,10 @@ use maplibre::{
     window::{HeadedMapWindow, MapWindowConfig, PhysicalSize},
 };
 use winit::{
-    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
-    event_loop::ControlFlow,
+    event::{ElementState, Event, WindowEvent},
 };
+use winit::event::KeyEvent;
+use winit::keyboard::{Key, NamedKey};
 
 use crate::input::{InputController, UpdateState};
 
@@ -46,9 +47,9 @@ impl<ET> WinitMapWindow<ET> {
 }
 
 impl<ET> HeadedMapWindow for WinitMapWindow<ET> {
-    type RawWindow = RawWinitWindow;
+    type WindowHandle = RawWinitWindow;
 
-    fn raw(&self) -> &Self::RawWindow {
+    fn handle(&self) -> &Self::WindowHandle {
         &self.window
     }
 
@@ -84,7 +85,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         let mut scale_factor = map.window().scale_factor();
 
         self.event_loop
-            .run(move |event, _window_target, control_flow| {
+            .run(move |event, window_target| {
                 #[cfg(target_os = "android")]
                 if !map.is_initialized() && event == Event::Resumed {
                     use tokio::{runtime::Handle, task};
@@ -109,29 +110,60 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         ref event,
                         window_id,
                     } if window_id == map.window().id().into() => {
+
+                        match event {
+                            WindowEvent::RedrawRequested => {
+                                if !map.is_initialized() {
+                                    return;
+                                }
+
+                                let now = Instant::now();
+                                let dt = now - last_render_time;
+                                last_render_time = now;
+
+                                if let Ok(map_context) =  map.context_mut() {
+                                    input_controller.update_state(map_context, dt);
+                                }
+
+                                // TODO: Handle gracefully
+                                map.run_schedule().expect("Failed to run schedule!");
+
+                                if let Some(max_frames) = max_frames {
+                                    if current_frame >= max_frames {
+                                        log::info!("Exiting because maximum frames reached.");
+                                        window_target.exit()
+                                    }
+
+                                    current_frame += 1;
+                                }
+
+                                map.window().request_redraw();
+                            }
+                            _ => {}
+                        }
+
                         if !input_controller.window_input(event, scale_factor) {
                             match event {
                                 WindowEvent::CloseRequested
                                 | WindowEvent::KeyboardInput {
-                                    input:
-                                    KeyboardInput {
+                                    event: KeyEvent {
                                         state: ElementState::Pressed,
-                                        virtual_keycode: Some(VirtualKeyCode::Escape),
+                                        logical_key: Key::Named(NamedKey::Exit),
                                         ..
                                     },
                                     ..
-                                } => *control_flow = ControlFlow::Exit,
+                                } =>  window_target.exit(),
                                 WindowEvent::Resized(winit::dpi::PhysicalSize { width, height}) => {
                                     if let Ok(map_context) = map.context_mut() {
                                         let size = PhysicalSize::new(*width, *height).expect("window values should not be zero");
                                         map_context.resize(size, scale_factor);
                                     }
                                 }
-                                WindowEvent::ScaleFactorChanged { new_inner_size: winit::dpi::PhysicalSize { width, height}, scale_factor: new_scale_factor } => {
+                                WindowEvent::ScaleFactorChanged { inner_size_writer, scale_factor: new_scale_factor } => {
                                     if let Ok(map_context) =  map.context_mut() {
                                         log::info!("New scaling factor: {}", new_scale_factor);
                                         scale_factor = *new_scale_factor;
-                                        let size = PhysicalSize::new(*width, *height).expect("window values should not be zero");
+                                        let size = PhysicalSize::new(0, 0).expect("window values should not be zero"); // TODO
                                         map_context.resize(size, scale_factor);
                                     }
                                 }
@@ -139,42 +171,13 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                             }
                         }
                     }
-                    Event::RedrawRequested(_) => {
-                        if !map.is_initialized() {
-                            return;
-                        }
 
-                        let now = Instant::now();
-                        let dt = now - last_render_time;
-                        last_render_time = now;
-
-                        if let Ok(map_context) =  map.context_mut() {
-                            input_controller.update_state(map_context, dt);
-                        }
-
-                        // TODO: Handle gracefully
-                        map.run_schedule().expect("Failed to run schedule!");
-
-                        if let Some(max_frames) = max_frames {
-                            if current_frame >= max_frames {
-                                log::info!("Exiting because maximum frames reached.");
-                                *control_flow = ControlFlow::Exit;
-                            }
-
-                            current_frame += 1;
-                        }
-                    }
                     Event::Suspended => {
                         log::info!("Suspending and dropping render state.");
                         map.reset() // TODO: Instead of resetting the whole map (incl. the renderer) only reset the renderer
                     }
                     Event::Resumed => {
                         // FIXME unimplemented!()
-                    }
-                    Event::MainEventsCleared => {
-                        // RedrawRequested will only trigger once, unless we manually
-                        // request it.
-                        map.window().request_redraw();
                     }
                     _ => {}
                 }

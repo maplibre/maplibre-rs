@@ -1,4 +1,5 @@
 use std::time::Duration;
+use winit::keyboard::{KeyCode, PhysicalKey};
 
 use maplibre::context::MapContext;
 
@@ -37,7 +38,7 @@ impl UpdateState for DebugHandler {
 impl DebugHandler {
     pub fn process_key_press(
         &mut self,
-        key: winit::event::VirtualKeyCode,
+        key: PhysicalKey,
         state: winit::event::ElementState,
     ) -> bool {
         let amount = if state == winit::event::ElementState::Pressed {
@@ -46,19 +47,19 @@ impl DebugHandler {
             0.0
         };
         match key {
-            winit::event::VirtualKeyCode::V => {
+            PhysicalKey::Code(KeyCode::KeyV) => {
                 self.left_delta += amount;
                 true
             }
-            winit::event::VirtualKeyCode::B => {
+            PhysicalKey::Code(KeyCode::KeyB) => {
                 self.top_delta += amount;
                 true
             }
-            winit::event::VirtualKeyCode::N => {
+            PhysicalKey::Code(KeyCode::KeyN) => {
                 self.bottom_delta += amount;
                 true
             }
-            winit::event::VirtualKeyCode::M => {
+            PhysicalKey::Code(KeyCode::KeyM) => {
                 self.right_delta += amount;
                 true
             }
