@@ -17,6 +17,7 @@
 		0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D56B2812903700906D21 /* maplibre_rs.framework */; };
 		0B85D5A42812991100906D21 /* libmaplibre_apple.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B85D5A32812987B00906D21 /* libmaplibre_apple.a */; };
 		5015FE4C2ACCB64600F8E4B6 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */; };
+		53BD1F062C34FB12008DAA23 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53BD1F052C34FB12008DAA23 /* Carbon.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +33,7 @@
 		0BE452D62812EEA8003BD2A5 /* example--iOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "example--iOS--Info.plist"; sourceTree = "<group>"; };
 		5015FE472ACCA77900F8E4B6 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.0.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
 		5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		53BD1F052C34FB12008DAA23 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5015FE4C2ACCB64600F8E4B6 /* SystemConfiguration.framework in Frameworks */,
+				53BD1F062C34FB12008DAA23 /* Carbon.framework in Frameworks */,
 				0B85D599281291A700906D21 /* maplibre_rs.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -97,6 +100,7 @@
 		0B85D573281290D400906D21 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				53BD1F052C34FB12008DAA23 /* Carbon.framework */,
 				5015FE472ACCA77900F8E4B6 /* SystemConfiguration.framework */,
 				5015FE492ACCA78300F8E4B6 /* SystemConfiguration.framework */,
 				0B85D5A32812987B00906D21 /* libmaplibre_apple.a */,
@@ -259,6 +263,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		0BE452D72812EFC1003BD2A5 /* Cargo Build */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -273,7 +278,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "arch=\"unknown\"\nvendor=\"apple\"\nos_type=\"unknown\"\nenvironment_type=\"\"\n\nmode=\"\"\n\necho \"ARCH: $ARCHS\"\n\nif [[ $CONFIGURATION == \"Release\" ]]\nthen\n    mode=\"--release\"\nfi\n\nif [[ $ARCHS == \"x86_64\" ]]\nthen\n    arch=\"x86_64\"\nelif [[ $ARCHS == \"arm64\" ]]\nthen\n    arch=\"aarch64\"\nfi\n\nif [[ $SDK_NAME == *\"iphoneos\"* ]]\nthen\n    os_type=\"ios\"\nelif [[ $SDK_NAME == *\"macos\"* ]]\nthen\n    os_type=\"darwin\"\nelif [[ $SDK_NAME == *\"iphonesimulator\"* ]]\nthen\n    os_type=\"ios\"\n    if [[ $ARCHS == \"arm64\" ]]\n    then\n        environment_type=\"sim\"\n    fi\nfi\n\n\ntriplet=\"$arch-$vendor-$os_type\"\n\nif [ -n \"$environment_type\" ]\nthen\n    triplet=\"$triplet-$environment_type\"\nfi\n\necho \"Mode: $mode\"\necho \"Triplet: $triplet\"\necho \"Shell: $SHELL\"\n\ncmd=$(cat << END\n  export HOME=$HOME\n  . $HOME/.cargo/env\n  \n  if [ -f \"/opt/homebrew/bin/brew\" ];\n  then\n    echo \"Homebrew support activated\"\n    eval \"\\$(/opt/homebrew/bin/brew shellenv)\"\n  fi\n  \n  cargo build -p apple $mode --target $triplet --lib\nEND\n)\n\necho \"Command: $cmd\"\n\nenv -i /bin/bash -c \"$cmd\"\n";
+			shellScript = "arch=\"unknown\"\nvendor=\"apple\"\nos_type=\"unknown\"\nenvironment_type=\"\"\n\nmode=\"\"\n\necho \"ARCH: $ARCHS\"\n\nif [[ $CONFIGURATION == \"Release\" ]]\nthen\n    mode=\"--release\"\nfi\n\nif [[ $ARCHS == \"x86_64\" ]]\nthen\n    arch=\"x86_64\"\nelif [[ $ARCHS == \"arm64\" ]]\nthen\n    arch=\"aarch64\"\nfi\n\nif [[ $SDK_NAME == *\"iphoneos\"* ]]\nthen\n    os_type=\"ios\"\nelif [[ $SDK_NAME == *\"macos\"* ]]\nthen\n    os_type=\"darwin\"\nelif [[ $SDK_NAME == *\"iphonesimulator\"* ]]\nthen\n    os_type=\"ios\"\n    if [[ $ARCHS == \"arm64\" ]]\n    then\n        environment_type=\"sim\"\n    fi\nfi\n\n\ntriplet=\"$arch-$vendor-$os_type\"\n\nif [ -n \"$environment_type\" ]\nthen\n    triplet=\"$triplet-$environment_type\"\nfi\n\necho \"Mode: $mode\"\necho \"Triplet: $triplet\"\necho \"Shell: $SHELL\"\n\ncmd=$(cat << END\n  export HOME=$HOME\n  . $HOME/.cargo/env\n  \n  if [ -f \"/opt/homebrew/bin/brew\" ];\n  then\n    echo \"Homebrew support activated\"\n    eval \"\\$(/opt/homebrew/bin/brew shellenv)\"\n  fi\n  \n  cargo build -p apple $mode --target $triplet --lib\nEND\n)\n\necho \"Command: $cmd\"\n\n\nif test -f /run/current-system/sw/bin/nix-shell; then\n  env -i /run/current-system/sw/bin/nix-shell \"$PROJECT_DIR/../../shell.nix\" --run \"$cmd\"\nelse\n  env -i /bin/bash --c \"$cmd\"\nfi\n\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
