@@ -18,7 +18,7 @@ use maplibre::{
     style::Style,
     window::{MapWindow, MapWindowConfig, PhysicalSize},
 };
-use winit::window::WindowBuilder;
+use winit::window::WindowAttributes;
 
 use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
@@ -73,8 +73,7 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
     fn create(&self) -> Self::MapWindow {
-        let mut raw_event_loop_builder =
-            winit::event_loop::EventLoopBuilder::<ET>::with_user_event();
+        let mut raw_event_loop_builder = winit::event_loop::EventLoop::<ET>::with_user_event();
 
         #[cfg(target_os = "android")]
         use winit::platform::android::EventLoopBuilderExtAndroid;
@@ -84,10 +83,9 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
 
         let raw_event_loop = raw_event_loop_builder.build().unwrap(); // TODO
 
-        let window = WindowBuilder::new()
-            .with_title(&self.title)
-            .build(&raw_event_loop)
-            .unwrap();
+        let window = raw_event_loop
+            .create_window(WindowAttributes::new().with_title(&self.title))
+            .unwrap(); // todo
 
         Self::MapWindow {
             window,
