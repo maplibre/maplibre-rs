@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use maplibre::window::{MapWindow, MapWindowConfig, PhysicalSize};
-use winit::{platform::web::WindowBuilderExtWebSys, window::WindowBuilder};
+use winit::{platform::web::WindowAttributesExtWebSys, window::WindowAttributes};
 
 use super::WinitMapWindow;
 use crate::WinitEventLoop;
@@ -25,13 +25,14 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
     fn create(&self) -> Self::MapWindow {
-        let raw_event_loop = winit::event_loop::EventLoopBuilder::<ET>::with_user_event()
+        let raw_event_loop = winit::event_loop::EventLoop::<ET>::with_user_event()
             .build()
             .unwrap(); // TODO
 
-        let window: winit::window::Window = WindowBuilder::new()
-            .with_canvas(Some(get_canvas(&self.canvas_id)))
-            .build(&raw_event_loop)
+        let window: winit::window::Window = raw_event_loop
+            .create_window(
+                WindowAttributes::default().with_canvas(Some(get_canvas(&self.canvas_id))),
+            )
             .unwrap();
 
         let size = get_body_size().unwrap();

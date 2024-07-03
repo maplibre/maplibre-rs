@@ -18,7 +18,7 @@ pkgs.mkShell {
     unstable.just
     unstable.nodejs
     unstable.mdbook
-    unstable.wasm-bindgen-cli
+    # unstable.wasm-bindgen-cli # we need wasm-bindgen-cli@0.2.92, so pull it from cargo instead
     unstable.tracy
     unstable.nixpkgs-fmt # To format this file: nixpkgs-fmt *.nix
     # System dependencies
