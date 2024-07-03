@@ -42,7 +42,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 ) -> Result<(), ProcessVectorError> {
     // Decode
 
-    let mut tile = geozero::mvt::Tile::decode(data).expect("failed to load tile");
+    let mut tile = geozero::mvt::Tile::decode(data).expect("failed to load tile"); // TODO handle
 
     // Available
 

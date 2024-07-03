@@ -1,7 +1,7 @@
 use std::time::Duration;
-use winit::keyboard::{KeyCode, PhysicalKey};
 
 use maplibre::context::MapContext;
+use winit::keyboard::{KeyCode, PhysicalKey};
 
 use super::UpdateState;
 

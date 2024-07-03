@@ -25,6 +25,8 @@ pkgs.mkShell {
     unstable.flatbuffers
     unstable.protobuf
 
+    pkgs.jdk17
+
     unstable.xorg.libXrandr
     unstable.xorg.libXi
     unstable.xorg.libXcursor

@@ -77,7 +77,10 @@ impl WindowHead {
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        self.surface = unsafe { instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window.handle())?)? };
+        self.surface = unsafe {
+            instance
+                .create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window.handle())?)?
+        };
         Ok(())
     }
 

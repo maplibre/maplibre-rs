@@ -27,7 +27,7 @@ use crate::{WinitEnvironment, WinitEventLoop};
 pub struct WinitMapWindowConfig<ET> {
     title: String,
     #[cfg(target_os = "android")]
-    android_app: winit::platform::android::activity::AndroidApp,
+    android_app: crate::android_activity::AndroidApp,
 
     phantom_et: PhantomData<ET>,
 }

@@ -25,7 +25,9 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
     fn create(&self) -> Self::MapWindow {
-        let raw_event_loop = winit::event_loop::EventLoopBuilder::<ET>::with_user_event().build();
+        let raw_event_loop = winit::event_loop::EventLoopBuilder::<ET>::with_user_event()
+            .build()
+            .unwrap(); // TODO
 
         let window: winit::window::Window = WindowBuilder::new()
             .with_canvas(Some(get_canvas(&self.canvas_id)))
@@ -33,7 +35,7 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
             .unwrap();
 
         let size = get_body_size().unwrap();
-        window.set_inner_size(size);
+        window.request_inner_size(size);
         Self::MapWindow {
             window,
             event_loop: Some(WinitEventLoop {
@@ -47,7 +49,7 @@ impl<ET: 'static> MapWindow for WinitMapWindow<ET> {
     fn size(&self) -> PhysicalSize {
         let size = self.window.inner_size();
 
-        PhysicalSize::new(size.width, size.height).expect("failed to get window dimensions.")
+        PhysicalSize::new(size.width, size.height).unwrap_or(PhysicalSize::new(1, 1).unwrap())
     }
 }
 

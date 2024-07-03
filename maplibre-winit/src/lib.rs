@@ -11,14 +11,16 @@ use maplibre::{
     window::{HeadedMapWindow, MapWindowConfig, PhysicalSize},
 };
 use winit::{
-    event::{ElementState, Event, WindowEvent},
+    event::{ElementState, Event, KeyEvent, WindowEvent},
+    keyboard::{Key, NamedKey},
 };
-use winit::event::KeyEvent;
-use winit::keyboard::{Key, NamedKey};
 
 use crate::input::{InputController, UpdateState};
 
 pub mod input;
+
+#[cfg(target_os = "android")]
+pub use winit::platform::android::activity as android_activity;
 
 pub type RawWinitWindow = winit::window::Window;
 pub type RawWinitEventLoop<ET> = winit::event_loop::EventLoop<ET>;

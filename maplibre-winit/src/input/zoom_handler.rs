@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use cgmath::Vector2;
-use winit::keyboard::{KeyCode, PhysicalKey};
 use maplibre::{context::MapContext, coords::Zoom};
+use winit::keyboard::{KeyCode, PhysicalKey};
 
 use super::UpdateState;
 
@@ -90,7 +90,7 @@ impl ZoomHandler {
         };
 
         match key {
-            PhysicalKey::Code(KeyCode::KeyI)=> {
+            PhysicalKey::Code(KeyCode::KeyI) => {
                 self.update_zoom(amount);
                 true
             }

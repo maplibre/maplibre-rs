@@ -175,7 +175,10 @@ impl Renderer {
             gles_minor_version: Default::default(),
         });
 
-        let surface: wgpu::Surface = unsafe { instance.create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window.handle())?)? };
+        let surface: wgpu::Surface = unsafe {
+            instance
+                .create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window.handle())?)?
+        };
 
         let (adapter, device, queue) = Self::request_device(
             &instance,
@@ -487,8 +490,8 @@ mod tests {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::default(),
-                    limits: wgpu::Limits::default(),
+                    required_features: wgpu::Features::default(),
+                    required_limits: wgpu::Limits::default(),
                 },
                 None,
             )

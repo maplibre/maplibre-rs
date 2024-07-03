@@ -13,11 +13,10 @@ authors.workspace = true
 
 [dependencies]
 maplibre = { path = "../maplibre", features = ["thread-safe-futures"] }
-maplibre-winit = { path = "../maplibre-winit", version = "0.1.0"  }
+maplibre-winit = { path = "../maplibre-winit", version = "0.1.0" }
 env_logger.workspace = true
 log.workspace = true
 android_logger.workspace = true
-android-activity.workspace = true
 jni.workspace = true
 
 [lib]
