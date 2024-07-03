@@ -34,9 +34,6 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
                 WindowAttributes::default().with_canvas(Some(get_canvas(&self.canvas_id))),
             )
             .unwrap();
-
-        let size = get_body_size().unwrap();
-        window.request_inner_size(size);
         Self::MapWindow {
             window,
             event_loop: Some(WinitEventLoop {
@@ -52,16 +49,6 @@ impl<ET: 'static> MapWindow for WinitMapWindow<ET> {
 
         PhysicalSize::new(size.width, size.height).unwrap_or(PhysicalSize::new(1, 1).unwrap())
     }
-}
-
-pub fn get_body_size() -> Option<winit::dpi::LogicalSize<i32>> {
-    let web_window: web_sys::Window = web_sys::window().unwrap();
-    let document = web_window.document().unwrap();
-    let body = document.body().unwrap();
-    Some(winit::dpi::LogicalSize {
-        width: body.client_width(),
-        height: body.client_height(),
-    })
 }
 
 pub fn get_canvas(element_id: &str) -> web_sys::HtmlCanvasElement {
