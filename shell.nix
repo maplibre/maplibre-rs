@@ -11,7 +11,10 @@ let
     })
     { };
 in
-pkgs.mkShell {
+(pkgs.mkShell.override {
+    stdenv = stdenvNoCC; # Wew are using the host clang on macOS; the Nix clang adds a clag that breaks cross compilation here: https://github.com/NixOS/nixpkgs/blob/362cb82b75394680990cbe89f40fe65d35f66617/pkgs/build-support/cc-wrapper/default.nix#L490
+                         # It causes: clang-15: error: invalid argument '-mmacos-version-min=11.0' not allowed with '-miphoneos-version-min=7.0'
+}) {
   nativeBuildInputs = [
     # Tools
     unstable.rustup
@@ -48,6 +51,8 @@ pkgs.mkShell {
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.vulkan-loader ] }";
     # EGL
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.libglvnd ] }";
+
+    #export PATH="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:$PATH"
   '';
 
 }
