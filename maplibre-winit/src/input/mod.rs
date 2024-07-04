@@ -72,17 +72,14 @@ impl InputController {
                 true
             }
             WindowEvent::KeyboardInput {
-                event:
-                    KeyEvent {
-                        state,
-                        physical_key,
-                        ..
-                    },
+                event: KeyEvent {
+                    state, logical_key, ..
+                },
                 ..
             } => {
-                self.shift_handler.process_key_press(*physical_key, *state)
-                    || self.debug_handler.process_key_press(*physical_key, *state)
-                    || self.zoom_handler.process_key_press(*physical_key, *state)
+                self.shift_handler.process_key_press(logical_key, *state)
+                    || self.debug_handler.process_key_press(logical_key, *state)
+                    || self.zoom_handler.process_key_press(logical_key, *state)
             }
             WindowEvent::Touch(touch) => match touch.phase {
                 TouchPhase::Started => {

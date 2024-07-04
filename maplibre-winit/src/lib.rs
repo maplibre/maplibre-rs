@@ -112,7 +112,6 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                         ref event,
                         window_id,
                     } if window_id == map.window().id().into() => {
-                        log::info!("{:?}", event);
                         match event {
                             WindowEvent::RedrawRequested => {
                                 if !map.is_initialized() {
@@ -130,8 +129,6 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                                 // TODO: Handle gracefully
                                 map.run_schedule().expect("Failed to run schedule!");
 
-
-
                                 if let Some(max_frames) = max_frames {
                                     if current_frame >= max_frames {
                                         log::info!("Exiting because maximum frames reached.");
@@ -142,7 +139,6 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                                 }
 
                                 map.window().request_redraw();
-                                log::info!("redraw requested");
                             }
                             _ => {}
                         }
@@ -162,8 +158,8 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                                     if let Ok(map_context) = map.context_mut() {
                                         let size = PhysicalSize::new(*width, *height).expect("window values should not be zero");
                                         map_context.resize(size, scale_factor);
+                                        map.window().request_redraw();
                                     }
-                                    map.window().request_redraw();
                                 }
                                 WindowEvent::ScaleFactorChanged { inner_size_writer, scale_factor: new_scale_factor } => {
                                     if let Ok(map_context) =  map.context_mut() {
