@@ -370,6 +370,10 @@
 <a href="#369" id="369">369</a>
 <a href="#370" id="370">370</a>
 <a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Utilities for handling surfaces which can be either headless or headed. A headed surface has
 //! a handle to a window. A headless surface renders to a texture.
 
@@ -412,7 +416,7 @@
 }
 
 <span class="kw">pub struct </span>WindowHead {
-    surface: wgpu::Surface,
+    surface: wgpu::Surface&lt;<span class="lifetime">'static</span>&gt;,
     size: PhysicalSize,
 
     texture_format: wgpu::TextureFormat,
@@ -435,6 +439,7 @@
             height: <span class="self">self</span>.size.height(),
             present_mode: <span class="self">self</span>.present_mode,
             view_formats: <span class="macro">vec!</span>[<span class="self">self</span>.texture_format],
+            desired_maximum_frame_latency: <span class="number">2</span>,
         };
 
         <span class="self">self</span>.surface.configure(device, <span class="kw-2">&amp;</span>surface_config);
@@ -448,7 +453,10 @@
     <span class="kw">where
         </span>MW: MapWindow + HeadedMapWindow,
     {
-        <span class="self">self</span>.surface = <span class="kw">unsafe </span>{ instance.create_surface(window.raw())<span class="question-mark">? </span>};
+        <span class="self">self</span>.surface = <span class="kw">unsafe </span>{
+            instance
+                .create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(<span class="kw-2">&amp;</span>window.handle())<span class="question-mark">?</span>)<span class="question-mark">?
+        </span>};
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -542,7 +550,7 @@
 
 <span class="kw">impl </span>Surface {
     <span class="kw">pub fn </span>from_surface&lt;MW&gt;(
-        surface: wgpu::Surface,
+        surface: wgpu::Surface&lt;<span class="lifetime">'static</span>&gt;,
         adapter: <span class="kw-2">&amp;</span>wgpu::Adapter,
         window: <span class="kw-2">&amp;</span>MW,
         settings: <span class="kw-2">&amp;</span>RendererSettings,

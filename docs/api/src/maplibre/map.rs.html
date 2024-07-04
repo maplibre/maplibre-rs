@@ -198,6 +198,8 @@
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
 <a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::rc::Rc;
 
 <span class="kw">use </span>thiserror::Error;
@@ -219,7 +221,7 @@
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
-    window::{HeadedMapWindow, MapWindow, MapWindowConfig},
+    window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowCreateError},
 };
 
 <span class="attr">#[derive(Error, Debug)]
@@ -233,6 +235,8 @@
     </span>RenderGraphInit(RenderGraphError),
     <span class="attr">#[error(<span class="string">"initializing device failed"</span>)]
     </span>DeviceInit(RenderError),
+    <span class="attr">#[error(<span class="string">"creating window failed"</span>)]
+    </span>Window(<span class="attr">#[from] </span>WindowCreateError),
 }
 
 <span class="kw">pub enum </span>CurrentMapContext {
@@ -258,13 +262,13 @@
 {
     <span class="kw">pub fn </span>new(
         style: Style,
-        <span class="kw-2">mut </span>kernel: Kernel&lt;E&gt;,
+        kernel: Kernel&lt;E&gt;,
         renderer_builder: RendererBuilder,
         plugins: Vec&lt;Box&lt;<span class="kw">dyn </span>Plugin&lt;E&gt;&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, MapError&gt; {
         <span class="kw">let </span>schedule = Schedule::default();
 
-        <span class="kw">let </span>window = kernel.map_window_config().create();
+        <span class="kw">let </span>window = kernel.map_window_config().create()<span class="question-mark">?</span>;
 
         <span class="kw">let </span>kernel = Rc::new(kernel);
 

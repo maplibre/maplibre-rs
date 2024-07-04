@@ -195,7 +195,8 @@
 <a href="#194" id="194">194</a>
 <a href="#195" id="195">195</a>
 <a href="#196" id="196">196</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashSet, marker::PhantomData};
+<a href="#197" id="197">197</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{borrow::Cow, collections::HashSet, marker::PhantomData};
 
 <span class="kw">use </span>geozero::{
     mvt::{tile, Message},
@@ -221,9 +222,9 @@
     <span class="doccomment">/// Sending of results failed
     </span><span class="attr">#[error(<span class="string">"sending data back through context failed"</span>)]
     </span>SendError(SendError),
-    <span class="doccomment">/// Error during processing of the pipeline
-    </span><span class="attr">#[error(<span class="string">"processing data in pipeline failed"</span>)]
-    </span>Processing(Box&lt;<span class="kw">dyn </span>std::error::Error&gt;),
+    <span class="doccomment">/// Error when decoding e.g. the protobuf file
+    </span><span class="attr">#[error(<span class="string">"decoding failed"</span>)]
+    </span>Decoding(Cow&lt;<span class="lifetime">'static</span>, str&gt;),
 }
 
 <span class="doccomment">/// A request for a tile at the given coordinates and in the given layers.
@@ -239,7 +240,8 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ProcessVectorError&gt; {
     <span class="comment">// Decode
 
-    </span><span class="kw">let </span><span class="kw-2">mut </span>tile = geozero::mvt::Tile::decode(data).expect(<span class="string">"failed to load tile"</span>);
+    </span><span class="kw">let </span><span class="kw-2">mut </span>tile = geozero::mvt::Tile::decode(data)
+        .map_err(|e| ProcessVectorError::Decoding(e.to_string().into()))<span class="question-mark">?</span>;
 
     <span class="comment">// Available
 
@@ -322,7 +324,7 @@
     <span class="kw">fn </span>tile_finished(<span class="kw-2">&amp;mut </span><span class="self">self</span>, coords: <span class="kw-2">&amp;</span>WorldTileCoords) -&gt; <span class="prelude-ty">Result</span>&lt;(), ProcessVectorError&gt; {
         <span class="self">self</span>.context
             .send(T::TileTessellated::build_from(<span class="kw-2">*</span>coords))
-            .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
+            .map_err(|e| ProcessVectorError::SendError(e))
     }
 
     <span class="kw">fn </span>layer_missing(
@@ -332,7 +334,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ProcessVectorError&gt; {
         <span class="self">self</span>.context
             .send(T::LayerMissing::build_from(<span class="kw-2">*</span>coords, layer_name.to_owned()))
-            .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
+            .map_err(|e| ProcessVectorError::SendError(e))
     }
 
     <span class="kw">fn </span>layer_tesselation_finished(
@@ -349,7 +351,7 @@
                 feature_indices,
                 layer_data,
             ))
-            .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
+            .map_err(|e| ProcessVectorError::SendError(e))
     }
 
     <span class="kw">fn </span>layer_indexing_finished(
@@ -362,7 +364,7 @@
                 <span class="kw-2">*</span>coords,
                 TileIndex::Linear { list: geometries },
             ))
-            .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
+            .map_err(|e| ProcessVectorError::SendError(e))
     }
 }
 
