@@ -30,3 +30,4 @@ winit.workspace = true
 cgmath.workspace = true
 instant.workspace = true
 log.workspace = true
+thiserror.workspace = true

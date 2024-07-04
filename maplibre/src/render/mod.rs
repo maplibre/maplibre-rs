@@ -434,7 +434,7 @@ impl Renderer {
 mod tests {
     use crate::{
         tcs::world::World,
-        window::{MapWindow, MapWindowConfig, PhysicalSize},
+        window::{MapWindow, MapWindowConfig, PhysicalSize, WindowCreateError},
     };
 
     #[derive(Clone)]
@@ -445,8 +445,8 @@ mod tests {
     impl MapWindowConfig for HeadlessMapWindowConfig {
         type MapWindow = HeadlessMapWindow;
 
-        fn create(&self) -> Self::MapWindow {
-            Self::MapWindow { size: self.size }
+        fn create(&self) -> Result<Self::MapWindow, WindowCreateError> {
+            Ok(Self::MapWindow { size: self.size })
         }
     }
 

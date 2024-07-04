@@ -1,9 +1,8 @@
 use std::time::Duration;
 
 use cgmath::{Vector2, Zero};
-use winit::keyboard::{Key, NamedKey};
-
 use maplibre::context::MapContext;
+use winit::keyboard::{Key, NamedKey};
 
 use super::UpdateState;
 

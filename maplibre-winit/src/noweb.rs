@@ -16,7 +16,7 @@ use maplibre::{
     },
     render::{builder::RendererBuilder, settings::WgpuSettings, RenderPlugin},
     style::Style,
-    window::{MapWindow, MapWindowConfig, PhysicalSize},
+    window::{MapWindow, MapWindowConfig, PhysicalSize, WindowCreateError},
 };
 use winit::window::WindowAttributes;
 
@@ -72,7 +72,7 @@ impl<ET> MapWindow for WinitMapWindow<ET> {
 impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
-    fn create(&self) -> Self::MapWindow {
+    fn create(&self) -> Result<Self::MapWindow, WindowCreateError> {
         let mut raw_event_loop_builder = winit::event_loop::EventLoop::<ET>::with_user_event();
 
         #[cfg(target_os = "android")]
@@ -81,18 +81,20 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
         let mut raw_event_loop_builder =
             raw_event_loop_builder.with_android_app(self.android_app.clone());
 
-        let raw_event_loop = raw_event_loop_builder.build().unwrap(); // TODO
+        let raw_event_loop = raw_event_loop_builder
+            .build()
+            .map_err(|_| WindowCreateError::EventLoop)?;
 
         let window = raw_event_loop
             .create_window(WindowAttributes::new().with_title(&self.title))
-            .unwrap(); // todo
+            .map_err(|_| WindowCreateError::Window)?;
 
-        Self::MapWindow {
+        Ok(Self::MapWindow {
             window,
             event_loop: Some(WinitEventLoop {
                 event_loop: raw_event_loop,
             }),
-        }
+        })
     }
 }
 

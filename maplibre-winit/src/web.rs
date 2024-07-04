@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use maplibre::window::{MapWindow, MapWindowConfig, PhysicalSize};
+use maplibre::window::{MapWindow, MapWindowConfig, PhysicalSize, WindowCreateError};
 use winit::{platform::web::WindowAttributesExtWebSys, window::WindowAttributes};
 
 use super::WinitMapWindow;
@@ -24,22 +24,23 @@ impl<ET: 'static> WinitMapWindowConfig<ET> {
 impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
-    fn create(&self) -> Self::MapWindow {
+    fn create(&self) -> Result<Self::MapWindow, WindowCreateError> {
         let raw_event_loop = winit::event_loop::EventLoop::<ET>::with_user_event()
             .build()
-            .unwrap(); // TODO
+            .map_err(|_| WindowCreateError::EventLoop)?;
 
         let window: winit::window::Window = raw_event_loop
             .create_window(
                 WindowAttributes::default().with_canvas(Some(get_canvas(&self.canvas_id))),
             )
-            .unwrap();
-        Self::MapWindow {
+            .map_err(|_| WindowCreateError::Window)?;
+
+        Ok(Self::MapWindow {
             window,
             event_loop: Some(WinitEventLoop {
                 event_loop: raw_event_loop,
             }),
-        }
+        })
     }
 }
 

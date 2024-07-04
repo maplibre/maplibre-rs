@@ -23,6 +23,7 @@
       <excludeFolder url="file://$MODULE_DIR$/web/lib/src/wasm" />
       <excludeFolder url="file://$MODULE_DIR$/web/lib/dist" />
       <excludeFolder url="file://$MODULE_DIR$/maplibre-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/apple/xcode/libs" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
