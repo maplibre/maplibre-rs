@@ -20,6 +20,8 @@ pub enum WebError {
     /// TypeError like it is defined in JS
     #[error("TypeError from JS")]
     TypeError(Cow<'static, str>),
+    #[error("fetching data failed")]
+    FetchError(Cow<'static, str>),
     /// Any other Error
     #[error("Error from JS")]
     GenericError(Cow<'static, str>),

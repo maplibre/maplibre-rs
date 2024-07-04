@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use cgmath::{Vector2, Zero};
 use maplibre::context::MapContext;
+use winit::keyboard::{Key, NamedKey};
 
 use super::UpdateState;
 
@@ -41,30 +42,26 @@ impl ShiftHandler {
         } * self.sensitivity;*/
     }
 
-    pub fn process_key_press(
-        &mut self,
-        key: winit::event::VirtualKeyCode,
-        state: winit::event::ElementState,
-    ) -> bool {
+    pub fn process_key_press(&mut self, key: &Key, state: winit::event::ElementState) -> bool {
         let amount = if state == winit::event::ElementState::Pressed {
             10.0 * self.sensitivity // left, right is the same as panning 10px
         } else {
             0.0
         };
-        match key {
-            winit::event::VirtualKeyCode::W | winit::event::VirtualKeyCode::Up => {
+        match key.as_ref() {
+            Key::Character("w") | Key::Named(NamedKey::ArrowUp) => {
                 self.camera_translate.y -= amount;
                 true
             }
-            winit::event::VirtualKeyCode::S | winit::event::VirtualKeyCode::Down => {
+            Key::Character("s") | Key::Named(NamedKey::ArrowDown) => {
                 self.camera_translate.y += amount;
                 true
             }
-            winit::event::VirtualKeyCode::A | winit::event::VirtualKeyCode::Left => {
+            Key::Character("a") | Key::Named(NamedKey::ArrowLeft) => {
                 self.camera_translate.x -= amount;
                 true
             }
-            winit::event::VirtualKeyCode::D | winit::event::VirtualKeyCode::Right => {
+            Key::Character("d") | Key::Named(NamedKey::ArrowRight) => {
                 self.camera_translate.x += amount;
                 true
             }

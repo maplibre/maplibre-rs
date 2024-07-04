@@ -6,6 +6,8 @@ use crate::render::graph::RenderGraphError;
 pub enum RenderError {
     #[error("error in surface")]
     Surface(#[from] wgpu::SurfaceError),
+    #[error("error while getting window handle")]
+    Handle(#[from] wgpu::rwh::HandleError),
     #[error("error during surface creation")]
     CreateSurfaceError(#[from] wgpu::CreateSurfaceError),
     #[error("error in render graph")]

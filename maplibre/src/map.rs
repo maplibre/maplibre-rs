@@ -19,7 +19,7 @@ use crate::{
     schedule::{Schedule, Stage},
     style::Style,
     tcs::world::World,
-    window::{HeadedMapWindow, MapWindow, MapWindowConfig},
+    window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowCreateError},
 };
 
 #[derive(Error, Debug)]
@@ -33,6 +33,8 @@ pub enum MapError {
     RenderGraphInit(RenderGraphError),
     #[error("initializing device failed")]
     DeviceInit(RenderError),
+    #[error("creating window failed")]
+    Window(#[from] WindowCreateError),
 }
 
 pub enum CurrentMapContext {
@@ -58,13 +60,13 @@ where
 {
     pub fn new(
         style: Style,
-        mut kernel: Kernel<E>,
+        kernel: Kernel<E>,
         renderer_builder: RendererBuilder,
         plugins: Vec<Box<dyn Plugin<E>>>,
     ) -> Result<Self, MapError> {
         let schedule = Schedule::default();
 
-        let window = kernel.map_window_config().create();
+        let window = kernel.map_window_config().create()?;
 
         let kernel = Rc::new(kernel);
 

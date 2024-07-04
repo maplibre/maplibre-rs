@@ -1,4 +1,4 @@
-use crate::window::{MapWindow, MapWindowConfig, PhysicalSize};
+use crate::window::{MapWindow, MapWindowConfig, PhysicalSize, WindowCreateError};
 
 #[derive(Clone)]
 pub struct HeadlessMapWindowConfig {
@@ -14,8 +14,8 @@ impl HeadlessMapWindowConfig {
 impl MapWindowConfig for HeadlessMapWindowConfig {
     type MapWindow = HeadlessMapWindow;
 
-    fn create(&self) -> Self::MapWindow {
-        Self::MapWindow { size: self.size }
+    fn create(&self) -> Result<Self::MapWindow, WindowCreateError> {
+        Ok(Self::MapWindow { size: self.size })
     }
 }
 

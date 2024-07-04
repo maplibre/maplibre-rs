@@ -29,6 +29,12 @@ impl WHATWGFetchHttpClient {
             .dyn_into()
             .map_err(|_e| WebError::TypeError("Unable to cast to Response".into()))?;
 
+        if !response.ok() {
+            return Err(WebError::GenericError(
+                format!("failed to fetch {}", response.status()).into(),
+            ));
+        }
+
         // Get ArrayBuffer
         let maybe_array_buffer = JsFuture::from(response.array_buffer()?).await?;
         Ok(maybe_array_buffer)

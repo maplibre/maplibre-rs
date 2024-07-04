@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use cgmath::Vector2;
 use maplibre::context::MapContext;
-use winit::event::{DeviceEvent, KeyboardInput, TouchPhase, WindowEvent};
+use winit::event::{DeviceEvent, KeyEvent, TouchPhase, WindowEvent};
 
 use crate::input::{
     camera_handler::CameraHandler, debug_handler::DebugHandler, pan_handler::PanHandler,
@@ -72,17 +72,14 @@ impl InputController {
                 true
             }
             WindowEvent::KeyboardInput {
-                input:
-                    KeyboardInput {
-                        state,
-                        virtual_keycode: Some(key),
-                        ..
-                    },
+                event: KeyEvent {
+                    state, logical_key, ..
+                },
                 ..
             } => {
-                self.shift_handler.process_key_press(*key, *state)
-                    || self.debug_handler.process_key_press(*key, *state)
-                    || self.zoom_handler.process_key_press(*key, *state)
+                self.shift_handler.process_key_press(logical_key, *state)
+                    || self.debug_handler.process_key_press(logical_key, *state)
+                    || self.zoom_handler.process_key_press(logical_key, *state)
             }
             WindowEvent::Touch(touch) => match touch.phase {
                 TouchPhase::Started => {

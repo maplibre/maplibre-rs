@@ -13,10 +13,6 @@ authors.workspace = true
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
 tokio.workspace = true
 
-# FIXME: is this section needed?  Seems to be identical to the default
-#[target.'cfg(target_os = "android")'.dependencies]
-#winit.wokrspace = true
-
 [target.'cfg(target_os = "linux")'.dependencies]
 winit = { workspace = true, features = ["x11", "wayland"] }
 
@@ -34,3 +30,4 @@ winit.workspace = true
 cgmath.workspace = true
 instant.workspace = true
 log.workspace = true
+thiserror.workspace = true

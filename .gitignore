@@ -30,3 +30,5 @@ perf.data*
 frame_*.png
 
 .direnv/
+
+xcode/libs/*/**

@@ -3,7 +3,7 @@
 use jni::{objects::JClass, JNIEnv};
 use log::Level;
 use maplibre::render::settings::WgpuSettings;
-use maplibre_winit::{run_headed_map, WinitMapWindowConfig};
+use maplibre_winit::{android_activity, run_headed_map, WinitMapWindowConfig};
 
 #[cfg(not(any(no_pendantic_os_check, target_os = "android")))]
 compile_error!("android works only on android.");

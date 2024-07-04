@@ -40,7 +40,7 @@ impl BufferDimensions {
 }
 
 pub struct WindowHead {
-    surface: wgpu::Surface,
+    surface: wgpu::Surface<'static>,
     size: PhysicalSize,
 
     texture_format: wgpu::TextureFormat,
@@ -63,6 +63,7 @@ impl WindowHead {
             height: self.size.height(),
             present_mode: self.present_mode,
             view_formats: vec![self.texture_format],
+            desired_maximum_frame_latency: 2,
         };
 
         self.surface.configure(device, &surface_config);
@@ -76,7 +77,10 @@ impl WindowHead {
     where
         MW: MapWindow + HeadedMapWindow,
     {
-        self.surface = unsafe { instance.create_surface(window.raw())? };
+        self.surface = unsafe {
+            instance
+                .create_surface_unsafe(wgpu::SurfaceTargetUnsafe::from_window(&window.handle())?)?
+        };
         Ok(())
     }
 
@@ -170,7 +174,7 @@ pub struct Surface {
 
 impl Surface {
     pub fn from_surface<MW>(
-        surface: wgpu::Surface,
+        surface: wgpu::Surface<'static>,
         adapter: &wgpu::Adapter,
         window: &MW,
         settings: &RendererSettings,

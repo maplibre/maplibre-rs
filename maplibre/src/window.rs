@@ -2,7 +2,8 @@
 
 use std::num::NonZeroU32;
 
-use raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle};
+use thiserror::Error;
+use wgpu::rwh::{HasDisplayHandle, HasWindowHandle};
 
 /// Window of a certain [`PhysicalSize`]. This can either be a proper window or a headless one.
 pub trait MapWindow {
@@ -12,9 +13,9 @@ pub trait MapWindow {
 /// Window which references a physical `RawWindow`. This is only implemented by headed windows and
 /// not by headless windows.
 pub trait HeadedMapWindow: MapWindow {
-    type RawWindow: HasRawWindowHandle + HasRawDisplayHandle;
+    type WindowHandle: HasWindowHandle + HasDisplayHandle + Sync;
 
-    fn raw(&self) -> &Self::RawWindow;
+    fn handle(&self) -> &Self::WindowHandle;
 
     // TODO: Can we avoid this?
     fn request_redraw(&self);
@@ -24,12 +25,20 @@ pub trait HeadedMapWindow: MapWindow {
     fn id(&self) -> u64;
 }
 
+#[derive(Error, Debug)]
+pub enum WindowCreateError {
+    #[error("unable to create event loop")]
+    EventLoop,
+    #[error("unable to create window")]
+    Window,
+}
+
 /// A configuration for a window which determines the corresponding implementation of a
 /// [`MapWindow`] and is able to create it.
 pub trait MapWindowConfig: 'static + Clone {
     type MapWindow: MapWindow;
 
-    fn create(&self) -> Self::MapWindow;
+    fn create(&self) -> Result<Self::MapWindow, WindowCreateError>;
 }
 
 /// Window size with a width and an height in pixels.

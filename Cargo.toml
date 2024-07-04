@@ -7,11 +7,9 @@ members = [
     "maplibre-winit",
     "maplibre-build-tools",
     "maplibre-demo",
-
     "android",
     "apple",
     "web",
-
     "benchmarks",
 ]
 
@@ -36,7 +34,7 @@ rand = { version = "0.7.3", features = ["wasm-bindgen"] }
 # FIXME: Untrusted dependency, 0.2.x doesn't compile with cache middleware
 reqwest-middleware = "0.1.6"
 
-winit = { version = "0.28.7", default-features = false }
+winit = { version = "0.30", default-features = false, features = ["rwh_06"] }
 
 #
 # These dependencies should be updated to the latest version
@@ -67,10 +65,8 @@ js-sys = "0.3"
 log = "0.4.20"
 lyon = { version = "1.0.1", features = [] }
 naga = { version = "0.13.0", features = ["wgsl-in"] }
-android-activity = "0.4.3"
 android_logger = "0.13.3"
 png = { version = "0.17.10" }
-raw-window-handle = "0.5.2"
 reqwest = { version = "0.11.20", default-features = false, features = ["rustls-tls", "gzip"] }  # Use rusttls on android because cross compiling is difficult
 reqwest-middleware-cache = "0.1.1"  # FIXME: Untrusted dependency
 rstar = "0.11.0"
@@ -91,7 +87,7 @@ wasm-bindgen = "=0.2.92"
 wasm-bindgen-futures = "0.4"
 wasm-bindgen-test = "0.3"
 web-sys = "0.3"  # Individual features are customized in each crate
-wgpu = "0.18.0"
+wgpu = "0.19.4"
 
 [profile.release]
 lto = true

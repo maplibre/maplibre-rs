@@ -16,9 +16,9 @@ use maplibre::{
     },
     render::{builder::RendererBuilder, settings::WgpuSettings, RenderPlugin},
     style::Style,
-    window::{MapWindow, MapWindowConfig, PhysicalSize},
+    window::{MapWindow, MapWindowConfig, PhysicalSize, WindowCreateError},
 };
-use winit::window::WindowBuilder;
+use winit::window::WindowAttributes;
 
 use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
@@ -27,7 +27,7 @@ use crate::{WinitEnvironment, WinitEventLoop};
 pub struct WinitMapWindowConfig<ET> {
     title: String,
     #[cfg(target_os = "android")]
-    android_app: winit::platform::android::activity::AndroidApp,
+    android_app: crate::android_activity::AndroidApp,
 
     phantom_et: PhantomData<ET>,
 }
@@ -72,9 +72,8 @@ impl<ET> MapWindow for WinitMapWindow<ET> {
 impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     type MapWindow = WinitMapWindow<ET>;
 
-    fn create(&self) -> Self::MapWindow {
-        let mut raw_event_loop_builder =
-            winit::event_loop::EventLoopBuilder::<ET>::with_user_event();
+    fn create(&self) -> Result<Self::MapWindow, WindowCreateError> {
+        let mut raw_event_loop_builder = winit::event_loop::EventLoop::<ET>::with_user_event();
 
         #[cfg(target_os = "android")]
         use winit::platform::android::EventLoopBuilderExtAndroid;
@@ -82,19 +81,20 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
         let mut raw_event_loop_builder =
             raw_event_loop_builder.with_android_app(self.android_app.clone());
 
-        let raw_event_loop = raw_event_loop_builder.build();
+        let raw_event_loop = raw_event_loop_builder
+            .build()
+            .map_err(|_| WindowCreateError::EventLoop)?;
 
-        let window = WindowBuilder::new()
-            .with_title(&self.title)
-            .build(&raw_event_loop)
-            .unwrap();
+        let window = raw_event_loop
+            .create_window(WindowAttributes::new().with_title(&self.title))
+            .map_err(|_| WindowCreateError::Window)?;
 
-        Self::MapWindow {
+        Ok(Self::MapWindow {
             window,
             event_loop: Some(WinitEventLoop {
                 event_loop: raw_event_loop,
             }),
-        }
+        })
     }
 }
 

@@ -1,4 +1,4 @@
-use std::{collections::HashSet, marker::PhantomData};
+use std::{borrow::Cow, collections::HashSet, marker::PhantomData};
 
 use geozero::{
     mvt::{tile, Message},
@@ -24,9 +24,9 @@ pub enum ProcessVectorError {
     /// Sending of results failed
     #[error("sending data back through context failed")]
     SendError(SendError),
-    /// Error during processing of the pipeline
-    #[error("processing data in pipeline failed")]
-    Processing(Box<dyn std::error::Error>),
+    /// Error when decoding e.g. the protobuf file
+    #[error("decoding failed")]
+    Decoding(Cow<'static, str>),
 }
 
 /// A request for a tile at the given coordinates and in the given layers.
@@ -42,7 +42,8 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 ) -> Result<(), ProcessVectorError> {
     // Decode
 
-    let mut tile = geozero::mvt::Tile::decode(data).expect("failed to load tile");
+    let mut tile = geozero::mvt::Tile::decode(data)
+        .map_err(|e| ProcessVectorError::Decoding(e.to_string().into()))?;
 
     // Available
 
@@ -125,7 +126,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
     fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), ProcessVectorError> {
         self.context
             .send(T::TileTessellated::build_from(*coords))
-            .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
+            .map_err(|e| ProcessVectorError::SendError(e))
     }
 
     fn layer_missing(
@@ -135,7 +136,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
     ) -> Result<(), ProcessVectorError> {
         self.context
             .send(T::LayerMissing::build_from(*coords, layer_name.to_owned()))
-            .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
+            .map_err(|e| ProcessVectorError::SendError(e))
     }
 
     fn layer_tesselation_finished(
@@ -152,7 +153,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
                 feature_indices,
                 layer_data,
             ))
-            .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
+            .map_err(|e| ProcessVectorError::SendError(e))
     }
 
     fn layer_indexing_finished(
@@ -165,7 +166,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
                 *coords,
                 TileIndex::Linear { list: geometries },
             ))
-            .map_err(|e| ProcessVectorError::Processing(Box::new(e)))
+            .map_err(|e| ProcessVectorError::SendError(e))
     }
 }
 

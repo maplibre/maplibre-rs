@@ -42,7 +42,7 @@ pub async fn create_headless_renderer(
         .build();
 
     let mwc: &HeadlessMapWindowConfig = kernel.map_window_config();
-    let window: HeadlessMapWindow = mwc.create();
+    let window: HeadlessMapWindow = mwc.create().expect("failed to create headless window");
 
     let renderer = RendererBuilder::new()
         .build()
