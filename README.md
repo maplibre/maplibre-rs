@@ -69,7 +69,7 @@ graphics are achievable using the current stack.
 
 - [WebGL](https://webgl.demo.maplibre-rs.maplibre.org)
 - [WebGL with multithreading](https://webgl-multithreaded.demo.maplibre-rs.maplibre.org) - Does not work on Safari right now
-- [WebGPU](https://webgpu.demo.maplibre-rs.maplibre.org) - Only works with development versions of Firefox and Chrome
+- [WebGPU](https://webgpu.demo.maplibre-rs.maplibre.org) - Only works with development versions of Safari TP, Firefox and Chrome
 
 ## Current Features
 
