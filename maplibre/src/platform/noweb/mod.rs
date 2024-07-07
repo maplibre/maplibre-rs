@@ -1,5 +1,6 @@
 //! Module which is used target platform is not web related.
 
+use std::path::PathBuf;
 use std::{
     future::Future,
     sync::atomic::{AtomicUsize, Ordering},
@@ -45,6 +46,8 @@ impl OffscreenKernelEnvironment for ReqwestOffscreenKernelEnvironment {
     }
 
     fn source_client(&self) -> SourceClient<Self::HttpClient> {
-        SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new(None)))
+        SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new::<PathBuf>(
+            None,
+        )))
     }
 }

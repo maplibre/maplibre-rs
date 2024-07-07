@@ -4,6 +4,7 @@
 //! * Render a new frame
 
 use std::marker::PhantomData;
+use std::path::PathBuf;
 
 use maplibre::{
     event_loop::EventLoop,
@@ -98,11 +99,13 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     }
 }
 
-pub fn run_headed_map(
-    cache_path: Option<String>,
+pub fn run_headed_map<P>(
+    cache_path: Option<P>,
     window_config: WinitMapWindowConfig<()>,
     wgpu_settings: WgpuSettings,
-) {
+) where
+    P: Into<PathBuf>,
+{
     run_multithreaded(async {
         type Environment<S, HC, APC> =
             WinitEnvironment<S, HC, ReqwestOffscreenKernelEnvironment, APC, ()>;
