@@ -15,7 +15,7 @@ in
   # Wew are using the host clang on macOS; the Nix clang adds a clag that breaks cross compilation here:
   # https://github.com/NixOS/nixpkgs/blob/362cb82b75394680990cbe89f40fe65d35f66617/pkgs/build-support/cc-wrapper/default.nix#L490
   # It caused this error during the compilation of ring: clang-15: error: invalid argument '-mmacos-version-min=11.0' not allowed with '-miphoneos-version-min=7.0'
-  stdenv = stdenvNoCC;
+  stdenv = if stdenv.isDarwin then stdenvNoCC else llvmPackages_16.stdenv;
 }) {
   nativeBuildInputs = [
     # Tools
@@ -32,14 +32,15 @@ in
 
     pkgs.jdk17
 
+    unstable.sqlite
+    unstable.pkg-config
+  ]  ++ lib.optionals stdenv.isLinux [
     unstable.xorg.libXrandr
     unstable.xorg.libXi
     unstable.xorg.libXcursor
     unstable.xorg.libX11
     unstable.libxkbcommon
-    unstable.sqlite
     unstable.wayland
-    unstable.pkg-config
   ];
   shellHook = ''
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ unstable.libxkbcommon ] }";
