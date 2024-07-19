@@ -1,7 +1,7 @@
 #![deny(unused_imports)]
 
 use maplibre::{
-    environment::OffscreenKernelEnvironment,
+    environment::OffscreenKernel,
     event_loop::EventLoop,
     io::source_client::{HttpSourceClient, SourceClient},
     kernel::{Kernel, KernelBuilder},
@@ -11,6 +11,7 @@ use maplibre::{
 };
 use maplibre_winit::{WinitEnvironment, WinitMapWindowConfig};
 use wasm_bindgen::prelude::*;
+use maplibre::environment::OffscreenKernelConfig;
 
 use crate::{
     error::JSError,
@@ -49,10 +50,10 @@ pub fn wasm_bindgen_start() {
 
 pub struct WHATWGOffscreenKernelEnvironment;
 
-impl OffscreenKernelEnvironment for WHATWGOffscreenKernelEnvironment {
+impl OffscreenKernel for WHATWGOffscreenKernelEnvironment {
     type HttpClient = WHATWGFetchHttpClient;
 
-    fn create() -> Self {
+    fn create(config: OffscreenKernelConfig) -> Self {
         WHATWGOffscreenKernelEnvironment
     }
 
@@ -106,7 +107,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
     #[cfg(not(target_feature = "atomics"))]
     {
         kernel_builder = kernel_builder
-            .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4)?)
+            .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4, OffscreenKernelConfig {})?)
             .with_scheduler(maplibre::io::scheduler::NopScheduler);
     }
 

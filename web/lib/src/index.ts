@@ -40,22 +40,23 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
         const memory = new WebAssembly.Memory({initial: 1024, shared: false})
         await maplibre.default(wasmPath, memory);
 
-        await maplibre.run_maplibre((ptr) => {
+        await maplibre.run_maplibre((received_ptr: number) => {
             let worker: Worker = workerPath ? new Worker(workerPath, {
                 type: 'module',
             }) : PoolWorker();  // Setting a "name" for this webworker is not yet supported, because it needs support from esbuild-plugin-inline-worker
 
-            worker.onmessage = (message: MessageEvent) => {
+            // Handle messages coming back from the Worker
+            worker.onmessage = (message: MessageEvent<[tag: number, buffer: ArrayBuffer]>) => {
                 // WARNING: Do not modify data passed from Rust!
-                let in_transfer = message.data;
+                let data = message.data;
 
-                const main_entry = maplibre["singlethreaded_main_entry"];
+                const receive_data: (received_ptr: number, tag: number, buffer: ArrayBuffer) => void = maplibre["singlethreaded_receive_data"];
 
-                if (!main_entry) {
+                if (!receive_data) {
                     throw Error("singlethreaded_main_entry is not defined. Maybe the Rust build used the wrong build configuration.")
                 }
 
-                main_entry(ptr, in_transfer)
+                receive_data(received_ptr, data[0], data[1])
             }
 
             return worker;

@@ -90,10 +90,14 @@ impl WorkerPool {
         // With a worker spun up send it the module/memory so it can start
         // instantiating the wasm module. Later it might receive further
         // messages about code to run on the wasm module.
-        let array = js_sys::Array::new();
-        array.push(&wasm_bindgen::module());
-        array.push(&wasm_bindgen::memory());
-        worker.post_message(&array)?;
+        worker.post_message(
+            &js_sys::Object::from_entries(&js_sys::Array::of3(
+                &js_sys::Array::of2(&JsValue::from("type"), &js_sys::JsString::from("wasm_init")),
+                &js_sys::Array::of2(&JsValue::from("module"), &wasm_bindgen::module())
+                &js_sys::Array::of2(&JsValue::from("memory"), &wasm_bindgen::memory())
+            )).expect("can not fail")
+        )?;
+
 
         self.state.push(worker);
         Ok(())
@@ -139,7 +143,12 @@ impl WorkerPool {
         let worker = self.worker()?;
         let work = Work { func: Box::new(f) };
         let work_ptr = Box::into_raw(Box::new(work));
-        match worker.post_message(&JsValue::from(work_ptr as u32)) {
+        match worker.post_message(
+            &js_sys::Object::from_entries(&js_sys::Array::of2(
+                &js_sys::Array::of2(&JsValue::from("type"), &js_sys::JsString::from("call")),
+                &js_sys::Array::of2(&JsValue::from("work_ptr"), &JsValue::from(work_ptr as u32))
+            )).expect("can not fail")
+        ) {
             Ok(()) => Ok(()),
             Err(e) => {
                 unsafe {

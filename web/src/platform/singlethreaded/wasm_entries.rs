@@ -1,18 +1,18 @@
 use std::{mem, rc::Rc};
 
-use js_sys::ArrayBuffer;
 use log::error;
 use maplibre::{
     benchmarking::io::{
         apc::{AsyncProcedure, Input, Message},
         source_client::{HttpSourceClient, SourceClient},
     },
-    environment::OffscreenKernelEnvironment,
+    environment::OffscreenKernel,
     io::apc::CallError,
 };
 use thiserror::Error;
 use wasm_bindgen::prelude::*;
 use web_sys::DedicatedWorkerGlobalScope;
+use maplibre::environment::OffscreenKernelConfig;
 
 use crate::{
     error::JSError,
@@ -27,9 +27,13 @@ use crate::{
     WHATWGFetchHttpClient,
 };
 
-/// Entry point invoked by the worker.
+struct SinglethreadedContext {
+    config: String
+}
+
+/// Entry point invoked by the worker. Processes data and sends the result back to the main thread.
 #[wasm_bindgen]
-pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> Result<(), JSError> {
+pub async fn singlethreaded_process_data(offscreen_kernel_config_ptr: *const String, procedure_ptr: u32, input: String) -> Result<(), JSError> {
     let procedure: AsyncProcedure<UsedOffscreenKernelEnvironment, UsedContext> =
         unsafe { mem::transmute(procedure_ptr) };
 
@@ -53,7 +57,14 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
         );
     }
 
-    procedure(input, context, UsedOffscreenKernelEnvironment::create()).await?;
+    procedure(input, context, UsedOffscreenKernelEnvironment::create(OffscreenKernelConfig {})).await?;
+
+    //let offscreen_kernel_config: Rc<String> = unsafe { Rc::from_raw(offscreen_kernel_config_ptr) };
+
+    // FIXME we need to use the kernel_config that is made available to the web worker here.
+    //procedure(input, context, UsedOffscreenKernelEnvironment::create(serde_json::from_str(&offscreen_kernel_config).unwrap())).await?; // TODO
+
+    //mem::forget(offscreen_kernel_config);
 
     Ok(())
 }
@@ -62,21 +73,14 @@ pub async fn singlethreaded_worker_entry(procedure_ptr: u32, input: String) -> R
 #[error("unable to deserialize message sent by postMessage()")]
 pub struct DeserializeMessage;
 
-/// Entry point invoked by the main thread.
+/// Entry point invoked by the main thread. Receives data on the main thread and makes it available
+/// to the renderer.
 #[wasm_bindgen]
-pub unsafe fn singlethreaded_main_entry(
+pub fn singlethreaded_receive_data(
     received_ptr: *const ReceivedType,
-    in_transfer: js_sys::Array,
+    tag: u32,
+    buffer: js_sys::ArrayBuffer,
 ) -> Result<(), JSError> {
-    let tag = in_transfer
-        .get(0)
-        .as_f64()
-        .ok_or_else(|| CallError::Deserialize(Box::new(DeserializeMessage)))? as u32; // TODO: Is this cast fine?
-    let buffer: ArrayBuffer = in_transfer
-        .get(1)
-        .dyn_into()
-        .map_err(|_e| CallError::Deserialize(Box::new(DeserializeMessage)))?;
-
     let tag = WebMessageTag::from_u32(tag).map_err(|e| CallError::Deserialize(Box::new(e)))?;
 
     log::debug!(
@@ -90,7 +94,7 @@ pub unsafe fn singlethreaded_main_entry(
     );
 
     // FIXME: Can we make this call safe? check if it was cloned before?
-    let received: Rc<ReceivedType> = Rc::from_raw(received_ptr);
+    let received: Rc<ReceivedType> = unsafe { Rc::from_raw(received_ptr) };
 
     // MAJOR FIXME: Fix mutability
     received

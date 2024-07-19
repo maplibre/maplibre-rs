@@ -4,7 +4,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use instant::Instant;
 use maplibre::{
-    environment::{Environment, OffscreenKernelEnvironment},
+    environment::{Environment, OffscreenKernel},
     event_loop::{EventLoop, EventLoopProxy, SendEventError},
     io::{apc::AsyncProcedureCall, scheduler::Scheduler, source_client::HttpClient},
     map::Map,
@@ -207,7 +207,7 @@ impl<ET: 'static> EventLoopProxy<ET> for WinitEventLoopProxy<ET> {
 pub struct WinitEnvironment<
     S: Scheduler,
     HC: HttpClient,
-    K: OffscreenKernelEnvironment,
+    K: OffscreenKernel,
     APC: AsyncProcedureCall<K>,
     ET,
 > {
@@ -221,7 +221,7 @@ pub struct WinitEnvironment<
 impl<
         S: Scheduler,
         HC: HttpClient,
-        K: OffscreenKernelEnvironment,
+        K: OffscreenKernel,
         APC: AsyncProcedureCall<K>,
         ET: 'static + Clone,
     > Environment for WinitEnvironment<S, HC, K, APC, ET>

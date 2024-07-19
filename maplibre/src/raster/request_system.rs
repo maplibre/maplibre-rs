@@ -4,7 +4,7 @@ use std::{borrow::Cow, collections::HashSet, marker::PhantomData, rc::Rc};
 
 use crate::{
     context::MapContext,
-    environment::{Environment, OffscreenKernelEnvironment},
+    environment::{Environment, OffscreenKernel},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
         source_type::{RasterSource, SourceType},
@@ -102,7 +102,7 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
     }
 }
 pub fn fetch_raster_apc<
-    K: OffscreenKernelEnvironment,
+    K: OffscreenKernel,
     T: RasterTransferables,
     C: Context + Clone + Send,
 >(

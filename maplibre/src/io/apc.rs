@@ -16,9 +16,10 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
-    coords::WorldTileCoords, define_label, environment::OffscreenKernelEnvironment,
+    coords::WorldTileCoords, define_label, environment::OffscreenKernel,
     io::scheduler::Scheduler, style::Style,
 };
+use crate::environment::OffscreenKernelConfig;
 
 define_label!(MessageTag);
 
@@ -164,7 +165,7 @@ pub type AsyncProcedure<K, C> = fn(input: Input, context: C, kernel: K) -> Async
 ///
 ///
 // TODO: Rename to AsyncProcedureCaller?
-pub trait AsyncProcedureCall<K: OffscreenKernelEnvironment>: 'static {
+pub trait AsyncProcedureCall<K: OffscreenKernel>: 'static {
     type Context: Context + Send + Clone;
 
     type ReceiveIterator<F: FnMut(&Message) -> bool>: Iterator<Item = Message>;
@@ -194,14 +195,16 @@ impl Context for SchedulerContext {
     }
 }
 
-pub struct SchedulerAsyncProcedureCall<K: OffscreenKernelEnvironment, S: Scheduler> {
+// An APC that uses a scheduler to execute work asynchronously.
+// An async sender and receiver to exchange return values of calls.
+pub struct SchedulerAsyncProcedureCall<K: OffscreenKernel, S: Scheduler> {
     channel: (Sender<Message>, Receiver<Message>),
     buffer: RefCell<Vec<Message>>,
     scheduler: S,
     phantom_k: PhantomData<K>,
 }
 
-impl<K: OffscreenKernelEnvironment, S: Scheduler> SchedulerAsyncProcedureCall<K, S> {
+impl<K: OffscreenKernel, S: Scheduler> SchedulerAsyncProcedureCall<K, S> {
     pub fn new(scheduler: S) -> Self {
         Self {
             channel: mpsc::channel(),
@@ -212,7 +215,7 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> SchedulerAsyncProcedureCall<K,
     }
 }
 
-impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
+impl<K: OffscreenKernel, S: Scheduler> AsyncProcedureCall<K>
     for SchedulerAsyncProcedureCall<K, S>
 {
     type Context = SchedulerContext;
@@ -260,7 +263,8 @@ impl<K: OffscreenKernelEnvironment, S: Scheduler> AsyncProcedureCall<K>
             .schedule(move || async move {
                 log::info!("Processing on thread: {:?}", std::thread::current().name());
 
-                procedure(input, SchedulerContext { sender }, K::create())
+                let kernel = K::create(OffscreenKernelConfig {});
+                procedure(input, SchedulerContext { sender }, kernel) // TODO
                     .await
                     .unwrap();
             })

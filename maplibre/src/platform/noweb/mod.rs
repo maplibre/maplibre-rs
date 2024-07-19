@@ -1,16 +1,16 @@
 //! Module which is used target platform is not web related.
 
-use std::path::PathBuf;
 use std::{
     future::Future,
     sync::atomic::{AtomicUsize, Ordering},
 };
 
 use crate::{
-    environment::OffscreenKernelEnvironment,
+    environment::OffscreenKernel,
     io::source_client::{HttpSourceClient, SourceClient},
     platform::http_client::ReqwestHttpClient,
 };
+use crate::environment::OffscreenKernelConfig;
 
 pub mod http_client;
 pub mod scheduler;
@@ -38,16 +38,16 @@ pub fn run_multithreaded<F: Future>(future: F) -> F::Output {
 
 pub struct ReqwestOffscreenKernelEnvironment;
 
-impl OffscreenKernelEnvironment for ReqwestOffscreenKernelEnvironment {
+impl OffscreenKernel for ReqwestOffscreenKernelEnvironment {
     type HttpClient = ReqwestHttpClient;
 
-    fn create() -> Self {
+    fn create(config: OffscreenKernelConfig) -> Self {
         ReqwestOffscreenKernelEnvironment
     }
 
     fn source_client(&self) -> SourceClient<Self::HttpClient> {
-        SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new::<PathBuf>(
-            None,
+        SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new::<String>(
+            Some("./maplibre-cache".to_string()), // FIXME, this is static
         )))
     }
 }

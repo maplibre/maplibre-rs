@@ -59,9 +59,10 @@ impl ReqwestHttpClient {
                 }))
                 .with(LoggingMiddleware);
         }
+        let client = builder.build();
 
         Self {
-            client: builder.build(),
+            client,
         }
     }
 }
