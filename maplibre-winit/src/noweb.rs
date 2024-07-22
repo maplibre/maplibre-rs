@@ -20,6 +20,7 @@ use maplibre::{
     window::{MapWindow, MapWindowConfig, PhysicalSize, WindowCreateError},
 };
 use winit::window::WindowAttributes;
+use maplibre::environment::OffscreenKernelConfig;
 
 use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
@@ -110,12 +111,15 @@ pub fn run_headed_map<P>(
         type Environment<S, HC, APC> =
             WinitEnvironment<S, HC, ReqwestOffscreenKernelEnvironment, APC, ()>;
 
-        let client = ReqwestHttpClient::new(cache_path);
+        let cache_path = cache_path.map(|path| path.into());
+        let client = ReqwestHttpClient::new(cache_path.clone());
 
         let kernel: Kernel<Environment<_, _, _>> = KernelBuilder::new()
             .with_map_window_config(window_config)
             .with_http_client(client.clone())
-            .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new()))
+            .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new(), OffscreenKernelConfig {
+                cache_directory: cache_path.map(|path| path.to_str().unwrap().to_string()),
+            }))
             .with_scheduler(TokioScheduler::new())
             .build();
 

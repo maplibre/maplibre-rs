@@ -36,18 +36,18 @@ pub fn run_multithreaded<F: Future>(future: F) -> F::Output {
         .block_on(future)
 }
 
-pub struct ReqwestOffscreenKernelEnvironment;
+pub struct ReqwestOffscreenKernelEnvironment(OffscreenKernelConfig);
 
 impl OffscreenKernel for ReqwestOffscreenKernelEnvironment {
     type HttpClient = ReqwestHttpClient;
 
     fn create(config: OffscreenKernelConfig) -> Self {
-        ReqwestOffscreenKernelEnvironment
+        ReqwestOffscreenKernelEnvironment(config)
     }
 
     fn source_client(&self) -> SourceClient<Self::HttpClient> {
         SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new::<String>(
-            Some("./maplibre-cache".to_string()), // FIXME, this is static
+            self.0.cache_directory.clone()
         )))
     }
 }

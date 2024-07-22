@@ -1,4 +1,5 @@
 use std::{mem, rc::Rc};
+use std::sync::{OnceLock};
 
 use log::error;
 use maplibre::{
@@ -12,7 +13,6 @@ use maplibre::{
 use thiserror::Error;
 use wasm_bindgen::prelude::*;
 use web_sys::DedicatedWorkerGlobalScope;
-use maplibre::environment::OffscreenKernelConfig;
 
 use crate::{
     error::JSError,
@@ -27,13 +27,21 @@ use crate::{
     WHATWGFetchHttpClient,
 };
 
-struct SinglethreadedContext {
-    config: String
+static CONFIG: OnceLock<String> = OnceLock::new();
+
+fn kernel_config() -> &'static str {
+    CONFIG.get().map(move |t| t.as_str()).unwrap_or("{}")
+}
+
+
+#[wasm_bindgen]
+pub  fn set_kernel_config(config: String) {
+    CONFIG.set(config).expect("failed to set kernel config")
 }
 
 /// Entry point invoked by the worker. Processes data and sends the result back to the main thread.
 #[wasm_bindgen]
-pub async fn singlethreaded_process_data(offscreen_kernel_config_ptr: *const String, procedure_ptr: u32, input: String) -> Result<(), JSError> {
+pub async fn singlethreaded_process_data(procedure_ptr: u32, input: String) -> Result<(), JSError> {
     let procedure: AsyncProcedure<UsedOffscreenKernelEnvironment, UsedContext> =
         unsafe { mem::transmute(procedure_ptr) };
 
@@ -57,14 +65,7 @@ pub async fn singlethreaded_process_data(offscreen_kernel_config_ptr: *const Str
         );
     }
 
-    procedure(input, context, UsedOffscreenKernelEnvironment::create(OffscreenKernelConfig {})).await?;
-
-    //let offscreen_kernel_config: Rc<String> = unsafe { Rc::from_raw(offscreen_kernel_config_ptr) };
-
-    // FIXME we need to use the kernel_config that is made available to the web worker here.
-    //procedure(input, context, UsedOffscreenKernelEnvironment::create(serde_json::from_str(&offscreen_kernel_config).unwrap())).await?; // TODO
-
-    //mem::forget(offscreen_kernel_config);
+    procedure(input, context, UsedOffscreenKernelEnvironment::create(serde_json::from_str(&kernel_config()).unwrap())).await?; // TODO
 
     Ok(())
 }

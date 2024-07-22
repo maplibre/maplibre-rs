@@ -202,15 +202,17 @@ pub struct SchedulerAsyncProcedureCall<K: OffscreenKernel, S: Scheduler> {
     buffer: RefCell<Vec<Message>>,
     scheduler: S,
     phantom_k: PhantomData<K>,
+    offscreen_kernel_config: OffscreenKernelConfig
 }
 
 impl<K: OffscreenKernel, S: Scheduler> SchedulerAsyncProcedureCall<K, S> {
-    pub fn new(scheduler: S) -> Self {
+    pub fn new(scheduler: S, offscreen_kernel_config: OffscreenKernelConfig) -> Self {
         Self {
             channel: mpsc::channel(),
             buffer: RefCell::new(Vec::new()),
             phantom_k: PhantomData::default(),
             scheduler,
+            offscreen_kernel_config,
         }
     }
 }
@@ -258,12 +260,13 @@ impl<K: OffscreenKernel, S: Scheduler> AsyncProcedureCall<K>
         procedure: AsyncProcedure<K, Self::Context>,
     ) -> Result<(), CallError> {
         let sender = self.channel.0.clone();
+        let offscreen_kernel_config = self.offscreen_kernel_config.clone();
 
         self.scheduler
             .schedule(move || async move {
                 log::info!("Processing on thread: {:?}", std::thread::current().name());
 
-                let kernel = K::create(OffscreenKernelConfig {});
+                let kernel = K::create(offscreen_kernel_config);
                 procedure(input, SchedulerContext { sender }, kernel) // TODO
                     .await
                     .unwrap();

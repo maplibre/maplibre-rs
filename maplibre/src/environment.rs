@@ -28,9 +28,9 @@ pub trait Environment: 'static {
     type OffscreenKernelEnvironment: OffscreenKernel;
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct OffscreenKernelConfig {
-
+    pub cache_directory: Option<String>
 }
 
 pub trait OffscreenKernel: Send + Sync + 'static {

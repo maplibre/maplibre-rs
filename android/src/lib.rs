@@ -1,5 +1,6 @@
 #![deny(unused_imports)]
 
+use std::path::PathBuf;
 use jni::{objects::JClass, JNIEnv};
 use log::Level;
 use maplibre::render::settings::WgpuSettings;

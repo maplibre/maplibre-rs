@@ -144,7 +144,7 @@ impl PassingAsyncProcedureCall {
             new_worker
                 .call1(
                     &JsValue::undefined(),
-                    &JsValue::from(Rc::into_raw(received.clone()) as u32),
+                    &JsValue::from(Rc::into_raw(received.clone())),
                 )
                 .map_err(WebError::from)?
                 .dyn_into::<Worker>()
@@ -225,7 +225,7 @@ impl<K: OffscreenKernel> AsyncProcedureCall<K> for PassingAsyncProcedureCall {
         input: Input,
         procedure: AsyncProcedure<K, UsedContext>,
     ) -> Result<(), CallError> {
-        let procedure_ptr = procedure as *mut AsyncProcedure<K, UsedContext> as u32; // FIXME: is u32 fine, define an overflow safe function?
+        let procedure_ptr = procedure as *mut AsyncProcedure<K, UsedContext>; // TODO: Verify how these poitner are converted to pointers
         let input = serde_json::to_string(&input).map_err(|e| CallError::Serialize(Box::new(e)))?;
 
         let message = js_sys::Object::from_entries(&js_sys::Array::of3(

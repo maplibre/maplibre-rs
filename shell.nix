@@ -2,7 +2,12 @@
 # The repository supports direnv (https://direnv.net/). If your IDE supports direnv,
 # then you do not need to care about dependencies.
 
-{ pkgs ? import <nixpkgs> { } }:
+{ pkgs ? import <nixpkgs> {
+    overlays = [
+      #rust_overlay
+    ];
+  }
+}:
 with pkgs;
 let
   unstable = import
@@ -19,11 +24,15 @@ in
 }) {
   nativeBuildInputs = [
     # Tools
-    unstable.rustup
+    rustup
     unstable.just
     unstable.nodejs
     unstable.mdbook
-    # unstable.wasm-bindgen-cli # we need wasm-bindgen-cli@0.2.92, so pull it from cargo instead
+    (pkgs.wasm-bindgen-cli.override {
+      version = "0.2.92"; # This needs to match the wasm-bindgen version of the web module
+      hash = "sha256-1VwY8vQy7soKEgbki4LD+v259751kKxSxmo/gqE6yV0=";
+      cargoHash = "sha256-aACJ+lYNEU8FFBs158G1/JG8sc6Rq080PeKCMnwdpH0=";
+    })
     unstable.tracy
     unstable.nixpkgs-fmt # To format this file: nixpkgs-fmt *.nix
     # System dependencies
@@ -34,7 +43,7 @@ in
 
     unstable.sqlite
     unstable.pkg-config
-  ]  ++ lib.optionals stdenv.isLinux [
+  ] ++ lib.optionals stdenv.isLinux [
     unstable.xorg.libXrandr
     unstable.xorg.libXi
     unstable.xorg.libXcursor
@@ -49,4 +58,6 @@ in
     # EGL
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.libglvnd ] }";
   '';
+  #    export RUST_PATH="${rust}/bin";
+  #    export RUST_SRC_PATH="${rust}/lib/rustlib/src/rust/library";
 }

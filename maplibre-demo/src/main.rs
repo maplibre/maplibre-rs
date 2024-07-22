@@ -66,7 +66,7 @@ fn main() {
     match &cli.command {
         Commands::Headed {} => run_headed_map(
             Some(PathBuf::from(
-                "/Users/pax/projects/maplibre/maplibre-rs/maplibre-cache".to_string(),
+                "./maplibre-cache".to_string(),
             )),
             WinitMapWindowConfig::new("maplibre".to_string()),
             WgpuSettings {

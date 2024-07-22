@@ -91,6 +91,10 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
         .with_map_window_config(WinitMapWindowConfig::new("maplibre".to_string()))
         .with_http_client(WHATWGFetchHttpClient::default());
 
+    let offscreen_kernel_config = OffscreenKernelConfig {
+        cache_directory: None
+    };
+
     #[cfg(target_feature = "atomics")]
     {
         kernel_builder = kernel_builder
@@ -98,6 +102,7 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
                 platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(
                     new_worker.clone(),
                 )?,
+                offscreen_kernel_config
             ))
             .with_scheduler(
                 platform::multithreaded::pool_scheduler::WebWorkerPoolScheduler::new(new_worker)?,
@@ -107,7 +112,11 @@ pub async fn run_maplibre(new_worker: js_sys::Function) -> Result<(), JSError> {
     #[cfg(not(target_feature = "atomics"))]
     {
         kernel_builder = kernel_builder
-            .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(new_worker, 4, OffscreenKernelConfig {})?)
+            .with_apc(platform::singlethreaded::apc::PassingAsyncProcedureCall::new(
+                new_worker,
+                4,
+                offscreen_kernel_config)?
+            )
             .with_scheduler(maplibre::io::scheduler::NopScheduler);
     }
 
