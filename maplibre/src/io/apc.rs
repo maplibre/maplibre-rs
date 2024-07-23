@@ -267,7 +267,7 @@ impl<K: OffscreenKernel, S: Scheduler> AsyncProcedureCall<K> for SchedulerAsyncP
                 log::info!("Processing on thread: {:?}", std::thread::current().name());
 
                 let kernel = K::create(offscreen_kernel_config);
-                procedure(input, SchedulerContext { sender }, kernel) // TODO
+                procedure(input, SchedulerContext { sender }, kernel)
                     .await
                     .unwrap();
             })

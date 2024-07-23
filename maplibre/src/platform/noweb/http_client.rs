@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 use async_trait::async_trait;
 use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache, HttpCacheOptions};
-use reqwest::{Client, Request, Response, StatusCode};
-use reqwest_middleware::{ClientWithMiddleware, Next};
+use reqwest::{Client, StatusCode};
+use reqwest_middleware::ClientWithMiddleware;
 
 use crate::io::source_client::{HttpClient, SourceFetchError};
 
@@ -24,23 +24,6 @@ impl From<reqwest_middleware::Error> for SourceFetchError {
     }
 }
 
-struct LoggingMiddleware;
-
-#[async_trait::async_trait]
-impl reqwest_middleware::Middleware for LoggingMiddleware {
-    async fn handle(
-        &self,
-        req: Request,
-        extensions: &mut http::Extensions,
-        next: Next<'_>,
-    ) -> reqwest_middleware::Result<Response> {
-        println!("Request started {:?}", req);
-        let res = next.run(req, extensions).await;
-        println!("Result: {:?}", res);
-        res
-    }
-}
-
 impl ReqwestHttpClient {
     /// cache_path: Under which path should we cache requests.
     pub fn new<P>(cache_path: Option<P>) -> Self
@@ -50,15 +33,13 @@ impl ReqwestHttpClient {
         let mut builder = reqwest_middleware::ClientBuilder::new(Client::new());
 
         if let Some(cache_path) = cache_path {
-            builder = builder
-                .with(Cache(HttpCache {
-                    mode: CacheMode::Default,
-                    manager: CACacheManager {
-                        path: cache_path.into(),
-                    },
-                    options: HttpCacheOptions::default(),
-                }))
-                .with(LoggingMiddleware);
+            builder = builder.with(Cache(HttpCache {
+                mode: CacheMode::Default,
+                manager: CACacheManager {
+                    path: cache_path.into(),
+                },
+                options: HttpCacheOptions::default(),
+            }))
         }
         let client = builder.build();
 

@@ -68,7 +68,7 @@ pub async fn singlethreaded_process_data(procedure_ptr: u32, input: String) -> R
         context,
         UsedOffscreenKernelEnvironment::create(serde_json::from_str(&kernel_config()).unwrap()),
     )
-    .await?; // TODO
+    .await?;
 
     Ok(())
 }

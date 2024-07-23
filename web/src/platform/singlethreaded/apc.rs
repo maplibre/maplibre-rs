@@ -181,7 +181,7 @@ impl PassingAsyncProcedureCall {
                         ),
                         &js_sys::Array::of2(
                             &JsValue::from("config"),
-                            &js_sys::JsString::from(serde_json::to_string(&config).expect("TODO")),
+                            &js_sys::JsString::from(serde_json::to_string(&config).expect("TODO")), // FIXME: Handle this error correctly
                         ),
                     ))
                     .expect("can not fail"),

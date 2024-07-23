@@ -3,9 +3,7 @@
 # then you do not need to care about dependencies.
 
 { pkgs ? import <nixpkgs> {
-    overlays = [
-      #rust_overlay
-    ];
+    overlays = [];
   }
 }:
 with pkgs;
@@ -58,6 +56,4 @@ in
     # EGL
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.libglvnd ] }";
   '';
-  #    export RUST_PATH="${rust}/bin";
-  #    export RUST_SRC_PATH="${rust}/lib/rustlib/src/rust/library";
 }

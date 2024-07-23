@@ -87,7 +87,6 @@ smallvec.workspace = true
 # Headless
 png = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
-http = "1.1.0"
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }
