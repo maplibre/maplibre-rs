@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["SendEventError"],"trait":["EventLoop","EventLoopConfig","EventLoopProxy"]};
+window.SIDEBAR_ITEMS = {"enum":["SendEventError"],"struct":["EventLoopError"],"trait":["EventLoop","EventLoopConfig","EventLoopProxy"]};
