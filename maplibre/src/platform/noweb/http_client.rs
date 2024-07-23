@@ -1,8 +1,9 @@
+use std::path::PathBuf;
+
 use async_trait::async_trait;
 use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache, HttpCacheOptions};
 use reqwest::{Client, Request, Response, StatusCode};
 use reqwest_middleware::{ClientWithMiddleware, Next};
-use std::path::PathBuf;
 
 use crate::io::source_client::{HttpClient, SourceFetchError};
 
@@ -61,9 +62,7 @@ impl ReqwestHttpClient {
         }
         let client = builder.build();
 
-        Self {
-            client,
-        }
+        Self { client }
     }
 }
 

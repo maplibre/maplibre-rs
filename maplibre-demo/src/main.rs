@@ -1,7 +1,6 @@
 #![deny(unused_imports)]
 
-use std::io::ErrorKind;
-use std::path::PathBuf;
+use std::{io::ErrorKind, path::PathBuf};
 
 use clap::{Parser, Subcommand};
 use maplibre::{coords::LatLon, render::settings::WgpuSettings};
@@ -65,9 +64,7 @@ fn main() {
     // matches just as you would the top level cmd
     match &cli.command {
         Commands::Headed {} => run_headed_map(
-            Some(PathBuf::from(
-                "./maplibre-cache".to_string(),
-            )),
+            Some(PathBuf::from("./maplibre-cache".to_string())),
             WinitMapWindowConfig::new("maplibre".to_string()),
             WgpuSettings {
                 backends: Some(maplibre::render::settings::Backends::all()),

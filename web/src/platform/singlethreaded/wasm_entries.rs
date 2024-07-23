@@ -1,5 +1,4 @@
-use std::{mem, rc::Rc};
-use std::sync::{OnceLock};
+use std::{mem, rc::Rc, sync::OnceLock};
 
 use log::error;
 use maplibre::{
@@ -33,9 +32,8 @@ fn kernel_config() -> &'static str {
     CONFIG.get().map(move |t| t.as_str()).unwrap_or("{}")
 }
 
-
 #[wasm_bindgen]
-pub  fn set_kernel_config(config: String) {
+pub fn set_kernel_config(config: String) {
     CONFIG.set(config).expect("failed to set kernel config")
 }
 
@@ -65,7 +63,12 @@ pub async fn singlethreaded_process_data(procedure_ptr: u32, input: String) -> R
         );
     }
 
-    procedure(input, context, UsedOffscreenKernelEnvironment::create(serde_json::from_str(&kernel_config()).unwrap())).await?; // TODO
+    procedure(
+        input,
+        context,
+        UsedOffscreenKernelEnvironment::create(serde_json::from_str(&kernel_config()).unwrap()),
+    )
+    .await?; // TODO
 
     Ok(())
 }

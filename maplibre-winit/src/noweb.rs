@@ -3,10 +3,10 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
-use std::marker::PhantomData;
-use std::path::PathBuf;
+use std::{marker::PhantomData, path::PathBuf};
 
 use maplibre::{
+    environment::OffscreenKernelConfig,
     event_loop::EventLoop,
     io::apc::SchedulerAsyncProcedureCall,
     kernel::{Kernel, KernelBuilder},
@@ -20,7 +20,6 @@ use maplibre::{
     window::{MapWindow, MapWindowConfig, PhysicalSize, WindowCreateError},
 };
 use winit::window::WindowAttributes;
-use maplibre::environment::OffscreenKernelConfig;
 
 use super::WinitMapWindow;
 use crate::{WinitEnvironment, WinitEventLoop};
@@ -117,9 +116,12 @@ pub fn run_headed_map<P>(
         let kernel: Kernel<Environment<_, _, _>> = KernelBuilder::new()
             .with_map_window_config(window_config)
             .with_http_client(client.clone())
-            .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new(), OffscreenKernelConfig {
-                cache_directory: cache_path.map(|path| path.to_str().unwrap().to_string()),
-            }))
+            .with_apc(SchedulerAsyncProcedureCall::new(
+                TokioScheduler::new(),
+                OffscreenKernelConfig {
+                    cache_directory: cache_path.map(|path| path.to_str().unwrap().to_string()),
+                },
+            ))
             .with_scheduler(TokioScheduler::new())
             .build();
 

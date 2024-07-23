@@ -16,10 +16,12 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::{
-    coords::WorldTileCoords, define_label, environment::OffscreenKernel,
-    io::scheduler::Scheduler, style::Style,
+    coords::WorldTileCoords,
+    define_label,
+    environment::{OffscreenKernel, OffscreenKernelConfig},
+    io::scheduler::Scheduler,
+    style::Style,
 };
-use crate::environment::OffscreenKernelConfig;
 
 define_label!(MessageTag);
 
@@ -202,7 +204,7 @@ pub struct SchedulerAsyncProcedureCall<K: OffscreenKernel, S: Scheduler> {
     buffer: RefCell<Vec<Message>>,
     scheduler: S,
     phantom_k: PhantomData<K>,
-    offscreen_kernel_config: OffscreenKernelConfig
+    offscreen_kernel_config: OffscreenKernelConfig,
 }
 
 impl<K: OffscreenKernel, S: Scheduler> SchedulerAsyncProcedureCall<K, S> {
@@ -217,9 +219,7 @@ impl<K: OffscreenKernel, S: Scheduler> SchedulerAsyncProcedureCall<K, S> {
     }
 }
 
-impl<K: OffscreenKernel, S: Scheduler> AsyncProcedureCall<K>
-    for SchedulerAsyncProcedureCall<K, S>
-{
+impl<K: OffscreenKernel, S: Scheduler> AsyncProcedureCall<K> for SchedulerAsyncProcedureCall<K, S> {
     type Context = SchedulerContext;
     type ReceiveIterator<F: FnMut(&Message) -> bool> = IntoIter<Message>;
 

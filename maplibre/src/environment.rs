@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+
 use crate::{
     io::{
         apc::AsyncProcedureCall,
@@ -30,7 +31,7 @@ pub trait Environment: 'static {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct OffscreenKernelConfig {
-    pub cache_directory: Option<String>
+    pub cache_directory: Option<String>,
 }
 
 pub trait OffscreenKernel: Send + Sync + 'static {

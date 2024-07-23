@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc, vec::IntoIter};
 use js_sys::{ArrayBuffer, Uint8Array};
 use log::error;
 use maplibre::{
-    environment::OffscreenKernel,
+    environment::{OffscreenKernel, OffscreenKernelConfig},
     io::{
         apc::{
             AsyncProcedure, AsyncProcedureCall, CallError, Context, Input, IntoMessage, Message,
@@ -16,7 +16,6 @@ use rand::{prelude::SliceRandom, thread_rng};
 use thiserror::Error;
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::{DedicatedWorkerGlobalScope, Worker};
-use maplibre::environment::OffscreenKernelConfig;
 
 use crate::{
     error::WebError,
@@ -137,7 +136,11 @@ pub struct PassingAsyncProcedureCall {
 }
 
 impl PassingAsyncProcedureCall {
-    pub fn new(new_worker: js_sys::Function, initial_workers: usize, config: OffscreenKernelConfig) -> Result<Self, WebError> {
+    pub fn new(
+        new_worker: js_sys::Function,
+        initial_workers: usize,
+        config: OffscreenKernelConfig,
+    ) -> Result<Self, WebError> {
         let received = Rc::new(RefCell::new(vec![]));
 
         let create_new_worker = || {
@@ -156,19 +159,34 @@ impl PassingAsyncProcedureCall {
         for _ in 0..initial_workers {
             let worker: Worker = create_new_worker()?;
 
-            worker.post_message(
-                &js_sys::Object::from_entries(&js_sys::Array::of2(
-                    &js_sys::Array::of2(&JsValue::from("type"), &js_sys::JsString::from("wasm_init")),
-                    &js_sys::Array::of2(&JsValue::from("module"), &wasm_bindgen::module())
-                )).expect("can not fail")
-            ).map_err(WebError::from)?;
+            worker
+                .post_message(
+                    &js_sys::Object::from_entries(&js_sys::Array::of2(
+                        &js_sys::Array::of2(
+                            &JsValue::from("type"),
+                            &js_sys::JsString::from("wasm_init"),
+                        ),
+                        &js_sys::Array::of2(&JsValue::from("module"), &wasm_bindgen::module()),
+                    ))
+                    .expect("can not fail"),
+                )
+                .map_err(WebError::from)?;
 
-            worker.post_message(
-                &js_sys::Object::from_entries(&js_sys::Array::of2(
-                    &js_sys::Array::of2(&JsValue::from("type"), &js_sys::JsString::from("kernel_config")),
-                    &js_sys::Array::of2(&JsValue::from("config"), &js_sys::JsString::from(serde_json::to_string(&config).expect("TODO")))
-                )).expect("can not fail")
-            ).map_err(WebError::from)?;
+            worker
+                .post_message(
+                    &js_sys::Object::from_entries(&js_sys::Array::of2(
+                        &js_sys::Array::of2(
+                            &JsValue::from("type"),
+                            &js_sys::JsString::from("kernel_config"),
+                        ),
+                        &js_sys::Array::of2(
+                            &JsValue::from("config"),
+                            &js_sys::JsString::from(serde_json::to_string(&config).expect("TODO")),
+                        ),
+                    ))
+                    .expect("can not fail"),
+                )
+                .map_err(WebError::from)?;
 
             workers.push(worker);
         }
@@ -230,9 +248,13 @@ impl<K: OffscreenKernel> AsyncProcedureCall<K> for PassingAsyncProcedureCall {
 
         let message = js_sys::Object::from_entries(&js_sys::Array::of3(
             &js_sys::Array::of2(&JsValue::from("type"), &JsValue::from("call")),
-            &js_sys::Array::of2(&JsValue::from("procedure_ptr"), &JsValue::from(procedure_ptr)),
-            &js_sys::Array::of2(&JsValue::from("input"), &JsValue::from(input))
-        )).expect("can not fail");
+            &js_sys::Array::of2(
+                &JsValue::from("procedure_ptr"),
+                &JsValue::from(procedure_ptr),
+            ),
+            &js_sys::Array::of2(&JsValue::from("input"), &JsValue::from(input)),
+        ))
+        .expect("can not fail");
 
         let worker = self
             .workers

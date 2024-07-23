@@ -94,10 +94,10 @@ impl WorkerPool {
             &js_sys::Object::from_entries(&js_sys::Array::of3(
                 &js_sys::Array::of2(&JsValue::from("type"), &js_sys::JsString::from("wasm_init")),
                 &js_sys::Array::of2(&JsValue::from("module"), &wasm_bindgen::module()),
-                &js_sys::Array::of2(&JsValue::from("memory"), &wasm_bindgen::memory())
-            )).expect("can not fail")
+                &js_sys::Array::of2(&JsValue::from("memory"), &wasm_bindgen::memory()),
+            ))
+            .expect("can not fail"),
         )?;
-
 
         self.state.push(worker);
         Ok(())
@@ -146,8 +146,9 @@ impl WorkerPool {
         match worker.post_message(
             &js_sys::Object::from_entries(&js_sys::Array::of2(
                 &js_sys::Array::of2(&JsValue::from("type"), &js_sys::JsString::from("call")),
-                &js_sys::Array::of2(&JsValue::from("work_ptr"), &JsValue::from(work_ptr as u32))
-            )).expect("can not fail")
+                &js_sys::Array::of2(&JsValue::from("work_ptr"), &JsValue::from(work_ptr as u32)),
+            ))
+            .expect("can not fail"),
         ) {
             Ok(()) => Ok(()),
             Err(e) => {

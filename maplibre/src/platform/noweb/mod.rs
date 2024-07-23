@@ -6,11 +6,10 @@ use std::{
 };
 
 use crate::{
-    environment::OffscreenKernel,
+    environment::{OffscreenKernel, OffscreenKernelConfig},
     io::source_client::{HttpSourceClient, SourceClient},
     platform::http_client::ReqwestHttpClient,
 };
-use crate::environment::OffscreenKernelConfig;
 
 pub mod http_client;
 pub mod scheduler;
@@ -47,7 +46,7 @@ impl OffscreenKernel for ReqwestOffscreenKernelEnvironment {
 
     fn source_client(&self) -> SourceClient<Self::HttpClient> {
         SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new::<String>(
-            self.0.cache_directory.clone()
+            self.0.cache_directory.clone(),
         )))
     }
 }
