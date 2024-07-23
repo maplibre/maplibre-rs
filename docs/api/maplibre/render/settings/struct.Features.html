@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Features that are not guaranteed to be supported."><title>Features in maplibre::render::settings - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc struct"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../maplibre/index.html">maplibre</a><span class="version">0.1.0</span></h2></div><h2 class="location"><a href="#">Features</a></h2><div class="sidebar-elems"><section><h3><a href="#fields">Tuple Fields</a></h3><ul class="block structfield"><li><a href="#structfield.0">0</a></li></ul><h3><a href="#implementations">Associated Constants</a></h3><ul class="block associatedconstant"><li><a href="#associatedconstant.ADDRESS_MODE_CLAMP_TO_BORDER">ADDRESS_MODE_CLAMP_TO_BORDER</a></li><li><a href="#associatedconstant.ADDRESS_MODE_CLAMP_TO_ZERO">ADDRESS_MODE_CLAMP_TO_ZERO</a></li><li><a href="#associatedconstant.BGRA8UNORM_STORAGE">BGRA8UNORM_STORAGE</a></li><li><a href="#associatedconstant.BUFFER_BINDING_ARRAY">BUFFER_BINDING_ARRAY</a></li><li><a href="#associatedconstant.CLEAR_TEXTURE">CLEAR_TEXTURE</a></li><li><a href="#associatedconstant.CONSERVATIVE_RASTERIZATION">CONSERVATIVE_RASTERIZATION</a></li><li><a href="#associatedconstant.DEPTH32FLOAT_STENCIL8">DEPTH32FLOAT_STENCIL8</a></li><li><a href="#associatedconstant.DEPTH_CLIP_CONTROL">DEPTH_CLIP_CONTROL</a></li><li><a href="#associatedconstant.DUAL_SOURCE_BLENDING">DUAL_SOURCE_BLENDING</a></li><li><a href="#associatedconstant.FLOAT32_FILTERABLE">FLOAT32_FILTERABLE</a></li><li><a href="#associatedconstant.INDIRECT_FIRST_INSTANCE">INDIRECT_FIRST_INSTANCE</a></li><li><a href="#associatedconstant.MAPPABLE_PRIMARY_BUFFERS">MAPPABLE_PRIMARY_BUFFERS</a></li><li><a href="#associatedconstant.MULTIVIEW">MULTIVIEW</a></li><li><a href="#associatedconstant.MULTI_DRAW_INDIRECT">MULTI_DRAW_INDIRECT</a></li><li><a href="#associatedconstant.MULTI_DRAW_INDIRECT_COUNT">MULTI_DRAW_INDIRECT_COUNT</a></li><li><a href="#associatedconstant.PARTIALLY_BOUND_BINDING_ARRAY">PARTIALLY_BOUND_BINDING_ARRAY</a></li><li><a href="#associatedconstant.PIPELINE_STATISTICS_QUERY">PIPELINE_STATISTICS_QUERY</a></li><li><a href="#associatedconstant.POLYGON_MODE_LINE">POLYGON_MODE_LINE</a></li><li><a href="#associatedconstant.POLYGON_MODE_POINT">POLYGON_MODE_POINT</a></li><li><a href="#associatedconstant.PUSH_CONSTANTS">PUSH_CONSTANTS</a></li><li><a href="#associatedconstant.RAY_QUERY">RAY_QUERY</a></li><li><a href="#associatedconstant.RAY_TRACING_ACCELERATION_STRUCTURE">RAY_TRACING_ACCELERATION_STRUCTURE</a></li><li><a href="#associatedconstant.RG11B10UFLOAT_RENDERABLE">RG11B10UFLOAT_RENDERABLE</a></li><li><a href="#associatedconstant.SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING">SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING</a></li><li><a href="#associatedconstant.SHADER_EARLY_DEPTH_TEST">SHADER_EARLY_DEPTH_TEST</a></li><li><a href="#associatedconstant.SHADER_F16">SHADER_F16</a></li><li><a href="#associatedconstant.SHADER_F64">SHADER_F64</a></li><li><a href="#associatedconstant.SHADER_I16">SHADER_I16</a></li><li><a href="#associatedconstant.SHADER_PRIMITIVE_INDEX">SHADER_PRIMITIVE_INDEX</a></li><li><a href="#associatedconstant.SHADER_UNUSED_VERTEX_OUTPUT">SHADER_UNUSED_VERTEX_OUTPUT</a></li><li><a href="#associatedconstant.SPIRV_SHADER_PASSTHROUGH">SPIRV_SHADER_PASSTHROUGH</a></li><li><a href="#associatedconstant.STORAGE_RESOURCE_BINDING_ARRAY">STORAGE_RESOURCE_BINDING_ARRAY</a></li><li><a href="#associatedconstant.TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES">TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</a></li><li><a href="#associatedconstant.TEXTURE_BINDING_ARRAY">TEXTURE_BINDING_ARRAY</a></li><li><a href="#associatedconstant.TEXTURE_COMPRESSION_ASTC">TEXTURE_COMPRESSION_ASTC</a></li><li><a href="#associatedconstant.TEXTURE_COMPRESSION_ASTC_HDR">TEXTURE_COMPRESSION_ASTC_HDR</a></li><li><a href="#associatedconstant.TEXTURE_COMPRESSION_BC">TEXTURE_COMPRESSION_BC</a></li><li><a href="#associatedconstant.TEXTURE_COMPRESSION_ETC2">TEXTURE_COMPRESSION_ETC2</a></li><li><a href="#associatedconstant.TEXTURE_FORMAT_16BIT_NORM">TEXTURE_FORMAT_16BIT_NORM</a></li><li><a href="#associatedconstant.TEXTURE_FORMAT_NV12">TEXTURE_FORMAT_NV12</a></li><li><a href="#associatedconstant.TIMESTAMP_QUERY">TIMESTAMP_QUERY</a></li><li><a href="#associatedconstant.TIMESTAMP_QUERY_INSIDE_PASSES">TIMESTAMP_QUERY_INSIDE_PASSES</a></li><li><a href="#associatedconstant.UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING">UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</a></li><li><a href="#associatedconstant.VERTEX_ATTRIBUTE_64BIT">VERTEX_ATTRIBUTE_64BIT</a></li><li><a href="#associatedconstant.VERTEX_WRITABLE_STORAGE">VERTEX_WRITABLE_STORAGE</a></li></ul><h3><a href="#implementations">Methods</a></h3><ul class="block method"><li><a href="#method.all">all</a></li><li><a href="#method.all_native_mask">all_native_mask</a></li><li><a href="#method.all_webgpu_mask">all_webgpu_mask</a></li><li><a href="#method.bits">bits</a></li><li><a href="#method.complement">complement</a></li><li><a href="#method.contains">contains</a></li><li><a href="#method.contains_invalid_bits">contains_invalid_bits</a></li><li><a href="#method.difference">difference</a></li><li><a href="#method.empty">empty</a></li><li><a href="#method.from_bits">from_bits</a></li><li><a href="#method.from_bits_retain">from_bits_retain</a></li><li><a href="#method.from_bits_truncate">from_bits_truncate</a></li><li><a href="#method.from_name">from_name</a></li><li><a href="#method.insert">insert</a></li><li><a href="#method.intersection">intersection</a></li><li><a href="#method.intersects">intersects</a></li><li><a href="#method.is_all">is_all</a></li><li><a href="#method.is_empty">is_empty</a></li><li><a href="#method.iter">iter</a></li><li><a href="#method.iter_names">iter_names</a></li><li><a href="#method.remove">remove</a></li><li><a href="#method.set">set</a></li><li><a href="#method.symmetric_difference">symmetric_difference</a></li><li><a href="#method.toggle">toggle</a></li><li><a href="#method.union">union</a></li></ul><h3><a href="#trait-implementations">Trait Implementations</a></h3><ul class="block trait-implementation"><li><a href="#impl-Binary-for-Features">Binary</a></li><li><a href="#impl-BitAnd-for-Features">BitAnd</a></li><li><a href="#impl-BitAndAssign-for-Features">BitAndAssign</a></li><li><a href="#impl-BitOr-for-Features">BitOr</a></li><li><a href="#impl-BitOrAssign-for-Features">BitOrAssign</a></li><li><a href="#impl-BitXor-for-Features">BitXor</a></li><li><a href="#impl-BitXorAssign-for-Features">BitXorAssign</a></li><li><a href="#impl-Clone-for-Features">Clone</a></li><li><a href="#impl-Copy-for-Features">Copy</a></li><li><a href="#impl-Debug-for-Features">Debug</a></li><li><a href="#impl-Default-for-Features">Default</a></li><li><a href="#impl-Eq-for-Features">Eq</a></li><li><a href="#impl-Extend%3CFeatures%3E-for-Features">Extend&lt;Features&gt;</a></li><li><a href="#impl-Flags-for-Features">Flags</a></li><li><a href="#impl-FromIterator%3CFeatures%3E-for-Features">FromIterator&lt;Features&gt;</a></li><li><a href="#impl-Hash-for-Features">Hash</a></li><li><a href="#impl-IntoIterator-for-Features">IntoIterator</a></li><li><a href="#impl-LowerHex-for-Features">LowerHex</a></li><li><a href="#impl-Not-for-Features">Not</a></li><li><a href="#impl-Octal-for-Features">Octal</a></li><li><a href="#impl-PartialEq-for-Features">PartialEq</a></li><li><a href="#impl-StructuralPartialEq-for-Features">StructuralPartialEq</a></li><li><a href="#impl-Sub-for-Features">Sub</a></li><li><a href="#impl-SubAssign-for-Features">SubAssign</a></li><li><a href="#impl-UpperHex-for-Features">UpperHex</a></li></ul><h3><a href="#synthetic-implementations">Auto Trait Implementations</a></h3><ul class="block synthetic-implementation"><li><a href="#impl-Freeze-for-Features">Freeze</a></li><li><a href="#impl-RefUnwindSafe-for-Features">RefUnwindSafe</a></li><li><a href="#impl-Send-for-Features">Send</a></li><li><a href="#impl-Sync-for-Features">Sync</a></li><li><a href="#impl-Unpin-for-Features">Unpin</a></li><li><a href="#impl-UnwindSafe-for-Features">UnwindSafe</a></li></ul><h3><a href="#blanket-implementations">Blanket Implementations</a></h3><ul class="block blanket-implementation"><li><a href="#impl-Any-for-T">Any</a></li><li><a href="#impl-Borrow%3CT%3E-for-T">Borrow&lt;T&gt;</a></li><li><a href="#impl-BorrowMut%3CT%3E-for-T">BorrowMut&lt;T&gt;</a></li><li><a href="#impl-Downcast-for-T">Downcast</a></li><li><a href="#impl-Downcast%3CT%3E-for-T">Downcast&lt;T&gt;</a></li><li><a href="#impl-DowncastSync-for-T">DowncastSync</a></li><li><a href="#impl-DynEq-for-T">DynEq</a></li><li><a href="#impl-DynHash-for-T">DynHash</a></li><li><a href="#impl-Equivalent%3CK%3E-for-Q">Equivalent&lt;K&gt;</a></li><li><a href="#impl-Equivalent%3CK%3E-for-Q-1">Equivalent&lt;K&gt;</a></li><li><a href="#impl-From%3CT%3E-for-T">From&lt;T&gt;</a></li><li><a href="#impl-Instrument-for-T">Instrument</a></li><li><a href="#impl-Into%3CU%3E-for-T">Into&lt;U&gt;</a></li><li><a href="#impl-IntoEither-for-T">IntoEither</a></li><li><a href="#impl-Resource-for-T">Resource</a></li><li><a href="#impl-Same-for-T">Same</a></li><li><a href="#impl-ToOwned-for-T">ToOwned</a></li><li><a href="#impl-TryFrom%3CU%3E-for-T">TryFrom&lt;U&gt;</a></li><li><a href="#impl-TryInto%3CU%3E-for-T">TryInto&lt;U&gt;</a></li><li><a href="#impl-Upcast%3CT%3E-for-T">Upcast&lt;T&gt;</a></li><li><a href="#impl-WasmNotSend-for-T">WasmNotSend</a></li><li><a href="#impl-WasmNotSendSync-for-T">WasmNotSendSync</a></li><li><a href="#impl-WasmNotSync-for-T">WasmNotSync</a></li><li><a href="#impl-WithSubscriber-for-T">WithSubscriber</a></li><li><a href="#impl-Within%3CG2%3E-for-G1">Within&lt;G2&gt;</a></li></ul></section><h2><a href="index.html">In maplibre::render::settings</a></h2></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../maplibre/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Struct <a href="../../index.html">maplibre</a>::<wbr><a href="../index.html">render</a>::<wbr><a href="index.html">settings</a>::<wbr><a class="struct" href="#">Features</a><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><span class="out-of-band"><button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code><div class="code-attribute">#[repr(transparent)]</div>pub struct Features(pub(crate) &lt;<a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> as PublicFlags&gt;::Internal);</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Features that are not guaranteed to be supported.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Features that are not guaranteed to be supported."><title>Features in maplibre::render::settings - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="maplibre" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc struct"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../maplibre/index.html">maplibre</a><span class="version">0.1.0</span></h2></div><h2 class="location"><a href="#">Features</a></h2><div class="sidebar-elems"><section><h3><a href="#fields">Tuple Fields</a></h3><ul class="block structfield"><li><a href="#structfield.0">0</a></li></ul><h3><a href="#implementations">Associated Constants</a></h3><ul class="block associatedconstant"><li><a href="#associatedconstant.ADDRESS_MODE_CLAMP_TO_BORDER">ADDRESS_MODE_CLAMP_TO_BORDER</a></li><li><a href="#associatedconstant.ADDRESS_MODE_CLAMP_TO_ZERO">ADDRESS_MODE_CLAMP_TO_ZERO</a></li><li><a href="#associatedconstant.BGRA8UNORM_STORAGE">BGRA8UNORM_STORAGE</a></li><li><a href="#associatedconstant.BUFFER_BINDING_ARRAY">BUFFER_BINDING_ARRAY</a></li><li><a href="#associatedconstant.CLEAR_TEXTURE">CLEAR_TEXTURE</a></li><li><a href="#associatedconstant.CONSERVATIVE_RASTERIZATION">CONSERVATIVE_RASTERIZATION</a></li><li><a href="#associatedconstant.DEPTH32FLOAT_STENCIL8">DEPTH32FLOAT_STENCIL8</a></li><li><a href="#associatedconstant.DEPTH_CLIP_CONTROL">DEPTH_CLIP_CONTROL</a></li><li><a href="#associatedconstant.DUAL_SOURCE_BLENDING">DUAL_SOURCE_BLENDING</a></li><li><a href="#associatedconstant.FLOAT32_FILTERABLE">FLOAT32_FILTERABLE</a></li><li><a href="#associatedconstant.INDIRECT_FIRST_INSTANCE">INDIRECT_FIRST_INSTANCE</a></li><li><a href="#associatedconstant.MAPPABLE_PRIMARY_BUFFERS">MAPPABLE_PRIMARY_BUFFERS</a></li><li><a href="#associatedconstant.MULTIVIEW">MULTIVIEW</a></li><li><a href="#associatedconstant.MULTI_DRAW_INDIRECT">MULTI_DRAW_INDIRECT</a></li><li><a href="#associatedconstant.MULTI_DRAW_INDIRECT_COUNT">MULTI_DRAW_INDIRECT_COUNT</a></li><li><a href="#associatedconstant.PARTIALLY_BOUND_BINDING_ARRAY">PARTIALLY_BOUND_BINDING_ARRAY</a></li><li><a href="#associatedconstant.PIPELINE_CACHE">PIPELINE_CACHE</a></li><li><a href="#associatedconstant.PIPELINE_STATISTICS_QUERY">PIPELINE_STATISTICS_QUERY</a></li><li><a href="#associatedconstant.POLYGON_MODE_LINE">POLYGON_MODE_LINE</a></li><li><a href="#associatedconstant.POLYGON_MODE_POINT">POLYGON_MODE_POINT</a></li><li><a href="#associatedconstant.PUSH_CONSTANTS">PUSH_CONSTANTS</a></li><li><a href="#associatedconstant.RAY_QUERY">RAY_QUERY</a></li><li><a href="#associatedconstant.RAY_TRACING_ACCELERATION_STRUCTURE">RAY_TRACING_ACCELERATION_STRUCTURE</a></li><li><a href="#associatedconstant.RG11B10UFLOAT_RENDERABLE">RG11B10UFLOAT_RENDERABLE</a></li><li><a href="#associatedconstant.SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING">SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING</a></li><li><a href="#associatedconstant.SHADER_EARLY_DEPTH_TEST">SHADER_EARLY_DEPTH_TEST</a></li><li><a href="#associatedconstant.SHADER_F16">SHADER_F16</a></li><li><a href="#associatedconstant.SHADER_F64">SHADER_F64</a></li><li><a href="#associatedconstant.SHADER_I16">SHADER_I16</a></li><li><a href="#associatedconstant.SHADER_INT64">SHADER_INT64</a></li><li><a href="#associatedconstant.SHADER_INT64_ATOMIC_ALL_OPS">SHADER_INT64_ATOMIC_ALL_OPS</a></li><li><a href="#associatedconstant.SHADER_INT64_ATOMIC_MIN_MAX">SHADER_INT64_ATOMIC_MIN_MAX</a></li><li><a href="#associatedconstant.SHADER_PRIMITIVE_INDEX">SHADER_PRIMITIVE_INDEX</a></li><li><a href="#associatedconstant.SPIRV_SHADER_PASSTHROUGH">SPIRV_SHADER_PASSTHROUGH</a></li><li><a href="#associatedconstant.STORAGE_RESOURCE_BINDING_ARRAY">STORAGE_RESOURCE_BINDING_ARRAY</a></li><li><a href="#associatedconstant.SUBGROUP">SUBGROUP</a></li><li><a href="#associatedconstant.SUBGROUP_BARRIER">SUBGROUP_BARRIER</a></li><li><a href="#associatedconstant.SUBGROUP_VERTEX">SUBGROUP_VERTEX</a></li><li><a href="#associatedconstant.TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES">TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</a></li><li><a href="#associatedconstant.TEXTURE_BINDING_ARRAY">TEXTURE_BINDING_ARRAY</a></li><li><a href="#associatedconstant.TEXTURE_COMPRESSION_ASTC">TEXTURE_COMPRESSION_ASTC</a></li><li><a href="#associatedconstant.TEXTURE_COMPRESSION_ASTC_HDR">TEXTURE_COMPRESSION_ASTC_HDR</a></li><li><a href="#associatedconstant.TEXTURE_COMPRESSION_BC">TEXTURE_COMPRESSION_BC</a></li><li><a href="#associatedconstant.TEXTURE_COMPRESSION_ETC2">TEXTURE_COMPRESSION_ETC2</a></li><li><a href="#associatedconstant.TEXTURE_FORMAT_16BIT_NORM">TEXTURE_FORMAT_16BIT_NORM</a></li><li><a href="#associatedconstant.TEXTURE_FORMAT_NV12">TEXTURE_FORMAT_NV12</a></li><li><a href="#associatedconstant.TIMESTAMP_QUERY">TIMESTAMP_QUERY</a></li><li><a href="#associatedconstant.TIMESTAMP_QUERY_INSIDE_ENCODERS">TIMESTAMP_QUERY_INSIDE_ENCODERS</a></li><li><a href="#associatedconstant.TIMESTAMP_QUERY_INSIDE_PASSES">TIMESTAMP_QUERY_INSIDE_PASSES</a></li><li><a href="#associatedconstant.UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING">UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</a></li><li><a href="#associatedconstant.VERTEX_ATTRIBUTE_64BIT">VERTEX_ATTRIBUTE_64BIT</a></li><li><a href="#associatedconstant.VERTEX_WRITABLE_STORAGE">VERTEX_WRITABLE_STORAGE</a></li></ul><h3><a href="#implementations">Methods</a></h3><ul class="block method"><li><a href="#method.all">all</a></li><li><a href="#method.all_native_mask">all_native_mask</a></li><li><a href="#method.all_webgpu_mask">all_webgpu_mask</a></li><li><a href="#method.bits">bits</a></li><li><a href="#method.complement">complement</a></li><li><a href="#method.contains">contains</a></li><li><a href="#method.contains_invalid_bits">contains_invalid_bits</a></li><li><a href="#method.difference">difference</a></li><li><a href="#method.empty">empty</a></li><li><a href="#method.from_bits">from_bits</a></li><li><a href="#method.from_bits_retain">from_bits_retain</a></li><li><a href="#method.from_bits_truncate">from_bits_truncate</a></li><li><a href="#method.from_name">from_name</a></li><li><a href="#method.insert">insert</a></li><li><a href="#method.intersection">intersection</a></li><li><a href="#method.intersects">intersects</a></li><li><a href="#method.is_all">is_all</a></li><li><a href="#method.is_empty">is_empty</a></li><li><a href="#method.iter">iter</a></li><li><a href="#method.iter_names">iter_names</a></li><li><a href="#method.remove">remove</a></li><li><a href="#method.set">set</a></li><li><a href="#method.symmetric_difference">symmetric_difference</a></li><li><a href="#method.toggle">toggle</a></li><li><a href="#method.union">union</a></li></ul><h3><a href="#trait-implementations">Trait Implementations</a></h3><ul class="block trait-implementation"><li><a href="#impl-Binary-for-Features">Binary</a></li><li><a href="#impl-BitAnd-for-Features">BitAnd</a></li><li><a href="#impl-BitAndAssign-for-Features">BitAndAssign</a></li><li><a href="#impl-BitOr-for-Features">BitOr</a></li><li><a href="#impl-BitOrAssign-for-Features">BitOrAssign</a></li><li><a href="#impl-BitXor-for-Features">BitXor</a></li><li><a href="#impl-BitXorAssign-for-Features">BitXorAssign</a></li><li><a href="#impl-Clone-for-Features">Clone</a></li><li><a href="#impl-Copy-for-Features">Copy</a></li><li><a href="#impl-Debug-for-Features">Debug</a></li><li><a href="#impl-Default-for-Features">Default</a></li><li><a href="#impl-Eq-for-Features">Eq</a></li><li><a href="#impl-Extend%3CFeatures%3E-for-Features">Extend&lt;Features&gt;</a></li><li><a href="#impl-Flags-for-Features">Flags</a></li><li><a href="#impl-FromIterator%3CFeatures%3E-for-Features">FromIterator&lt;Features&gt;</a></li><li><a href="#impl-Hash-for-Features">Hash</a></li><li><a href="#impl-IntoIterator-for-Features">IntoIterator</a></li><li><a href="#impl-LowerHex-for-Features">LowerHex</a></li><li><a href="#impl-Not-for-Features">Not</a></li><li><a href="#impl-Octal-for-Features">Octal</a></li><li><a href="#impl-PartialEq-for-Features">PartialEq</a></li><li><a href="#impl-StructuralPartialEq-for-Features">StructuralPartialEq</a></li><li><a href="#impl-Sub-for-Features">Sub</a></li><li><a href="#impl-SubAssign-for-Features">SubAssign</a></li><li><a href="#impl-UpperHex-for-Features">UpperHex</a></li></ul><h3><a href="#synthetic-implementations">Auto Trait Implementations</a></h3><ul class="block synthetic-implementation"><li><a href="#impl-Freeze-for-Features">Freeze</a></li><li><a href="#impl-RefUnwindSafe-for-Features">RefUnwindSafe</a></li><li><a href="#impl-Send-for-Features">Send</a></li><li><a href="#impl-Sync-for-Features">Sync</a></li><li><a href="#impl-Unpin-for-Features">Unpin</a></li><li><a href="#impl-UnwindSafe-for-Features">UnwindSafe</a></li></ul><h3><a href="#blanket-implementations">Blanket Implementations</a></h3><ul class="block blanket-implementation"><li><a href="#impl-Any-for-T">Any</a></li><li><a href="#impl-Borrow%3CT%3E-for-T">Borrow&lt;T&gt;</a></li><li><a href="#impl-BorrowMut%3CT%3E-for-T">BorrowMut&lt;T&gt;</a></li><li><a href="#impl-Downcast-for-T">Downcast</a></li><li><a href="#impl-Downcast%3CT%3E-for-T">Downcast&lt;T&gt;</a></li><li><a href="#impl-DowncastSync-for-T">DowncastSync</a></li><li><a href="#impl-DynEq-for-T">DynEq</a></li><li><a href="#impl-DynHash-for-T">DynHash</a></li><li><a href="#impl-Equivalent%3CK%3E-for-Q">Equivalent&lt;K&gt;</a></li><li><a href="#impl-Equivalent%3CK%3E-for-Q-1">Equivalent&lt;K&gt;</a></li><li><a href="#impl-From%3CT%3E-for-T">From&lt;T&gt;</a></li><li><a href="#impl-Instrument-for-T">Instrument</a></li><li><a href="#impl-Into%3CU%3E-for-T">Into&lt;U&gt;</a></li><li><a href="#impl-IntoEither-for-T">IntoEither</a></li><li><a href="#impl-Resource-for-T">Resource</a></li><li><a href="#impl-Same-for-T">Same</a></li><li><a href="#impl-ToOwned-for-T">ToOwned</a></li><li><a href="#impl-TryFrom%3CU%3E-for-T">TryFrom&lt;U&gt;</a></li><li><a href="#impl-TryInto%3CU%3E-for-T">TryInto&lt;U&gt;</a></li><li><a href="#impl-Upcast%3CT%3E-for-T">Upcast&lt;T&gt;</a></li><li><a href="#impl-WasmNotSend-for-T">WasmNotSend</a></li><li><a href="#impl-WasmNotSendSync-for-T">WasmNotSendSync</a></li><li><a href="#impl-WasmNotSync-for-T">WasmNotSync</a></li><li><a href="#impl-WithSubscriber-for-T">WithSubscriber</a></li><li><a href="#impl-Within%3CG2%3E-for-G1">Within&lt;G2&gt;</a></li></ul></section><h2><a href="index.html">In maplibre::render::settings</a></h2></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../maplibre/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Struct <a href="../../index.html">maplibre</a>::<wbr><a href="../index.html">render</a>::<wbr><a href="index.html">settings</a>::<wbr><a class="struct" href="#">Features</a><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><span class="out-of-band"><button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code><div class="code-attribute">#[repr(transparent)]</div>pub struct Features(pub(crate) &lt;<a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> as PublicFlags&gt;::Internal);</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Features that are not guaranteed to be supported.</p>
 <p>These are either part of the webgpu standard, or are extension features supported by
 wgpu when targeting native.</p>
 <p>If you want to use a feature, you need to first verify that the adapter supports
@@ -15,85 +15,13 @@ shadow map occluders to be rendered into a tighter depth range.</p>
 <li>some mobile chips</li>
 </ul>
 <p>This is a web and native feature.</p>
-</div></details><details class="toggle" open><summary><section id="associatedconstant.TIMESTAMP_QUERY" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.TIMESTAMP_QUERY" class="constant">TIMESTAMP_QUERY</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Enables use of Timestamp Queries. These queries tell the current gpu timestamp when
-all work before the query is finished.</p>
-<p>This feature allows the use of</p>
-<ul>
-<li>[<code>CommandEncoder::write_timestamp</code>]</li>
-<li>[<code>RenderPassDescriptor::timestamp_writes</code>]</li>
-<li>[<code>ComputePassDescriptor::timestamp_writes</code>]
-to write out timestamps.
-For timestamps within passes refer to <a href="struct.Features.html#associatedconstant.TIMESTAMP_QUERY_INSIDE_PASSES" title="associated constant maplibre::render::settings::Features::TIMESTAMP_QUERY_INSIDE_PASSES"><code>Features::TIMESTAMP_QUERY_INSIDE_PASSES</code></a></li>
-</ul>
-<p>They must be resolved using [<code>CommandEncoder::resolve_query_sets</code>] into a buffer,
-then the result must be multiplied by the timestamp period [<code>Queue::get_timestamp_period</code>]
-to get the timestamp in nanoseconds. Multiple timestamps can then be diffed to get the
-time for operations between them to finish.</p>
-<p>Supported Platforms:</p>
-<ul>
-<li>Vulkan</li>
-<li>DX12</li>
-<li>Metal</li>
-</ul>
-<p>This is a web and native feature.</p>
-</div></details><details class="toggle" open><summary><section id="associatedconstant.INDIRECT_FIRST_INSTANCE" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.INDIRECT_FIRST_INSTANCE" class="constant">INDIRECT_FIRST_INSTANCE</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows non-zero value for the <code>first_instance</code> member in indirect draw calls.</p>
-<p>If this feature is not enabled, and the <code>first_instance</code> member is non-zero, the behavior may be:</p>
-<ul>
-<li>The draw call is ignored.</li>
-<li>The draw call is executed as if the <code>first_instance</code> is zero.</li>
-<li>The draw call is executed with the correct <code>first_instance</code> value.</li>
-</ul>
-<p>Supported Platforms:</p>
-<ul>
-<li>Vulkan (mostly)</li>
-<li>DX12</li>
-<li>Metal on Apple3+ or Mac1+</li>
-<li>OpenGL (Desktop 4.2+ with ARB_shader_draw_parameters only)</li>
-</ul>
-<p>Not Supported:</p>
-<ul>
-<li>OpenGL ES / WebGL</li>
-</ul>
-<p>This is a web and native feature.</p>
-</div></details><details class="toggle" open><summary><section id="associatedconstant.SHADER_F16" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.SHADER_F16" class="constant">SHADER_F16</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows shaders to acquire the FP16 ability</p>
-<p>Note: this is not supported in <code>naga</code> yet，only through <code>spirv-passthrough</code> right now.</p>
-<p>Supported Platforms:</p>
-<ul>
-<li>Vulkan</li>
-<li>Metal</li>
-</ul>
-<p>This is a web and native feature.</p>
-</div></details><details class="toggle" open><summary><section id="associatedconstant.BGRA8UNORM_STORAGE" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.BGRA8UNORM_STORAGE" class="constant">BGRA8UNORM_STORAGE</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows the [<code>wgpu::TextureUsages::STORAGE_BINDING</code>] usage on textures with format [<code>TextureFormat::Bgra8unorm</code>]</p>
-<p>Supported Platforms:</p>
-<ul>
-<li>Vulkan</li>
-<li>DX12</li>
-<li>Metal</li>
-</ul>
-<p>This is a web and native feature.</p>
-</div></details><details class="toggle" open><summary><section id="associatedconstant.FLOAT32_FILTERABLE" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.FLOAT32_FILTERABLE" class="constant">FLOAT32_FILTERABLE</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows textures with formats “r32float”, “rg32float”, and “rgba32float” to be filterable.</p>
-<p>Supported Platforms:</p>
-<ul>
-<li>Vulkan (mainly on Desktop GPUs)</li>
-<li>DX12</li>
-<li>Metal on macOS or Apple9+ GPUs, optional on iOS/iPadOS with Apple7/8 GPUs</li>
-<li>GL with one of <code>GL_ARB_color_buffer_float</code>/<code>GL_EXT_color_buffer_float</code>/<code>OES_texture_float_linear</code></li>
-</ul>
-<p>This is a web and native feature.</p>
-</div></details><details class="toggle" open><summary><section id="associatedconstant.RG11B10UFLOAT_RENDERABLE" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.RG11B10UFLOAT_RENDERABLE" class="constant">RG11B10UFLOAT_RENDERABLE</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows for usage of textures of format <a href="enum.TextureFormat.html#variant.Rg11b10Float" title="variant maplibre::render::settings::TextureFormat::Rg11b10Float"><code>TextureFormat::Rg11b10Float</code></a> as a render target</p>
-<p>Supported platforms:</p>
-<ul>
-<li>Vulkan</li>
-<li>DX12</li>
-<li>Metal</li>
-</ul>
-<p>This is a web and native feature.</p>
 </div></details><details class="toggle" open><summary><section id="associatedconstant.DEPTH32FLOAT_STENCIL8" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.DEPTH32FLOAT_STENCIL8" class="constant">DEPTH32FLOAT_STENCIL8</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows for explicit creation of textures of format <a href="enum.TextureFormat.html#variant.Depth32FloatStencil8" title="variant maplibre::render::settings::TextureFormat::Depth32FloatStencil8"><code>TextureFormat::Depth32FloatStencil8</code></a></p>
 <p>Supported platforms:</p>
 <ul>
 <li>Vulkan (mostly)</li>
 <li>DX12</li>
 <li>Metal</li>
+<li>OpenGL</li>
 </ul>
 <p>This is a web and native feature.</p>
 </div></details><details class="toggle" open><summary><section id="associatedconstant.TEXTURE_COMPRESSION_BC" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.TEXTURE_COMPRESSION_BC" class="constant">TEXTURE_COMPRESSION_BC</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Enables BCn family of compressed textures. All BCn textures use 4x4 pixel blocks
@@ -131,6 +59,79 @@ bandwidth usage.</p>
 <li>Mobile (some)</li>
 </ul>
 <p>This is a web and native feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.TIMESTAMP_QUERY" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.TIMESTAMP_QUERY" class="constant">TIMESTAMP_QUERY</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Enables use of Timestamp Queries. These queries tell the current gpu timestamp when
+all work before the query is finished.</p>
+<p>This feature allows the use of</p>
+<ul>
+<li>[<code>RenderPassDescriptor::timestamp_writes</code>]</li>
+<li>[<code>ComputePassDescriptor::timestamp_writes</code>]
+to write out timestamps.</li>
+</ul>
+<p>For arbitrary timestamp write commands on encoders refer to <a href="struct.Features.html#associatedconstant.TIMESTAMP_QUERY_INSIDE_ENCODERS" title="associated constant maplibre::render::settings::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS"><code>Features::TIMESTAMP_QUERY_INSIDE_ENCODERS</code></a>.
+For arbitrary timestamp write commands on passes refer to <a href="struct.Features.html#associatedconstant.TIMESTAMP_QUERY_INSIDE_PASSES" title="associated constant maplibre::render::settings::Features::TIMESTAMP_QUERY_INSIDE_PASSES"><code>Features::TIMESTAMP_QUERY_INSIDE_PASSES</code></a>.</p>
+<p>They must be resolved using [<code>CommandEncoder::resolve_query_set</code>] into a buffer,
+then the result must be multiplied by the timestamp period [<code>Queue::get_timestamp_period</code>]
+to get the timestamp in nanoseconds. Multiple timestamps can then be diffed to get the
+time for operations between them to finish.</p>
+<p>Supported Platforms:</p>
+<ul>
+<li>Vulkan</li>
+<li>DX12</li>
+<li>Metal</li>
+</ul>
+<p>This is a web and native feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.INDIRECT_FIRST_INSTANCE" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.INDIRECT_FIRST_INSTANCE" class="constant">INDIRECT_FIRST_INSTANCE</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows non-zero value for the <code>first_instance</code> member in indirect draw calls.</p>
+<p>If this feature is not enabled, and the <code>first_instance</code> member is non-zero, the behavior may be:</p>
+<ul>
+<li>The draw call is ignored.</li>
+<li>The draw call is executed as if the <code>first_instance</code> is zero.</li>
+<li>The draw call is executed with the correct <code>first_instance</code> value.</li>
+</ul>
+<p>Supported Platforms:</p>
+<ul>
+<li>Vulkan (mostly)</li>
+<li>DX12</li>
+<li>Metal on Apple3+ or Mac1+</li>
+<li>OpenGL (Desktop 4.2+ with ARB_shader_draw_parameters only)</li>
+</ul>
+<p>Not Supported:</p>
+<ul>
+<li>OpenGL ES / WebGL</li>
+</ul>
+<p>This is a web and native feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.SHADER_F16" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.SHADER_F16" class="constant">SHADER_F16</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows shaders to acquire the FP16 ability</p>
+<p>Note: this is not supported in <code>naga</code> yet, only through <code>spirv-passthrough</code> right now.</p>
+<p>Supported Platforms:</p>
+<ul>
+<li>Vulkan</li>
+<li>Metal</li>
+</ul>
+<p>This is a web and native feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.RG11B10UFLOAT_RENDERABLE" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.RG11B10UFLOAT_RENDERABLE" class="constant">RG11B10UFLOAT_RENDERABLE</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows for usage of textures of format <a href="enum.TextureFormat.html#variant.Rg11b10Float" title="variant maplibre::render::settings::TextureFormat::Rg11b10Float"><code>TextureFormat::Rg11b10Float</code></a> as a render target</p>
+<p>Supported platforms:</p>
+<ul>
+<li>Vulkan</li>
+<li>DX12</li>
+<li>Metal</li>
+</ul>
+<p>This is a web and native feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.BGRA8UNORM_STORAGE" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.BGRA8UNORM_STORAGE" class="constant">BGRA8UNORM_STORAGE</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows the [<code>wgpu::TextureUsages::STORAGE_BINDING</code>] usage on textures with format [<code>TextureFormat::Bgra8unorm</code>]</p>
+<p>Supported Platforms:</p>
+<ul>
+<li>Vulkan</li>
+<li>DX12</li>
+<li>Metal</li>
+</ul>
+<p>This is a web and native feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.FLOAT32_FILTERABLE" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.FLOAT32_FILTERABLE" class="constant">FLOAT32_FILTERABLE</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows textures with formats “r32float”, “rg32float”, and “rgba32float” to be filterable.</p>
+<p>Supported Platforms:</p>
+<ul>
+<li>Vulkan (mainly on Desktop GPUs)</li>
+<li>DX12</li>
+<li>Metal on macOS or Apple9+ GPUs, optional on iOS/iPadOS with Apple7/8 GPUs</li>
+<li>GL with one of <code>GL_ARB_color_buffer_float</code>/<code>GL_EXT_color_buffer_float</code>/<code>OES_texture_float_linear</code></li>
+</ul>
+<p>This is a web and native feature.</p>
 </div></details><details class="toggle" open><summary><section id="associatedconstant.TEXTURE_FORMAT_16BIT_NORM" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.TEXTURE_FORMAT_16BIT_NORM" class="constant">TEXTURE_FORMAT_16BIT_NORM</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Enables normalized <code>16-bit</code> texture formats.</p>
 <p>Supported platforms:</p>
 <ul>
@@ -159,9 +160,9 @@ Note that without this flag, read/write storage access is not allowed at all.</p
 <p>This extension does not enable additional formats.</p>
 <p>This is a native only feature.</p>
 </div></details><details class="toggle" open><summary><section id="associatedconstant.PIPELINE_STATISTICS_QUERY" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.PIPELINE_STATISTICS_QUERY" class="constant">PIPELINE_STATISTICS_QUERY</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Enables use of Pipeline Statistics Queries. These queries tell the count of various operations
-performed between the start and stop call. Call [<code>RenderPassEncoder::begin_pipeline_statistics_query</code>] to start
-a query, then call [<code>RenderPassEncoder::end_pipeline_statistics_query</code>] to stop one.</p>
-<p>They must be resolved using [<code>CommandEncoder::resolve_query_sets</code>] into a buffer.
+performed between the start and stop call. Call [<code>RenderPass::begin_pipeline_statistics_query</code>] to start
+a query, then call [<code>RenderPass::end_pipeline_statistics_query</code>] to stop one.</p>
+<p>They must be resolved using [<code>CommandEncoder::resolve_query_set</code>] into a buffer.
 The rules on how these resolve into buffers are detailed in the documentation for [<code>PipelineStatisticsTypes</code>].</p>
 <p>Supported Platforms:</p>
 <ul>
@@ -169,12 +170,23 @@ The rules on how these resolve into buffers are detailed in the documentation fo
 <li>DX12</li>
 </ul>
 <p>This is a native only feature with a <a href="https://github.com/gpuweb/gpuweb/blob/0008bd30da2366af88180b511a5d0d0c1dffbc36/proposals/pipeline-statistics-query.md">proposal</a> for the web.</p>
-</div></details><details class="toggle" open><summary><section id="associatedconstant.TIMESTAMP_QUERY_INSIDE_PASSES" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.TIMESTAMP_QUERY_INSIDE_PASSES" class="constant">TIMESTAMP_QUERY_INSIDE_PASSES</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows for timestamp queries inside render passes.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.TIMESTAMP_QUERY_INSIDE_ENCODERS" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.TIMESTAMP_QUERY_INSIDE_ENCODERS" class="constant">TIMESTAMP_QUERY_INSIDE_ENCODERS</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows for timestamp queries directly on command encoders.</p>
 <p>Implies <a href="struct.Features.html#associatedconstant.TIMESTAMP_QUERY" title="associated constant maplibre::render::settings::Features::TIMESTAMP_QUERY"><code>Features::TIMESTAMP_QUERY</code></a> is supported.</p>
+<p>Additionally allows for timestamp writes on command encoders
+using  [<code>CommandEncoder::write_timestamp</code>].</p>
+<p>Supported platforms:</p>
+<ul>
+<li>Vulkan</li>
+<li>DX12</li>
+<li>Metal</li>
+</ul>
+<p>This is a native only feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.TIMESTAMP_QUERY_INSIDE_PASSES" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.TIMESTAMP_QUERY_INSIDE_PASSES" class="constant">TIMESTAMP_QUERY_INSIDE_PASSES</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows for timestamp queries directly on command encoders.</p>
+<p>Implies <a href="struct.Features.html#associatedconstant.TIMESTAMP_QUERY" title="associated constant maplibre::render::settings::Features::TIMESTAMP_QUERY"><code>Features::TIMESTAMP_QUERY</code></a> &amp; <a href="struct.Features.html#associatedconstant.TIMESTAMP_QUERY_INSIDE_ENCODERS" title="associated constant maplibre::render::settings::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS"><code>Features::TIMESTAMP_QUERY_INSIDE_ENCODERS</code></a> is supported.</p>
 <p>Additionally allows for timestamp queries to be used inside render &amp; compute passes using:</p>
 <ul>
-<li>[<code>RenderPassEncoder::write_timestamp</code>]</li>
-<li>[<code>ComputePassEncoder::write_timestamp</code>]</li>
+<li>[<code>RenderPass::write_timestamp</code>]</li>
+<li>[<code>ComputePass::write_timestamp</code>]</li>
 </ul>
 <p>Supported platforms:</p>
 <ul>
@@ -305,7 +317,11 @@ values.</p>
 inside a <a href="../wgpu/struct.RenderPass.html"><code>RenderPass</code></a>.</p>
 <p>Allows the user to call <a href="../wgpu/struct.RenderPass.html#method.set_push_constants"><code>RenderPass::set_push_constants</code></a>, provide a non-empty array
 to <a href="../wgpu/struct.PipelineLayoutDescriptor.html"><code>PipelineLayoutDescriptor</code></a>, and provide a non-zero limit to <a href="struct.Limits.html#structfield.max_push_constant_size" title="field maplibre::render::settings::Limits::max_push_constant_size"><code>Limits::max_push_constant_size</code></a>.</p>
-<p>A block of push constants can be declared with <code>layout(push_constant) uniform Name {..}</code> in shaders.</p>
+<p>A block of push constants can be declared in WGSL with <code>var&lt;push_constant&gt;</code>:</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">struct </span>PushConstants { example: f32, }
+var&lt;push_constant&gt; c: PushConstants;</code></pre></div>
+<p>In GLSL, this corresponds to <code>layout(push_constant) uniform Name {..}</code>.</p>
 <p>Supported platforms:</p>
 <ul>
 <li>DX12</li>
@@ -392,14 +408,6 @@ Vulkan implementation.</li>
 <p>Requires SHADER_FLOAT64.</p>
 <p>Supported Platforms: N/A</p>
 <p>This is a native only feature.</p>
-</div></details><details class="toggle" open><summary><section id="associatedconstant.SHADER_UNUSED_VERTEX_OUTPUT" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.SHADER_UNUSED_VERTEX_OUTPUT" class="constant">SHADER_UNUSED_VERTEX_OUTPUT</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows vertex shaders to have outputs which are not consumed
-by the fragment shader.</p>
-<p>Supported platforms:</p>
-<ul>
-<li>Vulkan</li>
-<li>Metal</li>
-<li>OpenGL</li>
-</ul>
 </div></details><details class="toggle" open><summary><section id="associatedconstant.TEXTURE_FORMAT_NV12" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.TEXTURE_FORMAT_NV12" class="constant">TEXTURE_FORMAT_NV12</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows for creation of textures of format <a href="enum.TextureFormat.html#variant.NV12" title="variant maplibre::render::settings::TextureFormat::NV12"><code>TextureFormat::NV12</code></a></p>
 <p>Supported platforms:</p>
 <ul>
@@ -461,6 +469,60 @@ Note that dual-source blending doesn’t support multiple render targets.</p>
 <li>Vulkan (with dualSrcBlend)</li>
 <li>DX12</li>
 </ul>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.SHADER_INT64" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.SHADER_INT64" class="constant">SHADER_INT64</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows shaders to use i64 and u64.</p>
+<p>Supported platforms:</p>
+<ul>
+<li>Vulkan</li>
+<li>DX12 (DXC only)</li>
+<li>Metal (with MSL 2.3+)</li>
+</ul>
+<p>This is a native only feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.SUBGROUP" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.SUBGROUP" class="constant">SUBGROUP</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows compute and fragment shaders to use the subgroup operation built-ins</p>
+<p>Supported Platforms:</p>
+<ul>
+<li>Vulkan</li>
+<li>DX12</li>
+<li>Metal</li>
+</ul>
+<p>This is a native only feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.SUBGROUP_VERTEX" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.SUBGROUP_VERTEX" class="constant">SUBGROUP_VERTEX</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows vertex shaders to use the subgroup operation built-ins</p>
+<p>Supported Platforms:</p>
+<ul>
+<li>Vulkan</li>
+</ul>
+<p>This is a native only feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.SUBGROUP_BARRIER" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.SUBGROUP_BARRIER" class="constant">SUBGROUP_BARRIER</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows shaders to use the subgroup barrier</p>
+<p>Supported Platforms:</p>
+<ul>
+<li>Vulkan</li>
+<li>Metal</li>
+</ul>
+<p>This is a native only feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.PIPELINE_CACHE" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.PIPELINE_CACHE" class="constant">PIPELINE_CACHE</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows the use of pipeline cache objects</p>
+<p>Supported platforms:</p>
+<ul>
+<li>Vulkan</li>
+</ul>
+<p>Unimplemented Platforms:</p>
+<ul>
+<li>DX12</li>
+<li>Metal</li>
+</ul>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.SHADER_INT64_ATOMIC_MIN_MAX" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.SHADER_INT64_ATOMIC_MIN_MAX" class="constant">SHADER_INT64_ATOMIC_MIN_MAX</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows shaders to use i64 and u64 atomic min and max.</p>
+<p>Supported platforms:</p>
+<ul>
+<li>Vulkan (with VK_KHR_shader_atomic_int64)</li>
+<li>DX12 (with SM 6.6+)</li>
+<li>Metal (with MSL 2.4+)</li>
+</ul>
+<p>This is a native only feature.</p>
+</div></details><details class="toggle" open><summary><section id="associatedconstant.SHADER_INT64_ATOMIC_ALL_OPS" class="associatedconstant"><h4 class="code-header">pub const <a href="#associatedconstant.SHADER_INT64_ATOMIC_ALL_OPS" class="constant">SHADER_INT64_ATOMIC_ALL_OPS</a>: <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a> = _</h4></section></summary><div class="docblock"><p>Allows shaders to use all i64 and u64 atomic operations.</p>
+<p>Supported platforms:</p>
+<ul>
+<li>Vulkan (with VK_KHR_shader_atomic_int64)</li>
+<li>DX12 (with SM 6.6+)</li>
+</ul>
+<p>This is a native only feature.</p>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-Features-1" class="impl"><a href="#impl-Features-1" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.empty" class="method"><h4 class="code-header">pub const fn <a href="#method.empty" class="fn">empty</a>() -&gt; <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a></h4></section></summary><div class="docblock"><p>Get a flags value with all bits unset.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.all" class="method"><h4 class="code-header">pub const fn <a href="#method.all" class="fn">all</a>() -&gt; <a class="struct" href="struct.Features.html" title="struct maplibre::render::settings::Features">Features</a></h4></section></summary><div class="docblock"><p>Get a flags value with all known bits set.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.bits" class="method"><h4 class="code-header">pub const fn <a href="#method.bits" class="fn">bits</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u64.html">u64</a></h4></section></summary><div class="docblock"><p>Get the underlying bits value.</p>

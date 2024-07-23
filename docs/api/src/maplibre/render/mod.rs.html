@@ -614,6 +614,16 @@
 <a href="#614" id="614">614</a>
 <a href="#615" id="615">615</a>
 <a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module implements the rendering algorithm of maplibre-rs. It manages the whole
 //! communication with the GPU.
 //!
@@ -988,6 +998,12 @@
                 max_inter_stage_shader_components: limits
                     .max_inter_stage_shader_components
                     .min(constrained_limits.max_inter_stage_shader_components),
+                max_color_attachments: limits
+                    .max_color_attachments
+                    .min(constrained_limits.max_color_attachments),
+                max_color_attachment_bytes_per_sample: limits
+                    .max_color_attachment_bytes_per_sample
+                    .min(constrained_limits.max_color_attachment_bytes_per_sample),
                 max_compute_workgroup_storage_size: limits
                     .max_compute_workgroup_storage_size
                     .min(constrained_limits.max_compute_workgroup_storage_size),
@@ -1006,12 +1022,14 @@
                 max_compute_workgroups_per_dimension: limits
                     .max_compute_workgroups_per_dimension
                     .min(constrained_limits.max_compute_workgroups_per_dimension),
+                min_subgroup_size: <span class="number">0</span>,
                 max_buffer_size: limits
                     .max_buffer_size
                     .min(constrained_limits.max_buffer_size),
                 max_non_sampler_bindings: limits
                     .max_non_sampler_bindings
                     .min(constrained_limits.max_non_sampler_bindings),
+                max_subgroup_size: <span class="number">0</span>,
             };
         }
 
@@ -1021,6 +1039,7 @@
                     label: settings.device_label.as_ref().map(|a| a.as_ref()),
                     required_features: features,
                     required_limits: limits,
+                    memory_hints: wgpu::MemoryHints::default(),
                 },
                 trace_path,
             )
@@ -1108,6 +1127,7 @@
                     label: <span class="prelude-val">None</span>,
                     required_features: wgpu::Features::default(),
                     required_limits: wgpu::Limits::default(),
+                    memory_hints: wgpu::MemoryHints::default(),
                 },
                 <span class="prelude-val">None</span>,
             )
