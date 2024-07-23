@@ -14,15 +14,15 @@
   "main": "dist/esbuild-cjs/main.js",
   "types": "dist/ts/index.d.ts",
   "dependencies": {
-    "binaryen": "^114.0.0",
-    "spectorjs": "0.9.27",
-    "wasm-feature-detect": "^1.5.1"
+    "binaryen": "^118.0.0",
+    "spectorjs": "0.9.30",
+    "wasm-feature-detect": "^1.6.2"
   },
   "devDependencies": {
-    "@chialab/esbuild-plugin-meta-url": "^0.17.7",
-    "esbuild": "^0.19.4",
+    "@chialab/esbuild-plugin-meta-url": "^0.18.2",
+    "esbuild": "^0.19.12",
     "esbuild-plugin-inline-worker": "^0.1.1",
-    "typescript": "^5.2.2",
+    "typescript": "^5.5.4",
     "yargs": "^17.7.2"
   },
   "repository": {
