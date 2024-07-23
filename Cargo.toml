@@ -25,20 +25,9 @@ categories = ["graphics", "science::geo"]
 authors = ["Maximilian Ammann <max@maxammann.org>"]
 
 [workspace.dependencies]
-#
-# These dependencies are kept back due to some issues
-#
-# TODO: Not yet upgraded because wasm-bindgen feature was later removed
-rand = { version = "0.7.3", features = ["wasm-bindgen"] }
-
-# FIXME: Untrusted dependency, 0.2.x doesn't compile with cache middleware
+rand = { version = "0.8.5" }
 reqwest-middleware = "0.3.2"
-
 winit = { version = "0.30", default-features = false, features = ["rwh_06"] }
-
-#
-# These dependencies should be updated to the latest version
-#
 async-trait = "0.1.73"
 bytemuck = "1.14.0"
 bytemuck_derive = "1.5.0"
