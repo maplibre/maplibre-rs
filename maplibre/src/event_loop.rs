@@ -21,6 +21,11 @@ pub enum SendEventError {
     Closed,
 }
 
+/// When sending events to an event loop errors can occur.
+#[derive(Error, Debug)]
+#[error("event loop creation failed")]
+pub struct EventLoopError;
+
 pub trait EventLoopProxy<T: 'static> {
     fn send_event(&self, event: T) -> Result<(), SendEventError>;
 }
@@ -28,7 +33,7 @@ pub trait EventLoopProxy<T: 'static> {
 pub trait EventLoop<ET: 'static + PartialEq> {
     type EventLoopProxy: EventLoopProxy<ET>;
 
-    fn run<E>(self, map: Map<E>, max_frames: Option<u64>)
+    fn run<E>(self, map: Map<E>, max_frames: Option<u64>) -> Result<(), EventLoopError>
     where
         E: Environment,
         <E::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow;

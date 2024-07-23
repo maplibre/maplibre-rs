@@ -12,6 +12,7 @@ use maplibre::{
 };
 use winit::{
     event::{ElementState, Event, KeyEvent, WindowEvent},
+    event_loop::ActiveEventLoop,
     keyboard::{Key, NamedKey},
 };
 
@@ -19,6 +20,7 @@ use crate::input::{InputController, UpdateState};
 
 pub mod input;
 
+use maplibre::event_loop::EventLoopError;
 #[cfg(target_os = "android")]
 pub use winit::platform::android::activity as android_activity;
 
@@ -75,7 +77,7 @@ pub struct WinitEventLoop<ET: 'static> {
 impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
     type EventLoopProxy = WinitEventLoopProxy<ET>;
 
-    fn run<E>(self, mut map: Map<E>, max_frames: Option<u64>)
+    fn run<E>(self, mut map: Map<E>, max_frames: Option<u64>) -> Result<(), EventLoopError>
     where
         E: Environment,
         <E::MapWindowConfig as MapWindowConfig>::MapWindow: HeadedMapWindow,
@@ -86,21 +88,20 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
         let mut input_controller = InputController::new(0.2, 100.0, 0.1);
         let mut scale_factor = map.window().scale_factor();
 
-        self.event_loop
-            .run(move |event, window_target| {
-                #[cfg(target_os = "android")]
-                if !map.is_initialized() && event == Event::Resumed {
-                    use tokio::{runtime::Handle, task};
+        let loop_ = move |event, window_target: &ActiveEventLoop| {
+            #[cfg(target_os = "android")]
+            if !map.is_initialized() && event == Event::Resumed {
+                use tokio::{runtime::Handle, task};
 
-                    task::block_in_place(|| {
-                        Handle::current().block_on(async {
-                            map.initialize_renderer().await.unwrap();
-                        })
-                    });
-                    return;
-                }
+                task::block_in_place(|| {
+                    Handle::current().block_on(async {
+                        map.initialize_renderer().await.unwrap();
+                    })
+                });
+                return;
+            }
 
-                match event {
+            match event {
                     Event::DeviceEvent {
                         ref event,
                         .. // We're not using device_id currently
@@ -182,7 +183,16 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                     }
                     _ => {}
                 }
-            });
+        };
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            winit::platform::web::EventLoopExtWebSys::spawn(self.event_loop, loop_);
+            return Ok(());
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        return self.event_loop.run(loop_).map_err(|_| EventLoopError);
     }
 
     fn create_proxy(&self) -> Self::EventLoopProxy {
