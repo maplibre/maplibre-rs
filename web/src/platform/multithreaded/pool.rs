@@ -93,7 +93,7 @@ impl WorkerPool {
         worker.post_message(
             &js_sys::Object::from_entries(&js_sys::Array::of3(
                 &js_sys::Array::of2(&JsValue::from("type"), &js_sys::JsString::from("wasm_init")),
-                &js_sys::Array::of2(&JsValue::from("module"), &wasm_bindgen::module())
+                &js_sys::Array::of2(&JsValue::from("module"), &wasm_bindgen::module()),
                 &js_sys::Array::of2(&JsValue::from("memory"), &wasm_bindgen::memory())
             )).expect("can not fail")
         )?;

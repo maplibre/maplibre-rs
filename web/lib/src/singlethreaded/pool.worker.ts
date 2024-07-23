@@ -41,6 +41,14 @@ onmessage = async (message: MessageEvent<MessageData>) => {
         await process_data(procedure_ptr, input);
     } else if (type === 'kernel_config') {
         const data = message.data;
-        maplibre.set_kernel_config(JSON.stringify(data.config))
+
+        const set_kernel_config: (config: string) => void = maplibre["set_kernel_config"];
+
+        if (!set_kernel_config) {
+            throw Error("set_kernel_config is not defined. Maybe the Rust build used the wrong build configuration.")
+        }
+
+
+        set_kernel_config(data.config)
     }
 }
