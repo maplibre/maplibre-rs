@@ -1,7 +1,9 @@
+use std::path::PathBuf;
+
 use async_trait::async_trait;
+use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache, HttpCacheOptions};
 use reqwest::{Client, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
-use reqwest_middleware_cache::{managers::CACacheManager, Cache, CacheMode};
 
 use crate::io::source_client::{HttpClient, SourceFetchError};
 
@@ -24,20 +26,24 @@ impl From<reqwest_middleware::Error> for SourceFetchError {
 
 impl ReqwestHttpClient {
     /// cache_path: Under which path should we cache requests.
-    // TODO: Use Into<Path> instead of String
-    pub fn new(cache_path: Option<String>) -> Self {
+    pub fn new<P>(cache_path: Option<P>) -> Self
+    where
+        P: Into<PathBuf>,
+    {
         let mut builder = reqwest_middleware::ClientBuilder::new(Client::new());
 
         if let Some(cache_path) = cache_path {
-            builder = builder.with(Cache {
+            builder = builder.with(Cache(HttpCache {
                 mode: CacheMode::Default,
-                cache_manager: CACacheManager { path: cache_path },
-            });
+                manager: CACacheManager {
+                    path: cache_path.into(),
+                },
+                options: HttpCacheOptions::default(),
+            }))
         }
+        let client = builder.build();
 
-        Self {
-            client: builder.build(),
-        }
+        Self { client }
     }
 }
 

@@ -32,7 +32,7 @@ authors = ["Maximilian Ammann <max@maxammann.org>"]
 rand = { version = "0.7.3", features = ["wasm-bindgen"] }
 
 # FIXME: Untrusted dependency, 0.2.x doesn't compile with cache middleware
-reqwest-middleware = "0.1.6"
+reqwest-middleware = "0.3.2"
 
 winit = { version = "0.30", default-features = false, features = ["rwh_06"] }
 
@@ -67,8 +67,7 @@ lyon = { version = "1.0.1", features = [] }
 naga = { version = "0.13.0", features = ["wgsl-in"] }
 android_logger = "0.13.3"
 png = { version = "0.17.10" }
-reqwest = { version = "0.11.20", default-features = false, features = ["rustls-tls", "gzip"] }  # Use rusttls on android because cross compiling is difficult
-reqwest-middleware-cache = "0.1.1"  # FIXME: Untrusted dependency
+reqwest = { version = "0.12.5", default-features = false, features = ["rustls-tls", "gzip"] }  # Use rusttls on android because cross compiling is difficult
 rstar = "0.11.0"
 rusqlite = { version = "0.29.0" }
 serde = { version = "1.0.188", features = ["derive"] }
@@ -88,6 +87,7 @@ wasm-bindgen-futures = "0.4"
 wasm-bindgen-test = "0.3"
 web-sys = "0.3"  # Individual features are customized in each crate
 wgpu = "0.19.4"
+http-cache-reqwest = "0.14.0"
 
 [profile.release]
 lto = true

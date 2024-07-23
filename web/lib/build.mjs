@@ -8,6 +8,7 @@ import {dirname} from "path";
 import {fileURLToPath} from "url";
 
 let argv = yargs(process.argv.slice(2))
+    .strict(true)
     .option('release', {
         type: 'boolean',
         description: 'Release mode'
@@ -139,6 +140,8 @@ const wasmPack = () => {
         # Set maximum memory to 200MB
         "-C", "link-args=--shared-memory --import-memory --max-memory=209715200"
     ]`
+
+    spawnTool('cargo', ["--version"])
 
     let cargo = spawnTool('cargo', [
         ...(multithreaded ? ["--config", multithreaded_config] : []),

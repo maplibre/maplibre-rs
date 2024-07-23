@@ -10,7 +10,7 @@ compile_error!("apple works only on macOS and iOS.");
 pub fn maplibre_apple_main() {
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("info"));
 
-    run_headed_map(
+    run_headed_map::<String>(
         None,
         WinitMapWindowConfig::new("maplibre".to_string()),
         WgpuSettings {

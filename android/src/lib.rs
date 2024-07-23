@@ -14,7 +14,7 @@ pub fn android_main(app: android_activity::AndroidApp) {
         android_logger::Config::default().with_max_level(log::LevelFilter::Info),
     );
     log::log!(Level::Info, "maplibre starting");
-    run_headed_map(
+    run_headed_map::<String>(
         None,
         WinitMapWindowConfig::new("maplibre".to_string(), app),
         WgpuSettings {

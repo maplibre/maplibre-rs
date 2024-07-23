@@ -6,7 +6,7 @@ use std::{
 };
 
 use crate::{
-    environment::OffscreenKernelEnvironment,
+    environment::{OffscreenKernel, OffscreenKernelConfig},
     io::source_client::{HttpSourceClient, SourceClient},
     platform::http_client::ReqwestHttpClient,
 };
@@ -35,16 +35,18 @@ pub fn run_multithreaded<F: Future>(future: F) -> F::Output {
         .block_on(future)
 }
 
-pub struct ReqwestOffscreenKernelEnvironment;
+pub struct ReqwestOffscreenKernelEnvironment(OffscreenKernelConfig);
 
-impl OffscreenKernelEnvironment for ReqwestOffscreenKernelEnvironment {
+impl OffscreenKernel for ReqwestOffscreenKernelEnvironment {
     type HttpClient = ReqwestHttpClient;
 
-    fn create() -> Self {
-        ReqwestOffscreenKernelEnvironment
+    fn create(config: OffscreenKernelConfig) -> Self {
+        ReqwestOffscreenKernelEnvironment(config)
     }
 
     fn source_client(&self) -> SourceClient<Self::HttpClient> {
-        SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new(None)))
+        SourceClient::new(HttpSourceClient::new(ReqwestHttpClient::new::<String>(
+            self.0.cache_directory.clone(),
+        )))
     }
 }

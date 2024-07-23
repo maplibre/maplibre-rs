@@ -4,7 +4,7 @@ use std::{borrow::Cow, collections::HashSet, marker::PhantomData, rc::Rc};
 
 use crate::{
     context::MapContext,
-    environment::{Environment, OffscreenKernelEnvironment},
+    environment::{Environment, OffscreenKernel},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
         source_type::{SourceType, TessellateSource},
@@ -103,11 +103,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
     }
 }
 
-pub fn fetch_vector_apc<
-    K: OffscreenKernelEnvironment,
-    T: VectorTransferables,
-    C: Context + Clone + Send,
->(
+pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context + Clone + Send>(
     input: Input,
     context: C,
     kernel: K,

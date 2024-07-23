@@ -3,9 +3,10 @@
 //! * Platform Events like suspend/resume
 //! * Render a new frame
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, path::PathBuf};
 
 use maplibre::{
+    environment::OffscreenKernelConfig,
     event_loop::EventLoop,
     io::apc::SchedulerAsyncProcedureCall,
     kernel::{Kernel, KernelBuilder},
@@ -98,21 +99,29 @@ impl<ET: 'static + Clone> MapWindowConfig for WinitMapWindowConfig<ET> {
     }
 }
 
-pub fn run_headed_map(
-    cache_path: Option<String>,
+pub fn run_headed_map<P>(
+    cache_path: Option<P>,
     window_config: WinitMapWindowConfig<()>,
     wgpu_settings: WgpuSettings,
-) {
+) where
+    P: Into<PathBuf>,
+{
     run_multithreaded(async {
         type Environment<S, HC, APC> =
             WinitEnvironment<S, HC, ReqwestOffscreenKernelEnvironment, APC, ()>;
 
-        let client = ReqwestHttpClient::new(cache_path);
+        let cache_path = cache_path.map(|path| path.into());
+        let client = ReqwestHttpClient::new(cache_path.clone());
 
         let kernel: Kernel<Environment<_, _, _>> = KernelBuilder::new()
             .with_map_window_config(window_config)
             .with_http_client(client.clone())
-            .with_apc(SchedulerAsyncProcedureCall::new(TokioScheduler::new()))
+            .with_apc(SchedulerAsyncProcedureCall::new(
+                TokioScheduler::new(),
+                OffscreenKernelConfig {
+                    cache_directory: cache_path.map(|path| path.to_str().unwrap().to_string()),
+                },
+            ))
             .with_scheduler(TokioScheduler::new())
             .build();
 

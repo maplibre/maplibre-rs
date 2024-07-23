@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{
     io::{
         apc::AsyncProcedureCall,
@@ -24,12 +26,17 @@ pub trait Environment: 'static {
 
     type HttpClient: HttpClient;
 
-    type OffscreenKernelEnvironment: OffscreenKernelEnvironment;
+    type OffscreenKernelEnvironment: OffscreenKernel;
 }
 
-pub trait OffscreenKernelEnvironment: Send + Sync + 'static {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct OffscreenKernelConfig {
+    pub cache_directory: Option<String>,
+}
+
+pub trait OffscreenKernel: Send + Sync + 'static {
     type HttpClient: HttpClient;
-    fn create() -> Self;
+    fn create(config: OffscreenKernelConfig) -> Self;
 
     fn source_client(&self) -> SourceClient<Self::HttpClient>;
 }
