@@ -61,6 +61,7 @@ impl RenderPipelineDescriptor {
             vertex: wgpu::VertexState {
                 module: &vertex_shader_module,
                 entry_point: self.vertex.entry_point,
+                compilation_options: Default::default(),
                 buffers: self
                     .vertex
                     .buffers
@@ -76,6 +77,7 @@ impl RenderPipelineDescriptor {
             fragment: Some(wgpu::FragmentState {
                 module: &fragment_shader_module,
                 entry_point: self.fragment.entry_point,
+                compilation_options: Default::default(),
                 targets: self.fragment.targets.as_slice(),
             }),
             primitive: self.primitive,
@@ -83,6 +85,7 @@ impl RenderPipelineDescriptor {
             multisample: self.multisample,
 
             multiview: None,
+            cache: None,
         });
 
         pipeline

@@ -372,6 +372,12 @@ impl Renderer {
                 max_inter_stage_shader_components: limits
                     .max_inter_stage_shader_components
                     .min(constrained_limits.max_inter_stage_shader_components),
+                max_color_attachments: limits
+                    .max_color_attachments
+                    .min(constrained_limits.max_color_attachments),
+                max_color_attachment_bytes_per_sample: limits
+                    .max_color_attachment_bytes_per_sample
+                    .min(constrained_limits.max_color_attachment_bytes_per_sample),
                 max_compute_workgroup_storage_size: limits
                     .max_compute_workgroup_storage_size
                     .min(constrained_limits.max_compute_workgroup_storage_size),
@@ -390,12 +396,14 @@ impl Renderer {
                 max_compute_workgroups_per_dimension: limits
                     .max_compute_workgroups_per_dimension
                     .min(constrained_limits.max_compute_workgroups_per_dimension),
+                min_subgroup_size: 0,
                 max_buffer_size: limits
                     .max_buffer_size
                     .min(constrained_limits.max_buffer_size),
                 max_non_sampler_bindings: limits
                     .max_non_sampler_bindings
                     .min(constrained_limits.max_non_sampler_bindings),
+                max_subgroup_size: 0,
             };
         }
 
@@ -405,6 +413,7 @@ impl Renderer {
                     label: settings.device_label.as_ref().map(|a| a.as_ref()),
                     required_features: features,
                     required_limits: limits,
+                    memory_hints: wgpu::MemoryHints::default(),
                 },
                 trace_path,
             )
@@ -492,6 +501,7 @@ mod tests {
                     label: None,
                     required_features: wgpu::Features::default(),
                     required_limits: wgpu::Limits::default(),
+                    memory_hints: wgpu::MemoryHints::default(),
                 },
                 None,
             )
