@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["Environment","OffscreenKernelEnvironment"]};
+window.SIDEBAR_ITEMS = {"struct":["OffscreenKernelConfig"],"trait":["Environment","OffscreenKernel"]};

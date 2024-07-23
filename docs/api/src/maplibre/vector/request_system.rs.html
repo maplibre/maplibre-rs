@@ -165,17 +165,13 @@
 <a href="#164" id="164">164</a>
 <a href="#165" id="165">165</a>
 <a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Requests tiles which are currently in view
 
 </span><span class="kw">use </span>std::{borrow::Cow, collections::HashSet, marker::PhantomData, rc::Rc};
 
 <span class="kw">use crate</span>::{
     context::MapContext,
-    environment::{Environment, OffscreenKernelEnvironment},
+    environment::{Environment, OffscreenKernel},
     io::{
         apc::{AsyncProcedureCall, AsyncProcedureFuture, Context, Input, ProcedureError},
         source_type::{SourceType, TessellateSource},
@@ -274,11 +270,7 @@
     }
 }
 
-<span class="kw">pub fn </span>fetch_vector_apc&lt;
-    K: OffscreenKernelEnvironment,
-    T: VectorTransferables,
-    C: Context + Clone + Send,
-&gt;(
+<span class="kw">pub fn </span>fetch_vector_apc&lt;K: OffscreenKernel, T: VectorTransferables, C: Context + Clone + Send&gt;(
     input: Input,
     context: C,
     kernel: K,

@@ -281,6 +281,13 @@
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     any::Any,
     cell::RefCell,
@@ -299,8 +306,11 @@
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use crate</span>::{
-    coords::WorldTileCoords, define_label, environment::OffscreenKernelEnvironment,
-    io::scheduler::Scheduler, style::Style,
+    coords::WorldTileCoords,
+    define_label,
+    environment::{OffscreenKernel, OffscreenKernelConfig},
+    io::scheduler::Scheduler,
+    style::Style,
 };
 
 <span class="macro">define_label!</span>(MessageTag);
@@ -447,7 +457,7 @@
 ///
 ///
 </span><span class="comment">// TODO: Rename to AsyncProcedureCaller?
-</span><span class="kw">pub trait </span>AsyncProcedureCall&lt;K: OffscreenKernelEnvironment&gt;: <span class="lifetime">'static </span>{
+</span><span class="kw">pub trait </span>AsyncProcedureCall&lt;K: OffscreenKernel&gt;: <span class="lifetime">'static </span>{
     <span class="kw">type </span>Context: Context + Send + Clone;
 
     <span class="kw">type </span>ReceiveIterator&lt;F: FnMut(<span class="kw-2">&amp;</span>Message) -&gt; bool&gt;: Iterator&lt;Item = Message&gt;;
@@ -477,27 +487,29 @@
     }
 }
 
-<span class="kw">pub struct </span>SchedulerAsyncProcedureCall&lt;K: OffscreenKernelEnvironment, S: Scheduler&gt; {
+<span class="comment">// An APC that uses a scheduler to execute work asynchronously.
+// An async sender and receiver to exchange return values of calls.
+</span><span class="kw">pub struct </span>SchedulerAsyncProcedureCall&lt;K: OffscreenKernel, S: Scheduler&gt; {
     channel: (Sender&lt;Message&gt;, Receiver&lt;Message&gt;),
     buffer: RefCell&lt;Vec&lt;Message&gt;&gt;,
     scheduler: S,
     phantom_k: PhantomData&lt;K&gt;,
+    offscreen_kernel_config: OffscreenKernelConfig,
 }
 
-<span class="kw">impl</span>&lt;K: OffscreenKernelEnvironment, S: Scheduler&gt; SchedulerAsyncProcedureCall&lt;K, S&gt; {
-    <span class="kw">pub fn </span>new(scheduler: S) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;K: OffscreenKernel, S: Scheduler&gt; SchedulerAsyncProcedureCall&lt;K, S&gt; {
+    <span class="kw">pub fn </span>new(scheduler: S, offscreen_kernel_config: OffscreenKernelConfig) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             channel: mpsc::channel(),
             buffer: RefCell::new(Vec::new()),
             phantom_k: PhantomData::default(),
             scheduler,
+            offscreen_kernel_config,
         }
     }
 }
 
-<span class="kw">impl</span>&lt;K: OffscreenKernelEnvironment, S: Scheduler&gt; AsyncProcedureCall&lt;K&gt;
-    <span class="kw">for </span>SchedulerAsyncProcedureCall&lt;K, S&gt;
-{
+<span class="kw">impl</span>&lt;K: OffscreenKernel, S: Scheduler&gt; AsyncProcedureCall&lt;K&gt; <span class="kw">for </span>SchedulerAsyncProcedureCall&lt;K, S&gt; {
     <span class="kw">type </span>Context = SchedulerContext;
     <span class="kw">type </span>ReceiveIterator&lt;F: FnMut(<span class="kw-2">&amp;</span>Message) -&gt; bool&gt; = IntoIter&lt;Message&gt;;
 
@@ -538,12 +550,14 @@
         procedure: AsyncProcedure&lt;K, <span class="self">Self</span>::Context&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CallError&gt; {
         <span class="kw">let </span>sender = <span class="self">self</span>.channel.<span class="number">0</span>.clone();
+        <span class="kw">let </span>offscreen_kernel_config = <span class="self">self</span>.offscreen_kernel_config.clone();
 
         <span class="self">self</span>.scheduler
             .schedule(<span class="kw">move </span>|| <span class="kw">async move </span>{
                 <span class="macro">log::info!</span>(<span class="string">"Processing on thread: {:?}"</span>, std::thread::current().name());
 
-                procedure(input, SchedulerContext { sender }, K::create())
+                <span class="kw">let </span>kernel = K::create(offscreen_kernel_config);
+                procedure(input, SchedulerContext { sender }, kernel)
                     .<span class="kw">await
                     </span>.unwrap();
             })
