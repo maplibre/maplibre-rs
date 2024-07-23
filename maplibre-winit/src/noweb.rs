@@ -152,7 +152,8 @@ pub fn run_headed_map<P>(
 
         map.window_mut()
             .take_event_loop()
-            .expect("Event loop is not available")
+            .expect("event loop is not available")
             .run(map, None)
+            .expect("event loop creation failed")
     })
 }
