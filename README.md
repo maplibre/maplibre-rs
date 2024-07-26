@@ -73,7 +73,7 @@ graphics are achievable using the current stack.
 
 ## Current Features
 
-* Runs on Linux, Android, iOS, macOS, Firefox and Chrome
+* Runs on Linux, Android, iOS, macOS, Firefox, Safari (>=v16 due to (#166)[https://github.com/maplibre/maplibre-rs/issues/166]) and Chrome
 * Render a vector tile dataset
 * Simple navigation powered by winit
 * Multithreaded on all platforms
