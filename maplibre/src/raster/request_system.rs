@@ -72,7 +72,7 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
                     world
                         .tiles
                         .spawn_mut(coords)
-                        .unwrap()
+                        .expect("unable to spawn a raster tile")
                         .insert(RasterLayersDataComponent::default());
 
                     tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
@@ -93,7 +93,7 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
                                 >>::Context,
                             >,
                         )
-                        .unwrap(); // TODO: Remove unwrap
+                        .expect("unable to call APC"); // TODO: Remove unwrap
                 }
             }
         }
