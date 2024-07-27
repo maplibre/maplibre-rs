@@ -1,4 +1,4 @@
-# This nix-shell only supports macOS right now. Soon I will also add support for Linux
+# This nix-shell supports macOS and Linux.
 # The repository supports direnv (https://direnv.net/). If your IDE supports direnv,
 # then you do not need to care about dependencies.
 
@@ -50,10 +50,12 @@ in
     unstable.wayland
   ];
   shellHook = ''
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ unstable.libxkbcommon ] }";
-    # Vulkan
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.vulkan-loader ] }";
-    # EGL
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.libglvnd ] }";
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [
+        unstable.libxkbcommon
+        # Vulkan
+        pkgs.vulkan-loader
+         # EGL
+        pkgs.libglvnd
+    ] }";
   '';
 }
