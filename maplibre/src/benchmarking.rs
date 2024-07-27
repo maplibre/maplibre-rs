@@ -7,5 +7,5 @@ pub mod io {
 
 /// Re-export of the tessellation module.
 pub mod tessellation {
-    pub use crate::tessellation::*;
+    pub use crate::vector::tessellation::*;
 }

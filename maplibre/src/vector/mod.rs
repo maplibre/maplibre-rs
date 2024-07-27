@@ -13,7 +13,7 @@ use crate::{
     },
     schedule::Schedule,
     tcs::{system::SystemContainer, tiles::TileComponent, world::World},
-    tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    vector::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
         populate_world_system::PopulateWorldSystem, queue_system::queue_system,
         request_system::RequestSystem, resource::BufferPool, resource_system::resource_system,
@@ -30,6 +30,9 @@ mod resource;
 mod resource_system;
 mod transferables;
 mod upload_system;
+
+// Public due to bechmarks
+pub mod tessellation;
 
 pub use process_vector::*;
 pub use transferables::{
