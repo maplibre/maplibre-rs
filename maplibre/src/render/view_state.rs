@@ -180,7 +180,7 @@ impl ViewState {
         // https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
         let near_z = height / 50.0;
 
-        let mut perspective =
+        let perspective =
             self.perspective
                 .calc_matrix_with_center(width, height, near_z, far_z, center_offset);
 
