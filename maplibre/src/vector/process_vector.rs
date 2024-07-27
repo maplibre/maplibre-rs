@@ -13,7 +13,7 @@ use crate::{
         geometry_index::{IndexProcessor, IndexedGeometry, TileIndex},
     },
     render::ShaderVertex,
-    tessellation::{zero_tessellator::ZeroTessellator, IndexDataType, OverAlignedVertexBuffer},
+    vector::tessellation::{ZeroTessellator, IndexDataType, OverAlignedVertexBuffer},
     vector::transferables::{
         LayerIndexed, LayerMissing, LayerTessellated, TileTessellated, VectorTransferables,
     },

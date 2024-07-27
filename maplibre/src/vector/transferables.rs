@@ -9,7 +9,7 @@ use crate::{
         geometry_index::TileIndex,
     },
     render::ShaderVertex,
-    tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    vector::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{AvailableVectorLayerData, MissingVectorLayerData},
 };
 
