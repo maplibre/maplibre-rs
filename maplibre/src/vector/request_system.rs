@@ -11,7 +11,6 @@ use crate::{
     },
     kernel::Kernel,
     render::tile_view_pattern::DEFAULT_TILE_SIZE,
-    style::layer::LayerPaint,
     tcs::system::System,
     vector::{
         process_vector::{process_vector_tile, ProcessVectorContext, VectorTileRequest},
@@ -19,6 +18,7 @@ use crate::{
         VectorLayersDataComponent,
     },
 };
+use crate::style::layer::StyleLayer;
 
 pub struct RequestSystem<E: Environment, T> {
     kernel: Rc<Kernel<E>>,
@@ -113,23 +113,13 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
             return Err(ProcedureError::IncompatibleInput);
         };
 
-        let fill_layers: HashSet<String> = style
-            .layers
-            .iter()
-            .filter_map(|layer| {
-                if matches!(layer.paint, Some(LayerPaint::Fill(_)))
-                    || matches!(layer.paint, Some(LayerPaint::Line(_)))
-                {
-                    layer.source_layer.clone()
-                } else {
-                    None
-                }
-            })
+        let requested_layers: HashSet<StyleLayer> = style
+            .layers.iter().cloned()
             .collect();
 
         let client = kernel.source_client();
 
-        if !fill_layers.is_empty() {
+        if !style.layers.is_empty() {
             let context = context.clone();
             let source = SourceType::Tessellate(TessellateSource::default());
             match client.fetch(&coords, &source).await {
@@ -141,7 +131,7 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
                         &data,
                         VectorTileRequest {
                             coords,
-                            layers: fill_layers,
+                            layers: requested_layers,
                         },
                         &mut pipeline_context,
                     )
@@ -149,11 +139,11 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
                 }
                 Err(e) => {
                     log::error!("{e:?}");
-                    for to_load in &fill_layers {
+                    for to_load in &requested_layers {
                         context
                             .send_back(<T as VectorTransferables>::LayerMissing::build_from(
                                 coords,
-                                to_load.to_string(),
+                                to_load.id.clone(),
                             ))
                             .map_err(ProcedureError::Send)?;
                     }

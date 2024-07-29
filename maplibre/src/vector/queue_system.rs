@@ -10,6 +10,8 @@ use crate::{
     tcs::tiles::Tile,
     vector::{render_commands::DrawVectorTiles, VectorBufferPool},
 };
+use crate::vector::render_commands::DrawSymbols;
+use crate::vector::SymbolBufferPool;
 
 pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
     let Some((
@@ -17,11 +19,13 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
         Initialized(buffer_pool),
         mask_phase,
         layer_item_phase,
+        Initialized(symbol_buffer_pool)
     )) = world.resources.query_mut::<(
         &mut Eventually<WgpuTileViewPattern>,
         &mut Eventually<VectorBufferPool>,
         &mut RenderPhase<TileMaskItem>,
         &mut RenderPhase<LayerItem>,
+        &mut Eventually<SymbolBufferPool>,
     )>()
     else {
         return;
@@ -41,8 +45,23 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
                 source_shape: source_shape.clone(),
             });
 
+            if let Some(layer_entries) = symbol_buffer_pool.index().get_layers(source_shape.coords()) {
+                for layer_entry in layer_entries {
+                    // Draw tile
+                    layer_item_phase.add(LayerItem {
+                        draw_function: Box::new(DrawState::<LayerItem, DrawSymbols>::new()),
+                        index: layer_entry.style_layer.index,
+                        style_layer: layer_entry.style_layer.id.clone(),
+                        tile: Tile {
+                            coords: layer_entry.coords,
+                        },
+                        source_shape: source_shape.clone(),
+                    });
+                }
+            };
             if let Some(layer_entries) = buffer_pool_index.get_layers(source_shape.coords()) {
                 for layer_entry in layer_entries {
+                   // continue;
                     // Draw tile
                     layer_item_phase.add(LayerItem {
                         draw_function: Box::new(DrawState::<LayerItem, DrawVectorTiles>::new()),
@@ -55,6 +74,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
                     });
                 }
             };
+
         });
     }
 }

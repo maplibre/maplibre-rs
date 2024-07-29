@@ -17,6 +17,7 @@ use crate::{
         AvailableVectorLayerData, VectorBufferPool, VectorLayerData, VectorLayersDataComponent,
     },
 };
+use crate::vector::{AvailableSymbolVectorLayerData, SymbolBufferPool};
 
 pub fn upload_system(
     MapContext {
@@ -27,9 +28,9 @@ pub fn upload_system(
         ..
     }: &mut MapContext,
 ) {
-    let Some(Initialized(buffer_pool)) = world
+    let Some((Initialized(buffer_pool), Initialized(symbol_buffer_pool))) = world
         .resources
-        .query_mut::<&mut Eventually<VectorBufferPool>>()
+        .query_mut::<(&mut Eventually<VectorBufferPool>, &mut Eventually<SymbolBufferPool>)>()
     else {
         return;
     };
@@ -38,8 +39,16 @@ pub fn upload_system(
         view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
 
     if let Some(view_region) = &view_region {
-        upload_tesselated_layer(
+        upload_tessellated_layer(
             buffer_pool,
+            device,
+            queue,
+            &mut world.tiles,
+            style,
+            view_region,
+        );
+        upload_symbol_layer(
+            symbol_buffer_pool,
             device,
             queue,
             &mut world.tiles,
@@ -121,7 +130,7 @@ pub fn upload_system(
     }
 }*/
 
-fn upload_tesselated_layer(
+fn upload_tessellated_layer(
     buffer_pool: &mut VectorBufferPool,
     _device: &wgpu::Device,
     queue: &wgpu::Queue,
@@ -143,8 +152,9 @@ fn upload_tesselated_layer(
             .layers
             .iter()
             .flat_map(|data| match data {
-                VectorLayerData::Available(data) => Some(data),
+                VectorLayerData::AvailableLayer(data) => Some(data),
                 VectorLayerData::Missing(_) => None,
+                VectorLayerData::AvailableSymbolLayer(_) => None // TODO when to upload symbol layers?
             })
             .filter(|data| !loaded_layers.contains(data.source_layer.as_str()))
             .collect::<Vec<_>>();
@@ -170,6 +180,7 @@ fn upload_tesselated_layer(
                 .and_then(|paint| paint.get_color())
                 .map(|color| color.into());
 
+            // Assign every feature in the layer the color from the style
             let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual features
                 .enumerate()
                 .flat_map(|(i, _feature)| {
@@ -179,6 +190,84 @@ fn upload_tesselated_layer(
                     .take(feature_indices[i] as usize)
                 })
                 .collect::<Vec<_>>();
+
+            log::debug!("Allocating geometry at {coords}");
+            buffer_pool.allocate_layer_geometry(
+                queue,
+                *coords,
+                style_layer.clone(),
+                buffer,
+                ShaderLayerMetadata::new(style_layer.index as f32),
+                &feature_metadata,
+            );
+        }
+    }
+}
+
+
+// TODO cleanup
+fn upload_symbol_layer(
+    buffer_pool: &mut SymbolBufferPool,
+    _device: &wgpu::Device,
+    queue: &wgpu::Queue,
+    tiles: &mut Tiles,
+    style: &Style,
+    view_region: &ViewRegion,
+) {
+    // Upload all tessellated layers which are in view
+    for coords in view_region.iter() {
+        let Some(vector_layers) = tiles.query_mut::<&VectorLayersDataComponent>(coords) else {
+            continue;
+        };
+
+        let loaded_layers = buffer_pool
+            .get_loaded_source_layers_at(coords)
+            .unwrap_or_default();
+
+        let available_layers = vector_layers
+            .layers
+            .iter()
+            .flat_map(|data| match data {
+                VectorLayerData::AvailableSymbolLayer(data) => Some(data),
+                VectorLayerData::Missing(_) => None,
+                VectorLayerData::AvailableLayer(_) => None // TODO when to upload symbol layers?
+            })
+            .filter(|data| !loaded_layers.contains(data.source_layer.as_str()))
+            .collect::<Vec<_>>();
+
+        for style_layer in &style.layers {
+            let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Unwrap
+
+            let Some(AvailableSymbolVectorLayerData {
+                         coords,
+                         feature_indices,
+                         buffer,
+                         ..
+                     }) = available_layers
+                .iter()
+                .find(|layer| source_layer.as_str() == layer.source_layer)
+            else {
+                continue;
+            };
+
+
+            // Assign every feature in the layer the color from the style
+            let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual features
+                .enumerate()
+                .flat_map(|(i, _feature)| {
+                    iter::repeat(crate::render::shaders::ShaderFeatureStyle {
+                        color: Vec4f32::default(),
+                    })
+                        .take(feature_indices[i] as usize)
+                })
+                .collect::<Vec<_>>();
+
+            // FIXME
+            if buffer.buffer.indices.is_empty()  {
+                log::error!("empty indices");
+                log::error!("empty indices");
+                continue
+            }
 
             log::debug!("Allocating geometry at {coords}");
             buffer_pool.allocate_layer_geometry(

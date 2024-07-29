@@ -18,6 +18,10 @@ use crate::{
         LayerIndexed, LayerMissing, LayerTessellated, TileTessellated, VectorTransferables,
     },
 };
+use crate::render::shaders::SymbolVertex;
+use crate::style::layer::{LayerPaint, StyleLayer};
+use crate::vector::tessellation::TextTessellator;
+use crate::vector::transferables::SymbolLayerTessellated;
 
 #[derive(Error, Debug)]
 pub enum ProcessVectorError {
@@ -32,7 +36,7 @@ pub enum ProcessVectorError {
 /// A request for a tile at the given coordinates and in the given layers.
 pub struct VectorTileRequest {
     pub coords: WorldTileCoords,
-    pub layers: HashSet<String>,
+    pub layers: HashSet<StyleLayer>,
 }
 
 pub fn process_vector_tile<T: VectorTransferables, C: Context>(
@@ -40,54 +44,84 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
     tile_request: VectorTileRequest,
     context: &mut ProcessVectorContext<T, C>,
 ) -> Result<(), ProcessVectorError> {
-    // Decode
-
     let mut tile = geozero::mvt::Tile::decode(data)
         .map_err(|e| ProcessVectorError::Decoding(e.to_string().into()))?;
 
-    // Available
-
+    // Report available layers
     let coords = &tile_request.coords;
 
-    for layer in &mut tile.layers {
-        let cloned_layer = layer.clone();
-        let layer_name: &str = &cloned_layer.name;
-        if !tile_request.layers.contains(layer_name) {
-            continue;
-        }
+    for style_layer in &tile_request.layers {
+        let id = &style_layer.id;
+        if let (Some(paint), Some(source_layer)) = (&style_layer.paint, &style_layer.source_layer) {
 
-        let mut tessellator = ZeroTessellator::<IndexDataType>::default();
-        if let Err(e) = layer.process(&mut tessellator) {
-            context.layer_missing(coords, layer_name)?;
+            if let Some(layer) = tile.layers.iter_mut().find(|layer| &layer.name == source_layer) {
+                let original_layer = layer.clone();
 
-            tracing::error!("layer {layer_name} at {coords} tesselation failed {e:?}");
+                match paint {
+                    LayerPaint::Line(_) | LayerPaint::Fill(_) => {
+                        let mut tessellator = ZeroTessellator::<IndexDataType>::default();
+
+                        if let Err(e) = layer.process(&mut tessellator) {
+                            context.layer_missing(coords, &source_layer)?;
+
+                            tracing::error!("tesselation for layer source {source_layer} at {coords} failed {e:?}");
+                        } else {
+                            context.layer_tesselation_finished(
+                                coords,
+                                tessellator.buffer.into(),
+                                tessellator.feature_indices,
+                                original_layer,
+                            )?;
+                        }
+                    }
+                    LayerPaint::Symbol(_) => {
+
+                        let mut tessellator = TextTessellator::<IndexDataType>::default();
+
+                        if let Err(e) = layer.process(&mut tessellator) {
+                            context.layer_missing(coords, &source_layer)?;
+
+                            tracing::error!("tesselation for layer source {source_layer} at {coords} failed {e:?}");
+                        } else {
+                            if tessellator.quad_buffer.indices.is_empty() {
+                                log::error!("quad buffer empty");
+                                continue
+                            }
+                            context.symbol_layer_tesselation_finished(
+                                coords,
+                                tessellator.quad_buffer.into(),
+                                tessellator.feature_indices,
+                                original_layer,
+                            )?;
+                        }
+
+                    }
+                    _ => {
+                        log::warn!("unhandled style layer type in {id}");
+                    }
+                }
+            } else {
+                log::warn!("layer source {source_layer} not found in vector tile");
+            }
         } else {
-            context.layer_tesselation_finished(
-                coords,
-                tessellator.buffer.into(),
-                tessellator.feature_indices,
-                cloned_layer,
-            )?;
+            log::error!("vector style layer {id} misses a required attribute");
         }
     }
 
-    // Missing
-
+    // Report missing layers
     let coords = &tile_request.coords;
-
     let available_layers: HashSet<_> = tile
         .layers
         .iter()
         .map(|layer| layer.name.clone())
         .collect::<HashSet<_>>();
 
-    for missing_layer in tile_request.layers.difference(&available_layers) {
-        context.layer_missing(coords, missing_layer)?;
-        tracing::info!("requested layer {missing_layer} at {coords} not found in tile");
-    }
+    // todo for missing_layer in tile_request.layers.difference(&available_layers) {
+    //    context.layer_missing(coords, &missing_layer.id)?;
+    //    tracing::info!("requested layer {missing_layer} at {coords} not found in tile");
+    //}
 
-    // Indexing
-
+    // Report index for layer
     let mut index = IndexProcessor::new();
 
     for layer in &mut tile.layers {
@@ -96,8 +130,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 
     context.layer_indexing_finished(&tile_request.coords, index.get_geometries())?;
 
-    // End
-
+    // Report end
     tracing::info!("tile tessellated at {coords} finished");
     context.tile_finished(coords)?;
 
@@ -155,6 +188,24 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
             ))
             .map_err(|e| ProcessVectorError::SendError(e))
     }
+
+    fn symbol_layer_tesselation_finished(
+        &mut self,
+        coords: &WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
+        feature_indices: Vec<u32>,
+        layer_data: tile::Layer,
+    ) -> Result<(), ProcessVectorError> {
+        self.context
+            .send(T::SymbolLayerTessellated::build_from(
+                *coords,
+                buffer,
+                feature_indices,
+                layer_data,
+            ))
+            .map_err(|e| ProcessVectorError::SendError(e))
+    }
+
 
     fn layer_indexing_finished(
         &mut self,

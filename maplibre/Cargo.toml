@@ -88,5 +88,9 @@ smallvec.workspace = true
 png = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
 
+# Text/glyphs
+prost = "0.13.1"
+
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }
+prost-build = "0.13.1"

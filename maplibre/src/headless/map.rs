@@ -86,7 +86,7 @@ impl HeadlessMap {
                 layers: layers
                     .into_iter()
                     .map(|layer| {
-                        VectorLayerData::Available(AvailableVectorLayerData {
+                        VectorLayerData::AvailableLayer(AvailableVectorLayerData {
                             coords: layer.coords,
                             source_layer: layer.layer_data.name,
                             buffer: layer.buffer,
