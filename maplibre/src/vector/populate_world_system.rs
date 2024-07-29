@@ -33,6 +33,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
             message.has_tag(T::TileTessellated::message_tag())
                 || message.has_tag(T::LayerMissing::message_tag())
                 || message.has_tag(T::LayerTessellated::message_tag())
+                || message.has_tag(T::SymbolLayerTessellated::message_tag())
                 || message.has_tag(T::LayerIndexed::message_tag())
         }) {
             let message: Message = message;
@@ -74,7 +75,20 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
 
                 component
                     .layers
-                    .push(VectorLayerData::Available(message.to_layer()));
+                    .push(VectorLayerData::AvailableLayer(message.to_layer()));
+            } else if message.has_tag(T::SymbolLayerTessellated::message_tag()) {
+                let message = message.into_transferable::<T::SymbolLayerTessellated>();
+
+                let Some(component) = world
+                    .tiles
+                    .query_mut::<&mut VectorLayersDataComponent>(message.coords())
+                else {
+                    continue;
+                };
+
+                component
+                    .layers
+                    .push(VectorLayerData::AvailableSymbolLayer(message.to_layer()));
             } else if message.has_tag(T::LayerIndexed::message_tag()) {
                 let message = message.into_transferable::<T::LayerIndexed>();
                 world
