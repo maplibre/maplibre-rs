@@ -33,6 +33,7 @@ mod upload_system;
 
 // Public due to bechmarks
 pub mod tessellation;
+mod text;
 
 pub use process_vector::*;
 pub use transferables::{
@@ -41,6 +42,8 @@ pub use transferables::{
 };
 
 use crate::render::graph::RenderGraph;
+use crate::render::shaders::SymbolVertex;
+use crate::vector::resource::GlyphTexture;
 
 struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {
@@ -55,6 +58,25 @@ pub type VectorBufferPool = BufferPool<
     wgpu::Queue,
     wgpu::Buffer,
     ShaderVertex,
+    IndexDataType,
+    ShaderLayerMetadata,
+    ShaderFeatureStyle,
+>;
+
+struct SymbolPipeline(wgpu::RenderPipeline);
+
+impl Deref for SymbolPipeline {
+    type Target = wgpu::RenderPipeline;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub type SymbolBufferPool = BufferPool<
+    wgpu::Queue,
+    wgpu::Buffer,
+    SymbolVertex,
     IndexDataType,
     ShaderLayerMetadata,
     ShaderFeatureStyle,
@@ -96,6 +118,12 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
         resources.insert(Eventually::<VectorBufferPool>::Uninitialized);
         resources.insert(Eventually::<VectorPipeline>::Uninitialized);
 
+
+        resources.insert(Eventually::<SymbolPipeline>::Uninitialized);
+        resources.insert(Eventually::<SymbolBufferPool>::Uninitialized);
+        resources.insert(Eventually::<GlyphTexture>::Uninitialized);
+        resources.insert(Eventually::<(wgpu::Texture, wgpu::Sampler)>::Uninitialized);
+
         resources
             .get_or_init_mut::<ViewTileSources>()
             .add_resource_query::<&Eventually<VectorBufferPool>>()
@@ -124,13 +152,23 @@ pub struct AvailableVectorLayerData {
     pub feature_indices: Vec<u32>,
 }
 
+pub struct AvailableSymbolVectorLayerData {
+    pub coords: WorldTileCoords,
+    pub source_layer: String,
+    pub buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
+    /// Holds for each feature the count of indices.
+    pub feature_indices: Vec<u32>,
+}
+
+
 pub struct MissingVectorLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
 }
 
 pub enum VectorLayerData {
-    Available(AvailableVectorLayerData),
+    AvailableLayer(AvailableVectorLayerData),
+    AvailableSymbolLayer(AvailableSymbolVectorLayerData),
     Missing(MissingVectorLayerData),
 }
 

@@ -3,6 +3,8 @@
 //! This script is built and executed just before building the package.
 //! It will validate the WGSL (WebGPU Shading Language) shaders and embed static files.
 
+use std::fs;
+use std::path::PathBuf;
 use maplibre_build_tools::wgsl::validate_project_wgsl;
 
 #[cfg(feature = "embed-static-tiles")]
@@ -50,9 +52,29 @@ fn embed_tiles_statically() {
     }
 }
 
+fn generate_protobuf() {
+    let proto_paths = fs::read_dir("./proto")
+        .unwrap()
+        .filter_map(|entry| {
+            let entry = entry.ok()?;
+            println!(
+                "cargo:rerun-if-changed={}",
+                entry.path().display().to_string()
+            );
+            Some(entry.path())
+        })
+        .collect::<Vec<_>>();
+
+
+    prost_build::compile_protos(&proto_paths, &[PathBuf::from("./proto/")]).unwrap();
+}
+
+
 fn main() {
     validate_project_wgsl();
 
     #[cfg(feature = "embed-static-tiles")]
     embed_tiles_statically();
+
+    generate_protobuf();
 }
