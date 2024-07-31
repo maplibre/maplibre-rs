@@ -11,6 +11,8 @@ members = [
     "apple",
     "web",
     "benchmarks",
+
+    "experiments/wgpu_for_fontrendering"
 ]
 
 [workspace.package]
