@@ -157,9 +157,8 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                                 } =>  window_target.exit(),
                                 WindowEvent::Resized(winit::dpi::PhysicalSize { width, height}) => {
                                     // If height or width is zero, skip this resize event. This happens on Windows when minimizing the window.
-                                    if *width != 0 && *height != 0 {
+                                    if let Some(size) = PhysicalSize::new(*width, *height) {
                                         if let Ok(map_context) = map.context_mut() {
-                                            let size = PhysicalSize::new(*width, *height).expect("window values should not be zero");
                                             map_context.resize(size, scale_factor);
                                             map.window().request_redraw();
                                         }
