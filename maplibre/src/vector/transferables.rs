@@ -13,7 +13,7 @@ use crate::{
     vector::{AvailableVectorLayerData, MissingVectorLayerData},
 };
 use crate::render::shaders::SymbolVertex;
-use crate::vector::AvailableSymbolVectorLayerData;
+use crate::sdf::AvailableSymbolVectorLayerData;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum VectorMessageTag {

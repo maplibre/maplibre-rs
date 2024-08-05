@@ -18,6 +18,7 @@ use crate::{
         VectorLayersDataComponent,
     },
 };
+use crate::sdf::SymbolLayersDataComponent;
 use crate::style::layer::StyleLayer;
 
 pub struct RequestSystem<E: Environment, T> {
@@ -74,7 +75,8 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                         .tiles
                         .spawn_mut(coords)
                         .unwrap()
-                        .insert(VectorLayersDataComponent::default());
+                        .insert(VectorLayersDataComponent::default())
+                        .insert(SymbolLayersDataComponent::default());
 
                     tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
                     log::info!("tile request started: {coords}");

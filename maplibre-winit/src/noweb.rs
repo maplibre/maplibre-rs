@@ -136,6 +136,9 @@ pub fn run_headed_map<P>(
                 Box::new(maplibre::vector::VectorPlugin::<
                     maplibre::vector::DefaultVectorTransferables,
                 >::default()),
+                Box::new(maplibre::sdf::SdfPlugin::<
+                    maplibre::vector::DefaultVectorTransferables,
+                >::default()),
                 // Box::new(maplibre::raster::RasterPlugin::<
                 //     maplibre::raster::DefaultRasterTransferables,
                 // >::default()),

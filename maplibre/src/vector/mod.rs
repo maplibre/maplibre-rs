@@ -1,5 +1,11 @@
 use std::{marker::PhantomData, ops::Deref, rc::Rc};
 
+pub use process_vector::*;
+pub use transferables::{
+    DefaultVectorTransferables, LayerIndexed, LayerMissing, LayerTessellated, TileTessellated,
+    VectorTransferables,
+};
+
 use crate::{
     coords::WorldTileCoords,
     environment::Environment,
@@ -7,43 +13,33 @@ use crate::{
     plugin::Plugin,
     render::{
         eventually::Eventually,
+        RenderStageLabel,
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        tile_view_pattern::{HasTile, ViewTileSources},
-        RenderStageLabel, ShaderVertex,
+        ShaderVertex, tile_view_pattern::{HasTile, ViewTileSources},
     },
     schedule::Schedule,
     tcs::{system::SystemContainer, tiles::TileComponent, world::World},
-    vector::tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
         populate_world_system::PopulateWorldSystem, queue_system::queue_system,
         request_system::RequestSystem, resource::BufferPool, resource_system::resource_system,
         upload_system::upload_system,
     },
+    vector::tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
+use crate::render::graph::RenderGraph;
 
 mod populate_world_system;
 mod process_vector;
 mod queue_system;
 mod render_commands;
 mod request_system;
-mod resource;
+pub(crate) mod resource;
 mod resource_system;
-mod transferables;
+pub(crate) mod transferables;
 mod upload_system;
 
 // Public due to bechmarks
 pub mod tessellation;
-mod text;
-
-pub use process_vector::*;
-pub use transferables::{
-    DefaultVectorTransferables, LayerIndexed, LayerMissing, LayerTessellated, TileTessellated,
-    VectorTransferables,
-};
-
-use crate::render::graph::RenderGraph;
-use crate::render::shaders::SymbolVertex;
-use crate::vector::resource::GlyphTexture;
 
 struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {
@@ -58,25 +54,6 @@ pub type VectorBufferPool = BufferPool<
     wgpu::Queue,
     wgpu::Buffer,
     ShaderVertex,
-    IndexDataType,
-    ShaderLayerMetadata,
-    ShaderFeatureStyle,
->;
-
-struct SymbolPipeline(wgpu::RenderPipeline);
-
-impl Deref for SymbolPipeline {
-    type Target = wgpu::RenderPipeline;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-pub type SymbolBufferPool = BufferPool<
-    wgpu::Queue,
-    wgpu::Buffer,
-    SymbolVertex,
     IndexDataType,
     ShaderLayerMetadata,
     ShaderFeatureStyle,
@@ -118,12 +95,6 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
         resources.insert(Eventually::<VectorBufferPool>::Uninitialized);
         resources.insert(Eventually::<VectorPipeline>::Uninitialized);
 
-
-        resources.insert(Eventually::<SymbolPipeline>::Uninitialized);
-        resources.insert(Eventually::<SymbolBufferPool>::Uninitialized);
-        resources.insert(Eventually::<GlyphTexture>::Uninitialized);
-        resources.insert(Eventually::<(wgpu::Texture, wgpu::Sampler)>::Uninitialized);
-
         resources
             .get_or_init_mut::<ViewTileSources>()
             .add_resource_query::<&Eventually<VectorBufferPool>>()
@@ -152,15 +123,6 @@ pub struct AvailableVectorLayerData {
     pub feature_indices: Vec<u32>,
 }
 
-pub struct AvailableSymbolVectorLayerData {
-    pub coords: WorldTileCoords,
-    pub source_layer: String,
-    pub buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
-    /// Holds for each feature the count of indices.
-    pub feature_indices: Vec<u32>,
-}
-
-
 pub struct MissingVectorLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
@@ -168,7 +130,6 @@ pub struct MissingVectorLayerData {
 
 pub enum VectorLayerData {
     AvailableLayer(AvailableVectorLayerData),
-    AvailableSymbolLayer(AvailableSymbolVectorLayerData),
     Missing(MissingVectorLayerData),
 }
 
