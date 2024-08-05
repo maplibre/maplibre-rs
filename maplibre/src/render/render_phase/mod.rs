@@ -68,6 +68,29 @@ impl PhaseItem for LayerItem {
     }
 }
 
+pub struct TranslucentItem {
+    pub draw_function: Box<dyn Draw<TranslucentItem>>,
+    pub index: u32,
+
+    pub style_layer: String,
+
+    pub tile: Tile,
+    pub source_shape: TileShape, // FIXME tcs: TileShape contains buffer ranges. This is bad, move them to a component?
+}
+
+impl PhaseItem for TranslucentItem {
+    type SortKey = u32;
+
+    fn sort_key(&self) -> Self::SortKey {
+        self.index
+    }
+
+    fn draw_function(&self) -> &dyn Draw<TranslucentItem> {
+        self.draw_function.as_ref()
+    }
+}
+
+
 pub struct TileMaskItem {
     pub draw_function: Box<dyn Draw<TileMaskItem>>,
     pub source_shape: TileShape,

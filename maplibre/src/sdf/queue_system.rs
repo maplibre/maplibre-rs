@@ -4,11 +4,12 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_commands::DrawMasks,
-        render_phase::{DrawState, LayerItem, RenderPhase, TileMaskItem},
+        render_phase::{DrawState, RenderPhase, TileMaskItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
     tcs::tiles::Tile,
 };
+use crate::render::render_phase::TranslucentItem;
 use crate::sdf::render_commands::DrawSymbols;
 use crate::sdf::SymbolBufferPool;
 
@@ -17,12 +18,12 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
     let Some((
         Initialized(tile_view_pattern),
         mask_phase,
-        layer_item_phase,
+        translucent_phase,
         Initialized(symbol_buffer_pool)
     )) = world.resources.query_mut::<(
         &mut Eventually<WgpuTileViewPattern>,
         &mut RenderPhase<TileMaskItem>,
-        &mut RenderPhase<LayerItem>,
+        &mut RenderPhase<TranslucentItem>,
         &mut Eventually<SymbolBufferPool>,
     )>()
     else {
@@ -45,8 +46,8 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
             if let Some(layer_entries) = symbol_buffer_pool.index().get_layers(source_shape.coords()) {
                 for layer_entry in layer_entries {
                     // Draw tile
-                    layer_item_phase.add(LayerItem {
-                        draw_function: Box::new(DrawState::<LayerItem, DrawSymbols>::new()),
+                    translucent_phase.add(TranslucentItem {
+                        draw_function: Box::new(DrawState::<TranslucentItem, DrawSymbols>::new()),
                         index: layer_entry.style_layer.index,
                         style_layer: layer_entry.style_layer.id.clone(),
                         tile: Tile {
