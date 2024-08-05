@@ -12,16 +12,17 @@ use crate::{
         apc::{Context, SendError},
         geometry_index::{IndexProcessor, IndexedGeometry, TileIndex},
     },
-    render::ShaderVertex,
-    vector::tessellation::{ZeroTessellator, IndexDataType, OverAlignedVertexBuffer},
-    vector::transferables::{
-        LayerIndexed, LayerMissing, LayerTessellated, TileTessellated, VectorTransferables,
+    render::{shaders::SymbolVertex, ShaderVertex},
+    sdf::tessellation::TextTessellator,
+    style::layer::{LayerPaint, StyleLayer},
+    vector::{
+        tessellation::{IndexDataType, OverAlignedVertexBuffer, ZeroTessellator},
+        transferables::{
+            LayerIndexed, LayerMissing, LayerTessellated, SymbolLayerTessellated, TileTessellated,
+            VectorTransferables,
+        },
     },
 };
-use crate::render::shaders::SymbolVertex;
-use crate::sdf::tessellation::TextTessellator;
-use crate::style::layer::{LayerPaint, StyleLayer};
-use crate::vector::transferables::SymbolLayerTessellated;
 
 #[derive(Error, Debug)]
 pub enum ProcessVectorError {
@@ -53,8 +54,11 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
     for style_layer in &tile_request.layers {
         let id = &style_layer.id;
         if let (Some(paint), Some(source_layer)) = (&style_layer.paint, &style_layer.source_layer) {
-
-            if let Some(layer) = tile.layers.iter_mut().find(|layer| &layer.name == source_layer) {
+            if let Some(layer) = tile
+                .layers
+                .iter_mut()
+                .find(|layer| &layer.name == source_layer)
+            {
                 let original_layer = layer.clone();
 
                 match paint {
@@ -75,7 +79,6 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                         }
                     }
                     LayerPaint::Symbol(_) => {
-
                         let mut tessellator = TextTessellator::<IndexDataType>::default();
 
                         if let Err(e) = layer.process(&mut tessellator) {
@@ -85,7 +88,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                         } else {
                             if tessellator.quad_buffer.indices.is_empty() {
                                 log::error!("quad buffer empty");
-                                continue
+                                continue;
                             }
                             context.symbol_layer_tesselation_finished(
                                 coords,
@@ -94,7 +97,6 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                                 original_layer,
                             )?;
                         }
-
                     }
                     _ => {
                         log::warn!("unhandled style layer type in {id}");
@@ -205,7 +207,6 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
             ))
             .map_err(|e| ProcessVectorError::SendError(e))
     }
-
 
     fn layer_indexing_finished(
         &mut self,

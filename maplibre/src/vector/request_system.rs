@@ -11,6 +11,8 @@ use crate::{
     },
     kernel::Kernel,
     render::tile_view_pattern::DEFAULT_TILE_SIZE,
+    sdf::SymbolLayersDataComponent,
+    style::layer::StyleLayer,
     tcs::system::System,
     vector::{
         process_vector::{process_vector_tile, ProcessVectorContext, VectorTileRequest},
@@ -18,8 +20,6 @@ use crate::{
         VectorLayersDataComponent,
     },
 };
-use crate::sdf::SymbolLayersDataComponent;
-use crate::style::layer::StyleLayer;
 
 pub struct RequestSystem<E: Environment, T> {
     kernel: Rc<Kernel<E>>,
@@ -115,9 +115,7 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
             return Err(ProcedureError::IncompatibleInput);
         };
 
-        let requested_layers: HashSet<StyleLayer> = style
-            .layers.iter().cloned()
-            .collect();
+        let requested_layers: HashSet<StyleLayer> = style.layers.iter().cloned().collect();
 
         let client = kernel.source_client();
 

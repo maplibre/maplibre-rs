@@ -6,14 +6,13 @@ use crate::{
     render::{
         draw_graph,
         graph::{Node, NodeRunError, RenderContext, RenderGraphContext, SlotInfo},
-        render_phase::{RenderPhase},
+        render_phase::{RenderPhase, TranslucentItem},
         resource::TrackedRenderPass,
         Eventually::Initialized,
         RenderResources,
     },
     tcs::world::World,
 };
-use crate::render::render_phase::TranslucentItem;
 
 pub struct TranslucentPassNode {}
 
@@ -78,7 +77,10 @@ impl Node for TranslucentPassNode {
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
         if let Some(mask_items) = world.resources.get::<RenderPhase<TranslucentItem>>() {
-            log::trace!("RenderPhase<TranslucentItem>::size() = {}", mask_items.size());
+            log::trace!(
+                "RenderPhase<TranslucentItem>::size() = {}",
+                mask_items.size()
+            );
             for item in mask_items {
                 item.draw_function.draw(&mut tracked_pass, world, item);
             }

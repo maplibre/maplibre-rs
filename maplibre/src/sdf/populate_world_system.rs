@@ -5,10 +5,10 @@ use crate::{
     environment::Environment,
     io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
+    sdf::{SymbolLayerData, SymbolLayersDataComponent},
     tcs::system::System,
     vector::transferables::*,
 };
-use crate::sdf::{SymbolLayerData, SymbolLayersDataComponent};
 
 pub struct PopulateWorldSystem<E: Environment, T> {
     kernel: Rc<Kernel<E>>,

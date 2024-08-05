@@ -3,17 +3,18 @@
 use std::fs;
 
 use csscolorparser::Color;
-use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
-use geozero::ColumnValue;
-use lyon::geom::{Box2D, euclid::Point2D};
-use lyon::tessellation::{
-    BuffersBuilder, FillOptions, FillTessellator, geometry_builder::MaxIndex
-    ,
+use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
+use lyon::{
+    geom::{euclid::Point2D, Box2D},
+    tessellation::{
+        geometry_builder::MaxIndex, BuffersBuilder, FillOptions, FillTessellator, VertexBuffers,
+    },
 };
-use lyon::tessellation::VertexBuffers;
 
-use crate::render::shaders::SymbolVertex;
-use crate::sdf::text::{Anchor, GlyphSet, SymbolVertexBuilder};
+use crate::{
+    render::shaders::SymbolVertex,
+    sdf::text::{Anchor, GlyphSet, SymbolVertexBuilder},
+};
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
@@ -37,7 +38,7 @@ pub struct TextTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId>
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
-for TextTessellator<I>
+    for TextTessellator<I>
 {
     fn default() -> Self {
         let data = fs::read("./data/0-255.pbf").unwrap();
@@ -125,7 +126,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProcessor
-for TextTessellator<I>
+    for TextTessellator<I>
 {
     fn xy(&mut self, x: f64, y: f64, _idx: usize) -> GeoResult<()> {
         let new_box = Box2D::new(
@@ -190,7 +191,7 @@ for TextTessellator<I>
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyProcessor
-for TextTessellator<I>
+    for TextTessellator<I>
 {
     fn property(
         &mut self,
@@ -198,7 +199,8 @@ for TextTessellator<I>
         name: &str,
         value: &ColumnValue,
     ) -> geozero::error::Result<bool> {
-        if name == "name" { // TODO: Support different tags
+        if name == "name" {
+            // TODO: Support different tags
             match value {
                 ColumnValue::String(str) => {
                     self.current_text = Some(str.to_string());
@@ -211,7 +213,7 @@ for TextTessellator<I>
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeatureProcessor
-for TextTessellator<I>
+    for TextTessellator<I>
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         if let (Some(bbox), Some(text)) = (&self.current_bbox, self.current_text.clone()) {

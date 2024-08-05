@@ -37,7 +37,7 @@ impl TilePipeline {
         wireframe: bool,
         multisampling: bool,
         raster: bool,
-        glyph_rendering: bool
+        glyph_rendering: bool,
     ) -> Self {
         TilePipeline {
             name,

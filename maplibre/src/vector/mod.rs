@@ -13,20 +13,23 @@ use crate::{
     plugin::Plugin,
     render::{
         eventually::Eventually,
-        RenderStageLabel,
+        graph::RenderGraph,
         shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
-        ShaderVertex, tile_view_pattern::{HasTile, ViewTileSources},
+        tile_view_pattern::{HasTile, ViewTileSources},
+        RenderStageLabel, ShaderVertex,
     },
     schedule::Schedule,
     tcs::{system::SystemContainer, tiles::TileComponent, world::World},
     vector::{
-        populate_world_system::PopulateWorldSystem, queue_system::queue_system,
-        request_system::RequestSystem, resource::BufferPool, resource_system::resource_system,
+        populate_world_system::PopulateWorldSystem,
+        queue_system::queue_system,
+        request_system::RequestSystem,
+        resource::BufferPool,
+        resource_system::resource_system,
+        tessellation::{IndexDataType, OverAlignedVertexBuffer},
         upload_system::upload_system,
     },
-    vector::tessellation::{IndexDataType, OverAlignedVertexBuffer},
 };
-use crate::render::graph::RenderGraph;
 
 mod populate_world_system;
 mod process_vector;

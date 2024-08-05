@@ -2,24 +2,19 @@
 
 use std::cell::RefCell;
 
+use bytemuck::Pod;
 use geozero::{FeatureProcessor, GeomProcessor, PropertyProcessor};
 use lyon::{
     geom,
     path::{path::Builder, Path},
     tessellation::{
         geometry_builder::MaxIndex, BuffersBuilder, FillOptions, FillRule, FillTessellator,
-        StrokeOptions, StrokeTessellator,
+        FillVertex, FillVertexConstructor, StrokeOptions, StrokeTessellator, StrokeVertex,
+        StrokeVertexConstructor, VertexBuffers,
     },
 };
 
-use crate::{
-    render::ShaderVertex,
-};
-
-use bytemuck::Pod;
-use lyon::tessellation::{
-    FillVertex, FillVertexConstructor, StrokeVertex, StrokeVertexConstructor, VertexBuffers,
-};
+use crate::render::ShaderVertex;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
@@ -63,8 +58,8 @@ impl<V, I> OverAlignedVertexBuffer<V, I> {
 
     pub fn from_iters<IV, II>(vertices: IV, indices: II, usable_indices: u32) -> Self
     where
-        IV: IntoIterator<Item=V>,
-        II: IntoIterator<Item=I>,
+        IV: IntoIterator<Item = V>,
+        II: IntoIterator<Item = I>,
         IV::IntoIter: ExactSizeIterator,
         II::IntoIter: ExactSizeIterator,
     {
@@ -138,7 +133,7 @@ pub struct ZeroTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId>
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
-for ZeroTessellator<I>
+    for ZeroTessellator<I>
 {
     fn default() -> Self {
         Self {
@@ -195,7 +190,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> ZeroTesse
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProcessor
-for ZeroTessellator<I>
+    for ZeroTessellator<I>
 {
     fn xy(&mut self, x: f64, y: f64, _idx: usize) -> GeoResult<()> {
         // log::info!("xy");
@@ -293,15 +288,15 @@ for ZeroTessellator<I>
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyProcessor
-for ZeroTessellator<I>
-{}
+    for ZeroTessellator<I>
+{
+}
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeatureProcessor
-for ZeroTessellator<I>
+    for ZeroTessellator<I>
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         self.update_feature_indices();
         Ok(())
     }
 }
-

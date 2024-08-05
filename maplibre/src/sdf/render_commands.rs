@@ -1,17 +1,14 @@
-
 use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
+        render_phase::{PhaseItem, RenderCommand, RenderCommandResult, TranslucentItem},
         resource::TrackedRenderPass,
         tile_view_pattern::WgpuTileViewPattern,
         INDEX_FORMAT,
     },
+    sdf::{resource::GlyphTexture, SymbolBufferPool, SymbolPipeline},
     tcs::world::World,
 };
-use crate::render::render_phase::TranslucentItem;
-use crate::sdf::resource::GlyphTexture;
-use crate::sdf::{SymbolBufferPool, SymbolPipeline};
 
 pub struct SetSymbolPipeline;
 impl<P: PhaseItem> RenderCommand<P> for SetSymbolPipeline {
@@ -21,10 +18,9 @@ impl<P: PhaseItem> RenderCommand<P> for SetSymbolPipeline {
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let Some((Initialized(GlyphTexture { ref bind_group, .. }), Initialized(symbol_pipeline))) =
-            world.resources.query::<(
-                &Eventually<GlyphTexture>,
-                &Eventually<SymbolPipeline>,
-            )>()
+            world
+                .resources
+                .query::<(&Eventually<GlyphTexture>, &Eventually<SymbolPipeline>)>()
         else {
             return RenderCommandResult::Failure;
         };
@@ -87,9 +83,7 @@ impl RenderCommand<TranslucentItem> for DrawSymbol {
         pass.set_stencil_reference(reference);
 
         pass.set_index_buffer(
-            symbol_buffer_pool
-                .indices()
-                .slice(index_range),
+            symbol_buffer_pool.indices().slice(index_range),
             INDEX_FORMAT,
         );
         pass.set_vertex_buffer(
@@ -98,7 +92,10 @@ impl RenderCommand<TranslucentItem> for DrawSymbol {
                 .vertices()
                 .slice(entry.vertices_buffer_range()),
         );
-        pass.set_vertex_buffer(1, tile_view_pattern.buffer().slice(tile_view_pattern_buffer));
+        pass.set_vertex_buffer(
+            1,
+            tile_view_pattern.buffer().slice(tile_view_pattern_buffer),
+        );
         pass.set_vertex_buffer(
             2,
             symbol_buffer_pool
@@ -110,6 +107,5 @@ impl RenderCommand<TranslucentItem> for DrawSymbol {
         RenderCommandResult::Success
     }
 }
-
 
 pub type DrawSymbols = (SetSymbolPipeline, DrawSymbol);

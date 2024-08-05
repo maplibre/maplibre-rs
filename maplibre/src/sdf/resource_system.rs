@@ -1,5 +1,6 @@
 //! Prepares GPU-owned resources by initializing them if they are uninitialized or out-of-date.
 use wgpu::util::{DeviceExt, TextureDataOrder};
+
 use crate::{
     context::MapContext,
     render::{
@@ -9,12 +10,9 @@ use crate::{
         shaders::Shader,
         RenderResources, Renderer,
     },
+    sdf::{resource::GlyphTexture, text::GlyphSet, SymbolBufferPool, SymbolPipeline},
+    vector::resource::BufferPool,
 };
-use crate::sdf::{SymbolBufferPool, SymbolPipeline};
-use crate::sdf::resource::GlyphTexture;
-use crate::sdf::text::GlyphSet;
-use crate::vector::resource::BufferPool;
-
 
 pub fn resource_system(
     MapContext {
@@ -30,12 +28,18 @@ pub fn resource_system(
         ..
     }: &mut MapContext,
 ) {
-    let Some((symbol_buffer_pool, symbol_pipeline, glyph_texture_sampler, glyph_texture_bind_group)) = world.resources.query_mut::<(
+    let Some((
+        symbol_buffer_pool,
+        symbol_pipeline,
+        glyph_texture_sampler,
+        glyph_texture_bind_group,
+    )) = world.resources.query_mut::<(
         &mut Eventually<SymbolBufferPool>,
         &mut Eventually<SymbolPipeline>,
         &mut Eventually<(wgpu::Texture, wgpu::Sampler)>,
         &mut Eventually<GlyphTexture>,
-    )>() else {
+    )>()
+    else {
         return;
     };
 
@@ -57,17 +61,14 @@ pub fn resource_system(
             false,
             surface.is_multisampling_supported(settings.msaa),
             false,
-            true
+            true,
         )
-            .describe_render_pipeline()
-            .initialize(device);
-
+        .describe_render_pipeline()
+        .initialize(device);
 
         let (texture, sampler) = glyph_texture_sampler.initialize(|| {
             let data = std::fs::read("./data/0-255.pbf").unwrap();
-            let glyphs = GlyphSet::try_from(
-               data.as_slice(),
-            ).unwrap();
+            let glyphs = GlyphSet::try_from(data.as_slice()).unwrap();
 
             let (width, height) = glyphs.get_texture_dimensions();
 
@@ -102,12 +103,7 @@ pub fn resource_system(
         });
 
         glyph_texture_bind_group.initialize(|| {
-            GlyphTexture::from_device(
-                device,
-                texture,
-                sampler,
-                &pipeline.get_bind_group_layout(0),
-            )
+            GlyphTexture::from_device(device, texture, sampler, &pipeline.get_bind_group_layout(0))
         });
 
         SymbolPipeline(pipeline)

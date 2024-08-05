@@ -51,7 +51,7 @@ pub fn resource_system(
                 false,
                 surface.is_multisampling_supported(settings.msaa),
                 true,
-                false
+                false,
             )
             .describe_render_pipeline()
             .initialize(device),

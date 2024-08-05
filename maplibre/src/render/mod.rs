@@ -52,8 +52,8 @@ mod systems;
 // Rendering internals
 mod graph_runner;
 mod main_pass;
-mod translucent_pass;
-pub mod shaders; // TODO: Make private
+pub mod shaders;
+mod translucent_pass; // TODO: Make private
 
 // Public API
 pub mod builder;
@@ -70,14 +70,13 @@ pub use shaders::ShaderVertex;
 
 use crate::{
     render::{
-        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        render_phase::{LayerItem, RenderPhase, TileMaskItem, TranslucentItem},
         systems::{graph_runner_system::GraphRunnerSystem, upload_system::upload_system},
         tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
+        translucent_pass::TranslucentPassNode,
     },
     window::PhysicalSize,
 };
-use crate::render::render_phase::TranslucentItem;
-use crate::render::translucent_pass::TranslucentPassNode;
 
 pub(crate) const INDEX_FORMAT: wgpu::IndexFormat = wgpu::IndexFormat::Uint32; // Must match IndexDataType
 
@@ -578,7 +577,10 @@ impl<E: Environment> Plugin<E> for RenderPlugin {
         // Draw nodes
         draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
         // Draw nodes
-        draw_graph.add_node(draw_graph::node::TRANSLUCENT_PASS, TranslucentPassNode::new());
+        draw_graph.add_node(
+            draw_graph::node::TRANSLUCENT_PASS,
+            TranslucentPassNode::new(),
+        );
         // Input node
         let input_node_id = draw_graph.set_input(vec![]);
         // Edges
@@ -586,7 +588,10 @@ impl<E: Environment> Plugin<E> for RenderPlugin {
             .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
             .expect("main pass or draw node does not exist");
         draw_graph
-            .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::TRANSLUCENT_PASS)
+            .add_node_edge(
+                draw_graph::node::MAIN_PASS,
+                draw_graph::node::TRANSLUCENT_PASS,
+            )
             .expect("main pass or draw node does not exist");
 
         graph.add_sub_graph(draw_graph::NAME, draw_graph);

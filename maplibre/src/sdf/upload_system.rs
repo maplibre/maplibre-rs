@@ -7,15 +7,17 @@ use crate::{
     coords::ViewRegion,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        shaders::{Vec4f32},
+        shaders::{ShaderLayerMetadata, Vec4f32},
         tile_view_pattern::DEFAULT_TILE_SIZE,
         Renderer,
+    },
+    sdf::{
+        AvailableSymbolVectorLayerData, SymbolBufferPool, SymbolLayerData,
+        SymbolLayersDataComponent,
     },
     style::Style,
     tcs::tiles::Tiles,
 };
-use crate::render::shaders::ShaderLayerMetadata;
-use crate::sdf::{AvailableSymbolVectorLayerData, SymbolBufferPool, SymbolLayerData, SymbolLayersDataComponent};
 
 pub fn upload_system(
     MapContext {
@@ -81,17 +83,16 @@ fn upload_symbol_layer(
             let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Unwrap
 
             let Some(AvailableSymbolVectorLayerData {
-                         coords,
-                         feature_indices,
-                         buffer,
-                         ..
-                     }) = available_layers
+                coords,
+                feature_indices,
+                buffer,
+                ..
+            }) = available_layers
                 .iter()
                 .find(|layer| source_layer.as_str() == layer.source_layer)
             else {
                 continue;
             };
-
 
             // Assign every feature in the layer the color from the style
             let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual features
@@ -100,15 +101,15 @@ fn upload_symbol_layer(
                     iter::repeat(crate::render::shaders::ShaderFeatureStyle {
                         color: Vec4f32::default(),
                     })
-                        .take(feature_indices[i] as usize)
+                    .take(feature_indices[i] as usize)
                 })
                 .collect::<Vec<_>>();
 
             // FIXME
-            if buffer.buffer.indices.is_empty()  {
+            if buffer.buffer.indices.is_empty() {
                 log::error!("empty indices");
                 log::error!("empty indices");
-                continue
+                continue;
             }
 
             log::debug!("Allocating geometry at {coords}");
