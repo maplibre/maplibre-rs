@@ -79,8 +79,9 @@ impl<E: Environment> Plugin<E> for DebugPlugin {
         let draw_graph = graph.get_sub_graph_mut(draw_graph::NAME).unwrap();
         draw_graph.add_node(draw_graph::node::DEBUG_PASS, DebugPassNode::new());
 
+        // FIXME: remove this dependency to translucent pass
         draw_graph
-            .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::DEBUG_PASS)
+            .add_node_edge("translucent_pass", draw_graph::node::DEBUG_PASS)
             .unwrap();
 
         resources.init::<RenderPhase<TileDebugItem>>();

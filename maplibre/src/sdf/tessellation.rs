@@ -15,6 +15,7 @@ use crate::{
     render::shaders::SymbolVertex,
     sdf::text::{Anchor, GlyphSet, SymbolVertexBuilder},
 };
+use crate::sdf::text::Glyph;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
@@ -54,6 +55,11 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
     }
 }
 
+enum StringGlyph<'a> {
+    Char(char),
+    Glyph(&'a Glyph)
+}
+
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTessellator<I> {
     pub fn tessellate_glyph_quads(
         &mut self,
@@ -71,11 +77,27 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
         // TODO: silently drops unknown characters
         // TODO: handle line wrapping / line height
         let mut bbox = None;
-        for glyph in label_text
+        for str_glyph in label_text
             .chars()
-            .filter_map(|c| self.glyphs.glyphs.get(&c))
+            .map(|c| self.glyphs.glyphs.get(&c).map(|glyph| StringGlyph::Glyph(glyph)).unwrap_or_else(|| StringGlyph::Char(c)))
             .collect::<Vec<_>>()
         {
+            let glyph = match str_glyph {
+                StringGlyph::Glyph(glyph) => glyph,
+                StringGlyph::Char(c) => {
+                    match c {
+                        ' ' => {
+                            next_origin[0] += 10.0;
+                            continue;
+                        }
+                        _ => {
+                            log::error!("unhandled char {}", c);
+                            continue;
+                        }
+                    }
+                }
+            };
+
             let glyph_dims = glyph.buffered_dimensions();
             let width = glyph_dims.0 as f32;
             let height = glyph_dims.1 as f32;
@@ -199,13 +221,15 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyP
         name: &str,
         value: &ColumnValue,
     ) -> geozero::error::Result<bool> {
-        if name == "name" {
+        if name == "name:latin" {
             // TODO: Support different tags
             match value {
                 ColumnValue::String(str) => {
                     self.current_text = Some(str.to_string());
                 }
-                _ => {}
+                _ => {
+                    self.current_text = None;
+                }
             }
         }
         Ok(true)
@@ -217,11 +241,12 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         if let (Some(bbox), Some(text)) = (&self.current_bbox, self.current_text.clone()) {
-            let anchor = Anchor::Center;
+            let anchor = Anchor::BottomLeft;
             // TODO: add more anchor possibilities; only support center right now
             // TODO: document how anchor and glyph metrics work together to establish a baseline
             let origin = match anchor {
                 Anchor::Center => bbox.center().to_array(),
+                Anchor::BottomLeft => bbox.min.to_array(),
                 _ => unimplemented!("no support for this anchor"),
             };
             self.tessellate_glyph_quads(

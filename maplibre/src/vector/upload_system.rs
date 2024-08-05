@@ -181,6 +181,11 @@ fn upload_tessellated_layer(
                 })
                 .collect::<Vec<_>>();
 
+            // FIXME avoid uploading empty indices
+            if buffer.buffer.indices.is_empty() {
+                continue;
+            }
+
             log::debug!("Allocating geometry at {coords}");
             buffer_pool.allocate_layer_geometry(
                 queue,
