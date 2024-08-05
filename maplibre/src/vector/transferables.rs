@@ -9,12 +9,12 @@ use crate::{
         geometry_index::TileIndex,
     },
     render::{shaders::SymbolVertex, ShaderVertex},
+    sdf::SymbolLayerData,
     vector::{
         tessellation::{IndexDataType, OverAlignedVertexBuffer},
         AvailableVectorLayerData, MissingVectorLayerData,
     },
 };
-use crate::sdf::SymbolLayerData;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum VectorMessageTag {

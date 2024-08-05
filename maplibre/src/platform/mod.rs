@@ -3,11 +3,10 @@
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use noweb::run_multithreaded;
-#[cfg(not(target_arch = "wasm32"))]
-pub use noweb::ReqwestOffscreenKernelEnvironment;
-
 #[cfg(feature = "trace")]
 pub use noweb::trace;
+#[cfg(not(target_arch = "wasm32"))]
+pub use noweb::ReqwestOffscreenKernelEnvironment;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod noweb;

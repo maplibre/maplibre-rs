@@ -2,8 +2,8 @@ use std::{marker::PhantomData, ops::Deref, rc::Rc};
 
 pub use process_vector::*;
 pub use transferables::{
-    DefaultVectorTransferables, LayerIndexed, LayerMissing, LayerTessellated, TileTessellated,
-    VectorTransferables,
+    DefaultVectorTransferables, LayerIndexed, LayerMissing, LayerTessellated,
+    SymbolLayerTessellated, TileTessellated, VectorTransferables,
 };
 
 use crate::{

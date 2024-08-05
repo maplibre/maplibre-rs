@@ -1,5 +1,5 @@
 struct VertexOutput {
-    @location(0) is_glyph: i32,
+ //   @location(0) is_glyph: i32,  // Chrome complaints about this line
     @location(1) tex_coords: vec2<f32>,
     @location(2) color: vec4<f32>,
     @builtin(position) position: vec4<f32>,

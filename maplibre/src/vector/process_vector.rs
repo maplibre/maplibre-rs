@@ -114,13 +114,15 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
         .map(|layer| layer.name.clone())
         .collect::<HashSet<_>>();
 
-     for layer in tile_request.layers {
-         if let Some(source_layer) = layer.source_layer {
-             if !available_layers.contains(&source_layer) {
-                 context.layer_missing(coords, &source_layer)?;
-                 tracing::info!("requested source layer {source_layer} at {coords} not found in tile");
-             }
-         }
+    for layer in tile_request.layers {
+        if let Some(source_layer) = layer.source_layer {
+            if !available_layers.contains(&source_layer) {
+                context.layer_missing(coords, &source_layer)?;
+                tracing::info!(
+                    "requested source layer {source_layer} at {coords} not found in tile"
+                );
+            }
+        }
     }
 
     // Report index for layer

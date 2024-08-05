@@ -67,7 +67,7 @@ pub fn resource_system(
         .initialize(device);
 
         let (texture, sampler) = glyph_texture_sampler.initialize(|| {
-            let data = std::fs::read("./data/0-255.pbf").unwrap();
+            let data = include_bytes!("../../../data/0-255.pbf");
             let glyphs = GlyphSet::try_from(data.as_slice()).unwrap();
 
             let (width, height) = glyphs.get_texture_dimensions();
