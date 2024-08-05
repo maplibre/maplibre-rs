@@ -2,13 +2,14 @@
 use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        render_phase::{LayerItem, PhaseItem, RenderCommand, RenderCommandResult},
+        render_phase::{PhaseItem, RenderCommand, RenderCommandResult},
         resource::TrackedRenderPass,
         tile_view_pattern::WgpuTileViewPattern,
         INDEX_FORMAT,
     },
     tcs::world::World,
 };
+use crate::render::render_phase::TranslucentItem;
 use crate::sdf::resource::GlyphTexture;
 use crate::sdf::{SymbolBufferPool, SymbolPipeline};
 
@@ -35,10 +36,10 @@ impl<P: PhaseItem> RenderCommand<P> for SetSymbolPipeline {
 }
 
 pub struct DrawSymbol;
-impl RenderCommand<LayerItem> for DrawSymbol {
+impl RenderCommand<TranslucentItem> for DrawSymbol {
     fn render<'w>(
         world: &'w World,
-        item: &LayerItem,
+        item: &TranslucentItem,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
         let Some((Initialized(symbol_buffer_pool), Initialized(tile_view_pattern))) =

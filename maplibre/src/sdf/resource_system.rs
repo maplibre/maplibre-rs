@@ -51,7 +51,7 @@ pub fn resource_system(
             *settings,
             tile_shader.describe_vertex(),
             tile_shader.describe_fragment(),
-            true,
+            false,
             false,
             true, // TODO ignore tile mask
             false,
