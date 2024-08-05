@@ -7,19 +7,19 @@ use crate::{
     plugin::Plugin,
     render::{
         eventually::Eventually,
-        shaders::{ShaderFeatureStyle, ShaderLayerMetadata}
+        graph::RenderGraph,
+        shaders::{ShaderFeatureStyle, ShaderLayerMetadata, SymbolVertex},
+        RenderStageLabel,
     },
     schedule::Schedule,
-    tcs::{tiles::TileComponent, world::World},
-    vector::resource::BufferPool,
-    vector::tessellation::{IndexDataType, OverAlignedVertexBuffer},
+    sdf::resource::GlyphTexture,
+    tcs::{system::SystemContainer, tiles::TileComponent, world::World},
+    vector::{
+        resource::BufferPool,
+        tessellation::{IndexDataType, OverAlignedVertexBuffer},
+        VectorTransferables,
+    },
 };
-use crate::render::graph::RenderGraph;
-use crate::render::RenderStageLabel;
-use crate::render::shaders::SymbolVertex;
-use crate::sdf::resource::GlyphTexture;
-use crate::tcs::system::SystemContainer;
-use crate::vector::VectorTransferables;
 
 mod populate_world_system;
 mod queue_system;
@@ -76,15 +76,25 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for SdfPlugin<T> {
 
         schedule.add_system_to_stage(
             RenderStageLabel::Extract,
-            SystemContainer::new(crate::sdf::populate_world_system::PopulateWorldSystem::<E, T>::new(&kernel)),
+            SystemContainer::new(
+                crate::sdf::populate_world_system::PopulateWorldSystem::<E, T>::new(&kernel),
+            ),
         );
 
-        schedule.add_system_to_stage(RenderStageLabel::Prepare, crate::sdf::resource_system::resource_system);
-        schedule.add_system_to_stage(RenderStageLabel::Queue, crate::sdf::upload_system::upload_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
-        schedule.add_system_to_stage(RenderStageLabel::Queue, crate::sdf::queue_system::queue_system);
+        schedule.add_system_to_stage(
+            RenderStageLabel::Prepare,
+            crate::sdf::resource_system::resource_system,
+        );
+        schedule.add_system_to_stage(
+            RenderStageLabel::Queue,
+            crate::sdf::upload_system::upload_system,
+        ); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
+        schedule.add_system_to_stage(
+            RenderStageLabel::Queue,
+            crate::sdf::queue_system::queue_system,
+        );
     }
 }
-
 
 pub struct AvailableSymbolVectorLayerData {
     pub coords: WorldTileCoords,

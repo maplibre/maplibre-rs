@@ -49,7 +49,7 @@ pub fn resource_system(
             false,
             false,
             false,
-            false
+            false,
         )
         .describe_render_pipeline()
         .initialize(device);

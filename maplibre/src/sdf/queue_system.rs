@@ -4,22 +4,19 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         render_commands::DrawMasks,
-        render_phase::{DrawState, RenderPhase, TileMaskItem},
+        render_phase::{DrawState, RenderPhase, TileMaskItem, TranslucentItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
+    sdf::{render_commands::DrawSymbols, SymbolBufferPool},
     tcs::tiles::Tile,
 };
-use crate::render::render_phase::TranslucentItem;
-use crate::sdf::render_commands::DrawSymbols;
-use crate::sdf::SymbolBufferPool;
-
 
 pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
     let Some((
         Initialized(tile_view_pattern),
         mask_phase,
         translucent_phase,
-        Initialized(symbol_buffer_pool)
+        Initialized(symbol_buffer_pool),
     )) = world.resources.query_mut::<(
         &mut Eventually<WgpuTileViewPattern>,
         &mut RenderPhase<TileMaskItem>,
@@ -29,7 +26,6 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
     else {
         return;
     };
-
 
     for view_tile in tile_view_pattern.iter() {
         let coords = &view_tile.coords();
@@ -43,7 +39,9 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
                 source_shape: source_shape.clone(),
             });
 
-            if let Some(layer_entries) = symbol_buffer_pool.index().get_layers(source_shape.coords()) {
+            if let Some(layer_entries) =
+                symbol_buffer_pool.index().get_layers(source_shape.coords())
+            {
                 for layer_entry in layer_entries {
                     // Draw tile
                     translucent_phase.add(TranslucentItem {

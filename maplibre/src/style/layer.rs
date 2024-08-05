@@ -1,7 +1,9 @@
 //! Vector tile layer drawing utilities.
 
-use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
+use std::{
+    collections::HashMap,
+    hash::{Hash, Hasher},
+};
 
 use cint::{Alpha, EncodedSrgb};
 use csscolorparser::Color;
@@ -87,7 +89,6 @@ pub struct SymbolPaint {
     // TODO a lot
 }
 
-
 /// The different types of paints.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", content = "paint")]
@@ -169,4 +170,3 @@ impl Default for StyleLayer {
         }
     }
 }
-

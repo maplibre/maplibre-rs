@@ -43,7 +43,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
 
             if let Some(layer_entries) = buffer_pool_index.get_layers(source_shape.coords()) {
                 for layer_entry in layer_entries {
-                   // continue;
+                    // continue;
                     // Draw tile
                     layer_item_phase.add(LayerItem {
                         draw_function: Box::new(DrawState::<LayerItem, DrawVectorTiles>::new()),
@@ -56,7 +56,6 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
                     });
                 }
             };
-
         });
     }
 }

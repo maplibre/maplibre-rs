@@ -90,7 +90,6 @@ impl PhaseItem for TranslucentItem {
     }
 }
 
-
 pub struct TileMaskItem {
     pub draw_function: Box<dyn Draw<TileMaskItem>>,
     pub source_shape: TileShape,
