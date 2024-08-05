@@ -14,11 +14,12 @@ use maplibre::{
         AvailableRasterLayerData, LayerRaster, LayerRasterMissing, MissingRasterLayerData,
         RasterTransferables,
     },
-    render::ShaderVertex,
+    render::{shaders::SymbolVertex, ShaderVertex},
+    sdf::SymbolLayerData,
     tile::Layer,
     vector::{
         AvailableVectorLayerData, LayerIndexed, LayerMissing, LayerTessellated,
-        MissingVectorLayerData, TileTessellated, VectorTransferables,
+        MissingVectorLayerData, SymbolLayerTessellated, TileTessellated, VectorTransferables,
     },
 };
 
@@ -26,7 +27,8 @@ use crate::platform::singlethreaded::{
     apc::WebMessageTag,
     transferables::{
         basic_generated::*, layer_indexed_generated::*, layer_missing_generated::*,
-        layer_raster_generated::*, layer_tessellated_generated::*, tile_tessellated_generated::*,
+        layer_raster_generated::*, layer_tessellated_generated::*,
+        symbol_layer_tessellated_generated::*, tile_tessellated_generated::*,
     },
 };
 
@@ -66,6 +68,14 @@ pub mod tile_tessellated_generated {
 pub mod layer_raster_generated {
     #![allow(unused, unused_imports, clippy::all)]
     include!(concat!(env!("OUT_DIR"), "/layer_raster_generated.rs"));
+}
+
+pub mod symbol_layer_tessellated_generated {
+    #![allow(unused, unused_imports, clippy::all)]
+    include!(concat!(
+        env!("OUT_DIR"),
+        "/symbol_layer_tessellated_generated.rs"
+    ));
 }
 
 pub struct FlatBufferTransferable {
@@ -381,6 +391,94 @@ impl LayerRasterMissing for FlatBufferTransferable {
     }
 }
 
+impl SymbolLayerTessellated for FlatBufferTransferable {
+    fn message_tag() -> &'static dyn MessageTag {
+        &WebMessageTag::SymbolLayerTessellated
+    }
+
+    fn build_from(
+        coords: WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
+        feature_indices: Vec<u32>,
+        layer_data: Layer,
+    ) -> Self {
+        let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
+
+        let vertices = inner_builder.create_vector(
+            &buffer
+                .buffer
+                .vertices
+                .iter()
+                .map(|vertex| {
+                    FlatSymbolVertex::new(
+                        &vertex.position,
+                        &vertex.text_anchor,
+                        &vertex.tex_coords,
+                        &vertex.color,
+                        vertex.is_glyph,
+                    )
+                })
+                .collect::<Vec<_>>(),
+        );
+        let indices = inner_builder.create_vector(&buffer.buffer.indices);
+        let feature_indices = inner_builder.create_vector(&feature_indices);
+        let layer_name = inner_builder.create_string(&layer_data.name);
+
+        let mut builder = FlatSymbolLayerTessellatedBuilder::new(&mut inner_builder);
+
+        builder.add_coords(&FlatWorldTileCoords::new(
+            coords.x,
+            coords.y,
+            coords.z.into(),
+        ));
+        builder.add_layer_name(layer_name);
+        builder.add_vertices(vertices);
+        builder.add_indices(indices);
+        builder.add_feature_indices(feature_indices);
+        builder.add_usable_indices(buffer.usable_indices);
+        let root = builder.finish();
+
+        inner_builder.finish(root, None);
+        let (data, start) = inner_builder.collapse();
+        FlatBufferTransferable {
+            tag: WebMessageTag::SymbolLayerTessellated,
+            data,
+            start,
+        }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
+        data.coords().unwrap().into()
+    }
+
+    fn is_empty(&self) -> bool {
+        let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
+        data.usable_indices() == 0
+    }
+
+    fn to_layer(self) -> SymbolLayerData {
+        let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
+        let vertices = data.vertices().unwrap().iter().map(|vertex| SymbolVertex {
+            position: vertex.position().into(),
+            text_anchor: vertex.text_anchor().into(),
+            tex_coords: vertex.tex_coords().into(),
+            color: vertex.color().into(),
+            is_glyph: vertex.is_glyph(),
+        });
+
+        let indices = data.indices().unwrap();
+        let feature_indices: Vec<u32> = data.feature_indices().unwrap().iter().collect();
+        let usable_indices = data.usable_indices();
+        SymbolLayerData {
+            coords: LayerTessellated::coords(&self),
+            source_layer: data.layer_name().unwrap().to_owned(),
+            buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
+            feature_indices,
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct FlatTransferables;
 
@@ -388,6 +486,7 @@ impl VectorTransferables for FlatTransferables {
     type TileTessellated = FlatBufferTransferable;
     type LayerMissing = FlatBufferTransferable;
     type LayerTessellated = FlatBufferTransferable;
+    type SymbolLayerTessellated = FlatBufferTransferable;
     type LayerIndexed = FlatBufferTransferable;
 }
 
