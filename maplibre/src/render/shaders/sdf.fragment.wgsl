@@ -37,16 +37,15 @@ fn main(in: VertexOutput) -> Output {
 
     let color_rgb = mix(outline_color.rgb, in.color.rgb, border);
 
+    // The translucent pass does not have a depth buffer. Therefore we do not need to discord the fragments:
     // "Another Good Trick" from https://www.sjbaker.org/steve/omniv/alpha_sorting.html
     // Using discard is an alternative for GL_ALPHA_TEST.
     // https://stackoverflow.com/questions/53024693/opengl-is-discard-the-only-replacement-for-deprecated-gl-alpha-test
-    // Alternative is to disable the depth buffer for the RenderPass using sdf.fragment.wgsl
-    if (alpha == 0.0) {
-        discard;
-    }
+    // if (alpha == 0.0) {
+    //     discard;
+    // }
 
     return Output(vec4(color_rgb, in.color.a * alpha));
-    //return Output(vec4(vec3<f32>(0.0, 0.0, 0.0), 1.0));
 }
 
 
