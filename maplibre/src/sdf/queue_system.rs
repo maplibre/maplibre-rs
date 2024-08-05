@@ -3,7 +3,6 @@ use crate::{
     context::MapContext,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        render_commands::DrawMasks,
         render_phase::{DrawState, RenderPhase, TileMaskItem, TranslucentItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
@@ -33,12 +32,6 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
 
         // draw tile normal or the source e.g. parent or children
         view_tile.render(|source_shape| {
-            // Draw masks for all source_shapes
-            mask_phase.add(TileMaskItem {
-                draw_function: Box::new(DrawState::<TileMaskItem, DrawMasks>::new()),
-                source_shape: source_shape.clone(),
-            });
-
             if let Some(layer_entries) =
                 symbol_buffer_pool.index().get_layers(source_shape.coords())
             {

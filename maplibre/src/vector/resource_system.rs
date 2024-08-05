@@ -17,7 +17,6 @@ pub fn resource_system(
         renderer:
             Renderer {
                 device,
-                queue,
                 resources: RenderResources { surface, .. },
                 settings,
                 ..

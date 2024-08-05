@@ -94,6 +94,8 @@ impl Node for MainPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
+        // TODO: Automatically raise error when items get linearly too many (+1k)
+
         if let Some(mask_items) = world.resources.get::<RenderPhase<TileMaskItem>>() {
             log::trace!("RenderPhase<TileMaskItem>::size() = {}", mask_items.size());
             for item in mask_items {

@@ -12,7 +12,7 @@ use crate::{
         Renderer,
     },
     sdf::{
-        AvailableSymbolVectorLayerData, SymbolBufferPool, SymbolLayerData,
+        SymbolBufferPool, SymbolLayerData,
         SymbolLayersDataComponent,
     },
     style::Style,
@@ -24,7 +24,7 @@ pub fn upload_system(
         world,
         style,
         view_state,
-        renderer: Renderer { device, queue, .. },
+        renderer: Renderer { queue, .. },
         ..
     }: &mut MapContext,
 ) {
@@ -41,20 +41,17 @@ pub fn upload_system(
     if let Some(view_region) = &view_region {
         upload_symbol_layer(
             symbol_buffer_pool,
-            device,
             queue,
             &mut world.tiles,
             style,
             view_region,
         );
-        // self.update_metadata(state, tile_repository, queue);
     }
 }
 
 // TODO cleanup, duplicated
 fn upload_symbol_layer(
-    buffer_pool: &mut SymbolBufferPool,
-    _device: &wgpu::Device,
+    symbol_buffer_pool: &mut SymbolBufferPool,
     queue: &wgpu::Queue,
     tiles: &mut Tiles,
     style: &Style,
@@ -66,23 +63,20 @@ fn upload_symbol_layer(
             continue;
         };
 
-        let loaded_layers = buffer_pool
+        let loaded_layers = symbol_buffer_pool
             .get_loaded_source_layers_at(coords)
             .unwrap_or_default();
 
         let available_layers = vector_layers
             .layers
             .iter()
-            .flat_map(|data| match data {
-                SymbolLayerData::AvailableSymbolLayer(data) => Some(data),
-            })
             .filter(|data| !loaded_layers.contains(data.source_layer.as_str()))
             .collect::<Vec<_>>();
 
         for style_layer in &style.layers {
             let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Unwrap
 
-            let Some(AvailableSymbolVectorLayerData {
+            let Some(SymbolLayerData {
                 coords,
                 feature_indices,
                 buffer,
@@ -105,15 +99,13 @@ fn upload_symbol_layer(
                 })
                 .collect::<Vec<_>>();
 
-            // FIXME
+            // FIXME avoid uploading empty indices
             if buffer.buffer.indices.is_empty() {
-                log::error!("empty indices");
-                log::error!("empty indices");
                 continue;
             }
 
             log::debug!("Allocating geometry at {coords}");
-            buffer_pool.allocate_layer_geometry(
+            symbol_buffer_pool.allocate_layer_geometry(
                 queue,
                 *coords,
                 style_layer.clone(),

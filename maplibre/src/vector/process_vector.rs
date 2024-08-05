@@ -86,10 +86,6 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 
                             tracing::error!("tesselation for layer source {source_layer} at {coords} failed {e:?}");
                         } else {
-                            if tessellator.quad_buffer.indices.is_empty() {
-                                log::error!("quad buffer empty");
-                                continue;
-                            }
                             context.symbol_layer_tesselation_finished(
                                 coords,
                                 tessellator.quad_buffer.into(),
@@ -118,10 +114,14 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
         .map(|layer| layer.name.clone())
         .collect::<HashSet<_>>();
 
-    // todo for missing_layer in tile_request.layers.difference(&available_layers) {
-    //    context.layer_missing(coords, &missing_layer.id)?;
-    //    tracing::info!("requested layer {missing_layer} at {coords} not found in tile");
-    //}
+     for layer in tile_request.layers {
+         if let Some(source_layer) = layer.source_layer {
+             if !available_layers.contains(&source_layer) {
+                 context.layer_missing(coords, &source_layer)?;
+                 tracing::info!("requested source layer {source_layer} at {coords} not found in tile");
+             }
+         }
+    }
 
     // Report index for layer
     let mut index = IndexProcessor::new();

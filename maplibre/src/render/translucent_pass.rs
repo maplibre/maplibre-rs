@@ -76,6 +76,8 @@ impl Node for TranslucentPassNode {
 
         let mut tracked_pass = TrackedRenderPass::new(render_pass);
 
+        // TODO: Automatically raise error when items get linearly too many (+1k)
+
         if let Some(mask_items) = world.resources.get::<RenderPhase<TranslucentItem>>() {
             log::trace!(
                 "RenderPhase<TranslucentItem>::size() = {}",

@@ -5,7 +5,7 @@ use crate::{
     environment::Environment,
     io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
-    sdf::{SymbolLayerData, SymbolLayersDataComponent},
+    sdf::{SymbolLayersDataComponent},
     tcs::system::System,
     vector::transferables::*,
 };
@@ -47,7 +47,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
 
                 component
                     .layers
-                    .push(SymbolLayerData::AvailableSymbolLayer(message.to_layer()));
+                    .push(message.to_layer());
             }
         }
     }

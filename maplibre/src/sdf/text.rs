@@ -14,9 +14,9 @@ pub type UnicodePoint = char;
 
 #[derive(Debug)]
 pub struct Glyph {
-    pub codepoint: UnicodePoint,
-    pub width: u32,
-    pub height: u32,
+    codepoint: UnicodePoint,
+    width: u32,
+    height: u32,
     pub left_bearing: i32,
     pub top_bearing: i32,
     h_advance: u32,
