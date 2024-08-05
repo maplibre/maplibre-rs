@@ -11,10 +11,7 @@ use crate::{
         tile_view_pattern::DEFAULT_TILE_SIZE,
         Renderer,
     },
-    sdf::{
-        SymbolBufferPool, SymbolLayerData,
-        SymbolLayersDataComponent,
-    },
+    sdf::{SymbolBufferPool, SymbolLayerData, SymbolLayersDataComponent},
     style::Style,
     tcs::tiles::Tiles,
 };

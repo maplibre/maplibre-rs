@@ -1,7 +1,4 @@
 //! Tessellation for lines and polygons is implemented here.
-
-use std::fs;
-
 use csscolorparser::Color;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
 use lyon::{
@@ -13,9 +10,8 @@ use lyon::{
 
 use crate::{
     render::shaders::SymbolVertex,
-    sdf::text::{Anchor, GlyphSet, SymbolVertexBuilder},
+    sdf::text::{Anchor, Glyph, GlyphSet, SymbolVertexBuilder},
 };
-use crate::sdf::text::Glyph;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
@@ -42,7 +38,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
     for TextTessellator<I>
 {
     fn default() -> Self {
-        let data = fs::read("./data/0-255.pbf").unwrap();
+        let data = include_bytes!("../../../data/0-255.pbf");
         let glyphs = GlyphSet::try_from(data.as_slice()).unwrap();
         Self {
             glyphs,
@@ -57,7 +53,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
 
 enum StringGlyph<'a> {
     Char(char),
-    Glyph(&'a Glyph)
+    Glyph(&'a Glyph),
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTessellator<I> {
@@ -79,23 +75,27 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
         let mut bbox = None;
         for str_glyph in label_text
             .chars()
-            .map(|c| self.glyphs.glyphs.get(&c).map(|glyph| StringGlyph::Glyph(glyph)).unwrap_or_else(|| StringGlyph::Char(c)))
+            .map(|c| {
+                self.glyphs
+                    .glyphs
+                    .get(&c)
+                    .map(|glyph| StringGlyph::Glyph(glyph))
+                    .unwrap_or_else(|| StringGlyph::Char(c))
+            })
             .collect::<Vec<_>>()
         {
             let glyph = match str_glyph {
                 StringGlyph::Glyph(glyph) => glyph,
-                StringGlyph::Char(c) => {
-                    match c {
-                        ' ' => {
-                            next_origin[0] += 10.0;
-                            continue;
-                        }
-                        _ => {
-                            log::error!("unhandled char {}", c);
-                            continue;
-                        }
+                StringGlyph::Char(c) => match c {
+                    ' ' => {
+                        next_origin[0] += 10.0;
+                        continue;
                     }
-                }
+                    _ => {
+                        log::error!("unhandled char {}", c);
+                        continue;
+                    }
+                },
             };
 
             let glyph_dims = glyph.buffered_dimensions();
@@ -140,7 +140,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
                 )
                 .ok()?;
 
-            next_origin[0] += glyph.advance() as f32;
+            next_origin[0] += glyph.advance() as f32 + 1.0;
         }
 
         bbox

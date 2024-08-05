@@ -43,6 +43,7 @@ pub enum WebMessageTag {
     LayerIndexed = 4,
     LayerRaster = 5,
     LayerRasterMissing = 6,
+    SymbolLayerTessellated = 7,
 }
 
 impl WebMessageTag {
@@ -54,6 +55,7 @@ impl WebMessageTag {
             WebMessageTag::TileTessellated => &WebMessageTag::TileTessellated,
             WebMessageTag::LayerTessellated => &WebMessageTag::LayerTessellated,
             WebMessageTag::LayerRasterMissing => &WebMessageTag::LayerRasterMissing,
+            WebMessageTag::SymbolLayerTessellated => &WebMessageTag::SymbolLayerTessellated,
         }
     }
 
@@ -66,6 +68,9 @@ impl WebMessageTag {
             x if x == WebMessageTag::LayerRaster as u32 => Ok(WebMessageTag::LayerRaster),
             x if x == WebMessageTag::LayerRasterMissing as u32 => {
                 Ok(WebMessageTag::LayerRasterMissing)
+            }
+            x if x == WebMessageTag::SymbolLayerTessellated as u32 => {
+                Ok(WebMessageTag::SymbolLayerTessellated)
             }
             _ => Err(MessageTagDeserializeError),
         }
@@ -96,6 +101,8 @@ impl Context for PassingContext {
             &WebMessageTag::LayerMissing
         } else if WebMessageTag::LayerIndexed.dyn_clone().as_ref() == message.tag() {
             &WebMessageTag::LayerIndexed
+        } else if WebMessageTag::SymbolLayerTessellated.dyn_clone().as_ref() == message.tag() {
+            &WebMessageTag::SymbolLayerTessellated
         } else {
             unreachable!()
         };
