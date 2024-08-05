@@ -8,12 +8,13 @@ use crate::{
         apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
-    render::ShaderVertex,
-    vector::tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    vector::{AvailableVectorLayerData, MissingVectorLayerData},
+    render::{shaders::SymbolVertex, ShaderVertex},
+    sdf::AvailableSymbolVectorLayerData,
+    vector::{
+        tessellation::{IndexDataType, OverAlignedVertexBuffer},
+        AvailableVectorLayerData, MissingVectorLayerData,
+    },
 };
-use crate::render::shaders::SymbolVertex;
-use crate::sdf::AvailableSymbolVectorLayerData;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum VectorMessageTag {
@@ -233,7 +234,6 @@ impl LayerTessellated for DefaultLayerTessellated {
         }
     }
 }
-
 
 #[derive(Clone)]
 pub struct DefaultSymbolLayerTessellated {

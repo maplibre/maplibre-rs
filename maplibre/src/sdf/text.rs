@@ -3,6 +3,7 @@ use std::{collections::BTreeMap, convert::TryFrom};
 use image::{GenericImage, GenericImageView, GrayImage, ImageBuffer, Luma};
 use lyon::tessellation::{FillVertex, FillVertexConstructor};
 use prost::{DecodeError, Message};
+
 use crate::render::shaders::SymbolVertex;
 
 pub mod sdf_glyphs {
@@ -158,10 +159,10 @@ impl FillVertexConstructor<SymbolVertex> for SymbolVertexBuilder {
         let tex_coords = [
             x_offset
                 + ((vertex_position.x - self.glyph_anchor[0]) / self.sprite_dimensions.0)
-                * sprite_ratio_x,
+                    * sprite_ratio_x,
             y_offset
                 + ((vertex_position.y - self.glyph_anchor[1]) / self.sprite_dimensions.1)
-                * sprite_ratio_y,
+                    * sprite_ratio_y,
         ];
 
         SymbolVertex {

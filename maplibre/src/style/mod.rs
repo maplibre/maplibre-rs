@@ -1,21 +1,18 @@
 //! Vector tile format styling.
 
-pub use cint::*;
 use std::{collections::HashMap, str::FromStr};
 
+pub use cint::*;
 use csscolorparser::Color;
 use serde::{Deserialize, Serialize};
 
 use crate::style::{
-    layer::{FillPaint, LayerPaint, LinePaint, StyleLayer},
-    layer::RasterPaint,
+    layer::{FillPaint, LayerPaint, LinePaint, RasterPaint, StyleLayer, SymbolPaint},
     source::Source,
 };
-use crate::style::layer::SymbolPaint;
 
 pub mod layer;
 pub mod source;
-
 
 /// Stores the style for a multi-layered map.
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -153,8 +150,7 @@ impl Default for Style {
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Symbol(SymbolPaint {
-                    })),
+                    paint: Some(LayerPaint::Symbol(SymbolPaint {})),
                     source: None,
                     source_layer: Some("transportation_name".to_string()),
                 },

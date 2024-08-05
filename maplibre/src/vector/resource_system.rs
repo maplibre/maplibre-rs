@@ -3,10 +3,10 @@ use crate::{
     context::MapContext,
     render::{
         eventually::Eventually,
-        Renderer,
-        RenderResources,
         resource::{RenderPipeline, TilePipeline},
-        shaders, shaders::Shader,
+        shaders,
+        shaders::Shader,
+        RenderResources, Renderer,
     },
     vector::{resource::BufferPool, VectorBufferPool, VectorPipeline},
 };
@@ -50,7 +50,7 @@ pub fn resource_system(
             false,
             surface.is_multisampling_supported(settings.msaa),
             false,
-            false
+            false,
         )
         .describe_render_pipeline()
         .initialize(device);
