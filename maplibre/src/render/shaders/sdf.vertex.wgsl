@@ -19,7 +19,7 @@ fn main(
     @location(11) tex_coords: vec2<f32>,
     @builtin(instance_index) instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
-    let font_scale = 5.0;
+    let font_scale = 4.0;
 
     let scaling: mat3x3<f32> = mat3x3<f32>(
             vec3<f32>(zoom_factor * font_scale,   0.0,          0.0),

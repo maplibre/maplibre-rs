@@ -96,7 +96,7 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for SdfPlugin<T> {
     }
 }
 
-pub struct AvailableSymbolVectorLayerData {
+pub struct SymbolLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
     pub buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
@@ -104,13 +104,8 @@ pub struct AvailableSymbolVectorLayerData {
     pub feature_indices: Vec<u32>,
 }
 
-pub enum SymbolLayerData {
-    AvailableSymbolLayer(AvailableSymbolVectorLayerData),
-}
-
 #[derive(Default)]
 pub struct SymbolLayersDataComponent {
-    pub done: bool,
     pub layers: Vec<SymbolLayerData>,
 }
 

@@ -9,12 +9,12 @@ use crate::{
         geometry_index::TileIndex,
     },
     render::{shaders::SymbolVertex, ShaderVertex},
-    sdf::AvailableSymbolVectorLayerData,
     vector::{
         tessellation::{IndexDataType, OverAlignedVertexBuffer},
         AvailableVectorLayerData, MissingVectorLayerData,
     },
 };
+use crate::sdf::SymbolLayerData;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum VectorMessageTag {
@@ -90,7 +90,7 @@ pub trait SymbolLayerTessellated: IntoMessage + Debug + Send {
 
     fn is_empty(&self) -> bool;
 
-    fn to_layer(self) -> AvailableSymbolVectorLayerData;
+    fn to_layer(self) -> SymbolLayerData;
 }
 
 pub trait LayerIndexed: IntoMessage + Debug + Send {
@@ -283,8 +283,8 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
         self.buffer.usable_indices == 0
     }
 
-    fn to_layer(self) -> AvailableSymbolVectorLayerData {
-        AvailableSymbolVectorLayerData {
+    fn to_layer(self) -> SymbolLayerData {
+        SymbolLayerData {
             coords: self.coords,
             source_layer: self.layer_data.name,
             buffer: self.buffer,
