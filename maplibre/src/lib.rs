@@ -53,3 +53,5 @@ pub mod tcs;
 pub mod debug;
 pub mod raster;
 pub mod vector;
+
+pub mod sdf;

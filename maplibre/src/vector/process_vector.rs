@@ -19,8 +19,8 @@ use crate::{
     },
 };
 use crate::render::shaders::SymbolVertex;
+use crate::sdf::tessellation::TextTessellator;
 use crate::style::layer::{LayerPaint, StyleLayer};
-use crate::vector::tessellation::TextTessellator;
 use crate::vector::transferables::SymbolLayerTessellated;
 
 #[derive(Error, Debug)]
