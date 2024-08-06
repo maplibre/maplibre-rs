@@ -14,7 +14,7 @@ use crate::{
     plugin::Plugin,
     render::{eventually::Eventually, view_state::ViewState, Renderer},
     schedule::{Schedule, Stage},
-    style::Style,
+    style::{layer::StyleLayer, Style},
     tcs::world::World,
     vector::{
         process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
@@ -126,7 +126,7 @@ impl HeadlessMap {
     pub async fn process_tile(
         &self,
         tile_data: Box<[u8]>,
-        source_layers: &[&str],
+        layer: &StyleLayer,
     ) -> Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>> {
         let context = HeadlessContext::default();
         let mut processor =
@@ -137,10 +137,7 @@ impl HeadlessMap {
             &tile_data,
             VectorTileRequest {
                 coords: target_coords,
-                layers: source_layers
-                    .iter()
-                    .map(|layer| layer.to_string())
-                    .collect(),
+                layers: [layer].into_iter().cloned().collect(),
             },
             &mut processor,
         )
