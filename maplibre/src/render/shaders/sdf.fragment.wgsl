@@ -2,6 +2,7 @@ struct VertexOutput {
  //   @location(0) is_glyph: i32,  // Chrome complaints about this line
     @location(1) tex_coords: vec2<f32>,
     @location(2) color: vec4<f32>,
+    @location(3) opacity: f32,
     @builtin(position) position: vec4<f32>,
 };
 
@@ -18,6 +19,11 @@ var s_glyphs: sampler;
 // https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Non-uniform_flow_control
 @fragment
 fn main(in: VertexOutput) -> Output {
+    if (in.opacity == 0.0) {
+        // Shortcut if opacity is zero. TODO is this increasing or harming performance?
+        return Output(vec4<f32>(0.0, 0.0, 0.0, 0.0));
+    }
+
     let buffer_width: f32 = 0.25;
     let buffer_center_outline: f32 = 0.8;
 
@@ -45,7 +51,7 @@ fn main(in: VertexOutput) -> Output {
     //     discard;
     // }
 
-    return Output(vec4(color_rgb, in.color.a * alpha));
+    return Output(vec4(color_rgb, in.color.a * alpha * in.opacity));
 }
 
 

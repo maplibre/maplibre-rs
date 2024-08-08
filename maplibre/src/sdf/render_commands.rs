@@ -102,6 +102,12 @@ impl RenderCommand<TranslucentItem> for DrawSymbol {
                 .metadata()
                 .slice(entry.layer_metadata_buffer_range()),
         );
+        pass.set_vertex_buffer(
+            3,
+            symbol_buffer_pool
+                .feature_metadata()
+                .slice(entry.feature_metadata_buffer_range()),
+        );
 
         pass.draw_indexed(entry.indices_range(), 0, 0..1);
         RenderCommandResult::Success
