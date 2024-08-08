@@ -92,14 +92,14 @@ impl Shader for TileMaskShader {
     }
 }
 
-pub struct VectorTileShader {
+pub struct FillShader {
     pub format: wgpu::TextureFormat,
 }
 
-impl Shader for VectorTileShader {
+impl Shader for FillShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
-            source: include_str!("tile.vertex.wgsl"),
+            source: include_str!("fill.vertex.wgsl"),
             entry_point: "main",
             buffers: vec![
                 // vertex data
@@ -170,7 +170,7 @@ impl Shader for VectorTileShader {
                 },
                 // features
                 VertexBufferLayout {
-                    array_stride: std::mem::size_of::<ShaderFeatureStyle>() as u64,
+                    array_stride: std::mem::size_of::<FillShaderFeatureMetadata>() as u64,
                     step_mode: wgpu::VertexStepMode::Vertex,
                     attributes: vec![
                         // color
@@ -258,20 +258,20 @@ impl Default for ShaderVertex {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Pod, Zeroable)]
-pub struct ShaderFeatureStyle {
+pub struct FillShaderFeatureMetadata {
     pub color: Vec4f32,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, Pod, Zeroable)]
+pub struct SDFShaderFeatureMetadata {
+    pub opacity: f32,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
 pub struct ShaderLayerMetadata {
     pub z_index: f32,
-}
-
-impl ShaderLayerMetadata {
-    pub fn new(z_index: f32) -> Self {
-        Self { z_index }
-    }
 }
 
 #[repr(C)]
@@ -312,14 +312,14 @@ impl Default for ShaderTextureVertex {
     }
 }
 
-pub struct RasterTileShader {
+pub struct RasterShader {
     pub format: wgpu::TextureFormat,
 }
 
-impl Shader for RasterTileShader {
+impl Shader for RasterShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
-            source: include_str!("tile_raster.vertex.wgsl"),
+            source: include_str!("raster.vertex.wgsl"),
             entry_point: "main",
             buffers: vec![
                 // tile metadata
@@ -375,7 +375,7 @@ impl Shader for RasterTileShader {
 
     fn describe_fragment(&self) -> FragmentState {
         FragmentState {
-            source: include_str!("tile_raster.fragment.wgsl"),
+            source: include_str!("raster.fragment.wgsl"),
             entry_point: "main",
             targets: vec![Some(wgpu::ColorTargetState {
                 format: self.format,
@@ -391,7 +391,7 @@ impl Shader for RasterTileShader {
 
 #[repr(C)]
 #[derive(Copy, Clone, Pod, Zeroable)]
-pub struct SymbolVertex {
+pub struct ShaderSymbolVertex {
     // 4 bytes * 3 = 12 bytes
     pub position: [f32; 3],
     // 4 bytes * 3 = 12 bytes
@@ -404,11 +404,11 @@ pub struct SymbolVertex {
     pub is_glyph: u32,
 }
 
-pub struct SymbolTileShader {
+pub struct SymbolShader {
     pub format: wgpu::TextureFormat,
 }
 
-impl Shader for SymbolTileShader {
+impl Shader for SymbolShader {
     fn describe_vertex(&self) -> VertexState {
         VertexState {
             source: include_str!("sdf.vertex.wgsl"),
@@ -416,7 +416,7 @@ impl Shader for SymbolTileShader {
             buffers: vec![
                 // vertex data
                 VertexBufferLayout {
-                    array_stride: std::mem::size_of::<SymbolVertex>() as u64,
+                    array_stride: std::mem::size_of::<ShaderSymbolVertex>() as u64,
                     step_mode: wgpu::VertexStepMode::Vertex,
                     attributes: vec![
                         // position
@@ -483,6 +483,19 @@ impl Shader for SymbolTileShader {
                             offset: 0,
                             format: wgpu::VertexFormat::Float32,
                             shader_location: 10,
+                        },
+                    ],
+                },
+                // features
+                VertexBufferLayout {
+                    array_stride: std::mem::size_of::<SDFShaderFeatureMetadata>() as u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: vec![
+                        // color
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 12,
                         },
                     ],
                 },

@@ -183,7 +183,7 @@ impl ViewState {
         // when rendering it's layers using custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
         //
-        // TODO remove: In tile.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
+        // TODO remove: In fill.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
         // This means that regardless of the `znear` value all layers will be rendered as part
         // of the near plane.
         // These values have been selected experimentally:

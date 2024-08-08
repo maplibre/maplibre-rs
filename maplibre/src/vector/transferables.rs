@@ -8,13 +8,14 @@ use crate::{
         apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
-    render::{shaders::SymbolVertex, ShaderVertex},
+    render::{shaders::ShaderSymbolVertex, ShaderVertex},
     sdf::SymbolLayerData,
     vector::{
         tessellation::{IndexDataType, OverAlignedVertexBuffer},
         AvailableVectorLayerData, MissingVectorLayerData,
     },
 };
+use crate::sdf::Feature;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum VectorMessageTag {
@@ -79,8 +80,8 @@ pub trait SymbolLayerTessellated: IntoMessage + Debug + Send {
 
     fn build_from(
         coords: WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
+        buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+        features: Vec<Feature>,
         layer_data: Layer,
     ) -> Self
     where
@@ -235,12 +236,10 @@ impl LayerTessellated for DefaultLayerTessellated {
     }
 }
 
-#[derive(Clone)]
 pub struct DefaultSymbolLayerTessellated {
     pub coords: WorldTileCoords,
-    pub buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
-    /// Holds for each feature the count of indices.
-    pub feature_indices: Vec<u32>,
+    pub buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+    pub features: Vec<Feature>,
     pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
 }
 
@@ -263,14 +262,14 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
 
     fn build_from(
         coords: WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
+        buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+        features: Vec<Feature>,
         layer_data: Layer,
     ) -> Self {
         Self {
             coords,
             buffer,
-            feature_indices,
+            features,
             layer_data,
         }
     }
@@ -288,7 +287,7 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
             coords: self.coords,
             source_layer: self.layer_data.name,
             buffer: self.buffer,
-            feature_indices: self.feature_indices,
+            features: self.features,
         }
     }
 }

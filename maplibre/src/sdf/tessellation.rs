@@ -9,9 +9,10 @@ use lyon::{
 };
 
 use crate::{
-    render::shaders::SymbolVertex,
+    render::shaders::ShaderSymbolVertex,
     sdf::text::{Anchor, Glyph, GlyphSet, SymbolVertexBuilder},
 };
+use crate::sdf::Feature;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
@@ -25,13 +26,13 @@ pub struct TextTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId>
     glyphs: GlyphSet,
 
     // output
-    pub quad_buffer: VertexBuffers<SymbolVertex, I>,
-    pub feature_indices: Vec<u32>,
+    pub quad_buffer: VertexBuffers<ShaderSymbolVertex, I>,
+    pub features: Vec<Feature>,
 
     // iteration variables
     current_index: usize,
     current_text: Option<String>,
-    current_bbox: Option<Box2D<f32>>,
+    current_origin: Option<Box2D<f32>>,
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
@@ -43,10 +44,10 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
         Self {
             glyphs,
             quad_buffer: VertexBuffers::new(),
-            feature_indices: Vec::new(),
+            features: Vec::new(),
             current_index: 0,
             current_text: None,
-            current_bbox: None,
+            current_origin: None,
         }
     }
 }
@@ -70,7 +71,6 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
         let texture_dimensions = self.glyphs.get_texture_dimensions();
         let texture_dimensions = (texture_dimensions.0 as f32, texture_dimensions.1 as f32);
 
-        // TODO: silently drops unknown characters
         // TODO: handle line wrapping / line height
         let mut bbox = None;
         for str_glyph in label_text
@@ -88,7 +88,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
                 StringGlyph::Glyph(glyph) => glyph,
                 StringGlyph::Char(c) => match c {
                     ' ' => {
-                        next_origin[0] += 10.0;
+                        next_origin[0] += 10.0; // Spaces are 10 units wide
                         continue;
                     }
                     _ => {
@@ -108,19 +108,19 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
                 0.,
             ];
 
-            let glyph_rect = Box2D::new(
+            let glyph_bbox = Box2D::new(
                 (glyph_anchor[0], glyph_anchor[1]).into(),
                 (glyph_anchor[0] + width, glyph_anchor[1] + height).into(),
             );
 
             bbox = bbox.map_or_else(
-                || Some(glyph_rect),
-                |bbox: Box2D<_>| Some(bbox.union(&glyph_rect)),
+                || Some(glyph_bbox),
+                |bbox: Box2D<_>| Some(bbox.union(&glyph_bbox)),
             );
 
             tessellator
                 .tessellate_rectangle(
-                    &glyph_rect,
+                    &glyph_bbox,
                     &FillOptions::default(),
                     &mut BuffersBuilder::new(
                         &mut self.quad_buffer,
@@ -155,11 +155,12 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
             Point2D::new(x as f32, y as f32),
             Point2D::new(x as f32, y as f32),
         );
-        if let Some(bbox) = self.current_bbox {
-            self.current_bbox = Some(bbox.union(&new_box))
+        if let Some(_) = self.current_origin {
+            unreachable!("Text labels have only a single origin point")
         } else {
-            self.current_bbox = Some(new_box)
+            self.current_origin = Some(new_box)
         }
+
         Ok(())
     }
 
@@ -221,15 +222,13 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyP
         name: &str,
         value: &ColumnValue,
     ) -> geozero::error::Result<bool> {
+        // TODO: Support different tags
         if name == "name" {
-            // TODO: Support different tags
             match value {
                 ColumnValue::String(str) => {
                     self.current_text = Some(str.to_string());
                 }
-                _ => {
-                    self.current_text = None;
-                }
+                _ => {}
             }
         }
         Ok(true)
@@ -240,29 +239,36 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
     for TextTessellator<I>
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
-        if let (Some(bbox), Some(text)) = (&self.current_bbox, self.current_text.clone()) {
+        if let (Some(origin), Some(text)) = (&self.current_origin, self.current_text.clone()) {
             let anchor = Anchor::BottomLeft;
-            // TODO: add more anchor possibilities; only support center right now
-            // TODO: document how anchor and glyph metrics work together to establish a baseline
+            // TODO: add more anchor possibilities
             let origin = match anchor {
-                Anchor::Center => bbox.center().to_array(),
-                Anchor::BottomLeft => bbox.min.to_array(),
+                Anchor::Center => origin.center(), // FIXME: origin is currently always a point
+                Anchor::BottomLeft => origin.min,
                 _ => unimplemented!("no support for this anchor"),
             };
-            self.tessellate_glyph_quads(
-                origin,
+            let bbox = self.tessellate_glyph_quads(
+                origin.to_array(),
                 text.as_str(),
                 Color::from_linear_rgba(1.0, 0., 0., 1.),
             );
 
             let next_index = self.quad_buffer.indices.len();
-            let indices = (next_index - self.current_index) as u32;
-            self.feature_indices.push(indices);
+            let start = self.current_index;
+            let end = next_index - start;
             self.current_index = next_index;
-        }
 
-        self.current_bbox = None;
-        self.current_text = None;
+            // We only add a feature
+
+                self.features.push(Feature {
+                    bbox: bbox.unwrap_or(Box2D::new(origin, origin)),
+                    indices: start..end
+                });
+
+
+            self.current_origin = None;
+            self.current_text = None;
+        }
         Ok(())
     }
 }

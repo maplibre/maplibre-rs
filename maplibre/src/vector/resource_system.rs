@@ -34,7 +34,7 @@ pub fn resource_system(
     buffer_pool.initialize(|| BufferPool::from_device(device));
 
     vector_pipeline.initialize(|| {
-        let tile_shader = shaders::VectorTileShader {
+        let tile_shader = shaders::FillShader {
             format: surface.surface_format(),
         };
 
