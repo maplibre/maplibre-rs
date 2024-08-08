@@ -23,9 +23,6 @@ extern crate core;
 // Export tile format
 pub use geozero::mvt::tile; // Used in transferables.rs in web/singlethreaded
 
-// Internal modules
-pub(crate) mod tessellation;
-
 pub mod context;
 pub mod coords;
 #[cfg(feature = "headless")]
@@ -56,3 +53,5 @@ pub mod tcs;
 pub mod debug;
 pub mod raster;
 pub mod vector;
+
+pub mod sdf;

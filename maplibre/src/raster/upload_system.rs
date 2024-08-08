@@ -9,10 +9,14 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         tile_view_pattern::DEFAULT_TILE_SIZE,
+        view_state::ViewStatePadding,
         Renderer,
     },
     style::Style,
-    tcs::tiles::Tiles,
+    tcs::{
+        system::{SystemError, SystemResult},
+        tiles::Tiles,
+    },
 };
 
 pub fn upload_system(
@@ -23,15 +27,17 @@ pub fn upload_system(
         renderer: Renderer { device, queue, .. },
         ..
     }: &mut MapContext,
-) {
+) -> SystemResult {
     let Some(Initialized(raster_resources)) = world
         .resources
         .query_mut::<&mut Eventually<RasterResources>>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
-    let view_region =
-        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
+    let view_region = view_state.create_view_region(
+        view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
+        ViewStatePadding::Loose,
+    );
 
     if let Some(view_region) = &view_region {
         upload_raster_layer(
@@ -43,6 +49,8 @@ pub fn upload_system(
             view_region,
         );
     }
+
+    Ok(())
 }
 
 #[tracing::instrument(skip_all)]

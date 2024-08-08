@@ -21,6 +21,13 @@ use crate::{
 const VIEW_REGION_PADDING: i32 = 1;
 const MAX_N_TILES: usize = 512;
 
+pub enum ViewStatePadding {
+    // This is helpful for loading a set of tiles.
+    Loose,
+    // This is helpful for rendering a set of tiles.
+    Tight,
+}
+
 pub struct ViewState {
     zoom: ChangeObserver<Zoom>,
     camera: ChangeObserver<Camera>,
@@ -70,12 +77,19 @@ impl ViewState {
         self.height = size.height() as f64;
     }
 
-    pub fn create_view_region(&self, visible_level: ZoomLevel) -> Option<ViewRegion> {
+    pub fn create_view_region(
+        &self,
+        visible_level: ZoomLevel,
+        padding: ViewStatePadding,
+    ) -> Option<ViewRegion> {
         self.view_region_bounding_box(&self.view_projection().invert())
             .map(|bounding_box| {
                 ViewRegion::new(
                     bounding_box,
-                    VIEW_REGION_PADDING,
+                    match padding {
+                        ViewStatePadding::Loose => VIEW_REGION_PADDING,
+                        ViewStatePadding::Tight => 0,
+                    },
                     MAX_N_TILES,
                     *self.zoom,
                     visible_level,
@@ -83,7 +97,7 @@ impl ViewState {
             })
     }
 
-    pub fn get_intersection_time(
+    fn get_intersection_time(
         ray_origin: Vector3<f64>,
         ray_direction: Vector3<f64>,
         plane_origin: Vector3<f64>,
@@ -105,7 +119,7 @@ impl ViewState {
         // is in the plane, to within rounding error.
     }
 
-    pub fn furthest_distance(&self, camera_height: f64, center_offset: Point2<f64>) -> f64 {
+    fn furthest_distance(&self, camera_height: f64, center_offset: Point2<f64>) -> f64 {
         let perspective = &self.perspective;
         let width = self.width;
         let height = self.height;
@@ -143,7 +157,7 @@ impl ViewState {
         let half_fovy = fovy / 2.0;
 
         // Camera height, such that given a certain field-of-view, exactly height/2 are visible on ground.
-        let camera_to_center_distance = (height / 2.0) / (half_fovy.tan()); // TODO: Not sure why it is height here and not width
+        let camera_to_center_distance = (height / 2.0) / (half_fovy.tan()); // We are using `height` here because this is the FOV in y direction (fovy).
         camera_to_center_distance
     }
 
@@ -173,14 +187,14 @@ impl ViewState {
         // when rendering it's layers using custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
         //
-        // TODO remove: In tile.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
+        // TODO remove: In fill.vertex.wgsl we are setting each layer's final `z` in ndc space to `z_index`.
         // This means that regardless of the `znear` value all layers will be rendered as part
         // of the near plane.
         // These values have been selected experimentally:
         // https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
         let near_z = height / 50.0;
 
-        let mut perspective =
+        let perspective =
             self.perspective
                 .calc_matrix_with_center(width, height, near_z, far_z, center_offset);
 
@@ -255,7 +269,7 @@ impl ViewState {
     /// Transforms coordinates in clip space to window coordinates.
     ///
     /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/dxtecharts/the-direct3d-transformation-pipeline) (Direct3D).
-    fn clip_to_window(&self, clip: &Vector4<f64>) -> Vector4<f64> {
+    pub(crate) fn clip_to_window(&self, clip: &Vector4<f64>) -> Vector4<f64> {
         #[rustfmt::skip]
         let ndc = Vector4::new(
             clip.x / clip.w,
@@ -403,7 +417,7 @@ impl ViewState {
 
         Some(Aabb2::new(Point2::from(min), Point2::from(max)))
     }
-    /// An alternative implementation for `view_bounding_box`.
+    /// An alternative implementation for `view_region_bounding_box`.
     ///
     /// This implementation works in the NDC space. We are creating a plane in the world 3D space.
     /// Then we are transforming it to the NDC space. In NDC space it is easy to calculate

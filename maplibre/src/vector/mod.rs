@@ -1,5 +1,11 @@
 use std::{marker::PhantomData, ops::Deref, rc::Rc};
 
+pub use process_vector::*;
+pub use transferables::{
+    DefaultVectorTransferables, LayerIndexed, LayerMissing, LayerTessellated,
+    SymbolLayerTessellated, TileTessellated, VectorTransferables,
+};
+
 use crate::{
     coords::WorldTileCoords,
     environment::Environment,
@@ -7,16 +13,20 @@ use crate::{
     plugin::Plugin,
     render::{
         eventually::Eventually,
-        shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
+        graph::RenderGraph,
+        shaders::{FillShaderFeatureMetadata, ShaderLayerMetadata},
         tile_view_pattern::{HasTile, ViewTileSources},
         RenderStageLabel, ShaderVertex,
     },
     schedule::Schedule,
     tcs::{system::SystemContainer, tiles::TileComponent, world::World},
-    tessellation::{IndexDataType, OverAlignedVertexBuffer},
     vector::{
-        populate_world_system::PopulateWorldSystem, queue_system::queue_system,
-        request_system::RequestSystem, resource::BufferPool, resource_system::resource_system,
+        populate_world_system::PopulateWorldSystem,
+        queue_system::queue_system,
+        request_system::RequestSystem,
+        resource::BufferPool,
+        resource_system::resource_system,
+        tessellation::{IndexDataType, OverAlignedVertexBuffer},
         upload_system::upload_system,
     },
 };
@@ -26,18 +36,13 @@ mod process_vector;
 mod queue_system;
 mod render_commands;
 mod request_system;
-mod resource;
+pub(crate) mod resource;
 mod resource_system;
-mod transferables;
+pub(crate) mod transferables;
 mod upload_system;
 
-pub use process_vector::*;
-pub use transferables::{
-    DefaultVectorTransferables, LayerIndexed, LayerMissing, LayerTessellated, TileTessellated,
-    VectorTransferables,
-};
-
-use crate::render::graph::RenderGraph;
+// Public due to bechmarks
+pub mod tessellation;
 
 struct VectorPipeline(wgpu::RenderPipeline);
 impl Deref for VectorPipeline {
@@ -54,7 +59,7 @@ pub type VectorBufferPool = BufferPool<
     ShaderVertex,
     IndexDataType,
     ShaderLayerMetadata,
-    ShaderFeatureStyle,
+    FillShaderFeatureMetadata,
 >;
 
 pub struct VectorPlugin<T>(PhantomData<T>);
@@ -127,7 +132,7 @@ pub struct MissingVectorLayerData {
 }
 
 pub enum VectorLayerData {
-    Available(AvailableVectorLayerData),
+    AvailableLayer(AvailableVectorLayerData),
     Missing(MissingVectorLayerData),
 }
 

@@ -8,9 +8,12 @@ use crate::{
         apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
-    render::ShaderVertex,
-    tessellation::{IndexDataType, OverAlignedVertexBuffer},
-    vector::{AvailableVectorLayerData, MissingVectorLayerData},
+    render::{shaders::ShaderSymbolVertex, ShaderVertex},
+    sdf::{Feature, SymbolLayerData},
+    vector::{
+        tessellation::{IndexDataType, OverAlignedVertexBuffer},
+        AvailableVectorLayerData, MissingVectorLayerData,
+    },
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -18,7 +21,8 @@ pub enum VectorMessageTag {
     TileTessellated = 1,
     LayerMissing = 2,
     LayerTessellated = 3,
-    LayerIndexed = 4,
+    SymbolLayerTessellated = 4,
+    LayerIndexed = 10,
 }
 
 impl MessageTag for VectorMessageTag {
@@ -68,6 +72,25 @@ pub trait LayerTessellated: IntoMessage + Debug + Send {
     fn is_empty(&self) -> bool;
 
     fn to_layer(self) -> AvailableVectorLayerData;
+}
+
+pub trait SymbolLayerTessellated: IntoMessage + Debug + Send {
+    fn message_tag() -> &'static dyn MessageTag;
+
+    fn build_from(
+        coords: WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+        features: Vec<Feature>,
+        layer_data: Layer,
+    ) -> Self
+    where
+        Self: Sized;
+
+    fn coords(&self) -> WorldTileCoords;
+
+    fn is_empty(&self) -> bool;
+
+    fn to_layer(self) -> SymbolLayerData;
 }
 
 pub trait LayerIndexed: IntoMessage + Debug + Send {
@@ -155,7 +178,7 @@ impl LayerMissing for DefaultLayerMissing {
 }
 
 #[derive(Clone)]
-pub struct DefaultLayerTesselated {
+pub struct DefaultLayerTessellated {
     pub coords: WorldTileCoords,
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
@@ -163,19 +186,19 @@ pub struct DefaultLayerTesselated {
     pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
 }
 
-impl Debug for DefaultLayerTesselated {
+impl Debug for DefaultLayerTessellated {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "DefaultLayerTesselated({})", self.coords)
     }
 }
 
-impl IntoMessage for DefaultLayerTesselated {
+impl IntoMessage for DefaultLayerTessellated {
     fn into(self) -> Message {
         Message::new(Self::message_tag(), Box::new(self))
     }
 }
 
-impl LayerTessellated for DefaultLayerTesselated {
+impl LayerTessellated for DefaultLayerTessellated {
     fn message_tag() -> &'static dyn MessageTag {
         &VectorMessageTag::LayerTessellated
     }
@@ -208,6 +231,62 @@ impl LayerTessellated for DefaultLayerTesselated {
             source_layer: self.layer_data.name,
             buffer: self.buffer,
             feature_indices: self.feature_indices,
+        }
+    }
+}
+
+pub struct DefaultSymbolLayerTessellated {
+    pub coords: WorldTileCoords,
+    pub buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+    pub features: Vec<Feature>,
+    pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
+}
+
+impl Debug for crate::vector::transferables::DefaultSymbolLayerTessellated {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "DefaultSymbolLayerTessellated({})", self.coords)
+    }
+}
+
+impl IntoMessage for crate::vector::transferables::DefaultSymbolLayerTessellated {
+    fn into(self) -> Message {
+        Message::new(Self::message_tag(), Box::new(self))
+    }
+}
+
+impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayerTessellated {
+    fn message_tag() -> &'static dyn MessageTag {
+        &VectorMessageTag::SymbolLayerTessellated
+    }
+
+    fn build_from(
+        coords: WorldTileCoords,
+        buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+        features: Vec<Feature>,
+        layer_data: Layer,
+    ) -> Self {
+        Self {
+            coords,
+            buffer,
+            features,
+            layer_data,
+        }
+    }
+
+    fn coords(&self) -> WorldTileCoords {
+        self.coords
+    }
+
+    fn is_empty(&self) -> bool {
+        self.buffer.usable_indices == 0
+    }
+
+    fn to_layer(self) -> SymbolLayerData {
+        SymbolLayerData {
+            coords: self.coords,
+            source_layer: self.layer_data.name,
+            buffer: self.buffer,
+            features: self.features,
         }
     }
 }
@@ -251,6 +330,7 @@ pub trait VectorTransferables: Copy + Clone + 'static {
     type TileTessellated: TileTessellated;
     type LayerMissing: LayerMissing;
     type LayerTessellated: LayerTessellated;
+    type SymbolLayerTessellated: SymbolLayerTessellated;
     type LayerIndexed: LayerIndexed;
 }
 
@@ -260,6 +340,7 @@ pub struct DefaultVectorTransferables;
 impl VectorTransferables for DefaultVectorTransferables {
     type TileTessellated = DefaultTileTessellated;
     type LayerMissing = DefaultLayerMissing;
-    type LayerTessellated = DefaultLayerTesselated;
+    type LayerTessellated = DefaultLayerTessellated;
+    type SymbolLayerTessellated = DefaultSymbolLayerTessellated;
     type LayerIndexed = DefaultLayerIndexed;
 }
