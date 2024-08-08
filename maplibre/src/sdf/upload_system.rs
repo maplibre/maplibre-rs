@@ -14,7 +14,10 @@ use crate::{
     },
     sdf::{SymbolBufferPool, SymbolLayerData, SymbolLayersDataComponent},
     style::Style,
-    tcs::tiles::Tiles,
+    tcs::{
+        system::{SystemError, SystemResult},
+        tiles::Tiles,
+    },
 };
 
 pub fn upload_system(
@@ -25,12 +28,12 @@ pub fn upload_system(
         renderer: Renderer { queue, .. },
         ..
     }: &mut MapContext,
-) {
+) -> SystemResult {
     let Some(Initialized(symbol_buffer_pool)) = world
         .resources
         .query_mut::<&mut Eventually<SymbolBufferPool>>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     let view_region = view_state.create_view_region(
@@ -47,6 +50,8 @@ pub fn upload_system(
             view_region,
         );
     }
+
+    Ok(())
 }
 
 // TODO cleanup, duplicated

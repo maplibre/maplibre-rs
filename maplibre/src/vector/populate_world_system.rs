@@ -5,7 +5,7 @@ use crate::{
     environment::Environment,
     io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
-    tcs::system::System,
+    tcs::system::{System, SystemResult},
     vector::{transferables::*, VectorLayerData, VectorLayersDataComponent},
 };
 
@@ -28,7 +28,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
         "populate_world_system".into()
     }
 
-    fn run(&mut self, MapContext { world, .. }: &mut MapContext) {
+    fn run(&mut self, MapContext { world, .. }: &mut MapContext) -> SystemResult {
         for message in self.kernel.apc().receive(|message| {
             message.has_tag(T::TileTessellated::message_tag())
                 || message.has_tag(T::LayerMissing::message_tag())
@@ -83,5 +83,6 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
                     .index_tile(&message.coords(), message.to_tile_index());
             }
         }
+        Ok(())
     }
 }

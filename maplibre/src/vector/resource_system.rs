@@ -8,6 +8,7 @@ use crate::{
         shaders::Shader,
         RenderResources, Renderer,
     },
+    tcs::system::{SystemError, SystemResult},
     vector::{resource::BufferPool, VectorBufferPool, VectorPipeline},
 };
 
@@ -23,12 +24,12 @@ pub fn resource_system(
             },
         ..
     }: &mut MapContext,
-) {
+) -> SystemResult {
     let Some((buffer_pool, vector_pipeline)) = world.resources.query_mut::<(
         &mut Eventually<VectorBufferPool>,
         &mut Eventually<VectorPipeline>,
     )>() else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     buffer_pool.initialize(|| BufferPool::from_device(device));
@@ -56,4 +57,6 @@ pub fn resource_system(
 
         VectorPipeline(pipeline)
     });
+
+    Ok(())
 }

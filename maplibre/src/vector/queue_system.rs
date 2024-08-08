@@ -7,11 +7,14 @@ use crate::{
         render_phase::{DrawState, LayerItem, RenderPhase, TileMaskItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
-    tcs::tiles::Tile,
+    tcs::{
+        system::{SystemError, SystemResult},
+        tiles::Tile,
+    },
     vector::{render_commands::DrawVectorTiles, VectorBufferPool},
 };
 
-pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
+pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
     let Some((
         Initialized(tile_view_pattern),
         Initialized(buffer_pool),
@@ -24,7 +27,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
         &mut RenderPhase<LayerItem>,
     )>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     let buffer_pool_index = buffer_pool.index();
@@ -58,4 +61,6 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
             };
         });
     }
+
+    Ok(())
 }

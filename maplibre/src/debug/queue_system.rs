@@ -7,14 +7,15 @@ use crate::{
         render_phase::{DrawState, RenderPhase},
         tile_view_pattern::WgpuTileViewPattern,
     },
+    tcs::system::{SystemError, SystemResult},
 };
 
-pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
+pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
     let Some((Initialized(tile_view_pattern), tile_debug_phase)) = world.resources.query_mut::<(
         &mut Eventually<WgpuTileViewPattern>,
         &mut RenderPhase<TileDebugItem>,
     )>() else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     for view_tile in tile_view_pattern.iter() {
@@ -30,4 +31,6 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
             });
         });
     }
+
+    Ok(())
 }
