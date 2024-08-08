@@ -7,7 +7,7 @@ use crate::{
     coords::ViewRegion,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        shaders::{ShaderLayerMetadata, Vec4f32},
+        shaders::{ShaderLayerMetadata},
         tile_view_pattern::DEFAULT_TILE_SIZE,
         Renderer,
     },
@@ -83,7 +83,7 @@ fn upload_symbol_layer(
 
             let Some(SymbolLayerData {
                 coords,
-                feature_indices,
+                features,
                 buffer,
                 ..
             }) = available_layers
@@ -94,13 +94,12 @@ fn upload_symbol_layer(
             };
 
             // Assign every feature in the layer the color from the style
-            let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual features
-                .enumerate()
-                .flat_map(|(i, _feature)| {
-                    iter::repeat(crate::render::shaders::ShaderFeatureStyle {
-                        color: Vec4f32::default(),
+            let feature_metadata = features.iter()
+                .flat_map(|(feature)| {
+                    iter::repeat(crate::render::shaders::SDFShaderFeatureMetadata {
+                        opacity: 1.0,
                     })
-                    .take(feature_indices[i] as usize)
+                    .take(feature.indices.end)
                 })
                 .collect::<Vec<_>>();
 
@@ -115,7 +114,9 @@ fn upload_symbol_layer(
                 *coords,
                 style_layer.clone(),
                 buffer,
-                ShaderLayerMetadata::new(style_layer.index as f32),
+                ShaderLayerMetadata {
+                    z_index: style_layer.index as f32,
+                },
                 &feature_metadata,
             );
         }

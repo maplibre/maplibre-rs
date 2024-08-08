@@ -46,7 +46,7 @@ pub fn resource_system(
     symbol_buffer_pool.initialize(|| BufferPool::from_device(device));
 
     symbol_pipeline.initialize(|| {
-        let tile_shader = shaders::SymbolTileShader {
+        let tile_shader = shaders::SymbolShader {
             format: surface.surface_format(),
         };
 

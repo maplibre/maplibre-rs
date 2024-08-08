@@ -14,7 +14,7 @@ use maplibre::{
         AvailableRasterLayerData, LayerRaster, LayerRasterMissing, MissingRasterLayerData,
         RasterTransferables,
     },
-    render::{shaders::SymbolVertex, ShaderVertex},
+    render::{shaders::ShaderSymbolVertex, ShaderVertex},
     sdf::SymbolLayerData,
     tile::Layer,
     vector::{
@@ -398,7 +398,7 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
 
     fn build_from(
         coords: WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
+        buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
         feature_indices: Vec<u32>,
         layer_data: Layer,
     ) -> Self {
@@ -459,7 +459,7 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
 
     fn to_layer(self) -> SymbolLayerData {
         let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
-        let vertices = data.vertices().unwrap().iter().map(|vertex| SymbolVertex {
+        let vertices = data.vertices().unwrap().iter().map(|vertex| ShaderSymbolVertex {
             position: vertex.position().into(),
             text_anchor: vertex.text_anchor().into(),
             tex_coords: vertex.tex_coords().into(),

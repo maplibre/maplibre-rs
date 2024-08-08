@@ -33,7 +33,7 @@ pub fn resource_system(
     };
 
     raster_resources.initialize(|| {
-        let shader = shaders::RasterTileShader {
+        let shader = shaders::RasterShader {
             format: surface.surface_format(),
         };
 

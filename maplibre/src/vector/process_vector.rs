@@ -12,7 +12,7 @@ use crate::{
         apc::{Context, SendError},
         geometry_index::{IndexProcessor, IndexedGeometry, TileIndex},
     },
-    render::{shaders::SymbolVertex, ShaderVertex},
+    render::{shaders::ShaderSymbolVertex, ShaderVertex},
     sdf::tessellation::TextTessellator,
     style::layer::{LayerPaint, StyleLayer},
     vector::{
@@ -23,6 +23,7 @@ use crate::{
         },
     },
 };
+use crate::sdf::Feature;
 
 #[derive(Error, Debug)]
 pub enum ProcessVectorError {
@@ -89,7 +90,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                             context.symbol_layer_tesselation_finished(
                                 coords,
                                 tessellator.quad_buffer.into(),
-                                tessellator.feature_indices,
+                                tessellator.features,
                                 original_layer,
                             )?;
                         }
@@ -196,15 +197,15 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
     fn symbol_layer_tesselation_finished(
         &mut self,
         coords: &WorldTileCoords,
-        buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
+        buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+        features: Vec<Feature>,
         layer_data: tile::Layer,
     ) -> Result<(), ProcessVectorError> {
         self.context
             .send(T::SymbolLayerTessellated::build_from(
                 *coords,
                 buffer,
-                feature_indices,
+                features,
                 layer_data,
             ))
             .map_err(|e| ProcessVectorError::SendError(e))

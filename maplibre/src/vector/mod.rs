@@ -14,7 +14,7 @@ use crate::{
     render::{
         eventually::Eventually,
         graph::RenderGraph,
-        shaders::{ShaderFeatureStyle, ShaderLayerMetadata},
+        shaders::{FillShaderFeatureMetadata, ShaderLayerMetadata},
         tile_view_pattern::{HasTile, ViewTileSources},
         RenderStageLabel, ShaderVertex,
     },
@@ -59,7 +59,7 @@ pub type VectorBufferPool = BufferPool<
     ShaderVertex,
     IndexDataType,
     ShaderLayerMetadata,
-    ShaderFeatureStyle,
+    FillShaderFeatureMetadata,
 >;
 
 pub struct VectorPlugin<T>(PhantomData<T>);

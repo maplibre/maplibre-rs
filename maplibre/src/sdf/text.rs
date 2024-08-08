@@ -4,7 +4,7 @@ use image::{GenericImage, GenericImageView, GrayImage, ImageBuffer, Luma};
 use lyon::tessellation::{FillVertex, FillVertexConstructor};
 use prost::{DecodeError, Message};
 
-use crate::render::shaders::SymbolVertex;
+use crate::render::shaders::ShaderSymbolVertex;
 
 pub mod sdf_glyphs {
     include!(concat!(env!("OUT_DIR"), "/glyphs.rs"));
@@ -146,8 +146,8 @@ pub struct SymbolVertexBuilder {
     pub color: [u8; 4],
 }
 
-impl FillVertexConstructor<SymbolVertex> for SymbolVertexBuilder {
-    fn new_vertex(&mut self, vertex: FillVertex) -> SymbolVertex {
+impl FillVertexConstructor<ShaderSymbolVertex> for SymbolVertexBuilder {
+    fn new_vertex(&mut self, vertex: FillVertex) -> ShaderSymbolVertex {
         let vertex_position = vertex.position();
 
         let sprite_ratio_x = self.sprite_dimensions.0 / self.texture_dimensions.0;
@@ -165,7 +165,7 @@ impl FillVertexConstructor<SymbolVertex> for SymbolVertexBuilder {
                     * sprite_ratio_y,
         ];
 
-        SymbolVertex {
+        ShaderSymbolVertex {
             position: [vertex_position.x, vertex_position.y, 0.],
             text_anchor: self.text_anchor,
             is_glyph: if self.glyph { 1 } else { 0 },

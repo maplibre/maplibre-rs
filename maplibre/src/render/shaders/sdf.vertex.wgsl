@@ -3,6 +3,7 @@ struct VertexOutput {
 //    @location(0) is_glyph: i32, // Chrome complaints about this line
     @location(1) tex_coords: vec2<f32>,
     @location(2) color: vec4<f32>,
+    @location(3) opacity: f32,
     @builtin(position) position: vec4<f32>,
 };
 
@@ -17,6 +18,7 @@ fn main(
     @location(9) zoom_factor: f32,
     @location(10) z_index: f32,
     @location(11) tex_coords: vec2<f32>,
+    @location(12) opacity: f32,
     @builtin(instance_index) instance_idx: u32 // instance_index is used when we have multiple instances of the same "object"
 ) -> VertexOutput {
     let font_scale = 6.0;
@@ -32,5 +34,5 @@ fn main(
 
     let white = vec4<f32>(1.0, 1.0, 1.0, 1.0);
     let black = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-    return VertexOutput(tex_coords, white, final_position);
+    return VertexOutput(tex_coords, white, opacity, final_position);
 }

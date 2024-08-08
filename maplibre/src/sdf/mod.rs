@@ -1,4 +1,6 @@
 use std::{marker::PhantomData, ops::Deref, rc::Rc};
+use std::ops::Range;
+use lyon::geom::Box2D;
 
 use crate::{
     coords::WorldTileCoords,
@@ -8,7 +10,7 @@ use crate::{
     render::{
         eventually::Eventually,
         graph::RenderGraph,
-        shaders::{ShaderFeatureStyle, ShaderLayerMetadata, SymbolVertex},
+        shaders::{ShaderLayerMetadata, ShaderSymbolVertex},
         RenderStageLabel,
     },
     schedule::Schedule,
@@ -20,6 +22,7 @@ use crate::{
         VectorTransferables,
     },
 };
+use crate::render::shaders::SDFShaderFeatureMetadata;
 
 mod populate_world_system;
 mod queue_system;
@@ -45,10 +48,10 @@ impl Deref for SymbolPipeline {
 pub type SymbolBufferPool = BufferPool<
     wgpu::Queue,
     wgpu::Buffer,
-    SymbolVertex,
+    ShaderSymbolVertex,
     IndexDataType,
     ShaderLayerMetadata,
-    ShaderFeatureStyle,
+    SDFShaderFeatureMetadata,
 >;
 
 pub struct SdfPlugin<T>(PhantomData<T>);
@@ -77,31 +80,35 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for SdfPlugin<T> {
         schedule.add_system_to_stage(
             RenderStageLabel::Extract,
             SystemContainer::new(
-                crate::sdf::populate_world_system::PopulateWorldSystem::<E, T>::new(&kernel),
+                populate_world_system::PopulateWorldSystem::<E, T>::new(&kernel),
             ),
         );
 
         schedule.add_system_to_stage(
             RenderStageLabel::Prepare,
-            crate::sdf::resource_system::resource_system,
+            resource_system::resource_system,
         );
         schedule.add_system_to_stage(
             RenderStageLabel::Queue,
-            crate::sdf::upload_system::upload_system,
+            upload_system::upload_system,
         ); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
         schedule.add_system_to_stage(
             RenderStageLabel::Queue,
-            crate::sdf::queue_system::queue_system,
+            queue_system::queue_system,
         );
     }
+}
+
+pub struct Feature {
+    pub bbox: Box2D<f32>,
+    pub indices: Range<usize>,
 }
 
 pub struct SymbolLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
-    pub buffer: OverAlignedVertexBuffer<SymbolVertex, IndexDataType>,
-    /// Holds for each feature the count of indices.
-    pub feature_indices: Vec<u32>,
+    pub buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+    pub features: Vec<Feature>
 }
 
 #[derive(Default)]

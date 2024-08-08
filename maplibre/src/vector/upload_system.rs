@@ -7,7 +7,7 @@ use crate::{
     coords::ViewRegion,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        shaders::{ShaderFeatureStyle, ShaderLayerMetadata, Vec4f32},
+        shaders::{FillShaderFeatureMetadata, ShaderLayerMetadata, Vec4f32},
         tile_view_pattern::DEFAULT_TILE_SIZE,
         Renderer,
     },
@@ -182,7 +182,7 @@ fn upload_tessellated_layer(
             let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual features
                 .enumerate()
                 .flat_map(|(i, _feature)| {
-                    iter::repeat(ShaderFeatureStyle {
+                    iter::repeat(FillShaderFeatureMetadata {
                         color: color.unwrap(),
                     })
                     .take(feature_indices[i] as usize)
@@ -200,7 +200,9 @@ fn upload_tessellated_layer(
                 *coords,
                 style_layer.clone(),
                 buffer,
-                ShaderLayerMetadata::new(style_layer.index as f32),
+                ShaderLayerMetadata {
+                    z_index: style_layer.index as f32,
+                },
                 &feature_metadata,
             );
         }
