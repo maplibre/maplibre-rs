@@ -150,7 +150,14 @@ fn upload_tessellated_layer(
             .collect::<Vec<_>>();
 
         for style_layer in &style.layers {
-            let source_layer = style_layer.source_layer.as_ref().unwrap(); // TODO: Unwrap
+            let layer_id = &style_layer.id;
+            let source_layer = match style_layer.source_layer.as_ref() {
+                Some(layer) => layer,
+                None => {
+                    log::trace!("style layer {layer_id} does not have a source layer");
+                    continue
+                },
+            };
 
             let Some(AvailableVectorLayerData {
                 coords,
