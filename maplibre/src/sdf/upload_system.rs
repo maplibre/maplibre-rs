@@ -15,6 +15,7 @@ use crate::{
     style::Style,
     tcs::tiles::Tiles,
 };
+use crate::render::view_state::ViewStatePadding;
 
 pub fn upload_system(
     MapContext {
@@ -33,7 +34,7 @@ pub fn upload_system(
     };
 
     let view_region =
-        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
+        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE), ViewStatePadding::Loose);
 
     if let Some(view_region) = &view_region {
         upload_symbol_layer(

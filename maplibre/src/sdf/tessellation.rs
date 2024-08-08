@@ -221,7 +221,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyP
         name: &str,
         value: &ColumnValue,
     ) -> geozero::error::Result<bool> {
-        if name == "name:latin" {
+        if name == "name" {
             // TODO: Support different tags
             match value {
                 ColumnValue::String(str) => {
