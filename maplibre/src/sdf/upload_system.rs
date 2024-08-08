@@ -7,15 +7,15 @@ use crate::{
     coords::ViewRegion,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        shaders::{ShaderLayerMetadata},
+        shaders::ShaderLayerMetadata,
         tile_view_pattern::DEFAULT_TILE_SIZE,
+        view_state::ViewStatePadding,
         Renderer,
     },
     sdf::{SymbolBufferPool, SymbolLayerData, SymbolLayersDataComponent},
     style::Style,
     tcs::tiles::Tiles,
 };
-use crate::render::view_state::ViewStatePadding;
 
 pub fn upload_system(
     MapContext {
@@ -33,8 +33,10 @@ pub fn upload_system(
         return;
     };
 
-    let view_region =
-        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE), ViewStatePadding::Loose);
+    let view_region = view_state.create_view_region(
+        view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
+        ViewStatePadding::Loose,
+    );
 
     if let Some(view_region) = &view_region {
         upload_symbol_layer(
@@ -77,8 +79,8 @@ fn upload_symbol_layer(
                 Some(layer) => layer,
                 None => {
                     log::trace!("style layer {layer_id} does not have a source layer");
-                    continue
-                },
+                    continue;
+                }
             };
 
             let Some(SymbolLayerData {
@@ -94,12 +96,11 @@ fn upload_symbol_layer(
             };
 
             // Assign every feature in the layer the color from the style
-            let feature_metadata = features.iter()
+            let feature_metadata = features
+                .iter()
                 .flat_map(|(feature)| {
-                    iter::repeat(crate::render::shaders::SDFShaderFeatureMetadata {
-                        opacity: 1.0,
-                    })
-                    .take(feature.indices.end)
+                    iter::repeat(crate::render::shaders::SDFShaderFeatureMetadata { opacity: 1.0 })
+                        .take(feature.indices.end)
                 })
                 .collect::<Vec<_>>();
 

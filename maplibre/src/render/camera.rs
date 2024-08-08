@@ -61,6 +61,10 @@ impl ModelViewProjection {
             .cast::<f32>()
             .expect("Unable to cast view projection to f32")
     }
+
+    pub fn get(&self) -> Matrix4<f64> {
+        self.0
+    }
 }
 
 const MIN_PITCH: Deg<f64> = Deg(-30.0);

@@ -51,7 +51,8 @@ fn main(in: VertexOutput) -> Output {
     //     discard;
     // }
 
-    return Output(vec4(color_rgb, in.color.a * alpha * in.opacity));
+    //return Output(vec4(color_rgb, in.color.a * alpha * in.opacity));
+    return Output(vec4(outline_color, 0.2)); // debug bounding box, alpha 0.2 to see collisions
 }
 
 
