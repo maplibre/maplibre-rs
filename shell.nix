@@ -32,11 +32,13 @@ in
       cargoHash = "sha256-aACJ+lYNEU8FFBs158G1/JG8sc6Rq080PeKCMnwdpH0=";
     })
     pkgs.cargo-criterion
-    unstable.tracy
     unstable.nixpkgs-fmt # To format this file: nixpkgs-fmt *.nix
     # System dependencies
     unstable.flatbuffers
     unstable.protobuf
+
+    unstable.tracy-x11
+    unstable.renderdoc
 
     pkgs.jdk17
 
