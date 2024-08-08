@@ -21,6 +21,13 @@ use crate::{
 const VIEW_REGION_PADDING: i32 = 1;
 const MAX_N_TILES: usize = 512;
 
+pub enum ViewStatePadding {
+    // This is helpful for loading a set of tiles.
+    Loose,
+    // This is helpful for rendering a set of tiles.
+    Tight
+}
+
 pub struct ViewState {
     zoom: ChangeObserver<Zoom>,
     camera: ChangeObserver<Camera>,
@@ -70,12 +77,15 @@ impl ViewState {
         self.height = size.height() as f64;
     }
 
-    pub fn create_view_region(&self, visible_level: ZoomLevel) -> Option<ViewRegion> {
+    pub fn create_view_region(&self, visible_level: ZoomLevel, padding: ViewStatePadding) -> Option<ViewRegion> {
         self.view_region_bounding_box(&self.view_projection().invert())
             .map(|bounding_box| {
                 ViewRegion::new(
                     bounding_box,
-                    VIEW_REGION_PADDING,
+                    match padding{
+                        ViewStatePadding::Loose => VIEW_REGION_PADDING,
+                        ViewStatePadding::Tight => 0
+                    },
                     MAX_N_TILES,
                     *self.zoom,
                     visible_level,

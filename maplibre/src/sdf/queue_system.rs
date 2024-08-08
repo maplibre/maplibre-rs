@@ -3,7 +3,7 @@ use crate::{
     context::MapContext,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        render_phase::{DrawState, RenderPhase, TileMaskItem, TranslucentItem},
+        render_phase::{DrawState, RenderPhase, TranslucentItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
     sdf::{render_commands::DrawSymbols, SymbolBufferPool},
@@ -13,12 +13,10 @@ use crate::{
 pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
     let Some((
         Initialized(tile_view_pattern),
-        mask_phase,
         translucent_phase,
         Initialized(symbol_buffer_pool),
     )) = world.resources.query_mut::<(
         &mut Eventually<WgpuTileViewPattern>,
-        &mut RenderPhase<TileMaskItem>,
         &mut RenderPhase<TranslucentItem>,
         &mut Eventually<SymbolBufferPool>,
     )>()

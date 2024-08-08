@@ -19,6 +19,7 @@ use crate::{
     style::layer::LayerPaint,
     tcs::system::System,
 };
+use crate::render::view_state::ViewStatePadding;
 
 pub struct RequestSystem<E: Environment, T: RasterTransferables> {
     kernel: Rc<Kernel<E>>,
@@ -49,7 +50,7 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
         }: &mut MapContext,
     ) {
         let view_region =
-            view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
+            view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE), ViewStatePadding::Loose);
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {

@@ -7,6 +7,7 @@ use crate::{
         tile_view_pattern::{ViewTileSources, WgpuTileViewPattern, DEFAULT_TILE_SIZE},
     },
 };
+use crate::render::view_state::ViewStatePadding;
 
 pub fn tile_view_pattern_system(
     MapContext {
@@ -19,8 +20,10 @@ pub fn tile_view_pattern_system(
     else {
         return;
     };
+
+    // Create the tile view pattern only for tiles in view -> Tight
     let view_region =
-        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
+        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE), ViewStatePadding::Tight);
 
     if let Some(view_region) = &view_region {
         let zoom = view_state.zoom();
