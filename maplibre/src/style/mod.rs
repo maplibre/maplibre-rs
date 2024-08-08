@@ -142,7 +142,7 @@ impl Default for Style {
                     metadata: None,
                     paint: Some(LayerPaint::Raster(RasterPaint::default())),
                     source: None,
-                    source_layer: Some("raster".to_string()),
+                    source_layer: None,
                 },
                 StyleLayer {
                     index: 9,
@@ -152,7 +152,17 @@ impl Default for Style {
                     metadata: None,
                     paint: Some(LayerPaint::Symbol(SymbolPaint {})),
                     source: None,
-                    source_layer: Some("transportation_name".to_string()),
+                    source_layer: Some("place".to_string()),
+                },
+                StyleLayer {
+                    index: 10,
+                    id: "text".to_string(),
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Symbol(SymbolPaint {})),
+                    source: None,
+                    source_layer: Some("transportation_name-disabled".to_string()),
                 },
             ],
         }
