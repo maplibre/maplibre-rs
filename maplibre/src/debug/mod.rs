@@ -2,8 +2,8 @@ use std::{ops::Deref, rc::Rc};
 
 use crate::{
     debug::{
-        cleanup_system::cleanup_system, debug_pass::DebugPassNode, queue_system::queue_system,
-        resource_system::resource_system,
+        cleanup_system::cleanup_system, debug_pass::DebugPassNode, fps_system::fps_system,
+        queue_system::queue_system, resource_system::resource_system,
     },
     environment::Environment,
     kernel::Kernel,
@@ -17,16 +17,15 @@ use crate::{
     },
     schedule::Schedule,
     tcs::world::World,
+    util::FPSMeter,
 };
-use crate::debug::fps_system::fps_system;
-use crate::util::FPSMeter;
 
 mod cleanup_system;
 mod debug_pass;
+mod fps_system;
 mod queue_system;
 mod render_commands;
 mod resource_system;
-mod fps_system;
 
 /// Labels for the "draw" graph
 mod draw_graph {
@@ -93,7 +92,6 @@ impl<E: Environment> Plugin<E> for DebugPlugin {
         schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system);
         schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system);
         schedule.add_system_to_stage(RenderStageLabel::Cleanup, cleanup_system);
-
 
         resources.insert(FPSMeter::new());
         schedule.add_system_to_stage(RenderStageLabel::Cleanup, fps_system);
