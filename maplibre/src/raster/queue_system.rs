@@ -9,15 +9,18 @@ use crate::{
         render_phase::{DrawState, LayerItem, RenderPhase, TileMaskItem},
         tile_view_pattern::WgpuTileViewPattern,
     },
-    tcs::tiles::Tile,
+    tcs::{
+        system::{SystemError, SystemResult},
+        tiles::Tile,
+    },
 };
 
-pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
+pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
     let Some((Initialized(tile_view_pattern),)) = world
         .resources
         .query::<(&Eventually<WgpuTileViewPattern>,)>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     let mut items = Vec::new();
@@ -52,11 +55,13 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
         .resources
         .query_mut::<(&mut RenderPhase<LayerItem>, &mut RenderPhase<TileMaskItem>)>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     for (layer, mask) in items {
         layer_item_phase.add(layer);
         tile_mask_phase.add(mask);
     }
+
+    Ok(())
 }

@@ -3,8 +3,10 @@ use std::borrow::Cow;
 use cgmath::{Matrix3, Vector3};
 
 use crate::{
-    context::MapContext, coords::WorldTileCoords, sdf::SymbolLayersDataComponent,
-    tcs::system::System,
+    context::MapContext,
+    coords::WorldTileCoords,
+    sdf::SymbolLayersDataComponent,
+    tcs::system::{System, SystemResult},
 };
 
 pub struct CollisionSystem {}
@@ -25,7 +27,7 @@ impl System for CollisionSystem {
         MapContext {
             world, view_state, ..
         }: &mut MapContext,
-    ) {
+    ) -> SystemResult {
         let coords = WorldTileCoords {
             x: 4193,
             y: 2746,
@@ -70,5 +72,6 @@ impl System for CollisionSystem {
                 }
             }
         }
+        Ok(())
     }
 }

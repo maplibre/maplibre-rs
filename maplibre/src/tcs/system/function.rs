@@ -1,6 +1,9 @@
 use std::{any::type_name, borrow::Cow};
 
-use crate::{context::MapContext, tcs::system::System};
+use crate::{
+    context::MapContext,
+    tcs::system::{System, SystemResult},
+};
 
 /// Conversion trait to turn something into a [`System`].
 ///
@@ -18,20 +21,20 @@ pub struct FunctionSystem<F> {
 
 impl<F> System for FunctionSystem<F>
 where
-    F: FnMut(&mut MapContext) + 'static,
+    F: FnMut(&mut MapContext) -> SystemResult + 'static,
 {
     fn name(&self) -> Cow<'static, str> {
         type_name::<F>().into()
     }
 
-    fn run(&mut self, context: &mut MapContext) {
+    fn run(&mut self, context: &mut MapContext) -> SystemResult {
         (self.func)(context)
     }
 }
 
 impl<F> IntoSystem for F
 where
-    F: FnMut(&mut MapContext) + 'static,
+    F: FnMut(&mut MapContext) -> SystemResult + 'static,
 {
     type System = FunctionSystem<F>;
 

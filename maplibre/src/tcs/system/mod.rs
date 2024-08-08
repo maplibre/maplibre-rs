@@ -1,16 +1,26 @@
 use std::borrow::Cow;
 
+use thiserror::Error;
+
 use crate::{context::MapContext, tcs::system::function::IntoSystem};
 
 mod function;
 pub mod stage;
+
+#[derive(Error, Debug)]
+pub enum SystemError {
+    #[error("dependencies were not resolvable")]
+    Dependencies,
+}
+
+pub type SystemResult = Result<(), SystemError>;
 
 /// An system that can be added to a [`Schedule`](crate::schedule::Schedule)
 pub trait System: 'static {
     /// Returns the system's name.
     fn name(&self) -> Cow<'static, str>;
 
-    fn run(&mut self, context: &mut MapContext);
+    fn run(&mut self, context: &mut MapContext) -> SystemResult;
 }
 
 /// A convenience type alias for a boxed [`System`] trait object.

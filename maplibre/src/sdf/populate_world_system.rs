@@ -6,7 +6,7 @@ use crate::{
     io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
     sdf::SymbolLayersDataComponent,
-    tcs::system::System,
+    tcs::system::{System, SystemResult},
     vector::transferables::*,
 };
 
@@ -29,7 +29,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
         "sdf_populate_world_system".into()
     }
 
-    fn run(&mut self, MapContext { world, .. }: &mut MapContext) {
+    fn run(&mut self, MapContext { world, .. }: &mut MapContext) -> SystemResult {
         for message in self.kernel.apc().receive(|message| {
             message.has_tag(T::SymbolLayerTessellated::message_tag())
                 || message.has_tag(T::LayerIndexed::message_tag())
@@ -48,5 +48,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
                 component.layers.push(message.to_layer());
             }
         }
+
+        Ok(())
     }
 }

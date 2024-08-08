@@ -10,6 +10,7 @@ use crate::{
         shaders::Shader,
         RenderResources, Renderer,
     },
+    tcs::system::{SystemError, SystemResult},
 };
 
 pub fn resource_system(
@@ -24,12 +25,12 @@ pub fn resource_system(
             },
         ..
     }: &mut MapContext,
-) {
+) -> SystemResult {
     let Some(raster_resources) = world
         .resources
         .query_mut::<&mut Eventually<RasterResources>>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     raster_resources.initialize(|| {
@@ -57,4 +58,5 @@ pub fn resource_system(
             .initialize(device),
         )
     });
+    Ok(())
 }
