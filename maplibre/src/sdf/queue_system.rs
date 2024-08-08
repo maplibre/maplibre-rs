@@ -7,10 +7,13 @@ use crate::{
         tile_view_pattern::WgpuTileViewPattern,
     },
     sdf::{render_commands::DrawSymbols, SymbolBufferPool},
-    tcs::tiles::Tile,
+    tcs::{
+        system::{SystemError, SystemResult},
+        tiles::Tile,
+    },
 };
 
-pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
+pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
     let Some((Initialized(tile_view_pattern), translucent_phase, Initialized(symbol_buffer_pool))) =
         world.resources.query_mut::<(
             &mut Eventually<WgpuTileViewPattern>,
@@ -18,7 +21,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
             &mut Eventually<SymbolBufferPool>,
         )>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     for view_tile in tile_view_pattern.iter() {
@@ -45,4 +48,5 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
             };
         });
     }
+    Ok(())
 }

@@ -13,7 +13,7 @@ use crate::{
     render::{tile_view_pattern::DEFAULT_TILE_SIZE, view_state::ViewStatePadding},
     sdf::SymbolLayersDataComponent,
     style::layer::StyleLayer,
-    tcs::system::System,
+    tcs::system::{System, SystemResult},
     vector::{
         process_vector::{process_vector_tile, ProcessVectorContext, VectorTileRequest},
         transferables::{LayerMissing, VectorTransferables},
@@ -48,7 +48,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
             world,
             ..
         }: &mut MapContext,
-    ) {
+    ) -> SystemResult {
         let _tiles = &mut world.tiles;
         let view_region = view_state.create_view_region(
             view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
@@ -104,6 +104,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
         }
 
         view_state.update_references();
+        Ok(())
     }
 }
 

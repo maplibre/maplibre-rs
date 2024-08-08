@@ -1,17 +1,20 @@
 use std::collections::HashMap;
 
 use downcast_rs::{impl_downcast, Downcast};
+use thiserror::Error;
 
 use crate::{
     context::MapContext,
     define_label,
-    tcs::system::{stage::SystemStage, IntoSystemContainer},
+    tcs::system::{stage::SystemStage, IntoSystemContainer, SystemError},
 };
 
 pub struct NopStage;
 
 impl Stage for NopStage {
-    fn run(&mut self, _context: &mut MapContext) {}
+    fn run(&mut self, _context: &mut MapContext) -> StageResult {
+        Ok(())
+    }
 }
 
 #[macro_export]
@@ -57,20 +60,30 @@ impl<const I: usize, S> Stage for MultiStage<I, S>
 where
     S: Stage,
 {
-    fn run(&mut self, context: &mut MapContext) {
+    fn run(&mut self, context: &mut MapContext) -> StageResult {
         for stage in self.stages.iter_mut() {
-            stage.run(context)
+            stage.run(context)?
         }
+
+        Ok(())
     }
 }
 
 define_label!(StageLabel);
 pub(crate) type BoxedStageLabel = Box<dyn StageLabel>;
 
+#[derive(Error, Debug)]
+pub enum StageError {
+    #[error("system errored")]
+    System(#[from] SystemError),
+}
+
+pub type StageResult = Result<(), StageError>;
+
 pub trait Stage: Downcast {
     /// Runs the stage; this happens once per update.
     /// Implementors must initialize all of their state before running the first time.
-    fn run(&mut self, context: &mut MapContext);
+    fn run(&mut self, context: &mut MapContext) -> StageResult;
 }
 
 impl_downcast!(Stage);
@@ -257,13 +270,14 @@ impl Schedule {
     }
 
     /// Executes each [`Stage`] contained in the schedule, one at a time.
-    pub fn run_once(&mut self, context: &mut MapContext) {
+    pub fn run_once(&mut self, context: &mut MapContext) -> StageResult {
         for label in &self.stage_order {
             #[cfg(feature = "trace")]
             let _stage_span = tracing::info_span!("stage", name = ?label).entered();
             let stage = self.stages.get_mut(label).unwrap(); // TODO: Remove unwrap
-            stage.run(context);
+            stage.run(context)?;
         }
+        Ok(())
     }
 
     pub fn clear(&mut self) {
@@ -309,7 +323,8 @@ impl Schedule {
 }
 
 impl Stage for Schedule {
-    fn run(&mut self, context: &mut MapContext) {
-        self.run_once(context);
+    fn run(&mut self, context: &mut MapContext) -> StageResult {
+        self.run_once(context)?;
+        Ok(())
     }
 }

@@ -7,7 +7,7 @@ use log::error;
 use crate::{
     context::MapContext,
     render::{eventually::Eventually::Initialized, graph_runner::RenderGraphRunner, Renderer},
-    tcs::system::System,
+    tcs::system::{System, SystemError, SystemResult},
 };
 
 /// Updates the [`RenderGraph`] with all of its nodes and then runs it to render the entire frame.
@@ -33,7 +33,7 @@ impl System for GraphRunnerSystem {
                 },
             ..
         }: &mut MapContext,
-    ) {
+    ) -> SystemResult {
         render_graph.update(state);
 
         if let Err(e) = RenderGraphRunner::run(render_graph, device, queue, state, world) {
@@ -57,18 +57,22 @@ impl System for GraphRunnerSystem {
         {
             let _span = tracing::info_span!("present_frames").entered();
 
-            if let Initialized(render_target) = state.render_target.take() {
-                if let Some(surface_texture) = render_target.take_surface_texture() {
-                    surface_texture.present();
-                }
+            let Initialized(render_target) = state.render_target.take() else {
+                return Err(SystemError::Dependencies);
+            };
 
-                #[cfg(feature = "tracing-tracy")]
-                tracing::event!(
-                    tracing::Level::INFO,
-                    message = "finished frame",
-                    tracy.frame_mark = true
-                );
+            if let Some(surface_texture) = render_target.take_surface_texture() {
+                surface_texture.present();
             }
+
+            #[cfg(feature = "tracing-tracy")]
+            tracing::event!(
+                tracing::Level::INFO,
+                message = "finished frame",
+                tracy.frame_mark = true
+            );
+
+            Ok(())
         }
     }
 }

@@ -13,7 +13,10 @@ use crate::{
         Renderer,
     },
     style::Style,
-    tcs::tiles::Tiles,
+    tcs::{
+        system::{SystemError, SystemResult},
+        tiles::Tiles,
+    },
     vector::{
         AvailableVectorLayerData, VectorBufferPool, VectorLayerData, VectorLayersDataComponent,
     },
@@ -27,12 +30,12 @@ pub fn upload_system(
         renderer: Renderer { device, queue, .. },
         ..
     }: &mut MapContext,
-) {
+) -> SystemResult {
     let Some(Initialized(buffer_pool)) = world
         .resources
         .query_mut::<&mut Eventually<VectorBufferPool>>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     let view_region = view_state.create_view_region(
@@ -51,6 +54,8 @@ pub fn upload_system(
         );
         // self.update_metadata(state, tile_repository, queue);
     }
+
+    Ok(())
 }
 
 /* FIXME tcs fn update_metadata(

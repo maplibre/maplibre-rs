@@ -11,6 +11,7 @@ use crate::{
         RenderResources, Renderer,
     },
     sdf::{resource::GlyphTexture, text::GlyphSet, SymbolBufferPool, SymbolPipeline},
+    tcs::system::{SystemError, SystemResult},
     vector::resource::BufferPool,
 };
 
@@ -27,7 +28,7 @@ pub fn resource_system(
             },
         ..
     }: &mut MapContext,
-) {
+) -> SystemResult {
     let Some((
         symbol_buffer_pool,
         symbol_pipeline,
@@ -40,7 +41,7 @@ pub fn resource_system(
         &mut Eventually<GlyphTexture>,
     )>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     symbol_buffer_pool.initialize(|| BufferPool::from_device(device));
@@ -108,4 +109,5 @@ pub fn resource_system(
 
         SymbolPipeline(pipeline)
     });
+    Ok(())
 }

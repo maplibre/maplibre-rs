@@ -96,7 +96,7 @@ impl HeadlessMap {
                     .collect::<Vec<_>>(),
             });
 
-        self.schedule.run(context);
+        self.schedule.run(context).expect("schedule must not error");
 
         let resources = &mut context.world.resources;
         let tiles = &mut context.world.tiles;
