@@ -9,12 +9,12 @@ use crate::{
     render::{
         eventually::{Eventually, Eventually::Initialized},
         tile_view_pattern::DEFAULT_TILE_SIZE,
+        view_state::ViewStatePadding,
         Renderer,
     },
     style::Style,
     tcs::tiles::Tiles,
 };
-use crate::render::view_state::ViewStatePadding;
 
 pub fn upload_system(
     MapContext {
@@ -31,8 +31,10 @@ pub fn upload_system(
     else {
         return;
     };
-    let view_region =
-        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE), ViewStatePadding::Loose);
+    let view_region = view_state.create_view_region(
+        view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
+        ViewStatePadding::Loose,
+    );
 
     if let Some(view_region) = &view_region {
         upload_raster_layer(

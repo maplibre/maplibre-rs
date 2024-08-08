@@ -9,6 +9,7 @@ use crate::{
         eventually::{Eventually, Eventually::Initialized},
         shaders::{FillShaderFeatureMetadata, ShaderLayerMetadata, Vec4f32},
         tile_view_pattern::DEFAULT_TILE_SIZE,
+        view_state::ViewStatePadding,
         Renderer,
     },
     style::Style,
@@ -17,7 +18,6 @@ use crate::{
         AvailableVectorLayerData, VectorBufferPool, VectorLayerData, VectorLayersDataComponent,
     },
 };
-use crate::render::view_state::ViewStatePadding;
 
 pub fn upload_system(
     MapContext {
@@ -35,8 +35,10 @@ pub fn upload_system(
         return;
     };
 
-    let view_region =
-        view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE), ViewStatePadding::Loose);
+    let view_region = view_state.create_view_region(
+        view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
+        ViewStatePadding::Loose,
+    );
 
     if let Some(view_region) = &view_region {
         upload_tessellated_layer(
@@ -156,8 +158,8 @@ fn upload_tessellated_layer(
                 Some(layer) => layer,
                 None => {
                     log::trace!("style layer {layer_id} does not have a source layer");
-                    continue
-                },
+                    continue;
+                }
             };
 
             let Some(AvailableVectorLayerData {

@@ -459,13 +459,17 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
 
     fn to_layer(self) -> SymbolLayerData {
         let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
-        let vertices = data.vertices().unwrap().iter().map(|vertex| ShaderSymbolVertex {
-            position: vertex.position().into(),
-            text_anchor: vertex.text_anchor().into(),
-            tex_coords: vertex.tex_coords().into(),
-            color: vertex.color().into(),
-            is_glyph: vertex.is_glyph(),
-        });
+        let vertices = data
+            .vertices()
+            .unwrap()
+            .iter()
+            .map(|vertex| ShaderSymbolVertex {
+                position: vertex.position().into(),
+                text_anchor: vertex.text_anchor().into(),
+                tex_coords: vertex.tex_coords().into(),
+                color: vertex.color().into(),
+                is_glyph: vertex.is_glyph(),
+            });
 
         let indices = data.indices().unwrap();
         let feature_indices: Vec<u32> = data.feature_indices().unwrap().iter().collect();

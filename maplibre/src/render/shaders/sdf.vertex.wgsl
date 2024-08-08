@@ -33,6 +33,5 @@ fn main(
     final_position.z = z_index;
 
     let white = vec4<f32>(1.0, 1.0, 1.0, 1.0);
-    let black = vec4<f32>(0.0, 0.0, 0.0, 1.0);
     return VertexOutput(tex_coords, white, opacity, final_position);
 }

@@ -13,7 +13,7 @@ use crate::{
         geometry_index::{IndexProcessor, IndexedGeometry, TileIndex},
     },
     render::{shaders::ShaderSymbolVertex, ShaderVertex},
-    sdf::tessellation::TextTessellator,
+    sdf::{tessellation::TextTessellator, Feature},
     style::layer::{LayerPaint, StyleLayer},
     vector::{
         tessellation::{IndexDataType, OverAlignedVertexBuffer, ZeroTessellator},
@@ -23,7 +23,6 @@ use crate::{
         },
     },
 };
-use crate::sdf::Feature;
 
 #[derive(Error, Debug)]
 pub enum ProcessVectorError {
@@ -203,10 +202,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
     ) -> Result<(), ProcessVectorError> {
         self.context
             .send(T::SymbolLayerTessellated::build_from(
-                *coords,
-                buffer,
-                features,
-                layer_data,
+                *coords, buffer, features, layer_data,
             ))
             .map_err(|e| ProcessVectorError::SendError(e))
     }

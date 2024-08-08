@@ -10,7 +10,7 @@ use crate::{
         source_type::{SourceType, TessellateSource},
     },
     kernel::Kernel,
-    render::tile_view_pattern::DEFAULT_TILE_SIZE,
+    render::{tile_view_pattern::DEFAULT_TILE_SIZE, view_state::ViewStatePadding},
     sdf::SymbolLayersDataComponent,
     style::layer::StyleLayer,
     tcs::system::System,
@@ -20,7 +20,6 @@ use crate::{
         VectorLayersDataComponent,
     },
 };
-use crate::render::view_state::ViewStatePadding;
 
 pub struct RequestSystem<E: Environment, T> {
     kernel: Rc<Kernel<E>>,
@@ -51,8 +50,10 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
         }: &mut MapContext,
     ) {
         let _tiles = &mut world.tiles;
-        let view_region =
-            view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE), ViewStatePadding::Loose);
+        let view_region = view_state.create_view_region(
+            view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
+            ViewStatePadding::Loose,
+        );
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {

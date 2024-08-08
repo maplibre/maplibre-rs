@@ -10,9 +10,11 @@ use lyon::{
 
 use crate::{
     render::shaders::ShaderSymbolVertex,
-    sdf::text::{Anchor, Glyph, GlyphSet, SymbolVertexBuilder},
+    sdf::{
+        text::{Anchor, Glyph, GlyphSet, SymbolVertexBuilder},
+        Feature,
+    },
 };
-use crate::sdf::Feature;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 
@@ -151,14 +153,13 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
     for TextTessellator<I>
 {
     fn xy(&mut self, x: f64, y: f64, _idx: usize) -> GeoResult<()> {
-        let new_box = Box2D::new(
-            Point2D::new(x as f32, y as f32),
-            Point2D::new(x as f32, y as f32),
-        );
         if let Some(_) = self.current_origin {
             unreachable!("Text labels have only a single origin point")
         } else {
-            self.current_origin = Some(new_box)
+            self.current_origin = Some(Box2D::new(
+                Point2D::new(x as f32, y as f32),
+                Point2D::new(x as f32, y as f32),
+            ))
         }
 
         Ok(())
@@ -260,11 +261,11 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
 
             // We only add a feature
 
-                self.features.push(Feature {
-                    bbox: bbox.unwrap_or(Box2D::new(origin, origin)),
-                    indices: start..end
-                });
-
+            self.features.push(Feature {
+                bbox: bbox.unwrap_or(Box2D::new(origin, origin)),
+                indices: start..end,
+                text_anchor: origin.cast(),
+            });
 
             self.current_origin = None;
             self.current_text = None;

@@ -1,6 +1,13 @@
-use std::{marker::PhantomData, ops::Deref, rc::Rc};
-use std::ops::Range;
-use lyon::geom::Box2D;
+use std::{
+    marker::PhantomData,
+    ops::{Deref, Range},
+    rc::Rc,
+};
+
+use lyon::geom::{
+    euclid::{Point2D, UnknownUnit},
+    Box2D,
+};
 
 use crate::{
     coords::WorldTileCoords,
@@ -10,7 +17,7 @@ use crate::{
     render::{
         eventually::Eventually,
         graph::RenderGraph,
-        shaders::{ShaderLayerMetadata, ShaderSymbolVertex},
+        shaders::{SDFShaderFeatureMetadata, ShaderLayerMetadata, ShaderSymbolVertex},
         RenderStageLabel,
     },
     schedule::Schedule,
@@ -22,7 +29,6 @@ use crate::{
         VectorTransferables,
     },
 };
-use crate::render::shaders::SDFShaderFeatureMetadata;
 
 mod populate_world_system;
 mod queue_system;
@@ -32,6 +38,7 @@ mod resource_system;
 mod upload_system;
 
 // Public due to bechmarks
+mod collision_system;
 pub mod tessellation;
 mod text;
 
@@ -79,22 +86,18 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for SdfPlugin<T> {
 
         schedule.add_system_to_stage(
             RenderStageLabel::Extract,
-            SystemContainer::new(
-                populate_world_system::PopulateWorldSystem::<E, T>::new(&kernel),
-            ),
+            SystemContainer::new(populate_world_system::PopulateWorldSystem::<E, T>::new(
+                &kernel,
+            )),
         );
+
+        schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system::resource_system);
+        schedule.add_system_to_stage(RenderStageLabel::Queue, upload_system::upload_system); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
+        schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system::queue_system);
 
         schedule.add_system_to_stage(
             RenderStageLabel::Prepare,
-            resource_system::resource_system,
-        );
-        schedule.add_system_to_stage(
-            RenderStageLabel::Queue,
-            upload_system::upload_system,
-        ); // FIXME tcs: Upload updates the TileView in tileviewpattern -> upload most run before prepare
-        schedule.add_system_to_stage(
-            RenderStageLabel::Queue,
-            queue_system::queue_system,
+            SystemContainer::new(collision_system::CollisionSystem::new()),
         );
     }
 }
@@ -102,13 +105,14 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for SdfPlugin<T> {
 pub struct Feature {
     pub bbox: Box2D<f32>,
     pub indices: Range<usize>,
+    pub text_anchor: Point2D<f32, UnknownUnit>,
 }
 
 pub struct SymbolLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
     pub buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
-    pub features: Vec<Feature>
+    pub features: Vec<Feature>,
 }
 
 #[derive(Default)]

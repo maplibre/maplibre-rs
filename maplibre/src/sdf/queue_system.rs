@@ -11,15 +11,12 @@ use crate::{
 };
 
 pub fn queue_system(MapContext { world, .. }: &mut MapContext) {
-    let Some((
-        Initialized(tile_view_pattern),
-        translucent_phase,
-        Initialized(symbol_buffer_pool),
-    )) = world.resources.query_mut::<(
-        &mut Eventually<WgpuTileViewPattern>,
-        &mut RenderPhase<TranslucentItem>,
-        &mut Eventually<SymbolBufferPool>,
-    )>()
+    let Some((Initialized(tile_view_pattern), translucent_phase, Initialized(symbol_buffer_pool))) =
+        world.resources.query_mut::<(
+            &mut Eventually<WgpuTileViewPattern>,
+            &mut RenderPhase<TranslucentItem>,
+            &mut Eventually<SymbolBufferPool>,
+        )>()
     else {
         return;
     };
