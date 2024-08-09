@@ -39,6 +39,7 @@ mod upload_system;
 
 // Public due to bechmarks
 mod collision_system;
+mod grid_index;
 pub mod tessellation;
 mod text;
 
