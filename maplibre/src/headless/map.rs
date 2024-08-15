@@ -17,9 +17,9 @@ use crate::{
     style::{layer::StyleLayer, Style},
     tcs::world::World,
     vector::{
-        process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
-        LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
-        VectorLayersDataComponent, VectorTileRequest, VectorTransferables,
+        process_vector_tile, AvailableVectorLayerBucket, DefaultVectorTransferables,
+        LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerBucket,
+        VectorLayerBucketComponent, VectorTileRequest, VectorTransferables,
     },
 };
 
@@ -81,12 +81,12 @@ impl HeadlessMap {
         tiles
             .spawn_mut((0, 0, ZoomLevel::default()).into())
             .expect("unable to spawn tile")
-            .insert(VectorLayersDataComponent {
+            .insert(VectorLayerBucketComponent {
                 done: true,
                 layers: layers
                     .into_iter()
                     .map(|layer| {
-                        VectorLayerData::AvailableLayer(AvailableVectorLayerData {
+                        VectorLayerBucket::AvailableLayer(AvailableVectorLayerBucket {
                             coords: layer.coords,
                             source_layer: layer.layer_data.name,
                             buffer: layer.buffer,

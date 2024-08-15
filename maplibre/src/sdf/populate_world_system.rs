@@ -45,7 +45,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
                     continue;
                 };
 
-                component.layers.push(message.to_layer());
+                component.layers.push(message.to_bucket());
             }
         }
 

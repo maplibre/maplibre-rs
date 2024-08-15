@@ -18,8 +18,8 @@ use maplibre::{
     sdf::SymbolLayerData,
     tile::Layer,
     vector::{
-        AvailableVectorLayerData, LayerIndexed, LayerMissing, LayerTessellated,
-        MissingVectorLayerData, SymbolLayerTessellated, TileTessellated, VectorTransferables,
+        AvailableVectorLayerBucket, LayerIndexed, LayerMissing, LayerTessellated,
+        MissingVectorLayerBucket, SymbolLayerTessellated, TileTessellated, VectorTransferables,
     },
 };
 
@@ -167,8 +167,8 @@ impl LayerMissing for FlatBufferTransferable {
         data.layer_name().expect("property must be set")
     }
 
-    fn to_layer(self) -> MissingVectorLayerData {
-        MissingVectorLayerData {
+    fn to_bucket(self) -> MissingVectorLayerBucket {
+        MissingVectorLayerBucket {
             source_layer: self.layer_name().to_owned(),
             coords: LayerMissing::coords(&self),
         }
@@ -245,7 +245,7 @@ impl LayerTessellated for FlatBufferTransferable {
         data.usable_indices() == 0
     }
 
-    fn to_layer(self) -> AvailableVectorLayerData {
+    fn to_bucket(self) -> AvailableVectorLayerBucket {
         let data = root_as_flat_layer_tessellated(&self.data[self.start..]).unwrap();
         let vertices = data
             .vertices()
@@ -256,7 +256,7 @@ impl LayerTessellated for FlatBufferTransferable {
         let indices = data.indices().unwrap();
         let feature_indices: Vec<u32> = data.feature_indices().unwrap().iter().collect();
         let usable_indices = data.usable_indices();
-        AvailableVectorLayerData {
+        AvailableVectorLayerBucket {
             coords: LayerTessellated::coords(&self),
             source_layer: data.layer_name().unwrap().to_owned(),
             buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
@@ -457,7 +457,7 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
         data.usable_indices() == 0
     }
 
-    fn to_layer(self) -> SymbolLayerData {
+    fn to_bucket(self) -> SymbolLayerData {
         let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
         let vertices = data
             .vertices()

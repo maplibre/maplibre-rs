@@ -12,7 +12,7 @@ use crate::{
     sdf::{Feature, SymbolLayerData},
     vector::{
         tessellation::{IndexDataType, OverAlignedVertexBuffer},
-        AvailableVectorLayerData, MissingVectorLayerData,
+        AvailableVectorLayerBucket, MissingVectorLayerBucket,
     },
 };
 
@@ -52,7 +52,7 @@ pub trait LayerMissing: IntoMessage + Debug + Send {
 
     fn layer_name(&self) -> &str;
 
-    fn to_layer(self) -> MissingVectorLayerData;
+    fn to_bucket(self) -> MissingVectorLayerBucket;
 }
 
 pub trait LayerTessellated: IntoMessage + Debug + Send {
@@ -71,7 +71,7 @@ pub trait LayerTessellated: IntoMessage + Debug + Send {
 
     fn is_empty(&self) -> bool;
 
-    fn to_layer(self) -> AvailableVectorLayerData;
+    fn to_bucket(self) -> AvailableVectorLayerBucket;
 }
 
 pub trait SymbolLayerTessellated: IntoMessage + Debug + Send {
@@ -90,7 +90,7 @@ pub trait SymbolLayerTessellated: IntoMessage + Debug + Send {
 
     fn is_empty(&self) -> bool;
 
-    fn to_layer(self) -> SymbolLayerData;
+    fn to_bucket(self) -> SymbolLayerData;
 }
 
 pub trait LayerIndexed: IntoMessage + Debug + Send {
@@ -169,8 +169,8 @@ impl LayerMissing for DefaultLayerMissing {
         &self.layer_name
     }
 
-    fn to_layer(self) -> MissingVectorLayerData {
-        MissingVectorLayerData {
+    fn to_bucket(self) -> MissingVectorLayerBucket {
+        MissingVectorLayerBucket {
             coords: self.coords,
             source_layer: self.layer_name,
         }
@@ -225,8 +225,8 @@ impl LayerTessellated for DefaultLayerTessellated {
         self.buffer.usable_indices == 0
     }
 
-    fn to_layer(self) -> AvailableVectorLayerData {
-        AvailableVectorLayerData {
+    fn to_bucket(self) -> AvailableVectorLayerBucket {
+        AvailableVectorLayerBucket {
             coords: self.coords,
             source_layer: self.layer_data.name,
             buffer: self.buffer,
@@ -281,7 +281,7 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
         self.buffer.usable_indices == 0
     }
 
-    fn to_layer(self) -> SymbolLayerData {
+    fn to_bucket(self) -> SymbolLayerData {
         SymbolLayerData {
             coords: self.coords,
             source_layer: self.layer_data.name,
