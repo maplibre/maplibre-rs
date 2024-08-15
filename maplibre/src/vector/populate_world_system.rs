@@ -6,7 +6,7 @@ use crate::{
     io::apc::{AsyncProcedureCall, Message},
     kernel::Kernel,
     tcs::system::{System, SystemResult},
-    vector::{transferables::*, VectorLayerData, VectorLayersDataComponent},
+    vector::{transferables::*, VectorLayerBucket, VectorLayerBucketComponent},
 };
 
 pub struct PopulateWorldSystem<E: Environment, T> {
@@ -40,7 +40,7 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
                 let message = message.into_transferable::<T::TileTessellated>();
                 let Some(component) = world
                     .tiles
-                    .query_mut::<&mut VectorLayersDataComponent>(message.coords())
+                    .query_mut::<&mut VectorLayerBucketComponent>(message.coords())
                 else {
                     continue;
                 };
@@ -50,14 +50,14 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
                 let message = message.into_transferable::<T::LayerMissing>();
                 let Some(component) = world
                     .tiles
-                    .query_mut::<&mut VectorLayersDataComponent>(message.coords())
+                    .query_mut::<&mut VectorLayerBucketComponent>(message.coords())
                 else {
                     continue;
                 };
 
                 component
                     .layers
-                    .push(VectorLayerData::Missing(message.to_layer()));
+                    .push(VectorLayerBucket::Missing(message.to_bucket()));
             } else if message.has_tag(T::LayerTessellated::message_tag()) {
                 let message = message.into_transferable::<T::LayerTessellated>();
                 // FIXME: Handle points!
@@ -67,14 +67,14 @@ impl<E: Environment, T: VectorTransferables> System for PopulateWorldSystem<E, T
 
                 let Some(component) = world
                     .tiles
-                    .query_mut::<&mut VectorLayersDataComponent>(message.coords())
+                    .query_mut::<&mut VectorLayerBucketComponent>(message.coords())
                 else {
                     continue;
                 };
 
                 component
                     .layers
-                    .push(VectorLayerData::AvailableLayer(message.to_layer()));
+                    .push(VectorLayerBucket::AvailableLayer(message.to_bucket()));
             } else if message.has_tag(T::LayerIndexed::message_tag()) {
                 let message = message.into_transferable::<T::LayerIndexed>();
                 world

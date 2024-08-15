@@ -18,7 +18,7 @@ use crate::{
         tiles::Tiles,
     },
     vector::{
-        AvailableVectorLayerData, VectorBufferPool, VectorLayerData, VectorLayersDataComponent,
+        AvailableVectorLayerBucket, VectorBufferPool, VectorLayerBucket, VectorLayerBucketComponent,
     },
 };
 
@@ -139,7 +139,7 @@ fn upload_tessellated_layer(
 ) {
     // Upload all tessellated layers which are in view
     for coords in view_region.iter() {
-        let Some(vector_layers) = tiles.query_mut::<&VectorLayersDataComponent>(coords) else {
+        let Some(vector_layers) = tiles.query_mut::<&VectorLayerBucketComponent>(coords) else {
             continue;
         };
 
@@ -151,8 +151,8 @@ fn upload_tessellated_layer(
             .layers
             .iter()
             .flat_map(|data| match data {
-                VectorLayerData::AvailableLayer(data) => Some(data),
-                VectorLayerData::Missing(_) => None,
+                VectorLayerBucket::AvailableLayer(data) => Some(data),
+                VectorLayerBucket::Missing(_) => None,
             })
             .filter(|data| !loaded_layers.contains(data.source_layer.as_str()))
             .collect::<Vec<_>>();
@@ -167,7 +167,7 @@ fn upload_tessellated_layer(
                 }
             };
 
-            let Some(AvailableVectorLayerData {
+            let Some(AvailableVectorLayerBucket {
                 coords,
                 feature_indices,
                 buffer,

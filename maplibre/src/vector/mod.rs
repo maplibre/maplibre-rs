@@ -76,7 +76,7 @@ struct VectorTilesDone;
 
 impl HasTile for VectorTilesDone {
     fn has_tile(&self, coords: WorldTileCoords, world: &World) -> bool {
-        let Some(vector_layers_indices) = world.tiles.query::<&VectorLayersDataComponent>(coords)
+        let Some(vector_layers_indices) = world.tiles.query::<&VectorLayerBucketComponent>(coords)
         else {
             return false;
         };
@@ -118,7 +118,7 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
     }
 }
 
-pub struct AvailableVectorLayerData {
+pub struct AvailableVectorLayerBucket {
     pub coords: WorldTileCoords,
     pub source_layer: String,
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
@@ -126,20 +126,20 @@ pub struct AvailableVectorLayerData {
     pub feature_indices: Vec<u32>,
 }
 
-pub struct MissingVectorLayerData {
+pub struct MissingVectorLayerBucket {
     pub coords: WorldTileCoords,
     pub source_layer: String,
 }
 
-pub enum VectorLayerData {
-    AvailableLayer(AvailableVectorLayerData),
-    Missing(MissingVectorLayerData),
+pub enum VectorLayerBucket {
+    AvailableLayer(AvailableVectorLayerBucket),
+    Missing(MissingVectorLayerBucket),
 }
 
 #[derive(Default)]
-pub struct VectorLayersDataComponent {
+pub struct VectorLayerBucketComponent {
     pub done: bool,
-    pub layers: Vec<VectorLayerData>,
+    pub layers: Vec<VectorLayerBucket>,
 }
 
-impl TileComponent for VectorLayersDataComponent {}
+impl TileComponent for VectorLayerBucketComponent {}

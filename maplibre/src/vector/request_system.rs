@@ -17,7 +17,7 @@ use crate::{
     vector::{
         process_vector::{process_vector_tile, ProcessVectorContext, VectorTileRequest},
         transferables::{LayerMissing, VectorTransferables},
-        VectorLayersDataComponent,
+        VectorLayerBucketComponent,
     },
 };
 
@@ -67,7 +67,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                     // TODO: Make tesselation depend on style? So maybe we need to request even if it exists
                     if world
                         .tiles
-                        .query::<&VectorLayersDataComponent>(coords)
+                        .query::<&VectorLayerBucketComponent>(coords)
                         .is_some()
                     {
                         continue;
@@ -77,7 +77,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                         .tiles
                         .spawn_mut(coords)
                         .unwrap()
-                        .insert(VectorLayersDataComponent::default())
+                        .insert(VectorLayerBucketComponent::default())
                         .insert(SymbolLayersDataComponent::default());
 
                     tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
