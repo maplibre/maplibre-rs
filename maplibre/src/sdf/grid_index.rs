@@ -1,4 +1,4 @@
-use std::{collections::HashSet, f32};
+use std::{collections::HashSet, f64};
 
 use lyon::geom::{
     euclid::{Point2D, UnknownUnit},
@@ -25,33 +25,33 @@ impl<T: PartialEq> PartialEq for Circle<T> {
 impl<T: PartialEq> Eq for Circle<T> {}
 
 pub struct GridIndex<T: Clone> {
-    width: f32,
-    height: f32,
+    width: f64,
+    height: f64,
     x_cell_count: usize,
     y_cell_count: usize,
-    x_scale: f32,
-    y_scale: f32,
+    x_scale: f64,
+    y_scale: f64,
     estimated_elements_per_cell: usize,
-    box_elements: Vec<(T, Box2D<f32>)>,
-    circle_elements: Vec<(T, Circle<f32>)>,
+    box_elements: Vec<(T, Box2D<f64>)>,
+    circle_elements: Vec<(T, Circle<f64>)>,
     box_cells: Vec<Vec<u32>>,
     circle_cells: Vec<Vec<u32>>,
 }
 
 impl<T: Clone> GridIndex<T> {
-    pub fn new(width: f32, height: f32, cell_size: u32) -> Self {
-        let x_cell_count = (width / cell_size as f32).ceil() as usize;
-        let y_cell_count = (height / cell_size as f32).ceil() as usize;
+    pub fn new(width: f64, height: f64, cell_size: u32) -> Self {
+        let x_cell_count = (width / cell_size as f64).ceil() as usize;
+        let y_cell_count = (height / cell_size as f64).ceil() as usize;
 
         assert!(width > 0.0);
         assert!(height > 0.0);
         Self {
             width,
             height,
-            x_cell_count: x_cell_count,
-            y_cell_count: y_cell_count,
-            x_scale: x_cell_count as f32 / width,
-            y_scale: y_cell_count as f32 / height,
+            x_cell_count,
+            y_cell_count,
+            x_scale: x_cell_count as f64 / width,
+            y_scale: y_cell_count as f64 / height,
             estimated_elements_per_cell: 0,
             box_elements: vec![],
             circle_elements: vec![],
@@ -65,7 +65,7 @@ impl<T: Clone> GridIndex<T> {
         self.estimated_elements_per_cell = value;
     }
 
-    pub fn insert(&mut self, t: T, bbox: Box2D<f32>) {
+    pub fn insert(&mut self, t: T, bbox: Box2D<f64>) {
         assert!(self.box_elements.len() < u32::MAX as usize);
         let uid = self.box_elements.len() as u32;
 
@@ -87,7 +87,7 @@ impl<T: Clone> GridIndex<T> {
         self.box_elements.push((t, bbox));
     }
 
-    pub fn insert_circle(&mut self, t: T, circle: Circle<f32>) {
+    pub fn insert_circle(&mut self, t: T, circle: Circle<f64>) {
         assert!(self.circle_elements.len() < u32::MAX as usize);
         let uid = self.circle_elements.len() as u32;
 
@@ -109,7 +109,7 @@ impl<T: Clone> GridIndex<T> {
         self.circle_elements.push((t, circle));
     }
 
-    pub fn query(&self, query_box: &Box2D<f32>) -> Vec<T> {
+    pub fn query(&self, query_box: &Box2D<f64>) -> Vec<T> {
         let mut result = Vec::new();
         self.query_internal(query_box, |t, bbox| -> bool {
             result.push(t);
@@ -118,7 +118,7 @@ impl<T: Clone> GridIndex<T> {
         return result;
     }
 
-    pub fn query_with_boxes(&self, query_box: &Box2D<f32>) -> Vec<(T, Box2D<f32>)> {
+    pub fn query_with_boxes(&self, query_box: &Box2D<f64>) -> Vec<(T, Box2D<f64>)> {
         let mut result = Vec::new();
         self.query_internal(query_box, |t, bbox| -> bool {
             result.push((t, bbox));
@@ -127,7 +127,7 @@ impl<T: Clone> GridIndex<T> {
         return result;
     }
 
-    pub fn hit_test<F>(&self, query_box: &Box2D<f32>, predicate: Option<F>) -> bool
+    pub fn hit_test<F>(&self, query_box: &Box2D<f64>, predicate: Option<F>) -> bool
     where
         F: Fn(&T) -> bool,
     {
@@ -148,7 +148,7 @@ impl<T: Clone> GridIndex<T> {
         return hit;
     }
 
-    pub fn hit_test_circle<F>(&self, circle: &Circle<f32>, predicate: Option<F>) -> bool
+    pub fn hit_test_circle<F>(&self, circle: &Circle<f64>, predicate: Option<F>) -> bool
     where
         F: Fn(&T) -> bool,
     {
@@ -175,21 +175,21 @@ impl<T: Clone> GridIndex<T> {
 }
 
 impl<T: Clone> GridIndex<T> {
-    fn no_intersection(&self, query_box: &Box2D<f32>) -> bool {
+    fn no_intersection(&self, query_box: &Box2D<f64>) -> bool {
         return query_box.max.x < 0.0
             || query_box.min.x >= self.width
             || query_box.max.y < 0.0
             || query_box.min.y >= self.height;
     }
 
-    fn complete_intersection(&self, query_box: &Box2D<f32>) -> bool {
+    fn complete_intersection(&self, query_box: &Box2D<f64>) -> bool {
         return query_box.min.x <= 0.0
             && query_box.min.y <= 0.0
             && self.width <= query_box.max.x
             && self.height <= query_box.max.y;
     }
 
-    fn convert_to_box(circle: &Circle<f32>) -> Box2D<f32> {
+    fn convert_to_box(circle: &Circle<f64>) -> Box2D<f64> {
         return Box2D::new(
             Point2D::new(
                 circle.center.x - circle.radius,
@@ -202,9 +202,9 @@ impl<T: Clone> GridIndex<T> {
         );
     }
 
-    fn query_internal<F>(&self, query_bbox: &Box2D<f32>, mut result_fn: F)
+    fn query_internal<F>(&self, query_bbox: &Box2D<f64>, mut result_fn: F)
     where
-        F: FnMut(T, Box2D<f32>) -> bool,
+        F: FnMut(T, Box2D<f64>) -> bool,
     {
         let mut seen_boxes = HashSet::new();
         let mut seen_circles = HashSet::new();
@@ -267,9 +267,9 @@ impl<T: Clone> GridIndex<T> {
         }
     }
 
-    fn query_internal_circles<F>(&self, query_bcircle: &Circle<f32>, mut result_fn: F)
+    fn query_internal_circles<F>(&self, query_bcircle: &Circle<f64>, mut result_fn: F)
     where
-        F: FnMut(T, Box2D<f32>) -> bool,
+        F: FnMut(T, Box2D<f64>) -> bool,
     {
         let mut seen_boxes = HashSet::new();
         let mut seen_circles = HashSet::new();
@@ -332,35 +332,35 @@ impl<T: Clone> GridIndex<T> {
         }
     }
 
-    fn convert_to_x_cell_coord(&self, x: f32) -> usize {
-        return f32::max(
+    fn convert_to_x_cell_coord(&self, x: f64) -> usize {
+        return f64::max(
             0.0,
-            f32::min((self.x_cell_count - 1) as f32, f32::floor(x * self.x_scale)),
+            f64::min((self.x_cell_count - 1) as f64, f64::floor(x * self.x_scale)),
         ) as usize;
     }
 
-    fn convert_to_y_cell_coord(&self, y: f32) -> usize {
-        return f32::max(
+    fn convert_to_y_cell_coord(&self, y: f64) -> usize {
+        return f64::max(
             0.0,
-            f32::min((self.y_cell_count - 1) as f32, f32::floor(y * self.y_scale)),
+            f64::min((self.y_cell_count - 1) as f64, f64::floor(y * self.y_scale)),
         ) as usize;
     }
 
-    fn boxes_collide(first: &Box2D<f32>, second: &Box2D<f32>) -> bool {
+    fn boxes_collide(first: &Box2D<f64>, second: &Box2D<f64>) -> bool {
         return first.min.x <= second.max.x
             && first.min.y <= second.max.y
             && first.max.x >= second.min.x
             && first.max.y >= second.min.y;
     }
 
-    fn circles_collide(first: &Circle<f32>, second: &Circle<f32>) -> bool {
+    fn circles_collide(first: &Circle<f64>, second: &Circle<f64>) -> bool {
         let dx = second.center.x - first.center.x;
         let dy = second.center.y - first.center.y;
         let both_radii = first.radius + second.radius;
         return (both_radii * both_radii) > (dx * dx + dy * dy);
     }
 
-    fn circle_and_box_collide(circle: &Circle<f32>, box_: &Box2D<f32>) -> bool {
+    fn circle_and_box_collide(circle: &Circle<f64>, box_: &Box2D<f64>) -> bool {
         let half_rect_width = (box_.max.x - box_.min.x) / 2.0;
         let dist_x = (circle.center.x - (box_.min.x + half_rect_width)).abs();
         if dist_x > (half_rect_width + circle.radius) {
