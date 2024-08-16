@@ -5,9 +5,10 @@ use lyon::geom::{
     Box2D,
 };
 
+#[derive(Default, Clone, Copy)]
 pub struct Circle<T> {
-    center: Point2D<T, UnknownUnit>,
-    radius: T,
+    pub center: Point2D<T, UnknownUnit>,
+    pub radius: T,
 }
 
 impl<T> Circle<T> {

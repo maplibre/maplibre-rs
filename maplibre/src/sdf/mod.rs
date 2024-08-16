@@ -5,7 +5,7 @@ use std::{
 };
 
 use lyon::geom::{
-    euclid::{Point2D, UnknownUnit},
+    euclid::{Point2D, UnknownUnit, Vector2D},
     Box2D,
 };
 
@@ -38,13 +38,14 @@ mod resource_system;
 mod upload_system;
 
 // Public due to bechmarks
+mod collision_feature;
 mod collision_index;
 mod collision_system;
+mod feature_index;
 mod grid_index;
+mod symbol_projection;
 pub mod tessellation;
 mod text;
-mod feature_index;
-mod collision_feature;
 
 struct SymbolPipeline(wgpu::RenderPipeline);
 
@@ -126,7 +127,14 @@ pub struct SymbolLayersDataComponent {
 
 impl TileComponent for SymbolLayersDataComponent {}
 
-
 // Additional structs
 
 type Point<T> = Point2D<T, UnknownUnit>;
+
+pub fn convert_point(point: &Point<i16>) -> Point<f64> {
+    Point::new(point.x as f64, point.y as f64)
+}
+
+pub fn perp(a: &Vector2D<f64, UnknownUnit>) -> Vector2D<f64, UnknownUnit> {
+    return Vector2D::new(-a.y, a.x);
+}
