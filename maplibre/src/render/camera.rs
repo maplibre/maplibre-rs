@@ -209,6 +209,7 @@ impl EdgeInsets {
     }
 }
 
+#[derive(Clone)]
 pub struct Perspective {
     fovy: Rad<f64>,
 }
