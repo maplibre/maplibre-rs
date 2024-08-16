@@ -38,10 +38,13 @@ mod resource_system;
 mod upload_system;
 
 // Public due to bechmarks
+mod collision_index;
 mod collision_system;
 mod grid_index;
 pub mod tessellation;
 mod text;
+mod feature_index;
+mod collision_feature;
 
 struct SymbolPipeline(wgpu::RenderPipeline);
 
@@ -122,3 +125,8 @@ pub struct SymbolLayersDataComponent {
 }
 
 impl TileComponent for SymbolLayersDataComponent {}
+
+
+// Additional structs
+
+type Point<T> = Point2D<T, UnknownUnit>;

@@ -27,7 +27,6 @@ pub struct Style {
     pub pitch: Option<f64>,
 }
 
-
 /// Default style for https://openmaptiles.org/schema/
 impl Default for Style {
     fn default() -> Self {
