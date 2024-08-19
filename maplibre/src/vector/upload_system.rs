@@ -186,14 +186,10 @@ fn upload_tessellated_layer(
                 .map(|color| color.into());
 
             // Assign every feature in the layer the color from the style
-            let feature_metadata = (0..feature_indices.len()) // FIXME: Iterate over actual features
-                .enumerate()
-                .flat_map(|(i, _feature)| {
-                    iter::repeat(FillShaderFeatureMetadata {
-                        color: color.unwrap(),
-                    })
-                    .take(feature_indices[i] as usize)
-                })
+            let feature_metadata = iter::repeat(FillShaderFeatureMetadata {
+                color: color.unwrap(),
+            })
+                .take(feature_indices.iter().sum::<u32>() as usize)
                 .collect::<Vec<_>>();
 
             // FIXME avoid uploading empty indices

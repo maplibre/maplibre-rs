@@ -65,6 +65,10 @@ impl ModelViewProjection {
     pub fn get(&self) -> Matrix4<f64> {
         self.0
     }
+
+    pub fn project(&self, vector: Vector4<f64>) -> Vector4<f64> {
+        self.0 * vector
+    }
 }
 
 const MIN_PITCH: Deg<f64> = Deg(-30.0);

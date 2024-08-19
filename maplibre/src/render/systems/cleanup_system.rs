@@ -4,7 +4,11 @@ use crate::{
     tcs::system::{SystemError, SystemResult},
 };
 
-pub fn cleanup_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
+pub fn cleanup_system(
+    MapContext {
+        world, view_state, ..
+    }: &mut MapContext,
+) -> SystemResult {
     let Some((layer_item_phase, tile_mask_phase, translucent_phase)) =
         world.resources.query_mut::<(
             &mut RenderPhase<LayerItem>,
@@ -18,6 +22,8 @@ pub fn cleanup_system(MapContext { world, .. }: &mut MapContext) -> SystemResult
     layer_item_phase.clear();
     tile_mask_phase.clear();
     translucent_phase.clear();
+
+    view_state.update_references();
 
     Ok(())
 }

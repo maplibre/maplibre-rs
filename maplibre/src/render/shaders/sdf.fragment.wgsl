@@ -1,5 +1,5 @@
 struct VertexOutput {
- //   @location(0) is_glyph: i32,  // Chrome complaints about this line
+//    @location(0) is_glyph: i32, // Chrome complaints about this line
     @location(1) tex_coords: vec2<f32>,
     @location(2) color: vec4<f32>,
     @location(3) opacity: f32,
@@ -47,12 +47,10 @@ fn main(in: VertexOutput) -> Output {
     // "Another Good Trick" from https://www.sjbaker.org/steve/omniv/alpha_sorting.html
     // Using discard is an alternative for GL_ALPHA_TEST.
     // https://stackoverflow.com/questions/53024693/opengl-is-discard-the-only-replacement-for-deprecated-gl-alpha-test
-    // if (alpha == 0.0) {
-    //     discard;
-    // }
 
-    //return Output(vec4(color_rgb, in.color.a * alpha * in.opacity));
-    return Output(vec4(outline_color, 0.2)); // debug bounding box, alpha 0.2 to see collisions
+
+    return Output(vec4(color_rgb, in.color.a * alpha * in.opacity));
+    //return Output(vec4(vec3<f32>(in.opacity, 0.0, 0.0), 0.2)); // debug bounding box, alpha 0.2 to see collisions
 }
 
 

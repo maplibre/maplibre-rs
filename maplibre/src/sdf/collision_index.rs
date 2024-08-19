@@ -1,21 +1,22 @@
+use crate::coords::EXTENT;
+use crate::render::camera::ModelViewProjection;
 use crate::render::view_state::ViewState;
 use crate::sdf::collision_feature::{CollisionBox, CollisionFeature, ProjectedCollisionBox};
 use crate::sdf::feature_index::IndexedSubfeature;
 use crate::sdf::grid_index::{Circle, GridIndex};
 use crate::sdf::symbol_projection::{placeFirstAndLastGlyph, project};
 use crate::sdf::Point;
+use bitflags::bitflags;
 use cgmath::{Matrix4, Vector4};
 use geo_types::LineString;
 use lyon::geom::euclid::{Point2D, UnknownUnit};
 use lyon::geom::Box2D;
 use std::collections::HashMap;
-use bitflags::bitflags;
-use crate::coords::EXTENT;
 
 type TransformState = ViewState;
 
 #[derive(PartialEq)]
-enum MapMode {
+pub enum MapMode {
     ///< continually updating map
     Continuous,
     ///< a once-off still image of an arbitrary viewport
@@ -26,28 +27,27 @@ enum MapMode {
 
 pub struct GeometryCoordinates(pub Vec<Point<i16>>); // TODO where should this live?
 
+// TODO where should this live?
 pub struct PlacedSymbol {
-    // TODO where should this live?
     pub anchorPoint: Point<f64>,
     pub segment: usize,
-    pub lowerSize: f64,
-    pub upperSize: f64,
+    // pub lowerSize: f64,
+    // pub upperSize: f64,
     pub lineOffset: [f64; 2],
-    // TODO pub writingModes: WritingModeType,
+    // pub writingModes: WritingModeType,
     pub line: GeometryCoordinates,
     pub tileDistances: Vec<f64>,
     pub glyphOffsets: Vec<f64>,
-    pub hidden: bool,
-    pub vertexStartIndex: usize,
-    // The crossTileID is only filled/used on the foreground for variable text anchors
-    pub crossTileID: u32,
-    // The placedOrientation is only used when symbol layer's property is set to
-    // support placement for orientation variants.
-    // TODO pub placedOrientation:  Option<TextWritingModeType>,
-    pub angle: f64,
-
-    // Reference to placed icon, only applicable for text symbols.
-    pub placedIconIndex: Option<usize>,
+    // pub hidden: bool,
+    // pub vertexStartIndex: usize,
+    // /// The crossTileID is only filled/used on the foreground for variable text anchors
+    // pub crossTileID: u32,
+    // /// The placedOrientation is only used when symbol layer's property is set to
+    // /// support placement for orientation variants.
+    // pub placedOrientation:  Option<TextWritingModeType>,
+    // pub angle: f64,
+    // /// Reference to placed icon, only applicable for text symbols.
+    // pub placedIconIndex: Option<usize>,
 }
 
 type ScreenLineString = LineString;
@@ -89,6 +89,7 @@ struct IntersectStatus {
 // the viewport for collision detection so that the bulk of the changes
 // occur offscreen. Making this ant greater increases label
 // stability, but it's expensive.
+// TODO remove const viewportPaddingDefault: f64 = -10.;
 const viewportPaddingDefault: f64 = 100.;
 // Viewport padding must be much larger for static tiles to avoid clipped labels.
 const viewportPaddingForStaticTiles: f64 = 1024.;
@@ -105,7 +106,7 @@ fn findViewportPadding(transformState: &TransformState, mapMode: MapMode) -> f64
 }
 
 type CollisionGrid = GridIndex<IndexedSubfeature>;
-struct CollisionIndex {
+pub struct CollisionIndex {
     transformState: TransformState,
     viewportPadding: f64,
     collisionGrid: CollisionGrid,
@@ -118,7 +119,7 @@ struct CollisionIndex {
 }
 
 impl CollisionIndex {
-    fn new(transformState: &TransformState, mapMode: MapMode) -> Self {
+    pub fn new(transformState: &TransformState, mapMode: MapMode) -> Self {
         let viewportPadding = findViewportPadding(transformState, mapMode);
         Self {
             transformState: transformState.clone(),
@@ -146,11 +147,12 @@ impl CollisionIndex {
         &self,
         box_: &CollisionBox,
         shift: Point2D<f64, UnknownUnit>,
-        posMatrix: &Matrix4<f64>,
+        posMatrix: &ModelViewProjection,
         textPixelRatio: f64,
         tileEdges: CollisionBoundaries,
     ) -> IntersectStatus {
-        let boundaries = self.getProjectedCollisionBoundaries(posMatrix, shift, textPixelRatio, box_);
+        let boundaries =
+            self.getProjectedCollisionBoundaries(posMatrix, shift, textPixelRatio, box_);
         let mut result: IntersectStatus = IntersectStatus::default();
         let x1 = boundaries.min.x;
         let y1 = boundaries.min.y;
@@ -163,18 +165,20 @@ impl CollisionIndex {
         let tileY2 = tileEdges.max.y;
 
         // Check left border
-        let mut minSectionLength = (((tileX1 - x1).min(x2 - tileX1))) as i32;
-        if (minSectionLength <= 0) { // Check right border
-            minSectionLength = ((tileX2 - x1).min(x2 - tileX2))  as i32;
+        let mut minSectionLength = ((tileX1 - x1).min(x2 - tileX1)) as i32;
+        if (minSectionLength <= 0) {
+            // Check right border
+            minSectionLength = ((tileX2 - x1).min(x2 - tileX2)) as i32;
         }
         if (minSectionLength > 0) {
             result.flags |= IntersectStatusFlags::VerticalBorders;
             result.minSectionLength = minSectionLength;
         }
         // Check top border
-        minSectionLength = ((tileY1 - y1).min( y2 - tileY1))  as i32;
-        if (minSectionLength <= 0) { // Check bottom border
-            minSectionLength = ((tileY2 - y1).min(y2 - tileY2))  as i32;
+        minSectionLength = ((tileY1 - y1).min(y2 - tileY1)) as i32;
+        if (minSectionLength <= 0) {
+            // Check bottom border
+            minSectionLength = ((tileY2 - y1).min(y2 - tileY2)) as i32;
         }
         if (minSectionLength > 0) {
             result.flags |= IntersectStatusFlags::HorizontalBorders;
@@ -182,12 +186,12 @@ impl CollisionIndex {
         }
         return result;
     }
-    
+
     pub fn placeFeature<F>(
         &self,
         feature: &CollisionFeature,
         shift: Point<f64>,
-        posMatrix: &Matrix4<f64>,
+        posMatrix: &ModelViewProjection,
         labelPlaneMatrix: &Matrix4<f64>,
         textPixelRatio: f64,
         symbol: &PlacedSymbol,
@@ -261,11 +265,23 @@ impl CollisionIndex {
                 }
 
                 if (ignorePlacement) {
-                    self.ignoredGrid.insert_circle(IndexedSubfeature::new(feature.indexedFeature.clone(), bucketInstanceId, collisionGroupId), // FIXME clone() should not be needed?
-                                            *circle.circle());
+                    self.ignoredGrid.insert_circle(
+                        IndexedSubfeature::new(
+                            feature.indexedFeature.clone(),
+                            bucketInstanceId,
+                            collisionGroupId,
+                        ), // FIXME clone() should not be needed?
+                        *circle.circle(),
+                    );
                 } else {
-                    self.collisionGrid.insert_circle(IndexedSubfeature::new(feature.indexedFeature.clone(), bucketInstanceId, collisionGroupId), // FIXME clone() should not be needed?
-                                              *circle.circle());
+                    self.collisionGrid.insert_circle(
+                        IndexedSubfeature::new(
+                            feature.indexedFeature.clone(),
+                            bucketInstanceId,
+                            collisionGroupId,
+                        ), // FIXME clone() should not be needed?
+                        *circle.circle(),
+                    );
                 }
             }
         } else if (!projectedBoxes.is_empty()) {
@@ -273,11 +289,23 @@ impl CollisionIndex {
             let box_ = projectedBoxes[0];
             // TODO assert!(box_.isBox());
             if (ignorePlacement) {
-                self.ignoredGrid.insert(IndexedSubfeature::new(feature.indexedFeature, bucketInstanceId, collisionGroupId),
-                                   *box_.box_());
+                self.ignoredGrid.insert(
+                    IndexedSubfeature::new(
+                        feature.indexedFeature,
+                        bucketInstanceId,
+                        collisionGroupId,
+                    ),
+                    *box_.box_(),
+                );
             } else {
-                self.collisionGrid.insert(IndexedSubfeature::new(feature.indexedFeature, bucketInstanceId, collisionGroupId),
-                                     *box_.box_());
+                self.collisionGrid.insert(
+                    IndexedSubfeature::new(
+                        feature.indexedFeature,
+                        bucketInstanceId,
+                        collisionGroupId,
+                    ),
+                    *box_.box_(),
+                );
             }
         }
     }
@@ -289,16 +317,15 @@ impl CollisionIndex {
         unimplemented!()
     }
 
-    pub fn projectTileBoundaries(&self, posMatrix: &Matrix4<f64>) -> CollisionBoundaries {
-       let topLeft = self.projectPoint(posMatrix, &Point2D::zero());
+    pub fn projectTileBoundaries(&self, posMatrix: &ModelViewProjection) -> CollisionBoundaries {
+        let topLeft = self.projectPoint(posMatrix, &Point2D::zero());
         let bottomRight = self.projectPoint(posMatrix, &Point2D::new(EXTENT, EXTENT)); // FIXME: maplibre-native uses here 8192
 
         return CollisionBoundaries::new(
             Point2D::new(topLeft.x, topLeft.y),
-            Point2D::new(bottomRight.x, bottomRight.y)
-        )
+            Point2D::new(bottomRight.x, bottomRight.y),
+        );
     }
-
 
     pub fn getTransformState(&self) -> &TransformState {
         return &self.transformState;
@@ -311,12 +338,16 @@ impl CollisionIndex {
 
 impl CollisionIndex {
     fn isOffscreen(&self, boundaries: &CollisionBoundaries) -> bool {
-        return boundaries.max.x < self.viewportPadding || boundaries.min.x >= self.screenRightBoundary || boundaries.max.y < self.viewportPadding ||
-            boundaries.min.y >= self.screenBottomBoundary;
+        return boundaries.max.x < self.viewportPadding
+            || boundaries.min.x >= self.screenRightBoundary
+            || boundaries.max.y < self.viewportPadding
+            || boundaries.min.y >= self.screenBottomBoundary;
     }
     fn isInsideGrid(&self, boundaries: &CollisionBoundaries) -> bool {
-        return boundaries.max.x >= 0. && boundaries.min.x < self.gridRightBoundary && boundaries.max.y >= 0. &&
-            boundaries.min.y < self.gridBottomBoundary;
+        return boundaries.max.x >= 0.
+            && boundaries.min.x < self.gridRightBoundary
+            && boundaries.max.y >= 0.
+            && boundaries.min.y < self.gridBottomBoundary;
     }
 
     fn isInsideTile(
@@ -324,8 +355,10 @@ impl CollisionIndex {
         boundaries: &CollisionBoundaries,
         tileBoundaries: &CollisionBoundaries,
     ) -> bool {
-        return boundaries.min.x >= tileBoundaries.min.x && boundaries.min.y >= tileBoundaries.min.y &&
-            boundaries.max.x < tileBoundaries.max.x && boundaries.max.y < tileBoundaries.max.y;
+        return boundaries.min.x >= tileBoundaries.min.x
+            && boundaries.min.y >= tileBoundaries.min.y
+            && boundaries.max.x < tileBoundaries.max.x
+            && boundaries.max.y < tileBoundaries.max.y;
     }
 
     fn overlapsTile(
@@ -333,14 +366,16 @@ impl CollisionIndex {
         boundaries: &CollisionBoundaries,
         tileBoundaries: &CollisionBoundaries,
     ) -> bool {
-        return boundaries.min.x < tileBoundaries.max.x && boundaries.max.x > tileBoundaries.min.x &&
-            boundaries.min.y < tileBoundaries.max.y && boundaries.max.y > tileBoundaries.min.y;
+        return boundaries.min.x < tileBoundaries.max.x
+            && boundaries.max.x > tileBoundaries.min.x
+            && boundaries.min.y < tileBoundaries.max.y
+            && boundaries.max.y > tileBoundaries.min.y;
     }
 
     fn placeLineFeature<F>(
         &self,
         feature: &CollisionFeature,
-        posMatrix: &Matrix4<f64>,
+        posMatrix: &ModelViewProjection,
         labelPlaneMatrix: &Matrix4<f64>,
         textPixelRatio: f64,
         symbol: &PlacedSymbol,
@@ -544,53 +579,67 @@ impl CollisionIndex {
             + (incidenceStretch - 1.) * lastSegmentTile * lastSegmentAngle.sin().abs();
     }
 
-    fn projectAnchor(&self, posMatrix: &Matrix4<f64>, point: &Point<f64>) -> (f64, f64) {
+    fn projectAnchor(&self, posMatrix: &ModelViewProjection, point: &Point<f64>) -> (f64, f64) {
         let p = Vector4::new(point.x, point.y, 0., 1.);
-        let p = posMatrix * p; // TODO verify multiplication
-        return (0.5 + 0.5 * (self.transformState.camera_to_center_distance() / p[3]), p[3]);
+        let p = posMatrix.project(p); // TODO verify multiplication
+        return (
+            0.5 + 0.5 * (self.transformState.camera_to_center_distance() / p[3]),
+            p[3],
+        );
     }
     fn projectAndGetPerspectiveRatio(
         &self,
-        posMatrix: &Matrix4<f64>,
+        posMatrix: &ModelViewProjection,
         point: &Point<f64>,
     ) -> (Point<f64>, f64) {
         let p = Vector4::new(point.x, point.y, 0., 1.);
-        let p = posMatrix * p; // TODO verify multiplication
+        let p = posMatrix.project(p); // TODO verify multiplication
         let width = self.transformState.width();
         let height = self.transformState.height();
-        return (Point::new(((p[0] / p[3] + 1.) / 2.) * width + self.viewportPadding,
-                                           ((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding),
-                              // See perspective ratio comment in symbol_sdf.vertex
-                              // We're doing collision detection in viewport space so we need
-                              // to scale down boxes in the distance
-                              0.5 + 0.5 * self.transformState.camera_to_center_distance() / p[3]);
+        let ccd = self.transformState.camera_to_center_distance();
+        return (
+            Point::new(
+                ((p[0] / p[3] + 1.) / 2.) * width + self.viewportPadding,
+                ((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding,
+            ),
+            // See perspective ratio comment in symbol_sdf.vertex
+            // We're doing collision detection in viewport space so we need
+            // to scale down boxes in the distance
+            0.5 + 0.5 * ccd / p[3]
+        );
     }
-    fn projectPoint(&self, posMatrix: &Matrix4<f64>, point: &Point<f64>) -> Point<f64> {
+    fn projectPoint(&self, posMatrix: &ModelViewProjection, point: &Point<f64>) -> Point<f64> {
         let p = Vector4::new(point.x, point.y, 0., 1.);
-        let p = posMatrix * p; // TODO verify multiplication
+        let p = posMatrix.project(p); // TODO verify multiplication
         let width = self.transformState.width();
         let height = self.transformState.height();
-        return Point::new((((p[0] / p[3] + 1.) / 2.) * width + self.viewportPadding),
-                         (((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding));
+        return Point::new(
+            (((p[0] / p[3] + 1.) / 2.) * width + self.viewportPadding),
+            (((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding),
+        );
     }
+
+
     fn getProjectedCollisionBoundaries(
         &self,
-        posMatrix: &Matrix4<f64>,
+        posMatrix: &ModelViewProjection,
         shift: Point<f64>,
         textPixelRatio: f64,
         box_: &CollisionBox,
     ) -> CollisionBoundaries {
-         let projectedPoint = self.projectAndGetPerspectiveRatio(posMatrix, &box_.anchor);
-        let tileToViewport = textPixelRatio * projectedPoint.1;
+        let (projectedPoint, tileToViewport) =
+            self.projectAndGetPerspectiveRatio(posMatrix, &box_.anchor);
+        let tileToViewport = textPixelRatio * tileToViewport;
+        let tileToViewport = 1.; // TODO
         return CollisionBoundaries::new(
             Point2D::new(
-                (box_.x1 + shift.x) * tileToViewport + projectedPoint.0.x,
-                (box_.y1 + shift.y) * tileToViewport + projectedPoint.0.y
+                (box_.x1 + shift.x) * tileToViewport + projectedPoint.x,
+                (box_.y1 + shift.y) * tileToViewport + projectedPoint.y,
             ),
             Point2D::new(
-                (box_.x2 + shift.x) * tileToViewport + projectedPoint.0.x,
-                (box_.y2 + shift.y) * tileToViewport + projectedPoint.0.y
-            )
+                (box_.x2 + shift.x) * tileToViewport + projectedPoint.x,
+                (box_.y2 + shift.y) * tileToViewport + projectedPoint.y,
+            ),
         );
     }
 }

@@ -101,7 +101,7 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for SdfPlugin<T> {
         schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system::queue_system);
 
         schedule.add_system_to_stage(
-            RenderStageLabel::Prepare,
+            RenderStageLabel::PhaseSort,
             SystemContainer::new(collision_system::CollisionSystem::new()),
         );
     }
@@ -111,6 +111,7 @@ pub struct Feature {
     pub bbox: Box2D<f32>,
     pub indices: Range<usize>,
     pub text_anchor: Point2D<f32, UnknownUnit>,
+    pub str: String,
 }
 
 pub struct SymbolLayerData {

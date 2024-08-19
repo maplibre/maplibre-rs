@@ -47,7 +47,7 @@ where
 }
 impl<T> Eventually<T> {
     #[tracing::instrument(name = "initialize", skip_all)]
-    pub fn initialize(&mut self, f: impl FnOnce() -> T) -> &T {
+    pub fn initialize(&mut self, f: impl FnOnce() -> T) -> &mut T {
         if let Eventually::Uninitialized = self {
             *self = Eventually::Initialized(f());
         }

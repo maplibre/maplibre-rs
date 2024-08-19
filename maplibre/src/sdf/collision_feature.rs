@@ -9,7 +9,7 @@ pub struct CollisionFeature {
     pub alongLine: bool,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Debug)]
 pub struct CollisionBox {
     // the box is centered around the anchor point
     pub anchor: Point<f64>,
@@ -27,7 +27,7 @@ pub struct CollisionBox {
     pub signedDistanceFromAnchor: f64,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum ProjectedCollisionBox {
     Circle(Circle<f64>),
     Box(Box2D<f64>),

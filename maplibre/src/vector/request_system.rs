@@ -102,8 +102,6 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                 }
             }
         }
-
-        view_state.update_references();
         Ok(())
     }
 }

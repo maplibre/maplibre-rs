@@ -6,7 +6,11 @@ pub struct IndexedSubfeature {
 }
 
 impl IndexedSubfeature {
-    pub fn new(indexedFeature: IndexedSubfeature, bucketInstanceId: u32, collisionGroupId: u16) -> IndexedSubfeature {
+    pub fn new(
+        indexedFeature: IndexedSubfeature,
+        bucketInstanceId: u32,
+        collisionGroupId: u16,
+    ) -> IndexedSubfeature {
         IndexedSubfeature {
             ref_: RefIndexedSubfeature {
                 index: indexedFeature.ref_.index,

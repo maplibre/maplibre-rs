@@ -104,8 +104,8 @@ fn upload_symbol_layer(
             let feature_metadata = features
                 .iter()
                 .flat_map(|(feature)| {
-                    iter::repeat(crate::render::shaders::SDFShaderFeatureMetadata { opacity: 1.0 })
-                        .take(feature.indices.end)
+                    iter::repeat(crate::render::shaders::SDFShaderFeatureMetadata { opacity: 0.0 })
+                        .take(feature.indices.len())
                 })
                 .collect::<Vec<_>>();
 
