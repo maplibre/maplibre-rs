@@ -52,82 +52,10 @@ pub fn upload_system(
             style,
             view_region,
         );
-        // self.update_metadata(state, tile_repository, queue);
     }
 
     Ok(())
 }
-
-/* FIXME tcs fn update_metadata(
-    buffer_pool: &VectorBufferPool,
-    tiles: &Tiles,
-    queue: &wgpu::Queue,
-) {
-    let animated_one = 0.5
-        * (1.0
-            + ((std::time::SystemTime::now()
-                .duration_since(std::time::SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_secs_f64())
-            .sin()));
-
-    for entries in buffer_pool.index().iter() {
-        for entry in entries {
-            let world_coords = entry.coords;
-
-            let source_layer = entry.style_layer.source_layer.as_ref().unwrap();
-
-            let Some(stored_layer) =
-                tile_repository
-                    .iter_layers_at(&world_coords)
-                    .and_then(|mut layers| {
-                        layers.find(|layer| source_layer.as_str() == layer.layer_name())
-                    })  else { continue; };
-
-            let color: Option<Vec4f32> = entry
-                .style_layer
-                .paint
-                .as_ref()
-                .and_then(|paint| paint.get_color())
-                .map(|mut color| {
-                    color.color.b = animated_one as f32;
-                    color.into()
-                });
-
-            match stored_layer {
-                StoredLayer::UnavailableLayer { .. } => {}
-                StoredLayer::TessellatedLayer {
-                    feature_indices, ..
-                } => {
-                    /* let feature_metadata = layer_data
-                    .features()
-                    .iter()
-                    .enumerate()
-                    .flat_map(|(i, _feature)| {
-                        iter::repeat(ShaderFeatureStyle {
-                            color: color.unwrap(),
-                        })
-                        .take(feature_indices[i] as usize)
-                    })
-                    .collect::<Vec<_>>();*/
-
-                    let feature_metadata = (0..feature_indices.len())
-                        .flat_map(|i| {
-                            iter::repeat(ShaderFeatureStyle {
-                                color: color.unwrap(),
-                            })
-                            .take(feature_indices[i] as usize)
-                        })
-                        .collect::<Vec<_>>();
-
-                    buffer_pool.update_feature_metadata(queue, entry, &feature_metadata);
-                }
-
-                StoredLayer::RasterLayer { .. } => {}
-            }
-        }
-    }
-}*/
 
 fn upload_tessellated_layer(
     buffer_pool: &mut VectorBufferPool,
