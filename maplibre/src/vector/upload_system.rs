@@ -117,8 +117,8 @@ fn upload_tessellated_layer(
             let feature_metadata = iter::repeat(FillShaderFeatureMetadata {
                 color: color.unwrap(),
             })
-                .take(feature_indices.iter().sum::<u32>() as usize)
-                .collect::<Vec<_>>();
+            .take(feature_indices.iter().sum::<u32>() as usize)
+            .collect::<Vec<_>>();
 
             // FIXME avoid uploading empty indices
             if buffer.buffer.indices.is_empty() {

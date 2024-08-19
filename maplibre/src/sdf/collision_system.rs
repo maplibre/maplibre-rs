@@ -6,19 +6,20 @@ use lyon::geom::euclid::Point2D;
 use crate::coords::{EXTENT, TILE_SIZE};
 use crate::render::eventually::Eventually;
 use crate::render::eventually::Eventually::Initialized;
+use crate::render::shaders::SDFShaderFeatureMetadata;
 use crate::render::tile_view_pattern::WgpuTileViewPattern;
 use crate::render::Renderer;
 use crate::sdf::collision_feature::{CollisionBox, CollisionFeature};
 use crate::sdf::collision_index::{CollisionIndex, GeometryCoordinates, MapMode, PlacedSymbol};
 use crate::sdf::feature_index::{IndexedSubfeature, RefIndexedSubfeature};
-use crate::sdf::{Point, SymbolBufferPool};
+use crate::sdf::geometry::Point;
+use crate::sdf::SymbolBufferPool;
 use crate::tcs::system::SystemError;
 use crate::{
     context::MapContext,
     sdf::SymbolLayersDataComponent,
     tcs::system::{System, SystemResult},
 };
-use crate::render::shaders::SDFShaderFeatureMetadata;
 
 pub struct CollisionSystem {}
 
@@ -51,20 +52,20 @@ impl System for CollisionSystem {
             return Err(SystemError::Dependencies);
         };
 
-
         if !view_state.did_camera_change() {
             //return Ok(());
         }
 
         let mut collision_index = CollisionIndex::new(view_state, MapMode::Continuous);
 
-
         for view_tile in tile_view_pattern.iter() {
             let coords = view_tile.coords();
             if let Some(component) = world.tiles.query::<&SymbolLayersDataComponent>(coords) {
                 for layer in &component.layers {
-
-                    let mut feature_metadata = vec![SDFShaderFeatureMetadata::default(); layer.features.last().unwrap().indices.end];
+                    let mut feature_metadata = vec![
+                        SDFShaderFeatureMetadata::default();
+                        layer.features.last().unwrap().indices.end
+                    ];
 
                     for feature in &layer.features {
                         // calculate where tile is
@@ -101,14 +102,15 @@ impl System for CollisionSystem {
 
                         //println!("{:?}", window);
 
-                        let anchorPoint = Point::new(feature.bbox.min.x as f64, feature.bbox.min.y as f64); // TODO
+                        let anchorPoint =
+                            Point::new(feature.bbox.min.x as f64, feature.bbox.min.y as f64); // TODO
 
                         let boxes = vec![CollisionBox {
                             anchor: anchorPoint,
                             x1: 0.0 * (EXTENT / TILE_SIZE),
                             y1: 0. * (EXTENT / TILE_SIZE),
                             x2: (feature.bbox.max.x - feature.bbox.min.x) as f64, //* (EXTENT / TILE_SIZE),
-                            y2: (feature.bbox.max.y -feature.bbox.min.y) as f64, // * (EXTENT / TILE_SIZE),
+                            y2: (feature.bbox.max.y - feature.bbox.min.y) as f64, // * (EXTENT / TILE_SIZE),
                             signedDistanceFromAnchor: 0.0,
                         }]; // TODO
 
@@ -154,13 +156,12 @@ impl System for CollisionSystem {
                             &mut projected_boxes,               // output
                         );
                         if (feature.str.starts_with("Ette")) {
-                        //println!("{}", feature.str);
-                        //println!("{:?}", &collision_feature.boxes);
-                        //println!("proj {:?}", &projected_boxes.get(0));
+                            //println!("{}", feature.str);
+                            //println!("{:?}", &collision_feature.boxes);
+                            //println!("proj {:?}", &projected_boxes.get(0));
                         }
 
                         if placed_text {
-
                             collision_index.insertFeature(
                                 collision_feature,
                                 &projected_boxes,
@@ -189,7 +190,7 @@ impl System for CollisionSystem {
                         let source_layer = entry.style_layer.source_layer.as_ref().unwrap();
 
                         if source_layer != &layer.source_layer {
-                            continue
+                            continue;
                         }
 
                         symbol_buffer_pool.update_feature_metadata(queue, entry, &feature_metadata);

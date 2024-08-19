@@ -1,17 +1,20 @@
+// File fully translated except for to-do comments
+
 use crate::coords::EXTENT;
 use crate::render::camera::ModelViewProjection;
 use crate::render::view_state::ViewState;
 use crate::sdf::collision_feature::{CollisionBox, CollisionFeature, ProjectedCollisionBox};
 use crate::sdf::feature_index::IndexedSubfeature;
+use crate::sdf::geometry::Point;
 use crate::sdf::grid_index::{Circle, GridIndex};
 use crate::sdf::symbol_projection::{placeFirstAndLastGlyph, project};
-use crate::sdf::Point;
 use bitflags::bitflags;
 use cgmath::{Matrix4, Vector4};
 use geo_types::LineString;
 use lyon::geom::euclid::{Point2D, UnknownUnit};
 use lyon::geom::Box2D;
 use std::collections::HashMap;
+use std::ops::Index;
 
 type TransformState = ViewState;
 
@@ -25,7 +28,21 @@ pub enum MapMode {
     Tile,
 }
 
-pub struct GeometryCoordinates(pub Vec<Point<i16>>); // TODO where should this live?
+pub type GeometryCoordinate = Point<i16>;
+
+pub struct GeometryCoordinates(pub Vec<GeometryCoordinate>); // TODO where should this live?
+impl GeometryCoordinates {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+impl Index<usize> for GeometryCoordinates {
+    type Output = GeometryCoordinate;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 // TODO where should this live?
 pub struct PlacedSymbol {
@@ -319,7 +336,7 @@ impl CollisionIndex {
 
     pub fn projectTileBoundaries(&self, posMatrix: &ModelViewProjection) -> CollisionBoundaries {
         let topLeft = self.projectPoint(posMatrix, &Point2D::zero());
-        let bottomRight = self.projectPoint(posMatrix, &Point2D::new(EXTENT, EXTENT)); // FIXME: maplibre-native uses here 8192
+        let bottomRight = self.projectPoint(posMatrix, &Point2D::new(EXTENT, EXTENT)); // FIXME: maplibre-native uses here 8192 for extent
 
         return CollisionBoundaries::new(
             Point2D::new(topLeft.x, topLeft.y),
@@ -391,8 +408,8 @@ impl CollisionIndex {
     where
         F: Fn(&IndexedSubfeature) -> bool,
     {
-        // TODO assert!(feature.alongLine);
-        // TODO  assert!(projectedBoxes.empty());
+        assert!(feature.alongLine);
+        assert!(projectedBoxes.is_empty());
         let tileUnitAnchorPoint = symbol.anchorPoint;
         let projectedAnchor = self.projectAnchor(posMatrix, &tileUnitAnchorPoint);
 
@@ -465,7 +482,7 @@ impl CollisionIndex {
 
             if (previousCirclePlaced) {
                 let previousCircle = &projectedBoxes[i - 1];
-                // TODO assert!(previousCircle.isCircle());
+                assert!(previousCircle.isCircle());
                 let previousCenter = previousCircle.circle().center;
                 let dx = projectedPoint.x - previousCenter.x;
                 let dy = projectedPoint.y - previousCenter.y;
@@ -605,7 +622,7 @@ impl CollisionIndex {
             // See perspective ratio comment in symbol_sdf.vertex
             // We're doing collision detection in viewport space so we need
             // to scale down boxes in the distance
-            0.5 + 0.5 * ccd / p[3]
+            0.5 + 0.5 * ccd / p[3],
         );
     }
     fn projectPoint(&self, posMatrix: &ModelViewProjection, point: &Point<f64>) -> Point<f64> {
@@ -618,7 +635,6 @@ impl CollisionIndex {
             (((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding),
         );
     }
-
 
     fn getProjectedCollisionBoundaries(
         &self,
