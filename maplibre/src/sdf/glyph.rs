@@ -11,7 +11,7 @@ type GlyphRange = Range<u32>;
 struct FontStackHash;
 struct FontStack;
 
-pub type GlyphID = u16; // was char16_t
+pub type GlyphID = char; // was char16_t
 pub type GlyphIDs = HashSet<GlyphID>;
 
 // Note: this only works for the BMP
@@ -36,8 +36,6 @@ pub struct GlyphMetrics {
     pub advance: u32,
 }
 
-const glyph_borderSize: u8 = 3;
-
 pub struct Glyph {
     // We're using this value throughout the Mapbox GL ecosystem. If this is
     // different, the glyphs also need to be reencoded.
@@ -48,6 +46,10 @@ pub struct Glyph {
 
     // Glyph metrics
     pub metrics: GlyphMetrics,
+}
+
+impl Glyph {
+    pub const borderSize: u8 = 3;
 }
 
 pub type Glyphs = HashMap<GlyphID, Option<Glyph>>;
@@ -68,11 +70,10 @@ pub struct PositionedGlyph {
 }
 
 pub struct PositionedLine {
-    positionedGlyphs: Vec<PositionedGlyph>,
-    lineOffset: f64,
+    pub positionedGlyphs: Vec<PositionedGlyph>,
+    pub lineOffset: f64,
 }
 
-const shaping_yOffset: i32 = -17;
 pub struct Shaping {
     pub positionedLines: Vec<PositionedLine>,
     pub top: f64,
@@ -84,6 +85,9 @@ pub struct Shaping {
     // The y offset *should* be part of the font metadata.
     pub verticalizable: bool,
     pub iconsInText: bool,
+}
+impl Shaping {
+    pub const yOffset: i32 = -17;
 }
 
 impl Into<bool> for Shaping {

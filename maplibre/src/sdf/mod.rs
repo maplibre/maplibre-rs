@@ -41,16 +41,22 @@ mod upload_system;
 mod collision_feature;
 mod collision_index;
 mod collision_system;
+mod constants;
 mod feature_index;
 mod geometry;
 mod glyph;
 mod grid_index;
+mod i18n;
 mod math;
 mod shaping;
-mod style;
+mod style_types;
 mod symbol_projection;
+mod tagged_string;
 pub mod tessellation;
 mod text;
+mod bidi;
+mod font_stack;
+mod glyph_atlas;
 
 struct SymbolPipeline(wgpu::RenderPipeline);
 

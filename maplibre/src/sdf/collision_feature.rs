@@ -7,7 +7,7 @@ use crate::sdf::glyph::Shaping;
 use crate::sdf::grid_index::Circle;
 use crate::sdf::math::{deg2radf, rotate, MinMax};
 use crate::sdf::shaping::{Padding, PositionedIcon};
-use crate::sdf::style::SymbolPlacementType;
+use crate::sdf::style_types::SymbolPlacementType;
 use lyon::geom::Box2D;
 
 pub struct CollisionFeature {
