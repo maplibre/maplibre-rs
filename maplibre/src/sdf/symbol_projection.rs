@@ -1,5 +1,6 @@
 use crate::sdf::collision_index::{GeometryCoordinates, PlacedSymbol, TileDistance};
-use crate::sdf::{convert_point, perp, Point};
+use crate::sdf::geometry::{convert_point_f64, Point};
+use crate::sdf::math::perp;
 use cgmath::{Matrix4, Vector4};
 use std::f64::consts::PI;
 
@@ -121,13 +122,13 @@ fn placeGlyphAlongLine(
         currentIndex += dir;
 
         // offset does not fit on the projected line
-        if (currentIndex < 0 || currentIndex >= line.0.len() as i16) {
+        if (currentIndex < 0 || currentIndex >= line.len() as i16) {
             return None;
         }
 
         prev = current;
         let projection = project(
-            convert_point(line.0.get(currentIndex as usize).unwrap()),
+            convert_point_f64(&line[currentIndex as usize]),
             labelPlaneMatrix,
         );
         if (projection.1 > 0.) {
@@ -138,10 +139,10 @@ fn placeGlyphAlongLine(
             let previousTilePoint = if distanceToPrev == 0. {
                 *tileAnchorPoint
             } else {
-                convert_point(line.0.get((currentIndex - dir) as usize).unwrap())
+                convert_point_f64(&line[(currentIndex - dir) as usize])
             };
 
-            let currentTilePoint = convert_point(line.0.get(currentIndex as usize).unwrap());
+            let currentTilePoint = convert_point_f64(&line[currentIndex as usize]);
             current = projectTruncatedLineSegment(
                 &previousTilePoint,
                 &currentTilePoint,
