@@ -1,9 +1,8 @@
+use cgmath::{prelude::*, *};
 use std::{
     f64,
     ops::{Deref, DerefMut},
 };
-
-use cgmath::{prelude::*, *};
 
 use crate::{
     coords::{ViewRegion, WorldCoords, Zoom, ZoomLevel},
@@ -250,7 +249,7 @@ impl ViewState {
 
     /// A transform which can be used to transform between clip and window space.
     /// Adopted from [here](https://docs.microsoft.com/en-us/windows/win32/direct3d9/viewports-and-clipping#viewport-rectangle) (Direct3D).
-    fn clip_to_window_transform(&self) -> Matrix4<f64> {
+    pub(crate) fn clip_to_window_transform(&self) -> Matrix4<f64> {
         let min_depth = 0.0;
         let max_depth = 1.0;
         let x = 0.0;
@@ -281,6 +280,18 @@ impl ViewState {
 
         self.clip_to_window_transform() * ndc
     }
+
+    /// The way how maplibre converts from clip to window space: https://github.com/maplibre/maplibre-native/blob/4add9ead08799577a37c465b8cb1266676b6c41e/src/mbgl/text/collision_index.cpp/#L437-L438
+    pub(crate) fn clip_to_window_maplibre(&self, clip: &Vector4<f64>) -> Vector4<f64> {
+        assert_eq!(clip.z, 0.0);
+        return Vector4::new(
+            ((clip.x / clip.w + 1.) / 2.) * self.width,
+            ((-clip.y / clip.w + 1.) / 2.) * self.height,
+            0.0,
+            1.0,
+        );
+    }
+
     /// Alternative implementation to `clip_to_window`. Transforms coordinates in clip space to
     /// window coordinates.
     ///

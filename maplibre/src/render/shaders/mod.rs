@@ -263,7 +263,7 @@ pub struct FillShaderFeatureMetadata {
 }
 
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Pod, Zeroable)]
+#[derive(Debug, Copy, Clone, Pod, Zeroable, Default)]
 pub struct SDFShaderFeatureMetadata {
     pub opacity: f32,
 }
@@ -491,7 +491,7 @@ impl Shader for SymbolShader {
                     array_stride: std::mem::size_of::<SDFShaderFeatureMetadata>() as u64,
                     step_mode: wgpu::VertexStepMode::Vertex,
                     attributes: vec![
-                        // color
+                        // opacity
                         wgpu::VertexAttribute {
                             offset: 0,
                             format: wgpu::VertexFormat::Float32,

@@ -154,6 +154,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
 {
     fn xy(&mut self, x: f64, y: f64, _idx: usize) -> GeoResult<()> {
         if let Some(_) = self.current_origin {
+            //FIXME
             unreachable!("Text labels have only a single origin point")
         } else {
             self.current_origin = Some(Box2D::new(
@@ -241,6 +242,9 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         if let (Some(origin), Some(text)) = (&self.current_origin, self.current_text.clone()) {
+            if text.is_empty() {
+                panic!("dud")
+            }
             let anchor = Anchor::BottomLeft;
             // TODO: add more anchor possibilities
             let origin = match anchor {
@@ -256,15 +260,14 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
 
             let next_index = self.quad_buffer.indices.len();
             let start = self.current_index;
-            let end = next_index - start;
+            let end = next_index;
             self.current_index = next_index;
-
-            // We only add a feature
 
             self.features.push(Feature {
                 bbox: bbox.unwrap_or(Box2D::new(origin, origin)),
                 indices: start..end,
                 text_anchor: origin.cast(),
+                str: text,
             });
 
             self.current_origin = None;

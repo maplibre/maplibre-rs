@@ -11,7 +11,8 @@ pub fn project(point: Point<f64>, matrix: &Matrix4<f64>) -> PointAndCameraDistan
     return (Point::new(pos[0] / pos[3], pos[1] / pos[3]), pos[3]);
 }
 
-pub struct PlacedGlyph { // TODO where should this live?
+pub struct PlacedGlyph {
+    // TODO where should this live?
     pub point: Point<f64>,
     pub angle: f64,
     pub tileDistance: Option<TileDistance>,
@@ -89,7 +90,7 @@ fn placeGlyphAlongLine(
         offsetX + lineOffsetX
     };
 
-    let mut dir = if combinedOffsetX > 0. { 1i16 } else { -1 };
+    let mut dir: i16 = if combinedOffsetX > 0. { 1 } else { -1 };
 
     let mut angle = 0.0;
     if (flip) {
@@ -203,6 +204,7 @@ fn projectTruncatedLineSegment(
     .0;
     let projectedUnitSegment = previousProjectedPoint.clone() - projectedUnitVertex.clone();
 
-    return previousProjectedPoint.clone() + (projectedUnitSegment * (minimumLength / projectedUnitSegment.length()));
+    return previousProjectedPoint.clone()
+        + (projectedUnitSegment * (minimumLength / projectedUnitSegment.length()));
     // TODO verify if mag impl is correct mag == length?
 }
