@@ -3,7 +3,6 @@ use widestring::U16String;
 
 pub type Char16 = u16; // was char16_t
 
-// TODO
 pub fn applyArabicShaping(str: &U16String) -> U16String {
     todo!();
 }
@@ -17,13 +16,20 @@ pub type StyledText = (U16String, Vec<u8>);
 // TODO
 pub struct BiDi;
 
-
 impl BiDi {
-pub fn processText(&self, input:  & U16String ,lineBreakPoints: HashSet<usize> ) -> Vec<U16String> {
-    todo!()
-}
+    pub fn processText(
+        &self,
+        input: &U16String,
+        lineBreakPoints: HashSet<usize>,
+    ) -> Vec<U16String> {
+        todo!()
+    }
 
-    pub fn processStyledText(&self, input:  &StyledText,lineBreakPoints: HashSet<usize> ) -> Vec<StyledText> {
-   todo!()
-}
+    pub fn processStyledText(
+        &self,
+        input: &StyledText,
+        lineBreakPoints: HashSet<usize>,
+    ) -> Vec<StyledText> {
+        todo!()
+    }
 }

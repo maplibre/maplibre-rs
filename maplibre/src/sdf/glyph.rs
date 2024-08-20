@@ -7,7 +7,7 @@ use bitflags::bitflags;
 use geo_types::Rect;
 use std::collections::{HashMap, HashSet};
 
-// TODO
+// TODO structs
 struct AlphaImage;
 
 pub type GlyphID = Char16;

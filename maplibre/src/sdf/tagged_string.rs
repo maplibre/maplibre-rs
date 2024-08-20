@@ -2,11 +2,8 @@ use crate::sdf::bidi::{Char16, StyledText};
 use crate::sdf::font_stack::{FontStack, FontStackHash, FontStackHasher};
 use crate::sdf::i18n;
 use crate::sdf::i18n::{BACKSLACK_F, BACKSLACK_V};
+use csscolorparser::Color;
 use widestring::{U16Str, U16String};
-
-// TODO
-#[derive(Clone)]
-struct Color;
 
 #[derive(Clone, Default)]
 pub struct SectionOptions {
