@@ -1,8 +1,8 @@
+use crate::sdf::image::{ImageContent, ImageStretches};
 use geo_types::Rect;
 use std::collections::HashMap;
-use crate::sdf::image::{ImageContent, ImageStretches};
 
-// TODO
+// TODO structs
 struct Image;
 struct ImageManager;
 struct ImageMap;

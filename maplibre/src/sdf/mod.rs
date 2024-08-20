@@ -51,6 +51,7 @@ mod glyph_atlas;
 mod glyph_range;
 mod grid_index;
 mod i18n;
+mod image;
 mod image_atlas;
 mod math;
 mod shaping;
@@ -60,7 +61,6 @@ mod tagged_string;
 pub mod tessellation;
 mod text;
 mod util;
-mod image;
 
 struct SymbolPipeline(wgpu::RenderPipeline);
 

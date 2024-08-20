@@ -3,7 +3,7 @@ use crate::sdf::glyph::{GlyphID, GlyphMap, GlyphMetrics};
 use geo_types::Rect;
 use std::collections::HashMap;
 
-// TODO
+// TODO structs
 pub struct AlphaImage;
 
 pub struct GlyphPosition {

@@ -105,7 +105,7 @@ impl PositionedIcon {
         let bottom = top + image.displaySize()[1];
 
         let mut collisionPadding: Padding = Padding::default();
-        if let Some(content ) = (&image.content) {
+        if let Some(content) = (&image.content) {
             let content = content;
             let pixelRatio = image.pixelRatio;
             collisionPadding.left = content.left / pixelRatio;
@@ -302,8 +302,7 @@ fn getGlyphAdvance(
             return 0.0;
         }
         let image = image.unwrap();
-        return image.displaySize()[0] * section.scale as f64 * ONE_EM / layoutTextSize
-            + spacing;
+        return image.displaySize()[0] * section.scale as f64 * ONE_EM / layoutTextSize + spacing;
     } else {
         let glyphs = glyphMap.get(&section.fontStackHash);
         if (glyphs.is_none()) {
@@ -320,8 +319,14 @@ fn getGlyphAdvance(
             return 0.0;
         }
 
-
-        return (it.expect("cant be none").as_ref().expect("cant be none").metrics.advance as f64 * section.scale) as f64 + spacing;
+        return (it
+            .expect("cant be none")
+            .as_ref()
+            .expect("cant be none")
+            .metrics
+            .advance as f64
+            * section.scale) as f64
+            + spacing;
     }
 }
 
@@ -410,7 +415,7 @@ fn evaluateBreak(
     breakIndex: usize,
     breakX: f64,
     targetWidth: f64,
-    potentialBreaks: & Vec<PotentialBreak>,
+    potentialBreaks: &Vec<PotentialBreak>,
     penalty: f64,
     isLastBreak: bool,
 ) -> PotentialBreak {
