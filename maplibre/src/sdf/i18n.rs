@@ -1,30 +1,31 @@
-use crate::sdf::bidi::u16string;
+use crate::sdf::bidi::Char16;
+use widestring::U16String;
 
-pub fn allowsWordBreaking(chr: char) -> bool {
+pub fn allowsWordBreaking(chr: Char16) -> bool {
     todo!()
 }
 
-pub fn charAllowsLetterSpacing(chr: char) -> bool {
+pub fn charAllowsLetterSpacing(chr: Char16) -> bool {
     todo!()
 }
 
-pub fn allowsLetterSpacing(string: &u16string) -> bool {
+pub fn allowsLetterSpacing(string: &U16String) -> bool {
     todo!()
 }
 
-pub fn allowsIdeographicBreaking_str(string: &u16string) -> bool {
+pub fn allowsIdeographicBreaking_str(string: &U16String) -> bool {
     todo!()
 }
 
-pub fn allowsIdeographicBreaking(chr: char) -> bool {
+pub fn allowsIdeographicBreaking(chr: Char16) -> bool {
     todo!()
 }
 
-pub fn allowsFixedWidthGlyphGeneration(chr: char) -> bool {
+pub fn allowsFixedWidthGlyphGeneration(chr: Char16) -> bool {
     todo!()
 }
 
-pub fn allowsVerticalWritingMode(string: &u16string) -> bool {
+pub fn allowsVerticalWritingMode(string: &U16String) -> bool {
     todo!()
 }
 
@@ -36,31 +37,30 @@ pub fn allowsVerticalWritingMode(string: &u16string) -> bool {
 // upright in vertical text but does not distinguish between upright and
 // “neutral” characters.
 
-pub fn hasUprightVerticalOrientation(chr: char) -> bool {
+pub fn hasUprightVerticalOrientation(chr: Char16) -> bool {
     todo!()
 }
 
-pub fn hasNeutralVerticalOrientation(chr: char) -> bool {
+pub fn hasNeutralVerticalOrientation(chr: Char16) -> bool {
     todo!()
 }
 
-pub fn hasRotatedVerticalOrientation(chr: char) -> bool {
+pub fn hasRotatedVerticalOrientation(chr: Char16) -> bool {
     todo!()
 }
-
 
 // Replaces "horizontal" with "vertical" punctuation in place
 // Does not re-order or change length of string
 // (TaggedString::verticalizePunctuation depends on this behavior)
-pub fn verticalizePunctuation_str(input: &u16string) -> u16string {
+pub fn verticalizePunctuation_str(input: &U16String) -> U16String {
     todo!()
 }
 
-pub fn verticalizePunctuation(chr: char) -> char {
+pub fn verticalizePunctuation(chr: Char16) -> char {
     todo!()
 }
 
-pub fn charInSupportedScript(chr: char) -> bool {
+pub fn charInSupportedScript(chr: Char16) -> bool {
     todo!()
 }
 
@@ -68,16 +68,19 @@ pub fn isStringInSupportedScript(input: &str) -> bool {
     todo!()
 }
 
-pub fn isCharInComplexShapingScript(chr: char) -> bool {
+pub fn isCharInComplexShapingScript(chr: Char16) -> bool {
     todo!()
 }
 
-pub fn isWhitespace(chr: char) -> bool {
+pub const BACKSLACK_V: Char16 = '\u{000B}' as Char16;
+pub const BACKSLACK_F: Char16 = '\u{000C}' as Char16;
+
+pub fn isWhitespace(chr: Char16) -> bool {
     // TODO verify that his is correct \v and \f where not available
-    return chr == ' '
-        || chr == '\t'
-        || chr == '\n'
-        || chr == '\u{000B}'
-        || chr == '\u{000C}'
-        || chr == '\r';
+    return chr == ' ' as Char16
+        || chr == '\t' as Char16
+        || chr == '\n' as Char16
+        || chr == BACKSLACK_V
+        || chr == BACKSLACK_F
+        || chr == '\r' as Char16;
 }

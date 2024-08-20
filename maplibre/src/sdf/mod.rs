@@ -38,15 +38,20 @@ mod resource_system;
 mod upload_system;
 
 // Public due to bechmarks
+mod bidi;
 mod collision_feature;
 mod collision_index;
 mod collision_system;
 mod constants;
 mod feature_index;
+mod font_stack;
 mod geometry;
 mod glyph;
+mod glyph_atlas;
+mod glyph_range;
 mod grid_index;
 mod i18n;
+mod image_atlas;
 mod math;
 mod shaping;
 mod style_types;
@@ -54,9 +59,8 @@ mod symbol_projection;
 mod tagged_string;
 pub mod tessellation;
 mod text;
-mod bidi;
-mod font_stack;
-mod glyph_atlas;
+mod util;
+mod image;
 
 struct SymbolPipeline(wgpu::RenderPipeline);
 

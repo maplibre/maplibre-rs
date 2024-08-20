@@ -1,11 +1,14 @@
-use crate::sdf::bidi::{StyledText, u16string};
-use crate::sdf::font_stack::{FontStack, FontStackHash};
+use crate::sdf::bidi::{Char16, StyledText};
+use crate::sdf::font_stack::{FontStack, FontStackHash, FontStackHasher};
 use crate::sdf::i18n;
+use crate::sdf::i18n::{BACKSLACK_F, BACKSLACK_V};
+use widestring::{U16Str, U16String};
 
 // TODO
+#[derive(Clone)]
 struct Color;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct SectionOptions {
     pub scale: f64,
     pub fontStackHash: FontStackHash,
@@ -14,17 +17,26 @@ pub struct SectionOptions {
     pub imageID: Option<String>,
 }
 impl SectionOptions {
-    pub fn new(imageID_: String) -> Self {
+    pub fn from_image_id(imageID_: String) -> Self {
         Self {
             scale: 1.0,
             imageID: Some(imageID_),
             ..SectionOptions::default()
         }
     }
+    pub fn new(scale: f64, fontStack: FontStack, textColor: Option<Color>) -> Self {
+        Self {
+            scale,
+            fontStackHash: FontStackHasher::new(&fontStack),
+            fontStack,
+            textColor,
+            imageID: None,
+        }
+    }
 }
 
-const PUAbegin: char = '\u{E000}';
-const PUAend: char = '\u{F8FF}';
+const PUAbegin: Char16 = '\u{E000}' as Char16;
+const PUAend: Char16 = '\u{F8FF}' as Char16;
 
 /**
  * A TaggedString is the shaping-code counterpart of the Formatted type
@@ -47,16 +59,17 @@ pub struct TaggedString {
     pub supportsVerticalWritingMode: Option<bool>,
     // Max number of images within a text is 6400 U+E000–U+F8FF
     // that covers Basic Multilingual Plane Unicode Private Use Area (PUA).
-    pub imageSectionID: char,
+    pub imageSectionID: Char16,
 }
 
 impl TaggedString {
-    pub fn new_from_raw(text_: u16string, options: SectionOptions) -> Self {
+    pub fn new_from_raw(text_: U16String, options: SectionOptions) -> Self {
+        let text_len = text_.len();
         Self {
-            styledText: StyledText::new(text_), // == std::move(text_), std::vector<uint8_t>(text_.size(), 0)
+            styledText: (text_, vec![0; text_len]), // TODO is this correct?
             sections: vec![options],
             supportsVerticalWritingMode: None,
-            imageSectionID: 0 as char, // TODO is this correct?
+            imageSectionID: 0 as Char16, // TODO is this correct?
         }
     }
 
@@ -65,31 +78,31 @@ impl TaggedString {
             styledText: styledText_,
             sections: sections_,
             supportsVerticalWritingMode: None,
-            imageSectionID: 0 as char, // TODO is this correct?
+            imageSectionID: 0 as Char16, // TODO is this correct?
         }
     }
 
     pub fn length(&self) -> usize {
-        return self.styledText.0.length();
+        return self.styledText.0.len();
     }
 
     pub fn sectionCount(&self) -> usize {
-        return self.sections.size();
+        return self.sections.len();
     }
 
     pub fn empty(&self) -> bool {
-        return self.styledText.0.empty();
+        return self.styledText.0.is_empty();
     }
 
     pub fn getSection(&self, index: usize) -> &SectionOptions {
-        return self.sections.at(self.styledText.1.at(index));
+        return &self.sections[self.styledText.1[index] as usize]; // TODO Index does not honor encoding, fine? previously it was .at()
     }
 
-    pub fn getCharCodeAt(&self, index: usize) -> char {
-        return self.styledText.0[index];
+    pub fn getCharCodeAt(&self, index: usize) -> u16 {
+        return self.styledText.0.as_slice()[index];
     }
 
-    pub fn rawText(&self) -> &u16string {
+    pub fn rawText(&self) -> &U16String {
         return &self.styledText.0;
     }
 
@@ -99,33 +112,34 @@ impl TaggedString {
 
     pub fn addTextSection(
         &mut self,
-        sectionText: &u16string,
+        sectionText: &U16String,
         scale: f64,
-        fontStack: &FontStack,
+        fontStack: FontStack,
         textColor: Option<Color>,
     ) {
-        self.styledText.0 += sectionText;
-        self.sections.push(scale, fontStack, textColor);
-        self.styledText.1.resize(
-            self.styledText.0.size(),
-            (self.sections.len() - 1) as u8,
-        );
+        self.styledText.0.push(sectionText);
+        self.sections
+            .push(SectionOptions::new(scale, fontStack, textColor));
+        self.styledText
+            .1
+            .resize(self.styledText.0.len(), (self.sections.len() - 1) as u8);
         self.supportsVerticalWritingMode = None;
     }
 
-    pub fn addImageSection(&mut self, imageID: &String) {
+    pub fn addImageSection(&mut self, imageID: String) {
         let nextImageSectionCharCode = self.getNextImageSectionCharCode();
-        if (!nextImageSectionCharCode) {
-            log::warn!("Exceeded maximum number of images in a label.");
-            return;
-        }
 
-        self.styledText.0 += *nextImageSectionCharCode;
-        self.sections.push(imageID);
-        self.styledText.1.resize(
-            self.styledText.0.size(),
-            (self.sections.size() - 1) as u8,
-        );
+        if let Some(nextImageSectionCharCode) = nextImageSectionCharCode {
+            self.styledText
+                .0
+                .push(U16Str::from_slice(&[nextImageSectionCharCode])); // TODO is this correct?
+            self.sections.push(SectionOptions::from_image_id(imageID));
+            self.styledText
+                .1
+                .resize(self.styledText.0.len(), (self.sections.len() - 1) as u8);
+        } else {
+            log::warn!("Exceeded maximum number of images in a label.");
+        }
     }
 
     pub fn sectionAt(&self, index: usize) -> &SectionOptions {
@@ -137,28 +151,52 @@ impl TaggedString {
     }
 
     pub fn getSectionIndex(&self, characterIndex: usize) -> u8 {
-        return self.styledText.1.at(characterIndex);
+        return self.styledText.1[characterIndex]; // TODO Index does not honor encoding, fine? previously it was .at()
     }
 
     pub fn getMaxScale(&self) -> f64 {
-    let mut maxScale = 0.0;
-    for i in 0..self.styledText.0.length() {
-        maxScale = maxScale.max(self.getSection(i).scale)
+        let mut maxScale: f64 = 0.0;
+        for i in 0..self.styledText.0.len() {
+            maxScale = maxScale.max(self.getSection(i).scale)
+        }
+        return maxScale;
     }
-    return maxScale;
-    }
+
+    const WHITESPACE_CHARS: &'static [Char16] = &[
+        ' ' as Char16,
+        '\t' as Char16,
+        '\n' as Char16,
+        BACKSLACK_V as Char16,
+        BACKSLACK_F as Char16,
+        '\r' as Char16,
+    ];
+
     pub fn trim(&mut self) {
-        let beginningWhitespace: usize = self.styledText.0.find_first_not_of(" \t\n\v\f\r");
-        if (beginningWhitespace == u16string::npos) {
+        let beginningWhitespace: Option<usize> = self
+            .styledText
+            .0
+            .as_slice()
+            .iter()
+            .position(|c| !Self::WHITESPACE_CHARS.contains(c));
+
+        if let Some(beginningWhitespace) = beginningWhitespace {
+            let trailingWhitespace: usize = self
+                .styledText
+                .0
+                .as_slice()
+                .iter()
+                .rposition(|c| !Self::WHITESPACE_CHARS.contains(c))
+                .expect("there is a whitespace char")
+                + 1;
+
+            self.styledText.0 =
+                U16String::from(&self.styledText.0[beginningWhitespace..trailingWhitespace]); // TODO write test for this
+            self.styledText.1 =
+                Vec::from(&self.styledText.1[beginningWhitespace..trailingWhitespace]);
+        } else {
             // Entirely whitespace
             self.styledText.0.clear();
             self.styledText.1.clear();
-        } else {
-            let trailingWhitespace: usize = self.styledText.0.find_last_not_of(" \t\n\v\f\r") + 1;
-
-            self.styledText.0 = self.styledText.0.substr(beginningWhitespace, trailingWhitespace - beginningWhitespace);
-            self.styledText.1 = (self.styledText.1.begin() + beginningWhitespace,
-                                      self.styledText.1.begin() + trailingWhitespace) as u8;
         }
     }
 
@@ -172,12 +210,14 @@ impl TaggedString {
             self.supportsVerticalWritingMode = Some(new_value);
             return new_value;
         }
-        return self.supportsVerticalWritingMode.expect("supportsVerticalWritingMode is set");
+        return self
+            .supportsVerticalWritingMode
+            .expect("supportsVerticalWritingMode is set");
     }
 }
 
 impl TaggedString {
-    fn getNextImageSectionCharCode(&mut self) -> Option<char> {
+    fn getNextImageSectionCharCode(&mut self) -> Option<Char16> {
         if (self.imageSectionID == 0) {
             self.imageSectionID = PUAbegin;
             return Some(self.imageSectionID);

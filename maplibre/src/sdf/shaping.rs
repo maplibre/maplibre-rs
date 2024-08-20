@@ -1,13 +1,16 @@
+use crate::sdf::bidi::{BiDi, Char16};
 use crate::sdf::constants::ONE_EM;
-use crate::sdf::glyph::{Glyph, GlyphMap, GlyphMetrics, PositionedGlyph, Shaping, WritingModeType};
+use crate::sdf::glyph::{
+    Glyph, GlyphMap, GlyphMetrics, PositionedGlyph, PositionedLine, Shaping, WritingModeType,
+};
+use crate::sdf::glyph_atlas::GlyphPositions;
 use crate::sdf::i18n;
+use crate::sdf::image_atlas::{ImagePosition, ImagePositions};
 use crate::sdf::style_types::{IconTextFitType, SymbolAnchorType, TextJustifyType};
 use crate::sdf::tagged_string::{SectionOptions, TaggedString};
 use cgmath::num_traits::Pow;
-use geo_types::Rect;
+use geo_types::{coord, Rect};
 use std::collections::HashSet;
-use crate::sdf::bidi::BiDi;
-use crate::sdf::glyph_atlas::GlyphPositions;
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct Padding {
@@ -22,11 +25,6 @@ impl Into<bool> for Padding {
         self.left != 0. || self.top != 0. || self.right != 0. || self.bottom != 0.
     }
 }
-
-// TODO
-#[derive(Default)]
-struct ImagePosition;
-struct ImagePositions;
 
 struct AnchorAlignment {
     horizontalAlign: f64,
@@ -83,7 +81,6 @@ fn getAnchorJustification(anchor: SymbolAnchorType) -> TextJustifyType {
     }
 }
 
-#[derive(Default)]
 pub struct PositionedIcon {
     pub image: ImagePosition,
     pub top: f64,
@@ -108,8 +105,8 @@ impl PositionedIcon {
         let bottom = top + image.displaySize()[1];
 
         let mut collisionPadding: Padding = Padding::default();
-        if (image.content) {
-            let content = *image.content;
+        if let Some(content ) = (&image.content) {
+            let content = content;
             let pixelRatio = image.pixelRatio;
             collisionPadding.left = content.left / pixelRatio;
             collisionPadding.top = content.top / pixelRatio;
@@ -132,7 +129,7 @@ impl PositionedIcon {
     fn fitIconToText(
         &mut self,
         shapedText: &Shaping,
-        textFit: &IconTextFitType,
+        textFit: IconTextFitType,
         padding: &[f64; 4],
         iconOffset: &[f64; 2],
         fontScale: f64,
@@ -204,7 +201,10 @@ pub fn getShaping(
             ),
         );
         for line in untaggedLines {
-            reorderedLines.push(TaggedString::new(line, formattedString.sectionAt(0)));
+            reorderedLines.push(TaggedString::new_from_raw(
+                line,
+                formattedString.sectionAt(0).clone(),
+            ));
         }
     } else {
         let processedLines = bidi.processStyledText(
@@ -219,13 +219,16 @@ pub fn getShaping(
             ),
         );
         for line in processedLines {
-            reorderedLines.push(TaggedString::new(line, formattedString.getSections()));
+            reorderedLines.push(TaggedString::new(
+                line,
+                formattedString.getSections().clone(),
+            ));
         }
     }
-    let shaping = Shaping::new(translate[0], translate[1], writingMode);
+    let mut shaping = Shaping::new(translate[0], translate[1], writingMode);
     shapeLines(
-        shaping,
-        &reorderedLines,
+        &mut shaping,
+        &mut reorderedLines,
         spacing,
         lineHeight,
         textAnchor,
@@ -242,7 +245,7 @@ pub fn getShaping(
 }
 
 // Zero width space that is used to suggest break points for Japanese labels.
-const ZWSP: char = '\u{200b}'; // was char16_t
+const ZWSP: Char16 = '\u{200b}' as Char16;
 
 fn align(
     shaping: &mut Shaping,
@@ -256,16 +259,14 @@ fn align(
     lineCount: usize,
 ) {
     let shiftX = (justify - horizontalAlign) * maxLineLength;
-    let mut shiftY = 0.0;
-
-    if (maxLineHeight != lineHeight) {
-        shiftY = -blockHeight * verticalAlign - Shaping::yOffset as f64;
+    let shiftY = if (maxLineHeight != lineHeight) {
+        -blockHeight * verticalAlign - Shaping::yOffset as f64
     } else {
-        shiftY = (-verticalAlign * (lineCount) as f64 + 0.5) * lineHeight;
-    }
+        (-verticalAlign * (lineCount) as f64 + 0.5) * lineHeight
+    };
 
     for line in &mut shaping.positionedLines {
-        for mut positionedGlyph in &mut line.positionedGlyphs {
+        for positionedGlyph in &mut line.positionedGlyphs {
             positionedGlyph.x += shiftX;
             positionedGlyph.y += shiftY;
         }
@@ -273,45 +274,54 @@ fn align(
 }
 
 // justify left = 0, right = 1, center = .5
-fn justifyLine(positionedGlyphs: Vec<PositionedGlyph>, justify: f64, lineOffset: f64) {
+fn justifyLine(positionedGlyphs: &mut Vec<PositionedGlyph>, justify: f64, lineOffset: f64) {
     if (justify == 0.0 && lineOffset == 0.0) {
         return;
     }
 
-    let lastGlyph = positionedGlyphs.back();
-    let lastAdvance: f64 = lastGlyph.metrics.advance * lastGlyph.scale;
+    let lastGlyph = positionedGlyphs.last().unwrap();
+    let lastAdvance: f64 = lastGlyph.metrics.advance as f64 * lastGlyph.scale;
     let lineIndent = lastGlyph.x + lastAdvance as f64 * justify;
-    for mut positionedGlyph in positionedGlyphs {
+    for positionedGlyph in positionedGlyphs {
         positionedGlyph.x -= lineIndent;
         positionedGlyph.y += lineOffset;
     }
 }
 
 fn getGlyphAdvance(
-    codePoint: char, // was char16_t
+    codePoint: Char16,
     section: &SectionOptions,
     glyphMap: &GlyphMap,
     imagePositions: &ImagePositions,
     layoutTextSize: f64,
     spacing: f64,
 ) -> f64 {
-    if (!section.imageID) {
-        let glyphs = glyphMap.find(section.fontStackHash);
-        if (glyphs == glyphMap.end()) {
+    if let Some(imageID) = &section.imageID {
+        let image = imagePositions.get(imageID);
+        if (image.is_none()) {
             return 0.0;
         }
-        let it = glyphs.second.find(codePoint);
-        if (it == glyphs.second.end() || !it.second) {
-            return 0.0;
-        }
-        return ((*it.second).metrics.advance * section.scale) as f64 + spacing;
-    } else {
-        let image = imagePositions.find(*section.imageID);
-        if (image == imagePositions.end()) {
-            return 0.0;
-        }
-        return image.second.displaySize()[0] * section.scale as f64 * ONE_EM / layoutTextSize
+        let image = image.unwrap();
+        return image.displaySize()[0] * section.scale as f64 * ONE_EM / layoutTextSize
             + spacing;
+    } else {
+        let glyphs = glyphMap.get(&section.fontStackHash);
+        if (glyphs.is_none()) {
+            return 0.0;
+        }
+        let glyphs = glyphs.unwrap();
+        let it = glyphs.get(&codePoint);
+
+        if (it.is_none()) {
+            return 0.0;
+        }
+
+        if it.expect("cant be none").is_none() {
+            return 0.0;
+        }
+
+
+        return (it.expect("cant be none").as_ref().expect("cant be none").metrics.advance as f64 * section.scale) as f64 + spacing;
     }
 }
 
@@ -327,7 +337,7 @@ fn determineAverageLineWidth(
 
     for i in 0..logicalInput.length() {
         let section = logicalInput.getSection(i);
-        let codePoint: char = logicalInput.getCharCodeAt(i); // was char16_t
+        let codePoint: Char16 = logicalInput.getCharCodeAt(i);
         totalWidth += getGlyphAdvance(
             codePoint,
             section,
@@ -359,23 +369,23 @@ fn calculateBadness(lineWidth: f64, targetWidth: f64, penalty: f64, isLastBreak:
 }
 
 fn calculatePenalty(
-    codePoint: char,     /* was char16_t */
-    nextCodePoint: char, /* was char16_t */
+    codePoint: Char16,
+    nextCodePoint: Char16,
     penalizableIdeographicBreak: bool,
 ) -> f64 {
     let mut penalty = 0.;
     // Force break on newline
-    if (codePoint == 0x0a as char) {
+    if (codePoint == 0x0au16) {
         penalty -= 10000.;
     }
 
     // Penalize open parenthesis at end of line
-    if (codePoint == 0x28 as char || codePoint == 0xff08 as char) {
+    if (codePoint == 0x28u16 || codePoint == 0xff08u16) {
         penalty += 50.;
     }
 
     // Penalize close parenthesis at beginning of line
-    if (nextCodePoint == 0x29 as char || nextCodePoint == 0xff09 as char) {
+    if (nextCodePoint == 0x29u16 || nextCodePoint == 0xff09u16) {
         penalty += 50.;
     }
 
@@ -388,34 +398,35 @@ fn calculatePenalty(
     return penalty;
 }
 
-struct PotentialBreak<'a> {
+#[derive(Clone)]
+struct PotentialBreak {
     pub index: usize,
     pub x: f64,
-    pub priorBreak: Option<&'a PotentialBreak<'a>>,
+    pub priorBreak: Option<Box<PotentialBreak>>, // TODO avoid Box
     pub badness: f64,
 }
 
-fn evaluateBreak<'a>(
+fn evaluateBreak(
     breakIndex: usize,
     breakX: f64,
     targetWidth: f64,
-    potentialBreaks: &'a Vec<PotentialBreak<'a>>,
+    potentialBreaks: & Vec<PotentialBreak>,
     penalty: f64,
     isLastBreak: bool,
-) -> PotentialBreak<'a> {
+) -> PotentialBreak {
     // We could skip evaluating breaks where the line length (breakX - priorBreak.x) > maxWidth
     //  ...but in fact we allow lines longer than maxWidth (if there's no break points)
     //  ...and when targetWidth and maxWidth are close, strictly enforcing maxWidth can give
     //     more lopsided results.
 
-    let mut bestPriorBreak: Option<&PotentialBreak> = None;
+    let mut bestPriorBreak: Option<Box<PotentialBreak>> = None;
     let mut bestBreakBadness: f64 = calculateBadness(breakX, targetWidth, penalty, isLastBreak);
     for potentialBreak in potentialBreaks {
         let lineWidth = breakX - potentialBreak.x;
         let breakBadness =
             calculateBadness(lineWidth, targetWidth, penalty, isLastBreak) + potentialBreak.badness;
         if (breakBadness <= bestBreakBadness) {
-            bestPriorBreak = Some(&potentialBreak);
+            bestPriorBreak = Some(Box::new(potentialBreak.clone()));
             bestBreakBadness = breakBadness;
         }
     }
@@ -430,10 +441,11 @@ fn evaluateBreak<'a>(
 
 fn leastBadBreaks(lastLineBreak: &PotentialBreak) -> HashSet<usize> {
     let mut leastBadBreaks: HashSet<usize> = HashSet::from([lastLineBreak.index]);
-    let mut priorBreak = lastLineBreak.priorBreak;
-    while (priorBreak) {
-        leastBadBreaks.insert(priorBreak.index);
-        priorBreak = priorBreak.priorBreak;
+    let mut priorBreak = &lastLineBreak.priorBreak;
+
+    while let Some(priorBreak_) = priorBreak {
+        leastBadBreaks.insert(priorBreak_.index);
+        priorBreak = &priorBreak_.priorBreak;
     }
     return leastBadBreaks;
 }
@@ -468,11 +480,11 @@ fn determineLineBreaks(
     let mut potentialBreaks: Vec<PotentialBreak> = Vec::new();
     let mut currentX: f64 = 0.;
     // Find first occurance of zero width space (ZWSP) character.
-    let hasServerSuggestedBreaks = logicalInput.rawText().find_first_of(ZWSP) != std::string::npos;
+    let hasServerSuggestedBreaks = logicalInput.rawText().as_slice().iter().any(|c| *c == ZWSP);
 
     for i in 0..logicalInput.length() {
         let section = logicalInput.getSection(i);
-        let codePoint: char = logicalInput.getCharCodeAt(i); // was char16_t
+        let codePoint: Char16 = logicalInput.getCharCodeAt(i);
         if (!i18n::isWhitespace(codePoint)) {
             currentX += getGlyphAdvance(
                 codePoint,
@@ -488,11 +500,14 @@ fn determineLineBreaks(
         // often appear without surrounding spaces.
         if (i < logicalInput.length() - 1) {
             let allowsIdeographicBreak = i18n::allowsIdeographicBreaking(codePoint);
-            if (section.imageID || allowsIdeographicBreak || i18n::allowsWordBreaking(codePoint)) {
+            if (section.imageID.is_some()
+                || allowsIdeographicBreak
+                || i18n::allowsWordBreaking(codePoint))
+            {
                 let penalizableIdeographicBreak =
                     allowsIdeographicBreak && hasServerSuggestedBreaks;
                 let nextIndex: usize = i + 1;
-                potentialBreaks.push(evaluateBreak(
+                let potential_break = evaluateBreak(
                     nextIndex,
                     currentX,
                     targetWidth,
@@ -503,12 +518,13 @@ fn determineLineBreaks(
                         penalizableIdeographicBreak,
                     ),
                     false,
-                ));
+                );
+                potentialBreaks.push(potential_break);
             }
         }
     }
 
-    return leastBadBreaks(evaluateBreak(
+    return leastBadBreaks(&evaluateBreak(
         logicalInput.length(),
         currentX,
         targetWidth,
@@ -520,7 +536,7 @@ fn determineLineBreaks(
 
 fn shapeLines(
     shaping: &mut Shaping,
-    lines: &Vec<TaggedString>,
+    lines: &mut Vec<TaggedString>,
     spacing: f64,
     lineHeight: f64,
     textAnchor: SymbolAnchorType,
@@ -549,6 +565,8 @@ fn shapeLines(
         }
     };
 
+    let n_lines = lines.len();
+
     for line in lines {
         // Collapse whitespace so it doesn't throw off justification
         line.trim();
@@ -556,9 +574,9 @@ fn shapeLines(
         let lineMaxScale = line.getMaxScale();
         let maxLineOffset = (lineMaxScale - 1.0) * ONE_EM;
         let mut lineOffset = 0.0;
-        shaping.positionedLines.push();
-        let positionedLine = shaping.positionedLines.back();
-        let positionedGlyphs = positionedLine.positionedGlyphs;
+        shaping.positionedLines.push(PositionedLine::default());
+        let positionedLine = shaping.positionedLines.last_mut().unwrap();
+        let positionedGlyphs = &mut positionedLine.positionedGlyphs;
 
         if (line.empty()) {
             y += lineHeight; // Still need a line feed after empty line
@@ -566,16 +584,16 @@ fn shapeLines(
         }
 
         for i in 0..line.length() {
-            let sectionIndex = line.getSectionIndex(i);
+            let sectionIndex = line.getSectionIndex(i) as usize;
             let section = line.sectionAt(sectionIndex);
-            let codePoint: char = line.getCharCodeAt(i); // was char16_t
+            let codePoint: Char16 = line.getCharCodeAt(i);
             let mut baselineOffset = 0.0;
-            let rect: Rect<u16>;
-            let mut metrics: GlyphMetrics;
+            let mut rect: Rect<u16> = Rect::new(coord! {x: 0, y: 0}, coord! {x: 0, y: 0}); // TODO are these default values fine?
+            let mut metrics: GlyphMetrics = GlyphMetrics::default(); // TODO are these default values fine?
             let mut advance = 0.0;
             let mut verticalAdvance = ONE_EM;
-            let sectionScale = section.scale;
-            assert!(sectionScale);
+            let mut sectionScale = section.scale;
+            assert_ne!(sectionScale, 0.0);
 
             let vertical = !(writingMode == WritingModeType::Horizontal ||
                 // Don't verticalize glyphs that have no upright orientation
@@ -584,52 +602,27 @@ fn shapeLines(
                 // If vertical placement is ebabled, don't verticalize glyphs
                 // that are from complex text layout script, or whitespaces.
                 (allowVerticalPlacement &&
-                 (i18n::isWhitespace(codePoint.is_whitespace()) || i18n::isCharInComplexShapingScript(codePoint))));
+                 (i18n::isWhitespace(codePoint) || i18n::isCharInComplexShapingScript(codePoint))));
 
-            if (!section.imageID) {
-                let glyphPositionMap = glyphPositions.find(section.fontStackHash);
-                if (glyphPositionMap == glyphPositions.end()) {
+            if let Some(imageID) = &section.imageID {
+                let image = imagePositions.get(imageID);
+                if (image.is_none()) {
                     continue;
                 }
+                let image = image.expect("is some");
 
-                let glyphPosition = glyphPositionMap.second.find(codePoint);
-                if (glyphPosition != glyphPositionMap.second.end()) {
-                    rect = glyphPosition.second.rect;
-                    metrics = glyphPosition.second.metrics;
-                } else {
-                    let glyphs = glyphMap.find(section.fontStackHash);
-                    if (glyphs == glyphMap.end()) {
-                        continue;
-                    }
-
-                    let glyph = glyphs.second.find(codePoint);
-                    if (glyph == glyphs.second.end() || !glyph.second) {
-                        continue;
-                    }
-                    metrics = (*glyph.second).metrics;
-                }
-                advance = metrics.advance as f64;
-                // We don't know the baseline, but since we're laying out
-                // at 24 points, we can calculate how much it will move when
-                // we scale up or down.
-                baselineOffset = (lineMaxScale - sectionScale) * ONE_EM;
-            } else {
-                let image = imagePositions.find(*section.imageID);
-                if (image == imagePositions.end()) {
-                    continue;
-                }
                 shaping.iconsInText |= true;
-                let displaySize = image.second.displaySize();
+                let displaySize = image.displaySize();
                 metrics.width = (displaySize[0]) as u32;
                 metrics.height = (displaySize[1]) as u32;
-                metrics.left = ImagePosition::padding;
+                metrics.left = ImagePosition::padding as i32;
                 metrics.top = -(Glyph::borderSize as i32);
                 metrics.advance = if vertical {
                     metrics.height
                 } else {
                     metrics.width
                 };
-                rect = image.second.paddedRect;
+                rect = image.paddedRect;
 
                 // If needed, allow to set scale factor for an image using
                 // alias "image-scale" that could be alias for "font-scale"
@@ -640,7 +633,9 @@ fn shapeLines(
                 // Aligns bottom of an image to a baseline level.
                 let imageOffset = ONE_EM - displaySize[1] * sectionScale as f64;
                 baselineOffset = maxLineOffset + imageOffset;
-                advance = verticalAdvance = metrics.advance as f64;
+
+                verticalAdvance = metrics.advance as f64;
+                advance = verticalAdvance;
 
                 // Difference between height of an image and one EM at max line scale.
                 // Pushes current line down if an image size is over 1 EM at max line scale.
@@ -653,42 +648,79 @@ fn shapeLines(
                 if (offset > 0.0 && offset > lineOffset) {
                     lineOffset = offset;
                 }
+            } else {
+                let glyphPositionMap = glyphPositions.get(&section.fontStackHash); // TODO was .find
+                if (glyphPositionMap.is_none()) {
+                    continue;
+                }
+
+                let glyphPositionMap = glyphPositionMap.expect("cant be none");
+
+                let glyphPosition = glyphPositionMap.get(&codePoint);
+                if let Some(glyphPosition) = glyphPosition {
+                    rect = glyphPosition.rect;
+                    metrics = glyphPosition.metrics.clone();
+                } else {
+                    let glyphs = glyphMap.get(&section.fontStackHash);
+                    if (glyphs.is_none()) {
+                        continue;
+                    }
+                    let glyphs = glyphs.expect("cant be none");
+
+                    let glyph = glyphs.get(&codePoint);
+
+                    if (glyph.is_none()) {
+                        continue;
+                    }
+
+                    if glyph.expect("cant be none").is_none() {
+                        continue;
+                    }
+
+                    metrics =
+                        (glyph.expect("cant be none").as_ref().expect("cant be none")).metrics;
+                }
+                advance = metrics.advance as f64;
+                // We don't know the baseline, but since we're laying out
+                // at 24 points, we can calculate how much it will move when
+                // we scale up or down.
+                baselineOffset = (lineMaxScale - sectionScale) * ONE_EM;
             }
 
             if (!vertical) {
-                positionedGlyphs.push(
-                    codePoint,
+                positionedGlyphs.push(PositionedGlyph {
+                    glyph: codePoint,
                     x,
-                    y + baselineOffset as f64,
+                    y: y + baselineOffset as f64,
                     vertical,
-                    section.fontStackHash,
-                    sectionScale as f64,
+                    font: section.fontStackHash,
+                    scale: sectionScale as f64,
                     rect,
                     metrics,
-                    section.imageID,
+                    imageID: section.imageID.clone(),
                     sectionIndex,
-                );
+                });
                 x += advance * sectionScale as f64 + spacing;
             } else {
-                positionedGlyphs.push(
-                    codePoint,
+                positionedGlyphs.push(PositionedGlyph {
+                    glyph: codePoint,
                     x,
-                    y + baselineOffset as f64,
+                    y: y + baselineOffset as f64,
                     vertical,
-                    section.fontStackHash,
-                    sectionScale as f64,
+                    font: section.fontStackHash,
+                    scale: sectionScale as f64,
                     rect,
                     metrics,
-                    section.imageID,
+                    imageID: section.imageID.clone(),
                     sectionIndex,
-                );
+                });
                 x += verticalAdvance * sectionScale as f64 + spacing;
                 shaping.verticalizable |= true;
             }
         }
 
         // Only justify if we placed at least one glyph
-        if (!positionedGlyphs.empty()) {
+        if (!positionedGlyphs.is_empty()) {
             let lineLength = x - spacing; // Don't count trailing spacing
             maxLineLength = (lineLength).max(maxLineLength);
             justifyLine(positionedGlyphs, justify, (lineOffset) as f64);
@@ -712,7 +744,7 @@ fn shapeLines(
         maxLineHeight,
         lineHeight,
         height,
-        lines.len(),
+        n_lines,
     );
 
     // Calculate the bounding box
