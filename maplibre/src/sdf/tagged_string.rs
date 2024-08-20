@@ -59,6 +59,18 @@ pub struct TaggedString {
     pub imageSectionID: Char16,
 }
 
+impl Default for TaggedString {
+    /// Returns an empty string
+    fn default() -> Self {
+        Self {
+            styledText: (U16String::new(), vec![]), // TODO is this correct?
+            sections: vec![],
+            supportsVerticalWritingMode: None,
+            imageSectionID: 0 as Char16, // TODO is this correct?
+        }
+    }
+}
+
 impl TaggedString {
     pub fn new_from_raw(text_: U16String, options: SectionOptions) -> Self {
         let text_len = text_.len();
@@ -226,5 +238,69 @@ impl TaggedString {
         }
 
         return Some(self.imageSectionID);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::sdf::bidi::Char16;
+    use crate::sdf::i18n::BACKSLACK_V;
+    use crate::sdf::tagged_string::{SectionOptions, TaggedString};
+    use widestring::U16String;
+
+    #[test]
+    fn TaggedString_Trim() {
+        let mut basic = TaggedString::new_from_raw(
+            " \t\ntrim that and not this  \n\t".into(),
+            SectionOptions::new(1.0, vec![], None),
+        );
+        basic.trim();
+        assert_eq!(basic.rawText(), &U16String::from("trim that and not this"));
+
+        let mut twoSections = TaggedString::default();
+        twoSections.addTextSection(&" \t\ntrim that".into(), 1.5, vec![], None);
+        twoSections.addTextSection(&" and not this  \n\t".into(), 0.5, vec![], None);
+
+        twoSections.trim();
+        assert_eq!(
+            twoSections.rawText(),
+            &U16String::from("trim that and not this")
+        );
+
+        let mut empty = TaggedString::new_from_raw(
+            format!(
+                "\n\t{} \r  \t\n",
+                char::from_u32(BACKSLACK_V as u32).unwrap()
+            )
+            .into(),
+            SectionOptions::new(1.0, vec![], None),
+        );
+        empty.trim();
+        assert_eq!(empty.rawText(), &U16String::from(""));
+
+        let mut noTrim =
+            TaggedString::new_from_raw("no trim!".into(), SectionOptions::new(1.0, vec![], None));
+        noTrim.trim();
+        assert_eq!(noTrim.rawText(), &U16String::from("no trim!"));
+    }
+    #[test]
+    fn TaggedString_ImageSections() {
+        let mut string = TaggedString::new_from_raw(U16String::new(), SectionOptions::default());
+        string.addImageSection("image_name".to_string());
+        assert_eq!(string.rawText(), &U16String::from("\u{E000}"));
+        assert!(string.getSection(0).imageID.is_some());
+        assert_eq!(
+            string.getSection(0).imageID.as_ref().unwrap(),
+            &"image_name".to_string()
+        );
+
+        let mut maxSections = TaggedString::default();
+        for i in 0..6401 {
+            maxSections.addImageSection(i.to_string());
+        }
+
+        assert_eq!(maxSections.getSections().len(), 6400);
+        assert_eq!(maxSections.getCharCodeAt(0), '\u{E000}' as Char16);
+        assert_eq!(maxSections.getCharCodeAt(6399), '\u{F8FF}' as Char16);
     }
 }
