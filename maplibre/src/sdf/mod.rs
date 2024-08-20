@@ -142,3 +142,5 @@ pub struct SymbolLayersDataComponent {
 }
 
 impl TileComponent for SymbolLayersDataComponent {}
+
+pub struct GlyphSpace;

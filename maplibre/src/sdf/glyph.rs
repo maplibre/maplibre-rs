@@ -1,17 +1,19 @@
 // Except for to-do comments this file was fully translated
 
+use crate::euclid::Rect;
 use crate::sdf::bidi::Char16;
 use crate::sdf::font_stack::{FontStack, FontStackHash};
 use crate::sdf::glyph_range::GlyphRange;
+use crate::sdf::GlyphSpace;
 use bitflags::bitflags;
-use geo_types::Rect;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 // TODO structs
+#[derive(Default)]
 struct AlphaImage;
 
 pub type GlyphID = Char16;
-pub type GlyphIDs = HashSet<GlyphID>;
+pub type GlyphIDs = BTreeSet<GlyphID>;
 
 // Note: this only works for the BMP
 pub fn getGlyphRange(glyph: GlyphID) -> GlyphRange {
@@ -35,6 +37,7 @@ pub struct GlyphMetrics {
     pub advance: u32,
 }
 
+#[derive(Default)]
 pub struct Glyph {
     // We're using this value throughout the Mapbox GL ecosystem. If this is
     // different, the glyphs also need to be reencoded.
@@ -51,8 +54,8 @@ impl Glyph {
     pub const borderSize: u8 = 3;
 }
 
-pub type Glyphs = HashMap<GlyphID, Option<Glyph>>;
-pub type GlyphMap = HashMap<FontStackHash, Glyphs>;
+pub type Glyphs = BTreeMap<GlyphID, Option<Glyph>>;
+pub type GlyphMap = BTreeMap<FontStackHash, Glyphs>;
 
 pub struct PositionedGlyph {
     pub glyph: GlyphID,
@@ -61,7 +64,7 @@ pub struct PositionedGlyph {
     pub vertical: bool,
     pub font: FontStackHash,
     pub scale: f64,
-    pub rect: Rect<u16>,
+    pub rect: Rect<u16, GlyphSpace>,
     pub metrics: GlyphMetrics,
     pub imageID: Option<String>,
     // Maps positioned glyph to TaggedString section
@@ -120,5 +123,5 @@ bitflags! {
     }
 }
 
-pub type GlyphDependencies = HashMap<FontStack, GlyphIDs>;
-pub type GlyphRangeDependencies = HashMap<FontStack, HashSet<GlyphRange>>;
+pub type GlyphDependencies = BTreeMap<FontStack, GlyphIDs>;
+pub type GlyphRangeDependencies = BTreeMap<FontStack, HashSet<GlyphRange>>;

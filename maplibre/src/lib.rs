@@ -23,6 +23,10 @@ extern crate core;
 // Export tile format
 pub use geozero::mvt::tile; // Used in transferables.rs in web/singlethreaded
 
+pub mod euclid {
+    pub use lyon::geom::euclid::*;
+}
+
 pub mod context;
 pub mod coords;
 #[cfg(feature = "headless")]

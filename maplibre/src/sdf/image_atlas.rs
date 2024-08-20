@@ -1,5 +1,6 @@
+use crate::euclid::Rect;
 use crate::sdf::image::{ImageContent, ImageStretches};
-use geo_types::Rect;
+use crate::sdf::GlyphSpace;
 use std::collections::HashMap;
 
 // TODO structs
@@ -11,7 +12,7 @@ struct PremultipliedImage;
 
 pub struct ImagePosition {
     pub pixelRatio: f64,
-    pub paddedRect: Rect<u16>,
+    pub paddedRect: Rect<u16, GlyphSpace>,
     pub version: u32,
     pub stretchX: ImageStretches,
     pub stretchY: ImageStretches,
@@ -52,7 +53,7 @@ pub type ImagePositions = HashMap<String, ImagePosition>;
 
 struct ImagePatch {
     image: Image,
-    paddedRect: Rect<u16>,
+    paddedRect: Rect<u16, GlyphSpace>,
 }
 
 impl ImagePatch {}

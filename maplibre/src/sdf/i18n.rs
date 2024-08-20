@@ -2,30 +2,49 @@ use crate::sdf::bidi::Char16;
 use widestring::U16String;
 
 pub fn allowsWordBreaking(chr: Char16) -> bool {
-    todo!()
+    return (chr == 0x0a      /* newline */
+        || chr == 0x20   /* space */
+        || chr == 0x26   /* ampersand */
+        || chr == 0x28   /* open parenthesis */
+        || chr == 0x29   /* close parenthesis */
+        || chr == 0x2b   /* plus sign */
+        || chr == 0x2d   /* hyphen-minus */
+        || chr == 0x2f   /* solidus */
+        || chr == 0xad   /* soft hyphen */
+        || chr == 0xb7   /* middle dot */
+        || chr == 0x200b /* zero-width space */
+        || chr == 0x2010 /* hyphen */
+        || chr == 0x2013 /* en dash */
+    );
 }
 
 pub fn charAllowsLetterSpacing(chr: Char16) -> bool {
+    return false;
     todo!()
 }
 
 pub fn allowsLetterSpacing(string: &U16String) -> bool {
+    return false;
     todo!()
 }
 
 pub fn allowsIdeographicBreaking_str(string: &U16String) -> bool {
+    return false;
     todo!()
 }
 
 pub fn allowsIdeographicBreaking(chr: Char16) -> bool {
+    return false;
     todo!()
 }
 
 pub fn allowsFixedWidthGlyphGeneration(chr: Char16) -> bool {
+    return false;
     todo!()
 }
 
 pub fn allowsVerticalWritingMode(string: &U16String) -> bool {
+    return false;
     todo!()
 }
 
@@ -38,38 +57,49 @@ pub fn allowsVerticalWritingMode(string: &U16String) -> bool {
 // “neutral” characters.
 
 pub fn hasUprightVerticalOrientation(chr: Char16) -> bool {
+    return false;
     todo!()
 }
 
 pub fn hasNeutralVerticalOrientation(chr: Char16) -> bool {
+    return false;
     todo!()
 }
 
 pub fn hasRotatedVerticalOrientation(chr: Char16) -> bool {
-    todo!()
+    return !(hasUprightVerticalOrientation(chr) || hasNeutralVerticalOrientation(chr));
 }
 
 // Replaces "horizontal" with "vertical" punctuation in place
 // Does not re-order or change length of string
 // (TaggedString::verticalizePunctuation depends on this behavior)
 pub fn verticalizePunctuation_str(input: &U16String) -> U16String {
+    return input.clone();
     todo!()
 }
 
-pub fn verticalizePunctuation(chr: Char16) -> char {
+pub fn verticalizePunctuation(chr: Char16) -> Char16 {
+    return 0;
     todo!()
 }
 
 pub fn charInSupportedScript(chr: Char16) -> bool {
+    return true;
     todo!()
 }
 
 pub fn isStringInSupportedScript(input: &str) -> bool {
-    todo!()
+    let u16string = U16String::from(input); // TODO: verify if this is correct
+    for chr in u16string.as_slice() {
+        if (!charInSupportedScript(*chr)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 pub fn isCharInComplexShapingScript(chr: Char16) -> bool {
-    todo!()
+    return false;
 }
 
 pub const BACKSLACK_V: Char16 = '\u{000B}' as Char16;

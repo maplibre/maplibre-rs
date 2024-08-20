@@ -1,6 +1,6 @@
 use crate::sdf::util::hash_combine;
 use crate::style::layer::StyleLayer;
-use std::collections::HashSet;
+use std::collections::{BTreeSet};
 
 // An array of font names
 pub type FontStack = Vec<String>;
@@ -23,8 +23,8 @@ pub fn fontStackToString(fontStack: &FontStack) -> String {
 }
 
 /// Statically evaluate layer properties to determine what font stacks are used.
-pub fn fontStacks(layers: &Vec<StyleLayer>) -> HashSet<FontStack> {
-    let mut result = HashSet::new();
+pub fn fontStacks(layers: &Vec<StyleLayer>) -> BTreeSet<FontStack> {
+    let mut result = BTreeSet::new();
     for layer in layers {
         populateFontStack(layer, &mut result);
     }
@@ -32,6 +32,6 @@ pub fn fontStacks(layers: &Vec<StyleLayer>) -> HashSet<FontStack> {
     return result;
 }
 
-pub(crate) fn populateFontStack(layer: &StyleLayer, stack: &mut HashSet<FontStack>) {
+pub(crate) fn populateFontStack(layer: &StyleLayer, stack: &mut BTreeSet<FontStack>) {
     todo!()
 }
