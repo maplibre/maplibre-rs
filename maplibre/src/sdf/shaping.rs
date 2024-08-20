@@ -10,7 +10,7 @@ use crate::sdf::style_types::{IconTextFitType, SymbolAnchorType, TextJustifyType
 use crate::sdf::tagged_string::{SectionOptions, TaggedString};
 use crate::sdf::{i18n, GlyphSpace};
 use cgmath::num_traits::Pow;
-use std::collections::{BTreeSet};
+use std::collections::BTreeSet;
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct Padding {

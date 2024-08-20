@@ -14,8 +14,7 @@ pub fn allowsWordBreaking(chr: Char16) -> bool {
         || chr == 0xb7   /* middle dot */
         || chr == 0x200b /* zero-width space */
         || chr == 0x2010 /* hyphen */
-        || chr == 0x2013 /* en dash */
-    );
+        || chr == 0x2013/* en dash */);
 }
 
 pub fn charAllowsLetterSpacing(chr: Char16) -> bool {

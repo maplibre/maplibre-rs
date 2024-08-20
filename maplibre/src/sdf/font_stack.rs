@@ -1,6 +1,6 @@
 use crate::sdf::util::hash_combine;
 use crate::style::layer::StyleLayer;
-use std::collections::{BTreeSet};
+use std::collections::BTreeSet;
 
 // An array of font names
 pub type FontStack = Vec<String>;

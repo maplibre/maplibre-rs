@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet};
+use std::collections::BTreeSet;
 use widestring::U16String;
 
 pub type Char16 = u16; // was char16_t

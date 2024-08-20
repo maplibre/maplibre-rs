@@ -2,7 +2,7 @@ use crate::euclid::Rect;
 use crate::sdf::font_stack::FontStackHash;
 use crate::sdf::glyph::{GlyphID, GlyphMap, GlyphMetrics};
 use crate::sdf::GlyphSpace;
-use std::collections::{BTreeMap};
+use std::collections::BTreeMap;
 
 // TODO structs
 pub struct AlphaImage;
