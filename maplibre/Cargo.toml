@@ -91,7 +91,10 @@ image = { workspace = true, optional = true }
 # Text/glyphs
 prost = "0.13.1"
 
+# Symbols
 bitflags = { workspace = true }
+widestring = "1.1.0"
+guillotiere = "0.6.2"
 
 [build-dependencies]
 maplibre-build-tools = { path = "../maplibre-build-tools", version = "0.1.0" }

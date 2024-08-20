@@ -1,22 +1,21 @@
 // Except for to-do comments this file was fully translated
 
+use crate::sdf::bidi::Char16;
+use crate::sdf::font_stack::{FontStack, FontStackHash};
+use crate::sdf::glyph_range::GlyphRange;
 use bitflags::bitflags;
 use geo_types::Rect;
 use std::collections::{HashMap, HashSet};
-use std::ops::Range;
 
 // TODO
 struct AlphaImage;
-type GlyphRange = Range<u32>;
-struct FontStackHash;
-struct FontStack;
 
-pub type GlyphID = char; // was char16_t
+pub type GlyphID = Char16;
 pub type GlyphIDs = HashSet<GlyphID>;
 
 // Note: this only works for the BMP
 pub fn getGlyphRange(glyph: GlyphID) -> GlyphRange {
-    let mut start: u32 = (glyph as u32 / 256) * 256;
+    let mut start: u16 = (glyph / 256) * 256;
     let mut end = (start + 255);
     if (start > 65280) {
         start = 65280;
@@ -27,7 +26,7 @@ pub fn getGlyphRange(glyph: GlyphID) -> GlyphRange {
     return start..end;
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Default, Copy, Clone)]
 pub struct GlyphMetrics {
     pub width: u32,
     pub height: u32,
@@ -69,6 +68,7 @@ pub struct PositionedGlyph {
     pub sectionIndex: usize,
 }
 
+#[derive(Default)]
 pub struct PositionedLine {
     pub positionedGlyphs: Vec<PositionedGlyph>,
     pub lineOffset: f64,
@@ -82,12 +82,25 @@ pub struct Shaping {
     pub right: f64,
     pub writingMode: WritingModeType,
 
-    // The y offset *should* be part of the font metadata.
     pub verticalizable: bool,
     pub iconsInText: bool,
 }
 impl Shaping {
+    // The y offset *should* be part of the font metadata.
     pub const yOffset: i32 = -17;
+
+    pub fn new(x: f64, y: f64, writingMode_: WritingModeType) -> Self {
+        Self {
+            positionedLines: vec![],
+            top: y,
+            bottom: y,
+            left: x,
+            right: x,
+            writingMode: writingMode_,
+            verticalizable: false,
+            iconsInText: false,
+        }
+    }
 }
 
 impl Into<bool> for Shaping {
