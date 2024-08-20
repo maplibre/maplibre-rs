@@ -1,16 +1,16 @@
+use crate::euclid::Rect;
 use crate::sdf::bidi::{BiDi, Char16};
 use crate::sdf::constants::ONE_EM;
 use crate::sdf::glyph::{
     Glyph, GlyphMap, GlyphMetrics, PositionedGlyph, PositionedLine, Shaping, WritingModeType,
 };
 use crate::sdf::glyph_atlas::GlyphPositions;
-use crate::sdf::i18n;
 use crate::sdf::image_atlas::{ImagePosition, ImagePositions};
 use crate::sdf::style_types::{IconTextFitType, SymbolAnchorType, TextJustifyType};
 use crate::sdf::tagged_string::{SectionOptions, TaggedString};
+use crate::sdf::{i18n, GlyphSpace};
 use cgmath::num_traits::Pow;
-use geo_types::{coord, Rect};
-use std::collections::HashSet;
+use std::collections::{BTreeSet};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct Padding {
@@ -180,7 +180,7 @@ pub fn getShaping(
     writingMode: WritingModeType,
     bidi: &BiDi,
     glyphMap: &GlyphMap,
-    glyphPositions: GlyphPositions,
+    glyphPositions: &GlyphPositions,
     imagePositions: &ImagePositions,
     layoutTextSize: f64,
     layoutTextSizeAtBucketZoomLevel: f64,
@@ -444,8 +444,8 @@ fn evaluateBreak(
     };
 }
 
-fn leastBadBreaks(lastLineBreak: &PotentialBreak) -> HashSet<usize> {
-    let mut leastBadBreaks: HashSet<usize> = HashSet::from([lastLineBreak.index]);
+fn leastBadBreaks(lastLineBreak: &PotentialBreak) -> BTreeSet<usize> {
+    let mut leastBadBreaks: BTreeSet<usize> = BTreeSet::from([lastLineBreak.index]);
     let mut priorBreak = &lastLineBreak.priorBreak;
 
     while let Some(priorBreak_) = priorBreak {
@@ -464,13 +464,13 @@ fn determineLineBreaks(
     glyphMap: &GlyphMap,
     imagePositions: &ImagePositions,
     layoutTextSize: f64,
-) -> HashSet<usize> {
+) -> BTreeSet<usize> {
     if (maxWidth == 0.0) {
-        return HashSet::default();
+        return BTreeSet::default();
     }
 
     if (logicalInput.empty()) {
-        return HashSet::default();
+        return BTreeSet::default();
     }
 
     let targetWidth = determineAverageLineWidth(
@@ -593,7 +593,7 @@ fn shapeLines(
             let section = line.sectionAt(sectionIndex);
             let codePoint: Char16 = line.getCharCodeAt(i);
             let mut baselineOffset = 0.0;
-            let mut rect: Rect<u16> = Rect::new(coord! {x: 0, y: 0}, coord! {x: 0, y: 0}); // TODO are these default values fine?
+            let mut rect: Rect<u16, GlyphSpace> = Rect::default(); // TODO are these default values fine?
             let mut metrics: GlyphMetrics = GlyphMetrics::default(); // TODO are these default values fine?
             let mut advance = 0.0;
             let mut verticalAdvance = ONE_EM;
@@ -757,4 +757,129 @@ fn shapeLines(
     shaping.bottom = shaping.top + height;
     shaping.left += -anchorAlign.horizontalAlign * maxLineLength;
     shaping.right = shaping.left + maxLineLength;
+}
+
+#[cfg(test)]
+mod test {
+    use crate::sdf::bidi::{BiDi, Char16};
+    use crate::sdf::constants::ONE_EM;
+    use crate::sdf::font_stack::FontStackHasher;
+    use crate::sdf::glyph::{Glyph, GlyphMap, Glyphs, WritingModeType};
+    use crate::sdf::glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions};
+    use crate::sdf::image_atlas::ImagePositions;
+    use crate::sdf::shaping::getShaping;
+    use crate::sdf::style_types::{SymbolAnchorType, TextJustifyType};
+    use crate::sdf::tagged_string::{SectionOptions, TaggedString};
+
+    #[test]
+    fn Shaping_ZWSP() {
+        let mut glyphPosition = GlyphPosition::default();
+        glyphPosition.metrics.width = 18;
+        glyphPosition.metrics.height = 18;
+        glyphPosition.metrics.left = 2;
+        glyphPosition.metrics.top = -8;
+        glyphPosition.metrics.advance = 21;
+
+        let mut glyph = Glyph::default();
+        glyph.id = '中' as Char16;
+        glyph.metrics = glyphPosition.metrics;
+
+        let bidi = BiDi;
+        let fontStack = vec!["font-stack".to_string()];
+        let sectionOptions = SectionOptions::new(1.0, fontStack.clone(), None);
+        let layoutTextSize = 16.0;
+        let layoutTextSizeAtBucketZoomLevel = 16.0;
+
+        let glyphs: GlyphMap = GlyphMap::from([(
+            FontStackHasher::new(&fontStack),
+            Glyphs::from([('中' as Char16, Some(glyph))]),
+        )]);
+
+        let glyphPositions: GlyphPositions = GlyphPositions::from([(
+            FontStackHasher::new(&fontStack),
+            GlyphPositionMap::from([('中' as Char16, glyphPosition)]),
+        )]);
+        let imagePositions: ImagePositions = ImagePositions::default();
+
+        let testGetShaping = |string: &TaggedString, maxWidthInChars| {
+            return getShaping(
+                string,
+                maxWidthInChars as f64 * ONE_EM,
+                ONE_EM, // lineHeight
+                SymbolAnchorType::Center,
+                TextJustifyType::Center,
+                0.,          // spacing
+                &[0.0, 0.0], // translate
+                WritingModeType::Horizontal,
+                &bidi,
+                &glyphs,
+                &glyphPositions,
+                &imagePositions,
+                layoutTextSize,
+                layoutTextSizeAtBucketZoomLevel,
+                /*allowVerticalPlacement*/ false,
+            );
+        };
+
+        // 3 lines
+        // 中中中中中中
+        // 中中中中中中
+        // 中中
+        {
+            let string = TaggedString::new_from_raw(
+                "中中\u{200b}中中\u{200b}中中\u{200b}中中中中中中\u{200b}中中".into(),
+                sectionOptions.clone(),
+            );
+            let shaping = testGetShaping(&string, 5);
+            assert_eq!(shaping.positionedLines.len(), 3);
+            assert_eq!(shaping.top, -36.);
+            assert_eq!(shaping.bottom, 36.);
+            assert_eq!(shaping.left, -63.);
+            assert_eq!(shaping.right, 63.);
+            assert_eq!(shaping.writingMode, WritingModeType::Horizontal);
+        }
+
+        // 2 lines
+        // 中中
+        // 中
+        {
+            let string =
+                TaggedString::new_from_raw("中中\u{200b}中".into(), sectionOptions.clone());
+            let shaping = testGetShaping(&string, 1);
+            assert_eq!(shaping.positionedLines.len(), 2);
+            assert_eq!(shaping.top, -24.);
+            assert_eq!(shaping.bottom, 24.);
+            assert_eq!(shaping.left, -21.);
+            assert_eq!(shaping.right, 21.);
+            assert_eq!(shaping.writingMode, WritingModeType::Horizontal);
+        }
+
+        // 1 line
+        // 中中
+        {
+            let string = TaggedString::new_from_raw("中中\u{200b}".into(), sectionOptions.clone());
+            let shaping = testGetShaping(&string, 2);
+            assert_eq!(shaping.positionedLines.len(), 1);
+            assert_eq!(shaping.top, -12.);
+            assert_eq!(shaping.bottom, 12.);
+            assert_eq!(shaping.left, -21.);
+            assert_eq!(shaping.right, 21.);
+            assert_eq!(shaping.writingMode, WritingModeType::Horizontal);
+        }
+
+        // 5 'new' lines.
+        {
+            let string = TaggedString::new_from_raw(
+                "\u{200b}\u{200b}\u{200b}\u{200b}\u{200b}".into(),
+                sectionOptions.clone(),
+            );
+            let shaping = testGetShaping(&string, 1);
+            assert_eq!(shaping.positionedLines.len(), 5);
+            assert_eq!(shaping.top, -60.);
+            assert_eq!(shaping.bottom, 60.);
+            assert_eq!(shaping.left, 0.);
+            assert_eq!(shaping.right, 0.);
+            assert_eq!(shaping.writingMode, WritingModeType::Horizontal);
+        }
+    }
 }

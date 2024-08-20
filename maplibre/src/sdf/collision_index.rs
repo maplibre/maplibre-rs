@@ -331,7 +331,7 @@ impl CollisionIndex {
         &self,
         line_string: &ScreenLineString,
     ) -> HashMap<u32, Vec<IndexedSubfeature>> {
-        unimplemented!()
+        todo!()
     }
 
     pub fn projectTileBoundaries(&self, posMatrix: &ModelViewProjection) -> CollisionBoundaries {
