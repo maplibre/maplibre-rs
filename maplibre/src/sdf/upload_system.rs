@@ -19,6 +19,7 @@ use crate::{
         tiles::Tiles,
     },
 };
+use crate::render::shaders::{FillShaderFeatureMetadata, SDFShaderFeatureMetadata};
 
 pub fn upload_system(
     MapContext {
@@ -101,13 +102,9 @@ fn upload_symbol_layer(
             };
 
             // Assign every feature in the layer the color from the style
-            let feature_metadata = features
-                .iter()
-                .flat_map(|(feature)| {
-                    iter::repeat(crate::render::shaders::SDFShaderFeatureMetadata { opacity: 0.0 })
-                        .take(feature.indices.len())
-                })
-                .collect::<Vec<_>>();
+            let feature_metadata = iter::repeat(
+                SDFShaderFeatureMetadata { opacity: 0.0 }
+            ).take(features.last().unwrap().indices.end).collect::<Vec<_>>();
 
             // FIXME avoid uploading empty indices
             if buffer.buffer.indices.is_empty() {
