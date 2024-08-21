@@ -1,12 +1,12 @@
-use crate::euclid::{Point2D, Vector2D};
+use crate::euclid::Vector2D;
 use std::f64::consts::PI;
 
-pub fn rotate<U>(a: &Point2D<f64, U>, angle: f64) -> Point2D<f64, U> {
+pub fn rotate<U>(a: &Vector2D<f64, U>, angle: f64) -> Vector2D<f64, U> {
     let cos = angle.cos();
     let sin = angle.sin();
     let x = cos * a.x - sin * a.y;
     let y = sin * a.x + cos * a.y;
-    return Point2D::new(x, y);
+    return Vector2D::new(x, y);
 }
 
 /**

@@ -5,6 +5,7 @@ use crate::sdf::TileSpace;
 
 pub type GeometryCoordinate = Point2D<i16, TileSpace>;
 
+#[derive(Default)]
 pub struct GeometryCoordinates(pub Vec<GeometryCoordinate>);
 impl GeometryCoordinates {
     pub fn len(&self) -> usize {

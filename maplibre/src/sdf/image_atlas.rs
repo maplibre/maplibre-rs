@@ -1,15 +1,12 @@
 use crate::euclid::Rect;
-use crate::sdf::image::{ImageContent, ImageStretches};
+use crate::sdf::image::{
+    Image, ImageContent, ImageManager, ImageMap, ImageStretches, ImageVersionMap,
+    PremultipliedImage,
+};
 use crate::sdf::TileSpace;
 use std::collections::HashMap;
 
-// TODO structs
-struct Image;
-struct ImageManager;
-struct ImageMap;
-struct ImageVersionMap;
-struct PremultipliedImage;
-
+#[derive(Clone)]
 pub struct ImagePosition {
     pub pixelRatio: f64,
     pub paddedRect: Rect<u16, TileSpace>,

@@ -1,6 +1,6 @@
 // This file was fully translated
 
-use crate::euclid::{Box2D, Point2D};
+use crate::euclid::{Box2D, Point2D, Vector2D};
 use crate::sdf::geometry::feature_index::IndexedSubfeature;
 use crate::sdf::geometry::{convert_point_f64, convert_point_i16, Anchor};
 use crate::sdf::geometry_tile_data::{GeometryCoordinate, GeometryCoordinates};
@@ -18,7 +18,7 @@ pub struct CollisionFeature {
 }
 
 impl CollisionFeature {
-    fn new(
+    pub fn new(
         line: &GeometryCoordinates,
         anchor: &Anchor,
         top: f64,
@@ -80,10 +80,10 @@ impl CollisionFeature {
                 // Doesn't account for icon-text-fit
                 let rotateRadians = deg2radf(rotate_);
 
-                let tl = rotate(&Point2D::<_, TileSpace>::new(x1, y1), rotateRadians);
-                let tr = rotate(&Point2D::<_, TileSpace>::new(x2, y1), rotateRadians);
-                let bl = rotate(&Point2D::<_, TileSpace>::new(x1, y2), rotateRadians);
-                let br = rotate(&Point2D::<_, TileSpace>::new(x2, y2), rotateRadians);
+                let tl = rotate(&Vector2D::<_, TileSpace>::new(x1, y1), rotateRadians);
+                let tr = rotate(&Vector2D::<_, TileSpace>::new(x2, y1), rotateRadians);
+                let bl = rotate(&Vector2D::<_, TileSpace>::new(x1, y2), rotateRadians);
+                let br = rotate(&Vector2D::<_, TileSpace>::new(x2, y2), rotateRadians);
 
                 // Collision features require an "on-axis" geometry,
                 // so take the envelope of the rotated geometry
@@ -116,7 +116,7 @@ impl CollisionFeature {
     }
 
     // for text
-    fn new_from_text(
+    pub fn new_from_text(
         line: &GeometryCoordinates,
         anchor: &Anchor,
         shapedText: Shaping,
@@ -152,10 +152,10 @@ impl CollisionFeature {
     // enough" to square that having incorrect rotation alignment doesn't throw
     // off collision detection too much. See:
     // https://github.com/mapbox/mapbox-gl-js/issues/4861
-    fn new_from_icon(
+    pub fn new_from_icon(
         line: &GeometryCoordinates,
         anchor: &Anchor,
-        shapedIcon: Option<PositionedIcon>,
+        shapedIcon: &Option<PositionedIcon>,
         boxScale: f64,
         padding: f64,
         indexedFeature_: IndexedSubfeature,

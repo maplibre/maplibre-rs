@@ -92,9 +92,9 @@ pub struct PositionedIcon {
 }
 
 impl PositionedIcon {
-    fn shapeIcon(
+    pub fn shapeIcon(
         image: ImagePosition,
-        iconOffset: [f64; 2],
+        iconOffset: &[f64; 2],
         iconAnchor: SymbolAnchorType,
     ) -> PositionedIcon {
         let anchorAlign = AnchorAlignment::getAnchorAlignment(iconAnchor);
@@ -127,7 +127,7 @@ impl PositionedIcon {
 
     // Updates shaped icon's bounds based on shaped text's bounds and provided
     // layout properties.
-    fn fitIconToText(
+    pub fn fitIconToText(
         &mut self,
         shapedText: &Shaping,
         textFit: IconTextFitType,
