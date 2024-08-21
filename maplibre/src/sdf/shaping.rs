@@ -1,6 +1,5 @@
 use crate::euclid::Rect;
 use crate::sdf::bidi::{BiDi, Char16};
-use crate::sdf::constants::ONE_EM;
 use crate::sdf::glyph::{
     Glyph, GlyphMap, GlyphMetrics, PositionedGlyph, PositionedLine, Shaping, WritingModeType,
 };
@@ -8,7 +7,9 @@ use crate::sdf::glyph_atlas::GlyphPositions;
 use crate::sdf::image_atlas::{ImagePosition, ImagePositions};
 use crate::sdf::style_types::{IconTextFitType, SymbolAnchorType, TextJustifyType};
 use crate::sdf::tagged_string::{SectionOptions, TaggedString};
-use crate::sdf::{i18n, GlyphSpace};
+use crate::sdf::util::constants::ONE_EM;
+use crate::sdf::util::i18n;
+use crate::sdf::TileSpace;
 use cgmath::num_traits::Pow;
 use std::collections::BTreeSet;
 
@@ -593,7 +594,7 @@ fn shapeLines(
             let section = line.sectionAt(sectionIndex);
             let codePoint: Char16 = line.getCharCodeAt(i);
             let mut baselineOffset = 0.0;
-            let mut rect: Rect<u16, GlyphSpace> = Rect::default(); // TODO are these default values fine?
+            let mut rect: Rect<u16, TileSpace> = Rect::default(); // TODO are these default values fine?
             let mut metrics: GlyphMetrics = GlyphMetrics::default(); // TODO are these default values fine?
             let mut advance = 0.0;
             let mut verticalAdvance = ONE_EM;
@@ -762,7 +763,6 @@ fn shapeLines(
 #[cfg(test)]
 mod test {
     use crate::sdf::bidi::{BiDi, Char16};
-    use crate::sdf::constants::ONE_EM;
     use crate::sdf::font_stack::FontStackHasher;
     use crate::sdf::glyph::{Glyph, GlyphMap, Glyphs, WritingModeType};
     use crate::sdf::glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions};
@@ -770,6 +770,7 @@ mod test {
     use crate::sdf::shaping::getShaping;
     use crate::sdf::style_types::{SymbolAnchorType, TextJustifyType};
     use crate::sdf::tagged_string::{SectionOptions, TaggedString};
+    use crate::sdf::util::constants::ONE_EM;
 
     #[test]
     fn Shaping_ZWSP() {

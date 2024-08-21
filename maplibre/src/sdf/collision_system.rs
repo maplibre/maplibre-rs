@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
 use cgmath::{Matrix3, Vector3};
-use lyon::geom::euclid::Point2D;
 
 use crate::coords::{EXTENT, TILE_SIZE};
 use crate::render::eventually::Eventually;
@@ -10,10 +9,13 @@ use crate::render::shaders::SDFShaderFeatureMetadata;
 use crate::render::tile_view_pattern::WgpuTileViewPattern;
 use crate::render::Renderer;
 use crate::sdf::collision_feature::{CollisionBox, CollisionFeature};
-use crate::sdf::collision_index::{CollisionIndex, GeometryCoordinates, MapMode, PlacedSymbol};
 use crate::sdf::feature_index::{IndexedSubfeature, RefIndexedSubfeature};
-use crate::sdf::geometry::Point;
-use crate::sdf::SymbolBufferPool;
+
+use crate::euclid::Point2D;
+use crate::sdf::buckets::symbol_bucket::PlacedSymbol;
+use crate::sdf::collision_index::CollisionIndex;
+use crate::sdf::geometry_tile_data::GeometryCoordinates;
+use crate::sdf::{MapMode, SymbolBufferPool};
 use crate::tcs::system::SystemError;
 use crate::{
     context::MapContext,
@@ -103,7 +105,7 @@ impl System for CollisionSystem {
                         //println!("{:?}", window);
 
                         let anchorPoint =
-                            Point::new(feature.bbox.min.x as f64, feature.bbox.min.y as f64); // TODO
+                            Point2D::new(feature.bbox.min.x as f64, feature.bbox.min.y as f64); // TODO
 
                         let boxes = vec![CollisionBox {
                             anchor: anchorPoint,

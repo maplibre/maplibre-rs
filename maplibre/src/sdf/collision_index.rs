@@ -1,80 +1,23 @@
 // File fully translated except for to-do comments
 
 use crate::coords::EXTENT;
+use crate::euclid::{Box2D, Point2D};
 use crate::render::camera::ModelViewProjection;
 use crate::render::view_state::ViewState;
+use crate::sdf::buckets::symbol_bucket::PlacedSymbol;
 use crate::sdf::collision_feature::{CollisionBox, CollisionFeature, ProjectedCollisionBox};
 use crate::sdf::feature_index::IndexedSubfeature;
-use crate::sdf::geometry::Point;
 use crate::sdf::grid_index::{Circle, GridIndex};
-use crate::sdf::symbol_projection::{placeFirstAndLastGlyph, project};
+use crate::sdf::layout::symbol_projection::{placeFirstAndLastGlyph, project, TileDistance};
+use crate::sdf::util::geo::ScreenLineString;
+use crate::sdf::{MapMode, ScreenSpace, TileSpace};
 use bitflags::bitflags;
 use cgmath::{Matrix4, Vector4};
-use geo_types::LineString;
-use lyon::geom::euclid::{Point2D, UnknownUnit};
-use lyon::geom::Box2D;
 use std::collections::HashMap;
-use std::ops::Index;
 
 type TransformState = ViewState;
 
-#[derive(PartialEq)]
-pub enum MapMode {
-    ///< continually updating map
-    Continuous,
-    ///< a once-off still image of an arbitrary viewport
-    Static,
-    ///< a once-off still image of a single tile
-    Tile,
-}
-
-pub type GeometryCoordinate = Point<i16>;
-
-pub struct GeometryCoordinates(pub Vec<GeometryCoordinate>); // TODO where should this live?
-impl GeometryCoordinates {
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-}
-impl Index<usize> for GeometryCoordinates {
-    type Output = GeometryCoordinate;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.0[index]
-    }
-}
-
-// TODO where should this live?
-pub struct PlacedSymbol {
-    pub anchorPoint: Point<f64>,
-    pub segment: usize,
-    // pub lowerSize: f64,
-    // pub upperSize: f64,
-    pub lineOffset: [f64; 2],
-    // pub writingModes: WritingModeType,
-    pub line: GeometryCoordinates,
-    pub tileDistances: Vec<f64>,
-    pub glyphOffsets: Vec<f64>,
-    // pub hidden: bool,
-    // pub vertexStartIndex: usize,
-    // /// The crossTileID is only filled/used on the foreground for variable text anchors
-    // pub crossTileID: u32,
-    // /// The placedOrientation is only used when symbol layer's property is set to
-    // /// support placement for orientation variants.
-    // pub placedOrientation:  Option<TextWritingModeType>,
-    // pub angle: f64,
-    // /// Reference to placed icon, only applicable for text symbols.
-    // pub placedIconIndex: Option<usize>,
-}
-
-type ScreenLineString = LineString;
-pub struct TileDistance {
-    // TODO where should this live?
-    pub prevTileDistance: f64,
-    pub lastSegmentViewportDistance: f64,
-}
-
-type CollisionBoundaries = Box2D<f64>; // [f64; 4]; // [x1, y1, x2, y2]
+type CollisionBoundaries = Box2D<f64, ScreenSpace>; // [f64; 4]; // [x1, y1, x2, y2]
 
 bitflags! {
     /// Represents a set of flags.
@@ -163,7 +106,7 @@ impl CollisionIndex {
     pub fn intersectsTileEdges(
         &self,
         box_: &CollisionBox,
-        shift: Point2D<f64, UnknownUnit>,
+        shift: Point2D<f64, ScreenSpace>,
         posMatrix: &ModelViewProjection,
         textPixelRatio: f64,
         tileEdges: CollisionBoundaries,
@@ -207,7 +150,7 @@ impl CollisionIndex {
     pub fn placeFeature<F>(
         &self,
         feature: &CollisionFeature,
-        shift: Point<f64>,
+        shift: Point2D<f64, ScreenSpace>,
         posMatrix: &ModelViewProjection,
         labelPlaneMatrix: &Matrix4<f64>,
         textPixelRatio: f64,
@@ -596,7 +539,11 @@ impl CollisionIndex {
             + (incidenceStretch - 1.) * lastSegmentTile * lastSegmentAngle.sin().abs();
     }
 
-    fn projectAnchor(&self, posMatrix: &ModelViewProjection, point: &Point<f64>) -> (f64, f64) {
+    fn projectAnchor(
+        &self,
+        posMatrix: &ModelViewProjection,
+        point: &Point2D<f64, TileSpace>,
+    ) -> (f64, f64) {
         let p = Vector4::new(point.x, point.y, 0., 1.);
         let p = posMatrix.project(p); // TODO verify multiplication
         return (
@@ -607,15 +554,15 @@ impl CollisionIndex {
     fn projectAndGetPerspectiveRatio(
         &self,
         posMatrix: &ModelViewProjection,
-        point: &Point<f64>,
-    ) -> (Point<f64>, f64) {
+        point: &Point2D<f64, TileSpace>,
+    ) -> (Point2D<f64, ScreenSpace>, f64) {
         let p = Vector4::new(point.x, point.y, 0., 1.);
         let p = posMatrix.project(p); // TODO verify multiplication
         let width = self.transformState.width();
         let height = self.transformState.height();
         let ccd = self.transformState.camera_to_center_distance();
         return (
-            Point::new(
+            Point2D::new(
                 ((p[0] / p[3] + 1.) / 2.) * width + self.viewportPadding,
                 ((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding,
             ),
@@ -625,12 +572,16 @@ impl CollisionIndex {
             0.5 + 0.5 * ccd / p[3],
         );
     }
-    fn projectPoint(&self, posMatrix: &ModelViewProjection, point: &Point<f64>) -> Point<f64> {
+    fn projectPoint(
+        &self,
+        posMatrix: &ModelViewProjection,
+        point: &Point2D<f64, TileSpace>,
+    ) -> Point2D<f64, ScreenSpace> {
         let p = Vector4::new(point.x, point.y, 0., 1.);
         let p = posMatrix.project(p); // TODO verify multiplication
         let width = self.transformState.width();
         let height = self.transformState.height();
-        return Point::new(
+        return Point2D::new(
             (((p[0] / p[3] + 1.) / 2.) * width + self.viewportPadding),
             (((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding),
         );
@@ -639,7 +590,7 @@ impl CollisionIndex {
     fn getProjectedCollisionBoundaries(
         &self,
         posMatrix: &ModelViewProjection,
-        shift: Point<f64>,
+        shift: Point2D<f64, ScreenSpace>,
         textPixelRatio: f64,
         box_: &CollisionBox,
     ) -> CollisionBoundaries {

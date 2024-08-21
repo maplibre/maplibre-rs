@@ -4,11 +4,7 @@ use std::{
     rc::Rc,
 };
 
-use lyon::geom::{
-    euclid::{Point2D, UnknownUnit},
-    Box2D,
-};
-
+use crate::euclid::{Box2D, Point2D};
 use crate::{
     coords::WorldTileCoords,
     environment::Environment,
@@ -39,24 +35,23 @@ mod upload_system;
 
 // Public due to bechmarks
 mod bidi;
+mod buckets;
 mod collision_feature;
 mod collision_index;
 mod collision_system;
-mod constants;
 mod feature_index;
 mod font_stack;
 mod geometry;
+mod geometry_tile_data;
 mod glyph;
 mod glyph_atlas;
 mod glyph_range;
 mod grid_index;
-mod i18n;
 mod image;
 mod image_atlas;
-mod math;
+mod layout;
 mod shaping;
 mod style_types;
-mod symbol_projection;
 mod tagged_string;
 pub mod tessellation;
 mod text;
@@ -123,9 +118,9 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for SdfPlugin<T> {
 }
 
 pub struct Feature {
-    pub bbox: Box2D<f32>,
+    pub bbox: Box2D<f32, TileSpace>,
     pub indices: Range<usize>,
-    pub text_anchor: Point2D<f32, UnknownUnit>,
+    pub text_anchor: Point2D<f32, TileSpace>,
     pub str: String,
 }
 
@@ -143,4 +138,17 @@ pub struct SymbolLayersDataComponent {
 
 impl TileComponent for SymbolLayersDataComponent {}
 
-pub struct GlyphSpace;
+// TODO where should this live?
+pub struct TileSpace; // The unit in which geometries or symbols are on a tile (0-EXTENT)
+pub struct ScreenSpace;
+
+// TODO where should this live?
+#[derive(PartialEq)]
+pub enum MapMode {
+    ///< continually updating map
+    Continuous,
+    ///< a once-off still image of an arbitrary viewport
+    Static,
+    ///< a once-off still image of a single tile
+    Tile,
+}

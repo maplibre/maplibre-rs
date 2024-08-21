@@ -1,7 +1,7 @@
 use crate::sdf::bidi::{Char16, StyledText};
 use crate::sdf::font_stack::{FontStack, FontStackHash, FontStackHasher};
-use crate::sdf::i18n;
-use crate::sdf::i18n::{BACKSLACK_F, BACKSLACK_V};
+use crate::sdf::util::i18n;
+use crate::sdf::util::i18n::{BACKSLACK_F, BACKSLACK_V};
 use csscolorparser::Color;
 use widestring::{U16Str, U16String};
 
@@ -244,8 +244,8 @@ impl TaggedString {
 #[cfg(test)]
 mod tests {
     use crate::sdf::bidi::Char16;
-    use crate::sdf::i18n::BACKSLACK_V;
     use crate::sdf::tagged_string::{SectionOptions, TaggedString};
+    use crate::sdf::util::i18n::BACKSLACK_V;
     use widestring::U16String;
 
     #[test]
