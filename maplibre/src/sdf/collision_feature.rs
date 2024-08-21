@@ -1,7 +1,7 @@
 // This file was fully translated
 
 use crate::euclid::{Box2D, Point2D};
-use crate::sdf::feature_index::IndexedSubfeature;
+use crate::sdf::geometry::feature_index::IndexedSubfeature;
 use crate::sdf::geometry::{convert_point_f64, convert_point_i16, Anchor};
 use crate::sdf::geometry_tile_data::{GeometryCoordinate, GeometryCoordinates};
 use crate::sdf::glyph::Shaping;

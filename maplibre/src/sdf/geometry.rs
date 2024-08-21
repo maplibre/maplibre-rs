@@ -1,6 +1,8 @@
 use crate::euclid::Point2D;
 use crate::sdf::TileSpace;
 
+pub mod feature_index;
+
 pub fn convert_point_f64<U>(point: &Point2D<i16, U>) -> Point2D<f64, U> {
     Point2D::new(point.x as f64, point.y as f64)
 }
