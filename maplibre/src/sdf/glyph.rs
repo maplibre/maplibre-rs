@@ -57,6 +57,7 @@ impl Glyph {
 pub type Glyphs = BTreeMap<GlyphID, Option<Glyph>>;
 pub type GlyphMap = BTreeMap<FontStackHash, Glyphs>;
 
+#[derive(Clone)]
 pub struct PositionedGlyph {
     pub glyph: GlyphID,
     pub x: f64,
@@ -71,12 +72,13 @@ pub struct PositionedGlyph {
     pub sectionIndex: usize,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct PositionedLine {
     pub positionedGlyphs: Vec<PositionedGlyph>,
     pub lineOffset: f64,
 }
 
+#[derive(Clone)]
 pub struct Shaping {
     pub positionedLines: Vec<PositionedLine>,
     pub top: f64,

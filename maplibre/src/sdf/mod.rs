@@ -13,8 +13,8 @@ use crate::{
     render::{
         eventually::Eventually,
         graph::RenderGraph,
-        RenderStageLabel,
         shaders::{SDFShaderFeatureMetadata, ShaderLayerMetadata, ShaderSymbolVertex},
+        RenderStageLabel,
     },
     schedule::Schedule,
     sdf::resource::GlyphTexture,
@@ -49,6 +49,7 @@ mod grid_index;
 mod image;
 mod image_atlas;
 mod layout;
+mod quads;
 mod shaping;
 mod style_types;
 mod tagged_string;

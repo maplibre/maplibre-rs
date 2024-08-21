@@ -55,7 +55,8 @@ impl System for CollisionSystem {
         };
 
         if !view_state.did_camera_change() {
-            //return Ok(());
+            // TODO
+            // return Ok(());
         }
 
         let mut collision_index = CollisionIndex::new(view_state, MapMode::Continuous);
