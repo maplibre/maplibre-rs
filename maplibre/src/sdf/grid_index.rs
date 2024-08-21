@@ -1,18 +1,15 @@
+use crate::euclid::{Box2D, Point2D};
+use crate::sdf::ScreenSpace;
 use std::{collections::HashSet, f64};
-
-use lyon::geom::{
-    euclid::{Point2D, UnknownUnit},
-    Box2D,
-};
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct Circle<T> {
-    pub center: Point2D<T, UnknownUnit>,
+    pub center: Point2D<T, ScreenSpace>,
     pub radius: T,
 }
 
 impl<T> Circle<T> {
-    pub fn new(center: Point2D<T, UnknownUnit>, radius: T) -> Circle<T> {
+    pub fn new(center: Point2D<T, ScreenSpace>, radius: T) -> Circle<T> {
         Self { center, radius }
     }
 }
@@ -33,7 +30,7 @@ pub struct GridIndex<T: Clone> {
     x_scale: f64,
     y_scale: f64,
     estimated_elements_per_cell: usize,
-    box_elements: Vec<(T, Box2D<f64>)>,
+    box_elements: Vec<(T, Box2D<f64, ScreenSpace>)>,
     circle_elements: Vec<(T, Circle<f64>)>,
     box_cells: Vec<Vec<u32>>,
     circle_cells: Vec<Vec<u32>>,
@@ -66,7 +63,7 @@ impl<T: Clone> GridIndex<T> {
         self.estimated_elements_per_cell = value;
     }
 
-    pub fn insert(&mut self, t: T, bbox: Box2D<f64>) {
+    pub fn insert(&mut self, t: T, bbox: Box2D<f64, ScreenSpace>) {
         assert!(self.box_elements.len() < u32::MAX as usize);
         let uid = self.box_elements.len() as u32;
 
@@ -110,7 +107,7 @@ impl<T: Clone> GridIndex<T> {
         self.circle_elements.push((t, circle));
     }
 
-    pub fn query(&self, query_box: &Box2D<f64>) -> Vec<T> {
+    pub fn query(&self, query_box: &Box2D<f64, ScreenSpace>) -> Vec<T> {
         let mut result = Vec::new();
         self.query_internal(query_box, |t, bbox| -> bool {
             result.push(t);
@@ -119,7 +116,10 @@ impl<T: Clone> GridIndex<T> {
         return result;
     }
 
-    pub fn query_with_boxes(&self, query_box: &Box2D<f64>) -> Vec<(T, Box2D<f64>)> {
+    pub fn query_with_boxes(
+        &self,
+        query_box: &Box2D<f64, ScreenSpace>,
+    ) -> Vec<(T, Box2D<f64, ScreenSpace>)> {
         let mut result = Vec::new();
         self.query_internal(query_box, |t, bbox| -> bool {
             result.push((t, bbox));
@@ -128,7 +128,7 @@ impl<T: Clone> GridIndex<T> {
         return result;
     }
 
-    pub fn hit_test<F>(&self, query_box: &Box2D<f64>, predicate: Option<F>) -> bool
+    pub fn hit_test<F>(&self, query_box: &Box2D<f64, ScreenSpace>, predicate: Option<F>) -> bool
     where
         F: Fn(&T) -> bool,
     {
@@ -176,21 +176,21 @@ impl<T: Clone> GridIndex<T> {
 }
 
 impl<T: Clone> GridIndex<T> {
-    fn no_intersection(&self, query_box: &Box2D<f64>) -> bool {
+    fn no_intersection(&self, query_box: &Box2D<f64, ScreenSpace>) -> bool {
         return query_box.max.x < 0.0
             || query_box.min.x >= self.width
             || query_box.max.y < 0.0
             || query_box.min.y >= self.height;
     }
 
-    fn complete_intersection(&self, query_box: &Box2D<f64>) -> bool {
+    fn complete_intersection(&self, query_box: &Box2D<f64, ScreenSpace>) -> bool {
         return query_box.min.x <= 0.0
             && query_box.min.y <= 0.0
             && self.width <= query_box.max.x
             && self.height <= query_box.max.y;
     }
 
-    fn convert_to_box(circle: &Circle<f64>) -> Box2D<f64> {
+    fn convert_to_box(circle: &Circle<f64>) -> Box2D<f64, ScreenSpace> {
         return Box2D::new(
             Point2D::new(
                 circle.center.x - circle.radius,
@@ -203,9 +203,9 @@ impl<T: Clone> GridIndex<T> {
         );
     }
 
-    fn query_internal<F>(&self, query_bbox: &Box2D<f64>, mut result_fn: F)
+    fn query_internal<F>(&self, query_bbox: &Box2D<f64, ScreenSpace>, mut result_fn: F)
     where
-        F: FnMut(T, Box2D<f64>) -> bool,
+        F: FnMut(T, Box2D<f64, ScreenSpace>) -> bool,
     {
         let mut seen_boxes = HashSet::new();
         let mut seen_circles = HashSet::new();
@@ -270,7 +270,7 @@ impl<T: Clone> GridIndex<T> {
 
     fn query_internal_circles<F>(&self, query_bcircle: &Circle<f64>, mut result_fn: F)
     where
-        F: FnMut(T, Box2D<f64>) -> bool,
+        F: FnMut(T, Box2D<f64, ScreenSpace>) -> bool,
     {
         let mut seen_boxes = HashSet::new();
         let mut seen_circles = HashSet::new();
@@ -347,7 +347,7 @@ impl<T: Clone> GridIndex<T> {
         ) as usize;
     }
 
-    fn boxes_collide(first: &Box2D<f64>, second: &Box2D<f64>) -> bool {
+    fn boxes_collide(first: &Box2D<f64, ScreenSpace>, second: &Box2D<f64, ScreenSpace>) -> bool {
         return first.min.x <= second.max.x
             && first.min.y <= second.max.y
             && first.max.x >= second.min.x
@@ -361,7 +361,7 @@ impl<T: Clone> GridIndex<T> {
         return (both_radii * both_radii) > (dx * dx + dy * dy);
     }
 
-    fn circle_and_box_collide(circle: &Circle<f64>, box_: &Box2D<f64>) -> bool {
+    fn circle_and_box_collide(circle: &Circle<f64>, box_: &Box2D<f64, ScreenSpace>) -> bool {
         let half_rect_width = (box_.max.x - box_.min.x) / 2.0;
         let dist_x = (circle.center.x - (box_.min.x + half_rect_width)).abs();
         if dist_x > (half_rect_width + circle.radius) {

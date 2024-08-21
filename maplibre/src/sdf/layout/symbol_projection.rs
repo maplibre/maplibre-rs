@@ -1,20 +1,27 @@
-use crate::sdf::collision_index::{GeometryCoordinates, PlacedSymbol, TileDistance};
-use crate::sdf::geometry::{convert_point_f64, Point};
-use crate::sdf::math::perp;
+use crate::euclid::Point2D;
+use crate::sdf::buckets::symbol_bucket::PlacedSymbol;
+use crate::sdf::geometry::convert_point_f64;
+use crate::sdf::geometry_tile_data::GeometryCoordinates;
+use crate::sdf::util::math::perp;
+use crate::sdf::TileSpace;
 use cgmath::{Matrix4, Vector4};
 use std::f64::consts::PI;
 
-type PointAndCameraDistance = (Point<f64>, f64);
+type PointAndCameraDistance = (Point2D<f64, TileSpace>, f64); // TODO is the Unit correct?
 
-pub fn project(point: Point<f64>, matrix: &Matrix4<f64>) -> PointAndCameraDistance {
+pub struct TileDistance {
+    pub prevTileDistance: f64,
+    pub lastSegmentViewportDistance: f64,
+}
+
+pub fn project(point: Point2D<f64, TileSpace>, matrix: &Matrix4<f64>) -> PointAndCameraDistance {
     let pos = Vector4::new(point.x, point.y, 0., 1.);
     let pos = matrix * pos; // TODO verify this multiplications
-    return (Point::new(pos[0] / pos[3], pos[1] / pos[3]), pos[3]);
+    return (Point2D::new(pos[0] / pos[3], pos[1] / pos[3]), pos[3]);
 }
 
 pub struct PlacedGlyph {
-    // TODO where should this live?
-    pub point: Point<f64>,
+    pub point: Point2D<f64, TileSpace>,
     pub angle: f64,
     pub tileDistance: Option<TileDistance>,
 }
@@ -24,8 +31,8 @@ pub fn placeFirstAndLastGlyph(
     lineOffsetX: f64,
     lineOffsetY: f64,
     flip: bool,
-    anchorPoint: Point<f64>,
-    tileAnchorPoint: Point<f64>,
+    anchorPoint: Point2D<f64, TileSpace>,
+    tileAnchorPoint: Point2D<f64, TileSpace>,
     symbol: &PlacedSymbol,
     labelPlaneMatrix: &Matrix4<f64>,
     returnTileDistance: bool,
@@ -77,8 +84,8 @@ fn placeGlyphAlongLine(
     lineOffsetX: f64,
     lineOffsetY: f64,
     flip: bool,
-    projectedAnchorPoint: &Point<f64>,
-    tileAnchorPoint: &Point<f64>,
+    projectedAnchorPoint: &Point2D<f64, TileSpace>,
+    tileAnchorPoint: &Point2D<f64, TileSpace>,
     anchorSegment: i16,
     line: &GeometryCoordinates,
     tileDistances: &Vec<f64>,
@@ -186,12 +193,12 @@ fn placeGlyphAlongLine(
 }
 
 fn projectTruncatedLineSegment(
-    &previousTilePoint: &Point<f64>,
-    currentTilePoint: &Point<f64>,
-    previousProjectedPoint: &Point<f64>,
+    &previousTilePoint: &Point2D<f64, TileSpace>,
+    currentTilePoint: &Point2D<f64, TileSpace>,
+    previousProjectedPoint: &Point2D<f64, TileSpace>,
     minimumLength: f64,
     projectionMatrix: &Matrix4<f64>,
-) -> Point<f64> {
+) -> Point2D<f64, TileSpace> {
     // We are assuming "previousTilePoint" won't project to a point within one
     // unit of the camera plane If it did, that would mean our label extended
     // all the way out from within the viewport to a (very distant) point near

@@ -1,13 +1,15 @@
 //! Tessellation for lines and polygons is implemented here.
 use csscolorparser::Color;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
+use lyon::geom::euclid::Box2D;
 use lyon::{
-    geom::{euclid::Point2D, Box2D},
+    geom::euclid::Point2D,
     tessellation::{
         geometry_builder::MaxIndex, BuffersBuilder, FillOptions, FillTessellator, VertexBuffers,
     },
 };
 
+use crate::sdf::TileSpace;
 use crate::{
     render::shaders::ShaderSymbolVertex,
     sdf::{
@@ -34,7 +36,7 @@ pub struct TextTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId>
     // iteration variables
     current_index: usize,
     current_text: Option<String>,
-    current_origin: Option<Box2D<f32>>,
+    current_origin: Option<Box2D<f32, TileSpace>>,
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
@@ -65,7 +67,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
         origin: [f32; 2],
         label_text: &str,
         color: Color,
-    ) -> Option<Box2D<f32>> {
+    ) -> Option<Box2D<f32, TileSpace>> {
         let mut tessellator = FillTessellator::new();
 
         let mut next_origin = origin;
@@ -117,12 +119,12 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
 
             bbox = bbox.map_or_else(
                 || Some(glyph_bbox),
-                |bbox: Box2D<_>| Some(bbox.union(&glyph_bbox)),
+                |bbox: Box2D<_, TileSpace>| Some(bbox.union(&glyph_bbox)),
             );
 
             tessellator
                 .tessellate_rectangle(
-                    &glyph_bbox,
+                    &glyph_bbox.cast_unit(),
                     &FillOptions::default(),
                     &mut BuffersBuilder::new(
                         &mut self.quad_buffer,

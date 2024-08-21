@@ -1,13 +1,12 @@
-use crate::sdf::geometry::Point;
-use lyon::geom::euclid::{UnknownUnit, Vector2D};
+use crate::euclid::{Point2D, Vector2D};
 use std::f64::consts::PI;
 
-pub fn rotate(a: &Point<f64>, angle: f64) -> Point<f64> {
+pub fn rotate<U>(a: &Point2D<f64, U>, angle: f64) -> Point2D<f64, U> {
     let cos = angle.cos();
     let sin = angle.sin();
     let x = cos * a.x - sin * a.y;
     let y = sin * a.x + cos * a.y;
-    return Point::new(x, y);
+    return Point2D::new(x, y);
 }
 
 /**
@@ -20,7 +19,7 @@ pub fn deg2radf(deg: f64) -> f64 {
     return deg * PI / 180.0;
 }
 
-pub fn perp(a: &Vector2D<f64, UnknownUnit>) -> Vector2D<f64, UnknownUnit> {
+pub fn perp<U>(a: &Vector2D<f64, U>) -> Vector2D<f64, U> {
     return Vector2D::new(-a.y, a.x);
 }
 

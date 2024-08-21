@@ -1,7 +1,7 @@
 use crate::euclid::Rect;
 use crate::sdf::font_stack::FontStackHash;
 use crate::sdf::glyph::{GlyphID, GlyphMap, GlyphMetrics};
-use crate::sdf::GlyphSpace;
+use crate::sdf::TileSpace;
 use std::collections::BTreeMap;
 
 // TODO structs
@@ -9,7 +9,7 @@ pub struct AlphaImage;
 
 #[derive(Default)]
 pub struct GlyphPosition {
-    pub rect: Rect<u16, GlyphSpace>,
+    pub rect: Rect<u16, TileSpace>,
     pub metrics: GlyphMetrics,
 }
 

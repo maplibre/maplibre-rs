@@ -1,5 +1,10 @@
 use std::hash::{DefaultHasher, Hash, Hasher};
 
+pub mod constants;
+pub mod geo;
+pub mod i18n;
+pub mod math;
+
 pub fn hash_combine<T: Hash>(seed: &mut u64, v: &T) {
     let mut hasher = DefaultHasher::new(); // TODO previously used std::hash https://en.cppreference.com/w/cpp/utility/hash
     v.hash(&mut hasher);

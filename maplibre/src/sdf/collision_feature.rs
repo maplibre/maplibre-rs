@@ -1,14 +1,15 @@
 // This file was fully translated
 
-use crate::sdf::collision_index::{GeometryCoordinate, GeometryCoordinates};
+use crate::euclid::{Box2D, Point2D};
 use crate::sdf::feature_index::IndexedSubfeature;
-use crate::sdf::geometry::{convert_point_f64, convert_point_i16, Anchor, Point};
+use crate::sdf::geometry::{convert_point_f64, convert_point_i16, Anchor};
+use crate::sdf::geometry_tile_data::{GeometryCoordinate, GeometryCoordinates};
 use crate::sdf::glyph::Shaping;
 use crate::sdf::grid_index::Circle;
-use crate::sdf::math::{deg2radf, rotate, MinMax};
 use crate::sdf::shaping::{Padding, PositionedIcon};
 use crate::sdf::style_types::SymbolPlacementType;
-use lyon::geom::Box2D;
+use crate::sdf::util::math::{deg2radf, rotate, MinMax};
+use crate::sdf::{ScreenSpace, TileSpace};
 
 pub struct CollisionFeature {
     pub boxes: Vec<CollisionBox>,
@@ -79,10 +80,10 @@ impl CollisionFeature {
                 // Doesn't account for icon-text-fit
                 let rotateRadians = deg2radf(rotate_);
 
-                let tl = rotate(&Point::new(x1, y1), rotateRadians);
-                let tr = rotate(&Point::new(x2, y1), rotateRadians);
-                let bl = rotate(&Point::new(x1, y2), rotateRadians);
-                let br = rotate(&Point::new(x2, y2), rotateRadians);
+                let tl = rotate(&Point2D::<_, TileSpace>::new(x1, y1), rotateRadians);
+                let tr = rotate(&Point2D::<_, TileSpace>::new(x2, y1), rotateRadians);
+                let bl = rotate(&Point2D::<_, TileSpace>::new(x1, y2), rotateRadians);
+                let br = rotate(&Point2D::<_, TileSpace>::new(x2, y2), rotateRadians);
 
                 // Collision features require an "on-axis" geometry,
                 // so take the envelope of the rotated geometry
@@ -295,7 +296,7 @@ impl CollisionFeature {
             let p0 = line[index];
             let p1 = line[index + 1];
 
-            let boxAnchor = Point::new(
+            let boxAnchor = Point2D::new(
                 p0.x as f64 + segmentBoxDistance / segmentLength * (p1.x - p0.x) as f64,
                 p0.y as f64 + segmentBoxDistance / segmentLength * (p1.y - p0.y) as f64,
             );
@@ -325,7 +326,7 @@ impl CollisionFeature {
 #[derive(Default, Clone, Copy, Debug)]
 pub struct CollisionBox {
     // the box is centered around the anchor point
-    pub anchor: Point<f64>,
+    pub anchor: Point2D<f64, TileSpace>,
 
     // the offset of the box from the label's anchor point.
     // TODO: might be needed for #13526
@@ -343,7 +344,7 @@ pub struct CollisionBox {
 #[derive(Clone, Copy, Debug)]
 pub enum ProjectedCollisionBox {
     Circle(Circle<f64>),
-    Box(Box2D<f64>),
+    Box(Box2D<f64, ScreenSpace>),
 }
 
 impl Default for ProjectedCollisionBox {
@@ -353,7 +354,7 @@ impl Default for ProjectedCollisionBox {
 }
 
 impl ProjectedCollisionBox {
-    pub fn box_(&self) -> &Box2D<f64> {
+    pub fn box_(&self) -> &Box2D<f64, ScreenSpace> {
         match self {
             ProjectedCollisionBox::Circle(_) => panic!("not a box"),
             ProjectedCollisionBox::Box(box_) => box_,
