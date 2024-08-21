@@ -5,6 +5,8 @@ use crate::sdf::glyph::{GlyphMap, WritingModeType};
 use crate::sdf::glyph_atlas::GlyphPositions;
 use crate::sdf::image::ImageMap;
 use crate::sdf::image_atlas::ImagePositions;
+use crate::sdf::layout::symbol_feature::SymbolFeature;
+use crate::sdf::layout::symbol_instance::{ShapedTextOrientations, SymbolContent, SymbolInstance};
 use crate::sdf::quads::{SymbolQuad, SymbolQuads};
 use crate::sdf::shaping::PositionedIcon;
 use crate::sdf::style_types::{SymbolAnchorType, TextWritingModeType};
@@ -13,14 +15,6 @@ use crate::sdf::MapMode;
 use std::collections::{BTreeMap, HashMap};
 use std::ops::Range;
 use widestring::U16String;
-
-// instance
-struct SymbolInstance;
-struct SymbolContent;
-struct ShapedTextOrientations;
-
-// feature
-struct SymbolFeature;
 
 // bucket
 struct SymbolBucket;
@@ -44,7 +38,6 @@ struct IconSize_UnevaluatedType;
 struct TextRadialOffset_UnevaluatedType;
 struct SymbolLayoutProperties_PossiblyEvaluated;
 
-// TODO #[derive(Default)]
 struct SymbolLayout {
     pub layerPaintProperties: BTreeMap<String, LayerProperties>,
     pub bucketLeaderID: String,
