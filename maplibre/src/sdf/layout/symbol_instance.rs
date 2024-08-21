@@ -73,7 +73,7 @@ bitflags! {
 }
 
 #[derive(Default)]
-struct SymbolInstanceSharedData {
+pub struct SymbolInstanceSharedData {
     line: GeometryCoordinates,
     // Note: When singleLine == true, only `rightJustifiedGlyphQuads` is populated.
     rightJustifiedGlyphQuads: SymbolQuads,
@@ -191,7 +191,7 @@ impl SymbolInstanceSharedData {
     }
 }
 
-struct SymbolInstance {
+pub struct SymbolInstance {
     sharedData: Rc<SymbolInstanceSharedData>,
 
     anchor: Anchor,
