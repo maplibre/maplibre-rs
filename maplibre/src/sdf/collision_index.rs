@@ -6,7 +6,7 @@ use crate::render::camera::ModelViewProjection;
 use crate::render::view_state::ViewState;
 use crate::sdf::buckets::symbol_bucket::PlacedSymbol;
 use crate::sdf::collision_feature::{CollisionBox, CollisionFeature, ProjectedCollisionBox};
-use crate::sdf::feature_index::IndexedSubfeature;
+use crate::sdf::geometry::feature_index::IndexedSubfeature;
 use crate::sdf::grid_index::{Circle, GridIndex};
 use crate::sdf::layout::symbol_projection::{placeFirstAndLastGlyph, project, TileDistance};
 use crate::sdf::util::geo::ScreenLineString;

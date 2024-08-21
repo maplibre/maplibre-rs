@@ -9,7 +9,7 @@ use crate::render::shaders::SDFShaderFeatureMetadata;
 use crate::render::tile_view_pattern::WgpuTileViewPattern;
 use crate::render::Renderer;
 use crate::sdf::collision_feature::{CollisionBox, CollisionFeature};
-use crate::sdf::feature_index::{IndexedSubfeature, RefIndexedSubfeature};
+use crate::sdf::geometry::feature_index::{IndexedSubfeature, RefIndexedSubfeature};
 
 use crate::euclid::Point2D;
 use crate::sdf::buckets::symbol_bucket::PlacedSymbol;

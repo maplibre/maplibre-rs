@@ -13,8 +13,8 @@ use crate::{
     render::{
         eventually::Eventually,
         graph::RenderGraph,
-        shaders::{SDFShaderFeatureMetadata, ShaderLayerMetadata, ShaderSymbolVertex},
         RenderStageLabel,
+        shaders::{SDFShaderFeatureMetadata, ShaderLayerMetadata, ShaderSymbolVertex},
     },
     schedule::Schedule,
     sdf::resource::GlyphTexture,
@@ -39,7 +39,6 @@ mod buckets;
 mod collision_feature;
 mod collision_index;
 mod collision_system;
-mod feature_index;
 mod font_stack;
 mod geometry;
 mod geometry_tile_data;
