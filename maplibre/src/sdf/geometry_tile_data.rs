@@ -25,6 +25,8 @@ impl Index<usize> for GeometryCoordinates {
 pub type Value = geo_types::Geometry;
 pub type Identifier = String;
 pub type PropertyMap = serde_json::Value;
+
+#[derive(PartialEq)]
 pub enum FeatureType {
     Unknown = 0,
     Point = 1,

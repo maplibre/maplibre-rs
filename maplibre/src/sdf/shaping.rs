@@ -82,6 +82,7 @@ pub fn getAnchorJustification(anchor: &SymbolAnchorType) -> TextJustifyType {
     }
 }
 
+#[derive(Clone)]
 pub struct PositionedIcon {
     pub image: ImagePosition,
     pub top: f64,
