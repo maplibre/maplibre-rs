@@ -1,4 +1,5 @@
 use crate::sdf::layout::symbol_feature::SymbolFeature;
+use std::collections::BTreeSet;
 use std::marker::PhantomData;
 
 /// Types belonging to style
@@ -767,6 +768,7 @@ pub struct SymbolLayoutProperties_PossiblyEvaluated;
 pub struct SymbolLayoutProperties_Evaluated;
 
 pub mod expression {
+    use crate::sdf::font_stack::FontStack;
     use csscolorparser::Color;
     use std::collections::HashMap;
 
@@ -784,7 +786,37 @@ pub mod expression {
         pub available: bool,
     }
     #[derive(Default)]
-    pub struct Formatted;
+    pub struct Formatted {
+        pub sections: Vec<FormattedSection>,
+    }
+
+    impl Formatted {
+        fn toString() -> String {
+            todo!()
+        }
+        fn toObject() -> Value {
+            todo!()
+        }
+
+        fn empty() -> bool {
+            todo!()
+        }
+    }
+
+    impl PartialEq for Formatted {
+        fn eq(&self, other: &Self) -> bool {
+            todo!()
+        }
+    }
+
+    #[derive(Default)]
+    pub struct FormattedSection {
+        pub text: String,
+        pub image: Option<Image>,
+        pub fontScale: Option<f64>,
+        pub fontStack: Option<FontStack>,
+        pub textColor: Option<Color>,
+    }
 
     pub const kFormattedSectionFontScale: &'static str = "font-scale";
     pub const kFormattedSectionTextFont: &'static str = "text-font";
@@ -817,6 +849,20 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
         &self,
         p0: f64,
         p1: &SymbolFeature,
+        p2: crate::sdf::layout::symbol_layout::CanonicalTileID,
+    ) -> T::Type {
+        todo!()
+    }
+
+    pub fn evaluate2<T: DataDrivenLayoutProperty>(&self, p0: f64, p1: &SymbolFeature) -> T::Type {
+        todo!()
+    }
+
+    pub fn evaluate4<T: DataDrivenLayoutProperty>(
+        &self,
+        p0: f64,
+        p1: &SymbolFeature,
+        availableImages: &BTreeSet<String>,
         p2: crate::sdf::layout::symbol_layout::CanonicalTileID,
     ) -> T::Type {
         todo!()

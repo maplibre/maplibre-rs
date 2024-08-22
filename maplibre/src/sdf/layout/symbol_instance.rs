@@ -81,7 +81,7 @@ pub struct SymbolInstanceSharedData {
 }
 
 impl SymbolInstanceSharedData {
-    fn new(
+    pub fn new(
         line_: GeometryCoordinates,
         shapedTextOrientations: &ShapedTextOrientations,
         shapedIcon: Option<PositionedIcon>,

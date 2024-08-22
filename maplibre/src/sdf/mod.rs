@@ -143,7 +143,7 @@ pub struct TileSpace; // The unit in which geometries or symbols are on a tile (
 pub struct ScreenSpace;
 
 // TODO where should this live?
-#[derive(PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum MapMode {
     ///< continually updating map
     Continuous,

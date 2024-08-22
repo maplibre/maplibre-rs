@@ -1,13 +1,16 @@
 use crate::coords::EXTENT;
-use crate::sdf::bidi::{BiDi, Char16};
+use crate::sdf::bidi::{applyArabicShaping, BiDi, Char16};
 use crate::sdf::buckets::symbol_bucket::PlacedSymbol;
 use crate::sdf::geometry::feature_index::{IndexedSubfeature, RefIndexedSubfeature};
 use crate::sdf::geometry::{Anchor, Anchors};
-use crate::sdf::geometry_tile_data::{FeatureType, GeometryCoordinates, GeometryTileLayer};
+use crate::sdf::geometry_tile_data::{
+    FeatureType, GeometryCoordinates, GeometryTileFeature, GeometryTileLayer,
+};
 use crate::sdf::glyph::{GlyphIDs, GlyphMap, Shaping, WritingModeType};
 use crate::sdf::glyph_atlas::GlyphPositions;
 use crate::sdf::image::{ImageMap, ImageType};
 use crate::sdf::image_atlas::ImagePositions;
+use crate::sdf::layout::layout::{BucketParameters, LayoutParameters};
 use crate::sdf::layout::symbol_feature::SymbolFeature;
 use crate::sdf::layout::symbol_instance::{
     ShapedTextOrientations, SymbolContent, SymbolInstance, SymbolInstanceSharedData,
@@ -21,33 +24,55 @@ use crate::sdf::util::i18n;
 use crate::sdf::util::math::deg2radf;
 use crate::sdf::MapMode;
 use geo::HasDimensions;
-use geo_types::Polygon;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::f64::consts::PI;
 use std::ops::Range;
 use std::rc::Rc;
 use widestring::U16String;
-use crate::sdf::layout::layout::{BucketParameters, LayoutParameters};
 
 // bucket
-struct SymbolBucket;
-struct SymbolBucket_Buffer;
+pub struct SymbolBucket {
+   pub symbolInstances: Vec<SymbolInstance>
+}
+pub struct SymbolBucket_Buffer;
+pub struct SymbolLayer;
+pub struct SymbolLayer_Impl;
+
+pub type Bucket = SymbolBucket;
+
+// render
+pub struct LayerRenderData {
+    bucket: Rc<Bucket>,
+    layerProperties: LayerProperties,
+}
+
+pub struct SortKeyRange {
+    sortKey: f64,
+    start: usize,
+    end: usize,
+}
+
+impl SortKeyRange {
+    pub fn isFirstRange(&self) -> bool {
+        return self.start == 0;
+    }
+}
 
 // index
 struct FeatureIndex;
 
-// render
-struct SortKeyRange;
-struct LayerRenderData; // = Bucket + LayerProperties
-
-// tile
+// TODO this is just a dummy
 #[derive(Copy, Clone)]
-pub struct CanonicalTileID;
+pub struct CanonicalTileID {
+    pub x: u32,
+    pub y: u32,
+    pub z: u8,
+}
 
 // TODO
 // template <class Property>
 // static bool has(const SymbolLayoutProperties::PossiblyEvaluated& layout) {
-//     return layout.get<Property>().match([](const typename Property::Type& t) { return !t.empty(); },
+//     return layout.get<Property>().match([](const typename Property::Type& t) { return !t.is_empty(); },
 //                                         [](let) { return true; });
 // }
 
@@ -240,26 +265,49 @@ impl SymbolLayout {
         layers: &Vec<LayerProperties>,
         sourceLayer_: Box<dyn GeometryTileLayer>,
         layoutParameters: &LayoutParameters,
-    ) -> Self {
-        let mut self_ = Self {};
-        /*
-        bucketLeaderID(layers.front()->baseImpl->id),
-          sourceLayer(std::move(sourceLayer_)),
-          overscaling(static_cast<float>(parameters.tileID.overscaleFactor())),
-          zoom(parameters.tileID.overscaledZ),
-          canonicalID(parameters.tileID.canonical),
-          mode(parameters.mode),
-          pixelRatio(parameters.pixelRatio),
-          tileSize(static_cast<uint32_t>(util::tileSize_D * overscaling)),
-          tilePixelRatio(static_cast<float>(util::EXTENT) / tileSize),
-          layout(createLayout(toSymbolLayerProperties(layers.at(0)).layerImpl().layout, zoom)
-         */
+    ) -> Option<Self> {
+        let overscaling = parameters.tileID.overscaleFactor() as f64;
+        let zoom = parameters.tileID.overscaledZ as f64;
+        let tileSize = (tileSize_D * overscaling) as u32;
 
-        let leader: &SymbolLayer::Impl = toSymbolLayerProperties(layers.at(0)).layerImpl();
+        let leader: &SymbolLayer::Impl =
+            toSymbolLayerProperties(layers.get(0).unwrap()).layerImpl();
 
-        self_.textSize = leader.layout.get::<TextSize>();
-        self_.iconSize = leader.layout.get::<IconSize>();
-        self_.textRadialOffset = leader.layout.get::<TextRadialOffset>();
+        let mut self_ = Self {
+            bucketLeaderID: layers.first().baseImpl.id,
+
+            sourceLayer: sourceLayer_,
+            overscaling,
+            zoom,
+            canonicalID: parameters.tileID.canonical,
+            mode: parameters.mode,
+            pixelRatio: parameters.pixelRatio,
+            tileSize,
+            tilePixelRatio: EXTENT as f64 / tileSize,
+            layout: createLayout(
+                toSymbolLayerProperties(layers.get(0).unwrap())
+                    .layerImpl()
+                    .layout,
+                zoom,
+            ),
+            textSize: leader.layout.get::<TextSize>(),
+            iconSize: leader.layout.get::<IconSize>(),
+            textRadialOffset: leader.layout.get::<TextRadialOffset>(),
+
+            // default values
+            layerPaintProperties: Default::default(),
+            symbolInstances: vec![],
+            sortKeyRanges: vec![],
+            iconsNeedLinear: false,
+            sortFeaturesByY: false,
+            sortFeaturesByKey: false,
+            allowVerticalPlacement: false,
+            iconsInText: false,
+            placementModes: vec![],
+            features: vec![],
+            bidi: BiDi,
+            compareText: Default::default(),
+        };
 
         let hasText = has::<TextField>(*self_.layout) && has::<TextFont>(*self_.layout);
         let hasIcon = has::<IconImage>(*self_.layout);
@@ -292,7 +340,7 @@ impl SymbolLayout {
         }
 
         for layer in layers {
-            self_.layerPaintProperties.emplace(layer.baseImpl.id, layer);
+            self_.layerPaintProperties.insert(layer.baseImpl.id, layer);
         }
 
         // Determine glyph dependencies
@@ -311,7 +359,7 @@ impl SymbolLayout {
             ft.index = i;
 
             if (hasText) {
-                let formatted = self_.layout.evaluate::<TextField>(
+                let formatted = self_.layout.evaluate4::<TextField>(
                     self_.zoom,
                     &ft,
                     layoutParameters.availableImages,
@@ -326,68 +374,69 @@ impl SymbolLayout {
                         .layout
                         .evaluate::<TextFont>(self_.zoom, &ft, self_.canonicalID);
 
-                ft.formattedText = TaggedString::default();
+                ft.formattedText = Some(TaggedString::default());
+                let ft_formattedText = ft.formattedText.as_mut().unwrap();
                 for section in &formatted.sections {
-                    if (!section.image) {
-                        let u8string = section.text;
+                    if let Some(image) = (&section.image) {
+                        layoutParameters
+                            .imageDependencies
+                            .insert(image.imageID.clone(), ImageType::Icon);
+                        ft_formattedText.addImageSection(image.imageID.clone());
+                    } else {
+                        let mut u8string = section.text.clone();
                         if (textTransform == TextTransformType::Uppercase) {
-                            u8string = platform::uppercase(u8string);
+                            u8string = u8string.to_uppercase();
                         } else if (textTransform == TextTransformType::Lowercase) {
-                            u8string = platform::lowercase(u8string);
+                            u8string = u8string.to_lowercase();
                         }
 
-                        if let Err(e) = ft.formattedText.addTextSection(
-                            applyArabicShaping(util::convertUTF8ToUTF16(u8string)),
-                            if section.fontScale {
-                                *section.fontScale
+                        if let Err(e) = ft_formattedText.addTextSection(
+                            &applyArabicShaping(&U16String::from(u8string.as_str())),
+                            if let Some(fontScale) = section.fontScale {
+                                fontScale
                             } else {
                                 1.0
                             },
-                            if section.fontScale {
-                                *section.fontStack
+                            if let Some(fontStack) = &section.fontStack {
+                                fontStack.clone()
                             } else {
-                                baseFontStack
+                                baseFontStack.clone()
                             },
-                            section.textColor,
+                            section.textColor.clone(),
                         ) {
                             log::error!("Encountered section with invalid UTF-8 in tile, source: {} z: {} x: {} y: {}", self_.sourceLayer.getName(), self_.canonicalID.z, self_.canonicalID.x, self_.canonicalID.y);
                             continue; // skip section
                         }
-                    } else {
-                        layoutParameters
-                            .imageDependencies
-                            .emplace(section.image.id(), ImageType::Icon);
-                        ft.formattedText.addImageSection(section.image.id());
                     }
                 }
 
                 let canVerticalizeText = self_.layout.get::<TextRotationAlignment>()
                     == AlignmentType::Map
                     && self_.layout.get::<SymbolPlacement>() != SymbolPlacementType::Point
-                    && ft.formattedText.allowsVerticalWritingMode();
+                    && ft_formattedText.allowsVerticalWritingMode();
 
                 // Loop through all characters of this text and collect unique codepoints.
-                for j in 0..ft.formattedText.len() {
-                    let section = formatted.sections[ft.formattedText.getSectionIndex(j)];
-                    if (section.image) {
+                for j in 0..ft_formattedText.length() {
+                    let section = &formatted.sections[ft_formattedText.getSectionIndex(j) as usize];
+                    if (section.image.is_some()) {
                         continue;
                     }
 
-                    let sectionFontStack = section.fontStack;
-                    let dependencies: &GlyphIDs = layoutParameters.glyphDependencies
-                        [if sectionFontStack? {
-                            *sectionFontStack
+                    let sectionFontStack = &section.fontStack;
+                    let dependencies: &mut GlyphIDs = &mut layoutParameters.glyphDependencies
+                        [if let Some(sectionFontStack) = sectionFontStack {
+                            sectionFontStack
                         } else {
-                            baseFontStack
+                            &baseFontStack
                         }];
-                    let codePoint: Char16 = ft.formattedText.getCharCodeAt(j);
+                    let codePoint: Char16 = ft_formattedText.getCharCodeAt(j);
                     dependencies.insert(codePoint);
                     if (canVerticalizeText
                         || (self_.allowVerticalPlacement
-                            && ft.formattedText.allowsVerticalWritingMode()))
+                            && ft_formattedText.allowsVerticalWritingMode()))
                     {
-                        let verticalChr: Char16 = util::i18n::verticalizePunctuation(codePoint);
-                        if (verticalChr) {
+                        let verticalChr: Char16 = i18n::verticalizePunctuation(codePoint);
+                        if (verticalChr != 0) {
                             dependencies.insert(verticalChr);
                         }
                     }
@@ -395,23 +444,25 @@ impl SymbolLayout {
             }
 
             if (hasIcon) {
-                ft.icon = self_.layout.evaluate::<IconImage>(
+                ft.icon = self_.layout.evaluate4::<IconImage>(
                     self_.zoom,
-                    ft,
+                    &ft,
                     layoutParameters.availableImages,
                     self_.canonicalID,
                 );
                 layoutParameters
                     .imageDependencies
-                    .emplace(ft.icon.id(), ImageType::Icon);
+                    .insert(ft.icon.as_ref().unwrap().imageID.clone(), ImageType::Icon);
             }
 
-            if (ft.formattedText || ft.icon) {
+            if (ft.formattedText.is_some() || ft.icon.is_some()) {
                 if (self_.sortFeaturesByKey) {
-                    ft.sortKey = self_
-                        .layout
-                        .evaluate::<SymbolSortKey>(self_.zoom, ft, self_.canonicalID);
-                    let lowerBound = std::lower_bound(self_.features.begin(), self_.features.end(), ft);
+                    ft.sortKey =
+                        self_
+                            .layout
+                            .evaluate::<SymbolSortKey>(self_.zoom, &ft, self_.canonicalID);
+                    let lowerBound =
+                        std::lower_bound(self_.features.begin(), self_.features.end(), &ft);
                     self_.features.insert(lowerBound, ft);
                 } else {
                     self_.features.push(ft);
@@ -420,8 +471,11 @@ impl SymbolLayout {
         }
 
         if (self_.layout.get::<SymbolPlacement>() == SymbolPlacementType::Line) {
-            util::mergeLines(self_.features);
+            todo!()
+            // TODO mergeLines(self_.features);
         }
+
+        Some(self_)
     }
     fn prepareSymbols(
         &mut self,
@@ -688,17 +742,17 @@ impl SymbolLayout {
             };
             if (defaultShaping.isAnyLineNotEmpty() || shapedIcon.is_some()) {
                 // TODO borrow conflict with self.features
-                //self.addFeature(
-                //    feature_index,
-                //    feature,
-                //    &shapedTextOrientations,
-                //    shapedIcon,
-                //    imageMap,
-                //    textOffset,
-                //    layoutTextSize,
-                //    layoutIconSize,
-                //    iconType,
-                //);
+                self.addFeature(
+                    feature_index,
+                    feature,
+                    &shapedTextOrientations,
+                    shapedIcon,
+                    imageMap,
+                    textOffset,
+                    layoutTextSize,
+                    layoutIconSize,
+                    iconType,
+                );
             }
 
             feature.geometry.0.clear();
@@ -716,24 +770,24 @@ impl SymbolLayout {
         showCollisionBoxes: bool,
         canonical: &CanonicalTileID,
     ) {
-        let bucket = SymbolBucket::new(
-            layout,
-            layerPaintProperties,
-            textSize,
-            iconSize,
-            zoom,
-            iconsNeedLinear,
-            sortFeaturesByY,
-            bucketLeaderID,
-            symbolInstances,
-            sortKeyRanges,
-            tilePixelRatio,
-            allowVerticalPlacement,
-            placementModes,
-            iconsInText,
+        let bucket: SymbolBucket = SymbolBucket::new(
+            &self.layout,
+            &self.layerPaintProperties,
+            &self.textSize,
+            &self.iconSize,
+            self.zoom,
+            self.iconsNeedLinear,
+            self.sortFeaturesByY,
+            &self.bucketLeaderID,
+            &self.symbolInstances,
+            &self.sortKeyRanges,
+            self.tilePixelRatio,
+            self.allowVerticalPlacement,
+            &self.placementModes,
+            self.iconsInText,
         );
 
-        for symbolInstance in bucket.symbolInstances {
+        for symbolInstance in &bucket.symbolInstances {
             let hasText = symbolInstance.hasText();
             let hasIcon = symbolInstance.hasIcon();
             let singleLine = symbolInstance.singleLine;
@@ -764,7 +818,7 @@ impl SymbolLayout {
                         Vec::new(),
                     );
                     index = iconBuffer.placedSymbols.len() - 1;
-                    let iconSymbol: PlacedSymbol = iconBuffer.placedSymbols.back();
+                    let iconSymbol: PlacedSymbol = iconBuffer.placedSymbols.last();
                     iconSymbol.angle = if (self.allowVerticalPlacement
                         && writingMode == WritingModeType::Vertical)
                     {
@@ -808,25 +862,25 @@ impl SymbolLayout {
             }
 
             if (hasText && feature.formattedText) {
-                let lastAddedSection: Option<usize>;
+                let mut lastAddedSection: Option<usize> = None;
                 if (singleLine) {
                     let placedTextIndex: Option<usize>;
-                    lastAddedSection = self.addSymbolGlyphQuads(
+                    lastAddedSection = Some(self.addSymbolGlyphQuads(
                         *bucket,
                         symbolInstance,
                         feature,
                         symbolInstance.writingModes,
-                        placedTextIndex,
+                        &placedTextIndex,
                         symbolInstance.rightJustifiedGlyphQuads(),
                         canonical,
-                        lastAddedSection,
-                    );
+                        &lastAddedSection,
+                    ));
                     symbolInstance.placedRightTextIndex = placedTextIndex;
                     symbolInstance.placedCenterTextIndex = placedTextIndex;
                     symbolInstance.placedLeftTextIndex = placedTextIndex;
                 } else {
                     if (symbolInstance.rightJustifiedGlyphQuadsSize) {
-                        lastAddedSection = self.addSymbolGlyphQuads(
+                        lastAddedSection = Some(self.addSymbolGlyphQuads(
                             *bucket,
                             symbolInstance,
                             feature,
@@ -835,10 +889,10 @@ impl SymbolLayout {
                             symbolInstance.rightJustifiedGlyphQuads(),
                             canonical,
                             lastAddedSection,
-                        );
+                        ));
                     }
                     if (symbolInstance.centerJustifiedGlyphQuadsSize) {
-                        lastAddedSection = self.addSymbolGlyphQuads(
+                        lastAddedSection = Some(self.addSymbolGlyphQuads(
                             *bucket,
                             symbolInstance,
                             feature,
@@ -847,10 +901,10 @@ impl SymbolLayout {
                             symbolInstance.centerJustifiedGlyphQuads(),
                             canonical,
                             lastAddedSection,
-                        );
+                        ));
                     }
                     if (symbolInstance.leftJustifiedGlyphQuadsSize) {
-                        lastAddedSection = self.addSymbolGlyphQuads(
+                        lastAddedSection = Some(self.addSymbolGlyphQuads(
                             *bucket,
                             symbolInstance,
                             feature,
@@ -859,13 +913,13 @@ impl SymbolLayout {
                             symbolInstance.leftJustifiedGlyphQuads(),
                             canonical,
                             lastAddedSection,
-                        );
+                        ));
                     }
                 }
                 if (symbolInstance.writingModes & WritingModeType::Vertical
                     && symbolInstance.verticalGlyphQuadsSize)
                 {
-                    lastAddedSection = self.addSymbolGlyphQuads(
+                    lastAddedSection = Some(self.addSymbolGlyphQuads(
                         *bucket,
                         symbolInstance,
                         feature,
@@ -874,13 +928,13 @@ impl SymbolLayout {
                         symbolInstance.verticalGlyphQuads(),
                         canonical,
                         lastAddedSection,
-                    );
+                    ));
                 }
-                assert!(lastAddedSection); // True, as hasText == true;
+                assert!(lastAddedSection.is_some()); // True, as hasText == true;
                 self.updatePaintPropertiesForSection(
                     *bucket,
                     feature,
-                    *lastAddedSection,
+                    lastAddedSection.unwrap(),
                     canonical,
                 );
             }
@@ -896,7 +950,10 @@ impl SymbolLayout {
                 if (!firstLoad) {
                     bucket.justReloaded = true;
                 }
-                renderData.emplace(pair.first, LayerRenderData::new(bucket, pair.second));
+                renderData.insert(pair.0, LayerRenderData {
+                    bucket: bucket, 
+                    layerProperties: pair.1,
+                });
             }
         }
     }
@@ -993,7 +1050,7 @@ impl SymbolLayout {
 
 impl SymbolLayout {
     fn addFeature(
-        &self,
+        &mut self,
         layoutFeatureIndex: usize,
         feature: &SymbolFeature,
         shapedTextOrientations: &ShapedTextOrientations,
@@ -1039,7 +1096,7 @@ impl SymbolLayout {
                 self.layout
                     .evaluate::<TextRadialOffset>(self.zoom, feature, self.canonicalID)
                     * ONE_EM,
-                INVALID_OFFSET_VALUE,
+                Self::INVALID_OFFSET_VALUE,
             ];
         } else {
             variableTextOffset = [
@@ -1059,8 +1116,8 @@ impl SymbolLayout {
                 self.layout.get::<SymbolPlacement>()
             };
 
-        let textRepeatDistance: f64 = symbolSpacing / 2;
-        let evaluatedLayoutProperties = self.layout.evaluate(self.zoom, feature);
+        let textRepeatDistance: f64 = symbolSpacing / 2.;
+        let evaluatedLayoutProperties = self.layout.evaluate2(self.zoom, feature);
         let indexedFeature = RefIndexedSubfeature::new(
             feature.index,
             self.sourceLayer.getName(),
@@ -1071,36 +1128,41 @@ impl SymbolLayout {
         let iconTextFit = evaluatedLayoutProperties.get::<IconTextFit>();
         let hasIconTextFit = iconTextFit != IconTextFitType::None;
         // Adjust shaped icon size when icon-text-fit is used.
-        let verticallyShapedIcon: Option<PositionedIcon>;
-        if (shapedIcon && hasIconTextFit) {
-            // Create vertically shaped icon for vertical writing mode if needed.
-            if (self.allowVerticalPlacement && shapedTextOrientations.vertical) {
-                verticallyShapedIcon = shapedIcon;
-                verticallyShapedIcon.fitIconToText(
-                    shapedTextOrientations.vertical,
-                    iconTextFit,
-                    self.layout.get::<IconTextFitPadding>(),
-                    iconOffset,
-                    fontScale,
-                );
-            }
-            let shapedText = getDefaultHorizontalShaping(shapedTextOrientations);
-            if (shapedText) {
-                shapedIcon.fitIconToText(
-                    shapedText,
-                    iconTextFit,
-                    self.layout.get::<IconTextFitPadding>(),
-                    iconOffset,
-                    fontScale,
-                );
+        let verticallyShapedIcon: Option<PositionedIcon> = None;
+
+        if let Some(shapedIcon) = &shapedIcon {
+            if (hasIconTextFit) {
+                // Create vertically shaped icon for vertical writing mode if needed.
+                if (self.allowVerticalPlacement
+                    && shapedTextOrientations.vertical.isAnyLineNotEmpty())
+                {
+                    verticallyShapedIcon = Some(shapedIcon.clone());
+                    verticallyShapedIcon.fitIconToText(
+                        &shapedTextOrientations.vertical,
+                        iconTextFit,
+                        &self.layout.get::<IconTextFitPadding>(),
+                        &iconOffset,
+                        fontScale,
+                    );
+                }
+                let shapedText = getDefaultHorizontalShaping(shapedTextOrientations);
+                if (shapedText.isAnyLineNotEmpty()) {
+                    shapedIcon.fitIconToText(
+                        shapedText,
+                        iconTextFit,
+                        &self.layout.get::<IconTextFitPadding>(),
+                        &iconOffset,
+                        fontScale,
+                    );
+                }
             }
         }
 
         let addSymbolInstance = |anchor: &Anchor, sharedData: Rc<SymbolInstanceSharedData>| {
-            assert!(sharedData);
-            let anchorInsideTile = anchor.point.x >= 0
+            // assert!(sharedData); TODO
+            let anchorInsideTile = anchor.point.x >= 0.
                 && anchor.point.x < EXTENT
-                && anchor.point.y >= 0
+                && anchor.point.y >= 0.
                 && anchor.point.y < EXTENT;
 
             if (self.mode == MapMode::Tile || anchorInsideTile) {
@@ -1109,12 +1171,12 @@ impl SymbolLayout {
                 // In tiled rendering mode, add all symbols in the buffers so that we can:
                 //  (1) render symbols that overlap into this tile
                 //  (2) approximate collision detection effects from neighboring symbols
-                self.symbolInstances.emplace_back(
-                    anchor,
+                self.symbolInstances.push(SymbolInstance::new(
+                    anchor.clone(),
                     sharedData,
                     shapedTextOrientations,
-                    shapedIcon,
-                    verticallyShapedIcon,
+                    &shapedIcon,
+                    &verticallyShapedIcon,
                     textBoxScale,
                     textPadding,
                     textPlacement,
@@ -1126,9 +1188,9 @@ impl SymbolLayout {
                     layoutFeatureIndex,
                     feature.index,
                     if let Some(formattedText) = &feature.formattedText {
-                        formattedText.rawText()
+                        formattedText.rawText().clone()
                     } else {
-                        &U16String::new()
+                        U16String::new()
                     },
                     self.overscaling,
                     iconRotation,
@@ -1136,26 +1198,26 @@ impl SymbolLayout {
                     variableTextOffset,
                     self.allowVerticalPlacement,
                     iconType,
-                );
+                ));
 
                 if (self.sortFeaturesByKey) {
-                    if (!self.sortKeyRanges.empty()
-                        && self.sortKeyRanges.back().sortKey == feature.sortKey)
+                    if (!self.sortKeyRanges.is_empty()
+                        && self.sortKeyRanges.last().unwrap().sortKey == feature.sortKey)
                     {
-                        self.sortKeyRanges.back().end = self.symbolInstances.len();
+                        self.sortKeyRanges.last_mut().unwrap().end = self.symbolInstances.len();
                     } else {
-                        self.sortKeyRanges.push(SortKeyRange::new(
-                            feature.sortKey,
-                            self.symbolInstances.len() - 1,
-                            self.symbolInstances.len(),
-                        ));
+                        self.sortKeyRanges.push(SortKeyRange {
+                            sortKey: feature.sortKey,
+                            start: self.symbolInstances.len() - 1,
+                            end: self.symbolInstances.len(),
+                        });
                     }
                 }
             }
         };
 
         let createSymbolInstanceSharedData = |line: GeometryCoordinates| {
-            return std::make_shared::<SymbolInstanceSharedData>(
+            return Rc::new(SymbolInstanceSharedData::new(
                 line,
                 shapedTextOrientations,
                 shapedIcon,
@@ -1168,26 +1230,27 @@ impl SymbolLayout {
                 iconType,
                 hasIconTextFit,
                 self.allowVerticalPlacement,
-            );
+            ));
         };
 
         let type_ = feature.getType();
 
         if (self.layout.get::<SymbolPlacement>() == SymbolPlacementType::Line) {
-            let clippedLines = util::clipLines(feature.geometry, 0, 0, EXTENT, EXTENT);
+            todo!()
+            /*let clippedLines = clipLines(feature.geometry, 0, 0, EXTENT, EXTENT);
             for line in clippedLines {
                 let anchors: Anchors = getAnchors(
                     line,
                     symbolSpacing,
                     textMaxAngle,
                     (if shapedTextOrientations.vertical {
-                        shapedTextOrientations.vertical
+                        &shapedTextOrientations.vertical
                     } else {
                         getDefaultHorizontalShaping(shapedTextOrientations)
                     })
                     .left,
                     (if shapedTextOrientations.vertical {
-                        shapedTextOrientations.vertical
+                        &shapedTextOrientations.vertical
                     } else {
                         getDefaultHorizontalShaping(shapedTextOrientations)
                     })
@@ -1210,8 +1273,10 @@ impl SymbolLayout {
                         addSymbolInstance(anchor, sharedData);
                     }
                 }
-            }
+            }*/
         } else if (self.layout.get::<SymbolPlacement>() == SymbolPlacementType::LineCenter) {
+            todo!()
+            /*
             // No clipping, multiple lines per feature are allowed
             // "lines" with only one point are ignored as in clipLines
             for line in feature.geometry {
@@ -1240,9 +1305,10 @@ impl SymbolLayout {
                         addSymbolInstance(*anchor, createSymbolInstanceSharedData(line));
                     }
                 }
-            }
+            }*/
         } else if (type_ == FeatureType::Polygon) {
-            for polygon in classifyRings(feature.geometry) {
+            todo!()
+            /*for polygon in classifyRings(feature.geometry) {
                 let poly: Polygon<f64>;
                 for ring in polygon {
                     let r: LinearRing<f64>;
@@ -1253,12 +1319,12 @@ impl SymbolLayout {
                 }
 
                 // 1 pixel worth of precision, in tile coordinates
-                let poi = mapbox::polylabel(poly, EXTENT / util::tileSize_D);
-                let anchor = Anchor::new((poi.x) as f64, (poi.y) as f64, 0.0f, (minScale) as usize);
+                let poi = mapbox::polylabel(poly, EXTENT / tileSize_D);
+                let anchor = Anchor::new((poi.x) as f64, (poi.y) as f64, 0.0, (minScale) as usize);
                 addSymbolInstance(anchor, createSymbolInstanceSharedData(polygon[0]));
-            }
+            }*/
         } else if (type_ == FeatureType::LineString) {
-            for line in feature.geometry {
+            for line in &feature.geometry {
                 // Skip invalid LineStrings.
                 if (line.is_empty()) {
                     continue;
@@ -1273,8 +1339,8 @@ impl SymbolLayout {
                 addSymbolInstance(anchor, createSymbolInstanceSharedData(line));
             }
         } else if (type_ == FeatureType::Point) {
-            for points in feature.geometry {
-                for point in points {
+            for points in &feature.geometry {
+                for point in &points {
                     let anchor =
                         Anchor::new((point.x) as f64, (point.y) as f64, 0.0, (minScale) as usize);
                     addSymbolInstance(anchor, createSymbolInstanceSharedData({ point }));
@@ -1324,11 +1390,9 @@ impl SymbolLayout {
         let pixelOffsetBR = symbol.pixelOffsetBR;
         let minFontScale = symbol.minFontScale;
 
-        if (buffer.segments.empty()
-            || buffer.segments.back().vertexLength + vertexLength
-                > u16::MAX
-            || std::fabs(buffer.segments.back().sortKey - sortKey)
-                > std::numeric_limits::<float>::epsilon())
+        if (buffer.segments.is_empty()
+            || buffer.segments.last().vertexLength + vertexLength > u16::MAX
+            || (buffer.segments.last().sortKey - sortKey).abs() > f64::EPSILON)
         {
             buffer.segments.emplace_back(
                 buffer.vertices().elements(),
@@ -1341,7 +1405,7 @@ impl SymbolLayout {
 
         // We're generating triangle fans, so we always start with the first
         // coordinate in this polygon.
-        let segment = buffer.segments.back();
+        let segment = buffer.segments.last();
         assert!(segment.vertexLength <= u16::MAX);
         let index = (segment.vertexLength) as u16;
 
@@ -1351,9 +1415,9 @@ impl SymbolLayout {
             labelAnchor.point,
             tl,
             symbol.glyphOffset.y,
-            tex.x,
-            tex.y,
-            sizeData,
+            tex.origin.x,
+            tex.origin.y,
+            sizeData.clone(),
             symbol.isSDF,
             pixelOffsetTL,
             minFontScale,
@@ -1362,9 +1426,9 @@ impl SymbolLayout {
             labelAnchor.point,
             tr,
             symbol.glyphOffset.y,
-            tex.x + tex.w,
-            tex.y,
-            sizeData,
+            tex.origin.x + tex.width(),
+            tex.origin.y,
+            sizeData.clone(),
             symbol.isSDF,
             [pixelOffsetBR.x, pixelOffsetTL.y],
             minFontScale,
@@ -1373,9 +1437,9 @@ impl SymbolLayout {
             labelAnchor.point,
             bl,
             symbol.glyphOffset.y,
-            tex.x,
-            tex.y + tex.h,
-            sizeData,
+            tex.origin.x,
+            tex.origin.y + tex.height(),
+            sizeData.clone(),
             symbol.isSDF,
             [pixelOffsetTL.x, pixelOffsetBR.y],
             minFontScale,
@@ -1384,9 +1448,9 @@ impl SymbolLayout {
             labelAnchor.point,
             br,
             symbol.glyphOffset.y,
-            tex.x + tex.w,
-            tex.y + tex.h,
-            sizeData,
+            tex.origin.x + tex.width(),
+            tex.origin.y + tex.height(),
+            sizeData.clone(),
             symbol.isSDF,
             pixelOffsetBR,
             minFontScale,
@@ -1463,7 +1527,7 @@ impl SymbolLayout {
         canonical: &CanonicalTileID,
         lastAddedSection: Option<usize>,
     ) -> usize {
-        let sizeData: Range<f64> = bucket.textSizeBinder.getVertexSizeData(feature);
+        let sizeData: Range<f64> = bucket.textSizeBinder.getVertexSizeData(feature); // TODO verify if usage of range is oke, empty ranges, reverse
         let hasFormatSectionOverrides: bool = bucket.hasFormatSectionOverrides();
         let placedIconIndex = if writingMode == WritingModeType::Vertical {
             symbolInstance.placedVerticalIconIndex
@@ -1472,9 +1536,9 @@ impl SymbolLayout {
         };
         bucket.text.placedSymbols.emplace_back(
             symbolInstance.anchor.point,
-            symbolInstance.anchor.segment.value_or(0),
-            sizeData.min,
-            sizeData.max,
+            symbolInstance.anchor.segment.unwrap_or(0),
+            sizeData.start,
+            sizeData.end,
             symbolInstance.textOffset,
             writingMode,
             symbolInstance.line(),
@@ -1482,7 +1546,7 @@ impl SymbolLayout {
             placedIconIndex,
         );
         placedIndex = bucket.text.placedSymbols.len() - 1;
-        let placedSymbol: &PlacedSymbol = bucket.text.placedSymbols.back();
+        let placedSymbol: &PlacedSymbol = bucket.text.placedSymbols.last();
         placedSymbol.angle =
             if (self.allowVerticalPlacement && writingMode == WritingModeType::Vertical) {
                 PI / 2.
