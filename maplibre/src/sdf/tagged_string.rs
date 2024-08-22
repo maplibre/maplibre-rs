@@ -221,7 +221,7 @@ impl TaggedString {
         }
         return self
             .supportsVerticalWritingMode
-            .expect("supportsVerticalWritingMode is set");
+            .expect("supportsVerticalWritingMode mut be set");
     }
 }
 

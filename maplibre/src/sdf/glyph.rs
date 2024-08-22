@@ -78,7 +78,7 @@ pub struct PositionedLine {
     pub lineOffset: f64,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Shaping {
     pub positionedLines: Vec<PositionedLine>,
     pub top: f64,
@@ -106,10 +106,7 @@ impl Shaping {
             iconsInText: false,
         }
     }
-}
-
-impl Into<bool> for Shaping {
-    fn into(self) -> bool {
+    pub fn isAnyLineNotEmpty(&self) -> bool {
         self.positionedLines
             .iter()
             .any(|line| !line.positionedGlyphs.is_empty())
@@ -122,6 +119,12 @@ bitflags! {
         const None = 0;
         const Horizontal = 1 << 0;
         const Vertical = 1 << 1;
+    }
+}
+
+impl Default for WritingModeType {
+    fn default() -> Self {
+        WritingModeType::None
     }
 }
 

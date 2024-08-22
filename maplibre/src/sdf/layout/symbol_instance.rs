@@ -14,32 +14,30 @@ use widestring::U16String;
 pub struct SymbolLayoutProperties_Evaluated;
 
 fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
-    if let Some(shape) = &(shapedTextOrientations.right) {
-        return shape;
+    if shapedTextOrientations.right.isAnyLineNotEmpty() {
+        return &shapedTextOrientations.right;
     }
-    if let Some(shape) = &(shapedTextOrientations.center) {
-        return shape;
+    if shapedTextOrientations.center.isAnyLineNotEmpty() {
+        return &(shapedTextOrientations.center);
     }
-    if let Some(shape) = &(shapedTextOrientations.left) {
-        return shape;
+    if shapedTextOrientations.left.isAnyLineNotEmpty() {
+        return &(shapedTextOrientations.left);
     }
-    if let Some(shape) = &(shapedTextOrientations.vertical) {
-        return shape;
+    if shapedTextOrientations.vertical.isAnyLineNotEmpty() {
+        return &(shapedTextOrientations.vertical);
     }
-    return shapedTextOrientations
-        .horizontal
-        .as_ref()
-        .expect("horizontal must be set");
+    return &shapedTextOrientations.horizontal;
 }
 
+#[derive(Default)]
 pub struct ShapedTextOrientations {
-    horizontal: Option<Shaping>,
-    vertical: Option<Shaping>,
+    pub horizontal: Shaping,
+    pub vertical: Shaping,
     // The following are used with variable text placement on.
-    right: Option<Shaping>,
-    center: Option<Shaping>,
-    left: Option<Shaping>,
-    singleLine: bool,
+    pub right: Shaping,
+    pub center: Shaping,
+    pub left: Shaping,
+    pub singleLine: bool,
 }
 
 impl ShapedTextOrientations {
@@ -52,11 +50,11 @@ impl ShapedTextOrientations {
         singleLine: bool,
     ) -> Self {
         Self {
-            right: Some(right.unwrap_or(horizontal.clone())),
-            horizontal: Some(horizontal),
-            vertical: Some(vertical),
-            center: Some(center),
-            left: Some(left),
+            right: (right.unwrap_or(horizontal.clone())),
+            horizontal: (horizontal),
+            vertical: (vertical),
+            center: (center),
+            left: (left),
             singleLine,
         }
     }
@@ -123,7 +121,54 @@ impl SymbolInstanceSharedData {
 
         // todo is this translation correct?
         if (!shapedTextOrientations.singleLine) {
-            if let Some(shape) = &(shapedTextOrientations.right) {
+            if shapedTextOrientations.right.isAnyLineNotEmpty() {
+                self_.rightJustifiedGlyphQuads = getGlyphQuads(
+                    &shapedTextOrientations.right,
+                    textOffset,
+                    layout,
+                    textPlacement,
+                    imageMap,
+                    allowVerticalPlacement,
+                );
+            }
+
+            if shapedTextOrientations.center.isAnyLineNotEmpty() {
+                self_.centerJustifiedGlyphQuads = getGlyphQuads(
+                    &shapedTextOrientations.center,
+                    textOffset,
+                    layout,
+                    textPlacement,
+                    imageMap,
+                    allowVerticalPlacement,
+                );
+            }
+
+            if shapedTextOrientations.left.isAnyLineNotEmpty() {
+                self_.leftJustifiedGlyphQuads = getGlyphQuads(
+                    &shapedTextOrientations.left,
+                    textOffset,
+                    layout,
+                    textPlacement,
+                    imageMap,
+                    allowVerticalPlacement,
+                );
+            }
+        } else {
+            let shape = if shapedTextOrientations.right.isAnyLineNotEmpty() {
+                Some(&shapedTextOrientations.right)
+            } else {
+                if shapedTextOrientations.center.isAnyLineNotEmpty() {
+                    Some(&shapedTextOrientations.center)
+                } else {
+                    if shapedTextOrientations.left.isAnyLineNotEmpty() {
+                        Some(&shapedTextOrientations.left)
+                    } else {
+                        None
+                    }
+                }
+            };
+
+            if let Some(shape) = shape {
                 self_.rightJustifiedGlyphQuads = getGlyphQuads(
                     shape,
                     textOffset,
@@ -133,47 +178,11 @@ impl SymbolInstanceSharedData {
                     allowVerticalPlacement,
                 );
             }
-
-            if let Some(shape) = &(shapedTextOrientations.center) {
-                self_.centerJustifiedGlyphQuads = getGlyphQuads(
-                    shape,
-                    textOffset,
-                    layout,
-                    textPlacement,
-                    imageMap,
-                    allowVerticalPlacement,
-                );
-            }
-
-            if let Some(shape) = &(shapedTextOrientations.left) {
-                self_.leftJustifiedGlyphQuads = getGlyphQuads(
-                    shape,
-                    textOffset,
-                    layout,
-                    textPlacement,
-                    imageMap,
-                    allowVerticalPlacement,
-                );
-            }
-        } else if let Some(shape) = shapedTextOrientations
-            .right
-            .as_ref()
-            .or(shapedTextOrientations.center.as_ref())
-            .or(shapedTextOrientations.left.as_ref())
-        {
-            self_.rightJustifiedGlyphQuads = getGlyphQuads(
-                shape,
-                textOffset,
-                layout,
-                textPlacement,
-                imageMap,
-                allowVerticalPlacement,
-            );
         }
 
-        if let Some(shape) = &(shapedTextOrientations.vertical) {
+        if shapedTextOrientations.vertical.isAnyLineNotEmpty() {
             self_.verticalGlyphQuads = getGlyphQuads(
-                shape,
+                &shapedTextOrientations.vertical,
                 textOffset,
                 layout,
                 textPlacement,
@@ -314,12 +323,12 @@ impl SymbolInstance {
             self_.symbolContent |= SymbolContent::Text;
         }
         if (allowVerticalPlacement) {
-            if let Some(vertical) = &shapedTextOrientations.vertical {
+            if shapedTextOrientations.vertical.isAnyLineNotEmpty() {
                 let verticalPointLabelAngle = 90.0;
                 self_.verticalTextCollisionFeature = CollisionFeature::new_from_text(
                     self_.line(),
                     &self_.anchor,
-                    vertical.clone(),
+                    shapedTextOrientations.vertical.clone(),
                     textBoxScale_,
                     textPadding,
                     textPlacement,
