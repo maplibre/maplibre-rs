@@ -11,10 +11,6 @@ use crate::sdf::util::math::{deg2radf, rotate};
 use crate::sdf::TileSpace;
 use std::f64::consts::PI;
 
-struct TextRotate;
-struct TextRotationAlignment;
-struct AlignmentType;
-
 pub struct SymbolQuad {
     pub tl: Point2D<f64, TileSpace>,
     pub tr: Point2D<f64, TileSpace>,

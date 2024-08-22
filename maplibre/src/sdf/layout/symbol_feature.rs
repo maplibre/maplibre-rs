@@ -2,18 +2,17 @@ use crate::sdf::geometry_tile_data::{FeatureType, GeometryTileFeature, Identifie
 use crate::sdf::tagged_string::TaggedString;
 use geo_types::GeometryCollection;
 use std::cmp::Ordering;
+use crate::sdf::style_types::expression;
 
-// TODO
-struct style_expression_Image;
 
 pub struct SymbolFeature {
-    feature: Box<dyn GeometryTileFeature>,
-    geometry: GeometryCollection,
-    formattedText: Option<TaggedString>,
-    icon: Option<style_expression_Image>,
-    sortKey: f64,
-    index: usize,
-    allowsVerticalWritingMode: bool,
+    pub feature: Box<dyn GeometryTileFeature>,
+    pub geometry: GeometryCollection,
+    pub formattedText: Option<TaggedString>,
+    pub icon: Option<expression::Image>,
+    pub sortKey: f64,
+    pub index: usize,
+    pub allowsVerticalWritingMode: bool,
 }
 
 impl PartialEq<Self> for SymbolFeature {

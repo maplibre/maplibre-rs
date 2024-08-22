@@ -70,7 +70,7 @@ impl AnchorAlignment {
 }
 
 // Choose the justification that matches the direction of the TextAnchor
-fn getAnchorJustification(anchor: SymbolAnchorType) -> TextJustifyType {
+pub fn getAnchorJustification(anchor: &SymbolAnchorType) -> TextJustifyType {
     match (anchor) {
         SymbolAnchorType::Right | SymbolAnchorType::TopRight | SymbolAnchorType::BottomRight => {
             TextJustifyType::Right
