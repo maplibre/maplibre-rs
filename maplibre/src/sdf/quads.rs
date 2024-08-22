@@ -3,9 +3,12 @@ use crate::euclid::{Point2D, Rect, Size2D};
 use crate::sdf::glyph::{Shaping, WritingModeType};
 use crate::sdf::image::{ImageMap, ImageStretches};
 use crate::sdf::image_atlas::ImagePosition;
-use crate::sdf::layout::symbol_instance::{SymbolContent, SymbolLayoutProperties_Evaluated};
+use crate::sdf::layout::symbol_instance::SymbolContent;
 use crate::sdf::shaping::PositionedIcon;
-use crate::sdf::style_types::SymbolPlacementType;
+use crate::sdf::style_types::{
+    AlignmentType, SymbolLayoutProperties_Evaluated, SymbolPlacementType, TextRotate,
+    TextRotationAlignment,
+};
 use crate::sdf::util::constants::ONE_EM;
 use crate::sdf::util::math::{deg2radf, rotate};
 use crate::sdf::TileSpace;
@@ -303,10 +306,9 @@ pub fn getGlyphQuads(
     imageMap: &ImageMap,
     allowVerticalPlacement: bool,
 ) -> SymbolQuads {
-    // TODO let textRotate: f64 = deg2radf(layout.get::<TextRotate>());
-    // TODO let alongLine: bool = layout.get::<TextRotationAlignment>() == AlignmentType::Map && placement != SymbolPlacementType::Point;
-    let textRotate: f64 = 0.0;
-    let alongLine: bool = false;
+    let textRotate: f64 = deg2radf(layout.get_eval::<TextRotate>());
+    let alongLine: bool = layout.get::<TextRotationAlignment>() == AlignmentType::Map
+        && placement != SymbolPlacementType::Point;
 
     let mut quads = Vec::new();
 
@@ -479,11 +481,14 @@ mod tests {
     use crate::sdf::geometry_tile_data::GeometryCoordinates;
     use crate::sdf::glyph::{PositionedGlyph, PositionedLine, Shaping, WritingModeType};
     use crate::sdf::image_atlas::ImagePosition;
-    use crate::sdf::layout::symbol_instance::{SymbolContent, SymbolLayoutProperties_Evaluated};
+    use crate::sdf::layout::symbol_instance::SymbolContent;
     use crate::sdf::quads::getIconQuads;
     use crate::sdf::shaping::PositionedIcon;
-    use crate::sdf::style_types::{IconTextFitType, SymbolAnchorType};
+    use crate::sdf::style_types::{
+        IconTextFitType, SymbolAnchorType, SymbolLayoutProperties_Evaluated,
+    };
     use cgmath::ulps_eq;
+
     #[test]
     pub fn getIconQuads_normal() {
         let layout = SymbolLayoutProperties_Evaluated;

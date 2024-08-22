@@ -1,9 +1,8 @@
 use crate::sdf::geometry_tile_data::{FeatureType, GeometryTileFeature, Identifier, Value};
+use crate::sdf::style_types::expression;
 use crate::sdf::tagged_string::TaggedString;
 use geo_types::GeometryCollection;
 use std::cmp::Ordering;
-use crate::sdf::style_types::expression;
-
 
 pub struct SymbolFeature {
     pub feature: Box<dyn GeometryTileFeature>,
