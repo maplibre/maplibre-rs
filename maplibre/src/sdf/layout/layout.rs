@@ -8,15 +8,15 @@ struct LayerTypeInfo;
 struct ImageDependencies;
 
 pub struct BucketParameters {
-    tileID: OverscaledTileID,
-    mode: MapMode,
-    pixelRatio: f64,
-    layerType: LayerTypeInfo,
+   pub tileID: OverscaledTileID,
+   pub mode: MapMode,
+   pub pixelRatio: f64,
+   pub layerType: LayerTypeInfo,
 }
 
 pub struct LayoutParameters<'a> {
-    bucketParameters: &'a BucketParameters,
-    glyphDependencies: &'a GlyphDependencies,
-    imageDependencies: &'a ImageDependencies,
-    availableImages: &'a BTreeSet<String>,
+    pub bucketParameters: &'a BucketParameters,
+    pub glyphDependencies: &'a GlyphDependencies,
+    pub imageDependencies: &'a ImageDependencies,
+    pub availableImages: &'a BTreeSet<String>,
 }
