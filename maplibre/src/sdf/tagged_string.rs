@@ -50,6 +50,7 @@ const PUAend: Char16 = '\u{F8FF}' as Char16;
  * iterate over the contents in order, using getCharCodeAt and getSection
  * to get the formatting options for each character in turn.
  */
+#[derive(Clone)]
 pub struct TaggedString {
     pub styledText: StyledText,
     pub sections: Vec<SectionOptions>,

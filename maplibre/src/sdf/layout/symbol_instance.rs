@@ -6,12 +6,10 @@ use crate::sdf::glyph::{Shaping, WritingModeType};
 use crate::sdf::image::ImageMap;
 use crate::sdf::quads::{getGlyphQuads, getIconQuads, SymbolQuads};
 use crate::sdf::shaping::PositionedIcon;
-use crate::sdf::style_types::SymbolPlacementType;
+use crate::sdf::style_types::{SymbolLayoutProperties_Evaluated, SymbolPlacementType};
 use bitflags::bitflags;
 use std::rc::Rc;
 use widestring::U16String;
-
-pub struct SymbolLayoutProperties_Evaluated;
 
 fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
     if shapedTextOrientations.right.isAnyLineNotEmpty() {
@@ -203,8 +201,8 @@ impl SymbolInstanceSharedData {
 pub struct SymbolInstance {
     sharedData: Rc<SymbolInstanceSharedData>,
 
-    anchor: Anchor,
-    symbolContent: SymbolContent,
+    pub anchor: Anchor,
+    pub symbolContent: SymbolContent,
 
     pub rightJustifiedGlyphQuadsSize: usize,
     pub centerJustifiedGlyphQuadsSize: usize,
