@@ -27,6 +27,7 @@ use std::f64::consts::PI;
 use std::ops::Range;
 use std::rc::Rc;
 use widestring::U16String;
+use crate::sdf::layout::layout::{BucketParameters, LayoutParameters};
 
 // bucket
 struct SymbolBucket;
@@ -260,8 +261,8 @@ impl SymbolLayout {
         self_.iconSize = leader.layout.get::<IconSize>();
         self_.textRadialOffset = leader.layout.get::<TextRadialOffset>();
 
-        let hasText = has::<TextField>(*layout) && has::<TextFont>(*layout);
-        let hasIcon = has::<IconImage>(*layout);
+        let hasText = has::<TextField>(*self_.layout) && has::<TextFont>(*self_.layout);
+        let hasIcon = has::<IconImage>(*self_.layout);
 
         if (!hasText && !hasIcon) {
             return None;
@@ -295,9 +296,9 @@ impl SymbolLayout {
         }
 
         // Determine glyph dependencies
-        let featureCount = sourceLayer.featureCount();
+        let featureCount = self_.sourceLayer.featureCount();
         for i in 0..featureCount {
-            let feature = sourceLayer.getFeature(i);
+            let feature = self_.sourceLayer.getFeature(i);
             if (!leader.filter(
                 expression::EvaluationContext(self_.zoom, feature.get())
                     .withCanonicalTileID(&parameters.tileID.canonical),
@@ -349,7 +350,7 @@ impl SymbolLayout {
                             },
                             section.textColor,
                         ) {
-                            log::error!("Encountered section with invalid UTF-8 in tile, source: {} z: {} x: {} y: {}", sourceLayer.getName(), canonicalID.z, canonicalID.x, canonicalID.y);
+                            log::error!("Encountered section with invalid UTF-8 in tile, source: {} z: {} x: {} y: {}", self_.sourceLayer.getName(), self_.canonicalID.z, self_.canonicalID.x, self_.canonicalID.y);
                             continue; // skip section
                         }
                     } else {
@@ -395,10 +396,10 @@ impl SymbolLayout {
 
             if (hasIcon) {
                 ft.icon = self_.layout.evaluate::<IconImage>(
-                    zoom,
+                    self_.zoom,
                     ft,
                     layoutParameters.availableImages,
-                    canonicalID,
+                    self_.canonicalID,
                 );
                 layoutParameters
                     .imageDependencies
@@ -409,11 +410,11 @@ impl SymbolLayout {
                 if (self_.sortFeaturesByKey) {
                     ft.sortKey = self_
                         .layout
-                        .evaluate::<SymbolSortKey>(zoom, ft, canonicalID);
-                    let lowerBound = std::lower_bound(features.begin(), features.end(), ft);
+                        .evaluate::<SymbolSortKey>(self_.zoom, ft, self_.canonicalID);
+                    let lowerBound = std::lower_bound(self_.features.begin(), self_.features.end(), ft);
                     self_.features.insert(lowerBound, ft);
                 } else {
-                    self_.features.push_back(ft);
+                    self_.features.push(ft);
                 }
             }
         }
@@ -715,7 +716,7 @@ impl SymbolLayout {
         showCollisionBoxes: bool,
         canonical: &CanonicalTileID,
     ) {
-        let bucket = std::make_shared::<SymbolBucket>(
+        let bucket = SymbolBucket::new(
             layout,
             layerPaintProperties,
             textSize,
@@ -762,7 +763,7 @@ impl SymbolLayout {
                         symbolInstance.line(),
                         Vec::new(),
                     );
-                    index = iconBuffer.placedSymbols.size() - 1;
+                    index = iconBuffer.placedSymbols.len() - 1;
                     let iconSymbol: PlacedSymbol = iconBuffer.placedSymbols.back();
                     iconSymbol.angle = if (self.allowVerticalPlacement
                         && writingMode == WritingModeType::Vertical)
@@ -1141,12 +1142,12 @@ impl SymbolLayout {
                     if (!self.sortKeyRanges.empty()
                         && self.sortKeyRanges.back().sortKey == feature.sortKey)
                     {
-                        self.sortKeyRanges.back().end = self.symbolInstances.size();
+                        self.sortKeyRanges.back().end = self.symbolInstances.len();
                     } else {
-                        self.sortKeyRanges.push_back(SortKeyRange::new(
+                        self.sortKeyRanges.push(SortKeyRange::new(
                             feature.sortKey,
-                            self.symbolInstances.size() - 1,
-                            self.symbolInstances.size(),
+                            self.symbolInstances.len() - 1,
+                            self.symbolInstances.len(),
                         ));
                     }
                 }
@@ -1214,7 +1215,7 @@ impl SymbolLayout {
             // No clipping, multiple lines per feature are allowed
             // "lines" with only one point are ignored as in clipLines
             for line in feature.geometry {
-                if (line.size() > 1) {
+                if (line.len() > 1) {
                     let anchor: Option<Anchor> = getCenterAnchor(
                         line,
                         textMaxAngle,
@@ -1246,9 +1247,9 @@ impl SymbolLayout {
                 for ring in polygon {
                     let r: LinearRing<f64>;
                     for p in ring {
-                        r.push_back(convertPoint::<double>(p));
+                        r.push(convertPoint::<double>(p));
                     }
-                    poly.push_back(r);
+                    poly.push(r);
                 }
 
                 // 1 pixel worth of precision, in tile coordinates
@@ -1325,7 +1326,7 @@ impl SymbolLayout {
 
         if (buffer.segments.empty()
             || buffer.segments.back().vertexLength + vertexLength
-                > std::numeric_limits::<uint16_t>::max()
+                > u16::MAX
             || std::fabs(buffer.segments.back().sortKey - sortKey)
                 > std::numeric_limits::<float>::epsilon())
         {
@@ -1417,7 +1418,7 @@ impl SymbolLayout {
         segment.vertexLength += vertexLength;
         segment.indexLength += 6;
 
-        placedSymbol.glyphOffsets.push_back(symbol.glyphOffset.x);
+        placedSymbol.glyphOffsets.push(symbol.glyphOffset.x);
 
         return index;
     }
@@ -1480,7 +1481,7 @@ impl SymbolLayout {
             Self::calculateTileDistances(symbolInstance.line(), symbolInstance.anchor),
             placedIconIndex,
         );
-        placedIndex = bucket.text.placedSymbols.size() - 1;
+        placedIndex = bucket.text.placedSymbols.len() - 1;
         let placedSymbol: &PlacedSymbol = bucket.text.placedSymbols.back();
         placedSymbol.angle =
             if (self.allowVerticalPlacement && writingMode == WritingModeType::Vertical) {

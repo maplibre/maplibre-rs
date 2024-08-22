@@ -50,24 +50,24 @@ pub enum AlignmentType {
     Viewport,
     Auto,
 }
-
+#[derive(Clone, Copy, PartialEq)]
 pub enum TextTransformType {
     None,
     Uppercase,
     Lowercase,
 }
-
+#[derive(Clone, Copy, PartialEq)]
 pub enum SymbolZOrderType {
     Auto,
     ViewportY,
     Source,
 }
-
+#[derive(Clone, PartialEq)]
 pub struct PropertyValue<T> {
     value: expression::Value,
     _phandom: PhantomData<T>,
 }
-
+#[derive(Clone, PartialEq)]
 pub struct PossiblyEvaluatedPropertyValue<T> {
     value: expression::Value,
     _phandom: PhantomData<T>,
@@ -770,6 +770,7 @@ pub mod expression {
     use csscolorparser::Color;
     use std::collections::HashMap;
 
+    #[derive(Clone, PartialEq)]
     pub enum Value {
         Color(Color),
         f64(f64),
