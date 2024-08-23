@@ -144,10 +144,20 @@ impl System for CollisionSystem {
                             &PlacedSymbol {
                                 anchorPoint,
                                 segment: 0,
+                                lowerSize: 0.0,
+                                upperSize: 0.0,
                                 lineOffset: [0., 0.],
+                                writingModes: Default::default(),
                                 line: GeometryCoordinates(vec![anchorPoint.cast()]), // TODO can be linestring or just a single point
                                 tileDistances: vec![],                               // TODO
                                 glyphOffsets: vec![0., 0.],                          // TODO
+                                hidden: false,
+                                vertexStartIndex: 0,
+                                crossTileID: 0,
+                                placedOrientation: None,
+                                angle: 0.0,
+
+                                placedIconIndex: None,
                             },
                             view_state.zoom().scale_to_zoom_level(coords.z),
                             6.0,

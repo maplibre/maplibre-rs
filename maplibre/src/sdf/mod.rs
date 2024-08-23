@@ -152,3 +152,24 @@ pub enum MapMode {
     ///< a once-off still image of a single tile
     Tile,
 }
+
+// TODO this is just a dummy
+#[derive(Copy, Clone)]
+pub struct CanonicalTileID {
+    pub x: u32,
+    pub y: u32,
+    pub z: u8,
+}
+
+// TODO
+#[derive(Copy, Clone)]
+struct OverscaledTileID {
+    pub canonical: CanonicalTileID,
+    pub overscaledZ: u8,
+}
+
+impl OverscaledTileID {
+    pub fn overscaleFactor(&self) -> u32 {
+        return 1 << (self.overscaledZ - self.canonical.z);
+    }
+}

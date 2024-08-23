@@ -198,6 +198,7 @@ impl SymbolInstanceSharedData {
     }
 }
 
+#[derive(Clone)]
 pub struct SymbolInstance {
     sharedData: Rc<SymbolInstanceSharedData>,
 

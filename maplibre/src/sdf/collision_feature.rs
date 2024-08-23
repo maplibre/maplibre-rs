@@ -11,6 +11,7 @@ use crate::sdf::style_types::SymbolPlacementType;
 use crate::sdf::util::math::{deg2radf, rotate, MinMax};
 use crate::sdf::{ScreenSpace, TileSpace};
 
+#[derive(Clone)]
 pub struct CollisionFeature {
     pub boxes: Vec<CollisionBox>,
     pub indexedFeature: IndexedSubfeature,
