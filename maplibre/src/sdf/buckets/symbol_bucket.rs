@@ -12,21 +12,76 @@ use crate::sdf::style_types::{
 use crate::sdf::{CanonicalTileID, TileSpace};
 use geo_types::GeometryCollection;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::marker::PhantomData;
+use std::ops::Range;
 
 struct PatternDependency;
 
-struct FillLayoutVertex;
-type VertexVector = Vec<FillLayoutVertex>;
-type DynamicVertexVector = Vec<FillLayoutVertex>;
-type OpacityVertexVector = Vec<FillLayoutVertex>;
-#[derive(Default)]
+#[derive(Copy, Clone)]
+pub struct SymbolVertex;
+
+impl SymbolVertex {
+    pub fn new(
+        labelAnchor: Point2D<f64, TileSpace>,
+        o: Point2D<f64, TileSpace>,
+        glyphOffsetY: f64,
+        tx: u16,
+        ty: u16,
+        sizeData: Range<f64>,
+        isSDF: bool,
+        pixelOffset: Point2D<f64, TileSpace>,
+        minFontScale: Point2D<f64, TileSpace>,
+    ) -> SymbolVertex {
+        todo!()
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct DynamicVertex;
+#[derive(Copy, Clone)]
+pub struct OpacityVertex;
+
+impl DynamicVertex {
+    pub fn new(anchorPoint: Point2D<f64, TileSpace>, labelAngle: f64) -> Self {
+        todo!()
+    }
+}
+
+impl OpacityVertex {
+    pub fn new(placed: bool, opacity: f64) -> Self {
+        todo!()
+    }
+}
+
+type VertexVector = Vec<SymbolVertex>;
+type DynamicVertexVector = Vec<DynamicVertex>;
+type OpacityVertexVector = Vec<OpacityVertex>;
+#[derive(Default, Clone)]
 struct SymbolTextAttributes;
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct SymbolSizeBinder;
-#[derive(Default)]
+
+impl SymbolSizeBinder {
+    pub fn getVertexSizeData(&self, feature: &SymbolGeometryTileFeature) -> Range<f64> {
+        todo!()
+    }
+}
+
+#[derive(Default, Clone)]
 struct FeatureSortOrder;
-#[derive(Default)]
-struct TriangleIndexVector;
+#[derive(Default, Clone)]
+pub struct TriangleIndexVector;
+impl TriangleIndexVector {
+    pub fn push(&self, a: u16, b: u16, c: u16) {
+        todo!()
+        // put them flat into the buffer .len() should return the count of indices
+    }
+
+    pub fn len(&self) -> usize {
+        todo!()
+        // put them flat into the buffer .len() should return the count of indices
+    }
+}
 struct UploadPass;
 struct SymbolInstanceReferences;
 struct RenderLayer;
@@ -35,8 +90,28 @@ struct BucketPlacementData;
 struct Placement;
 type TransformState = ViewState;
 struct RenderTile;
-struct Segment<T>(T);
 
+#[derive(Copy, Clone)]
+pub struct Segment<T> {
+    pub vertexOffset: usize,
+    pub indexOffset: usize,
+    pub vertexLength: usize,
+    pub indexLength: usize,
+
+    // One DrawScope per layer ID. This minimizes rebinding in cases where
+    // several layers share buckets but have different sets of active
+    // attributes. This can happen:
+    //   * when two layers have the same layout properties, but differing
+    //     data-driven paint properties
+    //   * when two fill layers have the same layout properties, but one
+    //     uses fill-color and the other uses fill-pattern
+    // TODO drawScopes:  BTreeMap<String, gfx::DrawScope>
+    pub sortKey: f64,
+
+    pub _phandom_data: PhantomData<T>,
+}
+
+#[derive(Default, Clone)]
 pub struct PlacedSymbol {
     pub anchorPoint: Point2D<f64, TileSpace>,
     pub segment: usize,
@@ -63,7 +138,7 @@ type PatternLayerMap = HashMap<String, PatternDependency>;
 
 type SegmentVector<T> = Vec<Segment<T>>;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct SymbolBucketBuffer {
     pub sharedVertices: Box<VertexVector>,
     pub sharedDynamicVertices: Box<DynamicVertexVector>,
@@ -83,6 +158,7 @@ pub struct SymbolBucketBuffer {
     //    #endif // MLN_LEGACY_RENDERER
 }
 
+#[derive(Clone)]
 struct PaintProperties {
     //    iconBinders: SymbolIconProgram::Binders,
     //    textBinders:  SymbolSDFTextProgram::Binders,
@@ -122,6 +198,7 @@ struct PaintProperties {
 //    #endif // MLN_LEGACY_RENDERER
 //}
 
+#[derive(Clone)]
 pub struct SymbolBucket {
     layout: SymbolLayoutProperties_PossiblyEvaluated,
     bucketLeaderID: String,

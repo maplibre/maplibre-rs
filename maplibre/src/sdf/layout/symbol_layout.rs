@@ -1,6 +1,9 @@
 use crate::coords::{EXTENT, TILE_SIZE};
 use crate::sdf::bidi::{applyArabicShaping, BiDi, Char16};
-use crate::sdf::buckets::symbol_bucket::{PlacedSymbol, SymbolBucket, SymbolBucketBuffer};
+use crate::sdf::buckets::symbol_bucket::{
+    DynamicVertex, OpacityVertex, PlacedSymbol, Segment, SymbolBucket, SymbolBucketBuffer,
+    SymbolVertex,
+};
 use crate::sdf::geometry::feature_index::{IndexedSubfeature, RefIndexedSubfeature};
 use crate::sdf::geometry::{Anchor, Anchors};
 use crate::sdf::geometry_tile_data::{FeatureType, GeometryCoordinates, SymbolGeometryTileLayer};
@@ -21,7 +24,6 @@ use crate::sdf::util::constants::ONE_EM;
 use crate::sdf::util::math::deg2radf;
 use crate::sdf::util::{i18n, lower_bound};
 use crate::sdf::{CanonicalTileID, MapMode};
-use geo::HasDimensions;
 use lyon::geom::euclid::Point2D;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::f64::consts::PI;
@@ -434,7 +436,8 @@ impl SymbolLayout {
                             sectionFontStack
                         } else {
                             &baseFontStack
-                        }).unwrap();
+                        })
+                        .unwrap();
                     let codePoint: Char16 = ft_formattedText.getCharCodeAt(j);
                     dependencies.insert(codePoint);
                     if (canVerticalizeText
@@ -761,7 +764,7 @@ impl SymbolLayout {
                 );
             }
 
-            feature.geometry.0.clear();
+            feature.geometry.clear();
         }
 
         self.compareText.clear();
@@ -966,15 +969,15 @@ impl SymbolLayout {
             self.addToDebugBuffers(&mut bucket);
         }
         if (bucket.hasData()) {
-            for pair in self.layerPaintProperties {
+            for pair in &self.layerPaintProperties {
                 if (!firstLoad) {
                     bucket.justReloaded = true;
                 }
                 renderData.insert(
-                    pair.0,
+                    pair.0.clone(),
                     LayerRenderData {
-                        bucket: Rc::new(bucket),
-                        layerProperties: pair.1,
+                        bucket: Rc::new(bucket.clone()), // TODO is cloning intended here?
+                        layerProperties: pair.1.clone(),
                     },
                 );
             }
@@ -1141,7 +1144,7 @@ impl SymbolLayout {
 
         let textRepeatDistance: f64 = symbolSpacing / 2.;
         let evaluatedLayoutProperties: SymbolLayoutProperties_Evaluated =
-            self.layout.evaluate2(self.zoom, feature);
+            self.layout.evaluate_feature(self.zoom, feature);
         let indexedFeature = IndexedSubfeature {
             ref_: RefIndexedSubfeature {
                 index: feature.index,
@@ -1356,7 +1359,7 @@ impl SymbolLayout {
         } else if (type_ == FeatureType::LineString) {
             for line in &feature.geometry {
                 // Skip invalid LineStrings.
-                if (line.is_empty()) {
+                if (line.0.is_empty()) {
                     continue;
                 }
 
@@ -1365,17 +1368,20 @@ impl SymbolLayout {
                     angle: 0.0,
                     segment: Some((minScale) as usize),
                 };
-                addSymbolInstance(&anchor, createSymbolInstanceSharedData(line));
+                addSymbolInstance(&anchor, createSymbolInstanceSharedData(line.clone()));
             }
         } else if (type_ == FeatureType::Point) {
             for points in &feature.geometry {
-                for point in points {
+                for point in points.0 {
                     let anchor = Anchor {
                         point: Point2D::new((point.x) as f64, (point.y) as f64),
                         angle: 0.0,
                         segment: Some((minScale) as usize),
                     };
-                    addSymbolInstance(&anchor, createSymbolInstanceSharedData({ point }));
+                    addSymbolInstance(
+                        &anchor,
+                        createSymbolInstanceSharedData(GeometryCoordinates(vec![point])),
+                    );
                 }
             }
         }
@@ -1423,27 +1429,29 @@ impl SymbolLayout {
         let minFontScale = symbol.minFontScale;
 
         if (buffer.segments.is_empty()
-            || buffer.segments.last().unwrap().vertexLength + vertexLength > u16::MAX
+            || buffer.segments.last().unwrap().vertexLength + vertexLength as usize
+                > u16::MAX as usize
             || (buffer.segments.last().unwrap().sortKey - sortKey).abs() > f64::EPSILON)
         {
-            buffer.segments.push(
-                buffer.sharedVertices.elements(),
-                buffer.triangles.elements(),
-                0,
-                0,
+            buffer.segments.push(Segment {
+                vertexOffset: buffer.sharedVertices.len(),
+                indexOffset: buffer.triangles.len(),
+                vertexLength: 0,
+                indexLength: 0,
                 sortKey,
-            );
+                _phandom_data: Default::default(),
+            });
         }
 
         // We're generating triangle fans, so we always start with the first
         // coordinate in this polygon.
-        let segment = buffer.segments.last();
-        assert!(segment.vertexLength <= u16::MAX);
+        let segment = buffer.segments.last_mut().unwrap();
+        assert!(segment.vertexLength <= u16::MAX as usize);
         let index = (segment.vertexLength) as u16;
 
         // coordinates (2 triangles)
         let vertices = &mut buffer.sharedVertices;
-        vertices.push(SymbolSDFIconProgram::layoutVertex(
+        vertices.push(SymbolVertex::new(
             labelAnchor.point,
             tl,
             symbol.glyphOffset.y,
@@ -1454,7 +1462,7 @@ impl SymbolLayout {
             pixelOffsetTL,
             minFontScale,
         ));
-        vertices.push(SymbolSDFIconProgram::layoutVertex(
+        vertices.push(SymbolVertex::new(
             labelAnchor.point,
             tr,
             symbol.glyphOffset.y,
@@ -1462,10 +1470,10 @@ impl SymbolLayout {
             tex.origin.y,
             sizeData.clone(),
             symbol.isSDF,
-            [pixelOffsetBR.x, pixelOffsetTL.y],
+            Point2D::new(pixelOffsetBR.x, pixelOffsetTL.y),
             minFontScale,
         ));
-        vertices.push(SymbolSDFIconProgram::layoutVertex(
+        vertices.push(SymbolVertex::new(
             labelAnchor.point,
             bl,
             symbol.glyphOffset.y,
@@ -1473,10 +1481,10 @@ impl SymbolLayout {
             tex.origin.y + tex.height(),
             sizeData.clone(),
             symbol.isSDF,
-            [pixelOffsetTL.x, pixelOffsetBR.y],
+            Point2D::new(pixelOffsetTL.x, pixelOffsetBR.y),
             minFontScale,
         ));
-        vertices.push(SymbolSDFIconProgram::layoutVertex(
+        vertices.push(SymbolVertex::new(
             labelAnchor.point,
             br,
             symbol.glyphOffset.y,
@@ -1491,13 +1499,13 @@ impl SymbolLayout {
         // Dynamic/Opacity vertices are initialized so that the vertex count always
         // agrees with the layout vertex buffer, but they will always be updated
         // before rendering happens
-        let dynamicVertex = SymbolSDFIconProgram::dynamicLayoutVertex(labelAnchor.point, 0);
+        let dynamicVertex = DynamicVertex::new(labelAnchor.point, 0.);
         buffer.sharedDynamicVertices.push(dynamicVertex);
         buffer.sharedDynamicVertices.push(dynamicVertex);
         buffer.sharedDynamicVertices.push(dynamicVertex);
         buffer.sharedDynamicVertices.push(dynamicVertex);
 
-        let opacityVertex = SymbolSDFIconProgram::opacityVertex(1.0, 1.0);
+        let opacityVertex = OpacityVertex::new(true, 1.0);
         buffer.sharedOpacityVertices.push(opacityVertex);
         buffer.sharedOpacityVertices.push(opacityVertex);
         buffer.sharedOpacityVertices.push(opacityVertex);
@@ -1507,12 +1515,12 @@ impl SymbolLayout {
         buffer.triangles.push(index + 0, index + 1, index + 2);
         buffer.triangles.push(index + 1, index + 2, index + 3);
 
-        segment.vertexLength += vertexLength;
+        segment.vertexLength += vertexLength as usize;
         segment.indexLength += 6;
 
         placedSymbol.glyphOffsets.push(symbol.glyphOffset.x);
 
-        return index;
+        return index as usize;
     }
     fn addSymbols(
         &self,

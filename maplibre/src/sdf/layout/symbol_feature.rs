@@ -1,7 +1,7 @@
-use crate::sdf::geometry_tile_data::{FeatureType, Identifier, Value};
+use crate::sdf::geometry_tile_data::{FeatureType, GeometryCollection, Identifier, Value};
 use crate::sdf::style_types::expression;
 use crate::sdf::tagged_string::TaggedString;
-use geo_types::GeometryCollection;
+
 use std::cmp::Ordering;
 
 #[derive(Clone)]
