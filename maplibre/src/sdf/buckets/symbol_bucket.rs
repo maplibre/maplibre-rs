@@ -147,7 +147,6 @@ pub struct SymbolBucket {
     pub paintProperties: HashMap<String, PaintProperties>,
 
     pub textSizeBinder: Box<SymbolSizeBinder>,
-
     //type VertexVector = gfx::VertexVector<SymbolLayoutVertex>,
     //type VertexBuffer = gfx::VertexBuffer<SymbolLayoutVertex>,
     //type DynamicVertexVector = gfx::VertexVector<gfx::Vertex<SymbolDynamicLayoutAttributes>>,
@@ -157,7 +156,6 @@ pub struct SymbolBucket {
     pub text: SymbolBucketBuffer,
 
     pub iconSizeBinder: Box<SymbolSizeBinder>,
-
     pub icon: SymbolBucketBuffer,
     pub sdfIcon: SymbolBucketBuffer,
 

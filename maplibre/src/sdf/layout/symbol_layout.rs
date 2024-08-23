@@ -30,22 +30,17 @@ use std::rc::Rc;
 use widestring::U16String;
 
 // TODO
-
 #[derive(Clone)]
 pub struct SymbolLayer {
     layout: SymbolLayoutProperties_Unevaluated,
 }
 pub type SymbolLayer_Impl = SymbolLayer;
-
-impl SymbolLayer {}
-
+// TODO
 #[derive(Clone)]
 pub struct LayerProperties {
     pub id: String,
 }
-
 pub type SymbolLayerProperties = LayerProperties;
-
 impl LayerProperties {
     pub fn layerImpl(&self) -> &SymbolLayer_Impl {
         todo!()
@@ -55,10 +50,7 @@ impl LayerProperties {
         self
     }
 }
-
 pub type Bucket = SymbolBucket;
-
-// render
 pub struct LayerRenderData {
     bucket: Rc<Bucket>,
     layerProperties: LayerProperties,
