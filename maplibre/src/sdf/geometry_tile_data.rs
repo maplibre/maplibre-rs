@@ -24,6 +24,8 @@ impl Index<usize> for GeometryCoordinates {
     }
 }
 
+pub type GeometryCollection = Vec<GeometryCoordinates>;
+
 // TODO: The following types are not final
 pub type Value = geo_types::Geometry;
 pub type Identifier = String;

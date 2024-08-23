@@ -902,11 +902,11 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
         todo!()
     }
 
-    pub fn evaluate2<T: DataDrivenLayoutProperty>(
+    pub fn evaluate_feature(
         &self,
         p0: f64,
         p1: &SymbolGeometryTileFeature,
-    ) -> T::Type {
+    ) -> SymbolLayoutProperties_Evaluated {
         todo!()
     }
 
