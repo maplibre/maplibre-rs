@@ -1,12 +1,15 @@
 use crate::euclid::Point2D;
-use geo_types::GeometryCollection;
+use crate::sdf::layout::symbol_feature::SymbolGeometryTileFeature;
 use std::ops::Index;
 
 use crate::sdf::TileSpace;
 
+// In maplibre-native GeometryTileFeature are traits/classes and there are impls for symbol, fill, line features etc.
+// The same is true for the data objects which might be backed by geojson
+
 pub type GeometryCoordinate = Point2D<i16, TileSpace>;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct GeometryCoordinates(pub Vec<GeometryCoordinate>);
 impl GeometryCoordinates {
     pub fn len(&self) -> usize {
@@ -34,28 +37,35 @@ pub enum FeatureType {
     Polygon = 3,
 }
 
-pub trait GeometryTileFeature {
-    fn getType(&self) -> FeatureType;
-    fn getValue(&self, key: &String) -> Option<&Value>;
-    fn getProperties(&self) -> &PropertyMap;
-    fn getID(&self) -> Identifier;
-    fn getGeometries(&self) -> &GeometryCollection;
-}
-
-pub trait GeometryTileLayer {
-    fn featureCount(&self) -> usize;
+#[derive(Clone)]
+pub struct SymbolGeometryTileLayer;
+impl SymbolGeometryTileLayer {
+    pub fn featureCount(&self) -> usize {
+        todo!()
+    }
 
     // Returns the feature object at the given position within the layer. The
     // returned feature object may *not* outlive the layer object.
-    fn getFeature(&self, index: usize) -> Box<dyn GeometryTileFeature>;
+    pub fn getFeature(&self, index: usize) -> Box<SymbolGeometryTileFeature> {
+        todo!()
+    }
 
-    fn getName(&self) -> String;
+    pub fn getName(&self) -> String {
+        todo!()
+    }
 }
 
-pub trait GeometryTileData {
-    fn clone(&self) -> Box<dyn GeometryTileData>;
+#[derive(Clone)]
+struct SymbolGeometryTileData;
+
+impl SymbolGeometryTileData {
+    pub fn clone(&self) -> Box<SymbolGeometryTileData> {
+        todo!()
+    }
 
     // Returns the layer with the given name. The returned layer object *may*
     // outlive the data object.
-    fn getLayer(&self, name: &str) -> Box<dyn GeometryTileLayer>;
+    pub fn getLayer(&self, name: &str) -> Box<SymbolGeometryTileLayer> {
+        todo!()
+    }
 }

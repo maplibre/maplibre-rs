@@ -1,11 +1,12 @@
-use crate::sdf::geometry_tile_data::{FeatureType, GeometryTileFeature, Identifier, Value};
+use crate::sdf::geometry_tile_data::{FeatureType, Identifier, Value};
 use crate::sdf::style_types::expression;
 use crate::sdf::tagged_string::TaggedString;
 use geo_types::GeometryCollection;
 use std::cmp::Ordering;
 
-pub struct SymbolFeature {
-    pub feature: Box<dyn GeometryTileFeature>,
+#[derive(Clone)]
+pub struct SymbolGeometryTileFeature {
+    pub feature: Box<SymbolGeometryTileFeature>,
     pub geometry: GeometryCollection,
     pub formattedText: Option<TaggedString>,
     pub icon: Option<expression::Image>,
@@ -14,39 +15,40 @@ pub struct SymbolFeature {
     pub allowsVerticalWritingMode: bool,
 }
 
-impl PartialEq<Self> for SymbolFeature {
+impl PartialEq<Self> for SymbolGeometryTileFeature {
     fn eq(&self, other: &Self) -> bool {
-        todo!()
+        self.sortKey.eq(&other.sortKey) // TODO is this correct?
     }
 }
 
-impl PartialOrd for SymbolFeature {
+impl PartialOrd for SymbolGeometryTileFeature {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.sortKey.partial_cmp(&other.sortKey)
     }
 }
 
-impl GeometryTileFeature for SymbolFeature {
-    fn getType(&self) -> FeatureType {
+impl SymbolGeometryTileFeature {
+    pub fn getType(&self) -> FeatureType {
         self.feature.getType()
     }
-    fn getValue(&self, key: &String) -> Option<&Value> {
+    pub fn getValue(&self, key: &String) -> Option<&Value> {
         self.feature.getValue(key)
     }
-    fn getProperties(&self) -> &serde_json::Value {
+    pub fn getProperties(&self) -> &serde_json::Value {
         self.feature.getProperties()
     }
-    fn getID(&self) -> Identifier {
+    pub fn getID(&self) -> Identifier {
         self.feature.getID()
     }
-    fn getGeometries(&self) -> &GeometryCollection {
+    pub fn getGeometries(&self) -> &GeometryCollection {
         self.feature.getGeometries()
     }
 }
-impl SymbolFeature {
-    fn new(feature: Box<dyn GeometryTileFeature>) -> Self {
+
+impl SymbolGeometryTileFeature {
+    fn new(feature: Box<SymbolGeometryTileFeature>) -> Self {
         Self {
-            geometry: feature.getGeometries().clone(), // we need a mutable copy of the geometry for mergeLines()
+            geometry: feature.geometry.clone(), // we need a mutable copy of the geometry for mergeLines()
             feature: feature, // we need a mutable copy of the geometry for mergeLines(),
             formattedText: None,
             icon: None,
