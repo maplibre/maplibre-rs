@@ -12,8 +12,8 @@ use std::rc::Rc;
 use widestring::U16String;
 
 fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
-    if shapedTextOrientations.right.isAnyLineNotEmpty() {
-        return &shapedTextOrientations.right;
+    if shapedTextOrientations.right().isAnyLineNotEmpty() {
+        return &shapedTextOrientations.right();
     }
     if shapedTextOrientations.center.isAnyLineNotEmpty() {
         return &(shapedTextOrientations.center);
@@ -29,12 +29,11 @@ fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
 
 #[derive(Default)]
 pub struct ShapedTextOrientations {
-    pub horizontal: Shaping,
-    pub vertical: Shaping,
-    // The following are used with variable text placement on.
-    pub right: Shaping,
-    pub center: Shaping,
-    pub left: Shaping,
+    horizontal: Shaping,
+    vertical: Shaping,
+    // The following are used with variable text placement on, including right()
+    center: Shaping,
+    left: Shaping,
     pub singleLine: bool,
 }
 
@@ -48,13 +47,37 @@ impl ShapedTextOrientations {
         singleLine: bool,
     ) -> Self {
         Self {
-            right: (right.unwrap_or(horizontal.clone())),
             horizontal: (horizontal),
             vertical: (vertical),
             center: (center),
             left: (left),
             singleLine,
         }
+    }
+
+
+    pub fn horizontal(&self) -> &Shaping {
+        &self.horizontal
+    }
+    pub fn vertical(&self) -> &Shaping {
+        &self.vertical
+    }
+    pub fn right(&self) -> &Shaping {
+        &self.horizontal
+    }
+    pub fn center(&self) -> &Shaping {
+        &self.center
+    }
+    pub fn left(&self) -> &Shaping {
+        &self.left
+    }
+
+
+    pub fn set_horizontal(&mut self, horizontal: Shaping) {
+        self.horizontal = horizontal;
+    }
+    pub fn set_vertical(&mut self, vertical: Shaping) {
+        self.vertical = vertical;
     }
 }
 
@@ -119,9 +142,9 @@ impl SymbolInstanceSharedData {
 
         // todo is this translation correct?
         if (!shapedTextOrientations.singleLine) {
-            if shapedTextOrientations.right.isAnyLineNotEmpty() {
+            if shapedTextOrientations.right().isAnyLineNotEmpty() {
                 self_.rightJustifiedGlyphQuads = getGlyphQuads(
-                    &shapedTextOrientations.right,
+                    &shapedTextOrientations.right(),
                     textOffset,
                     layout,
                     textPlacement,
@@ -152,8 +175,8 @@ impl SymbolInstanceSharedData {
                 );
             }
         } else {
-            let shape = if shapedTextOrientations.right.isAnyLineNotEmpty() {
-                Some(&shapedTextOrientations.right)
+            let shape = if shapedTextOrientations.right().isAnyLineNotEmpty() {
+                Some(shapedTextOrientations.right())
             } else {
                 if shapedTextOrientations.center.isAnyLineNotEmpty() {
                     Some(&shapedTextOrientations.center)
@@ -273,8 +296,7 @@ impl SymbolInstance {
                 indexedFeature.clone(),
                 overscaling,
                 textRotation,
-            )
-            .unwrap(),
+            ),
             iconCollisionFeature: CollisionFeature::new_from_icon(
                 &sharedData_.line,
                 &anchor_,
@@ -283,8 +305,7 @@ impl SymbolInstance {
                 iconPadding,
                 indexedFeature.clone(),
                 iconRotation,
-            )
-            .unwrap(),
+            ),
 
             sharedData: sharedData_,
             anchor: anchor_,
@@ -324,7 +345,7 @@ impl SymbolInstance {
         if (allowVerticalPlacement) {
             if shapedTextOrientations.vertical.isAnyLineNotEmpty() {
                 let verticalPointLabelAngle = 90.0;
-                self_.verticalTextCollisionFeature = CollisionFeature::new_from_text(
+                self_.verticalTextCollisionFeature = Some(CollisionFeature::new_from_text(
                     self_.line(),
                     &self_.anchor,
                     shapedTextOrientations.vertical.clone(),
@@ -334,9 +355,9 @@ impl SymbolInstance {
                     indexedFeature.clone(),
                     overscaling,
                     textRotation + verticalPointLabelAngle,
-                );
+                ));
                 if (verticallyShapedIcon.is_some()) {
-                    self_.verticalIconCollisionFeature = CollisionFeature::new_from_icon(
+                    self_.verticalIconCollisionFeature = Some(CollisionFeature::new_from_icon(
                         &self_.sharedData.line,
                         &self_.anchor,
                         verticallyShapedIcon,
@@ -344,7 +365,7 @@ impl SymbolInstance {
                         iconPadding,
                         indexedFeature,
                         iconRotation + verticalPointLabelAngle,
-                    );
+                    ));
                 }
             }
         }
@@ -416,7 +437,7 @@ impl SymbolInstance {
         return &self.sharedData.verticalIconQuads;
     }
     pub fn releaseSharedData(&self) {
-        todo!()
+        // todo!()
         // TODO not sure how to do this self.sharedData.reset();
     }
 
