@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 // TODO structs
 pub struct AlphaImage;
 
-#[derive(Default)]
+#[derive(Clone, Copy, Default)]
 pub struct GlyphPosition {
     pub rect: Rect<u16, TileSpace>,
     pub metrics: GlyphMetrics,

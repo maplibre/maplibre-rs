@@ -4,10 +4,15 @@ use crate::sdf::tagged_string::TaggedString;
 
 use std::cmp::Ordering;
 
+
+// TODO: Actual feature data with properties
+#[derive(Clone)]
+pub struct VectorGeometryTileFeature;
+
 #[derive(Clone)]
 pub struct SymbolGeometryTileFeature {
-    pub feature: Box<SymbolGeometryTileFeature>,
-    pub geometry: GeometryCollection,
+    pub feature: Box<VectorGeometryTileFeature>,
+    pub geometry: GeometryCollection, // we need a mutable copy of the geometry for mergeLines()
     pub formattedText: Option<TaggedString>,
     pub icon: Option<expression::Image>,
     pub sortKey: f64,
@@ -29,27 +34,29 @@ impl PartialOrd for SymbolGeometryTileFeature {
 
 impl SymbolGeometryTileFeature {
     pub fn getType(&self) -> FeatureType {
-        self.feature.getType()
+      //  todo!()
+        FeatureType::Point
     }
     pub fn getValue(&self, key: &String) -> Option<&Value> {
-        self.feature.getValue(key)
+        todo!()
     }
     pub fn getProperties(&self) -> &serde_json::Value {
-        self.feature.getProperties()
+        todo!()
     }
     pub fn getID(&self) -> Identifier {
-        self.feature.getID()
+        todo!()
     }
     pub fn getGeometries(&self) -> &GeometryCollection {
-        self.feature.getGeometries()
+       todo!()
     }
 }
 
 impl SymbolGeometryTileFeature {
     fn new(feature: Box<SymbolGeometryTileFeature>) -> Self {
         Self {
+            feature: Box::new(VectorGeometryTileFeature),
             geometry: feature.geometry.clone(), // we need a mutable copy of the geometry for mergeLines()
-            feature: feature, // we need a mutable copy of the geometry for mergeLines(),
+            //feature: feature, // we need a mutable copy of the geometry for mergeLines(),
             formattedText: None,
             icon: None,
             sortKey: 0.0,

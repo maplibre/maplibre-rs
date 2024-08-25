@@ -9,7 +9,7 @@ pub mod math;
 pub fn hash_combine<T: Hash>(seed: &mut u64, v: &T) {
     let mut hasher = DefaultHasher::new(); // TODO previously used std::hash https://en.cppreference.com/w/cpp/utility/hash
     v.hash(&mut hasher);
-    *seed ^= hasher.finish() + 0x9e3779b9 + (*seed << 6) + (*seed >> 2);
+    *seed ^= hasher.finish().overflowing_add(0x9e3779b9).0.overflowing_add((*seed << 6)).0.overflowing_add((*seed >> 2)).0;
 }
 
 pub fn hash<T: Hash>(args: &[T]) -> u64 {

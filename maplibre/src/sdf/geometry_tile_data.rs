@@ -9,7 +9,7 @@ use crate::sdf::TileSpace;
 
 pub type GeometryCoordinate = Point2D<i16, TileSpace>;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct GeometryCoordinates(pub Vec<GeometryCoordinate>);
 impl GeometryCoordinates {
     pub fn len(&self) -> usize {
@@ -40,20 +40,23 @@ pub enum FeatureType {
 }
 
 #[derive(Clone)]
-pub struct SymbolGeometryTileLayer;
+pub struct SymbolGeometryTileLayer {
+    pub name: String,
+    pub features: Vec<SymbolGeometryTileFeature>
+}
 impl SymbolGeometryTileLayer {
     pub fn featureCount(&self) -> usize {
-        todo!()
+        self.features.len()
     }
 
     // Returns the feature object at the given position within the layer. The
     // returned feature object may *not* outlive the layer object.
     pub fn getFeature(&self, index: usize) -> Box<SymbolGeometryTileFeature> {
-        todo!()
+       Box::new(self.features[index].clone())
     }
 
-    pub fn getName(&self) -> String {
-        todo!()
+    pub fn getName(&self) -> &str {
+        &self.name
     }
 }
 
