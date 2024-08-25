@@ -1758,15 +1758,11 @@ mod tests {
             }],
             Box::new(SymbolGeometryTileLayer {
                 name: "layer".to_string(),
-                features: vec![SymbolGeometryTileFeature {
-                    feature: Box::new(VectorGeometryTileFeature),
-                    geometry: vec![GeometryCoordinates(vec![Point2D::new(1024, 1024)])],
-                    formattedText: None,
-                    icon: None,
-                    sortKey: 0.0,
-                    index: 0,
-                    allowsVerticalWritingMode: false,
-                }],
+                features: vec![SymbolGeometryTileFeature::new(Box::new(
+                    VectorGeometryTileFeature {
+                        geometry: vec![GeometryCoordinates(vec![Point2D::new(1024, 1024)])],
+                    },
+                ))],
             }),
             &mut LayoutParameters {
                 bucketParameters: &mut parameters.clone(),
