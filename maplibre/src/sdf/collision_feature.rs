@@ -33,7 +33,7 @@ impl CollisionFeature {
         indexedFeature_: IndexedSubfeature,
         overscaling: f64,
         rotate_: f64,
-    ) -> Option<Self> {
+    ) -> Self {
         let mut self_ = Self {
             boxes: vec![],
             indexedFeature: indexedFeature_,
@@ -41,7 +41,7 @@ impl CollisionFeature {
         };
 
         if (top == 0. && bottom == 0. && left == 0. && right == 0.) {
-            return None;
+            return self_;
         }
 
         let mut y1 = top * boxScale - padding;
@@ -61,7 +61,7 @@ impl CollisionFeature {
             let length = x2 - x1;
 
             if (height <= 0.0) {
-                return None;
+                return self_;
             }
 
             height = 10.0 * boxScale.max(height);
@@ -113,7 +113,7 @@ impl CollisionFeature {
                 });
             }
         }
-        Some(self_)
+        self_
     }
 
     // for text
@@ -127,7 +127,7 @@ impl CollisionFeature {
         indexedFeature_: IndexedSubfeature,
         overscaling: f64,
         rotate: f64,
-    ) -> Option<Self> {
+    ) -> Self {
         Self::new(
             line,
             anchor,
@@ -161,7 +161,7 @@ impl CollisionFeature {
         padding: f64,
         indexedFeature_: IndexedSubfeature,
         rotate: f64,
-    ) -> Option<Self> {
+    ) -> Self {
         Self::new(
             line,
             anchor,

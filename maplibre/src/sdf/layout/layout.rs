@@ -3,8 +3,10 @@ use crate::sdf::image::ImageDependencies;
 use crate::sdf::{MapMode, OverscaledTileID};
 use std::collections::BTreeSet;
 
-struct LayerTypeInfo;
+#[derive(Clone)]
+pub struct LayerTypeInfo;
 
+#[derive(Clone)]
 pub struct BucketParameters {
     pub tileID: OverscaledTileID,
     pub mode: MapMode,

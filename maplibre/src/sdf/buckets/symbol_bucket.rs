@@ -17,8 +17,18 @@ use std::ops::Range;
 
 struct PatternDependency;
 
-#[derive(Copy, Clone)]
-pub struct SymbolVertex;
+#[derive(Clone, Debug)]
+pub struct SymbolVertex {
+    labelAnchor: Point2D<f64, TileSpace>,
+    o: Point2D<f64, TileSpace>,
+    glyphOffsetY: f64,
+    tx: u16,
+    ty: u16,
+    sizeData: Range<f64>,
+    isSDF: bool,
+    pixelOffset: Point2D<f64, TileSpace>,
+    minFontScale: Point2D<f64, TileSpace>,
+}
 
 impl SymbolVertex {
     pub fn new(
@@ -32,54 +42,81 @@ impl SymbolVertex {
         pixelOffset: Point2D<f64, TileSpace>,
         minFontScale: Point2D<f64, TileSpace>,
     ) -> SymbolVertex {
-        todo!()
+        Self {
+            labelAnchor,
+            o,
+            glyphOffsetY,
+            tx,
+            ty,
+            sizeData,
+            isSDF,
+            pixelOffset,
+            minFontScale,
+        }
     }
 }
 
-#[derive(Copy, Clone)]
-pub struct DynamicVertex;
-#[derive(Copy, Clone)]
-pub struct OpacityVertex;
+#[derive(Copy, Clone, Debug)]
+pub struct DynamicVertex {
+    anchorPoint: Point2D<f64, TileSpace>, labelAngle: f64
+}
+#[derive(Copy, Clone, Debug)]
+pub struct OpacityVertex {
+    placed: bool, opacity: f64
+}
 
 impl DynamicVertex {
     pub fn new(anchorPoint: Point2D<f64, TileSpace>, labelAngle: f64) -> Self {
-        todo!()
+        Self {
+            anchorPoint,
+            labelAngle,
+        }
     }
 }
 
 impl OpacityVertex {
     pub fn new(placed: bool, opacity: f64) -> Self {
-        todo!()
+        Self {
+            placed,
+            opacity,
+        }
     }
 }
 
-type VertexVector = Vec<SymbolVertex>;
-type DynamicVertexVector = Vec<DynamicVertex>;
-type OpacityVertexVector = Vec<OpacityVertex>;
-#[derive(Default, Clone)]
-struct SymbolTextAttributes;
-#[derive(Default, Clone)]
-struct SymbolSizeBinder;
+pub type VertexVector = Vec<SymbolVertex>;
+pub type DynamicVertexVector = Vec<DynamicVertex>;
+pub type OpacityVertexVector = Vec<OpacityVertex>;
+#[derive(Default, Clone, Debug)]
+pub struct SymbolTextAttributes;
+#[derive(Default, Clone, Debug)]
+pub struct SymbolSizeBinder;
 
 impl SymbolSizeBinder {
     pub fn getVertexSizeData(&self, feature: &SymbolGeometryTileFeature) -> Range<f64> {
-        todo!()
+        // TODO ConstantSymbolSizeBinder
+        return 0.0..0.0
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 struct FeatureSortOrder;
-#[derive(Default, Clone)]
-pub struct TriangleIndexVector;
+#[derive(Default, Clone, Debug)]
+pub struct TriangleIndexVector {
+    indices: Vec<u16>
+}
 impl TriangleIndexVector {
-    pub fn push(&self, a: u16, b: u16, c: u16) {
-        todo!()
+    pub fn push(&mut self, a: u16, b: u16, c: u16) {
+        //todo!()
         // put them flat into the buffer .len() should return the count of indices
+        self.indices.push(a);
+        self.indices.push(b);
+        self.indices.push(c);
     }
 
     pub fn len(&self) -> usize {
-        todo!()
+      //  todo!()
         // put them flat into the buffer .len() should return the count of indices
+        self.indices.len()
     }
 }
 struct UploadPass;
@@ -91,7 +128,7 @@ struct Placement;
 type TransformState = ViewState;
 struct RenderTile;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Segment<T> {
     pub vertexOffset: usize,
     pub indexOffset: usize,
@@ -111,7 +148,7 @@ pub struct Segment<T> {
     pub _phandom_data: PhantomData<T>,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct PlacedSymbol {
     pub anchorPoint: Point2D<f64, TileSpace>,
     pub segment: usize,
@@ -138,7 +175,7 @@ type PatternLayerMap = HashMap<String, PatternDependency>;
 
 type SegmentVector<T> = Vec<Segment<T>>;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct SymbolBucketBuffer {
     pub sharedVertices: Box<VertexVector>,
     pub sharedDynamicVertices: Box<DynamicVertexVector>,
@@ -158,8 +195,8 @@ pub struct SymbolBucketBuffer {
     //    #endif // MLN_LEGACY_RENDERER
 }
 
-#[derive(Clone)]
-struct PaintProperties {
+#[derive(Clone,Debug)]
+pub struct PaintProperties {
     //    iconBinders: SymbolIconProgram::Binders,
     //    textBinders:  SymbolSDFTextProgram::Binders,
 }
@@ -198,7 +235,7 @@ struct PaintProperties {
 //    #endif // MLN_LEGACY_RENDERER
 //}
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SymbolBucket {
     layout: SymbolLayoutProperties_PossiblyEvaluated,
     bucketLeaderID: String,
@@ -218,7 +255,7 @@ pub struct SymbolBucket {
     hasVariablePlacement: bool,
     hasUninitializedSymbols: bool,
 
-    pub symbolInstances: Vec<SymbolInstance>,
+    //pub symbolInstances: Vec<SymbolInstance>,
     pub sortKeyRanges: Vec<SortKeyRange>,
 
     pub paintProperties: HashMap<String, PaintProperties>,
@@ -288,7 +325,7 @@ impl SymbolBucket {
             justReloaded: false,
             hasVariablePlacement: false,
             hasUninitializedSymbols: false,
-            symbolInstances: symbolInstances_,
+            // TODO symbolInstances: symbolInstances_,
             sortKeyRanges: sortKeyRanges_,
             paintProperties: Default::default(),
             textSizeBinder: Default::default(),
@@ -326,7 +363,8 @@ impl SymbolBucket {
         todo!()
     }
     pub fn hasData(&self) -> bool {
-        todo!()
+       // todo!()
+        true
     }
 
     pub fn hasTextData(&self) -> bool {
@@ -351,7 +389,8 @@ impl SymbolBucket {
         todo!()
     }
     pub fn hasFormatSectionOverrides(&self) -> bool {
-        todo!()
+      //  todo!()
+        false
     }
 
     pub fn sortFeatures(&self, angle: f64) {

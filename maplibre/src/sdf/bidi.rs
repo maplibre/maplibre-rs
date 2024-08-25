@@ -4,7 +4,8 @@ use widestring::U16String;
 pub type Char16 = u16; // was char16_t
 
 pub fn applyArabicShaping(str: &U16String) -> U16String {
-    todo!();
+    // todo!();
+    str.clone()
 }
 
 // StyledText pairs each code point in a string with an integer indicating
