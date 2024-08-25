@@ -57,7 +57,7 @@ already implementing this specification. On the web, it is implemented by Firefo
 standalone implementations that directly use Vulkan, OpenGL or Metal as a backend. Those backends allow maplibre-rs to run on
 mobile and desktop applications.
 
-Rust is used as a Lingua-franka on all platforms. This is made possible by WebAssembly, which allows us to use Rust for
+Rust is used as a Lingua franca on all platforms. This is made possible by WebAssembly, which allows us to use Rust for
 web development.
 
 The goal of maplibre-rs is to render maps to visualize data. Right now the goal of maplibre-rs is not to replace existing
