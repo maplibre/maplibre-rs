@@ -58,11 +58,13 @@ impl SymbolVertex {
 
 #[derive(Copy, Clone, Debug)]
 pub struct DynamicVertex {
-    anchorPoint: Point2D<f64, TileSpace>, labelAngle: f64
+    anchorPoint: Point2D<f64, TileSpace>,
+    labelAngle: f64,
 }
 #[derive(Copy, Clone, Debug)]
 pub struct OpacityVertex {
-    placed: bool, opacity: f64
+    placed: bool,
+    opacity: f64,
 }
 
 impl DynamicVertex {
@@ -76,10 +78,7 @@ impl DynamicVertex {
 
 impl OpacityVertex {
     pub fn new(placed: bool, opacity: f64) -> Self {
-        Self {
-            placed,
-            opacity,
-        }
+        Self { placed, opacity }
     }
 }
 
@@ -94,7 +93,7 @@ pub struct SymbolSizeBinder;
 impl SymbolSizeBinder {
     pub fn getVertexSizeData(&self, feature: &SymbolGeometryTileFeature) -> Range<f64> {
         // TODO ConstantSymbolSizeBinder
-        return 0.0..0.0
+        return 0.0..0.0;
     }
 }
 
@@ -102,7 +101,7 @@ impl SymbolSizeBinder {
 struct FeatureSortOrder;
 #[derive(Default, Clone, Debug)]
 pub struct TriangleIndexVector {
-    indices: Vec<u16>
+    indices: Vec<u16>,
 }
 impl TriangleIndexVector {
     pub fn push(&mut self, a: u16, b: u16, c: u16) {
@@ -114,7 +113,7 @@ impl TriangleIndexVector {
     }
 
     pub fn len(&self) -> usize {
-      //  todo!()
+        //  todo!()
         // put them flat into the buffer .len() should return the count of indices
         self.indices.len()
     }
@@ -195,7 +194,7 @@ pub struct SymbolBucketBuffer {
     //    #endif // MLN_LEGACY_RENDERER
 }
 
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct PaintProperties {
     //    iconBinders: SymbolIconProgram::Binders,
     //    textBinders:  SymbolSDFTextProgram::Binders,
@@ -363,7 +362,7 @@ impl SymbolBucket {
         todo!()
     }
     pub fn hasData(&self) -> bool {
-       // todo!()
+        // todo!()
         true
     }
 
@@ -389,7 +388,7 @@ impl SymbolBucket {
         todo!()
     }
     pub fn hasFormatSectionOverrides(&self) -> bool {
-      //  todo!()
+        //  todo!()
         false
     }
 
