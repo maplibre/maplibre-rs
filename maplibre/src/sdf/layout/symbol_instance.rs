@@ -55,7 +55,6 @@ impl ShapedTextOrientations {
         }
     }
 
-
     pub fn horizontal(&self) -> &Shaping {
         &self.horizontal
     }
@@ -71,7 +70,6 @@ impl ShapedTextOrientations {
     pub fn left(&self) -> &Shaping {
         &self.left
     }
-
 
     pub fn set_horizontal(&mut self, horizontal: Shaping) {
         self.horizontal = horizontal;

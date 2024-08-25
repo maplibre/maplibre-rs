@@ -4,7 +4,6 @@ use crate::sdf::tagged_string::TaggedString;
 
 use std::cmp::Ordering;
 
-
 // TODO: Actual feature data with properties
 #[derive(Clone)]
 pub struct VectorGeometryTileFeature;
@@ -34,7 +33,7 @@ impl PartialOrd for SymbolGeometryTileFeature {
 
 impl SymbolGeometryTileFeature {
     pub fn getType(&self) -> FeatureType {
-      //  todo!()
+        //  todo!()
         FeatureType::Point
     }
     pub fn getValue(&self, key: &String) -> Option<&Value> {
@@ -47,7 +46,7 @@ impl SymbolGeometryTileFeature {
         todo!()
     }
     pub fn getGeometries(&self) -> &GeometryCollection {
-       todo!()
+        todo!()
     }
 }
 

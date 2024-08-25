@@ -42,7 +42,7 @@ pub enum FeatureType {
 #[derive(Clone)]
 pub struct SymbolGeometryTileLayer {
     pub name: String,
-    pub features: Vec<SymbolGeometryTileFeature>
+    pub features: Vec<SymbolGeometryTileFeature>,
 }
 impl SymbolGeometryTileLayer {
     pub fn featureCount(&self) -> usize {
@@ -52,7 +52,7 @@ impl SymbolGeometryTileLayer {
     // Returns the feature object at the given position within the layer. The
     // returned feature object may *not* outlive the layer object.
     pub fn getFeature(&self, index: usize) -> Box<SymbolGeometryTileFeature> {
-       Box::new(self.features[index].clone())
+        Box::new(self.features[index].clone())
     }
 
     pub fn getName(&self) -> &str {

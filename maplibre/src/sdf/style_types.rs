@@ -1,6 +1,6 @@
-use std::any::{TypeId};
 use crate::sdf::layout::symbol_feature::SymbolGeometryTileFeature;
 use crate::sdf::CanonicalTileID;
+use std::any::TypeId;
 use std::collections::BTreeSet;
 use std::marker::PhantomData;
 
@@ -72,7 +72,7 @@ pub struct PropertyValue<T> {
     _phandom: PhantomData<T>,
 }
 
-impl <T> Default for PropertyValue<T> {
+impl<T> Default for PropertyValue<T> {
     fn default() -> Self {
         // TODO
         PropertyValue {
@@ -84,16 +84,16 @@ impl <T> Default for PropertyValue<T> {
 
 impl<T> PropertyValue<T> {
     pub fn isUndefined(&self) -> bool {
-       // todo!()
+        // todo!()
         false
     }
     pub fn isDataDriven(&self) -> bool {
-       // todo!()
+        // todo!()
         false
     }
 
     pub fn isZoomant(&self) -> bool {
-      //  todo!()
+        //  todo!()
         false
     }
 }
@@ -104,7 +104,7 @@ pub struct PossiblyEvaluatedPropertyValue<T> {
     _phandom: PhantomData<T>,
 }
 
-impl <T> Default for PossiblyEvaluatedPropertyValue<T> {
+impl<T> Default for PossiblyEvaluatedPropertyValue<T> {
     fn default() -> Self {
         // TODO
         PossiblyEvaluatedPropertyValue {
@@ -119,7 +119,6 @@ impl<T> PossiblyEvaluatedPropertyValue<T> {
         todo!()
     }
 }
-
 
 pub trait LayoutProperty {
     // type TransitionableType = std::nullptr_t;
@@ -403,7 +402,6 @@ impl DataDrivenLayoutProperty for SymbolSortKey {
 
 pub struct SymbolSpacing {}
 
-
 impl LayoutProperty for SymbolSpacing {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
@@ -418,7 +416,6 @@ impl LayoutProperty for SymbolSpacing {
 }
 
 pub struct SymbolZOrder {}
-
 
 impl LayoutProperty for SymbolZOrder {
     type UnevaluatedType = PropertyValue<Self::Type>;
@@ -478,7 +475,6 @@ impl DataDrivenLayoutProperty for TextField {
 
 pub struct TextFont {}
 
-
 impl DataDrivenLayoutProperty for TextFont {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
@@ -527,9 +523,7 @@ impl DataDrivenLayoutProperty for TextJustify {
 
 pub struct TextKeepUpright {}
 
-impl TextKeepUpright {
-
-}
+impl TextKeepUpright {}
 impl LayoutProperty for TextKeepUpright {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
@@ -545,9 +539,7 @@ impl LayoutProperty for TextKeepUpright {
 
 pub struct TextLetterSpacing {}
 
-impl TextLetterSpacing {
-
-}
+impl TextLetterSpacing {}
 impl DataDrivenLayoutProperty for TextLetterSpacing {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
@@ -562,9 +554,7 @@ impl DataDrivenLayoutProperty for TextLetterSpacing {
 
 pub struct TextLineHeight {}
 
-impl TextLineHeight {
-
-}
+impl TextLineHeight {}
 impl LayoutProperty for TextLineHeight {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
@@ -580,7 +570,6 @@ impl LayoutProperty for TextLineHeight {
 
 pub struct TextMaxAngle {}
 
-
 impl LayoutProperty for TextMaxAngle {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
@@ -595,7 +584,6 @@ impl LayoutProperty for TextMaxAngle {
 }
 
 pub struct TextMaxWidth {}
-
 
 impl DataDrivenLayoutProperty for TextMaxWidth {
     type UnevaluatedType = PropertyValue<Self::Type>;
@@ -642,7 +630,6 @@ impl LayoutProperty for TextOptional {
 
 pub struct TextPadding {}
 
-
 impl LayoutProperty for TextPadding {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
@@ -658,9 +645,7 @@ impl LayoutProperty for TextPadding {
 
 pub struct TextPitchAlignment {}
 
-impl TextPitchAlignment {
-
-}
+impl TextPitchAlignment {}
 impl LayoutProperty for TextPitchAlignment {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
@@ -675,7 +660,6 @@ impl LayoutProperty for TextPitchAlignment {
 }
 
 pub struct TextRadialOffset {}
-
 
 impl DataDrivenLayoutProperty for TextRadialOffset {
     type UnevaluatedType = PropertyValue<Self::Type>;
@@ -692,7 +676,6 @@ impl DataDrivenLayoutProperty for TextRadialOffset {
 
 pub struct TextRotate {}
 
-
 impl DataDrivenLayoutProperty for TextRotate {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
@@ -708,7 +691,6 @@ impl DataDrivenLayoutProperty for TextRotate {
 
 pub struct TextRotationAlignment {}
 
-
 impl LayoutProperty for TextRotationAlignment {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
@@ -723,7 +705,6 @@ impl LayoutProperty for TextRotationAlignment {
 }
 
 pub struct TextSize {}
-
 
 impl DataDrivenLayoutProperty for TextSize {
     type UnevaluatedType = PropertyValue<Self::Type>;
@@ -755,9 +736,7 @@ impl DataDrivenLayoutProperty for TextTransform {
 
 pub struct TextVariableAnchor {}
 
-impl TextVariableAnchor {
-
-}
+impl TextVariableAnchor {}
 impl LayoutProperty for TextVariableAnchor {
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
@@ -772,8 +751,6 @@ impl LayoutProperty for TextVariableAnchor {
 }
 
 pub struct TextWritingMode {}
-
-
 
 impl LayoutProperty for TextWritingMode {
     type UnevaluatedType = PropertyValue<Self::Type>;
@@ -790,16 +767,16 @@ impl LayoutProperty for TextWritingMode {
 
 #[derive(Clone, Debug)]
 pub struct SymbolLayoutProperties_Unevaluated;
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct SymbolLayoutProperties_PossiblyEvaluated;
 
 impl SymbolLayoutProperties_PossiblyEvaluated {
-    pub fn has<T:'static>(&self) -> bool {
+    pub fn has<T: 'static>(&self) -> bool {
         // todo!()
         //     return layout.get<Property>().match([](const typename Property::Type& t) { return !t.is_empty(); },
         //                                         [](let) { return true; });
-        TypeId::of::<T>() ==  TypeId::of::<TextField>() ||
-        TypeId::of::<T>() ==  TypeId::of::<TextFont>()
+        TypeId::of::<T>() == TypeId::of::<TextField>()
+            || TypeId::of::<T>() == TypeId::of::<TextFont>()
     }
 }
 
@@ -807,7 +784,7 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
 pub struct SymbolLayoutProperties_Evaluated;
 
 pub mod expression {
-    use crate::sdf::font_stack::{FontStack};
+    use crate::sdf::font_stack::FontStack;
     use crate::sdf::layout::symbol_feature::SymbolGeometryTileFeature;
     use crate::sdf::CanonicalTileID;
     use csscolorparser::Color;
