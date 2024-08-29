@@ -1,5 +1,4 @@
-use crate::euclid::Point2D;
-use crate::sdf::TileSpace;
+use crate::{euclid::Point2D, sdf::TileSpace};
 
 pub mod feature_index;
 

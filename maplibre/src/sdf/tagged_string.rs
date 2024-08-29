@@ -1,9 +1,14 @@
-use crate::sdf::bidi::{Char16, StyledText};
-use crate::sdf::font_stack::{FontStack, FontStackHash, FontStackHasher};
-use crate::sdf::util::i18n;
-use crate::sdf::util::i18n::{BACKSLACK_F, BACKSLACK_V};
 use csscolorparser::Color;
 use widestring::{U16Str, U16String};
+
+use crate::sdf::{
+    bidi::{Char16, StyledText},
+    font_stack::{FontStack, FontStackHash, FontStackHasher},
+    util::{
+        i18n,
+        i18n::{BACKSLACK_F, BACKSLACK_V},
+    },
+};
 
 #[derive(Clone, Default)]
 pub struct SectionOptions {
@@ -244,10 +249,13 @@ impl TaggedString {
 
 #[cfg(test)]
 mod tests {
-    use crate::sdf::bidi::Char16;
-    use crate::sdf::tagged_string::{SectionOptions, TaggedString};
-    use crate::sdf::util::i18n::BACKSLACK_V;
     use widestring::U16String;
+
+    use crate::sdf::{
+        bidi::Char16,
+        tagged_string::{SectionOptions, TaggedString},
+        util::i18n::BACKSLACK_V,
+    };
 
     #[test]
     fn TaggedString_Trim() {

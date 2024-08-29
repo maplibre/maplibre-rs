@@ -1,12 +1,18 @@
 // Except for to-do comments this file was fully translated
 
-use crate::euclid::Rect;
-use crate::sdf::bidi::Char16;
-use crate::sdf::font_stack::{FontStack, FontStackHash};
-use crate::sdf::glyph_range::GlyphRange;
-use crate::sdf::TileSpace;
-use bitflags::bitflags;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
+
+use bitflags::bitflags;
+
+use crate::{
+    euclid::Rect,
+    sdf::{
+        bidi::Char16,
+        font_stack::{FontStack, FontStackHash},
+        glyph_range::GlyphRange,
+        TileSpace,
+    },
+};
 
 // TODO structs
 #[derive(Default)]

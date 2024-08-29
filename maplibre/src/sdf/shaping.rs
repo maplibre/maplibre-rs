@@ -1,17 +1,23 @@
-use crate::euclid::Rect;
-use crate::sdf::bidi::{BiDi, Char16};
-use crate::sdf::glyph::{
-    Glyph, GlyphMap, GlyphMetrics, PositionedGlyph, PositionedLine, Shaping, WritingModeType,
-};
-use crate::sdf::glyph_atlas::GlyphPositions;
-use crate::sdf::image_atlas::{ImagePosition, ImagePositions};
-use crate::sdf::style_types::{IconTextFitType, SymbolAnchorType, TextJustifyType};
-use crate::sdf::tagged_string::{SectionOptions, TaggedString};
-use crate::sdf::util::constants::ONE_EM;
-use crate::sdf::util::i18n;
-use crate::sdf::TileSpace;
-use cgmath::num_traits::Pow;
 use std::collections::BTreeSet;
+
+use cgmath::num_traits::Pow;
+
+use crate::{
+    euclid::Rect,
+    sdf::{
+        bidi::{BiDi, Char16},
+        glyph::{
+            Glyph, GlyphMap, GlyphMetrics, PositionedGlyph, PositionedLine, Shaping,
+            WritingModeType,
+        },
+        glyph_atlas::GlyphPositions,
+        image_atlas::{ImagePosition, ImagePositions},
+        style_types::{IconTextFitType, SymbolAnchorType, TextJustifyType},
+        tagged_string::{SectionOptions, TaggedString},
+        util::{constants::ONE_EM, i18n},
+        TileSpace,
+    },
+};
 
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct Padding {
@@ -763,15 +769,17 @@ fn shapeLines(
 
 #[cfg(test)]
 mod test {
-    use crate::sdf::bidi::{BiDi, Char16};
-    use crate::sdf::font_stack::FontStackHasher;
-    use crate::sdf::glyph::{Glyph, GlyphMap, Glyphs, WritingModeType};
-    use crate::sdf::glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions};
-    use crate::sdf::image_atlas::ImagePositions;
-    use crate::sdf::shaping::getShaping;
-    use crate::sdf::style_types::{SymbolAnchorType, TextJustifyType};
-    use crate::sdf::tagged_string::{SectionOptions, TaggedString};
-    use crate::sdf::util::constants::ONE_EM;
+    use crate::sdf::{
+        bidi::{BiDi, Char16},
+        font_stack::FontStackHasher,
+        glyph::{Glyph, GlyphMap, Glyphs, WritingModeType},
+        glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions},
+        image_atlas::ImagePositions,
+        shaping::getShaping,
+        style_types::{SymbolAnchorType, TextJustifyType},
+        tagged_string::{SectionOptions, TaggedString},
+        util::constants::ONE_EM,
+    };
 
     #[test]
     fn Shaping_ZWSP() {

@@ -1,10 +1,15 @@
-use crate::euclid::Rect;
-use crate::sdf::image::{
-    Image, ImageContent, ImageManager, ImageMap, ImageStretches, ImageVersionMap,
-    PremultipliedImage,
-};
-use crate::sdf::TileSpace;
 use std::collections::HashMap;
+
+use crate::{
+    euclid::Rect,
+    sdf::{
+        image::{
+            Image, ImageContent, ImageManager, ImageMap, ImageStretches, ImageVersionMap,
+            PremultipliedImage,
+        },
+        TileSpace,
+    },
+};
 
 #[derive(Clone)]
 pub struct ImagePosition {

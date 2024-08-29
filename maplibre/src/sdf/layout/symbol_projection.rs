@@ -1,11 +1,14 @@
-use crate::euclid::Point2D;
-use crate::sdf::buckets::symbol_bucket::PlacedSymbol;
-use crate::sdf::geometry::convert_point_f64;
-use crate::sdf::geometry_tile_data::GeometryCoordinates;
-use crate::sdf::util::math::perp;
-use crate::sdf::TileSpace;
-use cgmath::{Matrix4, Vector4};
 use std::f64::consts::PI;
+
+use cgmath::{Matrix4, Vector4};
+
+use crate::{
+    euclid::Point2D,
+    sdf::{
+        buckets::symbol_bucket::PlacedSymbol, geometry::convert_point_f64,
+        geometry_tile_data::GeometryCoordinates, util::math::perp, TileSpace,
+    },
+};
 
 type PointAndCameraDistance = (Point2D<f64, TileSpace>, f64); // TODO is the Unit correct?
 

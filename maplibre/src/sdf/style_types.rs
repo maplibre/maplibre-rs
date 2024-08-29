@@ -1,8 +1,6 @@
-use crate::sdf::layout::symbol_feature::SymbolGeometryTileFeature;
-use crate::sdf::CanonicalTileID;
-use std::any::TypeId;
-use std::collections::BTreeSet;
-use std::marker::PhantomData;
+use std::{any::TypeId, collections::BTreeSet, marker::PhantomData};
+
+use crate::sdf::{layout::symbol_feature::SymbolGeometryTileFeature, CanonicalTileID};
 
 /// Types belonging to style
 
@@ -784,12 +782,16 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
 pub struct SymbolLayoutProperties_Evaluated;
 
 pub mod expression {
-    use crate::sdf::font_stack::FontStack;
-    use crate::sdf::layout::symbol_feature::SymbolGeometryTileFeature;
-    use crate::sdf::CanonicalTileID;
+    use std::{
+        collections::{BTreeSet, HashMap},
+        rc::Rc,
+    };
+
     use csscolorparser::Color;
-    use std::collections::{BTreeSet, HashMap};
-    use std::rc::Rc;
+
+    use crate::sdf::{
+        font_stack::FontStack, layout::symbol_feature::SymbolGeometryTileFeature, CanonicalTileID,
+    };
 
     #[derive(Clone, PartialEq)]
     pub enum Value {

@@ -1,15 +1,18 @@
-use crate::sdf::collision_feature::CollisionFeature;
-use crate::sdf::geometry::feature_index::IndexedSubfeature;
-use crate::sdf::geometry::Anchor;
-use crate::sdf::geometry_tile_data::GeometryCoordinates;
-use crate::sdf::glyph::{Shaping, WritingModeType};
-use crate::sdf::image::ImageMap;
-use crate::sdf::quads::{getGlyphQuads, getIconQuads, SymbolQuads};
-use crate::sdf::shaping::PositionedIcon;
-use crate::sdf::style_types::{SymbolLayoutProperties_Evaluated, SymbolPlacementType};
-use bitflags::bitflags;
 use std::rc::Rc;
+
+use bitflags::bitflags;
 use widestring::U16String;
+
+use crate::sdf::{
+    collision_feature::CollisionFeature,
+    geometry::{feature_index::IndexedSubfeature, Anchor},
+    geometry_tile_data::GeometryCoordinates,
+    glyph::{Shaping, WritingModeType},
+    image::ImageMap,
+    quads::{getGlyphQuads, getIconQuads, SymbolQuads},
+    shaping::PositionedIcon,
+    style_types::{SymbolLayoutProperties_Evaluated, SymbolPlacementType},
+};
 
 fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
     if shapedTextOrientations.right().isAnyLineNotEmpty() {

@@ -4,10 +4,10 @@ use std::{
     rc::Rc,
 };
 
-use crate::euclid::{Box2D, Point2D};
 use crate::{
     coords::WorldTileCoords,
     environment::Environment,
+    euclid::{Box2D, Point2D},
     kernel::Kernel,
     plugin::Plugin,
     render::{

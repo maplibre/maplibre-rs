@@ -1,15 +1,20 @@
 // This file was fully translated
 
-use crate::euclid::{Box2D, Point2D, Vector2D};
-use crate::sdf::geometry::feature_index::IndexedSubfeature;
-use crate::sdf::geometry::{convert_point_f64, convert_point_i16, Anchor};
-use crate::sdf::geometry_tile_data::{GeometryCoordinate, GeometryCoordinates};
-use crate::sdf::glyph::Shaping;
-use crate::sdf::grid_index::Circle;
-use crate::sdf::shaping::{Padding, PositionedIcon};
-use crate::sdf::style_types::SymbolPlacementType;
-use crate::sdf::util::math::{deg2radf, rotate, MinMax};
-use crate::sdf::{ScreenSpace, TileSpace};
+use crate::{
+    euclid::{Box2D, Point2D, Vector2D},
+    sdf::{
+        geometry::{
+            convert_point_f64, convert_point_i16, feature_index::IndexedSubfeature, Anchor,
+        },
+        geometry_tile_data::{GeometryCoordinate, GeometryCoordinates},
+        glyph::Shaping,
+        grid_index::Circle,
+        shaping::{Padding, PositionedIcon},
+        style_types::SymbolPlacementType,
+        util::math::{deg2radf, rotate, MinMax},
+        ScreenSpace, TileSpace,
+    },
+};
 
 #[derive(Clone)]
 pub struct CollisionFeature {

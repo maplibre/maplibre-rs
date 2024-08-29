@@ -1,8 +1,9 @@
-use cgmath::{prelude::*, *};
 use std::{
     f64,
     ops::{Deref, DerefMut},
 };
+
+use cgmath::{prelude::*, *};
 
 use crate::{
     coords::{ViewRegion, WorldCoords, Zoom, ZoomLevel},

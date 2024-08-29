@@ -1,20 +1,18 @@
 //! Tessellation for lines and polygons is implemented here.
 use csscolorparser::Color;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
-use lyon::geom::euclid::Box2D;
 use lyon::{
-    geom::euclid::Point2D,
+    geom::euclid::{Box2D, Point2D},
     tessellation::{
         geometry_builder::MaxIndex, BuffersBuilder, FillOptions, FillTessellator, VertexBuffers,
     },
 };
 
-use crate::sdf::TileSpace;
 use crate::{
     render::shaders::ShaderSymbolVertex,
     sdf::{
         text::{Anchor, Glyph, GlyphSet, SymbolVertexBuilder},
-        Feature,
+        Feature, TileSpace,
     },
 };
 
