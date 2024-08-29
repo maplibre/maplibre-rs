@@ -18,7 +18,6 @@ pub struct SymbolGeometryTileFeature {
     pub icon: Option<expression::Image>,
     pub sortKey: f64,
     pub index: usize,
-    pub allowsVerticalWritingMode: bool,
 }
 
 impl PartialEq<Self> for SymbolGeometryTileFeature {
@@ -61,7 +60,6 @@ impl SymbolGeometryTileFeature {
             icon: None,
             sortKey: 0.0,
             index: 0,
-            allowsVerticalWritingMode: false,
         }
     }
 }
