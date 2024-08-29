@@ -1,8 +1,10 @@
-use crate::sdf::geometry_tile_data::{FeatureType, GeometryCollection, Identifier, Value};
-use crate::sdf::style_types::expression;
-use crate::sdf::tagged_string::TaggedString;
-
 use std::cmp::Ordering;
+
+use crate::sdf::{
+    geometry_tile_data::{FeatureType, GeometryCollection, Identifier, Value},
+    style_types::expression,
+    tagged_string::TaggedString,
+};
 
 // TODO: Actual feature data with properties
 #[derive(Clone)]

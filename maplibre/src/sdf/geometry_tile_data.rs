@@ -1,8 +1,9 @@
-use crate::euclid::Point2D;
-use crate::sdf::layout::symbol_feature::SymbolGeometryTileFeature;
 use std::ops::Index;
 
-use crate::sdf::TileSpace;
+use crate::{
+    euclid::Point2D,
+    sdf::{layout::symbol_feature::SymbolGeometryTileFeature, TileSpace},
+};
 
 // In maplibre-native GeometryTileFeature are traits/classes and there are impls for symbol, fill, line features etc.
 // The same is true for the data objects which might be backed by geojson

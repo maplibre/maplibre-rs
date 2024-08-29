@@ -1,5 +1,6 @@
-use crate::euclid::Vector2D;
 use std::f64::consts::PI;
+
+use crate::euclid::Vector2D;
 
 pub fn rotate<U>(a: &Vector2D<f64, U>, angle: f64) -> Vector2D<f64, U> {
     let cos = angle.cos();

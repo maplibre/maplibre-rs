@@ -1,6 +1,9 @@
-use crate::euclid::{Box2D, Point2D};
-use crate::sdf::ScreenSpace;
 use std::{collections::HashSet, f64};
+
+use crate::{
+    euclid::{Box2D, Point2D},
+    sdf::ScreenSpace,
+};
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct Circle<T> {

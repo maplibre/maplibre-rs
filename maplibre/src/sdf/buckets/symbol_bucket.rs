@@ -1,19 +1,29 @@
-use crate::euclid::Point2D;
-use crate::render::view_state::ViewState;
-use crate::sdf::geometry_tile_data::GeometryCoordinates;
-use crate::sdf::glyph::WritingModeType;
-use crate::sdf::image_atlas::ImagePositions;
-use crate::sdf::layout::symbol_feature::SymbolGeometryTileFeature;
-use crate::sdf::layout::symbol_instance::SymbolInstance;
-use crate::sdf::layout::symbol_layout::{LayerProperties, SortKeyRange};
-use crate::sdf::style_types::{
-    PropertyValue, SymbolLayoutProperties_PossiblyEvaluated, TextWritingModeType,
+use std::{
+    collections::{BTreeMap, BTreeSet, HashMap},
+    marker::PhantomData,
+    ops::Range,
 };
-use crate::sdf::{CanonicalTileID, TileSpace};
+
 use geo_types::GeometryCollection;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::marker::PhantomData;
-use std::ops::Range;
+
+use crate::{
+    euclid::Point2D,
+    render::view_state::ViewState,
+    sdf::{
+        geometry_tile_data::GeometryCoordinates,
+        glyph::WritingModeType,
+        image_atlas::ImagePositions,
+        layout::{
+            symbol_feature::SymbolGeometryTileFeature,
+            symbol_instance::SymbolInstance,
+            symbol_layout::{LayerProperties, SortKeyRange},
+        },
+        style_types::{
+            PropertyValue, SymbolLayoutProperties_PossiblyEvaluated, TextWritingModeType,
+        },
+        CanonicalTileID, TileSpace,
+    },
+};
 
 struct PatternDependency;
 

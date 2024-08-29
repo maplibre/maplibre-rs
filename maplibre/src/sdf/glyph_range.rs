@@ -1,5 +1,6 @@
-use crate::sdf::util::hash;
 use std::ops::Range;
+
+use crate::sdf::util::hash;
 
 pub type GlyphRange = Range<u16>;
 

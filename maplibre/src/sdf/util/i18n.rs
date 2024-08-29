@@ -1,5 +1,6 @@
-use crate::sdf::bidi::Char16;
 use widestring::U16String;
+
+use crate::sdf::bidi::Char16;
 
 pub fn allowsWordBreaking(chr: Char16) -> bool {
     return (chr == 0x0a      /* newline */

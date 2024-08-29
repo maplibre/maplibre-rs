@@ -300,10 +300,11 @@ impl Schedule {
     /// # use maplibre::context::MapContext;
     /// # use maplibre::tcs::system::stage::SystemStage;
     /// # use maplibre::schedule::{Schedule, NopStage};
+    /// # use maplibre::tcs::system::SystemError;
     /// #
     /// # let mut schedule = Schedule::default();
     /// # schedule.add_stage("my_stage", SystemStage::default());
-    /// # fn my_system(context: &mut MapContext) {}
+    /// # fn my_system(context: &mut MapContext) -> Result<(), SystemError> { Ok(()) }
     /// #
     /// schedule.add_system_to_stage("my_stage", my_system);
     /// ```

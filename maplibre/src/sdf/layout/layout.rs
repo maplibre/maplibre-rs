@@ -1,7 +1,6 @@
-use crate::sdf::glyph::GlyphDependencies;
-use crate::sdf::image::ImageDependencies;
-use crate::sdf::{MapMode, OverscaledTileID};
 use std::collections::BTreeSet;
+
+use crate::sdf::{glyph::GlyphDependencies, image::ImageDependencies, MapMode, OverscaledTileID};
 
 #[derive(Clone)]
 pub struct LayerTypeInfo;

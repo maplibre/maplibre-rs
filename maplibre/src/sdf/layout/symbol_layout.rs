@@ -1,35 +1,45 @@
-use crate::coords::{EXTENT, TILE_SIZE};
-use crate::sdf::bidi::{applyArabicShaping, BiDi, Char16};
-use crate::sdf::buckets::symbol_bucket::{
-    DynamicVertex, OpacityVertex, PlacedSymbol, Segment, SymbolBucket, SymbolBucketBuffer,
-    SymbolVertex,
+use std::{
+    collections::{BTreeMap, BTreeSet, HashMap},
+    f64::consts::PI,
+    ops::Range,
+    rc::Rc,
 };
-use crate::sdf::geometry::feature_index::{IndexedSubfeature, RefIndexedSubfeature};
-use crate::sdf::geometry::{Anchor, Anchors};
-use crate::sdf::geometry_tile_data::{FeatureType, GeometryCoordinates, SymbolGeometryTileLayer};
-use crate::sdf::glyph::{GlyphIDs, GlyphMap, Shaping, WritingModeType};
-use crate::sdf::glyph_atlas::GlyphPositions;
-use crate::sdf::image::{ImageMap, ImageType};
-use crate::sdf::image_atlas::ImagePositions;
-use crate::sdf::layout::layout::{BucketParameters, LayoutParameters};
-use crate::sdf::layout::symbol_feature::SymbolGeometryTileFeature;
-use crate::sdf::layout::symbol_instance::{
-    ShapedTextOrientations, SymbolContent, SymbolInstance, SymbolInstanceSharedData,
-};
-use crate::sdf::quads::{SymbolQuad, SymbolQuads};
-use crate::sdf::shaping::{getAnchorJustification, getShaping, PositionedIcon};
-use crate::sdf::style_types::*;
-use crate::sdf::tagged_string::{SectionOptions, TaggedString};
-use crate::sdf::util::constants::ONE_EM;
-use crate::sdf::util::math::deg2radf;
-use crate::sdf::util::{i18n, lower_bound};
-use crate::sdf::{CanonicalTileID, MapMode};
+
 use lyon::geom::euclid::Point2D;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::f64::consts::PI;
-use std::ops::Range;
-use std::rc::Rc;
 use widestring::U16String;
+
+use crate::{
+    coords::{EXTENT, TILE_SIZE},
+    sdf::{
+        bidi::{applyArabicShaping, BiDi, Char16},
+        buckets::symbol_bucket::{
+            DynamicVertex, OpacityVertex, PlacedSymbol, Segment, SymbolBucket, SymbolBucketBuffer,
+            SymbolVertex,
+        },
+        geometry::{
+            feature_index::{IndexedSubfeature, RefIndexedSubfeature},
+            Anchor, Anchors,
+        },
+        geometry_tile_data::{FeatureType, GeometryCoordinates, SymbolGeometryTileLayer},
+        glyph::{GlyphIDs, GlyphMap, Shaping, WritingModeType},
+        glyph_atlas::GlyphPositions,
+        image::{ImageMap, ImageType},
+        image_atlas::ImagePositions,
+        layout::{
+            layout::{BucketParameters, LayoutParameters},
+            symbol_feature::SymbolGeometryTileFeature,
+            symbol_instance::{
+                ShapedTextOrientations, SymbolContent, SymbolInstance, SymbolInstanceSharedData,
+            },
+        },
+        quads::{SymbolQuad, SymbolQuads},
+        shaping::{getAnchorJustification, getShaping, PositionedIcon},
+        style_types::*,
+        tagged_string::{SectionOptions, TaggedString},
+        util::{constants::ONE_EM, i18n, lower_bound, math::deg2radf},
+        CanonicalTileID, MapMode,
+    },
+};
 
 // TODO
 #[derive(Clone, Debug)]
@@ -1707,25 +1717,28 @@ impl SymbolLayout {
 
 #[cfg(test)]
 mod tests {
-    use crate::euclid::{Point2D, Rect, Size2D};
-    use crate::sdf::bidi::Char16;
-    use crate::sdf::font_stack::FontStackHasher;
-    use crate::sdf::geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer};
-    use crate::sdf::glyph::{Glyph, GlyphDependencies, GlyphMap, GlyphMetrics, Glyphs};
-    use crate::sdf::glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions};
-    use crate::sdf::image::ImageMap;
-    use crate::sdf::image_atlas::ImagePositions;
-    use crate::sdf::layout::layout::{BucketParameters, LayerTypeInfo, LayoutParameters};
-    use crate::sdf::layout::symbol_feature::{
-        SymbolGeometryTileFeature, VectorGeometryTileFeature,
-    };
-    use crate::sdf::layout::symbol_layout::{
-        FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout,
-    };
-    use crate::sdf::style_types::SymbolLayoutProperties_Unevaluated;
-    use crate::sdf::tagged_string::SectionOptions;
-    use crate::sdf::{CanonicalTileID, MapMode, OverscaledTileID};
     use std::collections::HashMap;
+
+    use crate::{
+        euclid::{Point2D, Rect, Size2D},
+        sdf::{
+            bidi::Char16,
+            font_stack::FontStackHasher,
+            geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer},
+            glyph::{Glyph, GlyphDependencies, GlyphMap, GlyphMetrics, Glyphs},
+            glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions},
+            image::ImageMap,
+            image_atlas::ImagePositions,
+            layout::{
+                layout::{BucketParameters, LayerTypeInfo, LayoutParameters},
+                symbol_feature::{SymbolGeometryTileFeature, VectorGeometryTileFeature},
+                symbol_layout::{FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout},
+            },
+            style_types::SymbolLayoutProperties_Unevaluated,
+            tagged_string::SectionOptions,
+            CanonicalTileID, MapMode, OverscaledTileID,
+        },
+    };
 
     #[test]
     fn test() {

@@ -2,25 +2,25 @@ use std::borrow::Cow;
 
 use cgmath::{Matrix3, Vector3};
 
-use crate::coords::{EXTENT, TILE_SIZE};
-use crate::render::eventually::Eventually;
-use crate::render::eventually::Eventually::Initialized;
-use crate::render::shaders::SDFShaderFeatureMetadata;
-use crate::render::tile_view_pattern::WgpuTileViewPattern;
-use crate::render::Renderer;
-use crate::sdf::collision_feature::{CollisionBox, CollisionFeature};
-use crate::sdf::geometry::feature_index::{IndexedSubfeature, RefIndexedSubfeature};
-
-use crate::euclid::Point2D;
-use crate::sdf::buckets::symbol_bucket::PlacedSymbol;
-use crate::sdf::collision_index::CollisionIndex;
-use crate::sdf::geometry_tile_data::GeometryCoordinates;
-use crate::sdf::{MapMode, SymbolBufferPool};
-use crate::tcs::system::SystemError;
 use crate::{
     context::MapContext,
-    sdf::SymbolLayersDataComponent,
-    tcs::system::{System, SystemResult},
+    coords::{EXTENT, TILE_SIZE},
+    euclid::Point2D,
+    render::{
+        eventually::{Eventually, Eventually::Initialized},
+        shaders::SDFShaderFeatureMetadata,
+        tile_view_pattern::WgpuTileViewPattern,
+        Renderer,
+    },
+    sdf::{
+        buckets::symbol_bucket::PlacedSymbol,
+        collision_feature::{CollisionBox, CollisionFeature},
+        collision_index::CollisionIndex,
+        geometry::feature_index::{IndexedSubfeature, RefIndexedSubfeature},
+        geometry_tile_data::GeometryCoordinates,
+        MapMode, SymbolBufferPool, SymbolLayersDataComponent,
+    },
+    tcs::system::{System, SystemError, SystemResult},
 };
 
 pub struct CollisionSystem {}

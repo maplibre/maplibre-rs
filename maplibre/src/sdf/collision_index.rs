@@ -1,19 +1,24 @@
 // File fully translated except for to-do comments
 
-use crate::coords::EXTENT;
-use crate::euclid::{Box2D, Point2D};
-use crate::render::camera::ModelViewProjection;
-use crate::render::view_state::ViewState;
-use crate::sdf::buckets::symbol_bucket::PlacedSymbol;
-use crate::sdf::collision_feature::{CollisionBox, CollisionFeature, ProjectedCollisionBox};
-use crate::sdf::geometry::feature_index::IndexedSubfeature;
-use crate::sdf::grid_index::{Circle, GridIndex};
-use crate::sdf::layout::symbol_projection::{placeFirstAndLastGlyph, project, TileDistance};
-use crate::sdf::util::geo::ScreenLineString;
-use crate::sdf::{MapMode, ScreenSpace, TileSpace};
+use std::collections::HashMap;
+
 use bitflags::bitflags;
 use cgmath::{Matrix4, Vector4};
-use std::collections::HashMap;
+
+use crate::{
+    coords::EXTENT,
+    euclid::{Box2D, Point2D},
+    render::{camera::ModelViewProjection, view_state::ViewState},
+    sdf::{
+        buckets::symbol_bucket::PlacedSymbol,
+        collision_feature::{CollisionBox, CollisionFeature, ProjectedCollisionBox},
+        geometry::feature_index::IndexedSubfeature,
+        grid_index::{Circle, GridIndex},
+        layout::symbol_projection::{placeFirstAndLastGlyph, project, TileDistance},
+        util::geo::ScreenLineString,
+        MapMode, ScreenSpace, TileSpace,
+    },
+};
 
 type TransformState = ViewState;
 

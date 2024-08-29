@@ -1,8 +1,13 @@
-use crate::euclid::Rect;
-use crate::sdf::font_stack::FontStackHash;
-use crate::sdf::glyph::{GlyphID, GlyphMap, GlyphMetrics};
-use crate::sdf::TileSpace;
 use std::collections::BTreeMap;
+
+use crate::{
+    euclid::Rect,
+    sdf::{
+        font_stack::FontStackHash,
+        glyph::{GlyphID, GlyphMap, GlyphMetrics},
+        TileSpace,
+    },
+};
 
 // TODO structs
 pub struct AlphaImage;

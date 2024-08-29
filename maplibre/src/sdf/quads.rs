@@ -1,18 +1,24 @@
-use crate::euclid::Vector2D;
-use crate::euclid::{Point2D, Rect, Size2D};
-use crate::sdf::glyph::{Shaping, WritingModeType};
-use crate::sdf::image::{ImageMap, ImageStretches};
-use crate::sdf::image_atlas::ImagePosition;
-use crate::sdf::layout::symbol_instance::SymbolContent;
-use crate::sdf::shaping::PositionedIcon;
-use crate::sdf::style_types::{
-    AlignmentType, SymbolLayoutProperties_Evaluated, SymbolPlacementType, TextRotate,
-    TextRotationAlignment,
-};
-use crate::sdf::util::constants::ONE_EM;
-use crate::sdf::util::math::{deg2radf, rotate};
-use crate::sdf::TileSpace;
 use std::f64::consts::PI;
+
+use crate::{
+    euclid::{Point2D, Rect, Size2D, Vector2D},
+    sdf::{
+        glyph::{Shaping, WritingModeType},
+        image::{ImageMap, ImageStretches},
+        image_atlas::ImagePosition,
+        layout::symbol_instance::SymbolContent,
+        shaping::PositionedIcon,
+        style_types::{
+            AlignmentType, SymbolLayoutProperties_Evaluated, SymbolPlacementType, TextRotate,
+            TextRotationAlignment,
+        },
+        util::{
+            constants::ONE_EM,
+            math::{deg2radf, rotate},
+        },
+        TileSpace,
+    },
+};
 
 pub struct SymbolQuad {
     pub tl: Point2D<f64, TileSpace>,
@@ -476,18 +482,21 @@ pub fn getGlyphQuads(
 }
 #[cfg(test)]
 mod tests {
-    use crate::euclid::{Point2D, Rect, Size2D};
-    use crate::sdf::geometry::Anchor;
-    use crate::sdf::geometry_tile_data::GeometryCoordinates;
-    use crate::sdf::glyph::{PositionedGlyph, PositionedLine, Shaping, WritingModeType};
-    use crate::sdf::image_atlas::ImagePosition;
-    use crate::sdf::layout::symbol_instance::SymbolContent;
-    use crate::sdf::quads::getIconQuads;
-    use crate::sdf::shaping::PositionedIcon;
-    use crate::sdf::style_types::{
-        IconTextFitType, SymbolAnchorType, SymbolLayoutProperties_Evaluated,
-    };
     use cgmath::ulps_eq;
+
+    use crate::{
+        euclid::{Point2D, Rect, Size2D},
+        sdf::{
+            geometry::Anchor,
+            geometry_tile_data::GeometryCoordinates,
+            glyph::{PositionedGlyph, PositionedLine, Shaping, WritingModeType},
+            image_atlas::ImagePosition,
+            layout::symbol_instance::SymbolContent,
+            quads::getIconQuads,
+            shaping::PositionedIcon,
+            style_types::{IconTextFitType, SymbolAnchorType, SymbolLayoutProperties_Evaluated},
+        },
+    };
 
     #[test]
     pub fn getIconQuads_normal() {

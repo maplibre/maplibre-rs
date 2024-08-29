@@ -1,5 +1,4 @@
-use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::{cmp::Ordering, collections::HashMap};
 
 // TODO
 pub struct ImageManager;

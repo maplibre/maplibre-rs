@@ -1,5 +1,7 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::Range;
+use std::{
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::Range,
+};
 
 pub mod constants;
 pub mod geo;

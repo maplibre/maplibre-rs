@@ -2,13 +2,12 @@
 
 use std::iter;
 
-use crate::render::shaders::SDFShaderFeatureMetadata;
 use crate::{
     context::MapContext,
     coords::ViewRegion,
     render::{
         eventually::{Eventually, Eventually::Initialized},
-        shaders::ShaderLayerMetadata,
+        shaders::{SDFShaderFeatureMetadata, ShaderLayerMetadata},
         tile_view_pattern::DEFAULT_TILE_SIZE,
         view_state::ViewStatePadding,
         Renderer,
