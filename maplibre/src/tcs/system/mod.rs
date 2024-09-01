@@ -9,6 +9,8 @@ pub mod stage;
 
 #[derive(Error, Debug)]
 pub enum SystemError {
+    #[error("renderer was setup wrong")]
+    Setup,
     #[error("dependencies were not resolvable")]
     Dependencies,
 }
