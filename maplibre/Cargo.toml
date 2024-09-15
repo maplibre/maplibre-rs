@@ -68,6 +68,7 @@ log.workspace = true
 bytemuck.workspace = true
 bytemuck_derive.workspace = true
 thiserror.workspace = true
+morton-encoding.workspace = true
 
 # Static tiles inclusion
 include_dir.workspace = true
