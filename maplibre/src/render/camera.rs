@@ -61,6 +61,14 @@ impl ModelViewProjection {
             .cast::<f32>()
             .expect("Unable to cast view projection to f32")
     }
+
+    pub fn get(&self) -> Matrix4<f64> {
+        self.0
+    }
+
+    pub fn project(&self, vector: Vector4<f64>) -> Vector4<f64> {
+        self.0 * vector
+    }
 }
 
 const MIN_PITCH: Deg<f64> = Deg(-30.0);
@@ -205,6 +213,7 @@ impl EdgeInsets {
     }
 }
 
+#[derive(Clone)]
 pub struct Perspective {
     fovy: Rad<f64>,
 }

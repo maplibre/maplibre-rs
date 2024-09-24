@@ -31,7 +31,7 @@ impl FPSMeter {
         self.frame_count += 1;
         let now = Instant::now();
         if now >= self.next_report {
-            log::info!("{} FPS", self.frame_count);
+            log::warn!("{} FPS", self.frame_count);
             self.frame_count = 0;
             self.next_report = now + Duration::from_secs(1);
         }

@@ -14,12 +14,12 @@ use crate::{
     plugin::Plugin,
     render::{eventually::Eventually, view_state::ViewState, Renderer},
     schedule::{Schedule, Stage},
-    style::Style,
+    style::{layer::StyleLayer, Style},
     tcs::world::World,
     vector::{
-        process_vector_tile, AvailableVectorLayerData, DefaultVectorTransferables,
-        LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerData,
-        VectorLayersDataComponent, VectorTileRequest, VectorTransferables,
+        process_vector_tile, AvailableVectorLayerBucket, DefaultVectorTransferables,
+        LayerTessellated, ProcessVectorContext, VectorBufferPool, VectorLayerBucket,
+        VectorLayerBucketComponent, VectorTileRequest, VectorTransferables,
     },
 };
 
@@ -81,12 +81,12 @@ impl HeadlessMap {
         tiles
             .spawn_mut((0, 0, ZoomLevel::default()).into())
             .expect("unable to spawn tile")
-            .insert(VectorLayersDataComponent {
+            .insert(VectorLayerBucketComponent {
                 done: true,
                 layers: layers
                     .into_iter()
                     .map(|layer| {
-                        VectorLayerData::Available(AvailableVectorLayerData {
+                        VectorLayerBucket::AvailableLayer(AvailableVectorLayerBucket {
                             coords: layer.coords,
                             source_layer: layer.layer_data.name,
                             buffer: layer.buffer,
@@ -96,7 +96,7 @@ impl HeadlessMap {
                     .collect::<Vec<_>>(),
             });
 
-        self.schedule.run(context);
+        self.schedule.run(context).expect("schedule must not error");
 
         let resources = &mut context.world.resources;
         let tiles = &mut context.world.tiles;
@@ -126,7 +126,7 @@ impl HeadlessMap {
     pub async fn process_tile(
         &self,
         tile_data: Box<[u8]>,
-        source_layers: &[&str],
+        layer: &StyleLayer,
     ) -> Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>> {
         let context = HeadlessContext::default();
         let mut processor =
@@ -137,10 +137,7 @@ impl HeadlessMap {
             &tile_data,
             VectorTileRequest {
                 coords: target_coords,
-                layers: source_layers
-                    .iter()
-                    .map(|layer| layer.to_string())
-                    .collect(),
+                layers: [layer].into_iter().cloned().collect(),
             },
             &mut processor,
         )

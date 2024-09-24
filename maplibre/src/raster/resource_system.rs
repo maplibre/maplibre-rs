@@ -10,6 +10,7 @@ use crate::{
         shaders::Shader,
         RenderResources, Renderer,
     },
+    tcs::system::{SystemError, SystemResult},
 };
 
 pub fn resource_system(
@@ -24,16 +25,16 @@ pub fn resource_system(
             },
         ..
     }: &mut MapContext,
-) {
+) -> SystemResult {
     let Some(raster_resources) = world
         .resources
         .query_mut::<&mut Eventually<RasterResources>>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     raster_resources.initialize(|| {
-        let shader = shaders::RasterTileShader {
+        let shader = shaders::RasterShader {
             format: surface.surface_format(),
         };
 
@@ -51,9 +52,11 @@ pub fn resource_system(
                 false,
                 surface.is_multisampling_supported(settings.msaa),
                 true,
+                false,
             )
             .describe_render_pipeline()
             .initialize(device),
         )
     });
+    Ok(())
 }
