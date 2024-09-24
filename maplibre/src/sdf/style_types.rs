@@ -770,7 +770,7 @@ pub struct SymbolLayoutProperties_PossiblyEvaluated;
 
 impl SymbolLayoutProperties_PossiblyEvaluated {
     pub fn has<T: 'static>(&self) -> bool {
-        // todo!()
+        // todo!() check actual style if property is not empty
         //     return layout.get<Property>().match([](const typename Property::Type& t) { return !t.is_empty(); },
         //                                         [](let) { return true; });
         TypeId::of::<T>() == TypeId::of::<TextField>()

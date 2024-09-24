@@ -1816,7 +1816,8 @@ mod tests {
             Glyphs::from([('中' as Char16, Some(glyph))]),
         )]);
 
-        layout.prepareSymbols(&glyphs, &glyphPositions, &ImageMap::new(), &image_positions);
+        let empty_image_map = ImageMap::new();
+        layout.prepareSymbols(&glyphs, &glyphPositions, &empty_image_map, &image_positions);
 
         let mut output = HashMap::new();
         layout.createBucket(
