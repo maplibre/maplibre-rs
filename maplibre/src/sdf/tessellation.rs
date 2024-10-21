@@ -1,6 +1,9 @@
 //! Tessellation for lines and polygons is implemented here.
+
+use std::collections::HashMap;
 use csscolorparser::Color;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
+use geozero::geo_types::GeoWriter;
 use lyon::{
     geom::euclid::{Box2D, Point2D},
     tessellation::{

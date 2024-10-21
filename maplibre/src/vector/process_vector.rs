@@ -79,6 +79,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                         }
                     }
                     LayerPaint::Symbol(_) => {
+                        // TODO
                         let mut tessellator = TextTessellator::<IndexDataType>::default();
 
                         if let Err(e) = layer.process(&mut tessellator) {
