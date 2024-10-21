@@ -1714,3 +1714,125 @@ impl SymbolLayout {
         return 0;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use crate::{
+        euclid::{Point2D, Rect, Size2D},
+        sdf::{
+            bidi::Char16,
+            font_stack::FontStackHasher,
+            geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer},
+            glyph::{Glyph, GlyphDependencies, GlyphMap, GlyphMetrics, Glyphs},
+            glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions},
+            image::ImageMap,
+            image_atlas::ImagePositions,
+            layout::{
+                layout::{BucketParameters, LayerTypeInfo, LayoutParameters},
+                symbol_feature::{SymbolGeometryTileFeature, VectorGeometryTileFeature},
+                symbol_layout::{FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout},
+            },
+            style_types::SymbolLayoutProperties_Unevaluated,
+            tagged_string::SectionOptions,
+            CanonicalTileID, MapMode, OverscaledTileID,
+        },
+    };
+
+    #[test]
+    fn test() {
+        let fontStack = vec![
+            "Open Sans Regular".to_string(),
+            "Arial Unicode MS Regular".to_string(),
+        ];
+
+        let sectionOptions = SectionOptions::new(1.0, fontStack.clone(), None);
+
+        let mut glyphDependencies = GlyphDependencies::new();
+
+        let tile_id = OverscaledTileID {
+            canonical: CanonicalTileID { x: 0, y: 0, z: 0 },
+            overscaledZ: 0,
+        };
+        let mut parameters = BucketParameters {
+            tileID: tile_id,
+            mode: MapMode::Continuous,
+            pixelRatio: 1.0,
+            layerType: LayerTypeInfo,
+        };
+        let layer_data = SymbolGeometryTileLayer {
+            name: "layer".to_string(),
+            features: vec![SymbolGeometryTileFeature::new(Box::new(
+                VectorGeometryTileFeature {
+                    geometry: vec![GeometryCoordinates(vec![Point2D::new(1024, 1024)])],
+                },
+            ))],
+        };
+        let layer_properties = vec![LayerProperties {
+            id: "layer".to_string(),
+            layer: SymbolLayer {
+                layout: SymbolLayoutProperties_Unevaluated,
+            },
+        }];
+
+        let image_positions = ImagePositions::new();
+
+        let mut glyphPosition = GlyphPosition {
+            rect: Rect::new(Point2D::new(0, 0), Size2D::new(10, 10)),
+            metrics: GlyphMetrics {
+                width: 18,
+                height: 18,
+                left: 2,
+                top: -8,
+                advance: 21,
+            },
+        };
+        let glyphPositions: GlyphPositions = GlyphPositions::from([(
+            FontStackHasher::new(&fontStack),
+            GlyphPositionMap::from([('中' as Char16, glyphPosition)]),
+        )]);
+
+        let mut glyph = Glyph::default();
+        glyph.id = '中' as Char16;
+        glyph.metrics = glyphPosition.metrics;
+
+        let glyphs: GlyphMap = GlyphMap::from([(
+            FontStackHasher::new(&fontStack),
+            Glyphs::from([('中' as Char16, Some(glyph))]),
+        )]);
+
+        let mut layout = SymbolLayout::new(
+            &parameters,
+            &layer_properties,
+            Box::new(layer_data),
+            &mut LayoutParameters {
+                bucketParameters: &mut parameters.clone(),
+                glyphDependencies: &mut glyphDependencies,
+                imageDependencies: &mut Default::default(),
+                availableImages: &mut Default::default(),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(glyphDependencies.len(), 1);
+
+        let empty_image_map = ImageMap::new();
+        layout.prepareSymbols(&glyphs, &glyphPositions, &empty_image_map, &image_positions);
+
+        let mut output = HashMap::new();
+        layout.createBucket(
+            image_positions,
+            Box::new(FeatureIndex),
+            &mut output,
+            false,
+            false,
+            &tile_id.canonical,
+        );
+
+        println!(
+            "{:#?}",
+            output.get("layer").unwrap().bucket.text.sharedVertices
+        )
+    }
+}

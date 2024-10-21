@@ -674,6 +674,8 @@ fn shapeLines(
                     rect = glyphPosition.rect;
                     metrics = glyphPosition.metrics.clone();
                 } else {
+                    // TODO why would a glyph position not be available but a glyph? Maybe if a glyph bitmap is empty?
+                    unreachable!();
                     let glyphs = glyphMap.get(&section.fontStackHash);
                     if (glyphs.is_none()) {
                         continue;

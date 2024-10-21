@@ -20,6 +20,7 @@ pub struct Glyph {
     pub left_bearing: i32,
     pub top_bearing: i32,
     h_advance: u32,
+
     /// x origin coordinate within the packed texture
     tex_origin_x: u32,
     /// y origin coordinate within the packed texture
@@ -51,21 +52,21 @@ impl Glyph {
     }
 }
 
-pub struct GlyphSet {
+pub struct GlyphAtlas {
     texture_bytes: Vec<u8>,
     texture_dimensions: (usize, usize),
     pub glyphs: BTreeMap<UnicodePoint, Glyph>,
 }
 
-impl TryFrom<&[u8]> for GlyphSet {
+impl TryFrom<&[u8]> for GlyphAtlas {
     type Error = DecodeError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        Ok(GlyphSet::from(sdf_glyphs::Glyphs::decode(value)?))
+        Ok(GlyphAtlas::from(sdf_glyphs::Glyphs::decode(value)?))
     }
 }
 
-impl From<sdf_glyphs::Glyphs> for GlyphSet {
+impl From<sdf_glyphs::Glyphs> for GlyphAtlas {
     fn from(pbf_glyphs: sdf_glyphs::Glyphs) -> Self {
         let stacks = pbf_glyphs.stacks;
         let mut texture: GrayImage = ImageBuffer::new(4096, 4096);
@@ -121,7 +122,7 @@ impl From<sdf_glyphs::Glyphs> for GlyphSet {
     }
 }
 
-impl GlyphSet {
+impl GlyphAtlas {
     pub fn get_texture_dimensions(&self) -> (usize, usize) {
         self.texture_dimensions
     }
