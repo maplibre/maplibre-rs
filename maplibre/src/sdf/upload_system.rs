@@ -92,6 +92,7 @@ fn upload_symbol_layer(
                 coords,
                 features,
                 buffer,
+                new_buffer,
                 ..
             }) = available_layers
                 .iter()

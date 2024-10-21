@@ -404,6 +404,22 @@ pub struct ShaderSymbolVertex {
     pub is_glyph: u32,
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+pub struct ShaderSymbolVertexNew {
+    // 4 bytes * 3 = 12 bytes
+    pub position: [f32; 3],
+    // 4 bytes * 3 = 12 bytes
+    pub text_anchor: [f32; 3],
+    // 4 bytes * 2 = 8 bytes
+    pub tex_coords: [f32; 2],
+    // 1 byte * 4 = 4 bytes
+    pub color: [u8; 4],
+    // 1 byte
+    pub is_glyph: u32,
+}
+
+
 pub struct SymbolShader {
     pub format: wgpu::TextureFormat,
 }
