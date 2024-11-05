@@ -52,21 +52,21 @@ impl Glyph {
     }
 }
 
-pub struct GlyphAtlas {
+pub struct GlyphSet {
     texture_bytes: Vec<u8>,
     texture_dimensions: (usize, usize),
     pub glyphs: BTreeMap<UnicodePoint, Glyph>,
 }
 
-impl TryFrom<&[u8]> for GlyphAtlas {
+impl TryFrom<&[u8]> for GlyphSet {
     type Error = DecodeError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        Ok(GlyphAtlas::from(sdf_glyphs::Glyphs::decode(value)?))
+        Ok(GlyphSet::from(sdf_glyphs::Glyphs::decode(value)?))
     }
 }
 
-impl From<sdf_glyphs::Glyphs> for GlyphAtlas {
+impl From<sdf_glyphs::Glyphs> for GlyphSet {
     fn from(pbf_glyphs: sdf_glyphs::Glyphs) -> Self {
         let stacks = pbf_glyphs.stacks;
         let mut texture: GrayImage = ImageBuffer::new(4096, 4096);
@@ -122,7 +122,7 @@ impl From<sdf_glyphs::Glyphs> for GlyphAtlas {
     }
 }
 
-impl GlyphAtlas {
+impl GlyphSet {
     pub fn get_texture_dimensions(&self) -> (usize, usize) {
         self.texture_dimensions
     }

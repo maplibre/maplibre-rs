@@ -1,39 +1,31 @@
 //! Tessellation for lines and polygons is implemented here.
 
-use std::collections::HashMap;
-use csscolorparser::Color;
 use geo_types::Geometry;
-use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
 use geozero::geo_types::GeoWriter;
+use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
 use lyon::{
     geom::euclid::{Box2D, Point2D},
-    tessellation::{
-        geometry_builder::MaxIndex, VertexBuffers,
-    },
+    tessellation::{geometry_builder::MaxIndex, VertexBuffers},
 };
+use std::collections::HashMap;
 
-use crate::{
-    sdf::{
-        text::{Anchor, Glyph, GlyphSet, SymbolVertexBuilder},
-        Feature, TileSpace,
-    },
-};
 use crate::euclid::{Rect, Size2D};
-use crate::io::geometry_index::IndexedGeometry;
 use crate::render::shaders::ShaderSymbolVertexNew;
 use crate::sdf::bidi::Char16;
-use crate::sdf::{CanonicalTileID, MapMode, OverscaledTileID};
 use crate::sdf::font_stack::FontStackHasher;
 use crate::sdf::geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer};
-use crate::sdf::glyph::{GlyphDependencies, GlyphMap, GlyphMetrics};
-use crate::sdf::glyph_atlas::{GlyphAtlas, GlyphPosition, GlyphPositionMap, GlyphPositions};
+use crate::sdf::glyph::{Glyph, GlyphDependencies, GlyphMap, GlyphMetrics, Glyphs};
+use crate::sdf::glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions};
 use crate::sdf::image::ImageMap;
 use crate::sdf::image_atlas::ImagePositions;
 use crate::sdf::layout::layout::{BucketParameters, LayerTypeInfo, LayoutParameters};
 use crate::sdf::layout::symbol_feature::{SymbolGeometryTileFeature, VectorGeometryTileFeature};
 use crate::sdf::layout::symbol_layout::{FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout};
 use crate::sdf::style_types::SymbolLayoutProperties_Unevaluated;
-
+use crate::sdf::{
+    Feature, TileSpace,
+};
+use crate::sdf::{CanonicalTileID, MapMode, OverscaledTileID};
 
 /// Vertex buffers index data type.
 pub type IndexDataType = u32; // Must match INDEX_FORMAT
@@ -56,7 +48,6 @@ pub struct TextTessellatorNew<I> {
 
 impl<I> TextTessellatorNew<I> {
     pub fn finish() {
-
         let fontStack = vec![
             "Open Sans Regular".to_string(),
             "Arial Unicode MS Regular".to_string(),
@@ -94,7 +85,6 @@ impl<I> TextTessellatorNew<I> {
 
         // layouting
 
-
         let mut glyphDependencies = GlyphDependencies::new();
 
         let tile_id = OverscaledTileID {
@@ -129,7 +119,8 @@ impl<I> TextTessellatorNew<I> {
                 imageDependencies: &mut Default::default(),
                 availableImages: &mut Default::default(),
             },
-        ).unwrap();
+        )
+        .unwrap();
 
         layout.prepareSymbols(&glyphs, &glyphPositions, &empty_image_map, &image_positions);
 
@@ -142,12 +133,10 @@ impl<I> TextTessellatorNew<I> {
             false,
             &tile_id.canonical,
         );
-
     }
 }
 
-impl<I> Default for TextTessellatorNew<I>
-{
+impl<I> Default for TextTessellatorNew<I> {
     fn default() -> Self {
         Self {
             geo_writer: Default::default(),
@@ -173,12 +162,7 @@ impl<I> GeomProcessor for TextTessellatorNew<I> {
     fn multipoint_begin(&mut self, size: usize, idx: usize) -> GeoResult<()> {
         self.geo_writer.multipoint_begin(size, idx)
     }
-    fn linestring_begin(
-        &mut self,
-        tagged: bool,
-        size: usize,
-        idx: usize,
-    ) -> GeoResult<()> {
+    fn linestring_begin(&mut self, tagged: bool, size: usize, idx: usize) -> GeoResult<()> {
         self.geo_writer.linestring_begin(tagged, size, idx)
     }
     fn linestring_end(&mut self, tagged: bool, idx: usize) -> GeoResult<()> {
@@ -205,7 +189,7 @@ impl<I> GeomProcessor for TextTessellatorNew<I> {
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyProcessor
-for TextTessellatorNew<I>
+    for TextTessellatorNew<I>
 {
     fn property(
         &mut self,
@@ -227,21 +211,21 @@ for TextTessellatorNew<I>
 }
 
 impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeatureProcessor
-for TextTessellatorNew<I>
+    for TextTessellatorNew<I>
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         let geometry = self.geo_writer.take_geometry();
 
         match geometry {
-            Some(Geometry::Point(point)) => self.geometries.push(
+            Some(Geometry::Point(point)) => {
 
-            ),
-            Some(Geometry::Polygon(polygon)) => self.geometries.push(
+            },
+            Some(Geometry::Polygon(polygon)) => {
 
-            ),
-            Some(Geometry::LineString(linestring)) => self.geometries.push(
+            },
+            Some(Geometry::LineString(linestring))  => {
 
-            ),
+            },
             Some(Geometry::Line(_))
             | Some(Geometry::MultiPoint(_))
             | Some(Geometry::MultiLineString(_))
@@ -256,6 +240,6 @@ for TextTessellatorNew<I>
             }
         };
 
-
+        Ok(())
     }
 }
