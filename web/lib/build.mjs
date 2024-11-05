@@ -59,6 +59,7 @@ if (multithreaded) {
 let baseConfig = {
     platform: "browser",
     bundle: true,
+    minify: release,
     assetNames: "assets/[name]",
     define: {
         WEBGL: `${webgl}`,
