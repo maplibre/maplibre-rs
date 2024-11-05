@@ -1,9 +1,7 @@
 //! Tessellation for lines and polygons is implemented here.
 
-use std::collections::HashMap;
 use csscolorparser::Color;
 use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
-use geozero::geo_types::GeoWriter;
 use lyon::{
     geom::euclid::{Box2D, Point2D},
     tessellation::{
@@ -14,7 +12,7 @@ use lyon::{
 use crate::{
     render::shaders::ShaderSymbolVertex,
     sdf::{
-        text::{Anchor, Glyph, GlyphAtlas, SymbolVertexBuilder},
+        text::{Anchor, Glyph, GlyphSet, SymbolVertexBuilder},
         Feature, TileSpace,
     },
 };
@@ -28,7 +26,7 @@ type GeoResult<T> = geozero::error::Result<T>;
 
 /// Build tessellations with vectors.
 pub struct TextTessellator<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> {
-    glyphs: GlyphAtlas,
+    glyphs: GlyphSet,
 
     // output
     pub quad_buffer: VertexBuffers<ShaderSymbolVertex, I>,
@@ -45,7 +43,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
 {
     fn default() -> Self {
         let data = include_bytes!("../../../data/0-255.pbf");
-        let glyphs = GlyphAtlas::try_from(data.as_slice()).unwrap();
+        let glyphs = GlyphSet::try_from(data.as_slice()).unwrap();
         Self {
             glyphs,
             quad_buffer: VertexBuffers::new(),

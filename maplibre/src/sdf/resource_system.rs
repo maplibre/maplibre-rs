@@ -10,7 +10,7 @@ use crate::{
         shaders::Shader,
         RenderResources, Renderer,
     },
-    sdf::{resource::GlyphTexture, text::GlyphAtlas, SymbolBufferPool, SymbolPipeline},
+    sdf::{resource::GlyphTexture, text::GlyphSet, SymbolBufferPool, SymbolPipeline},
     tcs::system::{SystemError, SystemResult},
     vector::resource::BufferPool,
 };
@@ -69,7 +69,7 @@ pub fn resource_system(
 
         let (texture, sampler) = glyph_texture_sampler.initialize(|| {
             let data = include_bytes!("../../../data/0-255.pbf");
-            let glyphs = GlyphAtlas::try_from(data.as_slice()).unwrap();
+            let glyphs = GlyphSet::try_from(data.as_slice()).unwrap();
 
             let (width, height) = glyphs.get_texture_dimensions();
 
