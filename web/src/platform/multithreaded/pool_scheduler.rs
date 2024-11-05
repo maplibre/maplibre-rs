@@ -36,12 +36,7 @@ impl Scheduler for WebWorkerPoolScheduler {
         T: Future<Output = ()> + 'static,
     {
         self.pool
-            .execute(move || {
-                wasm_bindgen_futures::future_to_promise(async move {
-                    future_factory().await;
-                    Ok(JsValue::undefined())
-                })
-            })
+            .execute(move || Box::pin(future_factory()))
             .map_err(|e| ScheduleError::Scheduling(Box::new(e)))
     }
 }

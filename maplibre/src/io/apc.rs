@@ -88,7 +88,7 @@ pub enum SendError {
 /// Allows sending messages from workers to back to the caller.
 pub trait Context: 'static {
     /// Send a message back to the caller.
-    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError>;
+    fn send_back<T: IntoMessage>(&self, message: T) -> Result<(), SendError>;
 }
 
 #[derive(Error, Debug)]
@@ -190,7 +190,7 @@ pub struct SchedulerContext {
 }
 
 impl Context for SchedulerContext {
-    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+    fn send_back<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
         self.sender
             .send(message.into())
             .map_err(|_e| SendError::Transmission)
@@ -282,7 +282,7 @@ pub mod tests {
     pub struct DummyContext;
 
     impl Context for DummyContext {
-        fn send<T: IntoMessage>(&self, _message: T) -> Result<(), SendError> {
+        fn send_back<T: IntoMessage>(&self, _message: T) -> Result<(), SendError> {
             Ok(())
         }
     }

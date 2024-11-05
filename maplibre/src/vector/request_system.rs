@@ -151,7 +151,7 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
                     log::error!("{e:?}");
                     for to_load in &fill_layers {
                         context
-                            .send(<T as VectorTransferables>::LayerMissing::build_from(
+                            .send_back(<T as VectorTransferables>::LayerMissing::build_from(
                                 coords,
                                 to_load.to_string(),
                             ))

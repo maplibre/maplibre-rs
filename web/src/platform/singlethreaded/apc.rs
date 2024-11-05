@@ -84,7 +84,7 @@ pub struct PassingContext {
 }
 
 impl Context for PassingContext {
-    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+    fn send_back<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
         let message = message.into();
         let tag = if WebMessageTag::LayerRaster.dyn_clone().as_ref() == message.tag() {
             &WebMessageTag::LayerRaster

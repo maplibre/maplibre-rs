@@ -55,7 +55,7 @@ impl<T: RasterTransferables, C: Context> ProcessRasterContext<T, C> {
         image_data: RgbaImage,
     ) -> Result<(), ProcessRasterError> {
         self.context
-            .send(T::LayerRaster::build_from(*coords, layer_name, image_data))
+            .send_back(T::LayerRaster::build_from(*coords, layer_name, image_data))
             .map_err(|e| ProcessRasterError::Processing(Box::new(e)))
     }
 }
