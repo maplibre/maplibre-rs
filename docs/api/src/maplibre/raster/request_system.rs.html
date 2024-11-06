@@ -297,7 +297,7 @@
                     <span class="macro">log::error!</span>(<span class="string">"{e:?}"</span>);
 
                     context
-                        .send(&lt;T <span class="kw">as </span>RasterTransferables&gt;::LayerRasterMissing::build_from(
+                        .send_back(&lt;T <span class="kw">as </span>RasterTransferables&gt;::LayerRasterMissing::build_from(
                             coords,
                         ))
                         .map_err(ProcedureError::Send)<span class="question-mark">?</span>;

@@ -141,7 +141,7 @@
         image_data: RgbaImage,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ProcessRasterError&gt; {
         <span class="self">self</span>.context
-            .send(T::LayerRaster::build_from(<span class="kw-2">*</span>coords, layer_name, image_data))
+            .send_back(T::LayerRaster::build_from(<span class="kw-2">*</span>coords, layer_name, image_data))
             .map_err(|e| ProcessRasterError::Processing(Box::new(e)))
     }
 }

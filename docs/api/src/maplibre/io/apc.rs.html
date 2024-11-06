@@ -377,7 +377,7 @@
 <span class="doccomment">/// Allows sending messages from workers to back to the caller.
 </span><span class="kw">pub trait </span>Context: <span class="lifetime">'static </span>{
     <span class="doccomment">/// Send a message back to the caller.
-    </span><span class="kw">fn </span>send&lt;T: IntoMessage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, message: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt;;
+    </span><span class="kw">fn </span>send_back&lt;T: IntoMessage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, message: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt;;
 }
 
 <span class="attr">#[derive(Error, Debug)]
@@ -479,7 +479,7 @@
 }
 
 <span class="kw">impl </span>Context <span class="kw">for </span>SchedulerContext {
-    <span class="kw">fn </span>send&lt;T: IntoMessage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, message: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt; {
+    <span class="kw">fn </span>send_back&lt;T: IntoMessage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, message: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt; {
         <span class="self">self</span>.sender
             .send(message.into())
             .map_err(|_e| SendError::Transmission)
@@ -571,7 +571,7 @@
     <span class="kw">pub struct </span>DummyContext;
 
     <span class="kw">impl </span>Context <span class="kw">for </span>DummyContext {
-        <span class="kw">fn </span>send&lt;T: IntoMessage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, _message: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt; {
+        <span class="kw">fn </span>send_back&lt;T: IntoMessage&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, _message: T) -&gt; <span class="prelude-ty">Result</span>&lt;(), SendError&gt; {
             <span class="prelude-val">Ok</span>(())
         }
     }
