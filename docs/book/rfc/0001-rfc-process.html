@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="light" dir="ltr">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -7,7 +7,7 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
@@ -32,7 +32,7 @@
         <link rel="stylesheet" href="../diff.css">
 
     </head>
-    <body class="sidebar-visible no-js">
+    <body>
     <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
@@ -61,19 +61,16 @@
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            var body = document.querySelector('body');
-            body.classList.remove('no-js')
-            body.classList.add('js');
+            html.classList.add("js");
         </script>
 
         <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var body = document.querySelector('body');
             var sidebar = null;
             var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
@@ -83,45 +80,27 @@
                 sidebar = 'hidden';
             }
             sidebar_toggle.checked = sidebar === 'visible';
-            body.classList.remove('sidebar-visible');
-            body.classList.add("sidebar-" + sidebar);
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="../supported-platforms.html">Supported Platforms</a></li><li class="chapter-item expanded affix "><a href="../developer-log.html">Developer Log</a></li><li class="chapter-item expanded "><a href="../user-guide/index.html"><strong aria-hidden="true">1.</strong> User Guide</a></li><li class="chapter-item expanded "><a href="../development-guide/index.html"><strong aria-hidden="true">2.</strong> Development Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-guide/how-to-run.html"><strong aria-hidden="true">2.1.</strong> How to Run Demos</a></li><li class="chapter-item expanded "><a href="../development-guide/building-libraries.html"><strong aria-hidden="true">2.2.</strong> Building Libraries</a></li><li class="chapter-item expanded "><a href="../development-guide/debugging.html"><strong aria-hidden="true">2.3.</strong> Debugging</a></li></ol></li><li class="chapter-item expanded "><a href="../development-documents/index.html"><strong aria-hidden="true">3.</strong> Development Documents</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-documents/architecture.html"><strong aria-hidden="true">3.1.</strong> Architecture</a></li><li class="chapter-item expanded "><a href="../development-documents/design.html"><strong aria-hidden="true">3.2.</strong> Design</a></li><li class="chapter-item expanded "><a href="../development-documents/caching.html"><strong aria-hidden="true">3.3.</strong> Caching</a></li><li class="chapter-item expanded "><a href="../development-documents/stencil-masking.html"><strong aria-hidden="true">3.4.</strong> Stencil Masking</a></li><li class="chapter-item expanded "><a href="../development-documents/font-rendering.html"><strong aria-hidden="true">3.5.</strong> Font Rendering</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging.html"><strong aria-hidden="true">3.6.</strong> Library Packaging</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../development-documents/library-packaging/apple.html"><strong aria-hidden="true">3.6.1.</strong> Apple</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging/android.html"><strong aria-hidden="true">3.6.2.</strong> Android</a></li><li class="chapter-item expanded "><a href="../development-documents/library-packaging/web.html"><strong aria-hidden="true">3.6.3.</strong> Web</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../appendix/index.html"><strong aria-hidden="true">4.</strong> Appendix</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../appendix/link-collection.html"><strong aria-hidden="true">4.1.</strong> Link Collection</a></li></ol></li><li class="chapter-item expanded "><a href="../rfc/0001-rfc-process.html" class="active"><strong aria-hidden="true">5.</strong> RFCs</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../rfc/0000-template.html"><strong aria-hidden="true">5.1.</strong> 0000-template</a></li><li class="chapter-item expanded "><a href="../rfc/0001-rfc-process.html" class="active"><strong aria-hidden="true">5.2.</strong> 0001-rfc-process</a></li></ol></li></ol>
-            </div>
+            <!-- populated by js -->
+            <div class="sidebar-scrollbox"></div>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <!-- Track and set sidebar scroll position -->
-        <script>
-            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
-            sidebarScrollbox.addEventListener('click', function(e) {
-                if (e.target.tagName === 'A') {
-                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
-                }
-            }, { passive: true });
-            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
-            sessionStorage.removeItem('sidebar-scroll');
-            if (sidebarScrollTop) {
-                // preserve sidebar scroll position when navigating via links within sidebar
-                sidebarScrollbox.scrollTop = sidebarScrollTop;
-            } else {
-                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
-                var activeSection = document.querySelector('#sidebar .active');
-                if (activeSection) {
-                    activeSection.scrollIntoView({ block: 'center' });
-                }
-            }
-        </script>
+        <script async src="../toc.js"></script>
 
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar-hover-placeholder"></div>
                 <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
                         <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
