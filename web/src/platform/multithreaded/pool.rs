@@ -140,7 +140,10 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    pub fn execute(&self, f: impl (FnOnce() -> PinnedFuture) + Send + 'static) -> Result<(), WebError> {
+    pub fn execute(
+        &self,
+        f: impl (FnOnce() -> PinnedFuture) + Send + 'static,
+    ) -> Result<(), WebError> {
         let worker = self.worker()?;
         let work = Work { func: Box::new(f) };
         let work_ptr = Box::into_raw(Box::new(work));
