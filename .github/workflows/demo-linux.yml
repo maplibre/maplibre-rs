@@ -8,7 +8,7 @@ jobs:
     name: Build
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/setup
         with:
@@ -24,7 +24,7 @@ jobs:
       - name: Test x86_64 linux
         shell: bash
         run: just test maplibre-demo x86_64-unknown-linux-gnu
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: maplibre-rs
           path: target/x86_64-unknown-linux-gnu/release/maplibre-demo
