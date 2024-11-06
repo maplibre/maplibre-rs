@@ -142,7 +142,7 @@ pub fn fetch_raster_apc<K: OffscreenKernel, T: RasterTransferables, C: Context +
                     log::error!("{e:?}");
 
                     context
-                        .send(<T as RasterTransferables>::LayerRasterMissing::build_from(
+                        .send_back(<T as RasterTransferables>::LayerRasterMissing::build_from(
                             coords,
                         ))
                         .map_err(ProcedureError::Send)?;

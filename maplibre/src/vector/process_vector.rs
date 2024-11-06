@@ -125,7 +125,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
 
     fn tile_finished(&mut self, coords: &WorldTileCoords) -> Result<(), ProcessVectorError> {
         self.context
-            .send(T::TileTessellated::build_from(*coords))
+            .send_back(T::TileTessellated::build_from(*coords))
             .map_err(|e| ProcessVectorError::SendError(e))
     }
 
@@ -135,7 +135,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
         layer_name: &str,
     ) -> Result<(), ProcessVectorError> {
         self.context
-            .send(T::LayerMissing::build_from(*coords, layer_name.to_owned()))
+            .send_back(T::LayerMissing::build_from(*coords, layer_name.to_owned()))
             .map_err(|e| ProcessVectorError::SendError(e))
     }
 
@@ -147,7 +147,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
         layer_data: tile::Layer,
     ) -> Result<(), ProcessVectorError> {
         self.context
-            .send(T::LayerTessellated::build_from(
+            .send_back(T::LayerTessellated::build_from(
                 *coords,
                 buffer,
                 feature_indices,
@@ -162,7 +162,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
         geometries: Vec<IndexedGeometry<f64>>,
     ) -> Result<(), ProcessVectorError> {
         self.context
-            .send(T::LayerIndexed::build_from(
+            .send_back(T::LayerIndexed::build_from(
                 *coords,
                 TileIndex::Linear { list: geometries },
             ))

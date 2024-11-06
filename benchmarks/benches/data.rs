@@ -21,7 +21,7 @@ const MUNICH_COORDS: TileCoords = TileCoords {
 pub struct DummyContext;
 
 impl Context for DummyContext {
-    fn send<T: IntoMessage>(&self, _message: T) -> Result<(), SendError> {
+    fn send_back<T: IntoMessage>(&self, _message: T) -> Result<(), SendError> {
         Ok(())
     }
 }

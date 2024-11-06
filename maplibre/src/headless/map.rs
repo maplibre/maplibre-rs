@@ -162,7 +162,7 @@ pub struct HeadlessContext {
 }
 
 impl Context for HeadlessContext {
-    fn send<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
+    fn send_back<T: IntoMessage>(&self, message: T) -> Result<(), SendError> {
         self.messages.deref().borrow_mut().push(message.into());
         Ok(())
     }

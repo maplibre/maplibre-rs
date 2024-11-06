@@ -4,7 +4,6 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use js_sys::Promise;
 use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 use web_sys::Worker;
@@ -17,8 +16,10 @@ extern "C" {
     fn new_worker() -> JsValue;
 }
 
+pub type PinnedFuture = std::pin::Pin<Box<(dyn std::future::Future<Output = ()> + 'static)>>;
+
 type NewWorker = Box<dyn Fn() -> Result<Worker, WebError>>;
-type Execute = Box<dyn (FnOnce() -> Promise) + Send>;
+type Execute = Box<dyn (FnOnce() -> PinnedFuture) + Send>;
 
 pub struct WorkerPool {
     new_worker: NewWorker,
@@ -44,7 +45,7 @@ pub struct Work {
 }
 
 impl Work {
-    pub fn execute(self) -> Promise {
+    pub fn execute(self) -> PinnedFuture {
         (self.func)()
     }
 }
@@ -139,13 +140,16 @@ impl WorkerPool {
     ///
     /// Returns any error that may happen while a JS web worker is created and a
     /// message is sent to it.
-    pub fn execute(&self, f: impl (FnOnce() -> Promise) + Send + 'static) -> Result<(), WebError> {
+    pub fn execute(
+        &self,
+        f: impl (FnOnce() -> PinnedFuture) + Send + 'static,
+    ) -> Result<(), WebError> {
         let worker = self.worker()?;
         let work = Work { func: Box::new(f) };
         let work_ptr = Box::into_raw(Box::new(work));
         match worker.post_message(
             &js_sys::Object::from_entries(&js_sys::Array::of2(
-                &js_sys::Array::of2(&JsValue::from("type"), &js_sys::JsString::from("call")),
+                &js_sys::Array::of2(&JsValue::from("type"), &js_sys::JsString::from("pool_call")),
                 &js_sys::Array::of2(&JsValue::from("work_ptr"), &JsValue::from(work_ptr as u32)),
             ))
             .expect("can not fail"),
