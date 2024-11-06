@@ -25,7 +25,7 @@ export const startMapLibre = async (wasmPath: string | undefined, workerPath: st
     preventDefaultTouchActions();
 
     if (MULTITHREADED) {
-        const MEMORY = 209715200; // 200MB
+        const MEMORY = 900 * 1024 * 1024; // 900 MB
         const PAGES = 64 * 1024;
 
         const memory = new WebAssembly.Memory({initial: 1024, maximum: MEMORY / PAGES, shared: true})
