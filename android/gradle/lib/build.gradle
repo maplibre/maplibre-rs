@@ -8,7 +8,7 @@ apply plugin: 'kotlin-android'
 
 android {
     // Also update NDK in library-android.yml
-    ndkVersion "27.1.12297006"
+    ndkVersion "27.2.12479018"
 
     compileSdkVersion 31
     
