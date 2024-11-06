@@ -16,14 +16,6 @@ jobs:
           targets: x86_64-linux-android aarch64-linux-android i686-linux-android
       - name: Install Dependencies
         uses: ./.github/actions/install-system-dependencies
-      - name: Set NDK Version
-        shell: bash
-        run: |
-          ANDROID_ROOT=/usr/local/lib/android
-          ANDROID_SDK_ROOT=${ANDROID_ROOT}/sdk
-          ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk-bundle
-          ln -sfn $ANDROID_SDK_ROOT/ndk/27.1.12297006 $ANDROID_NDK_ROOT
-        # Also update NDK in build.gradle
       - name: Build
         shell: bash
         run: just build-android
