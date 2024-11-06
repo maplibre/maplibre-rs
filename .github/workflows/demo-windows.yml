@@ -22,7 +22,7 @@ jobs:
       - name: Show bash PATH
         shell: bash
         run: echo $PATH
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/setup
         with:
@@ -38,7 +38,7 @@ jobs:
       - name: Test x86_64 windows
         shell: powershell
         run: just test maplibre-demo x86_64-pc-windows-msvc
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: maplibre-x86_64-windows-demo
           path: target/x86_64-pc-windows-msvc/release/maplibre-demo.exe
