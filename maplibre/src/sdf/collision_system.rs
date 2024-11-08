@@ -67,7 +67,11 @@ impl System for CollisionSystem {
                 for layer in &component.layers {
                     let mut feature_metadata = vec![
                         SDFShaderFeatureMetadata::default();
-                        layer.features.last().map(|feature| feature.indices.end).unwrap_or_default()
+                        layer
+                            .features
+                            .last()
+                            .map(|feature| feature.indices.end)
+                            .unwrap_or_default()
                     ];
 
                     for feature in &layer.features {
@@ -207,10 +211,13 @@ impl System for CollisionSystem {
                                 continue;
                             }
 
-                            symbol_buffer_pool.update_feature_metadata(queue, entry, &feature_metadata);
+                            symbol_buffer_pool.update_feature_metadata(
+                                queue,
+                                entry,
+                                &feature_metadata,
+                            );
                         }
                     }
-
                 }
             }
         }

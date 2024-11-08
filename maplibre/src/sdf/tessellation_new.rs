@@ -1,31 +1,36 @@
 //! Tessellation for lines and polygons is implemented here.
 
+use std::collections::HashMap;
+
 use geo_types::Geometry;
-use geozero::geo_types::GeoWriter;
-use geozero::{ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor};
+use geozero::{
+    geo_types::GeoWriter, ColumnValue, FeatureProcessor, GeomProcessor, PropertyProcessor,
+};
 use lyon::{
     geom::euclid::{Box2D, Point2D},
     tessellation::{geometry_builder::MaxIndex, VertexBuffers},
 };
-use std::collections::HashMap;
 
-use crate::euclid::{Rect, Size2D};
-use crate::render::shaders::ShaderSymbolVertexNew;
-use crate::sdf::bidi::Char16;
-use crate::sdf::font_stack::FontStackHasher;
-use crate::sdf::geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer};
-use crate::sdf::glyph::{Glyph, GlyphDependencies, GlyphMap, GlyphMetrics, Glyphs};
-use crate::sdf::glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions};
-use crate::sdf::image::ImageMap;
-use crate::sdf::image_atlas::ImagePositions;
-use crate::sdf::layout::layout::{BucketParameters, LayerTypeInfo, LayoutParameters};
-use crate::sdf::layout::symbol_feature::{SymbolGeometryTileFeature, VectorGeometryTileFeature};
-use crate::sdf::layout::symbol_layout::{FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout};
-use crate::sdf::style_types::SymbolLayoutProperties_Unevaluated;
-use crate::sdf::{
-    Feature, TileSpace,
+use crate::{
+    euclid::{Rect, Size2D},
+    render::shaders::ShaderSymbolVertexNew,
+    sdf::{
+        bidi::Char16,
+        font_stack::FontStackHasher,
+        geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer},
+        glyph::{Glyph, GlyphDependencies, GlyphMap, GlyphMetrics, Glyphs},
+        glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions},
+        image::ImageMap,
+        image_atlas::ImagePositions,
+        layout::{
+            layout::{BucketParameters, LayerTypeInfo, LayoutParameters},
+            symbol_feature::{SymbolGeometryTileFeature, VectorGeometryTileFeature},
+            symbol_layout::{FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout},
+        },
+        style_types::SymbolLayoutProperties_Unevaluated,
+        CanonicalTileID, Feature, MapMode, OverscaledTileID, TileSpace,
+    },
 };
-use crate::sdf::{CanonicalTileID, MapMode, OverscaledTileID};
 
 /// Vertex buffers index data type.
 pub type IndexDataType = u32; // Must match INDEX_FORMAT
@@ -217,15 +222,9 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
         let geometry = self.geo_writer.take_geometry();
 
         match geometry {
-            Some(Geometry::Point(point)) => {
-
-            },
-            Some(Geometry::Polygon(polygon)) => {
-
-            },
-            Some(Geometry::LineString(linestring))  => {
-
-            },
+            Some(Geometry::Point(point)) => {}
+            Some(Geometry::Polygon(polygon)) => {}
+            Some(Geometry::LineString(linestring)) => {}
             Some(Geometry::Line(_))
             | Some(Geometry::MultiPoint(_))
             | Some(Geometry::MultiLineString(_))

@@ -3,6 +3,7 @@ use std::{
     marker::PhantomData,
     ops::Range,
 };
+
 use geo_types::GeometryCollection;
 
 use crate::{

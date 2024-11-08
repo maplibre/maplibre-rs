@@ -103,7 +103,12 @@ fn upload_symbol_layer(
 
             // Assign every feature in the layer the color from the style
             let feature_metadata = iter::repeat(SDFShaderFeatureMetadata { opacity: 0.0 })
-                .take(features.last().map(|feature| feature.indices.end).unwrap_or_default())
+                .take(
+                    features
+                        .last()
+                        .map(|feature| feature.indices.end)
+                        .unwrap_or_default(),
+                )
                 .collect::<Vec<_>>();
 
             // FIXME avoid uploading empty indices
