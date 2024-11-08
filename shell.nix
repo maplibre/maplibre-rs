@@ -1,4 +1,4 @@
-# This nix-shell only supports macOS right now. Soon I will also add support for Linux
+# This nix-shell supports macOS and Linux.
 # The repository supports direnv (https://direnv.net/). If your IDE supports direnv,
 # then you do not need to care about dependencies.
 
@@ -10,7 +10,7 @@ with pkgs;
 let
   unstable = import
     (builtins.fetchTarball {
-      url = "https://github.com/NixOS/nixpkgs/archive/075dce259f6ced5cee1226dd76474d0674b54e64.tar.gz";
+      url = "https://github.com/NixOS/nixpkgs/archive/cb9a96f23c491c081b38eab96d22fa958043c9fa.tar.gz"; # Ger from here: https://github.com/NixOS/nixpkgs/tree/nixos-unstable
     })
     { };
 in
@@ -31,11 +31,14 @@ in
       hash = "sha256-1VwY8vQy7soKEgbki4LD+v259751kKxSxmo/gqE6yV0=";
       cargoHash = "sha256-aACJ+lYNEU8FFBs158G1/JG8sc6Rq080PeKCMnwdpH0=";
     })
-    unstable.tracy
+    pkgs.cargo-criterion
     unstable.nixpkgs-fmt # To format this file: nixpkgs-fmt *.nix
     # System dependencies
     unstable.flatbuffers
     unstable.protobuf
+
+    unstable.tracy-x11
+    unstable.renderdoc
 
     pkgs.jdk17
 
@@ -50,10 +53,12 @@ in
     unstable.wayland
   ];
   shellHook = ''
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ unstable.libxkbcommon ] }";
-    # Vulkan
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.vulkan-loader ] }";
-    # EGL
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [ pkgs.libglvnd ] }";
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${ pkgs.lib.makeLibraryPath [
+        unstable.libxkbcommon
+        # Vulkan
+        pkgs.vulkan-loader
+         # EGL
+        pkgs.libglvnd
+    ] }";
   '';
 }

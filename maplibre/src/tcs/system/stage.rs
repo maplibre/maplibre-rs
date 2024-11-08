@@ -1,6 +1,6 @@
 use crate::{
     context::MapContext,
-    schedule::Stage,
+    schedule::{Stage, StageResult},
     tcs::system::{IntoSystemContainer, SystemContainer},
 };
 
@@ -23,12 +23,13 @@ impl SystemStage {
 }
 
 impl Stage for SystemStage {
-    fn run(&mut self, context: &mut MapContext) {
+    fn run(&mut self, context: &mut MapContext) -> StageResult {
         for container in &mut self.systems {
             #[cfg(feature = "trace")]
             let _span =
                 tracing::info_span!("system", name = container.system.name().as_ref()).entered();
-            container.system.run(context)
+            container.system.run(context)?
         }
+        Ok(())
     }
 }

@@ -6,7 +6,7 @@ use crate::{
         resource::{BufferedTextureHead, Head},
         Renderer,
     },
-    tcs::system::System,
+    tcs::system::{System, SystemError},
 };
 
 /// Stage which writes the current contents of the GPU/CPU buffer in [`BufferedTextureHead`]
@@ -41,10 +41,10 @@ impl System for WriteSurfaceBufferSystem {
                 },
             ..
         }: &mut MapContext,
-    ) {
+    ) -> Result<(), SystemError> {
         let surface = state.surface();
         match surface.head() {
-            Head::Headed(_) => {}
+            Head::Headed(_) => Err(SystemError::Setup),
             Head::Headless(buffered_texture) => {
                 let buffered_texture: Arc<BufferedTextureHead> = buffered_texture.clone();
 
@@ -69,6 +69,7 @@ impl System for WriteSurfaceBufferSystem {
                 buffered_texture.unmap();
 
                 self.frame += 1;
+                Ok(())
             }
         }
     }

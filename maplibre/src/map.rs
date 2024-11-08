@@ -16,7 +16,7 @@ use crate::{
         graph::RenderGraphError,
         view_state::ViewState,
     },
-    schedule::{Schedule, Stage},
+    schedule::{Schedule, Stage, StageError},
     style::Style,
     tcs::world::World,
     window::{HeadedMapWindow, MapWindow, MapWindowConfig, WindowCreateError},
@@ -35,6 +35,8 @@ pub enum MapError {
     DeviceInit(RenderError),
     #[error("creating window failed")]
     Window(#[from] WindowCreateError),
+    #[error("executing stage must not error")]
+    StageError(#[from] StageError),
 }
 
 pub enum CurrentMapContext {
@@ -174,7 +176,7 @@ where
     pub fn run_schedule(&mut self) -> Result<(), MapError> {
         match &mut self.map_context {
             CurrentMapContext::Ready(map_context) => {
-                self.schedule.run(map_context);
+                self.schedule.run(map_context)?;
                 Ok(())
             }
             CurrentMapContext::Pending { .. } => Err(MapError::RendererNotReady),

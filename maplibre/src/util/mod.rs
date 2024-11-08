@@ -17,6 +17,7 @@ pub trait SignificantlyDifferent<Rhs: ?Sized = Self> {
     fn ne(&self, other: &Rhs, epsilon: Self::Epsilon) -> bool;
 }
 
+#[derive(Clone)]
 pub struct ChangeObserver<T> {
     inner: T,
     reference_value: Option<T>,
