@@ -14,17 +14,17 @@ pub type UnicodePoint = char;
 
 #[derive(Debug)]
 pub struct Glyph {
-    codepoint: UnicodePoint,
-    width: u32,
-    height: u32,
+    pub codepoint: UnicodePoint,
+    pub width: u32,
+    pub height: u32,
     pub left_bearing: i32,
     pub top_bearing: i32,
-    h_advance: u32,
+    pub h_advance: u32,
 
     /// x origin coordinate within the packed texture
-    tex_origin_x: u32,
+    pub tex_origin_x: u32,
     /// y origin coordinate within the packed texture
-    tex_origin_y: u32,
+    pub tex_origin_y: u32,
 }
 
 impl Glyph {

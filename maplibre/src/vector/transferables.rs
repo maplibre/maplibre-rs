@@ -15,6 +15,7 @@ use crate::{
         AvailableVectorLayerBucket, MissingVectorLayerBucket,
     },
 };
+use crate::render::shaders::ShaderSymbolVertexNew;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum VectorMessageTag {
@@ -80,6 +81,7 @@ pub trait SymbolLayerTessellated: IntoMessage + Debug + Send {
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+        new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
         features: Vec<Feature>,
         layer_data: Layer,
     ) -> Self
@@ -238,6 +240,7 @@ impl LayerTessellated for DefaultLayerTessellated {
 pub struct DefaultSymbolLayerTessellated {
     pub coords: WorldTileCoords,
     pub buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+    pub new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
     pub features: Vec<Feature>,
     pub layer_data: Layer, // FIXME (perf): Introduce a better structure for this
 }
@@ -262,12 +265,14 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+        new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
         features: Vec<Feature>,
         layer_data: Layer,
     ) -> Self {
         Self {
             coords,
             buffer,
+            new_buffer,
             features,
             layer_data,
         }
@@ -286,6 +291,7 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
             coords: self.coords,
             source_layer: self.layer_data.name,
             buffer: self.buffer,
+            new_buffer: self.new_buffer,
             features: self.features,
         }
     }

@@ -3,7 +3,6 @@ use std::{
     marker::PhantomData,
     ops::Range,
 };
-
 use geo_types::GeometryCollection;
 
 use crate::{
@@ -29,15 +28,15 @@ struct PatternDependency;
 
 #[derive(Clone, Debug)]
 pub struct SymbolVertex {
-    labelAnchor: Point2D<f64, TileSpace>,
-    o: Point2D<f64, TileSpace>,
-    glyphOffsetY: f64,
-    tx: u16,
-    ty: u16,
-    sizeData: Range<f64>,
-    isSDF: bool,
-    pixelOffset: Point2D<f64, TileSpace>,
-    minFontScale: Point2D<f64, TileSpace>,
+    pub labelAnchor: Point2D<f64, TileSpace>,
+    pub o: Point2D<f64, TileSpace>,
+    pub glyphOffsetY: f64,
+    pub tx: u16,
+    pub ty: u16,
+    pub sizeData: Range<f64>,
+    pub isSDF: bool,
+    pub pixelOffset: Point2D<f64, TileSpace>,
+    pub minFontScale: Point2D<f64, TileSpace>,
 }
 
 impl SymbolVertex {
@@ -111,7 +110,7 @@ impl SymbolSizeBinder {
 struct FeatureSortOrder;
 #[derive(Default, Clone, Debug)]
 pub struct TriangleIndexVector {
-    indices: Vec<u16>,
+    pub indices: Vec<u16>,
 }
 impl TriangleIndexVector {
     pub fn push(&mut self, a: u16, b: u16, c: u16) {
@@ -186,13 +185,13 @@ type SegmentVector<T> = Vec<Segment<T>>;
 
 #[derive(Default, Clone, Debug)]
 pub struct SymbolBucketBuffer {
-    pub sharedVertices: Box<VertexVector>,
-    pub sharedDynamicVertices: Box<DynamicVertexVector>,
-    pub sharedOpacityVertices: Box<OpacityVertexVector>,
+    pub sharedVertices: VertexVector,
+    pub sharedDynamicVertices: DynamicVertexVector,
+    pub sharedOpacityVertices: OpacityVertexVector,
 
     // type TriangleIndexVector = gfx::IndexVector<gfx::Triangles>,
-    pub sharedTriangles: Box<TriangleIndexVector>,
-    pub triangles: Box<TriangleIndexVector>,
+    pub sharedTriangles: TriangleIndexVector,
+    pub triangles: TriangleIndexVector,
     //TODO triangles: &TriangleIndexVector = *sharedTriangles,
     pub segments: SegmentVector<SymbolTextAttributes>,
     pub placedSymbols: Vec<PlacedSymbol>,

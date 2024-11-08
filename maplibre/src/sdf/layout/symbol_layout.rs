@@ -68,8 +68,8 @@ pub type Bucket = SymbolBucket;
 
 #[derive(Debug)]
 pub struct LayerRenderData {
-    bucket: Rc<Bucket>,
-    layerProperties: LayerProperties,
+    pub bucket: Bucket,
+    pub layerProperties: LayerProperties,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -1027,7 +1027,7 @@ impl SymbolLayout {
                 renderData.insert(
                     pair.0.clone(),
                     LayerRenderData {
-                        bucket: Rc::new(bucket.clone()), // TODO is cloning intended here?
+                        bucket: bucket.clone(), // TODO is cloning intended here?
                         layerProperties: pair.1.clone(),
                     },
                 );

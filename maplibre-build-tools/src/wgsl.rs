@@ -62,15 +62,19 @@ pub fn validate_project_wgsl() {
             Ok(entry) => {
                 let path = entry.path();
                 if !path.is_dir() {
+                    println!(
+                        "cargo:rerun-if-changed={}",
+                        path.display().to_string()
+                    );
                     match validate_wgsl(&mut validator, path) {
                         Ok(_) => {}
                         Err(err) => {
                             let path = path.strip_prefix(&root_dir).unwrap_or(path);
-                            println!(
-                                "cargo:warning={}{}",
+                            panic!(
+                                "{}{}",
                                 path.to_str().unwrap(),
                                 match err {
-                                    WgslError::ValidationErr(error) => format!(": {error:?}"),
+                                    WgslError::ValidationErr(error) => format!(": {error}"),
                                     WgslError::ParserErr { error, location } =>
                                         if let Some(SourceLocation {
                                             line_number,
@@ -82,10 +86,9 @@ pub fn validate_project_wgsl() {
                                         } else {
                                             error
                                         },
-                                    WgslError::IoErr(error) => format!(": {error:?}"),
+                                    WgslError::IoErr(error) => format!(": {error}"),
                                 }
                             );
-                            exit(1);
                         }
                     };
                 }

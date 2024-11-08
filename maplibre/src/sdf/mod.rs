@@ -25,7 +25,7 @@ use crate::{
         VectorTransferables,
     },
 };
-use crate::sdf::layout::symbol_layout::LayerRenderData;
+use crate::render::shaders::ShaderSymbolVertexNew;
 
 mod populate_world_system;
 mod queue_system;
@@ -35,27 +35,27 @@ mod resource_system;
 mod upload_system;
 
 // Public due to bechmarks
-mod bidi;
-mod buckets;
-mod collision_feature;
-mod collision_index;
-mod collision_system;
-mod font_stack;
-mod geometry;
-mod geometry_tile_data;
-mod glyph;
-mod glyph_atlas;
-mod glyph_range;
-mod grid_index;
-mod image;
-mod image_atlas;
-mod layout;
-mod quads;
-mod shaping;
-mod style_types;
-mod tagged_string;
+pub mod bidi;
+pub  mod buckets;
+pub  mod collision_feature;
+pub  mod collision_index;
+pub  mod collision_system;
+pub  mod font_stack;
+pub mod geometry;
+pub mod geometry_tile_data;
+pub mod glyph;
+pub mod glyph_atlas;
+pub mod glyph_range;
+pub mod grid_index;
+pub mod image;
+pub mod image_atlas;
+pub mod layout;
+pub mod quads;
+pub mod shaping;
+pub mod style_types;
+pub mod tagged_string;
 pub mod tessellation;
-mod text;
+pub mod text;
 mod util;
 mod tessellation_new;
 
@@ -72,7 +72,7 @@ impl Deref for SymbolPipeline {
 pub type SymbolBufferPool = BufferPool<
     wgpu::Queue,
     wgpu::Buffer,
-    ShaderSymbolVertex,
+    ShaderSymbolVertexNew,
     IndexDataType,
     ShaderLayerMetadata,
     SDFShaderFeatureMetadata,
@@ -130,7 +130,7 @@ pub struct SymbolLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
     pub buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
-    pub new_buffer: LayerRenderData, // TODO
+    pub new_buffer:OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>, // TODO
     pub features: Vec<Feature>,
 }
 
@@ -166,7 +166,7 @@ pub struct CanonicalTileID {
 
 // TODO
 #[derive(Copy, Clone)]
-struct OverscaledTileID {
+pub struct OverscaledTileID {
     pub canonical: CanonicalTileID,
     pub overscaledZ: u8,
 }

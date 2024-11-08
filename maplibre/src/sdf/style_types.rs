@@ -815,7 +815,7 @@ pub mod expression {
             // TODO remove
             Formatted {
                 sections: vec![FormattedSection {
-                    text: "中中中中".to_string(),
+                    text: "AllerAnfangistschwer".to_string(),
                     image: None,
                     fontScale: None,
                     fontStack: None,
