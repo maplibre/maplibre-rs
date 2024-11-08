@@ -8,14 +8,16 @@ use crate::{
         apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
-    render::{shaders::ShaderSymbolVertex, ShaderVertex},
+    render::{
+        shaders::{ShaderSymbolVertex, ShaderSymbolVertexNew},
+        ShaderVertex,
+    },
     sdf::{Feature, SymbolLayerData},
     vector::{
         tessellation::{IndexDataType, OverAlignedVertexBuffer},
         AvailableVectorLayerBucket, MissingVectorLayerBucket,
     },
 };
-use crate::render::shaders::ShaderSymbolVertexNew;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum VectorMessageTag {

@@ -13,7 +13,10 @@ use crate::{
     render::{
         eventually::Eventually,
         graph::RenderGraph,
-        shaders::{SDFShaderFeatureMetadata, ShaderLayerMetadata, ShaderSymbolVertex},
+        shaders::{
+            SDFShaderFeatureMetadata, ShaderLayerMetadata, ShaderSymbolVertex,
+            ShaderSymbolVertexNew,
+        },
         RenderStageLabel,
     },
     schedule::Schedule,
@@ -25,7 +28,6 @@ use crate::{
         VectorTransferables,
     },
 };
-use crate::render::shaders::ShaderSymbolVertexNew;
 
 mod populate_world_system;
 mod queue_system;
@@ -36,11 +38,11 @@ mod upload_system;
 
 // Public due to bechmarks
 pub mod bidi;
-pub  mod buckets;
-pub  mod collision_feature;
-pub  mod collision_index;
-pub  mod collision_system;
-pub  mod font_stack;
+pub mod buckets;
+pub mod collision_feature;
+pub mod collision_index;
+pub mod collision_system;
+pub mod font_stack;
 pub mod geometry;
 pub mod geometry_tile_data;
 pub mod glyph;
@@ -55,9 +57,9 @@ pub mod shaping;
 pub mod style_types;
 pub mod tagged_string;
 pub mod tessellation;
+mod tessellation_new;
 pub mod text;
 mod util;
-mod tessellation_new;
 
 struct SymbolPipeline(wgpu::RenderPipeline);
 
@@ -130,7 +132,7 @@ pub struct SymbolLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
     pub buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
-    pub new_buffer:OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>, // TODO
+    pub new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>, // TODO
     pub features: Vec<Feature>,
 }
 

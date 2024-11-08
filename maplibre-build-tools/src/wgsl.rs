@@ -62,10 +62,7 @@ pub fn validate_project_wgsl() {
             Ok(entry) => {
                 let path = entry.path();
                 if !path.is_dir() {
-                    println!(
-                        "cargo:rerun-if-changed={}",
-                        path.display().to_string()
-                    );
+                    println!("cargo:rerun-if-changed={}", path.display().to_string());
                     match validate_wgsl(&mut validator, path) {
                         Ok(_) => {}
                         Err(err) => {
