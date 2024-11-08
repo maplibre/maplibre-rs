@@ -95,7 +95,7 @@ trait Align<V: Pod, I: Pod> {
 impl<V: Pod, I: Pod> Align<V, I> for VertexBuffers<V, I> {
     fn align_vertices(&mut self) {
         let align = wgpu::COPY_BUFFER_ALIGNMENT;
-        let stride = std::mem::size_of::<ShaderVertex>() as wgpu::BufferAddress;
+        let stride = std::mem::size_of::<V>() as wgpu::BufferAddress;
         let unpadded_bytes = self.vertices.len() as wgpu::BufferAddress * stride;
         let padding_bytes = (align - unpadded_bytes % align) % align;
 

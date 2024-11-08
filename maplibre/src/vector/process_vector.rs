@@ -1,9 +1,10 @@
 use std::{borrow::Cow, collections::HashSet, marker::PhantomData};
-
+use std::collections::HashMap;
 use geozero::{
     mvt::{tile, Message},
     GeozeroDatasource,
 };
+use lyon::tessellation::VertexBuffers;
 use thiserror::Error;
 
 use crate::{
@@ -23,6 +24,23 @@ use crate::{
         },
     },
 };
+use crate::euclid::{Point2D, Rect, Size2D};
+use crate::render::shaders::ShaderSymbolVertexNew;
+use crate::sdf::bidi::Char16;
+use crate::sdf::font_stack::FontStackHasher;
+use crate::sdf::geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer};
+use crate::sdf::glyph::{Glyph, GlyphDependencies, GlyphMap, GlyphMetrics, Glyphs};
+use crate::sdf::glyph_atlas::{GlyphPosition, GlyphPositionMap, GlyphPositions};
+use crate::sdf::image::ImageMap;
+use crate::sdf::image_atlas::ImagePositions;
+use crate::sdf::layout::layout::{BucketParameters, LayerTypeInfo, LayoutParameters};
+use crate::sdf::layout::symbol_feature::{SymbolGeometryTileFeature, VectorGeometryTileFeature};
+use crate::sdf::layout::symbol_layout::{FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout};
+use crate::sdf::{CanonicalTileID, MapMode, OverscaledTileID};
+use crate::sdf::buckets::symbol_bucket::{SymbolBucketBuffer};
+use crate::sdf::style_types::SymbolLayoutProperties_Unevaluated;
+use crate::sdf::tagged_string::SectionOptions;
+use crate::sdf::text::GlyphSet;
 
 #[derive(Error, Debug)]
 pub enum ProcessVectorError {
@@ -79,10 +97,123 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                         }
                     }
                     LayerPaint::Symbol(_) => {
+
+                        let data = include_bytes!("../../../data/0-255.pbf");
+                        let glyphs = GlyphSet::try_from(data.as_slice()).unwrap();
+
+
+                        let fontStack = vec![
+                            "Open Sans Regular".to_string(),
+                            "Arial Unicode MS Regular".to_string(),
+                        ];
+
+                        let layer_name = "layer".to_string();
+
+                        let sectionOptions = SectionOptions::new(1.0, fontStack.clone(), None);
+
+                        let mut glyphDependencies = GlyphDependencies::new();
+
+                        let tile_id = OverscaledTileID {
+                            canonical: CanonicalTileID { x: 0, y: 0, z: 0 },
+                            overscaledZ: 0,
+                        };
+                        let mut parameters = BucketParameters {
+                            tileID: tile_id,
+                            mode: MapMode::Continuous,
+                            pixelRatio: 1.0,
+                            layerType: LayerTypeInfo,
+                        };
+                        let layer_data = SymbolGeometryTileLayer {
+                            name: layer_name.clone(),
+                            features: vec![SymbolGeometryTileFeature::new(Box::new(
+                                VectorGeometryTileFeature {
+                                    geometry: vec![GeometryCoordinates(vec![Point2D::new(512, 512)])],
+                                },
+                            ))],
+                        };
+                        let layer_properties = vec![LayerProperties {
+                            id: layer_name.clone(),
+                            layer: SymbolLayer {
+                                layout: SymbolLayoutProperties_Unevaluated,
+                            },
+                        }];
+
+                        let image_positions = ImagePositions::new();
+
+                        let map = GlyphPositionMap::from_iter(glyphs.glyphs.iter().map(|(unicode_point, glyph)| (*unicode_point as Char16, GlyphPosition {
+                            rect: Rect::new(Point2D::new(glyph.tex_origin_x as u16 +3, glyph.tex_origin_y as u16 +3), Size2D::new(glyph.buffered_dimensions().0 as u16, glyph.buffered_dimensions().1 as u16)), // FIXME: verify if this mapping is correct
+                            metrics: GlyphMetrics {
+                                width: glyph.width,
+                                height: glyph.height,
+                                left: glyph.left_bearing,
+                                top: glyph.top_bearing,
+                                advance: glyph.h_advance,
+                            }
+                        })));
+                        let option = map.get(&('H' as Char16)).unwrap();
+
+                        let glyphPositions: GlyphPositions = GlyphPositions::from([(
+                            FontStackHasher::new(&fontStack),
+                            map,
+                        )]);
+
+
+
+                        let glyphs: GlyphMap = GlyphMap::from([(
+                            FontStackHasher::new(&fontStack),
+                            Glyphs::from_iter(glyphs.glyphs.iter().map(|(unicode_point, glyph)| (*unicode_point as Char16, Some(Glyph {
+                                id: *unicode_point as Char16,
+                                bitmap: Default::default(),
+                                metrics: GlyphMetrics {
+                                    width: glyph.width,
+                                    height: glyph.height,
+                                    left: glyph.left_bearing,
+                                    top: glyph.top_bearing,
+                                    advance: glyph.h_advance,
+                                }
+                            })))),
+                        )]);
+
+                        let mut layout = SymbolLayout::new(
+                            &parameters,
+                            &layer_properties,
+                            Box::new(layer_data),
+                            &mut LayoutParameters {
+                                bucketParameters: &mut parameters.clone(),
+                                glyphDependencies: &mut glyphDependencies,
+                                imageDependencies: &mut Default::default(),
+                                availableImages: &mut Default::default(),
+                            },
+                        ).unwrap();
+
+                        assert_eq!(glyphDependencies.len(), 1);
+
+                        let empty_image_map = ImageMap::new();
+                        layout.prepareSymbols(&glyphs, &glyphPositions, &empty_image_map, &image_positions);
+
+                        let mut output = HashMap::new();
+                        layout.createBucket(
+                            image_positions,
+                            Box::new(FeatureIndex),
+                            &mut output,
+                            false,
+                            false,
+                            &tile_id.canonical,
+                        );
+
+                        let new_buffer = output.remove(&layer_name).unwrap();
+
+                        let mut buffer = VertexBuffers::new();
+                        let text_buffer = new_buffer.bucket.text;
+                        let SymbolBucketBuffer {sharedVertices, triangles, ..} = text_buffer;
+                        buffer.vertices = sharedVertices.iter().map(|v| ShaderSymbolVertexNew::new(v)).collect();
+                        buffer.indices = triangles.indices.iter().map(|i| *i as u32).collect();
+
                         // TODO
                         let mut tessellator = TextTessellator::<IndexDataType>::default();
 
-                        if let Err(e) = layer.process(&mut tessellator) {
+                        //if let Err(e) = layer.process(&mut tessellator) {
+                        if let Err(e) = Ok::<(), ProcessVectorError>(()) {
                             context.layer_missing(coords, &source_layer)?;
 
                             tracing::error!("tesselation for layer source {source_layer} at {coords} failed {e:?}");
@@ -90,6 +221,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                             context.symbol_layer_tesselation_finished(
                                 coords,
                                 tessellator.quad_buffer.into(),
+                                buffer.into(),
                                 tessellator.features,
                                 original_layer,
                             )?;
@@ -198,12 +330,13 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
         &mut self,
         coords: &WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
+        new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
         features: Vec<Feature>,
         layer_data: tile::Layer,
     ) -> Result<(), ProcessVectorError> {
         self.context
             .send(T::SymbolLayerTessellated::build_from(
-                *coords, buffer, features, layer_data,
+                *coords, buffer, new_buffer, features, layer_data,
             ))
             .map_err(|e| ProcessVectorError::SendError(e))
     }

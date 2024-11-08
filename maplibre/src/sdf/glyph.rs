@@ -16,7 +16,7 @@ use crate::{
 
 // TODO structs
 #[derive(Default)]
-struct AlphaImage;
+pub struct AlphaImage;
 
 pub type GlyphID = Char16;
 pub type GlyphIDs = BTreeSet<GlyphID>;
