@@ -11,13 +11,15 @@ use crate::{
     euclid::{Box2D, Point2D},
     render::{camera::ModelViewProjection, view_state::ViewState},
     legacy::{
+        TileSpace,
+        MapMode, ScreenSpace,
         buckets::symbol_bucket::PlacedSymbol,
         collision_feature::{CollisionBox, CollisionFeature, ProjectedCollisionBox},
         geometry::feature_index::IndexedSubfeature,
         grid_index::{Circle, GridIndex},
         layout::symbol_projection::{placeFirstAndLastGlyph, project, TileDistance},
         util::geo::ScreenLineString,
-        MapMode, ScreenSpace, TileSpace,
+
     },
 };
 

@@ -28,6 +28,7 @@ use crate::{
         VectorTransferables,
     },
 };
+use crate::legacy::TileSpace;
 
 mod populate_world_system;
 mod queue_system;
@@ -35,31 +36,11 @@ mod render_commands;
 mod resource;
 mod resource_system;
 mod upload_system;
-
-// Public due to bechmarks
-pub mod bidi;
-pub mod buckets;
-pub mod collision_feature;
-pub mod collision_index;
 pub mod collision_system;
-pub mod font_stack;
-pub mod geometry_tile_data;
-pub mod glyph;
-pub mod glyph_atlas;
-pub mod glyph_range;
-pub mod grid_index;
-pub mod image;
-pub mod image_atlas;
-pub mod layout;
-pub mod quads;
-pub mod shaping;
-pub mod style_types;
-pub mod tagged_string;
+
 pub mod tessellation;
 mod tessellation_new;
 pub mod text;
-pub mod util;
-pub mod geometry;
 
 struct SymbolPipeline(wgpu::RenderPipeline);
 
@@ -143,49 +124,13 @@ pub struct SymbolLayersDataComponent {
 
 impl TileComponent for SymbolLayersDataComponent {}
 
-// TODO where should this live?
-pub struct TileSpace; // The unit in which geometries or symbols are on a tile (0-EXTENT)
-pub struct ScreenSpace;
-
-// TODO where should this live?
-#[derive(Copy, Clone, PartialEq)]
-pub enum MapMode {
-    ///< continually updating map
-    Continuous,
-    ///< a once-off still image of an arbitrary viewport
-    Static,
-    ///< a once-off still image of a single tile
-    Tile,
-}
-
-// TODO this is just a dummy
-#[derive(Copy, Clone)]
-pub struct CanonicalTileID {
-    pub x: u32,
-    pub y: u32,
-    pub z: u8,
-}
-
-// TODO
-#[derive(Copy, Clone)]
-pub struct OverscaledTileID {
-    pub canonical: CanonicalTileID,
-    pub overscaledZ: u8,
-}
-
-impl OverscaledTileID {
-    pub fn overscaleFactor(&self) -> u32 {
-        return 1 << (self.overscaledZ - self.canonical.z);
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
 
     use crate::{
         euclid::{Point2D, Rect, Size2D},
-        sdf::{
+        legacy::{
             bidi::Char16,
             font_stack::FontStackHasher,
             geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer},

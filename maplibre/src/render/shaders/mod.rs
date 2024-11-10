@@ -6,7 +6,7 @@ use cgmath::SquareMatrix;
 use crate::{
     coords::WorldCoords,
     render::resource::{FragmentState, VertexBufferLayout, VertexState},
-    sdf::buckets::symbol_bucket::SymbolVertex,
+    legacy::buckets::symbol_bucket::SymbolVertex,
 };
 
 pub type Vec2f32 = [f32; 2];

@@ -11,7 +11,10 @@ use geo_types::GeometryCollection;
 use crate::{
     euclid::Point2D,
     render::view_state::ViewState,
+
     legacy::{
+        TileSpace,
+        CanonicalTileID,
         geometry_tile_data::GeometryCoordinates,
         glyph::WritingModeType,
         image_atlas::ImagePositions,
@@ -23,7 +26,6 @@ use crate::{
         style_types::{
             PropertyValue, SymbolLayoutProperties_PossiblyEvaluated, TextWritingModeType,
         },
-        CanonicalTileID, TileSpace,
     },
 };
 

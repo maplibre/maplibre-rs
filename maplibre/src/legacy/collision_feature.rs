@@ -2,7 +2,9 @@
 
 use crate::{
     euclid::{Box2D, Point2D, Vector2D},
+
     legacy::{
+        ScreenSpace, TileSpace,
         util::math::{
             convert_point_f64, convert_point_i16,
         },
@@ -12,7 +14,7 @@ use crate::{
         shaping::{Padding, PositionedIcon},
         style_types::SymbolPlacementType,
         util::math::{deg2radf, rotate, MinMax},
-        ScreenSpace, TileSpace,
+
     },
 };
 use crate::legacy::geometry::anchor::Anchor;

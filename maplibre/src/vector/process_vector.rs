@@ -23,6 +23,12 @@ use crate::{
         ShaderVertex,
     },
     sdf::{
+        tessellation::TextTessellator,
+        text::GlyphSet,
+        Feature
+    },
+    legacy::{
+        CanonicalTileID, MapMode, OverscaledTileID,
         bidi::Char16,
         buckets::symbol_bucket::SymbolBucketBuffer,
         font_stack::FontStackHasher,
@@ -38,9 +44,7 @@ use crate::{
         },
         style_types::SymbolLayoutProperties_Unevaluated,
         tagged_string::SectionOptions,
-        tessellation::TextTessellator,
-        text::GlyphSet,
-        CanonicalTileID, Feature, MapMode, OverscaledTileID,
+
     },
     style::layer::{LayerPaint, StyleLayer},
     vector::{

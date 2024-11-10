@@ -12,13 +12,16 @@ use crate::{
         tile_view_pattern::WgpuTileViewPattern,
         Renderer,
     },
-    sdf::{
+    legacy::{
         buckets::symbol_bucket::PlacedSymbol,
         collision_feature::{CollisionBox, CollisionFeature},
         collision_index::CollisionIndex,
         geometry::feature_index::{IndexedSubfeature, RefIndexedSubfeature},
         geometry_tile_data::GeometryCoordinates,
-        MapMode, SymbolBufferPool, SymbolLayersDataComponent,
+        MapMode
+    },
+    sdf::{
+         SymbolBufferPool, SymbolLayersDataComponent,
     },
     tcs::system::{System, SystemError, SystemResult},
 };

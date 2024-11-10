@@ -15,7 +15,7 @@ use maplibre::{
         RasterTransferables,
     },
     render::{shaders::ShaderSymbolVertex, ShaderVertex},
-    sdf::SymbolLayerData,
+    legacy::SymbolLayerData,
     tile::Layer,
     vector::{
         AvailableVectorLayerBucket, LayerIndexed, LayerMissing, LayerTessellated,
