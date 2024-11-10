@@ -10,20 +10,22 @@ use maplibre::{
         apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
-    sdf::SymbolLayerData,
     raster::{
         AvailableRasterLayerData, LayerRaster, LayerRasterMissing, MissingRasterLayerData,
         RasterTransferables,
     },
-    render::{shaders::ShaderSymbolVertex, ShaderVertex},
+    render::{
+        shaders::{ShaderSymbolVertex, ShaderSymbolVertexNew},
+        ShaderVertex,
+    },
+    sdf::{Feature, SymbolLayerData},
     tile::Layer,
     vector::{
         AvailableVectorLayerBucket, LayerIndexed, LayerMissing, LayerTessellated,
         MissingVectorLayerBucket, SymbolLayerTessellated, TileTessellated, VectorTransferables,
     },
 };
-use maplibre::render::shaders::ShaderSymbolVertexNew;
-use maplibre::sdf::Feature;
+
 use crate::platform::singlethreaded::{
     apc::WebMessageTag,
     transferables::{
