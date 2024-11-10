@@ -16,6 +16,7 @@ use crate::legacy::{
     style_types::{SymbolLayoutProperties_Evaluated, SymbolPlacementType},
 };
 
+/// maplibre/maplibre-native#4add9ea original name: getAnyShaping
 fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
     if shapedTextOrientations.right().isAnyLineNotEmpty() {
         return &shapedTextOrientations.right();
@@ -32,6 +33,7 @@ fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
     return &shapedTextOrientations.horizontal;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: ShapedTextOrientations
 #[derive(Default)]
 pub struct ShapedTextOrientations {
     horizontal: Shaping,
@@ -43,6 +45,7 @@ pub struct ShapedTextOrientations {
 }
 
 impl ShapedTextOrientations {
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
         horizontal: Shaping,
         vertical: Shaping,
@@ -60,32 +63,40 @@ impl ShapedTextOrientations {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: horizontal
     pub fn horizontal(&self) -> &Shaping {
         &self.horizontal
     }
+    /// maplibre/maplibre-native#4add9ea original name: vertical
     pub fn vertical(&self) -> &Shaping {
         &self.vertical
     }
+    /// maplibre/maplibre-native#4add9ea original name: right
     pub fn right(&self) -> &Shaping {
         &self.horizontal
     }
+    /// maplibre/maplibre-native#4add9ea original name: center
     pub fn center(&self) -> &Shaping {
         &self.center
     }
+    /// maplibre/maplibre-native#4add9ea original name: left
     pub fn left(&self) -> &Shaping {
         &self.left
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: set_horizontal
     pub fn set_horizontal(&mut self, horizontal: Shaping) {
         self.horizontal = horizontal;
     }
+    /// maplibre/maplibre-native#4add9ea original name: set_vertical
     pub fn set_vertical(&mut self, vertical: Shaping) {
         self.vertical = vertical;
     }
 }
 
 bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    /// maplibre/maplibre-native#4add9ea original name: SymbolContent:
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct SymbolContent: u8 {
          const None = 0;
          const Text = 1 << 0;
@@ -94,6 +105,7 @@ bitflags! {
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: SymbolInstanceSharedData
 #[derive(Default)]
 pub struct SymbolInstanceSharedData {
     line: GeometryCoordinates,
@@ -107,6 +119,7 @@ pub struct SymbolInstanceSharedData {
 }
 
 impl SymbolInstanceSharedData {
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
         line_: GeometryCoordinates,
         shapedTextOrientations: &ShapedTextOrientations,
@@ -216,6 +229,7 @@ impl SymbolInstanceSharedData {
         }
         self_
     }
+    /// maplibre/maplibre-native#4add9ea original name: empty
     fn empty(&self) -> bool {
         return self.rightJustifiedGlyphQuads.is_empty()
             && self.centerJustifiedGlyphQuads.is_empty()
@@ -224,6 +238,7 @@ impl SymbolInstanceSharedData {
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: SymbolInstance
 #[derive(Clone)]
 pub struct SymbolInstance {
     sharedData: Rc<SymbolInstanceSharedData>,
@@ -260,6 +275,7 @@ pub struct SymbolInstance {
 }
 
 impl SymbolInstance {
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
         anchor_: Anchor,
         sharedData_: Rc<SymbolInstanceSharedData>,
@@ -397,6 +413,7 @@ impl SymbolInstance {
 
         self_
     }
+    /// maplibre/maplibre-native#4add9ea original name: getDefaultHorizontalPlacedTextIndex
     pub fn getDefaultHorizontalPlacedTextIndex(&self) -> Option<usize> {
         if let Some(index) = (self.placedRightTextIndex) {
             return Some(index);
@@ -409,44 +426,57 @@ impl SymbolInstance {
         }
         return None;
     }
+    /// maplibre/maplibre-native#4add9ea original name: line
     pub fn line(&self) -> &GeometryCoordinates {
         return &self.sharedData.line;
     }
+    /// maplibre/maplibre-native#4add9ea original name: rightJustifiedGlyphQuads
     pub fn rightJustifiedGlyphQuads(&self) -> &SymbolQuads {
         return &self.sharedData.rightJustifiedGlyphQuads;
     }
+    /// maplibre/maplibre-native#4add9ea original name: leftJustifiedGlyphQuads
     pub fn leftJustifiedGlyphQuads(&self) -> &SymbolQuads {
         return &self.sharedData.leftJustifiedGlyphQuads;
     }
+    /// maplibre/maplibre-native#4add9ea original name: centerJustifiedGlyphQuads
     pub fn centerJustifiedGlyphQuads(&self) -> &SymbolQuads {
         return &self.sharedData.centerJustifiedGlyphQuads;
     }
+    /// maplibre/maplibre-native#4add9ea original name: verticalGlyphQuads
     pub fn verticalGlyphQuads(&self) -> &SymbolQuads {
         return &self.sharedData.verticalGlyphQuads;
     }
+    /// maplibre/maplibre-native#4add9ea original name: hasText
     pub fn hasText(&self) -> bool {
         return self.symbolContent.contains(SymbolContent::Text); // TODO Is this correct?
     }
+    /// maplibre/maplibre-native#4add9ea original name: hasIcon
     pub fn hasIcon(&self) -> bool {
         return self.symbolContent.contains(SymbolContent::IconRGBA) || self.hasSdfIcon();
     }
+    /// maplibre/maplibre-native#4add9ea original name: hasSdfIcon
     pub fn hasSdfIcon(&self) -> bool {
         return self.symbolContent.contains(SymbolContent::IconSDF);
     }
+    /// maplibre/maplibre-native#4add9ea original name: iconQuads
     pub fn iconQuads(&self) -> &Option<SymbolQuads> {
         return &self.sharedData.iconQuads;
     }
+    /// maplibre/maplibre-native#4add9ea original name: verticalIconQuads
     pub fn verticalIconQuads(&self) -> &Option<SymbolQuads> {
         return &self.sharedData.verticalIconQuads;
     }
+    /// maplibre/maplibre-native#4add9ea original name: releaseSharedData
     pub fn releaseSharedData(&self) {
         // todo!()
         // TODO not sure how to do this self.sharedData.reset();
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: invalidCrossTileID
     fn invalidCrossTileID() -> u32 {
         return u32::MAX;
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: SymbolInstanceReferences
 type SymbolInstanceReferences = Vec<SymbolInstance>;

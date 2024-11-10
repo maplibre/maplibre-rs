@@ -1,5 +1,6 @@
 //! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/geometry/feature_index.cpp
 
+/// maplibre/maplibre-native#4add9ea original name: IndexedSubfeature
 #[derive(Clone)]
 pub struct IndexedSubfeature {
     pub ref_: RefIndexedSubfeature,
@@ -8,6 +9,7 @@ pub struct IndexedSubfeature {
 }
 
 impl IndexedSubfeature {
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
         indexedFeature: IndexedSubfeature,
         bucketInstanceId: u32,
@@ -28,6 +30,7 @@ impl IndexedSubfeature {
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: RefIndexedSubfeature
 #[derive(Clone)]
 pub struct RefIndexedSubfeature {
     pub index: usize,

@@ -2,4 +2,5 @@
 
 use geo_types::LineString;
 
+/// maplibre/maplibre-native#4add9ea original name: ScreenLineString
 pub type ScreenLineString = LineString;

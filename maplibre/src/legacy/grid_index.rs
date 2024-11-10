@@ -7,6 +7,7 @@ use crate::{
     legacy::ScreenSpace,
 };
 
+/// maplibre/maplibre-native#4add9ea original name: Circle
 #[derive(Default, Clone, Copy, Debug)]
 pub struct Circle<T> {
     pub center: Point2D<T, ScreenSpace>,
@@ -14,12 +15,14 @@ pub struct Circle<T> {
 }
 
 impl<T> Circle<T> {
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(center: Point2D<T, ScreenSpace>, radius: T) -> Circle<T> {
         Self { center, radius }
     }
 }
 
 impl<T: PartialEq> PartialEq for Circle<T> {
+    /// maplibre/maplibre-native#4add9ea original name: eq
     fn eq(&self, other: &Self) -> bool {
         self.center == other.center && self.radius == other.radius
     }
@@ -27,6 +30,7 @@ impl<T: PartialEq> PartialEq for Circle<T> {
 
 impl<T: PartialEq> Eq for Circle<T> {}
 
+/// maplibre/maplibre-native#4add9ea original name: GridIndex
 pub struct GridIndex<T: Clone> {
     width: f64,
     height: f64,
@@ -42,6 +46,7 @@ pub struct GridIndex<T: Clone> {
 }
 
 impl<T: Clone> GridIndex<T> {
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(width: f64, height: f64, cell_size: u32) -> Self {
         let x_cell_count = (width / cell_size as f64).ceil() as usize;
         let y_cell_count = (height / cell_size as f64).ceil() as usize;
@@ -64,10 +69,12 @@ impl<T: Clone> GridIndex<T> {
     }
 
     /// Set the expected number of elements per cell to avoid small re-allocations for populated cells
+    /// maplibre/maplibre-native#4add9ea original name: reserve
     pub fn reserve(&mut self, value: usize) {
         self.estimated_elements_per_cell = value;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: insert
     pub fn insert(&mut self, t: T, bbox: Box2D<f64, ScreenSpace>) {
         assert!(self.box_elements.len() < u32::MAX as usize);
         let uid = self.box_elements.len() as u32;
@@ -90,6 +97,7 @@ impl<T: Clone> GridIndex<T> {
         self.box_elements.push((t, bbox));
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: insert_circle
     pub fn insert_circle(&mut self, t: T, circle: Circle<f64>) {
         assert!(self.circle_elements.len() < u32::MAX as usize);
         let uid = self.circle_elements.len() as u32;
@@ -112,6 +120,7 @@ impl<T: Clone> GridIndex<T> {
         self.circle_elements.push((t, circle));
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: query
     pub fn query(&self, query_box: &Box2D<f64, ScreenSpace>) -> Vec<T> {
         let mut result = Vec::new();
         self.query_internal(query_box, |t, bbox| -> bool {
@@ -121,6 +130,7 @@ impl<T: Clone> GridIndex<T> {
         return result;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: query_with_boxes
     pub fn query_with_boxes(
         &self,
         query_box: &Box2D<f64, ScreenSpace>,
@@ -133,6 +143,7 @@ impl<T: Clone> GridIndex<T> {
         return result;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: hit_test
     pub fn hit_test<F>(&self, query_box: &Box2D<f64, ScreenSpace>, predicate: Option<F>) -> bool
     where
         F: Fn(&T) -> bool,
@@ -154,6 +165,7 @@ impl<T: Clone> GridIndex<T> {
         return hit;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: hit_test_circle
     pub fn hit_test_circle<F>(&self, circle: &Circle<f64>, predicate: Option<F>) -> bool
     where
         F: Fn(&T) -> bool,
@@ -175,12 +187,14 @@ impl<T: Clone> GridIndex<T> {
         return hit;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: empty
     pub fn empty(&self) -> bool {
         return self.box_elements.is_empty() && self.circle_elements.is_empty();
     }
 }
 
 impl<T: Clone> GridIndex<T> {
+    /// maplibre/maplibre-native#4add9ea original name: no_intersection
     fn no_intersection(&self, query_box: &Box2D<f64, ScreenSpace>) -> bool {
         return query_box.max.x < 0.0
             || query_box.min.x >= self.width
@@ -188,6 +202,7 @@ impl<T: Clone> GridIndex<T> {
             || query_box.min.y >= self.height;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: complete_intersection
     fn complete_intersection(&self, query_box: &Box2D<f64, ScreenSpace>) -> bool {
         return query_box.min.x <= 0.0
             && query_box.min.y <= 0.0
@@ -195,6 +210,7 @@ impl<T: Clone> GridIndex<T> {
             && self.height <= query_box.max.y;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: convert_to_box
     fn convert_to_box(circle: &Circle<f64>) -> Box2D<f64, ScreenSpace> {
         return Box2D::new(
             Point2D::new(
@@ -208,6 +224,7 @@ impl<T: Clone> GridIndex<T> {
         );
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: query_internal
     fn query_internal<F>(&self, query_bbox: &Box2D<f64, ScreenSpace>, mut result_fn: F)
     where
         F: FnMut(T, Box2D<f64, ScreenSpace>) -> bool,
@@ -273,6 +290,7 @@ impl<T: Clone> GridIndex<T> {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: query_internal_circles
     fn query_internal_circles<F>(&self, query_bcircle: &Circle<f64>, mut result_fn: F)
     where
         F: FnMut(T, Box2D<f64, ScreenSpace>) -> bool,
@@ -338,6 +356,7 @@ impl<T: Clone> GridIndex<T> {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: convert_to_x_cell_coord
     fn convert_to_x_cell_coord(&self, x: f64) -> usize {
         return f64::max(
             0.0,
@@ -345,6 +364,7 @@ impl<T: Clone> GridIndex<T> {
         ) as usize;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: convert_to_y_cell_coord
     fn convert_to_y_cell_coord(&self, y: f64) -> usize {
         return f64::max(
             0.0,
@@ -352,6 +372,7 @@ impl<T: Clone> GridIndex<T> {
         ) as usize;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: boxes_collide
     fn boxes_collide(first: &Box2D<f64, ScreenSpace>, second: &Box2D<f64, ScreenSpace>) -> bool {
         return first.min.x <= second.max.x
             && first.min.y <= second.max.y
@@ -359,6 +380,7 @@ impl<T: Clone> GridIndex<T> {
             && first.max.y >= second.min.y;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: circles_collide
     fn circles_collide(first: &Circle<f64>, second: &Circle<f64>) -> bool {
         let dx = second.center.x - first.center.x;
         let dy = second.center.y - first.center.y;
@@ -366,6 +388,7 @@ impl<T: Clone> GridIndex<T> {
         return (both_radii * both_radii) > (dx * dx + dy * dy);
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: circle_and_box_collide
     fn circle_and_box_collide(circle: &Circle<f64>, box_: &Box2D<f64, ScreenSpace>) -> bool {
         let half_rect_width = (box_.max.x - box_.min.x) / 2.0;
         let dist_x = (circle.center.x - (box_.min.x + half_rect_width)).abs();
@@ -394,6 +417,7 @@ mod tests {
     use super::*;
 
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: indexes_features
     fn indexes_features() {
         let mut grid = GridIndex::<i16>::new(100.0, 100.0, 10);
         grid.insert(
@@ -447,6 +471,7 @@ mod tests {
         );
     }
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: duplicate_keys
     fn duplicate_keys() {
         let mut grid = GridIndex::<i16>::new(100.0, 100.0, 10);
         const KEY: i16 = 123;
@@ -472,9 +497,11 @@ mod tests {
         );
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: i16_closure
     fn i16_closure() {}
 
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: circle_circle
     fn circle_circle() {
         let mut grid = GridIndex::<i16>::new(100.0, 100.0, 10);
         grid.insert_circle(0, Circle::new(Point2D::new(50.0, 50.0), 10.0));
@@ -500,6 +527,7 @@ mod tests {
     }
 
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: circle_box
     fn circle_box() {
         let mut grid = GridIndex::<i16>::new(100.0, 100.0, 10);
         grid.insert_circle(0, Circle::new(Point2D::new(50.0, 50.0), 10.0));
@@ -531,6 +559,7 @@ mod tests {
     }
 
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: indexes_features_overflow
     fn indexes_features_overflow() {
         let mut grid = GridIndex::<i16>::new(5000.0, 5000.0, 25);
         grid.insert(

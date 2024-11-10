@@ -12,6 +12,7 @@ use crate::legacy::{
     },
 };
 
+/// maplibre/maplibre-native#4add9ea original name: SectionOptions
 #[derive(Clone, Default)]
 pub struct SectionOptions {
     pub scale: f64,
@@ -21,6 +22,7 @@ pub struct SectionOptions {
     pub imageID: Option<String>,
 }
 impl SectionOptions {
+    /// maplibre/maplibre-native#4add9ea original name: from_image_id
     pub fn from_image_id(imageID_: String) -> Self {
         Self {
             scale: 1.0,
@@ -28,6 +30,7 @@ impl SectionOptions {
             ..SectionOptions::default()
         }
     }
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(scale: f64, fontStack: FontStack, textColor: Option<Color>) -> Self {
         Self {
             scale,
@@ -57,6 +60,7 @@ const PUAend: Char16 = '\u{F8FF}' as Char16;
  * iterate over the contents in order, using getCharCodeAt and getSection
  * to get the formatting options for each character in turn.
  */
+/// maplibre/maplibre-native#4add9ea original name: TaggedString
 #[derive(Clone)]
 pub struct TaggedString {
     pub styledText: StyledText,
@@ -69,6 +73,7 @@ pub struct TaggedString {
 
 impl Default for TaggedString {
     /// Returns an empty string
+    /// maplibre/maplibre-native#4add9ea original name: default
     fn default() -> Self {
         Self {
             styledText: (U16String::new(), vec![]), // TODO is this correct?
@@ -80,6 +85,7 @@ impl Default for TaggedString {
 }
 
 impl TaggedString {
+    /// maplibre/maplibre-native#4add9ea original name: new_from_raw
     pub fn new_from_raw(text_: U16String, options: SectionOptions) -> Self {
         let text_len = text_.len();
         Self {
@@ -90,6 +96,7 @@ impl TaggedString {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(styledText_: StyledText, sections_: Vec<SectionOptions>) -> Self {
         Self {
             styledText: styledText_,
@@ -99,34 +106,42 @@ impl TaggedString {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: length
     pub fn length(&self) -> usize {
         return self.styledText.0.len();
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: sectionCount
     pub fn sectionCount(&self) -> usize {
         return self.sections.len();
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: empty
     pub fn empty(&self) -> bool {
         return self.styledText.0.is_empty();
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: getSection
     pub fn getSection(&self, index: usize) -> &SectionOptions {
         return &self.sections[self.styledText.1[index] as usize]; // TODO Index does not honor encoding, fine? previously it was .at()
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: getCharCodeAt
     pub fn getCharCodeAt(&self, index: usize) -> u16 {
         return self.styledText.0.as_slice()[index];
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: rawText
     pub fn rawText(&self) -> &U16String {
         return &self.styledText.0;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: getStyledText
     pub fn getStyledText(&self) -> &StyledText {
         return &self.styledText;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: addTextSection
     pub fn addTextSection(
         &mut self,
         sectionText: &U16String,
@@ -143,6 +158,7 @@ impl TaggedString {
         self.supportsVerticalWritingMode = None;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: addImageSection
     pub fn addImageSection(&mut self, imageID: String) {
         let nextImageSectionCharCode = self.getNextImageSectionCharCode();
 
@@ -159,18 +175,22 @@ impl TaggedString {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: sectionAt
     pub fn sectionAt(&self, index: usize) -> &SectionOptions {
         return &self.sections[index];
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: getSections
     pub fn getSections(&self) -> &Vec<SectionOptions> {
         return &self.sections;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: getSectionIndex
     pub fn getSectionIndex(&self, characterIndex: usize) -> u8 {
         return self.styledText.1[characterIndex]; // TODO Index does not honor encoding, fine? previously it was .at()
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: getMaxScale
     pub fn getMaxScale(&self) -> f64 {
         let mut maxScale: f64 = 0.0;
         for i in 0..self.styledText.0.len() {
@@ -188,6 +208,7 @@ impl TaggedString {
         '\r' as Char16,
     ];
 
+    /// maplibre/maplibre-native#4add9ea original name: trim
     pub fn trim(&mut self) {
         let beginningWhitespace: Option<usize> = self
             .styledText
@@ -217,10 +238,12 @@ impl TaggedString {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: verticalizePunctuation
     pub fn verticalizePunctuation(&mut self) {
         // Relies on verticalization changing characters in place so that style indices don't need updating
         self.styledText.0 = i18n::verticalizePunctuation_str(&self.styledText.0);
     }
+    /// maplibre/maplibre-native#4add9ea original name: allowsVerticalWritingMode
     pub fn allowsVerticalWritingMode(&mut self) -> bool {
         if (self.supportsVerticalWritingMode.is_none()) {
             let new_value = i18n::allowsVerticalWritingMode(self.rawText());
@@ -234,6 +257,7 @@ impl TaggedString {
 }
 
 impl TaggedString {
+    /// maplibre/maplibre-native#4add9ea original name: getNextImageSectionCharCode
     fn getNextImageSectionCharCode(&mut self) -> Option<Char16> {
         if (self.imageSectionID == 0) {
             self.imageSectionID = PUAbegin;
@@ -260,6 +284,7 @@ mod tests {
     };
 
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: TaggedString_Trim
     fn TaggedString_Trim() {
         let mut basic = TaggedString::new_from_raw(
             " \t\ntrim that and not this  \n\t".into(),
@@ -295,6 +320,7 @@ mod tests {
         assert_eq!(noTrim.rawText(), &U16String::from("no trim!"));
     }
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: TaggedString_ImageSections
     fn TaggedString_ImageSections() {
         let mut string = TaggedString::new_from_raw(U16String::new(), SectionOptions::default());
         string.addImageSection("image_name".to_string());

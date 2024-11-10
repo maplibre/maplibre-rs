@@ -3,12 +3,17 @@
 use std::{cmp::Ordering, collections::HashMap};
 
 // TODO
+/// maplibre/maplibre-native#4add9ea original name: ImageManager
 pub struct ImageManager;
+/// maplibre/maplibre-native#4add9ea original name: PremultipliedImage
 pub struct PremultipliedImage;
 
+/// maplibre/maplibre-native#4add9ea original name: ImageStretch
 pub type ImageStretch = (f64, f64);
+/// maplibre/maplibre-native#4add9ea original name: ImageStretches
 pub type ImageStretches = Vec<ImageStretch>;
 
+/// maplibre/maplibre-native#4add9ea original name: ImageContent
 #[derive(Clone)]
 pub struct ImageContent {
     pub left: f64,
@@ -17,6 +22,7 @@ pub struct ImageContent {
     pub bottom: f64,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: Image
 pub struct Image {
     pub id: String,
 
@@ -37,23 +43,30 @@ pub struct Image {
 }
 
 impl PartialEq<Self> for Image {
+    /// maplibre/maplibre-native#4add9ea original name: eq
     fn eq(&self, other: &Self) -> bool {
         self.id.eq(&other.id)
     }
 }
 
 impl PartialOrd<Self> for Image {
+    /// maplibre/maplibre-native#4add9ea original name: partial_cmp
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.id.partial_cmp(&other.id)
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: ImageType
 pub enum ImageType {
     Icon,
     Pattern,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: ImageMap
 pub type ImageMap = HashMap<String, Image>;
+/// maplibre/maplibre-native#4add9ea original name: ImageDependencies
 pub type ImageDependencies = HashMap<String, ImageType>;
+/// maplibre/maplibre-native#4add9ea original name: ImageRequestPair
 pub type ImageRequestPair = (ImageDependencies, u64);
+/// maplibre/maplibre-native#4add9ea original name: ImageVersionMap
 pub type ImageVersionMap = HashMap<String, u32>;

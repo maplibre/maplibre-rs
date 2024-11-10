@@ -14,6 +14,7 @@ use crate::{
     },
 };
 
+/// maplibre/maplibre-native#4add9ea original name: CollisionFeature
 #[derive(Clone)]
 pub struct CollisionFeature {
     pub boxes: Vec<CollisionBox>,
@@ -22,6 +23,7 @@ pub struct CollisionFeature {
 }
 
 impl CollisionFeature {
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
         line: &GeometryCoordinates,
         anchor: &Anchor,
@@ -120,6 +122,7 @@ impl CollisionFeature {
     }
 
     // for text
+    /// maplibre/maplibre-native#4add9ea original name: new_from_text
     pub fn new_from_text(
         line: &GeometryCoordinates,
         anchor: &Anchor,
@@ -156,6 +159,7 @@ impl CollisionFeature {
     // enough" to square that having incorrect rotation alignment doesn't throw
     // off collision detection too much. See:
     // https://github.com/mapbox/mapbox-gl-js/issues/4861
+    /// maplibre/maplibre-native#4add9ea original name: new_from_icon
     pub fn new_from_icon(
         line: &GeometryCoordinates,
         anchor: &Anchor,
@@ -202,6 +206,7 @@ impl CollisionFeature {
         )
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: bboxifyLabel
     fn bboxifyLabel(
         &mut self,
         line: &GeometryCoordinates,
@@ -327,6 +332,7 @@ impl CollisionFeature {
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: CollisionBox
 #[derive(Default, Clone, Copy, Debug)]
 pub struct CollisionBox {
     // the box is centered around the anchor point
@@ -345,6 +351,7 @@ pub struct CollisionBox {
     pub signedDistanceFromAnchor: f64,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: ProjectedCollisionBox
 #[derive(Clone, Copy, Debug)]
 pub enum ProjectedCollisionBox {
     Circle(Circle<f64>),
@@ -352,12 +359,14 @@ pub enum ProjectedCollisionBox {
 }
 
 impl Default for ProjectedCollisionBox {
+    /// maplibre/maplibre-native#4add9ea original name: default
     fn default() -> Self {
         return Self::Box(Box2D::zero());
     }
 }
 
 impl ProjectedCollisionBox {
+    /// maplibre/maplibre-native#4add9ea original name: box_
     pub fn box_(&self) -> &Box2D<f64, ScreenSpace> {
         match self {
             ProjectedCollisionBox::Circle(_) => panic!("not a box"),
@@ -365,6 +374,7 @@ impl ProjectedCollisionBox {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: circle
     pub fn circle(&self) -> &Circle<f64> {
         match self {
             ProjectedCollisionBox::Circle(circle) => circle,
@@ -372,6 +382,7 @@ impl ProjectedCollisionBox {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: isBox
     pub fn isBox(&self) -> bool {
         match self {
             ProjectedCollisionBox::Circle(_) => false,
@@ -379,6 +390,7 @@ impl ProjectedCollisionBox {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: isCircle
     pub fn isCircle(&self) -> bool {
         match self {
             ProjectedCollisionBox::Circle(_) => true,

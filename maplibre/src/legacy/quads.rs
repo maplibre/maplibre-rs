@@ -22,6 +22,7 @@ use crate::{
     },
 };
 
+/// maplibre/maplibre-native#4add9ea original name: SymbolQuad
 pub struct SymbolQuad {
     pub tl: Point2D<f64, TileSpace>,
     pub tr: Point2D<f64, TileSpace>,
@@ -37,10 +38,12 @@ pub struct SymbolQuad {
     pub minFontScale: Point2D<f64, TileSpace>,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: SymbolQuads
 pub type SymbolQuads = Vec<SymbolQuad>;
 
 const border: u16 = ImagePosition::padding;
 
+/// maplibre/maplibre-native#4add9ea original name: computeStretchSum
 fn computeStretchSum(stretches: &ImageStretches) -> f64 {
     let mut sum = 0.;
     for stretch in stretches {
@@ -49,6 +52,7 @@ fn computeStretchSum(stretches: &ImageStretches) -> f64 {
     return sum;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: sumWithinRange
 fn sumWithinRange(stretches: &ImageStretches, min: f64, max: f64) -> f64 {
     let mut sum = 0.;
     for stretch in stretches {
@@ -57,21 +61,26 @@ fn sumWithinRange(stretches: &ImageStretches, min: f64, max: f64) -> f64 {
     return sum;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: getEmOffset
 fn getEmOffset(stretchOffset: f64, stretchSize: f64, iconSize: f64, iconOffset: f64) -> f64 {
     return iconOffset + iconSize * stretchOffset / stretchSize;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: getPxOffset
 fn getPxOffset(fixedOffset: f64, fixedSize: f64, stretchOffset: f64, stretchSize: f64) -> f64 {
     return fixedOffset - fixedSize * stretchOffset / stretchSize;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: Cut
 struct Cut {
     fixed: f64,
     stretch: f64,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: Cuts
 type Cuts = Vec<Cut>;
 
+/// maplibre/maplibre-native#4add9ea original name: stretchZonesToCuts
 fn stretchZonesToCuts(stretchZones: &ImageStretches, fixedSize: f64, stretchSize: f64) -> Cuts {
     let mut cuts = vec![Cut {
         fixed: -(border as f64),
@@ -98,10 +107,12 @@ fn stretchZonesToCuts(stretchZones: &ImageStretches, fixedSize: f64, stretchSize
     return cuts;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: matrixMultiply
 fn matrixMultiply<U>(m: &[f64; 4], p: Point2D<f64, U>) -> Point2D<f64, U> {
     return Point2D::<f64, U>::new(m[0] * p.x + m[1] * p.y, m[2] * p.x + m[3] * p.y);
 }
 
+/// maplibre/maplibre-native#4add9ea original name: getIconQuads
 pub fn getIconQuads(
     shapedIcon: &PositionedIcon,
     iconRotate: f64,
@@ -306,6 +317,7 @@ pub fn getIconQuads(
     return quads;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: getGlyphQuads
 pub fn getGlyphQuads(
     shapedText: &Shaping,
     textOffset: [f64; 2],
@@ -501,6 +513,7 @@ mod tests {
     };
 
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: getIconQuads_normal
     pub fn getIconQuads_normal() {
         let layout = SymbolLayoutProperties_Evaluated;
         let anchor = Anchor {
@@ -535,6 +548,7 @@ mod tests {
     }
 
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: getIconQuads_style
     pub fn getIconQuads_style() {
         let anchor = Anchor {
             point: Point2D::new(0.0, 0.0),

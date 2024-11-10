@@ -15,13 +15,17 @@ use crate::{
 };
 
 // TODO structs
+/// maplibre/maplibre-native#4add9ea original name: AlphaImage
 #[derive(Default)]
 pub struct AlphaImage;
 
+/// maplibre/maplibre-native#4add9ea original name: GlyphID
 pub type GlyphID = Char16;
+/// maplibre/maplibre-native#4add9ea original name: GlyphIDs
 pub type GlyphIDs = BTreeSet<GlyphID>;
 
 // Note: this only works for the BMP
+/// maplibre/maplibre-native#4add9ea original name: getGlyphRange
 pub fn getGlyphRange(glyph: GlyphID) -> GlyphRange {
     let mut start: u16 = (glyph / 256) * 256;
     let mut end = (start + 255);
@@ -34,6 +38,7 @@ pub fn getGlyphRange(glyph: GlyphID) -> GlyphRange {
     return start..end;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: GlyphMetrics
 #[derive(PartialEq, Default, Copy, Clone)]
 pub struct GlyphMetrics {
     pub width: u32,
@@ -43,6 +48,7 @@ pub struct GlyphMetrics {
     pub advance: u32,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: Glyph
 #[derive(Default)]
 pub struct Glyph {
     // We're using this value throughout the Mapbox GL ecosystem. If this is
@@ -60,9 +66,12 @@ impl Glyph {
     pub const borderSize: u8 = 3;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: Glyphs
 pub type Glyphs = BTreeMap<GlyphID, Option<Glyph>>;
+/// maplibre/maplibre-native#4add9ea original name: GlyphMap
 pub type GlyphMap = BTreeMap<FontStackHash, Glyphs>;
 
+/// maplibre/maplibre-native#4add9ea original name: PositionedGlyph
 #[derive(Clone)]
 pub struct PositionedGlyph {
     pub glyph: GlyphID,
@@ -78,12 +87,14 @@ pub struct PositionedGlyph {
     pub sectionIndex: usize,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: PositionedLine
 #[derive(Default, Clone)]
 pub struct PositionedLine {
     pub positionedGlyphs: Vec<PositionedGlyph>,
     pub lineOffset: f64,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: Shaping
 #[derive(Clone, Default)]
 pub struct Shaping {
     pub positionedLines: Vec<PositionedLine>,
@@ -100,6 +111,7 @@ impl Shaping {
     // The y offset *should* be part of the font metadata.
     pub const yOffset: i32 = -17;
 
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(x: f64, y: f64, writingMode_: WritingModeType) -> Self {
         Self {
             positionedLines: vec![],
@@ -112,6 +124,7 @@ impl Shaping {
             iconsInText: false,
         }
     }
+    /// maplibre/maplibre-native#4add9ea original name: isAnyLineNotEmpty
     pub fn isAnyLineNotEmpty(&self) -> bool {
         self.positionedLines
             .iter()
@@ -120,7 +133,8 @@ impl Shaping {
 }
 
 bitflags! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    /// maplibre/maplibre-native#4add9ea original name: WritingModeType:
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct WritingModeType: u8 {
         const None = 0;
         const Horizontal = 1 << 0;
@@ -129,10 +143,13 @@ bitflags! {
 }
 
 impl Default for WritingModeType {
+    /// maplibre/maplibre-native#4add9ea original name: default
     fn default() -> Self {
         WritingModeType::None
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: GlyphDependencies
 pub type GlyphDependencies = BTreeMap<FontStack, GlyphIDs>;
+/// maplibre/maplibre-native#4add9ea original name: GlyphRangeDependencies
 pub type GlyphRangeDependencies = BTreeMap<FontStack, HashSet<GlyphRange>>;

@@ -2,6 +2,7 @@
 
 use crate::{euclid::Point2D, legacy::TileSpace};
 
+/// maplibre/maplibre-native#4add9ea original name: Anchor
 #[derive(Clone, Copy)]
 pub struct Anchor {
     pub point: Point2D<f64, TileSpace>,
@@ -9,4 +10,5 @@ pub struct Anchor {
     pub segment: Option<usize>,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: Anchors
 pub type Anchors = Vec<Anchor>;

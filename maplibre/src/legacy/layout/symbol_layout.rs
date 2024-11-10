@@ -44,36 +44,45 @@ use crate::{
 };
 
 // TODO
+/// maplibre/maplibre-native#4add9ea original name: SymbolLayer
 #[derive(Clone, Debug)]
 pub struct SymbolLayer {
     pub layout: SymbolLayoutProperties_Unevaluated,
 }
+/// maplibre/maplibre-native#4add9ea original name: SymbolLayer_Impl
 pub type SymbolLayer_Impl = SymbolLayer;
 // TODO
+/// maplibre/maplibre-native#4add9ea original name: LayerProperties
 #[derive(Clone, Debug)]
 pub struct LayerProperties {
     pub id: String,
     pub layer: SymbolLayer_Impl,
 }
+/// maplibre/maplibre-native#4add9ea original name: SymbolLayerProperties
 pub type SymbolLayerProperties = LayerProperties;
 impl LayerProperties {
+    /// maplibre/maplibre-native#4add9ea original name: layerImpl
     pub fn layerImpl(&self) -> &SymbolLayer_Impl {
         // TODO
         &self.layer
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: baseImpl
     pub fn baseImpl(&self) -> &Self {
         self
     }
 }
+/// maplibre/maplibre-native#4add9ea original name: Bucket
 pub type Bucket = SymbolBucket;
 
+/// maplibre/maplibre-native#4add9ea original name: LayerRenderData
 #[derive(Debug)]
 pub struct LayerRenderData {
     pub bucket: Bucket,
     pub layerProperties: LayerProperties,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: SortKeyRange
 #[derive(Clone, Copy, Debug)]
 pub struct SortKeyRange {
     sortKey: f64,
@@ -82,14 +91,17 @@ pub struct SortKeyRange {
 }
 
 impl SortKeyRange {
+    /// maplibre/maplibre-native#4add9ea original name: isFirstRange
     pub fn isFirstRange(&self) -> bool {
         return self.start == 0;
     }
 }
 
 // index
+/// maplibre/maplibre-native#4add9ea original name: FeatureIndex
 pub struct FeatureIndex;
 
+/// maplibre/maplibre-native#4add9ea original name: sectionOptionsToValue
 fn sectionOptionsToValue(options: &SectionOptions) -> expression::Value {
     let mut result: HashMap<String, expression::Value> = Default::default();
     // TODO: Data driven properties that can be overridden on per section basis.
@@ -106,12 +118,14 @@ fn sectionOptionsToValue(options: &SectionOptions) -> expression::Value {
     return expression::Value::Object(result);
 }
 
+/// maplibre/maplibre-native#4add9ea original name: toSymbolLayerProperties
 fn toSymbolLayerProperties(layer: &LayerProperties) -> &SymbolLayerProperties {
     // TODO
     //return static_cast<const SymbolLayerProperties&>(*layer);
     return layer;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: createLayout
 fn createLayout(
     unevaluated: &SymbolLayoutProperties_Unevaluated,
     zoom: f64,
@@ -154,6 +168,7 @@ const baselineOffset: f64 = 7.0;
 
 // We don't care which shaping we get because this is used for collision
 // purposes and all the justifications have the same collision box.
+/// maplibre/maplibre-native#4add9ea original name: getDefaultHorizontalShaping
 fn getDefaultHorizontalShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
     if shapedTextOrientations.right().isAnyLineNotEmpty() {
         return &shapedTextOrientations.right();
@@ -167,6 +182,7 @@ fn getDefaultHorizontalShaping(shapedTextOrientations: &ShapedTextOrientations) 
     return &shapedTextOrientations.horizontal();
 }
 
+/// maplibre/maplibre-native#4add9ea original name: shapingForTextJustifyType
 fn shapingForTextJustifyType(
     shapedTextOrientations: &ShapedTextOrientations,
     type_: TextJustifyType,
@@ -190,6 +206,7 @@ fn shapingForTextJustifyType(
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: evaluateRadialOffset
 fn evaluateRadialOffset(anchor: SymbolAnchorType, mut radialOffset: f64) -> [f64; 2] {
     let mut result = [0.0, 0.0];
     if (radialOffset < 0.0) {
@@ -237,6 +254,7 @@ fn evaluateRadialOffset(anchor: SymbolAnchorType, mut radialOffset: f64) -> [f64
     return result;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: SymbolLayout
 pub struct SymbolLayout {
     pub layerPaintProperties: BTreeMap<String, LayerProperties>,
     pub bucketLeaderID: String,
@@ -275,6 +293,7 @@ pub struct SymbolLayout {
 }
 
 impl SymbolLayout {
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
         parameters: &BucketParameters,
         layers: &Vec<LayerProperties>,
@@ -502,6 +521,7 @@ impl SymbolLayout {
 
         Some(self_)
     }
+    /// maplibre/maplibre-native#4add9ea original name: prepareSymbols
     pub fn prepareSymbols(
         &mut self,
         glyphMap: &GlyphMap,
@@ -812,6 +832,7 @@ impl SymbolLayout {
         self.compareText.clear();
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: createBucket
     pub fn createBucket(
         &self,
         _imagePositions: ImagePositions,
@@ -1037,9 +1058,11 @@ impl SymbolLayout {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: hasSymbolInstances
     fn hasSymbolInstances(&self) -> bool {
         return !self.symbolInstances.is_empty();
     }
+    /// maplibre/maplibre-native#4add9ea original name: hasDependencies
     fn hasDependencies(&self) -> bool {
         return !self.features.is_empty();
     }
@@ -1053,6 +1076,7 @@ impl SymbolLayout {
      * INVALID_OFFSET_VALUE ]
      * @return std::array<f64, 2> offset along x- and y- axis correspondingly.
      */
+    /// maplibre/maplibre-native#4add9ea original name: evaluateVariableOffset
     pub fn evaluateVariableOffset(anchor: SymbolAnchorType, mut offset: [f64; 2]) -> [f64; 2] {
         if (offset[1] == Self::INVALID_OFFSET_VALUE) {
             return evaluateRadialOffset(anchor, offset[0]);
@@ -1093,6 +1117,7 @@ impl SymbolLayout {
     // Analog of `addToLineVertexArray` in JS. This version doesn't need to build up
     // a line array like the JS version does, but it uses the same logic to
     // calculate tile distances.
+    /// maplibre/maplibre-native#4add9ea original name: calculateTileDistances
     pub fn calculateTileDistances(line: &GeometryCoordinates, anchor: &Anchor) -> Vec<f64> {
         let mut tileDistances: Vec<f64> = vec![0.0; line.len()];
         if let Some(segment) = (anchor.segment) {
@@ -1128,6 +1153,7 @@ impl SymbolLayout {
 }
 
 impl SymbolLayout {
+    /// maplibre/maplibre-native#4add9ea original name: addFeature
     fn addFeature(
         &mut self,
         layoutFeatureIndex: usize,
@@ -1440,6 +1466,7 @@ impl SymbolLayout {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: anchorIsTooClose
     fn anchorIsTooClose(&mut self, text: &U16String, repeatDistance: f64, anchor: &Anchor) -> bool {
         if let Some(otherAnchors) = self.compareText.get(text) {
             for otherAnchor in otherAnchors {
@@ -1456,11 +1483,13 @@ impl SymbolLayout {
         return false;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: addToDebugBuffers
     fn addToDebugBuffers(&self, bucket: &mut SymbolBucket) {
         todo!()
     }
 
     // Adds placed items to the buffer.
+    /// maplibre/maplibre-native#4add9ea original name: addSymbol
     fn addSymbol(
         &self,
         buffer: &mut SymbolBucketBuffer,
@@ -1572,6 +1601,7 @@ impl SymbolLayout {
 
         return index as usize;
     }
+    /// maplibre/maplibre-native#4add9ea original name: addSymbols
     fn addSymbols(
         &self,
         buffer: &mut SymbolBucketBuffer,
@@ -1596,6 +1626,7 @@ impl SymbolLayout {
 
     // Adds symbol quads to bucket and returns formatted section index of last
     // added quad.
+    /// maplibre/maplibre-native#4add9ea original name: addSymbolGlyphQuads
     fn addSymbolGlyphQuads(
         &self,
         bucket: &mut SymbolBucket,
@@ -1687,6 +1718,7 @@ impl SymbolLayout {
         };
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: updatePaintPropertiesForSection
     fn updatePaintPropertiesForSection(
         &self,
         bucket: &SymbolBucket,
@@ -1743,6 +1775,7 @@ mod tests {
     };
 
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: test
     fn test() {
         let fontStack = vec![
             "Open Sans Regular".to_string(),

@@ -14,25 +14,30 @@ use crate::{
     },
 };
 
+/// maplibre/maplibre-native#4add9ea original name: PointAndCameraDistance
 type PointAndCameraDistance = (Point2D<f64, TileSpace>, f64); // TODO is the Unit correct?
 
+/// maplibre/maplibre-native#4add9ea original name: TileDistance
 pub struct TileDistance {
     pub prevTileDistance: f64,
     pub lastSegmentViewportDistance: f64,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: project
 pub fn project(point: Point2D<f64, TileSpace>, matrix: &Matrix4<f64>) -> PointAndCameraDistance {
     let pos = Vector4::new(point.x, point.y, 0., 1.);
     let pos = matrix * pos; // TODO verify this multiplications
     return (Point2D::new(pos[0] / pos[3], pos[1] / pos[3]), pos[3]);
 }
 
+/// maplibre/maplibre-native#4add9ea original name: PlacedGlyph
 pub struct PlacedGlyph {
     pub point: Point2D<f64, TileSpace>,
     pub angle: f64,
     pub tileDistance: Option<TileDistance>,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: placeFirstAndLastGlyph
 pub fn placeFirstAndLastGlyph(
     fontScale: f64,
     lineOffsetX: f64,
@@ -86,6 +91,7 @@ pub fn placeFirstAndLastGlyph(
     return None;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: placeGlyphAlongLine
 fn placeGlyphAlongLine(
     offsetX: f64,
     lineOffsetX: f64,
@@ -199,6 +205,7 @@ fn placeGlyphAlongLine(
     });
 }
 
+/// maplibre/maplibre-native#4add9ea original name: projectTruncatedLineSegment
 fn projectTruncatedLineSegment(
     &previousTilePoint: &Point2D<f64, TileSpace>,
     currentTilePoint: &Point2D<f64, TileSpace>,

@@ -21,6 +21,7 @@ use crate::{
     },
 };
 
+/// maplibre/maplibre-native#4add9ea original name: Padding
 #[derive(Clone, Copy, Default, PartialEq)]
 pub struct Padding {
     pub left: f64,
@@ -30,16 +31,19 @@ pub struct Padding {
 }
 
 impl Into<bool> for Padding {
+    /// maplibre/maplibre-native#4add9ea original name: into
     fn into(self) -> bool {
         self.left != 0. || self.top != 0. || self.right != 0. || self.bottom != 0.
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: AnchorAlignment
 struct AnchorAlignment {
     horizontalAlign: f64,
     verticalAlign: f64,
 }
 impl AnchorAlignment {
+    /// maplibre/maplibre-native#4add9ea original name: getAnchorAlignment
     fn getAnchorAlignment(anchor: SymbolAnchorType) -> AnchorAlignment {
         let mut result = AnchorAlignment {
             horizontalAlign: 0.5,
@@ -78,6 +82,7 @@ impl AnchorAlignment {
 }
 
 // Choose the justification that matches the direction of the TextAnchor
+/// maplibre/maplibre-native#4add9ea original name: getAnchorJustification
 pub fn getAnchorJustification(anchor: &SymbolAnchorType) -> TextJustifyType {
     match (anchor) {
         SymbolAnchorType::Right | SymbolAnchorType::TopRight | SymbolAnchorType::BottomRight => {
@@ -90,6 +95,7 @@ pub fn getAnchorJustification(anchor: &SymbolAnchorType) -> TextJustifyType {
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: PositionedIcon
 #[derive(Clone)]
 pub struct PositionedIcon {
     pub image: ImagePosition,
@@ -101,6 +107,7 @@ pub struct PositionedIcon {
 }
 
 impl PositionedIcon {
+    /// maplibre/maplibre-native#4add9ea original name: shapeIcon
     pub fn shapeIcon(
         image: ImagePosition,
         iconOffset: &[f64; 2],
@@ -136,6 +143,7 @@ impl PositionedIcon {
 
     // Updates shaped icon's bounds based on shaped text's bounds and provided
     // layout properties.
+    /// maplibre/maplibre-native#4add9ea original name: fitIconToText
     pub fn fitIconToText(
         &mut self,
         shapedText: &Shaping,
@@ -178,6 +186,7 @@ impl PositionedIcon {
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: getShaping
 pub fn getShaping(
     formattedString: &TaggedString,
     maxWidth: f64,
@@ -257,6 +266,7 @@ pub fn getShaping(
 // Zero width space that is used to suggest break points for Japanese labels.
 const ZWSP: Char16 = '\u{200b}' as Char16;
 
+/// maplibre/maplibre-native#4add9ea original name: align
 fn align(
     shaping: &mut Shaping,
     justify: f64,
@@ -284,6 +294,7 @@ fn align(
 }
 
 // justify left = 0, right = 1, center = .5
+/// maplibre/maplibre-native#4add9ea original name: justifyLine
 fn justifyLine(positionedGlyphs: &mut Vec<PositionedGlyph>, justify: f64, lineOffset: f64) {
     if (justify == 0.0 && lineOffset == 0.0) {
         return;
@@ -298,6 +309,7 @@ fn justifyLine(positionedGlyphs: &mut Vec<PositionedGlyph>, justify: f64, lineOf
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: getGlyphAdvance
 fn getGlyphAdvance(
     codePoint: Char16,
     section: &SectionOptions,
@@ -340,6 +352,7 @@ fn getGlyphAdvance(
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: determineAverageLineWidth
 fn determineAverageLineWidth(
     logicalInput: &TaggedString,
     spacing: f64,
@@ -367,6 +380,7 @@ fn determineAverageLineWidth(
     return totalWidth / targetLineCount as f64;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: calculateBadness
 fn calculateBadness(lineWidth: f64, targetWidth: f64, penalty: f64, isLastBreak: bool) -> f64 {
     let raggedness = (lineWidth - targetWidth).pow(2) as f64;
     if (isLastBreak) {
@@ -383,6 +397,7 @@ fn calculateBadness(lineWidth: f64, targetWidth: f64, penalty: f64, isLastBreak:
     return raggedness + penalty * penalty;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: calculatePenalty
 fn calculatePenalty(
     codePoint: Char16,
     nextCodePoint: Char16,
@@ -413,6 +428,7 @@ fn calculatePenalty(
     return penalty;
 }
 
+/// maplibre/maplibre-native#4add9ea original name: PotentialBreak
 #[derive(Clone)]
 struct PotentialBreak {
     pub index: usize,
@@ -421,6 +437,7 @@ struct PotentialBreak {
     pub badness: f64,
 }
 
+/// maplibre/maplibre-native#4add9ea original name: evaluateBreak
 fn evaluateBreak(
     breakIndex: usize,
     breakX: f64,
@@ -454,6 +471,7 @@ fn evaluateBreak(
     };
 }
 
+/// maplibre/maplibre-native#4add9ea original name: leastBadBreaks
 fn leastBadBreaks(lastLineBreak: &PotentialBreak) -> BTreeSet<usize> {
     let mut leastBadBreaks: BTreeSet<usize> = BTreeSet::from([lastLineBreak.index]);
     let mut priorBreak = &lastLineBreak.priorBreak;
@@ -467,6 +485,7 @@ fn leastBadBreaks(lastLineBreak: &PotentialBreak) -> BTreeSet<usize> {
 
 // We determine line breaks based on shaped text in logical order. Working in visual order would be
 //  more intuitive, but we can't do that because the visual order may be changed by line breaks!
+/// maplibre/maplibre-native#4add9ea original name: determineLineBreaks
 fn determineLineBreaks(
     logicalInput: &TaggedString,
     spacing: f64,
@@ -549,6 +568,7 @@ fn determineLineBreaks(
     ));
 }
 
+/// maplibre/maplibre-native#4add9ea original name: shapeLines
 fn shapeLines(
     shaping: &mut Shaping,
     lines: &mut Vec<TaggedString>,
@@ -786,6 +806,7 @@ mod test {
     };
 
     #[test]
+    /// maplibre/maplibre-native#4add9ea original name: Shaping_ZWSP
     fn Shaping_ZWSP() {
         let mut glyphPosition = GlyphPosition::default();
         glyphPosition.metrics.width = 18;

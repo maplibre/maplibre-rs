@@ -4,8 +4,10 @@ use std::collections::BTreeSet;
 
 use widestring::U16String;
 
+/// maplibre/maplibre-native#4add9ea original name: Char16
 pub type Char16 = u16; // was char16_t
 
+/// maplibre/maplibre-native#4add9ea original name: applyArabicShaping
 pub fn applyArabicShaping(str: &U16String) -> U16String {
     // TODO: Add real implementation
     str.clone()
@@ -15,14 +17,17 @@ pub fn applyArabicShaping(str: &U16String) -> U16String {
 // the styling options to use for rendering that code point
 // The data structure is intended to accomodate the reordering/interleaving
 // of formatting that can happen when BiDi rearranges inputs
+/// maplibre/maplibre-native#4add9ea original name: StyledText
 pub type StyledText = (U16String, Vec<u8>);
 
+/// maplibre/maplibre-native#4add9ea original name: BiDi
 pub struct BiDi;
 
 impl BiDi {
     // TODO: This implementation is from the QT backend and lacks ICU support
     /// Given text in logical ordering and a set of line break points,
     /// return a set of lines in visual order with bidi and line breaking applied
+    /// maplibre/maplibre-native#4add9ea original name: processText
     pub fn processText(
         &self,
         input: &U16String,
@@ -41,6 +46,7 @@ impl BiDi {
     }
 
     /// Same as processText but preserves per-code-point formatting information
+    /// maplibre/maplibre-native#4add9ea original name: processStyledText
     pub fn processStyledText(
         &self,
         input: &StyledText,

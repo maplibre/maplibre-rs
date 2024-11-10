@@ -23,6 +23,7 @@ pub struct TileSpace; // The unit in which geometries or symbols are on a tile (
 pub struct ScreenSpace;
 
 // TODO where should this live?
+/// maplibre/maplibre-native#4add9ea original name: MapMode
 #[derive(Copy, Clone, PartialEq)]
 pub enum MapMode {
     ///< continually updating map
@@ -34,6 +35,7 @@ pub enum MapMode {
 }
 
 // TODO this is just a dummy
+/// maplibre/maplibre-native#4add9ea original name: CanonicalTileID
 #[derive(Copy, Clone)]
 pub struct CanonicalTileID {
     pub x: u32,
@@ -42,6 +44,7 @@ pub struct CanonicalTileID {
 }
 
 // TODO
+/// maplibre/maplibre-native#4add9ea original name: OverscaledTileID
 #[derive(Copy, Clone)]
 pub struct OverscaledTileID {
     pub canonical: CanonicalTileID,
@@ -49,6 +52,7 @@ pub struct OverscaledTileID {
 }
 
 impl OverscaledTileID {
+    /// maplibre/maplibre-native#4add9ea original name: overscaleFactor
     pub fn overscaleFactor(&self) -> u32 {
         return 1 << (self.overscaledZ - self.canonical.z);
     }

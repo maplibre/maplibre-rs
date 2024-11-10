@@ -20,12 +20,15 @@ use crate::{
     render::{camera::ModelViewProjection, view_state::ViewState},
 };
 
+/// maplibre/maplibre-native#4add9ea original name: TransformState
 type TransformState = ViewState;
 
+/// maplibre/maplibre-native#4add9ea original name: CollisionBoundaries
 type CollisionBoundaries = Box2D<f64, ScreenSpace>; // [f64; 4]; // [x1, y1, x2, y2]
 
 bitflags! {
     /// Represents a set of flags.
+    /// maplibre/maplibre-native#4add9ea original name: IntersectStatusFlags:
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     struct IntersectStatusFlags: u8 {
         const None = 0;
@@ -36,11 +39,13 @@ bitflags! {
 }
 
 impl Default for IntersectStatusFlags {
+    /// maplibre/maplibre-native#4add9ea original name: default
     fn default() -> Self {
         Self::None
     }
 }
 
+/// maplibre/maplibre-native#4add9ea original name: IntersectStatus
 #[derive(Default)]
 struct IntersectStatus {
     flags: IntersectStatusFlags,
@@ -59,6 +64,7 @@ const viewportPaddingDefault: f64 = 100.;
 // Viewport padding must be much larger for static tiles to avoid clipped labels.
 const viewportPaddingForStaticTiles: f64 = 1024.;
 
+/// maplibre/maplibre-native#4add9ea original name: findViewportPadding
 fn findViewportPadding(transformState: &TransformState, mapMode: MapMode) -> f64 {
     if (mapMode == MapMode::Tile) {
         return viewportPaddingForStaticTiles;
@@ -70,7 +76,9 @@ fn findViewportPadding(transformState: &TransformState, mapMode: MapMode) -> f64
     };
 }
 
+/// maplibre/maplibre-native#4add9ea original name: CollisionGrid
 type CollisionGrid = GridIndex<IndexedSubfeature>;
+/// maplibre/maplibre-native#4add9ea original name: CollisionIndex
 pub struct CollisionIndex {
     transformState: TransformState,
     viewportPadding: f64,
@@ -84,6 +92,7 @@ pub struct CollisionIndex {
 }
 
 impl CollisionIndex {
+    /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(transformState: &TransformState, mapMode: MapMode) -> Self {
         let viewportPadding = findViewportPadding(transformState, mapMode);
         Self {
@@ -108,6 +117,7 @@ impl CollisionIndex {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: intersectsTileEdges
     pub fn intersectsTileEdges(
         &self,
         box_: &CollisionBox,
@@ -152,6 +162,7 @@ impl CollisionIndex {
         return result;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: placeFeature
     pub fn placeFeature<F>(
         &self,
         feature: &CollisionFeature,
@@ -215,6 +226,7 @@ impl CollisionIndex {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: insertFeature
     pub fn insertFeature(
         &mut self,
         feature: CollisionFeature,
@@ -275,6 +287,7 @@ impl CollisionIndex {
         }
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: queryRenderedSymbols
     pub fn queryRenderedSymbols(
         &self,
         line_string: &ScreenLineString,
@@ -282,6 +295,7 @@ impl CollisionIndex {
         todo!()
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: projectTileBoundaries
     pub fn projectTileBoundaries(&self, posMatrix: &ModelViewProjection) -> CollisionBoundaries {
         let topLeft = self.projectPoint(posMatrix, &Point2D::zero());
         let bottomRight = self.projectPoint(posMatrix, &Point2D::new(EXTENT, EXTENT)); // FIXME: maplibre-native uses here 8192 for extent
@@ -292,22 +306,26 @@ impl CollisionIndex {
         );
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: getTransformState
     pub fn getTransformState(&self) -> &TransformState {
         return &self.transformState;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: getViewportPadding
     pub fn getViewportPadding(&self) -> f64 {
         return self.viewportPadding;
     }
 }
 
 impl CollisionIndex {
+    /// maplibre/maplibre-native#4add9ea original name: isOffscreen
     fn isOffscreen(&self, boundaries: &CollisionBoundaries) -> bool {
         return boundaries.max.x < self.viewportPadding
             || boundaries.min.x >= self.screenRightBoundary
             || boundaries.max.y < self.viewportPadding
             || boundaries.min.y >= self.screenBottomBoundary;
     }
+    /// maplibre/maplibre-native#4add9ea original name: isInsideGrid
     fn isInsideGrid(&self, boundaries: &CollisionBoundaries) -> bool {
         return boundaries.max.x >= 0.
             && boundaries.min.x < self.gridRightBoundary
@@ -315,6 +333,7 @@ impl CollisionIndex {
             && boundaries.min.y < self.gridBottomBoundary;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: isInsideTile
     fn isInsideTile(
         &self,
         boundaries: &CollisionBoundaries,
@@ -326,6 +345,7 @@ impl CollisionIndex {
             && boundaries.max.y < tileBoundaries.max.y;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: overlapsTile
     fn overlapsTile(
         &self,
         boundaries: &CollisionBoundaries,
@@ -337,6 +357,7 @@ impl CollisionIndex {
             && boundaries.max.y > tileBoundaries.min.y;
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: placeLineFeature
     fn placeLineFeature<F>(
         &self,
         feature: &CollisionFeature,
@@ -510,6 +531,7 @@ impl CollisionIndex {
         );
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: approximateTileDistance
     fn approximateTileDistance(
         &self,
         tileDistance: &TileDistance,
@@ -544,6 +566,7 @@ impl CollisionIndex {
             + (incidenceStretch - 1.) * lastSegmentTile * lastSegmentAngle.sin().abs();
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: projectAnchor
     fn projectAnchor(
         &self,
         posMatrix: &ModelViewProjection,
@@ -556,6 +579,7 @@ impl CollisionIndex {
             p[3],
         );
     }
+    /// maplibre/maplibre-native#4add9ea original name: projectAndGetPerspectiveRatio
     fn projectAndGetPerspectiveRatio(
         &self,
         posMatrix: &ModelViewProjection,
@@ -577,6 +601,7 @@ impl CollisionIndex {
             0.5 + 0.5 * ccd / p[3],
         );
     }
+    /// maplibre/maplibre-native#4add9ea original name: projectPoint
     fn projectPoint(
         &self,
         posMatrix: &ModelViewProjection,
@@ -592,6 +617,7 @@ impl CollisionIndex {
         );
     }
 
+    /// maplibre/maplibre-native#4add9ea original name: getProjectedCollisionBoundaries
     fn getProjectedCollisionBoundaries(
         &self,
         posMatrix: &ModelViewProjection,
