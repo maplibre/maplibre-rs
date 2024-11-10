@@ -94,18 +94,18 @@ impl<T> Default for PropertyValue<T> {
 
 impl<T> PropertyValue<T> {
     /// maplibre/maplibre-native#4add9ea original name: isUndefined
-    pub fn isUndefined(&self) -> bool {
+    pub fn is_undefined(&self) -> bool {
         // todo!()
         false
     }
     /// maplibre/maplibre-native#4add9ea original name: isDataDriven
-    pub fn isDataDriven(&self) -> bool {
+    pub fn is_data_driven(&self) -> bool {
         // todo!()
         false
     }
 
     /// maplibre/maplibre-native#4add9ea original name: isZoomant
-    pub fn isZoomant(&self) -> bool {
+    pub fn is_zoomant(&self) -> bool {
         //  todo!()
         false
     }
@@ -131,7 +131,7 @@ impl<T> Default for PossiblyEvaluatedPropertyValue<T> {
 
 impl<T> PossiblyEvaluatedPropertyValue<T> {
     /// maplibre/maplibre-native#4add9ea original name: constantOr
-    pub fn constantOr(&self, constant: T) -> T {
+    pub fn constant_or(&self, constant: T) -> T {
         todo!()
     }
 }
@@ -147,12 +147,12 @@ pub trait LayoutProperty {
     type PossiblyEvaluatedType;
 
     type Type;
-    const IsDataDriven: bool = false;
-    const IsOverridable: bool = false;
+    const IS_DATA_DRIVEN: bool = false;
+    const IS_OVERRIDABLE: bool = false;
 
     fn name() -> &'static str;
 
-    fn defaultValue() -> Self::Type;
+    fn default_value() -> Self::Type;
 }
 
 pub trait DataDrivenLayoutProperty {
@@ -166,12 +166,12 @@ pub trait DataDrivenLayoutProperty {
     type PossiblyEvaluatedTyp: Default;
 
     type Type;
-    const IsDataDriven: bool = true;
-    const IsOverridable: bool = false;
+    const IS_DATA_DRIVEN: bool = true;
+    const IS_OVERRIDABLE: bool = false;
 
     fn name() -> &'static str;
 
-    fn defaultValue() -> Self::Type;
+    fn default_value() -> Self::Type;
 }
 
 // text
@@ -189,7 +189,7 @@ impl LayoutProperty for IconAllowOverlap {
         "icon-allow-overlap"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         false
     }
 }
@@ -208,7 +208,7 @@ impl DataDrivenLayoutProperty for IconAnchor {
         "icon-anchor"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         SymbolAnchorType::Center
     }
 }
@@ -227,7 +227,7 @@ impl LayoutProperty for IconIgnorePlacement {
         "icon-ignore-placement"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         false
     }
 }
@@ -246,7 +246,7 @@ impl DataDrivenLayoutProperty for IconImage {
         "icon-image"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         expression::Image::default()
     }
 }
@@ -265,7 +265,7 @@ impl LayoutProperty for IconKeepUpright {
         "icon-keep-upright"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         false
     }
 }
@@ -284,7 +284,7 @@ impl DataDrivenLayoutProperty for IconOffset {
         "icon-offset"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         [0.0, 0.0]
     }
 }
@@ -303,7 +303,7 @@ impl LayoutProperty for IconOptional {
         "icon-optional"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         false
     }
 }
@@ -322,7 +322,7 @@ impl LayoutProperty for IconPadding {
         "icon-padding"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         2.0
     }
 }
@@ -341,7 +341,7 @@ impl LayoutProperty for IconPitchAlignment {
         "icon-pitch-alignment"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         AlignmentType::Auto
     }
 }
@@ -360,7 +360,7 @@ impl DataDrivenLayoutProperty for IconRotate {
         "icon-rotate"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         0.0
     }
 }
@@ -379,7 +379,7 @@ impl LayoutProperty for IconRotationAlignment {
         "icon-rotation-alignment"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         AlignmentType::Auto
     }
 }
@@ -397,7 +397,7 @@ impl DataDrivenLayoutProperty for IconSize {
         "icon-size"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         1.0
     }
 }
@@ -416,7 +416,7 @@ impl LayoutProperty for IconTextFit {
         "icon-text-fit"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         IconTextFitType::None
     }
 }
@@ -433,7 +433,7 @@ impl LayoutProperty for IconTextFitPadding {
         "icon-text-fit-padding"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         [0.0, 0.0, 0.0, 0.0]
     }
 }
@@ -452,7 +452,7 @@ impl LayoutProperty for SymbolAvoidEdges {
         "symbol-avoid-edges"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         false
     }
 }
@@ -471,7 +471,7 @@ impl LayoutProperty for SymbolPlacement {
         "symbol-placement"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         SymbolPlacementType::Point
     }
 }
@@ -490,7 +490,7 @@ impl DataDrivenLayoutProperty for SymbolSortKey {
         "symbol-sort-key"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         0.0
     }
 }
@@ -509,7 +509,7 @@ impl LayoutProperty for SymbolSpacing {
         "symbol-spacing"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         250.0
     }
 }
@@ -528,7 +528,7 @@ impl LayoutProperty for SymbolZOrder {
         "symbol-z-order"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         SymbolZOrderType::Auto
     }
 }
@@ -546,7 +546,7 @@ impl LayoutProperty for TextAllowOverlap {
         "text-allow-overlap"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         false
     }
 }
@@ -565,7 +565,7 @@ impl DataDrivenLayoutProperty for TextAnchor {
         "text-anchor"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         SymbolAnchorType::Center
     }
 }
@@ -583,7 +583,7 @@ impl DataDrivenLayoutProperty for TextField {
         "text-field"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         expression::Formatted::default()
     }
 }
@@ -602,7 +602,7 @@ impl DataDrivenLayoutProperty for TextFont {
         "text-font"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         vec![
             "Open Sans Regular".to_string(),
             "Arial Unicode MS Regular".to_string(),
@@ -624,7 +624,7 @@ impl LayoutProperty for TextIgnorePlacement {
         "text-ignore-placement"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         false
     }
 }
@@ -643,7 +643,7 @@ impl DataDrivenLayoutProperty for TextJustify {
         "text-justify"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         TextJustifyType::Center
     }
 }
@@ -663,7 +663,7 @@ impl LayoutProperty for TextKeepUpright {
         "text-keep-upright"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         true
     }
 }
@@ -683,7 +683,7 @@ impl DataDrivenLayoutProperty for TextLetterSpacing {
         "text-letter-spacing"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         0.0
     }
 }
@@ -703,7 +703,7 @@ impl LayoutProperty for TextLineHeight {
         "text-line-height"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         1.2
     }
 }
@@ -722,7 +722,7 @@ impl LayoutProperty for TextMaxAngle {
         "text-max-angle"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         45.0
     }
 }
@@ -741,7 +741,7 @@ impl DataDrivenLayoutProperty for TextMaxWidth {
         "text-max-width"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         10.0
     }
 }
@@ -760,7 +760,7 @@ impl DataDrivenLayoutProperty for TextOffset {
         "text-offset"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         [0.0, 0.0]
     }
 }
@@ -779,7 +779,7 @@ impl LayoutProperty for TextOptional {
         "text-optional"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         false
     }
 }
@@ -798,7 +798,7 @@ impl LayoutProperty for TextPadding {
         "text-padding"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         2.0
     }
 }
@@ -818,7 +818,7 @@ impl LayoutProperty for TextPitchAlignment {
         "text-pitch-alignment"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         AlignmentType::Auto
     }
 }
@@ -837,7 +837,7 @@ impl DataDrivenLayoutProperty for TextRadialOffset {
         "text-radial-offset"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         0.0
     }
 }
@@ -856,7 +856,7 @@ impl DataDrivenLayoutProperty for TextRotate {
         "text-rotate"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         0.0
     }
 }
@@ -874,7 +874,7 @@ impl LayoutProperty for TextRotationAlignment {
         "text-rotation-alignment"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         AlignmentType::Auto
     }
 }
@@ -893,7 +893,7 @@ impl DataDrivenLayoutProperty for TextSize {
         "text-size"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         16.0
     }
 }
@@ -912,7 +912,7 @@ impl DataDrivenLayoutProperty for TextTransform {
         "text-transform"
     }
 
-    fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
+    fn default_value() -> <Self as DataDrivenLayoutProperty>::Type {
         TextTransformType::None
     }
 }
@@ -931,7 +931,7 @@ impl LayoutProperty for TextVariableAnchor {
         "text-variable-anchor"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         Vec::new()
     }
 }
@@ -950,7 +950,7 @@ impl LayoutProperty for TextWritingMode {
         "text-writing-mode"
     }
 
-    fn defaultValue() -> <Self as LayoutProperty>::Type {
+    fn default_value() -> <Self as LayoutProperty>::Type {
         Vec::new()
     }
 }
@@ -1001,7 +1001,7 @@ pub mod expression {
     /// maplibre/maplibre-native#4add9ea original name: Image
     #[derive(Default, Clone)]
     pub struct Image {
-        pub imageID: String,
+        pub image_id: String,
         pub available: bool,
     }
     /// maplibre/maplibre-native#4add9ea original name: Formatted
@@ -1017,9 +1017,9 @@ pub mod expression {
                 sections: vec![FormattedSection {
                     text: "AllerAnfangistschwer".to_string(),
                     image: None,
-                    fontScale: None,
-                    fontStack: None,
-                    textColor: None,
+                    font_scale: None,
+                    font_stack: None,
+                    text_color: None,
                 }],
             }
         }
@@ -1027,11 +1027,11 @@ pub mod expression {
 
     impl Formatted {
         /// maplibre/maplibre-native#4add9ea original name: toString
-        fn toString() -> String {
+        fn to_string() -> String {
             todo!()
         }
         /// maplibre/maplibre-native#4add9ea original name: toObject
-        fn toObject() -> Value {
+        fn to_object() -> Value {
             todo!()
         }
 
@@ -1053,14 +1053,14 @@ pub mod expression {
     pub struct FormattedSection {
         pub text: String,
         pub image: Option<Image>,
-        pub fontScale: Option<f64>,
-        pub fontStack: Option<FontStack>,
-        pub textColor: Option<Color>,
+        pub font_scale: Option<f64>,
+        pub font_stack: Option<FontStack>,
+        pub text_color: Option<Color>,
     }
 
-    pub const kFormattedSectionFontScale: &str = "font-scale";
-    pub const kFormattedSectionTextFont: &str = "text-font";
-    pub const kFormattedSectionTextColor: &str = "text-color";
+    pub const K_FORMATTED_SECTION_FONT_SCALE: &str = "font-scale";
+    pub const K_FORMATTED_SECTION_TEXT_FONT: &str = "text-font";
+    pub const K_FORMATTED_SECTION_TEXT_COLOR: &str = "text-color";
 
     // TODO
     /// maplibre/maplibre-native#4add9ea original name: FeatureState
@@ -1071,11 +1071,11 @@ pub mod expression {
         zoom: Option<f64>,
         accumulated: Option<Value>,
         feature: Rc<SymbolGeometryTileFeature>,
-        colorRampParameter: Option<f64>,
+        color_ramp_parameter: Option<f64>,
         // Contains formatted section object, std::unordered_map<std::string, Value>.
-        formattedSection: Rc<Value>,
-        featureState: Rc<FeatureState>,
-        availableImages: Rc<BTreeSet<String>>,
+        formatted_section: Rc<Value>,
+        feature_state: Rc<FeatureState>,
+        available_images: Rc<BTreeSet<String>>,
         canonical: Rc<CanonicalTileID>,
     }
 }
@@ -1105,7 +1105,7 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
     /// maplibre/maplibre-native#4add9ea original name: get
     pub fn get<T: LayoutProperty>(&self) -> T::Type {
         // todo!()
-        T::defaultValue()
+        T::default_value()
     }
     /// maplibre/maplibre-native#4add9ea original name: set
     pub fn set<T: LayoutProperty>(&mut self, value: T::Type) {
@@ -1125,7 +1125,7 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
         p2: CanonicalTileID,
     ) -> T::Type {
         //todo!()
-        T::defaultValue()
+        T::default_value()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: evaluate_feature
@@ -1147,7 +1147,7 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
         p2: CanonicalTileID,
     ) -> T::Type {
         //todo!()
-        T::defaultValue()
+        T::default_value()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: evaluate_static
@@ -1158,7 +1158,7 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
         p2: CanonicalTileID,
     ) -> T::Type {
         //todo!()
-        T::defaultValue()
+        T::default_value()
     }
 }
 
@@ -1166,7 +1166,7 @@ impl SymbolLayoutProperties_Evaluated {
     /// maplibre/maplibre-native#4add9ea original name: get
     pub fn get<T: LayoutProperty>(&self) -> T::Type {
         //todo!()
-        T::defaultValue()
+        T::default_value()
     }
     /// maplibre/maplibre-native#4add9ea original name: set
     pub fn set<T: LayoutProperty>(&mut self, value: T::Type) {
@@ -1182,7 +1182,7 @@ impl SymbolLayoutProperties_Evaluated {
     /// maplibre/maplibre-native#4add9ea original name: get_eval
     pub fn get_eval<T: DataDrivenLayoutProperty>(&self) -> T::Type {
         //todo!()
-        T::defaultValue()
+        T::default_value()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: evaluate
@@ -1193,7 +1193,7 @@ impl SymbolLayoutProperties_Evaluated {
         p2: CanonicalTileID,
     ) -> T::Type {
         //todo!()
-        T::defaultValue()
+        T::default_value()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: evaluate_static
@@ -1204,6 +1204,6 @@ impl SymbolLayoutProperties_Evaluated {
         p2: CanonicalTileID,
     ) -> T::Type {
         //todo!()
-        T::defaultValue()
+        T::default_value()
     }
 }

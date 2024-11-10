@@ -125,10 +125,10 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                             overscaledZ: 0,
                         };
                         let mut parameters = BucketParameters {
-                            tileID: tile_id,
+                            tile_id: tile_id,
                             mode: MapMode::Continuous,
-                            pixelRatio: 1.0,
-                            layerType: LayerTypeInfo,
+                            pixel_ratio: 1.0,
+                            layer_type: LayerTypeInfo,
                         };
                         let layer_data = SymbolGeometryTileLayer {
                             name: layer_name.clone(),
@@ -207,10 +207,10 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                             &layer_properties,
                             Box::new(layer_data),
                             &mut LayoutParameters {
-                                bucketParameters: &mut parameters.clone(),
-                                glyphDependencies: &mut glyphDependencies,
-                                imageDependencies: &mut Default::default(),
-                                availableImages: &mut Default::default(),
+                                bucket_parameters: &mut parameters.clone(),
+                                glyph_dependencies: &mut glyphDependencies,
+                                image_dependencies: &mut Default::default(),
+                                available_images: &mut Default::default(),
                             },
                         )
                         .unwrap();
@@ -240,7 +240,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                         let mut buffer = VertexBuffers::new();
                         let text_buffer = new_buffer.bucket.text;
                         let SymbolBucketBuffer {
-                            sharedVertices,
+                            shared_vertices: sharedVertices,
                             triangles,
                             ..
                         } = text_buffer;

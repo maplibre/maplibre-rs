@@ -18,8 +18,8 @@ use crate::{
 #[derive(Clone)]
 pub struct CollisionFeature {
     pub boxes: Vec<CollisionBox>,
-    pub indexedFeature: IndexedSubfeature,
-    pub alongLine: bool,
+    pub indexed_feature: IndexedSubfeature,
+    pub along_line: bool,
 }
 
 impl CollisionFeature {
@@ -31,37 +31,37 @@ impl CollisionFeature {
         bottom: f64,
         left: f64,
         right: f64,
-        collisionPadding: Option<Padding>,
-        boxScale: f64,
+        collision_padding: Option<Padding>,
+        box_scale: f64,
         padding: f64,
         placement: SymbolPlacementType,
-        indexedFeature_: IndexedSubfeature,
+        indexed_feature: IndexedSubfeature,
         overscaling: f64,
         rotate_: f64,
     ) -> Self {
         let mut self_ = Self {
             boxes: vec![],
-            indexedFeature: indexedFeature_,
-            alongLine: placement != SymbolPlacementType::Point,
+            indexed_feature,
+            along_line: placement != SymbolPlacementType::Point,
         };
 
         if top == 0. && bottom == 0. && left == 0. && right == 0. {
             return self_;
         }
 
-        let mut y1 = top * boxScale - padding;
-        let mut y2 = bottom * boxScale + padding;
-        let mut x1 = left * boxScale - padding;
-        let mut x2 = right * boxScale + padding;
+        let mut y1 = top * box_scale - padding;
+        let mut y2 = bottom * box_scale + padding;
+        let mut x1 = left * box_scale - padding;
+        let mut x2 = right * box_scale + padding;
 
-        if let Some(collisionPadding) = collisionPadding {
-            x1 -= collisionPadding.left * boxScale;
-            y1 -= collisionPadding.top * boxScale;
-            x2 += collisionPadding.right * boxScale;
-            y2 += collisionPadding.bottom * boxScale;
+        if let Some(collisionPadding) = collision_padding {
+            x1 -= collisionPadding.left * box_scale;
+            y1 -= collisionPadding.top * box_scale;
+            x2 += collisionPadding.right * box_scale;
+            y2 += collisionPadding.bottom * box_scale;
         }
 
-        if self_.alongLine {
+        if self_.along_line {
             let mut height = y2 - y1;
             let length = x2 - x1;
 
@@ -69,12 +69,12 @@ impl CollisionFeature {
                 return self_;
             }
 
-            height = 10.0 * boxScale.max(height);
+            height = 10.0 * box_scale.max(height);
 
-            let anchorPoint = convert_point_i16(&anchor.point);
-            self_.bboxifyLabel(
+            let anchor_point = convert_point_i16(&anchor.point);
+            self_.bboxify_label(
                 line,
-                &anchorPoint,
+                &anchor_point,
                 anchor.segment.unwrap_or(0),
                 length,
                 height,
@@ -83,28 +83,28 @@ impl CollisionFeature {
         } else if rotate_ != 0. {
             // Account for *-rotate in point collision boxes
             // Doesn't account for icon-text-fit
-            let rotateRadians = deg2radf(rotate_);
+            let rotate_radians = deg2radf(rotate_);
 
-            let tl = rotate(&Vector2D::<_, TileSpace>::new(x1, y1), rotateRadians);
-            let tr = rotate(&Vector2D::<_, TileSpace>::new(x2, y1), rotateRadians);
-            let bl = rotate(&Vector2D::<_, TileSpace>::new(x1, y2), rotateRadians);
-            let br = rotate(&Vector2D::<_, TileSpace>::new(x2, y2), rotateRadians);
+            let tl = rotate(&Vector2D::<_, TileSpace>::new(x1, y1), rotate_radians);
+            let tr = rotate(&Vector2D::<_, TileSpace>::new(x2, y1), rotate_radians);
+            let bl = rotate(&Vector2D::<_, TileSpace>::new(x1, y2), rotate_radians);
+            let br = rotate(&Vector2D::<_, TileSpace>::new(x2, y2), rotate_radians);
 
             // Collision features require an "on-axis" geometry,
             // so take the envelope of the rotated geometry
             // (may be quite large for wide labels rotated 45 degrees)
-            let xMin = [tl.x, tr.x, bl.x, br.x].min_value();
-            let xMax = [tl.x, tr.x, bl.x, br.x].max_value();
-            let yMin = [tl.y, tr.y, bl.y, br.y].min_value();
-            let yMax = [tl.y, tr.y, bl.y, br.y].max_value();
+            let x_min = [tl.x, tr.x, bl.x, br.x].min_value();
+            let x_max = [tl.x, tr.x, bl.x, br.x].max_value();
+            let y_min = [tl.y, tr.y, bl.y, br.y].min_value();
+            let y_max = [tl.y, tr.y, bl.y, br.y].max_value();
 
             self_.boxes.push(CollisionBox {
                 anchor: anchor.point,
-                x1: xMin,
-                y1: yMin,
-                x2: xMax,
-                y2: yMax,
-                signedDistanceFromAnchor: 0.0,
+                x1: x_min,
+                y1: y_min,
+                x2: x_max,
+                y2: y_max,
+                signed_distance_from_anchor: 0.0,
             });
         } else {
             self_.boxes.push(CollisionBox {
@@ -113,7 +113,7 @@ impl CollisionFeature {
                 y1,
                 x2,
                 y2,
-                signedDistanceFromAnchor: 0.0,
+                signed_distance_from_anchor: 0.0,
             });
         }
         self_
@@ -124,26 +124,26 @@ impl CollisionFeature {
     pub fn new_from_text(
         line: &GeometryCoordinates,
         anchor: &Anchor,
-        shapedText: Shaping,
-        boxScale: f64,
+        shaped_text: Shaping,
+        box_scale: f64,
         padding: f64,
         placement: SymbolPlacementType,
-        indexedFeature_: IndexedSubfeature,
+        indexed_feature: IndexedSubfeature,
         overscaling: f64,
         rotate: f64,
     ) -> Self {
         Self::new(
             line,
             anchor,
-            shapedText.top,
-            shapedText.bottom,
-            shapedText.left,
-            shapedText.right,
+            shaped_text.top,
+            shaped_text.bottom,
+            shaped_text.left,
+            shaped_text.right,
             None,
-            boxScale,
+            box_scale,
             padding,
             placement,
-            indexedFeature_,
+            indexed_feature,
             overscaling,
             rotate,
         )
@@ -161,59 +161,59 @@ impl CollisionFeature {
     pub fn new_from_icon(
         line: &GeometryCoordinates,
         anchor: &Anchor,
-        shapedIcon: &Option<PositionedIcon>,
-        boxScale: f64,
+        shaped_icon: &Option<PositionedIcon>,
+        box_scale: f64,
         padding: f64,
-        indexedFeature_: IndexedSubfeature,
+        indexed_feature: IndexedSubfeature,
         rotate: f64,
     ) -> Self {
         Self::new(
             line,
             anchor,
-            if let Some(shapedIcon) = &shapedIcon {
+            if let Some(shapedIcon) = &shaped_icon {
                 shapedIcon.top
             } else {
                 0.
             },
-            if let Some(shapedIcon) = &shapedIcon {
+            if let Some(shapedIcon) = &shaped_icon {
                 shapedIcon.bottom
             } else {
                 0.
             },
-            if let Some(shapedIcon) = &shapedIcon {
+            if let Some(shapedIcon) = &shaped_icon {
                 shapedIcon.left
             } else {
                 0.
             },
-            if let Some(shapedIcon) = &shapedIcon {
+            if let Some(shapedIcon) = &shaped_icon {
                 shapedIcon.right
             } else {
                 0.
             },
-            shapedIcon
+            shaped_icon
                 .as_ref()
-                .map(|shapedIcon| shapedIcon.collisionPadding),
-            boxScale,
+                .map(|shaped_icon| shaped_icon.collision_padding),
+            box_scale,
             padding,
             SymbolPlacementType::Point,
-            indexedFeature_,
+            indexed_feature,
             1.,
             rotate,
         )
     }
 
     /// maplibre/maplibre-native#4add9ea original name: bboxifyLabel
-    fn bboxifyLabel(
+    fn bboxify_label(
         &mut self,
         line: &GeometryCoordinates,
-        anchorPoint: &GeometryCoordinate,
+        anchor_point: &GeometryCoordinate,
         segment: usize,
-        labelLength: f64,
-        boxSize: f64,
+        label_length: f64,
+        box_size: f64,
         overscaling: f64,
     ) {
-        let step = boxSize / 2.;
-        let nBoxes = ((labelLength / step).floor() as i32).max(1);
+        let step = box_size / 2.;
+        let n_boxes = ((label_length / step).floor() as i32).max(1);
 
         // We calculate line collision circles out to 300% of what would normally be
         // our max size, to allow collision detection to work on labels that expand
@@ -222,23 +222,24 @@ impl CollisionFeature {
         // overscaled tiles where the pitch 0-based symbol spacing will put labels
         // very close together in a pitched map. To reduce the cost of adding extra
         // collision circles, we slowly increase them for overscaled tiles.
-        let overscalingPaddingFactor = 1. + 0.4 * overscaling.log2();
-        let nPitchPaddingBoxes = ((nBoxes as f64 * overscalingPaddingFactor / 2.).floor()) as i32;
+        let overscaling_padding_factor = 1. + 0.4 * overscaling.log2();
+        let n_pitch_padding_boxes =
+            ((n_boxes as f64 * overscaling_padding_factor / 2.).floor()) as i32;
 
         // offset the center of the first box by half a box so that the edge of the
         // box is at the edge of the label.
-        let firstBoxOffset = -boxSize / 2.;
+        let first_box_offset = -box_size / 2.;
 
-        let mut p = anchorPoint;
+        let mut p = anchor_point;
         let mut index = segment + 1;
-        let mut anchorDistance = firstBoxOffset;
-        let labelStartDistance = -labelLength / 2.;
-        let paddingStartDistance = labelStartDistance - labelLength / 8.;
+        let mut anchor_distance = first_box_offset;
+        let label_start_distance = -label_length / 2.;
+        let padding_start_distance = label_start_distance - label_length / 8.;
 
         // move backwards along the line to the first segment the label appears on
         loop {
             if index == 0 {
-                if anchorDistance > labelStartDistance {
+                if anchor_distance > label_start_distance {
                     // there isn't enough room for the label after the beginning of
                     // the line checkMaxAngle should have already caught this
                     return;
@@ -251,39 +252,39 @@ impl CollisionFeature {
             }
 
             index -= 1;
-            anchorDistance -= convert_point_f64(&line[index]).distance_to(convert_point_f64(p));
+            anchor_distance -= convert_point_f64(&line[index]).distance_to(convert_point_f64(p));
             p = &line[index];
 
-            if !(anchorDistance > paddingStartDistance) {
+            if !(anchor_distance > padding_start_distance) {
                 break;
             }
         }
 
-        let mut segmentLength =
+        let mut segment_length =
             convert_point_f64(&line[index]).distance_to(convert_point_f64(&line[index + 1]));
 
-        for i in -nPitchPaddingBoxes..nBoxes + nPitchPaddingBoxes {
+        for i in -n_pitch_padding_boxes..n_boxes + n_pitch_padding_boxes {
             // the distance the box will be from the anchor
-            let boxOffset = i as f64 * step;
-            let mut boxDistanceToAnchor = labelStartDistance + boxOffset;
+            let box_offset = i as f64 * step;
+            let mut box_distance_to_anchor = label_start_distance + box_offset;
 
             // make the distance between pitch padding boxes bigger
-            if boxOffset < 0. {
-                boxDistanceToAnchor += boxOffset;
+            if box_offset < 0. {
+                box_distance_to_anchor += box_offset;
             }
-            if boxOffset > labelLength {
-                boxDistanceToAnchor += boxOffset - labelLength;
+            if box_offset > label_length {
+                box_distance_to_anchor += box_offset - label_length;
             }
 
-            if boxDistanceToAnchor < anchorDistance {
+            if box_distance_to_anchor < anchor_distance {
                 // The line doesn't extend far enough back for this box, skip it
                 // (This could allow for line collisions on distant tiles)
                 continue;
             }
 
             // the box is not on the current segment. Move to the next segment.
-            while anchorDistance + segmentLength < boxDistanceToAnchor {
-                anchorDistance += segmentLength;
+            while anchor_distance + segment_length < box_distance_to_anchor {
+                anchor_distance += segment_length;
                 index += 1;
 
                 // There isn't enough room before the end of the line.
@@ -291,38 +292,39 @@ impl CollisionFeature {
                     return;
                 }
 
-                segmentLength = convert_point_f64(&line[index])
+                segment_length = convert_point_f64(&line[index])
                     .distance_to(convert_point_f64(&line[index + 1]));
             }
 
             // the distance the box will be from the beginning of the segment
-            let segmentBoxDistance = boxDistanceToAnchor - anchorDistance;
+            let segment_box_distance = box_distance_to_anchor - anchor_distance;
 
             let p0 = line[index];
             let p1 = line[index + 1];
 
-            let boxAnchor = Point2D::new(
-                p0.x as f64 + segmentBoxDistance / segmentLength * (p1.x - p0.x) as f64,
-                p0.y as f64 + segmentBoxDistance / segmentLength * (p1.y - p0.y) as f64,
+            let box_anchor = Point2D::new(
+                p0.x as f64 + segment_box_distance / segment_length * (p1.x - p0.x) as f64,
+                p0.y as f64 + segment_box_distance / segment_length * (p1.y - p0.y) as f64,
             );
 
             // If the box is within boxSize of the anchor, force the box to be used
             // (so even 0-width labels use at least one box)
             // Otherwise, the .8 multiplication gives us a little bit of conservative
             // padding in choosing which boxes to use (see CollisionIndex#placedCollisionCircles)
-            let paddedAnchorDistance = if (boxDistanceToAnchor - firstBoxOffset).abs() < step {
+            let padded_anchor_distance = if (box_distance_to_anchor - first_box_offset).abs() < step
+            {
                 0.0
             } else {
-                (boxDistanceToAnchor - firstBoxOffset) * 0.8
+                (box_distance_to_anchor - first_box_offset) * 0.8
             };
 
             self.boxes.push(CollisionBox {
-                anchor: boxAnchor,
-                x1: -boxSize / 2.,
-                y1: -boxSize / 2.,
-                x2: boxSize / 2.,
-                y2: boxSize / 2.,
-                signedDistanceFromAnchor: paddedAnchorDistance,
+                anchor: box_anchor,
+                x1: -box_size / 2.,
+                y1: -box_size / 2.,
+                x2: box_size / 2.,
+                y2: box_size / 2.,
+                signed_distance_from_anchor: padded_anchor_distance,
             });
         }
     }
@@ -344,7 +346,7 @@ pub struct CollisionBox {
     pub x2: f64,
     pub y2: f64,
 
-    pub signedDistanceFromAnchor: f64,
+    pub signed_distance_from_anchor: f64,
 }
 
 /// maplibre/maplibre-native#4add9ea original name: ProjectedCollisionBox
@@ -379,7 +381,7 @@ impl ProjectedCollisionBox {
     }
 
     /// maplibre/maplibre-native#4add9ea original name: isBox
-    pub fn isBox(&self) -> bool {
+    pub fn is_box(&self) -> bool {
         match self {
             ProjectedCollisionBox::Circle(_) => false,
             ProjectedCollisionBox::Box(_) => true,
@@ -387,7 +389,7 @@ impl ProjectedCollisionBox {
     }
 
     /// maplibre/maplibre-native#4add9ea original name: isCircle
-    pub fn isCircle(&self) -> bool {
+    pub fn is_circle(&self) -> bool {
         match self {
             ProjectedCollisionBox::Circle(_) => true,
             ProjectedCollisionBox::Box(_) => false,

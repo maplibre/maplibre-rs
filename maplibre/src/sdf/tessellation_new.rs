@@ -98,10 +98,10 @@ impl<I> TextTessellatorNew<I> {
             overscaledZ: 0,
         };
         let parameters = BucketParameters {
-            tileID: tile_id,
+            tile_id: tile_id,
             mode: MapMode::Continuous,
-            pixelRatio: 1.0,
-            layerType: LayerTypeInfo,
+            pixel_ratio: 1.0,
+            layer_type: LayerTypeInfo,
         };
         let mut layout = SymbolLayout::new(
             &parameters,
@@ -120,10 +120,10 @@ impl<I> TextTessellatorNew<I> {
                 ))],
             }),
             &mut LayoutParameters {
-                bucketParameters: &mut parameters.clone(),
-                glyphDependencies: &mut glyphDependencies,
-                imageDependencies: &mut Default::default(),
-                availableImages: &mut Default::default(),
+                bucket_parameters: &mut parameters.clone(),
+                glyph_dependencies: &mut glyphDependencies,
+                image_dependencies: &mut Default::default(),
+                available_images: &mut Default::default(),
             },
         )
         .unwrap();

@@ -4,8 +4,8 @@
 #[derive(Clone)]
 pub struct IndexedSubfeature {
     pub ref_: RefIndexedSubfeature,
-    pub sourceLayerNameCopy: String,
-    pub bucketLeaderIDCopy: String,
+    pub source_layer_name_copy: String,
+    pub bucket_leader_idcopy: String,
 }
 
 impl IndexedSubfeature {
@@ -18,14 +18,14 @@ impl IndexedSubfeature {
         IndexedSubfeature {
             ref_: RefIndexedSubfeature {
                 index: indexedFeature.ref_.index,
-                sortIndex: indexedFeature.ref_.sortIndex,
-                sourceLayerName: indexedFeature.ref_.sourceLayerName.to_string(),
-                bucketLeaderID: indexedFeature.ref_.bucketLeaderID.to_string(),
-                bucketInstanceId,
-                collisionGroupId,
+                sort_index: indexedFeature.ref_.sort_index,
+                source_layer_name: indexedFeature.ref_.source_layer_name.to_string(),
+                bucket_leader_id: indexedFeature.ref_.bucket_leader_id.to_string(),
+                bucket_instance_id: bucketInstanceId,
+                collision_group_id: collisionGroupId,
             },
-            sourceLayerNameCopy: indexedFeature.ref_.sourceLayerName.to_string(),
-            bucketLeaderIDCopy: indexedFeature.ref_.bucketLeaderID.to_string(),
+            source_layer_name_copy: indexedFeature.ref_.source_layer_name.to_string(),
+            bucket_leader_idcopy: indexedFeature.ref_.bucket_leader_id.to_string(),
         }
     }
 }
@@ -34,12 +34,12 @@ impl IndexedSubfeature {
 #[derive(Clone)]
 pub struct RefIndexedSubfeature {
     pub index: usize,
-    pub sortIndex: usize,
+    pub sort_index: usize,
 
-    pub sourceLayerName: String,
-    pub bucketLeaderID: String,
+    pub source_layer_name: String,
+    pub bucket_leader_id: String,
 
     // Only used for symbol features
-    pub bucketInstanceId: u32,
-    pub collisionGroupId: u16,
+    pub bucket_instance_id: u32,
+    pub collision_group_id: u16,
 }

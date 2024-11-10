@@ -26,7 +26,7 @@ pub type GlyphIDs = BTreeSet<GlyphID>;
 
 // Note: this only works for the BMP
 /// maplibre/maplibre-native#4add9ea original name: getGlyphRange
-pub fn getGlyphRange(glyph: GlyphID) -> GlyphRange {
+pub fn get_glyph_range(glyph: GlyphID) -> GlyphRange {
     let mut start: u16 = (glyph / 256) * 256;
     let mut end = start + 255;
     if start > 65280 {
@@ -63,7 +63,7 @@ pub struct Glyph {
 }
 
 impl Glyph {
-    pub const borderSize: u8 = 3;
+    pub const BORDER_SIZE: u8 = 3;
 }
 
 /// maplibre/maplibre-native#4add9ea original name: Glyphs
@@ -82,59 +82,59 @@ pub struct PositionedGlyph {
     pub scale: f64,
     pub rect: Rect<u16, TileSpace>,
     pub metrics: GlyphMetrics,
-    pub imageID: Option<String>,
+    pub image_id: Option<String>,
     // Maps positioned glyph to TaggedString section
-    pub sectionIndex: usize,
+    pub section_index: usize,
 }
 
 /// maplibre/maplibre-native#4add9ea original name: PositionedLine
 #[derive(Default, Clone)]
 pub struct PositionedLine {
-    pub positionedGlyphs: Vec<PositionedGlyph>,
-    pub lineOffset: f64,
+    pub positioned_glyphs: Vec<PositionedGlyph>,
+    pub line_offset: f64,
 }
 
 /// maplibre/maplibre-native#4add9ea original name: Shaping
 #[derive(Clone, Default)]
 pub struct Shaping {
-    pub positionedLines: Vec<PositionedLine>,
+    pub positioned_lines: Vec<PositionedLine>,
     pub top: f64,
     pub bottom: f64,
     pub left: f64,
     pub right: f64,
-    pub writingMode: WritingModeType,
+    pub writing_mode: WritingModeType,
 
     pub verticalizable: bool,
-    pub iconsInText: bool,
+    pub icons_in_text: bool,
 }
 impl Shaping {
     // The y offset *should* be part of the font metadata.
-    pub const yOffset: i32 = -17;
+    pub const Y_OFFSET: i32 = -17;
 
     /// maplibre/maplibre-native#4add9ea original name: new
-    pub fn new(x: f64, y: f64, writingMode_: WritingModeType) -> Self {
+    pub fn new(x: f64, y: f64, writing_mode: WritingModeType) -> Self {
         Self {
-            positionedLines: vec![],
+            positioned_lines: vec![],
             top: y,
             bottom: y,
             left: x,
             right: x,
-            writingMode: writingMode_,
+            writing_mode,
             verticalizable: false,
-            iconsInText: false,
+            icons_in_text: false,
         }
     }
     /// maplibre/maplibre-native#4add9ea original name: isAnyLineNotEmpty
-    pub fn isAnyLineNotEmpty(&self) -> bool {
-        self.positionedLines
+    pub fn is_any_line_not_empty(&self) -> bool {
+        self.positioned_lines
             .iter()
-            .any(|line| !line.positionedGlyphs.is_empty())
+            .any(|line| !line.positioned_glyphs.is_empty())
     }
 }
 
 bitflags! {
     /// maplibre/maplibre-native#4add9ea original name: WritingModeType:
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct WritingModeType: u8 {
         const None = 0;
         const Horizontal = 1 << 0;

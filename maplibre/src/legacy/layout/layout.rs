@@ -13,16 +13,16 @@ pub struct LayerTypeInfo;
 /// maplibre/maplibre-native#4add9ea original name: BucketParameters
 #[derive(Clone)]
 pub struct BucketParameters {
-    pub tileID: OverscaledTileID,
+    pub tile_id: OverscaledTileID,
     pub mode: MapMode,
-    pub pixelRatio: f64,
-    pub layerType: LayerTypeInfo,
+    pub pixel_ratio: f64,
+    pub layer_type: LayerTypeInfo,
 }
 
 /// maplibre/maplibre-native#4add9ea original name: LayoutParameters
 pub struct LayoutParameters<'a> {
-    pub bucketParameters: &'a mut BucketParameters,
-    pub glyphDependencies: &'a mut GlyphDependencies,
-    pub imageDependencies: &'a mut ImageDependencies,
-    pub availableImages: &'a mut BTreeSet<String>,
+    pub bucket_parameters: &'a mut BucketParameters,
+    pub glyph_dependencies: &'a mut GlyphDependencies,
+    pub image_dependencies: &'a mut ImageDependencies,
+    pub available_images: &'a mut BTreeSet<String>,
 }

@@ -38,51 +38,51 @@ pub struct PlacedGlyph {
 }
 
 /// maplibre/maplibre-native#4add9ea original name: placeFirstAndLastGlyph
-pub fn placeFirstAndLastGlyph(
-    fontScale: f64,
-    lineOffsetX: f64,
-    lineOffsetY: f64,
+pub fn place_first_and_last_glyph(
+    font_scale: f64,
+    line_offset_x: f64,
+    line_offset_y: f64,
     flip: bool,
-    anchorPoint: Point2D<f64, TileSpace>,
-    tileAnchorPoint: Point2D<f64, TileSpace>,
+    anchor_point: Point2D<f64, TileSpace>,
+    tile_anchor_point: Point2D<f64, TileSpace>,
     symbol: &PlacedSymbol,
-    labelPlaneMatrix: &Matrix4<f64>,
-    returnTileDistance: bool,
+    label_plane_matrix: &Matrix4<f64>,
+    return_tile_distance: bool,
 ) -> Option<(PlacedGlyph, PlacedGlyph)> {
-    if symbol.glyphOffsets.is_empty() {
+    if symbol.glyph_offsets.is_empty() {
         assert!(false);
         return None;
     }
 
-    let firstGlyphOffset = *symbol.glyphOffsets.first().unwrap();
-    let lastGlyphOffset = *symbol.glyphOffsets.last().unwrap();
+    let first_glyph_offset = *symbol.glyph_offsets.first().unwrap();
+    let last_glyph_offset = *symbol.glyph_offsets.last().unwrap();
 
     if let (Some(firstPlacedGlyph), Some(lastPlacedGlyph)) = (
-        placeGlyphAlongLine(
-            fontScale * firstGlyphOffset,
-            lineOffsetX,
-            lineOffsetY,
+        place_glyph_along_line(
+            font_scale * first_glyph_offset,
+            line_offset_x,
+            line_offset_y,
             flip,
-            &anchorPoint,
-            &tileAnchorPoint,
+            &anchor_point,
+            &tile_anchor_point,
             symbol.segment as i16,
             &symbol.line,
-            &symbol.tileDistances,
-            labelPlaneMatrix,
-            returnTileDistance,
+            &symbol.tile_distances,
+            label_plane_matrix,
+            return_tile_distance,
         ),
-        placeGlyphAlongLine(
-            fontScale * lastGlyphOffset,
-            lineOffsetX,
-            lineOffsetY,
+        place_glyph_along_line(
+            font_scale * last_glyph_offset,
+            line_offset_x,
+            line_offset_y,
             flip,
-            &anchorPoint,
-            &tileAnchorPoint,
+            &anchor_point,
+            &tile_anchor_point,
             symbol.segment as i16,
             &symbol.line,
-            &symbol.tileDistances,
-            labelPlaneMatrix,
-            returnTileDistance,
+            &symbol.tile_distances,
+            label_plane_matrix,
+            return_tile_distance,
         ),
     ) {
         return Some((firstPlacedGlyph, lastPlacedGlyph));
@@ -92,26 +92,26 @@ pub fn placeFirstAndLastGlyph(
 }
 
 /// maplibre/maplibre-native#4add9ea original name: placeGlyphAlongLine
-fn placeGlyphAlongLine(
-    offsetX: f64,
-    lineOffsetX: f64,
-    lineOffsetY: f64,
+fn place_glyph_along_line(
+    offset_x: f64,
+    line_offset_x: f64,
+    line_offset_y: f64,
     flip: bool,
-    projectedAnchorPoint: &Point2D<f64, TileSpace>,
-    tileAnchorPoint: &Point2D<f64, TileSpace>,
-    anchorSegment: i16,
+    projected_anchor_point: &Point2D<f64, TileSpace>,
+    tile_anchor_point: &Point2D<f64, TileSpace>,
+    anchor_segment: i16,
     line: &GeometryCoordinates,
-    tileDistances: &Vec<f64>,
-    labelPlaneMatrix: &Matrix4<f64>,
-    returnTileDistance: bool,
+    tile_distances: &Vec<f64>,
+    label_plane_matrix: &Matrix4<f64>,
+    return_tile_distance: bool,
 ) -> Option<PlacedGlyph> {
-    let combinedOffsetX = if flip {
-        offsetX - lineOffsetX
+    let combined_offset_x = if flip {
+        offset_x - line_offset_x
     } else {
-        offsetX + lineOffsetX
+        offset_x + line_offset_x
     };
 
-    let mut dir: i16 = if combinedOffsetX > 0. { 1 } else { -1 };
+    let mut dir: i16 = if combined_offset_x > 0. { 1 } else { -1 };
 
     let mut angle = 0.0;
     if flip {
@@ -125,79 +125,79 @@ fn placeGlyphAlongLine(
         angle += PI;
     }
 
-    let mut currentIndex = if dir > 0 {
-        anchorSegment
+    let mut current_index = if dir > 0 {
+        anchor_segment
     } else {
-        anchorSegment + 1
+        anchor_segment + 1
     };
 
-    let initialIndex = currentIndex;
-    let mut current = *projectedAnchorPoint;
-    let mut prev = *projectedAnchorPoint;
-    let mut distanceToPrev = 0.0;
-    let mut currentSegmentDistance = 0.0;
-    let absOffsetX = combinedOffsetX.abs();
+    let initial_index = current_index;
+    let mut current = *projected_anchor_point;
+    let mut prev = *projected_anchor_point;
+    let mut distance_to_prev = 0.0;
+    let mut current_segment_distance = 0.0;
+    let abs_offset_x = combined_offset_x.abs();
 
-    while distanceToPrev + currentSegmentDistance <= absOffsetX {
-        currentIndex += dir;
+    while distance_to_prev + current_segment_distance <= abs_offset_x {
+        current_index += dir;
 
         // offset does not fit on the projected line
-        if currentIndex < 0 || currentIndex >= line.len() as i16 {
+        if current_index < 0 || current_index >= line.len() as i16 {
             return None;
         }
 
         prev = current;
         let projection = project(
-            convert_point_f64(&line[currentIndex as usize]),
-            labelPlaneMatrix,
+            convert_point_f64(&line[current_index as usize]),
+            label_plane_matrix,
         );
         if projection.1 > 0. {
             current = projection.0;
         } else {
             // The vertex is behind the plane of the camera, so we can't project it
             // Instead, we'll create a vertex along the line that's far enough to include the glyph
-            let previousTilePoint = if distanceToPrev == 0. {
-                *tileAnchorPoint
+            let previous_tile_point = if distance_to_prev == 0. {
+                *tile_anchor_point
             } else {
-                convert_point_f64(&line[(currentIndex - dir) as usize])
+                convert_point_f64(&line[(current_index - dir) as usize])
             };
 
-            let currentTilePoint = convert_point_f64(&line[currentIndex as usize]);
-            current = projectTruncatedLineSegment(
-                &previousTilePoint,
-                &currentTilePoint,
+            let current_tile_point = convert_point_f64(&line[current_index as usize]);
+            current = project_truncated_line_segment(
+                &previous_tile_point,
+                &current_tile_point,
                 &prev,
-                absOffsetX - distanceToPrev + 1.,
-                labelPlaneMatrix,
+                abs_offset_x - distance_to_prev + 1.,
+                label_plane_matrix,
             );
         }
 
-        distanceToPrev += currentSegmentDistance;
-        currentSegmentDistance = prev.distance_to(current); // TODO verify distance calculation is correct
+        distance_to_prev += current_segment_distance;
+        current_segment_distance = prev.distance_to(current); // TODO verify distance calculation is correct
     }
 
     // The point is on the current segment. Interpolate to find it.
-    let segmentInterpolationT = (absOffsetX - distanceToPrev) / currentSegmentDistance;
-    let prevToCurrent = current - prev;
-    let mut p = prev + (prevToCurrent * segmentInterpolationT);
+    let segment_interpolation_t = (abs_offset_x - distance_to_prev) / current_segment_distance;
+    let prev_to_current = current - prev;
+    let mut p = prev + (prev_to_current * segment_interpolation_t);
 
     // offset the point from the line to text-offset and icon-offset
-    p += perp(&prevToCurrent) * (lineOffsetY * dir as f64 / prevToCurrent.length()); // TODO verify if mag impl is correct mag == length?
+    p += perp(&prev_to_current) * (line_offset_y * dir as f64 / prev_to_current.length()); // TODO verify if mag impl is correct mag == length?
 
-    let segmentAngle = angle + (current.y - prev.y).atan2(current.x - prev.x); // TODO is this atan2 right?
+    let segment_angle = angle + (current.y - prev.y).atan2(current.x - prev.x); // TODO is this atan2 right?
 
     Some(PlacedGlyph {
         point: p,
-        angle: segmentAngle,
-        tileDistance: if returnTileDistance {
+        angle: segment_angle,
+        tileDistance: if return_tile_distance {
             Some(TileDistance {
                 // TODO are these the right fields assigned?
-                prevTileDistance: if (currentIndex - dir) == initialIndex {
+                prevTileDistance: if (current_index - dir) == initial_index {
                     0.
                 } else {
-                    tileDistances[(currentIndex - dir) as usize]
+                    tile_distances[(current_index - dir) as usize]
                 },
-                lastSegmentViewportDistance: absOffsetX - distanceToPrev,
+                lastSegmentViewportDistance: abs_offset_x - distance_to_prev,
             })
         } else {
             None
@@ -206,27 +206,27 @@ fn placeGlyphAlongLine(
 }
 
 /// maplibre/maplibre-native#4add9ea original name: projectTruncatedLineSegment
-fn projectTruncatedLineSegment(
+fn project_truncated_line_segment(
     &previousTilePoint: &Point2D<f64, TileSpace>,
-    currentTilePoint: &Point2D<f64, TileSpace>,
-    previousProjectedPoint: &Point2D<f64, TileSpace>,
-    minimumLength: f64,
-    projectionMatrix: &Matrix4<f64>,
+    current_tile_point: &Point2D<f64, TileSpace>,
+    previous_projected_point: &Point2D<f64, TileSpace>,
+    minimum_length: f64,
+    projection_matrix: &Matrix4<f64>,
 ) -> Point2D<f64, TileSpace> {
     // We are assuming "previousTilePoint" won't project to a point within one
     // unit of the camera plane If it did, that would mean our label extended
     // all the way out from within the viewport to a (very distant) point near
     // the plane of the camera. We wouldn't be able to render the label anyway
     // once it crossed the plane of the camera.
-    let vec = previousTilePoint - *currentTilePoint;
-    let projectedUnitVertex = project(
+    let vec = previousTilePoint - *current_tile_point;
+    let projected_unit_vertex = project(
         previousTilePoint + vec.try_normalize().unwrap_or(vec),
-        projectionMatrix,
+        projection_matrix,
     )
     .0;
-    let projectedUnitSegment = *previousProjectedPoint - projectedUnitVertex;
+    let projected_unit_segment = *previous_projected_point - projected_unit_vertex;
 
-    *previousProjectedPoint
-        + (projectedUnitSegment * (minimumLength / projectedUnitSegment.length()))
+    *previous_projected_point
+        + (projected_unit_segment * (minimum_length / projected_unit_segment.length()))
     // TODO verify if mag impl is correct mag == length?
 }

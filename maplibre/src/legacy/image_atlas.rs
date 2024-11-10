@@ -16,29 +16,29 @@ use crate::{
 /// maplibre/maplibre-native#4add9ea original name: ImagePosition
 #[derive(Clone)]
 pub struct ImagePosition {
-    pub pixelRatio: f64,
-    pub paddedRect: Rect<u16, TileSpace>,
+    pub pixel_ratio: f64,
+    pub padded_rect: Rect<u16, TileSpace>,
     pub version: u32,
-    pub stretchX: ImageStretches,
-    pub stretchY: ImageStretches,
+    pub stretch_x: ImageStretches,
+    pub stretch_y: ImageStretches,
     pub content: Option<ImageContent>,
 }
 impl ImagePosition {
-    pub const padding: u16 = 1;
+    pub const PADDING: u16 = 1;
 
     /// maplibre/maplibre-native#4add9ea original name: tl
     pub fn tl(&self) -> [u16; 2] {
         [
-            (self.paddedRect.min().x + Self::padding),
-            (self.paddedRect.min().y + Self::padding),
+            (self.padded_rect.min().x + Self::PADDING),
+            (self.padded_rect.min().y + Self::PADDING),
         ]
     }
 
     /// maplibre/maplibre-native#4add9ea original name: br
     pub fn br(&self) -> [u16; 2] {
         [
-            (self.paddedRect.min().x + self.paddedRect.width() - Self::padding),
-            (self.paddedRect.min().y + self.paddedRect.height() - Self::padding),
+            (self.padded_rect.min().x + self.padded_rect.width() - Self::PADDING),
+            (self.padded_rect.min().y + self.padded_rect.height() - Self::PADDING),
         ]
     }
 
@@ -50,10 +50,10 @@ impl ImagePosition {
     }
 
     /// maplibre/maplibre-native#4add9ea original name: displaySize
-    pub fn displaySize(&self) -> [f64; 2] {
+    pub fn display_size(&self) -> [f64; 2] {
         [
-            (self.paddedRect.width() - Self::padding * 2) as f64 / self.pixelRatio,
-            (self.paddedRect.height() - Self::padding * 2) as f64 / self.pixelRatio,
+            (self.padded_rect.width() - Self::PADDING * 2) as f64 / self.pixel_ratio,
+            (self.padded_rect.height() - Self::PADDING * 2) as f64 / self.pixel_ratio,
         ]
     }
 }
@@ -64,7 +64,7 @@ pub type ImagePositions = HashMap<String, ImagePosition>;
 /// maplibre/maplibre-native#4add9ea original name: ImagePatch
 struct ImagePatch {
     image: Image,
-    paddedRect: Rect<u16, TileSpace>,
+    padded_rect: Rect<u16, TileSpace>,
 }
 
 impl ImagePatch {}
@@ -72,21 +72,21 @@ impl ImagePatch {}
 /// maplibre/maplibre-native#4add9ea original name: ImageAtlas
 struct ImageAtlas {
     image: PremultipliedImage,
-    iconPositions: ImagePositions,
-    patternPositions: ImagePositions,
+    icon_positions: ImagePositions,
+    pattern_positions: ImagePositions,
 }
 impl ImageAtlas {
     /// maplibre/maplibre-native#4add9ea original name: getImagePatchesAndUpdateVersions
-    pub fn getImagePatchesAndUpdateVersions(image_manager: &ImageManager) -> Vec<ImagePatch> {
+    pub fn get_image_patches_and_update_versions(image_manager: &ImageManager) -> Vec<ImagePatch> {
         todo!()
     }
 }
 
 /// maplibre/maplibre-native#4add9ea original name: makeImageAtlas
-pub fn makeImageAtlas(
+pub fn make_image_atlas(
     image_map_a: &ImageMap,
     image_map_b: &ImageMap,
-    versionMap: &ImageVersionMap,
+    version_map: &ImageVersionMap,
 ) -> ImageAtlas {
     todo!()
 }

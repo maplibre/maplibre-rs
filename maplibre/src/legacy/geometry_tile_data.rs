@@ -59,19 +59,19 @@ pub struct SymbolGeometryTileLayer {
 }
 impl SymbolGeometryTileLayer {
     /// maplibre/maplibre-native#4add9ea original name: featureCount
-    pub fn featureCount(&self) -> usize {
+    pub fn feature_count(&self) -> usize {
         self.features.len()
     }
 
     // Returns the feature object at the given position within the layer. The
     // returned feature object may *not* outlive the layer object.
     /// maplibre/maplibre-native#4add9ea original name: getFeature
-    pub fn getFeature(&self, index: usize) -> Box<SymbolGeometryTileFeature> {
+    pub fn get_feature(&self, index: usize) -> Box<SymbolGeometryTileFeature> {
         Box::new(self.features[index].clone())
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getName
-    pub fn getName(&self) -> &str {
+    pub fn get_name(&self) -> &str {
         &self.name
     }
 }
@@ -89,7 +89,7 @@ impl SymbolGeometryTileData {
     // Returns the layer with the given name. The returned layer object *may*
     // outlive the data object.
     /// maplibre/maplibre-native#4add9ea original name: getLayer
-    pub fn getLayer(&self, name: &str) -> Box<SymbolGeometryTileLayer> {
+    pub fn get_layer(&self, name: &str) -> Box<SymbolGeometryTileLayer> {
         todo!()
     }
 }

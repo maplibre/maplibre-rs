@@ -125,27 +125,27 @@ impl System for CollisionSystem {
                             y1: 0. * (EXTENT / TILE_SIZE),
                             x2: (feature.bbox.max.x - feature.bbox.min.x) as f64, //* (EXTENT / TILE_SIZE),
                             y2: (feature.bbox.max.y - feature.bbox.min.y) as f64, // * (EXTENT / TILE_SIZE),
-                            signedDistanceFromAnchor: 0.0,
+                            signed_distance_from_anchor: 0.0,
                         }]; // TODO
 
                         let mut projected_boxes = vec![];
                         let collision_feature = CollisionFeature {
                             boxes,
-                            indexedFeature: IndexedSubfeature {
+                            indexed_feature: IndexedSubfeature {
                                 ref_: RefIndexedSubfeature {
                                     index: 0,
-                                    sortIndex: 0,
-                                    sourceLayerName: "".to_string(),
-                                    bucketLeaderID: "".to_string(),
-                                    bucketInstanceId: 0,
-                                    collisionGroupId: 0,
+                                    sort_index: 0,
+                                    source_layer_name: "".to_string(),
+                                    bucket_leader_id: "".to_string(),
+                                    bucket_instance_id: 0,
+                                    collision_group_id: 0,
                                 },
-                                sourceLayerNameCopy: "".to_string(),
-                                bucketLeaderIDCopy: "".to_string(),
+                                source_layer_name_copy: "".to_string(),
+                                bucket_leader_idcopy: "".to_string(),
                             },
-                            alongLine: false, // false if point, else true
+                            along_line: false, // false if point, else true
                         };
-                        let (placed_text, is_offscreen) = collision_index.placeFeature(
+                        let (placed_text, is_offscreen) = collision_index.place_feature(
                             &collision_feature,
                             Point2D::zero(), // shift
                             &posMatrix,
@@ -153,22 +153,22 @@ impl System for CollisionSystem {
                             //TILE_SIZE / EXTENT,
                             1.0,
                             &PlacedSymbol {
-                                anchorPoint,
+                                anchor_point: anchorPoint,
                                 segment: 0,
-                                lowerSize: 0.0,
-                                upperSize: 0.0,
-                                lineOffset: [0., 0.],
-                                writingModes: Default::default(),
+                                lower_size: 0.0,
+                                upper_size: 0.0,
+                                line_offset: [0., 0.],
+                                writing_modes: Default::default(),
                                 line: GeometryCoordinates(vec![anchorPoint.cast()]), // TODO can be linestring or just a single point
-                                tileDistances: vec![],                               // TODO
-                                glyphOffsets: vec![0., 0.],                          // TODO
+                                tile_distances: vec![],                              // TODO
+                                glyph_offsets: vec![0., 0.],                         // TODO
                                 hidden: false,
-                                vertexStartIndex: 0,
-                                crossTileID: 0,
-                                placedOrientation: None,
+                                vertex_start_index: 0,
+                                cross_tile_id: 0,
+                                placed_orientation: None,
                                 angle: 0.0,
 
-                                placedIconIndex: None,
+                                placed_icon_index: None,
                             },
                             view_state.zoom().scale_to_zoom_level(coords.z),
                             6.0,
@@ -186,7 +186,7 @@ impl System for CollisionSystem {
                         }
 
                         if placed_text {
-                            collision_index.insertFeature(
+                            collision_index.insert_feature(
                                 collision_feature,
                                 &projected_boxes,
                                 false,

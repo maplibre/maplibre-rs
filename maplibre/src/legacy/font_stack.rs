@@ -25,22 +25,22 @@ impl FontStackHasher {
 }
 
 /// maplibre/maplibre-native#4add9ea original name: fontStackToString
-pub fn fontStackToString(fontStack: &FontStack) -> String {
+pub fn font_stack_to_string(fontStack: &FontStack) -> String {
     fontStack.join(",")
 }
 
 /// Statically evaluate layer properties to determine what font stacks are used.
 /// maplibre/maplibre-native#4add9ea original name: fontStacks
-pub fn fontStacks(layers: &Vec<StyleLayer>) -> BTreeSet<FontStack> {
+pub fn font_stacks(layers: &Vec<StyleLayer>) -> BTreeSet<FontStack> {
     let mut result = BTreeSet::new();
     for layer in layers {
-        populateFontStack(layer, &mut result);
+        populate_font_stack(layer, &mut result);
     }
 
     result
 }
 
 /// maplibre/maplibre-native#4add9ea original name: populateFontStack
-pub(crate) fn populateFontStack(layer: &StyleLayer, stack: &mut BTreeSet<FontStack>) {
+pub(crate) fn populate_font_stack(layer: &StyleLayer, stack: &mut BTreeSet<FontStack>) {
     todo!()
 }

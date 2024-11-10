@@ -29,22 +29,22 @@ pub struct SymbolQuad {
     pub bl: Point2D<f64, TileSpace>,
     pub br: Point2D<f64, TileSpace>,
     pub tex: Rect<u16, TileSpace>,
-    pub pixelOffsetTL: Point2D<f64, TileSpace>,
-    pub pixelOffsetBR: Point2D<f64, TileSpace>,
-    pub glyphOffset: Point2D<f64, TileSpace>,
-    pub writingMode: WritingModeType,
-    pub isSDF: bool,
-    pub sectionIndex: usize,
-    pub minFontScale: Point2D<f64, TileSpace>,
+    pub pixel_offset_tl: Point2D<f64, TileSpace>,
+    pub pixel_offset_br: Point2D<f64, TileSpace>,
+    pub glyph_offset: Point2D<f64, TileSpace>,
+    pub writing_mode: WritingModeType,
+    pub is_sdf: bool,
+    pub section_index: usize,
+    pub min_font_scale: Point2D<f64, TileSpace>,
 }
 
 /// maplibre/maplibre-native#4add9ea original name: SymbolQuads
 pub type SymbolQuads = Vec<SymbolQuad>;
 
-const border: u16 = ImagePosition::padding;
+const BORDER: u16 = ImagePosition::PADDING;
 
 /// maplibre/maplibre-native#4add9ea original name: computeStretchSum
-fn computeStretchSum(stretches: &ImageStretches) -> f64 {
+fn compute_stretch_sum(stretches: &ImageStretches) -> f64 {
     let mut sum = 0.;
     for stretch in stretches {
         sum += stretch.1 - stretch.0;
@@ -53,7 +53,7 @@ fn computeStretchSum(stretches: &ImageStretches) -> f64 {
 }
 
 /// maplibre/maplibre-native#4add9ea original name: sumWithinRange
-fn sumWithinRange(stretches: &ImageStretches, min: f64, max: f64) -> f64 {
+fn sum_within_range(stretches: &ImageStretches, min: f64, max: f64) -> f64 {
     let mut sum = 0.;
     for stretch in stretches {
         sum += min.max(max.min(stretch.1)) - min.max(max.min(stretch.0));
@@ -62,13 +62,18 @@ fn sumWithinRange(stretches: &ImageStretches, min: f64, max: f64) -> f64 {
 }
 
 /// maplibre/maplibre-native#4add9ea original name: getEmOffset
-fn getEmOffset(stretchOffset: f64, stretchSize: f64, iconSize: f64, iconOffset: f64) -> f64 {
-    iconOffset + iconSize * stretchOffset / stretchSize
+fn get_em_offset(stretch_offset: f64, stretch_size: f64, icon_size: f64, icon_offset: f64) -> f64 {
+    icon_offset + icon_size * stretch_offset / stretch_size
 }
 
 /// maplibre/maplibre-native#4add9ea original name: getPxOffset
-fn getPxOffset(fixedOffset: f64, fixedSize: f64, stretchOffset: f64, stretchSize: f64) -> f64 {
-    fixedOffset - fixedSize * stretchOffset / stretchSize
+fn get_px_offset(
+    fixed_offset: f64,
+    fixed_size: f64,
+    stretch_offset: f64,
+    stretch_size: f64,
+) -> f64 {
+    fixed_offset - fixed_size * stretch_offset / stretch_size
 }
 
 /// maplibre/maplibre-native#4add9ea original name: Cut
@@ -81,169 +86,174 @@ struct Cut {
 type Cuts = Vec<Cut>;
 
 /// maplibre/maplibre-native#4add9ea original name: stretchZonesToCuts
-fn stretchZonesToCuts(stretchZones: &ImageStretches, fixedSize: f64, stretchSize: f64) -> Cuts {
+fn stretch_zones_to_cuts(
+    stretch_zones: &ImageStretches,
+    fixed_size: f64,
+    stretch_size: f64,
+) -> Cuts {
     let mut cuts = vec![Cut {
-        fixed: -(border as f64),
+        fixed: -(BORDER as f64),
         stretch: 0.0,
     }];
 
-    for zone in stretchZones {
+    for zone in stretch_zones {
         let c1 = zone.0;
         let c2 = zone.1;
-        let lastStretch = cuts.last().unwrap().stretch;
+        let last_stretch = cuts.last().unwrap().stretch;
         cuts.push(Cut {
-            fixed: c1 - lastStretch,
-            stretch: lastStretch,
+            fixed: c1 - last_stretch,
+            stretch: last_stretch,
         });
         cuts.push(Cut {
-            fixed: c1 - lastStretch,
-            stretch: lastStretch + (c2 - c1),
+            fixed: c1 - last_stretch,
+            stretch: last_stretch + (c2 - c1),
         });
     }
     cuts.push(Cut {
-        fixed: fixedSize + border as f64,
-        stretch: stretchSize,
+        fixed: fixed_size + BORDER as f64,
+        stretch: stretch_size,
     });
     cuts
 }
 
 /// maplibre/maplibre-native#4add9ea original name: matrixMultiply
-fn matrixMultiply<U>(m: &[f64; 4], p: Point2D<f64, U>) -> Point2D<f64, U> {
+fn matrix_multiply<U>(m: &[f64; 4], p: Point2D<f64, U>) -> Point2D<f64, U> {
     Point2D::<f64, U>::new(m[0] * p.x + m[1] * p.y, m[2] * p.x + m[3] * p.y)
 }
 
 /// maplibre/maplibre-native#4add9ea original name: getIconQuads
-pub fn getIconQuads(
-    shapedIcon: &PositionedIcon,
-    iconRotate: f64,
-    iconType: SymbolContent,
-    hasIconTextFit: bool,
+pub fn get_icon_quads(
+    shaped_icon: &PositionedIcon,
+    icon_rotate: f64,
+    icon_type: SymbolContent,
+    has_icon_text_fit: bool,
 ) -> SymbolQuads {
     let mut quads = Vec::new();
 
-    let image = &shapedIcon.image;
-    let pixelRatio = image.pixelRatio;
-    let imageWidth: u16 = image.paddedRect.width() - 2 * border;
-    let imageHeight: u16 = image.paddedRect.height() - 2 * border;
+    let image = &shaped_icon.image;
+    let pixel_ratio = image.pixel_ratio;
+    let image_width: u16 = image.padded_rect.width() - 2 * BORDER;
+    let image_height: u16 = image.padded_rect.height() - 2 * BORDER;
 
-    let iconWidth = shapedIcon.right - shapedIcon.left;
-    let iconHeight = shapedIcon.bottom - shapedIcon.top;
+    let icon_width = shaped_icon.right - shaped_icon.left;
+    let icon_height = shaped_icon.bottom - shaped_icon.top;
 
-    let stretchXFull: ImageStretches = vec![(0.0, imageWidth as f64)];
-    let stretchYFull: ImageStretches = vec![(0.0, imageHeight as f64)];
-    let stretchX: &ImageStretches = if !image.stretchX.is_empty() {
-        &image.stretchX
+    let stretch_xfull: ImageStretches = vec![(0.0, image_width as f64)];
+    let stretch_yfull: ImageStretches = vec![(0.0, image_height as f64)];
+    let stretch_x: &ImageStretches = if !image.stretch_x.is_empty() {
+        &image.stretch_x
     } else {
-        &stretchXFull
+        &stretch_xfull
     };
-    let stretchY: &ImageStretches = if !image.stretchY.is_empty() {
-        &image.stretchY
+    let stretch_y: &ImageStretches = if !image.stretch_y.is_empty() {
+        &image.stretch_y
     } else {
-        &stretchYFull
+        &stretch_yfull
     };
 
-    let stretchWidth = computeStretchSum(stretchX);
-    let stretchHeight = computeStretchSum(stretchY);
-    let fixedWidth = imageWidth as f64 - stretchWidth;
-    let fixedHeight = imageHeight as f64 - stretchHeight;
+    let stretch_width = compute_stretch_sum(stretch_x);
+    let stretch_height = compute_stretch_sum(stretch_y);
+    let fixed_width = image_width as f64 - stretch_width;
+    let fixed_height = image_height as f64 - stretch_height;
 
-    let mut stretchOffsetX = 0.;
-    let mut stretchContentWidth = stretchWidth;
-    let mut stretchOffsetY = 0.;
-    let mut stretchContentHeight = stretchHeight;
-    let mut fixedOffsetX = 0.;
-    let mut fixedContentWidth = fixedWidth;
-    let mut fixedOffsetY = 0.;
-    let mut fixedContentHeight = fixedHeight;
+    let mut stretch_offset_x = 0.;
+    let mut stretch_content_width = stretch_width;
+    let mut stretch_offset_y = 0.;
+    let mut stretch_content_height = stretch_height;
+    let mut fixed_offset_x = 0.;
+    let mut fixed_content_width = fixed_width;
+    let mut fixed_offset_y = 0.;
+    let mut fixed_content_height = fixed_height;
 
-    if hasIconTextFit {
+    if has_icon_text_fit {
         if let Some(content) = &image.content {
-            stretchOffsetX = sumWithinRange(stretchX, 0., content.left);
-            stretchOffsetY = sumWithinRange(stretchY, 0., content.top);
-            stretchContentWidth = sumWithinRange(stretchX, content.left, content.right);
-            stretchContentHeight = sumWithinRange(stretchY, content.top, content.bottom);
-            fixedOffsetX = content.left - stretchOffsetX;
-            fixedOffsetY = content.top - stretchOffsetY;
-            fixedContentWidth = content.right - content.left - stretchContentWidth;
-            fixedContentHeight = content.bottom - content.top - stretchContentHeight;
+            stretch_offset_x = sum_within_range(stretch_x, 0., content.left);
+            stretch_offset_y = sum_within_range(stretch_y, 0., content.top);
+            stretch_content_width = sum_within_range(stretch_x, content.left, content.right);
+            stretch_content_height = sum_within_range(stretch_y, content.top, content.bottom);
+            fixed_offset_x = content.left - stretch_offset_x;
+            fixed_offset_y = content.top - stretch_offset_y;
+            fixed_content_width = content.right - content.left - stretch_content_width;
+            fixed_content_height = content.bottom - content.top - stretch_content_height;
         }
     }
 
     let mut matrix: Option<[f64; 4]> = None;
-    if iconRotate != 0.0 {
+    if icon_rotate != 0.0 {
         // TODO is this correct?
-        let angle = deg2radf(iconRotate);
+        let angle = deg2radf(icon_rotate);
         let angle_sin = angle.sin();
         let angle_cos = angle.cos();
         matrix = Some([angle_cos, -angle_sin, angle_sin, angle_cos]);
     }
 
-    let mut makeBox = |left: &Cut, top: &Cut, right: &Cut, bottom: &Cut| {
-        let leftEm = getEmOffset(
-            left.stretch - stretchOffsetX,
-            stretchContentWidth,
-            iconWidth,
-            shapedIcon.left,
+    let mut make_box = |left: &Cut, top: &Cut, right: &Cut, bottom: &Cut| {
+        let left_em = get_em_offset(
+            left.stretch - stretch_offset_x,
+            stretch_content_width,
+            icon_width,
+            shaped_icon.left,
         );
-        let leftPx = getPxOffset(
-            left.fixed - fixedOffsetX,
-            fixedContentWidth,
+        let left_px = get_px_offset(
+            left.fixed - fixed_offset_x,
+            fixed_content_width,
             left.stretch,
-            stretchWidth,
+            stretch_width,
         );
 
-        let topEm = getEmOffset(
-            top.stretch - stretchOffsetY,
-            stretchContentHeight,
-            iconHeight,
-            shapedIcon.top,
+        let top_em = get_em_offset(
+            top.stretch - stretch_offset_y,
+            stretch_content_height,
+            icon_height,
+            shaped_icon.top,
         );
-        let topPx = getPxOffset(
-            top.fixed - fixedOffsetY,
-            fixedContentHeight,
+        let top_px = get_px_offset(
+            top.fixed - fixed_offset_y,
+            fixed_content_height,
             top.stretch,
-            stretchHeight,
+            stretch_height,
         );
 
-        let rightEm = getEmOffset(
-            right.stretch - stretchOffsetX,
-            stretchContentWidth,
-            iconWidth,
-            shapedIcon.left,
+        let right_em = get_em_offset(
+            right.stretch - stretch_offset_x,
+            stretch_content_width,
+            icon_width,
+            shaped_icon.left,
         );
-        let rightPx = getPxOffset(
-            right.fixed - fixedOffsetX,
-            fixedContentWidth,
+        let right_px = get_px_offset(
+            right.fixed - fixed_offset_x,
+            fixed_content_width,
             right.stretch,
-            stretchWidth,
+            stretch_width,
         );
 
-        let bottomEm = getEmOffset(
-            bottom.stretch - stretchOffsetY,
-            stretchContentHeight,
-            iconHeight,
-            shapedIcon.top,
+        let bottom_em = get_em_offset(
+            bottom.stretch - stretch_offset_y,
+            stretch_content_height,
+            icon_height,
+            shaped_icon.top,
         );
-        let bottomPx = getPxOffset(
-            bottom.fixed - fixedOffsetY,
-            fixedContentHeight,
+        let bottom_px = get_px_offset(
+            bottom.fixed - fixed_offset_y,
+            fixed_content_height,
             bottom.stretch,
-            stretchHeight,
+            stretch_height,
         );
 
-        let mut tl = Point2D::<f64, TileSpace>::new(leftEm, topEm);
-        let mut tr = Point2D::<f64, TileSpace>::new(rightEm, topEm);
-        let mut br = Point2D::<f64, TileSpace>::new(rightEm, bottomEm);
-        let mut bl = Point2D::<f64, TileSpace>::new(leftEm, bottomEm);
-        let pixelOffsetTL = Point2D::<f64, TileSpace>::new(leftPx / pixelRatio, topPx / pixelRatio);
-        let pixelOffsetBR =
-            Point2D::<f64, TileSpace>::new(rightPx / pixelRatio, bottomPx / pixelRatio);
+        let mut tl = Point2D::<f64, TileSpace>::new(left_em, top_em);
+        let mut tr = Point2D::<f64, TileSpace>::new(right_em, top_em);
+        let mut br = Point2D::<f64, TileSpace>::new(right_em, bottom_em);
+        let mut bl = Point2D::<f64, TileSpace>::new(left_em, bottom_em);
+        let pixel_offset_tl =
+            Point2D::<f64, TileSpace>::new(left_px / pixel_ratio, top_px / pixel_ratio);
+        let pixel_offset_br =
+            Point2D::<f64, TileSpace>::new(right_px / pixel_ratio, bottom_px / pixel_ratio);
 
         if let Some(matrix) = matrix {
-            tl = matrixMultiply(&matrix, tl);
-            tr = matrixMultiply(&matrix, tr);
-            bl = matrixMultiply(&matrix, bl);
-            br = matrixMultiply(&matrix, br);
+            tl = matrix_multiply(&matrix, tl);
+            tr = matrix_multiply(&matrix, tr);
+            bl = matrix_multiply(&matrix, bl);
+            br = matrix_multiply(&matrix, br);
         }
 
         let x1 = left.stretch + left.fixed;
@@ -252,16 +262,16 @@ pub fn getIconQuads(
         let y2 = bottom.stretch + bottom.fixed;
 
         // TODO: consider making texture coordinates f64 instead of uint16_t
-        let subRect: Rect<u16, TileSpace> = Rect::new(
+        let sub_rect: Rect<u16, TileSpace> = Rect::new(
             Point2D::new(
-                (image.paddedRect.origin.x as f64 + border as f64 + x1) as u16,
-                (image.paddedRect.origin.y as f64 + border as f64 + y1) as u16,
+                (image.padded_rect.origin.x as f64 + BORDER as f64 + x1) as u16,
+                (image.padded_rect.origin.y as f64 + BORDER as f64 + y1) as u16,
             ),
             Size2D::new((x2 - x1) as u16, (y2 - y1) as u16),
         );
 
-        let minFontScaleX = fixedContentWidth / pixelRatio / iconWidth;
-        let minFontScaleY = fixedContentHeight / pixelRatio / iconHeight;
+        let min_font_scale_x = fixed_content_width / pixel_ratio / icon_width;
+        let min_font_scale_y = fixed_content_height / pixel_ratio / icon_height;
 
         // Icon quad is padded, so texture coordinates also need to be padded.
         quads.push(SymbolQuad {
@@ -269,19 +279,19 @@ pub fn getIconQuads(
             tr,
             bl,
             br,
-            tex: subRect,
-            pixelOffsetTL,
-            pixelOffsetBR,
-            glyphOffset: Point2D::new(0.0, 0.0),
-            writingMode: WritingModeType::None,
-            isSDF: iconType == SymbolContent::IconSDF,
-            sectionIndex: 0,
-            minFontScale: Point2D::new(minFontScaleX, minFontScaleY),
+            tex: sub_rect,
+            pixel_offset_tl,
+            pixel_offset_br,
+            glyph_offset: Point2D::new(0.0, 0.0),
+            writing_mode: WritingModeType::None,
+            is_sdf: icon_type == SymbolContent::IconSDF,
+            section_index: 0,
+            min_font_scale: Point2D::new(min_font_scale_x, min_font_scale_y),
         });
     };
 
-    if !hasIconTextFit || (image.stretchX.is_empty() && image.stretchY.is_empty()) {
-        makeBox(
+    if !has_icon_text_fit || (image.stretch_x.is_empty() && image.stretch_y.is_empty()) {
+        make_box(
             &Cut {
                 fixed: 0.,
                 stretch: -1.,
@@ -292,24 +302,24 @@ pub fn getIconQuads(
             },
             &Cut {
                 fixed: 0.,
-                stretch: (imageWidth + 1) as f64,
+                stretch: (image_width + 1) as f64,
             },
             &Cut {
                 fixed: 0.,
-                stretch: (imageHeight + 1) as f64,
+                stretch: (image_height + 1) as f64,
             },
         );
     } else {
-        let xCuts = stretchZonesToCuts(stretchX, fixedWidth, stretchWidth);
-        let yCuts = stretchZonesToCuts(stretchY, fixedHeight, stretchHeight);
+        let x_cuts = stretch_zones_to_cuts(stretch_x, fixed_width, stretch_width);
+        let y_cuts = stretch_zones_to_cuts(stretch_y, fixed_height, stretch_height);
 
-        for xi in 0..xCuts.len() - 1 {
-            let x1 = &xCuts[xi];
-            let x2 = &xCuts[xi + 1];
-            for yi in 0..yCuts.len() - 1 {
-                let y1 = &yCuts[yi];
-                let y2 = &yCuts[yi + 1];
-                makeBox(x1, y1, x2, y2);
+        for xi in 0..x_cuts.len() - 1 {
+            let x1 = &x_cuts[xi];
+            let x2 = &x_cuts[xi + 1];
+            for yi in 0..y_cuts.len() - 1 {
+                let y1 = &y_cuts[yi];
+                let y2 = &y_cuts[yi + 1];
+                make_box(x1, y1, x2, y2);
             }
         }
     }
@@ -318,98 +328,98 @@ pub fn getIconQuads(
 }
 
 /// maplibre/maplibre-native#4add9ea original name: getGlyphQuads
-pub fn getGlyphQuads(
-    shapedText: &Shaping,
-    textOffset: [f64; 2],
+pub fn get_glyph_quads(
+    shaped_text: &Shaping,
+    text_offset: [f64; 2],
     layout: &SymbolLayoutProperties_Evaluated,
     placement: SymbolPlacementType,
-    imageMap: &ImageMap,
-    allowVerticalPlacement: bool,
+    image_map: &ImageMap,
+    allow_vertical_placement: bool,
 ) -> SymbolQuads {
-    let textRotate: f64 = deg2radf(layout.get_eval::<TextRotate>());
-    let alongLine: bool = layout.get::<TextRotationAlignment>() == AlignmentType::Map
+    let text_rotate: f64 = deg2radf(layout.get_eval::<TextRotate>());
+    let along_line: bool = layout.get::<TextRotationAlignment>() == AlignmentType::Map
         && placement != SymbolPlacementType::Point;
 
     let mut quads = Vec::new();
 
-    for line in &shapedText.positionedLines {
-        for positionedGlyph in &line.positionedGlyphs {
+    for line in &shaped_text.positioned_lines {
+        for positionedGlyph in &line.positioned_glyphs {
             if positionedGlyph.rect.is_empty() {
                 continue;
             }
 
             // The rects have an addditional buffer that is not included in their size;
-            let glyphPadding = 1.0;
-            let mut rectBuffer = 3.0 + glyphPadding;
-            let mut pixelRatio = 1.0;
-            let mut lineOffset = 0.0;
-            let rotateVerticalGlyph =
-                (alongLine || allowVerticalPlacement) && positionedGlyph.vertical;
-            let halfAdvance = positionedGlyph.metrics.advance as f64 * positionedGlyph.scale / 2.0;
+            let glyph_padding = 1.0;
+            let mut rect_buffer = 3.0 + glyph_padding;
+            let mut pixel_ratio = 1.0;
+            let mut line_offset = 0.0;
+            let rotate_vertical_glyph =
+                (along_line || allow_vertical_placement) && positionedGlyph.vertical;
+            let half_advance = positionedGlyph.metrics.advance as f64 * positionedGlyph.scale / 2.0;
             let rect = positionedGlyph.rect;
-            let mut isSDF = true;
+            let mut is_sdf = true;
 
             // Align images and scaled glyphs in the middle of a vertical line.
-            if allowVerticalPlacement && shapedText.verticalizable {
-                let scaledGlyphOffset = (positionedGlyph.scale - 1.) * ONE_EM;
-                let imageOffset =
+            if allow_vertical_placement && shaped_text.verticalizable {
+                let scaled_glyph_offset = (positionedGlyph.scale - 1.) * ONE_EM;
+                let image_offset =
                     (ONE_EM - positionedGlyph.metrics.width as f64 * positionedGlyph.scale) / 2.0;
-                lineOffset = line.lineOffset / 2.0
-                    - (if positionedGlyph.imageID.is_some() {
-                        -imageOffset
+                line_offset = line.line_offset / 2.0
+                    - (if positionedGlyph.image_id.is_some() {
+                        -image_offset
                     } else {
-                        scaledGlyphOffset
+                        scaled_glyph_offset
                     });
             }
 
-            if let Some(imageID) = &positionedGlyph.imageID {
-                let image = imageMap.get(imageID);
+            if let Some(imageID) = &positionedGlyph.image_id {
+                let image = image_map.get(imageID);
                 if let Some(image) = image {
-                    pixelRatio = image.pixelRatio;
-                    rectBuffer = ImagePosition::padding as f64 / pixelRatio;
-                    isSDF = image.sdf;
+                    pixel_ratio = image.pixel_ratio;
+                    rect_buffer = ImagePosition::PADDING as f64 / pixel_ratio;
+                    is_sdf = image.sdf;
                 }
             }
 
-            let glyphOffset = if alongLine {
-                Point2D::new(positionedGlyph.x + halfAdvance, positionedGlyph.y)
+            let glyph_offset = if along_line {
+                Point2D::new(positionedGlyph.x + half_advance, positionedGlyph.y)
             } else {
                 Point2D::new(0.0, 0.0)
             };
 
-            let mut builtInOffset = if alongLine {
+            let mut built_in_offset = if along_line {
                 Vector2D::new(0.0, 0.0)
             } else {
                 Vector2D::new(
-                    positionedGlyph.x + halfAdvance + textOffset[0],
-                    positionedGlyph.y + textOffset[1] - lineOffset,
+                    positionedGlyph.x + half_advance + text_offset[0],
+                    positionedGlyph.y + text_offset[1] - line_offset,
                 )
             };
 
-            let mut verticalizedLabelOffset = Vector2D::<f64, TileSpace>::new(0.0, 0.0);
-            if rotateVerticalGlyph {
+            let mut verticalized_label_offset = Vector2D::<f64, TileSpace>::new(0.0, 0.0);
+            if rotate_vertical_glyph {
                 // Vertical POI labels, that are rotated 90deg CW and whose
                 // glyphs must preserve upright orientation need to be rotated
                 // 90deg CCW. After quad is rotated, it is translated to the
                 // original built-in offset.
-                verticalizedLabelOffset = builtInOffset;
-                builtInOffset = Vector2D::new(0.0, 0.0);
+                verticalized_label_offset = built_in_offset;
+                built_in_offset = Vector2D::new(0.0, 0.0);
             }
 
-            let x1 = (positionedGlyph.metrics.left as f64 - rectBuffer) * positionedGlyph.scale
-                - halfAdvance
-                + builtInOffset.x;
-            let y1 = (-positionedGlyph.metrics.top as f64 - rectBuffer) * positionedGlyph.scale
-                + builtInOffset.y;
-            let x2 = x1 + rect.width() as f64 * positionedGlyph.scale / pixelRatio;
-            let y2 = y1 + rect.height() as f64 * positionedGlyph.scale / pixelRatio;
+            let x1 = (positionedGlyph.metrics.left as f64 - rect_buffer) * positionedGlyph.scale
+                - half_advance
+                + built_in_offset.x;
+            let y1 = (-positionedGlyph.metrics.top as f64 - rect_buffer) * positionedGlyph.scale
+                + built_in_offset.y;
+            let x2 = x1 + rect.width() as f64 * positionedGlyph.scale / pixel_ratio;
+            let y2 = y1 + rect.height() as f64 * positionedGlyph.scale / pixel_ratio;
 
             let mut tl: Point2D<f64, TileSpace> = Point2D::new(x1, y1);
             let mut tr: Point2D<f64, TileSpace> = Point2D::new(x2, y1);
             let mut bl: Point2D<f64, TileSpace> = Point2D::new(x1, y2);
             let mut br: Point2D<f64, TileSpace> = Point2D::new(x2, y2);
 
-            if rotateVerticalGlyph {
+            if rotate_vertical_glyph {
                 // Vertical-supporting glyphs are laid out in 24x24 point boxes
                 // (1 square em) In horizontal orientation, the y values for
                 // glyphs are below the midline and we use a "yOffset" of -17 to
@@ -422,58 +432,58 @@ pub fn getGlyphQuads(
                 // therefore, needs to be accounted for when glyph is rotated
                 // and translated.
 
-                let center = Point2D::new(-halfAdvance, halfAdvance - Shaping::yOffset as f64);
-                let verticalRotation = -PI / 2.;
+                let center = Point2D::new(-half_advance, half_advance - Shaping::Y_OFFSET as f64);
+                let vertical_rotation = -PI / 2.;
 
                 // xHalfWidhtOffsetcorrection is a difference between full-width
                 // and half-width advance, should be 0 for full-width glyphs and
                 // will pull up half-width glyphs.
-                let xHalfWidhtOffsetcorrection = ONE_EM / 2. - halfAdvance;
-                let yImageOffsetCorrection = if positionedGlyph.imageID.is_some() {
-                    xHalfWidhtOffsetcorrection
+                let x_half_widht_offsetcorrection = ONE_EM / 2. - half_advance;
+                let y_image_offset_correction = if positionedGlyph.image_id.is_some() {
+                    x_half_widht_offsetcorrection
                 } else {
                     0.0
                 };
 
-                let xOffsetCorrection = Vector2D::<f64, TileSpace>::new(
-                    5.0 - Shaping::yOffset as f64 - xHalfWidhtOffsetcorrection,
-                    -yImageOffsetCorrection,
+                let x_offset_correction = Vector2D::<f64, TileSpace>::new(
+                    5.0 - Shaping::Y_OFFSET as f64 - x_half_widht_offsetcorrection,
+                    -y_image_offset_correction,
                 );
 
                 tl = center
-                    + rotate(&(tl - center), verticalRotation)
-                    + xOffsetCorrection
-                    + verticalizedLabelOffset;
+                    + rotate(&(tl - center), vertical_rotation)
+                    + x_offset_correction
+                    + verticalized_label_offset;
                 tr = center
-                    + rotate(&(tr - center), verticalRotation)
-                    + xOffsetCorrection
-                    + verticalizedLabelOffset;
+                    + rotate(&(tr - center), vertical_rotation)
+                    + x_offset_correction
+                    + verticalized_label_offset;
                 bl = center
-                    + rotate(&(bl - center), verticalRotation)
-                    + xOffsetCorrection
-                    + verticalizedLabelOffset;
+                    + rotate(&(bl - center), vertical_rotation)
+                    + x_offset_correction
+                    + verticalized_label_offset;
                 br = center
-                    + rotate(&(br - center), verticalRotation)
-                    + xOffsetCorrection
-                    + verticalizedLabelOffset;
+                    + rotate(&(br - center), vertical_rotation)
+                    + x_offset_correction
+                    + verticalized_label_offset;
             }
 
-            if textRotate != 0.0 {
+            if text_rotate != 0.0 {
                 // TODO is this correct?
                 // Compute the transformation matrix.
-                let angle_sin = textRotate.sin();
-                let angle_cos = textRotate.cos();
+                let angle_sin = text_rotate.sin();
+                let angle_cos = text_rotate.cos();
                 let matrix = [angle_cos, -angle_sin, angle_sin, angle_cos];
 
-                tl = matrixMultiply(&matrix, tl);
-                tr = matrixMultiply(&matrix, tr);
-                bl = matrixMultiply(&matrix, bl);
-                br = matrixMultiply(&matrix, br);
+                tl = matrix_multiply(&matrix, tl);
+                tr = matrix_multiply(&matrix, tr);
+                bl = matrix_multiply(&matrix, bl);
+                br = matrix_multiply(&matrix, br);
             }
 
-            let pixelOffsetTL = Point2D::default();
-            let pixelOffsetBR = Point2D::default();
-            let minFontScale = Point2D::default();
+            let pixel_offset_tl = Point2D::default();
+            let pixel_offset_br = Point2D::default();
+            let min_font_scale = Point2D::default();
 
             quads.push(SymbolQuad {
                 tl,
@@ -481,13 +491,13 @@ pub fn getGlyphQuads(
                 bl,
                 br,
                 tex: rect,
-                pixelOffsetTL,
-                pixelOffsetBR,
-                glyphOffset,
-                writingMode: shapedText.writingMode,
-                isSDF,
-                sectionIndex: positionedGlyph.sectionIndex,
-                minFontScale,
+                pixel_offset_tl,
+                pixel_offset_br,
+                glyph_offset,
+                writing_mode: shaped_text.writing_mode,
+                is_sdf,
+                section_index: positionedGlyph.section_index,
+                min_font_scale,
             });
         }
     }
@@ -501,12 +511,12 @@ mod tests {
     use crate::{
         euclid::{Point2D, Rect, Size2D},
         legacy::{
-            geometry::Anchor,
+            geometry::anchor::Anchor,
             geometry_tile_data::GeometryCoordinates,
             glyph::{PositionedGlyph, PositionedLine, Shaping, WritingModeType},
             image_atlas::ImagePosition,
             layout::symbol_instance::SymbolContent,
-            quads::getIconQuads,
+            quads::get_icon_quads,
             shaping::PositionedIcon,
             style_types::{IconTextFitType, SymbolAnchorType, SymbolLayoutProperties_Evaluated},
         },
@@ -514,7 +524,7 @@ mod tests {
 
     #[test]
     /// maplibre/maplibre-native#4add9ea original name: getIconQuads_normal
-    pub fn getIconQuads_normal() {
+    pub fn get_icon_quads_normal() {
         let layout = SymbolLayoutProperties_Evaluated;
         let anchor = Anchor {
             point: Point2D::new(2.0, 3.0),
@@ -522,18 +532,18 @@ mod tests {
             segment: Some(0),
         };
         let image: ImagePosition = ImagePosition {
-            pixelRatio: 1.0,
-            paddedRect: Rect::new(Point2D::origin(), Size2D::new(15, 11)),
+            pixel_ratio: 1.0,
+            padded_rect: Rect::new(Point2D::origin(), Size2D::new(15, 11)),
             version: 0,
-            stretchX: vec![],
-            stretchY: vec![],
+            stretch_x: vec![],
+            stretch_y: vec![],
             content: None,
         };
 
-        let shapedIcon =
-            PositionedIcon::shapeIcon(image.clone(), &[-6.5, -4.5], SymbolAnchorType::Center);
+        let shaped_icon =
+            PositionedIcon::shape_icon(image.clone(), &[-6.5, -4.5], SymbolAnchorType::Center);
 
-        let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+        let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
         assert_eq!(quads.len(), 1);
         let quad = &quads[0];
@@ -549,7 +559,7 @@ mod tests {
 
     #[test]
     /// maplibre/maplibre-native#4add9ea original name: getIconQuads_style
-    pub fn getIconQuads_style() {
+    pub fn get_icon_quads_style() {
         let anchor = Anchor {
             point: Point2D::new(0.0, 0.0),
             angle: 0.0,
@@ -557,35 +567,35 @@ mod tests {
         };
 
         let image: ImagePosition = ImagePosition {
-            pixelRatio: 1.0,
-            paddedRect: Rect::new(Point2D::origin(), Size2D::new(20, 20)),
+            pixel_ratio: 1.0,
+            padded_rect: Rect::new(Point2D::origin(), Size2D::new(20, 20)),
             version: 0,
-            stretchX: vec![],
-            stretchY: vec![],
+            stretch_x: vec![],
+            stretch_y: vec![],
             content: None,
         };
 
         let line = GeometryCoordinates::default();
-        let mut shapedText: Shaping = Shaping {
+        let mut shaped_text: Shaping = Shaping {
             top: -10.,
             bottom: 30.0,
             left: -60.,
             right: 20.0,
 
-            positionedLines: vec![],
-            writingMode: WritingModeType::None,
+            positioned_lines: vec![],
+            writing_mode: WritingModeType::None,
             verticalizable: false,
-            iconsInText: false,
+            icons_in_text: false,
         };
 
         // shapedText.positionedGlyphs.emplace_back(PositionedGlyph(32, 0.0, 0.0, false, 0, 1.0));
 
-        shapedText.positionedLines.push(PositionedLine::default());
-        shapedText
-            .positionedLines
+        shaped_text.positioned_lines.push(PositionedLine::default());
+        shaped_text
+            .positioned_lines
             .last_mut()
             .unwrap()
-            .positionedGlyphs
+            .positioned_glyphs
             .push(PositionedGlyph {
                 glyph: 32,
                 x: 0.0,
@@ -595,22 +605,22 @@ mod tests {
                 scale: 0.0,
                 rect: Default::default(),
                 metrics: Default::default(),
-                imageID: None,
-                sectionIndex: 0,
+                image_id: None,
+                section_index: 0,
             });
 
         // none
         {
-            let shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            let shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
 
-            ulps_eq!(-18.5, shapedIcon.top);
-            ulps_eq!(-0.5, shapedIcon.right);
-            ulps_eq!(-0.5, shapedIcon.bottom);
-            ulps_eq!(-18.5, shapedIcon.left);
+            ulps_eq!(-18.5, shaped_icon.top);
+            ulps_eq!(-0.5, shaped_icon.right);
+            ulps_eq!(-0.5, shaped_icon.bottom);
+            ulps_eq!(-18.5, shaped_icon.left);
 
             let layout = SymbolLayoutProperties_Evaluated;
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -627,16 +637,16 @@ mod tests {
 
         // width
         {
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Width,
                 &[0., 0., 0., 0.],
                 &[0., 0.],
                 24.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -653,16 +663,16 @@ mod tests {
 
         // width x textSize
         {
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Width,
                 &[0., 0., 0., 0.],
                 &[0., 0.],
                 12.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -679,16 +689,16 @@ mod tests {
 
         // width x textSize + padding
         {
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Width,
                 &[5., 10., 5., 10.],
                 &[0., 0.],
                 12.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -705,16 +715,16 @@ mod tests {
 
         // height
         {
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Height,
                 &[0., 0., 0., 0.],
                 &[0., 0.],
                 24.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -732,16 +742,16 @@ mod tests {
         // height x textSize
         {
             let layout = SymbolLayoutProperties_Evaluated;
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Height,
                 &[0., 0., 0., 0.],
                 &[0., 0.],
                 12.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -758,16 +768,16 @@ mod tests {
 
         // height x textSize + padding
         {
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Height,
                 &[5., 10., 5., 20.],
                 &[0., 0.],
                 12.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -784,16 +794,16 @@ mod tests {
 
         // both
         {
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Both,
                 &[0., 0., 0., 0.],
                 &[0., 0.],
                 24.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -810,16 +820,16 @@ mod tests {
 
         // both x textSize
         {
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Both,
                 &[0., 0., 0., 0.],
                 &[0., 0.],
                 12.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -836,16 +846,16 @@ mod tests {
 
         // both x textSize + padding
         {
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Both,
                 &[5., 10., 5., 10.],
                 &[0., 0.],
                 12.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];
@@ -864,16 +874,16 @@ mod tests {
         {
             let layout = SymbolLayoutProperties_Evaluated;
             // FIXME add layout.get::<TextSize>() = 12.0; this test also works without this, which makes sense because text size does not affect glyph quads
-            let mut shapedIcon =
-                PositionedIcon::shapeIcon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
-            shapedIcon.fitIconToText(
-                &shapedText,
+            let mut shaped_icon =
+                PositionedIcon::shape_icon(image.clone(), &[-9.5, -9.5], SymbolAnchorType::Center);
+            shaped_icon.fit_icon_to_text(
+                &shaped_text,
                 IconTextFitType::Both,
                 &[0., 5., 10., 15.],
                 &[0., 0.],
                 12.0 / 24.0,
             );
-            let quads = getIconQuads(&shapedIcon, 0., SymbolContent::IconRGBA, false);
+            let quads = get_icon_quads(&shaped_icon, 0., SymbolContent::IconRGBA, false);
 
             assert_eq!(quads.len(), 1);
             let quad = &quads[0];

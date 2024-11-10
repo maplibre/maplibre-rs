@@ -42,24 +42,24 @@ impl PartialOrd for SymbolGeometryTileFeature {
 
 impl SymbolGeometryTileFeature {
     /// maplibre/maplibre-native#4add9ea original name: getType
-    pub fn getType(&self) -> FeatureType {
+    pub fn get_type(&self) -> FeatureType {
         //  todo!()
         FeatureType::Point
     }
     /// maplibre/maplibre-native#4add9ea original name: getValue
-    pub fn getValue(&self, key: &String) -> Option<&Value> {
+    pub fn get_value(&self, key: &String) -> Option<&Value> {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: getProperties
-    pub fn getProperties(&self) -> &serde_json::Value {
+    pub fn get_properties(&self) -> &serde_json::Value {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: getID
-    pub fn getID(&self) -> Identifier {
+    pub fn get_id(&self) -> Identifier {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: getGeometries
-    pub fn getGeometries(&self) -> &GeometryCollection {
+    pub fn get_geometries(&self) -> &GeometryCollection {
         todo!()
     }
 }

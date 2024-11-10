@@ -16,34 +16,34 @@ use crate::legacy::{
 #[derive(Clone, Default)]
 pub struct SectionOptions {
     pub scale: f64,
-    pub fontStackHash: FontStackHash,
-    pub fontStack: FontStack,
-    pub textColor: Option<Color>,
-    pub imageID: Option<String>,
+    pub font_stack_hash: FontStackHash,
+    pub font_stack: FontStack,
+    pub text_color: Option<Color>,
+    pub image_id: Option<String>,
 }
 impl SectionOptions {
     /// maplibre/maplibre-native#4add9ea original name: from_image_id
-    pub fn from_image_id(imageID_: String) -> Self {
+    pub fn from_image_id(image_id: String) -> Self {
         Self {
             scale: 1.0,
-            imageID: Some(imageID_),
+            image_id: Some(image_id),
             ..SectionOptions::default()
         }
     }
     /// maplibre/maplibre-native#4add9ea original name: new
-    pub fn new(scale: f64, fontStack: FontStack, textColor: Option<Color>) -> Self {
+    pub fn new(scale: f64, font_stack: FontStack, text_color: Option<Color>) -> Self {
         Self {
             scale,
-            fontStackHash: FontStackHasher::new(&fontStack),
-            fontStack,
-            textColor,
-            imageID: None,
+            font_stack_hash: FontStackHasher::new(&font_stack),
+            font_stack,
+            text_color,
+            image_id: None,
         }
     }
 }
 
-const PUAbegin: Char16 = '\u{E000}' as Char16;
-const PUAend: Char16 = '\u{F8FF}' as Char16;
+const PUABEGIN: Char16 = '\u{E000}' as Char16;
+const PUAEND: Char16 = '\u{F8FF}' as Char16;
 
 /**
  * A TaggedString is the shaping-code counterpart of the Formatted type
@@ -63,12 +63,12 @@ const PUAend: Char16 = '\u{F8FF}' as Char16;
 /// maplibre/maplibre-native#4add9ea original name: TaggedString
 #[derive(Clone)]
 pub struct TaggedString {
-    pub styledText: StyledText,
+    pub styled_text: StyledText,
     pub sections: Vec<SectionOptions>,
-    pub supportsVerticalWritingMode: Option<bool>,
+    pub supports_vertical_writing_mode: Option<bool>,
     // Max number of images within a text is 6400 U+E000–U+F8FF
     // that covers Basic Multilingual Plane Unicode Private Use Area (PUA).
-    pub imageSectionID: Char16,
+    pub image_section_id: Char16,
 }
 
 impl Default for TaggedString {
@@ -76,10 +76,10 @@ impl Default for TaggedString {
     /// maplibre/maplibre-native#4add9ea original name: default
     fn default() -> Self {
         Self {
-            styledText: (U16String::new(), vec![]), // TODO is this correct?
+            styled_text: (U16String::new(), vec![]), // TODO is this correct?
             sections: vec![],
-            supportsVerticalWritingMode: None,
-            imageSectionID: 0 as Char16, // TODO is this correct?
+            supports_vertical_writing_mode: None,
+            image_section_id: 0 as Char16, // TODO is this correct?
         }
     }
 }
@@ -89,114 +89,114 @@ impl TaggedString {
     pub fn new_from_raw(text_: U16String, options: SectionOptions) -> Self {
         let text_len = text_.len();
         Self {
-            styledText: (text_, vec![0; text_len]), // TODO is this correct?
+            styled_text: (text_, vec![0; text_len]), // TODO is this correct?
             sections: vec![options],
-            supportsVerticalWritingMode: None,
-            imageSectionID: 0 as Char16, // TODO is this correct?
+            supports_vertical_writing_mode: None,
+            image_section_id: 0 as Char16, // TODO is this correct?
         }
     }
 
     /// maplibre/maplibre-native#4add9ea original name: new
-    pub fn new(styledText_: StyledText, sections_: Vec<SectionOptions>) -> Self {
+    pub fn new(styled_text: StyledText, sections_: Vec<SectionOptions>) -> Self {
         Self {
-            styledText: styledText_,
+            styled_text,
             sections: sections_,
-            supportsVerticalWritingMode: None,
-            imageSectionID: 0 as Char16, // TODO is this correct?
+            supports_vertical_writing_mode: None,
+            image_section_id: 0 as Char16, // TODO is this correct?
         }
     }
 
     /// maplibre/maplibre-native#4add9ea original name: length
     pub fn length(&self) -> usize {
-        self.styledText.0.len()
+        self.styled_text.0.len()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: sectionCount
-    pub fn sectionCount(&self) -> usize {
+    pub fn section_count(&self) -> usize {
         self.sections.len()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: empty
     pub fn empty(&self) -> bool {
-        self.styledText.0.is_empty()
+        self.styled_text.0.is_empty()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getSection
-    pub fn getSection(&self, index: usize) -> &SectionOptions {
-        &self.sections[self.styledText.1[index] as usize] // TODO Index does not honor encoding, fine? previously it was .at()
+    pub fn get_section(&self, index: usize) -> &SectionOptions {
+        &self.sections[self.styled_text.1[index] as usize] // TODO Index does not honor encoding, fine? previously it was .at()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getCharCodeAt
-    pub fn getCharCodeAt(&self, index: usize) -> u16 {
-        return self.styledText.0.as_slice()[index];
+    pub fn get_char_code_at(&self, index: usize) -> u16 {
+        return self.styled_text.0.as_slice()[index];
     }
 
     /// maplibre/maplibre-native#4add9ea original name: rawText
-    pub fn rawText(&self) -> &U16String {
-        &self.styledText.0
+    pub fn raw_text(&self) -> &U16String {
+        &self.styled_text.0
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getStyledText
-    pub fn getStyledText(&self) -> &StyledText {
-        &self.styledText
+    pub fn get_styled_text(&self) -> &StyledText {
+        &self.styled_text
     }
 
     /// maplibre/maplibre-native#4add9ea original name: addTextSection
-    pub fn addTextSection(
+    pub fn add_text_section(
         &mut self,
-        sectionText: &U16String,
+        section_text: &U16String,
         scale: f64,
-        fontStack: FontStack,
-        textColor: Option<Color>,
+        font_stack: FontStack,
+        text_color: Option<Color>,
     ) {
-        self.styledText.0.push(sectionText);
+        self.styled_text.0.push(section_text);
         self.sections
-            .push(SectionOptions::new(scale, fontStack, textColor));
-        self.styledText
+            .push(SectionOptions::new(scale, font_stack, text_color));
+        self.styled_text
             .1
-            .resize(self.styledText.0.len(), (self.sections.len() - 1) as u8);
-        self.supportsVerticalWritingMode = None;
+            .resize(self.styled_text.0.len(), (self.sections.len() - 1) as u8);
+        self.supports_vertical_writing_mode = None;
     }
 
     /// maplibre/maplibre-native#4add9ea original name: addImageSection
-    pub fn addImageSection(&mut self, imageID: String) {
-        let nextImageSectionCharCode = self.getNextImageSectionCharCode();
+    pub fn add_image_section(&mut self, image_id: String) {
+        let next_image_section_char_code = self.get_next_image_section_char_code();
 
-        if let Some(nextImageSectionCharCode) = nextImageSectionCharCode {
-            self.styledText
+        if let Some(nextImageSectionCharCode) = next_image_section_char_code {
+            self.styled_text
                 .0
                 .push(U16Str::from_slice(&[nextImageSectionCharCode])); // TODO is this correct?
-            self.sections.push(SectionOptions::from_image_id(imageID));
-            self.styledText
+            self.sections.push(SectionOptions::from_image_id(image_id));
+            self.styled_text
                 .1
-                .resize(self.styledText.0.len(), (self.sections.len() - 1) as u8);
+                .resize(self.styled_text.0.len(), (self.sections.len() - 1) as u8);
         } else {
             log::warn!("Exceeded maximum number of images in a label.");
         }
     }
 
     /// maplibre/maplibre-native#4add9ea original name: sectionAt
-    pub fn sectionAt(&self, index: usize) -> &SectionOptions {
+    pub fn section_at(&self, index: usize) -> &SectionOptions {
         &self.sections[index]
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getSections
-    pub fn getSections(&self) -> &Vec<SectionOptions> {
+    pub fn get_sections(&self) -> &Vec<SectionOptions> {
         &self.sections
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getSectionIndex
-    pub fn getSectionIndex(&self, characterIndex: usize) -> u8 {
-        self.styledText.1[characterIndex] // TODO Index does not honor encoding, fine? previously it was .at()
+    pub fn get_section_index(&self, character_index: usize) -> u8 {
+        self.styled_text.1[character_index] // TODO Index does not honor encoding, fine? previously it was .at()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getMaxScale
-    pub fn getMaxScale(&self) -> f64 {
-        let mut maxScale: f64 = 0.0;
-        for i in 0..self.styledText.0.len() {
-            maxScale = maxScale.max(self.getSection(i).scale)
+    pub fn get_max_scale(&self) -> f64 {
+        let mut max_scale: f64 = 0.0;
+        for i in 0..self.styled_text.0.len() {
+            max_scale = max_scale.max(self.get_section(i).scale)
         }
-        maxScale
+        max_scale
     }
 
     const WHITESPACE_CHARS: &'static [Char16] = &[
@@ -210,16 +210,16 @@ impl TaggedString {
 
     /// maplibre/maplibre-native#4add9ea original name: trim
     pub fn trim(&mut self) {
-        let beginningWhitespace: Option<usize> = self
-            .styledText
+        let beginning_whitespace: Option<usize> = self
+            .styled_text
             .0
             .as_slice()
             .iter()
             .position(|c| !Self::WHITESPACE_CHARS.contains(c));
 
-        if let Some(beginningWhitespace) = beginningWhitespace {
-            let trailingWhitespace: usize = self
-                .styledText
+        if let Some(beginningWhitespace) = beginning_whitespace {
+            let trailing_whitespace: usize = self
+                .styled_text
                 .0
                 .as_slice()
                 .iter()
@@ -227,48 +227,48 @@ impl TaggedString {
                 .expect("there is a whitespace char")
                 + 1;
 
-            self.styledText.0 =
-                U16String::from(&self.styledText.0[beginningWhitespace..trailingWhitespace]); // TODO write test for this
-            self.styledText.1 =
-                Vec::from(&self.styledText.1[beginningWhitespace..trailingWhitespace]);
+            self.styled_text.0 =
+                U16String::from(&self.styled_text.0[beginningWhitespace..trailing_whitespace]); // TODO write test for this
+            self.styled_text.1 =
+                Vec::from(&self.styled_text.1[beginningWhitespace..trailing_whitespace]);
         } else {
             // Entirely whitespace
-            self.styledText.0.clear();
-            self.styledText.1.clear();
+            self.styled_text.0.clear();
+            self.styled_text.1.clear();
         }
     }
 
     /// maplibre/maplibre-native#4add9ea original name: verticalizePunctuation
-    pub fn verticalizePunctuation(&mut self) {
+    pub fn verticalize_punctuation(&mut self) {
         // Relies on verticalization changing characters in place so that style indices don't need updating
-        self.styledText.0 = i18n::verticalizePunctuation_str(&self.styledText.0);
+        self.styled_text.0 = i18n::verticalize_punctuation_str(&self.styled_text.0);
     }
     /// maplibre/maplibre-native#4add9ea original name: allowsVerticalWritingMode
-    pub fn allowsVerticalWritingMode(&mut self) -> bool {
-        if self.supportsVerticalWritingMode.is_none() {
-            let new_value = i18n::allowsVerticalWritingMode(self.rawText());
-            self.supportsVerticalWritingMode = Some(new_value);
+    pub fn allows_vertical_writing_mode(&mut self) -> bool {
+        if self.supports_vertical_writing_mode.is_none() {
+            let new_value = i18n::allows_vertical_writing_mode(self.raw_text());
+            self.supports_vertical_writing_mode = Some(new_value);
             return new_value;
         }
-        self.supportsVerticalWritingMode
+        self.supports_vertical_writing_mode
             .expect("supportsVerticalWritingMode mut be set")
     }
 }
 
 impl TaggedString {
     /// maplibre/maplibre-native#4add9ea original name: getNextImageSectionCharCode
-    fn getNextImageSectionCharCode(&mut self) -> Option<Char16> {
-        if self.imageSectionID == 0 {
-            self.imageSectionID = PUAbegin;
-            return Some(self.imageSectionID);
+    fn get_next_image_section_char_code(&mut self) -> Option<Char16> {
+        if self.image_section_id == 0 {
+            self.image_section_id = PUABEGIN;
+            return Some(self.image_section_id);
         }
 
-        self.imageSectionID += 1;
-        if self.imageSectionID > PUAend {
+        self.image_section_id += 1;
+        if self.image_section_id > PUAEND {
             return None;
         }
 
-        Some(self.imageSectionID)
+        Some(self.image_section_id)
     }
 }
 
@@ -284,21 +284,21 @@ mod tests {
 
     #[test]
     /// maplibre/maplibre-native#4add9ea original name: TaggedString_Trim
-    fn TaggedString_Trim() {
+    fn tagged_string_trim() {
         let mut basic = TaggedString::new_from_raw(
             " \t\ntrim that and not this  \n\t".into(),
             SectionOptions::new(1.0, vec![], None),
         );
         basic.trim();
-        assert_eq!(basic.rawText(), &U16String::from("trim that and not this"));
+        assert_eq!(basic.raw_text(), &U16String::from("trim that and not this"));
 
-        let mut twoSections = TaggedString::default();
-        twoSections.addTextSection(&" \t\ntrim that".into(), 1.5, vec![], None);
-        twoSections.addTextSection(&" and not this  \n\t".into(), 0.5, vec![], None);
+        let mut two_sections = TaggedString::default();
+        two_sections.add_text_section(&" \t\ntrim that".into(), 1.5, vec![], None);
+        two_sections.add_text_section(&" and not this  \n\t".into(), 0.5, vec![], None);
 
-        twoSections.trim();
+        two_sections.trim();
         assert_eq!(
-            twoSections.rawText(),
+            two_sections.raw_text(),
             &U16String::from("trim that and not this")
         );
 
@@ -311,32 +311,32 @@ mod tests {
             SectionOptions::new(1.0, vec![], None),
         );
         empty.trim();
-        assert_eq!(empty.rawText(), &U16String::from(""));
+        assert_eq!(empty.raw_text(), &U16String::from(""));
 
-        let mut noTrim =
+        let mut no_trim =
             TaggedString::new_from_raw("no trim!".into(), SectionOptions::new(1.0, vec![], None));
-        noTrim.trim();
-        assert_eq!(noTrim.rawText(), &U16String::from("no trim!"));
+        no_trim.trim();
+        assert_eq!(no_trim.raw_text(), &U16String::from("no trim!"));
     }
     #[test]
     /// maplibre/maplibre-native#4add9ea original name: TaggedString_ImageSections
-    fn TaggedString_ImageSections() {
+    fn tagged_string_image_sections() {
         let mut string = TaggedString::new_from_raw(U16String::new(), SectionOptions::default());
-        string.addImageSection("image_name".to_string());
-        assert_eq!(string.rawText(), &U16String::from("\u{E000}"));
-        assert!(string.getSection(0).imageID.is_some());
+        string.add_image_section("image_name".to_string());
+        assert_eq!(string.raw_text(), &U16String::from("\u{E000}"));
+        assert!(string.get_section(0).image_id.is_some());
         assert_eq!(
-            string.getSection(0).imageID.as_ref().unwrap(),
+            string.get_section(0).image_id.as_ref().unwrap(),
             &"image_name".to_string()
         );
 
-        let mut maxSections = TaggedString::default();
+        let mut max_sections = TaggedString::default();
         for i in 0..6401 {
-            maxSections.addImageSection(i.to_string());
+            max_sections.add_image_section(i.to_string());
         }
 
-        assert_eq!(maxSections.getSections().len(), 6400);
-        assert_eq!(maxSections.getCharCodeAt(0), '\u{E000}' as Char16);
-        assert_eq!(maxSections.getCharCodeAt(6399), '\u{F8FF}' as Char16);
+        assert_eq!(max_sections.get_sections().len(), 6400);
+        assert_eq!(max_sections.get_char_code_at(0), '\u{E000}' as Char16);
+        assert_eq!(max_sections.get_char_code_at(6399), '\u{F8FF}' as Char16);
     }
 }

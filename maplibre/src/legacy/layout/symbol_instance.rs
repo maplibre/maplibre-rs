@@ -11,26 +11,26 @@ use crate::legacy::{
     geometry_tile_data::GeometryCoordinates,
     glyph::{Shaping, WritingModeType},
     image::ImageMap,
-    quads::{getGlyphQuads, getIconQuads, SymbolQuads},
+    quads::{get_glyph_quads, get_icon_quads, SymbolQuads},
     shaping::PositionedIcon,
     style_types::{SymbolLayoutProperties_Evaluated, SymbolPlacementType},
 };
 
 /// maplibre/maplibre-native#4add9ea original name: getAnyShaping
-fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
-    if shapedTextOrientations.right().isAnyLineNotEmpty() {
-        return shapedTextOrientations.right();
+fn get_any_shaping(shaped_text_orientations: &ShapedTextOrientations) -> &Shaping {
+    if shaped_text_orientations.right().is_any_line_not_empty() {
+        return shaped_text_orientations.right();
     }
-    if shapedTextOrientations.center.isAnyLineNotEmpty() {
-        return &(shapedTextOrientations.center);
+    if shaped_text_orientations.center.is_any_line_not_empty() {
+        return &(shaped_text_orientations.center);
     }
-    if shapedTextOrientations.left.isAnyLineNotEmpty() {
-        return &(shapedTextOrientations.left);
+    if shaped_text_orientations.left.is_any_line_not_empty() {
+        return &(shaped_text_orientations.left);
     }
-    if shapedTextOrientations.vertical.isAnyLineNotEmpty() {
-        return &(shapedTextOrientations.vertical);
+    if shaped_text_orientations.vertical.is_any_line_not_empty() {
+        return &(shaped_text_orientations.vertical);
     }
-    &shapedTextOrientations.horizontal
+    &shaped_text_orientations.horizontal
 }
 
 /// maplibre/maplibre-native#4add9ea original name: ShapedTextOrientations
@@ -41,7 +41,7 @@ pub struct ShapedTextOrientations {
     // The following are used with variable text placement on, including right()
     center: Shaping,
     left: Shaping,
-    pub singleLine: bool,
+    pub single_line: bool,
 }
 
 impl ShapedTextOrientations {
@@ -52,14 +52,14 @@ impl ShapedTextOrientations {
         right: Option<Shaping>,
         center: Shaping,
         left: Shaping,
-        singleLine: bool,
+        single_line: bool,
     ) -> Self {
         Self {
             horizontal: (horizontal),
             vertical: (vertical),
             center: (center),
             left: (left),
-            singleLine,
+            single_line: single_line,
         }
     }
 
@@ -110,364 +110,366 @@ bitflags! {
 pub struct SymbolInstanceSharedData {
     line: GeometryCoordinates,
     // Note: When singleLine == true, only `rightJustifiedGlyphQuads` is populated.
-    rightJustifiedGlyphQuads: SymbolQuads,
-    centerJustifiedGlyphQuads: SymbolQuads,
-    leftJustifiedGlyphQuads: SymbolQuads,
-    verticalGlyphQuads: SymbolQuads,
-    iconQuads: Option<SymbolQuads>,
-    verticalIconQuads: Option<SymbolQuads>,
+    right_justified_glyph_quads: SymbolQuads,
+    center_justified_glyph_quads: SymbolQuads,
+    left_justified_glyph_quads: SymbolQuads,
+    vertical_glyph_quads: SymbolQuads,
+    icon_quads: Option<SymbolQuads>,
+    vertical_icon_quads: Option<SymbolQuads>,
 }
 
 impl SymbolInstanceSharedData {
     /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
         line_: GeometryCoordinates,
-        shapedTextOrientations: &ShapedTextOrientations,
-        shapedIcon: Option<PositionedIcon>,
-        verticallyShapedIcon: Option<PositionedIcon>,
+        shaped_text_orientations: &ShapedTextOrientations,
+        shaped_icon: Option<PositionedIcon>,
+        vertically_shaped_icon: Option<PositionedIcon>,
         layout: &SymbolLayoutProperties_Evaluated,
-        textPlacement: SymbolPlacementType,
-        textOffset: [f64; 2],
-        imageMap: &ImageMap,
-        iconRotation: f64,
-        iconType: SymbolContent,
-        hasIconTextFit: bool,
-        allowVerticalPlacement: bool,
+        text_placement: SymbolPlacementType,
+        text_offset: [f64; 2],
+        image_map: &ImageMap,
+        icon_rotation: f64,
+        icon_type: SymbolContent,
+        has_icon_text_fit: bool,
+        allow_vertical_placement: bool,
     ) -> Self {
         let mut self_ = Self {
             line: line_,
             ..Self::default()
         };
         // Create the quads used for rendering the icon and glyphs.
-        if let Some(shapedIcon) = &shapedIcon {
-            self_.iconQuads = Some(getIconQuads(
+        if let Some(shapedIcon) = &shaped_icon {
+            self_.icon_quads = Some(get_icon_quads(
                 shapedIcon,
-                iconRotation,
-                iconType,
-                hasIconTextFit,
+                icon_rotation,
+                icon_type,
+                has_icon_text_fit,
             ));
-            if let Some(verticallyShapedIcon) = &verticallyShapedIcon {
-                self_.verticalIconQuads = Some(getIconQuads(
+            if let Some(verticallyShapedIcon) = &vertically_shaped_icon {
+                self_.vertical_icon_quads = Some(get_icon_quads(
                     verticallyShapedIcon,
-                    iconRotation,
-                    iconType,
-                    hasIconTextFit,
+                    icon_rotation,
+                    icon_type,
+                    has_icon_text_fit,
                 ));
             }
         }
 
         // todo is this translation correct?
-        if !shapedTextOrientations.singleLine {
-            if shapedTextOrientations.right().isAnyLineNotEmpty() {
-                self_.rightJustifiedGlyphQuads = getGlyphQuads(
-                    shapedTextOrientations.right(),
-                    textOffset,
+        if !shaped_text_orientations.single_line {
+            if shaped_text_orientations.right().is_any_line_not_empty() {
+                self_.right_justified_glyph_quads = get_glyph_quads(
+                    shaped_text_orientations.right(),
+                    text_offset,
                     layout,
-                    textPlacement,
-                    imageMap,
-                    allowVerticalPlacement,
+                    text_placement,
+                    image_map,
+                    allow_vertical_placement,
                 );
             }
 
-            if shapedTextOrientations.center.isAnyLineNotEmpty() {
-                self_.centerJustifiedGlyphQuads = getGlyphQuads(
-                    &shapedTextOrientations.center,
-                    textOffset,
+            if shaped_text_orientations.center.is_any_line_not_empty() {
+                self_.center_justified_glyph_quads = get_glyph_quads(
+                    &shaped_text_orientations.center,
+                    text_offset,
                     layout,
-                    textPlacement,
-                    imageMap,
-                    allowVerticalPlacement,
+                    text_placement,
+                    image_map,
+                    allow_vertical_placement,
                 );
             }
 
-            if shapedTextOrientations.left.isAnyLineNotEmpty() {
-                self_.leftJustifiedGlyphQuads = getGlyphQuads(
-                    &shapedTextOrientations.left,
-                    textOffset,
+            if shaped_text_orientations.left.is_any_line_not_empty() {
+                self_.left_justified_glyph_quads = get_glyph_quads(
+                    &shaped_text_orientations.left,
+                    text_offset,
                     layout,
-                    textPlacement,
-                    imageMap,
-                    allowVerticalPlacement,
+                    text_placement,
+                    image_map,
+                    allow_vertical_placement,
                 );
             }
         } else {
-            let shape = if shapedTextOrientations.right().isAnyLineNotEmpty() {
-                Some(shapedTextOrientations.right())
-            } else if shapedTextOrientations.center.isAnyLineNotEmpty() {
-                Some(&shapedTextOrientations.center)
-            } else if shapedTextOrientations.left.isAnyLineNotEmpty() {
-                Some(&shapedTextOrientations.left)
+            let shape = if shaped_text_orientations.right().is_any_line_not_empty() {
+                Some(shaped_text_orientations.right())
+            } else if shaped_text_orientations.center.is_any_line_not_empty() {
+                Some(&shaped_text_orientations.center)
+            } else if shaped_text_orientations.left.is_any_line_not_empty() {
+                Some(&shaped_text_orientations.left)
             } else {
                 None
             };
 
             if let Some(shape) = shape {
-                self_.rightJustifiedGlyphQuads = getGlyphQuads(
+                self_.right_justified_glyph_quads = get_glyph_quads(
                     shape,
-                    textOffset,
+                    text_offset,
                     layout,
-                    textPlacement,
-                    imageMap,
-                    allowVerticalPlacement,
+                    text_placement,
+                    image_map,
+                    allow_vertical_placement,
                 );
             }
         }
 
-        if shapedTextOrientations.vertical.isAnyLineNotEmpty() {
-            self_.verticalGlyphQuads = getGlyphQuads(
-                &shapedTextOrientations.vertical,
-                textOffset,
+        if shaped_text_orientations.vertical.is_any_line_not_empty() {
+            self_.vertical_glyph_quads = get_glyph_quads(
+                &shaped_text_orientations.vertical,
+                text_offset,
                 layout,
-                textPlacement,
-                imageMap,
-                allowVerticalPlacement,
+                text_placement,
+                image_map,
+                allow_vertical_placement,
             );
         }
         self_
     }
     /// maplibre/maplibre-native#4add9ea original name: empty
     fn empty(&self) -> bool {
-        self.rightJustifiedGlyphQuads.is_empty()
-            && self.centerJustifiedGlyphQuads.is_empty()
-            && self.leftJustifiedGlyphQuads.is_empty()
-            && self.verticalGlyphQuads.is_empty()
+        self.right_justified_glyph_quads.is_empty()
+            && self.center_justified_glyph_quads.is_empty()
+            && self.left_justified_glyph_quads.is_empty()
+            && self.vertical_glyph_quads.is_empty()
     }
 }
 
 /// maplibre/maplibre-native#4add9ea original name: SymbolInstance
 #[derive(Clone)]
 pub struct SymbolInstance {
-    sharedData: Rc<SymbolInstanceSharedData>,
+    shared_data: Rc<SymbolInstanceSharedData>,
 
     pub anchor: Anchor,
-    pub symbolContent: SymbolContent,
+    pub symbol_content: SymbolContent,
 
-    pub rightJustifiedGlyphQuadsSize: usize,
-    pub centerJustifiedGlyphQuadsSize: usize,
-    pub leftJustifiedGlyphQuadsSize: usize,
-    pub verticalGlyphQuadsSize: usize,
-    pub iconQuadsSize: usize,
+    pub right_justified_glyph_quads_size: usize,
+    pub center_justified_glyph_quads_size: usize,
+    pub left_justified_glyph_quads_size: usize,
+    pub vertical_glyph_quads_size: usize,
+    pub icon_quads_size: usize,
 
-    pub textCollisionFeature: CollisionFeature,
-    pub iconCollisionFeature: CollisionFeature,
-    pub verticalTextCollisionFeature: Option<CollisionFeature>,
-    pub verticalIconCollisionFeature: Option<CollisionFeature>,
-    pub writingModes: WritingModeType,
-    pub layoutFeatureIndex: usize, // Index into the set of features included at layout time
-    pub dataFeatureIndex: usize,   // Index into the underlying tile data feature set
-    pub textOffset: [f64; 2],
-    pub iconOffset: [f64; 2],
+    pub text_collision_feature: CollisionFeature,
+    pub icon_collision_feature: CollisionFeature,
+    pub vertical_text_collision_feature: Option<CollisionFeature>,
+    pub vertical_icon_collision_feature: Option<CollisionFeature>,
+    pub writing_modes: WritingModeType,
+    pub layout_feature_index: usize, // Index into the set of features included at layout time
+    pub data_feature_index: usize,   // Index into the underlying tile data feature set
+    pub text_offset: [f64; 2],
+    pub icon_offset: [f64; 2],
     pub key: U16String,
-    pub placedRightTextIndex: Option<usize>,
-    pub placedCenterTextIndex: Option<usize>,
-    pub placedLeftTextIndex: Option<usize>,
-    pub placedVerticalTextIndex: Option<usize>,
-    pub placedIconIndex: Option<usize>,
-    pub placedVerticalIconIndex: Option<usize>,
-    pub textBoxScale: f64,
-    pub variableTextOffset: [f64; 2],
-    pub singleLine: bool,
-    pub crossTileID: u32,
+    pub placed_right_text_index: Option<usize>,
+    pub placed_center_text_index: Option<usize>,
+    pub placed_left_text_index: Option<usize>,
+    pub placed_vertical_text_index: Option<usize>,
+    pub placed_icon_index: Option<usize>,
+    pub placed_vertical_icon_index: Option<usize>,
+    pub text_box_scale: f64,
+    pub variable_text_offset: [f64; 2],
+    pub single_line: bool,
+    pub cross_tile_id: u32,
 }
 
 impl SymbolInstance {
     /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
         anchor_: Anchor,
-        sharedData_: Rc<SymbolInstanceSharedData>,
-        shapedTextOrientations: &ShapedTextOrientations,
-        shapedIcon: &Option<PositionedIcon>,
-        verticallyShapedIcon: &Option<PositionedIcon>,
-        textBoxScale_: f64,
-        textPadding: f64,
-        textPlacement: SymbolPlacementType,
-        textOffset_: [f64; 2],
-        iconBoxScale: f64,
-        iconPadding: f64,
-        iconOffset_: [f64; 2],
-        indexedFeature: IndexedSubfeature,
-        layoutFeatureIndex_: usize,
-        dataFeatureIndex_: usize,
+        shared_data: Rc<SymbolInstanceSharedData>,
+        shaped_text_orientations: &ShapedTextOrientations,
+        shaped_icon: &Option<PositionedIcon>,
+        vertically_shaped_icon: &Option<PositionedIcon>,
+        text_box_scale: f64,
+        text_padding: f64,
+        text_placement: SymbolPlacementType,
+        text_offset: [f64; 2],
+        icon_box_scale: f64,
+        icon_padding: f64,
+        icon_offset: [f64; 2],
+        indexed_feature: IndexedSubfeature,
+        layout_feature_index: usize,
+        data_feature_index: usize,
         key_: U16String,
         overscaling: f64,
-        iconRotation: f64,
-        textRotation: f64,
-        variableTextOffset_: [f64; 2],
-        allowVerticalPlacement: bool,
-        iconType: SymbolContent,
+        icon_rotation: f64,
+        text_rotation: f64,
+        variable_text_offset: [f64; 2],
+        allow_vertical_placement: bool,
+        icon_type: SymbolContent,
     ) -> Self {
         let mut self_ = Self {
-            symbolContent: iconType,
+            symbol_content: icon_type,
             // Create the collision features that will be used to check whether this
             // symbol instance can be placed As a collision approximation, we can use
             // either the vertical or any of the horizontal versions of the feature
-            textCollisionFeature: CollisionFeature::new_from_text(
-                &sharedData_.line,
+            text_collision_feature: CollisionFeature::new_from_text(
+                &shared_data.line,
                 &anchor_,
-                getAnyShaping(shapedTextOrientations).clone(),
-                textBoxScale_,
-                textPadding,
-                textPlacement,
-                indexedFeature.clone(),
+                get_any_shaping(shaped_text_orientations).clone(),
+                text_box_scale,
+                text_padding,
+                text_placement,
+                indexed_feature.clone(),
                 overscaling,
-                textRotation,
+                text_rotation,
             ),
-            iconCollisionFeature: CollisionFeature::new_from_icon(
-                &sharedData_.line,
+            icon_collision_feature: CollisionFeature::new_from_icon(
+                &shared_data.line,
                 &anchor_,
-                shapedIcon,
-                iconBoxScale,
-                iconPadding,
-                indexedFeature.clone(),
-                iconRotation,
+                shaped_icon,
+                icon_box_scale,
+                icon_padding,
+                indexed_feature.clone(),
+                icon_rotation,
             ),
 
-            sharedData: sharedData_,
+            shared_data: shared_data,
             anchor: anchor_,
-            writingModes: WritingModeType::None,
-            layoutFeatureIndex: layoutFeatureIndex_,
-            dataFeatureIndex: dataFeatureIndex_,
-            textOffset: textOffset_,
-            iconOffset: iconOffset_,
+            writing_modes: WritingModeType::None,
+            layout_feature_index: layout_feature_index,
+            data_feature_index: data_feature_index,
+            text_offset: text_offset,
+            icon_offset: icon_offset,
             key: key_,
 
-            textBoxScale: textBoxScale_,
-            variableTextOffset: variableTextOffset_,
-            singleLine: shapedTextOrientations.singleLine,
+            text_box_scale: text_box_scale,
+            variable_text_offset: variable_text_offset,
+            single_line: shaped_text_orientations.single_line,
 
-            rightJustifiedGlyphQuadsSize: 0,
-            centerJustifiedGlyphQuadsSize: 0,
-            leftJustifiedGlyphQuadsSize: 0,
-            verticalGlyphQuadsSize: 0,
-            iconQuadsSize: 0,
+            right_justified_glyph_quads_size: 0,
+            center_justified_glyph_quads_size: 0,
+            left_justified_glyph_quads_size: 0,
+            vertical_glyph_quads_size: 0,
+            icon_quads_size: 0,
 
-            verticalTextCollisionFeature: None,
-            placedRightTextIndex: None,
-            placedCenterTextIndex: None,
-            placedLeftTextIndex: None,
-            placedVerticalTextIndex: None,
-            placedIconIndex: None,
-            placedVerticalIconIndex: None,
+            vertical_text_collision_feature: None,
+            placed_right_text_index: None,
+            placed_center_text_index: None,
+            placed_left_text_index: None,
+            placed_vertical_text_index: None,
+            placed_icon_index: None,
+            placed_vertical_icon_index: None,
 
-            verticalIconCollisionFeature: None,
-            crossTileID: 0,
+            vertical_icon_collision_feature: None,
+            cross_tile_id: 0,
         };
 
         // 'hasText' depends on finding at least one glyph in the shaping that's also in the GlyphPositionMap
-        if !self_.sharedData.empty() {
-            self_.symbolContent |= SymbolContent::Text;
+        if !self_.shared_data.empty() {
+            self_.symbol_content |= SymbolContent::Text;
         }
-        if allowVerticalPlacement && shapedTextOrientations.vertical.isAnyLineNotEmpty() {
-            let verticalPointLabelAngle = 90.0;
-            self_.verticalTextCollisionFeature = Some(CollisionFeature::new_from_text(
+        if allow_vertical_placement && shaped_text_orientations.vertical.is_any_line_not_empty() {
+            let vertical_point_label_angle = 90.0;
+            self_.vertical_text_collision_feature = Some(CollisionFeature::new_from_text(
                 self_.line(),
                 &self_.anchor,
-                shapedTextOrientations.vertical.clone(),
-                textBoxScale_,
-                textPadding,
-                textPlacement,
-                indexedFeature.clone(),
+                shaped_text_orientations.vertical.clone(),
+                text_box_scale,
+                text_padding,
+                text_placement,
+                indexed_feature.clone(),
                 overscaling,
-                textRotation + verticalPointLabelAngle,
+                text_rotation + vertical_point_label_angle,
             ));
-            if verticallyShapedIcon.is_some() {
-                self_.verticalIconCollisionFeature = Some(CollisionFeature::new_from_icon(
-                    &self_.sharedData.line,
+            if vertically_shaped_icon.is_some() {
+                self_.vertical_icon_collision_feature = Some(CollisionFeature::new_from_icon(
+                    &self_.shared_data.line,
                     &self_.anchor,
-                    verticallyShapedIcon,
-                    iconBoxScale,
-                    iconPadding,
-                    indexedFeature,
-                    iconRotation + verticalPointLabelAngle,
+                    vertically_shaped_icon,
+                    icon_box_scale,
+                    icon_padding,
+                    indexed_feature,
+                    icon_rotation + vertical_point_label_angle,
                 ));
             }
         }
 
-        self_.rightJustifiedGlyphQuadsSize = self_.sharedData.rightJustifiedGlyphQuads.len();
-        self_.centerJustifiedGlyphQuadsSize = self_.sharedData.centerJustifiedGlyphQuads.len();
-        self_.leftJustifiedGlyphQuadsSize = self_.sharedData.leftJustifiedGlyphQuads.len();
-        self_.verticalGlyphQuadsSize = self_.sharedData.verticalGlyphQuads.len();
+        self_.right_justified_glyph_quads_size =
+            self_.shared_data.right_justified_glyph_quads.len();
+        self_.center_justified_glyph_quads_size =
+            self_.shared_data.center_justified_glyph_quads.len();
+        self_.left_justified_glyph_quads_size = self_.shared_data.left_justified_glyph_quads.len();
+        self_.vertical_glyph_quads_size = self_.shared_data.vertical_glyph_quads.len();
 
-        self_.iconQuadsSize = if let Some(iconQuads) = &self_.sharedData.iconQuads {
+        self_.icon_quads_size = if let Some(iconQuads) = &self_.shared_data.icon_quads {
             iconQuads.len()
         } else {
             0
         };
 
-        if self_.rightJustifiedGlyphQuadsSize != 0
-            || self_.centerJustifiedGlyphQuadsSize != 0
-            || self_.leftJustifiedGlyphQuadsSize != 0
+        if self_.right_justified_glyph_quads_size != 0
+            || self_.center_justified_glyph_quads_size != 0
+            || self_.left_justified_glyph_quads_size != 0
         {
-            self_.writingModes |= WritingModeType::Horizontal;
+            self_.writing_modes |= WritingModeType::Horizontal;
         }
 
-        if self_.verticalGlyphQuadsSize != 0 {
-            self_.writingModes |= WritingModeType::Vertical;
+        if self_.vertical_glyph_quads_size != 0 {
+            self_.writing_modes |= WritingModeType::Vertical;
         }
 
         self_
     }
     /// maplibre/maplibre-native#4add9ea original name: getDefaultHorizontalPlacedTextIndex
-    pub fn getDefaultHorizontalPlacedTextIndex(&self) -> Option<usize> {
-        if let Some(index) = self.placedRightTextIndex {
+    pub fn get_default_horizontal_placed_text_index(&self) -> Option<usize> {
+        if let Some(index) = self.placed_right_text_index {
             return Some(index);
         }
-        if let Some(index) = self.placedCenterTextIndex {
+        if let Some(index) = self.placed_center_text_index {
             return Some(index);
         }
-        if let Some(index) = self.placedLeftTextIndex {
+        if let Some(index) = self.placed_left_text_index {
             return Some(index);
         }
         None
     }
     /// maplibre/maplibre-native#4add9ea original name: line
     pub fn line(&self) -> &GeometryCoordinates {
-        &self.sharedData.line
+        &self.shared_data.line
     }
     /// maplibre/maplibre-native#4add9ea original name: rightJustifiedGlyphQuads
-    pub fn rightJustifiedGlyphQuads(&self) -> &SymbolQuads {
-        &self.sharedData.rightJustifiedGlyphQuads
+    pub fn right_justified_glyph_quads(&self) -> &SymbolQuads {
+        &self.shared_data.right_justified_glyph_quads
     }
     /// maplibre/maplibre-native#4add9ea original name: leftJustifiedGlyphQuads
-    pub fn leftJustifiedGlyphQuads(&self) -> &SymbolQuads {
-        &self.sharedData.leftJustifiedGlyphQuads
+    pub fn left_justified_glyph_quads(&self) -> &SymbolQuads {
+        &self.shared_data.left_justified_glyph_quads
     }
     /// maplibre/maplibre-native#4add9ea original name: centerJustifiedGlyphQuads
-    pub fn centerJustifiedGlyphQuads(&self) -> &SymbolQuads {
-        &self.sharedData.centerJustifiedGlyphQuads
+    pub fn center_justified_glyph_quads(&self) -> &SymbolQuads {
+        &self.shared_data.center_justified_glyph_quads
     }
     /// maplibre/maplibre-native#4add9ea original name: verticalGlyphQuads
-    pub fn verticalGlyphQuads(&self) -> &SymbolQuads {
-        &self.sharedData.verticalGlyphQuads
+    pub fn vertical_glyph_quads(&self) -> &SymbolQuads {
+        &self.shared_data.vertical_glyph_quads
     }
     /// maplibre/maplibre-native#4add9ea original name: hasText
-    pub fn hasText(&self) -> bool {
-        self.symbolContent.contains(SymbolContent::Text) // TODO Is this correct?
+    pub fn has_text(&self) -> bool {
+        self.symbol_content.contains(SymbolContent::Text) // TODO Is this correct?
     }
     /// maplibre/maplibre-native#4add9ea original name: hasIcon
-    pub fn hasIcon(&self) -> bool {
-        self.symbolContent.contains(SymbolContent::IconRGBA) || self.hasSdfIcon()
+    pub fn has_icon(&self) -> bool {
+        self.symbol_content.contains(SymbolContent::IconRGBA) || self.has_sdf_icon()
     }
     /// maplibre/maplibre-native#4add9ea original name: hasSdfIcon
-    pub fn hasSdfIcon(&self) -> bool {
-        self.symbolContent.contains(SymbolContent::IconSDF)
+    pub fn has_sdf_icon(&self) -> bool {
+        self.symbol_content.contains(SymbolContent::IconSDF)
     }
     /// maplibre/maplibre-native#4add9ea original name: iconQuads
-    pub fn iconQuads(&self) -> &Option<SymbolQuads> {
-        &self.sharedData.iconQuads
+    pub fn icon_quads(&self) -> &Option<SymbolQuads> {
+        &self.shared_data.icon_quads
     }
     /// maplibre/maplibre-native#4add9ea original name: verticalIconQuads
-    pub fn verticalIconQuads(&self) -> &Option<SymbolQuads> {
-        &self.sharedData.verticalIconQuads
+    pub fn vertical_icon_quads(&self) -> &Option<SymbolQuads> {
+        &self.shared_data.vertical_icon_quads
     }
     /// maplibre/maplibre-native#4add9ea original name: releaseSharedData
-    pub fn releaseSharedData(&self) {
+    pub fn release_shared_data(&self) {
         // todo!()
         // TODO not sure how to do this self.sharedData.reset();
     }
 
     /// maplibre/maplibre-native#4add9ea original name: invalidCrossTileID
-    fn invalidCrossTileID() -> u32 {
+    fn invalid_cross_tile_id() -> u32 {
         u32::MAX
     }
 }

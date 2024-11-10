@@ -61,20 +61,20 @@ fn main(in: VertexOutput) -> Output {
     let EDGE_GAMMA = 0.105 / device_pixel_ratio;
 
     let size = 6.0; // TODO
-    let fontScale = size / 24.0; // TODO Why / 24?
+    let font_scale = size / 24.0; // TODO Why / 24?
     let halo_width = 0.5; // TODO
     let halo_blur = 0.5; // TODO
     let halo_color = vec4(1.0, 0.0, 0.0, 1.0);
 
     var color = in.color;
     var gamma_scale = 1.0;
-    var gamma = EDGE_GAMMA / (fontScale * gamma_scale);
+    var gamma = EDGE_GAMMA / (font_scale * gamma_scale);
     var buff = (256.0 - 64.0) / 256.0;
 
     let is_halo = false;
     if (is_halo) {
         color = halo_color;
-        gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * gamma_scale);
-        buff = (6.0 - halo_width / fontScale) / SDF_PX;
+        gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (font_scale * gamma_scale);
+        buff = (6.0 - halo_width / font_scale) / SDF_PX;
     }
 */

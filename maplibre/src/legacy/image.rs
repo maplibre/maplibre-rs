@@ -29,14 +29,14 @@ pub struct Image {
     image: PremultipliedImage,
 
     // Pixel ratio of the sprite image.
-    pub pixelRatio: f64,
+    pub pixel_ratio: f64,
 
     // Whether this image should be interpreted as a signed distance field icon.
     pub sdf: bool,
 
     // Stretch areas of this image.
-    pub stretchX: Option<ImageStretches>,
-    pub stretchY: Option<ImageStretches>,
+    pub stretch_x: Option<ImageStretches>,
+    pub stretch_y: Option<ImageStretches>,
 
     // The space where text can be fit into this image.
     pub content: Option<ImageContent>,

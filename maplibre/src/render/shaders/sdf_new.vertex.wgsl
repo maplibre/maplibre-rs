@@ -98,7 +98,7 @@ let a_projected_pos: vec3<f32> =  vec3<f32>(vec2<f32>(a_pos_offset.xy), 0.0);
 
     size *= perspective_ratio;
 
-    let fontScale: f32 = select(size,  size / 24.0, u_is_text);
+    let font_scale: f32 = select(size,  size / 24.0, u_is_text);
 
     let symbol_rotation: f32 = 0.0; // highp
     //if (u_rotate_symbol) {
@@ -118,7 +118,7 @@ let a_projected_pos: vec3<f32> =  vec3<f32>(vec2<f32>(a_pos_offset.xy), 0.0);
     let rotation_matrix: mat2x2<f32> = mat2x2<f32>(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
     let projected_pos: vec4<f32> = u_label_plane_matrix * vec4(a_projected_pos.xy, 0.0, 1.0);
-    let gl_Position = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (vec2<f32>(a_offset) / 32.0 * fontScale + vec2<f32>(a_pxoffset)), 0.0, 1.0);
+    let gl_Position = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (vec2<f32>(a_offset) / 32.0 * font_scale + vec2<f32>(a_pxoffset)), 0.0, 1.0);
     let gamma_scale: f32 = gl_Position.w;
 
     // TODO let fade_opacity: vec4<f32> = unpack_opacity(a_fade_opacity);
@@ -131,7 +131,7 @@ let a_projected_pos: vec3<f32> =  vec3<f32>(vec2<f32>(a_pos_offset.xy), 0.0);
     let v_data1 = vec3<f32>(gamma_scale, size, interpolated_fade_opacity);
 
 
-    //var final_position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(a_projected_pos + vec3<f32>(vec2<f32>(a_offset) / 32.0 * fontScale + vec2<f32>(a_pxoffset), 0.0), 1.0);
+    //var final_position = mat4x4<f32>(translate1, translate2, translate3, translate4) * vec4<f32>(a_projected_pos + vec3<f32>(vec2<f32>(a_offset) / 32.0 * font_scale + vec2<f32>(a_pxoffset), 0.0), 1.0);
     var final_position =  mat4x4<f32>(translate1, translate2, translate3, translate4)*gl_Position;
     final_position.z = 10.0;
     return VertexOutput(v_data0, v_data1, final_position);

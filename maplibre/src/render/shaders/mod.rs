@@ -420,23 +420,23 @@ const MAX_PACKED_SIZE: u32 = MAX_GLYPH_ICON_SIZE * SIZE_PACK_FACTOR;
 impl ShaderSymbolVertexNew {
     pub fn new(vertex: &SymbolVertex) -> Self {
         let aSizeMin =
-            (MAX_PACKED_SIZE.min((vertex.sizeData.start * SIZE_PACK_FACTOR as f64) as u32) << 1)
-                + vertex.isSDF as u32;
-        let aSizeMax = MAX_PACKED_SIZE.min((vertex.sizeData.end * SIZE_PACK_FACTOR as f64) as u32);
+            (MAX_PACKED_SIZE.min((vertex.size_data.start * SIZE_PACK_FACTOR as f64) as u32) << 1)
+                + vertex.is_sdf as u32;
+        let aSizeMax = MAX_PACKED_SIZE.min((vertex.size_data.end * SIZE_PACK_FACTOR as f64) as u32);
 
         ShaderSymbolVertexNew {
             a_pos_offset: [
-                vertex.labelAnchor.x as i32,
-                vertex.labelAnchor.y as i32,
+                vertex.label_anchor.x as i32,
+                vertex.label_anchor.y as i32,
                 (vertex.o.x * 32.).round() as i32,
-                ((vertex.o.y + vertex.glyphOffsetY) * 32.) as i32,
+                ((vertex.o.y + vertex.glyph_offset_y) * 32.) as i32,
             ],
             a_data: [vertex.tx as u32, vertex.ty as u32, aSizeMin, aSizeMax],
             a_pixeloffset: [
-                (vertex.pixelOffset.x * 16.) as i32,
-                (vertex.pixelOffset.y * 16.) as i32,
-                (vertex.minFontScale.x * 256.) as i32,
-                (vertex.minFontScale.y * 256.) as i32,
+                (vertex.pixel_offset.x * 16.) as i32,
+                (vertex.pixel_offset.y * 16.) as i32,
+                (vertex.min_font_scale.x * 256.) as i32,
+                (vertex.min_font_scale.y * 256.) as i32,
             ],
         }
     }

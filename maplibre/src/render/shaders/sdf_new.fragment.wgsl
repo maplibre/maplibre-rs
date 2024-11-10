@@ -41,15 +41,15 @@ let tex: vec2<f32> = in.v_data0.xy;
     let size: f32 = in.v_data1.y;
     let fade_opacity: f32 = in.v_data1[2];
 
-    let fontScale: f32 = select(size,  size / 24.0, u_is_text);
+    let font_scale: f32 = select(size,  size / 24.0, u_is_text);
 
     var color: vec4<f32> = fill_color; // lowp
-    var  gamma: f32 = EDGE_GAMMA / (fontScale * u_gamma_scale); // highp
+    var  gamma: f32 = EDGE_GAMMA / (font_scale * u_gamma_scale); // highp
      var buff = (256.0 - 64.0) / 256.0; // lowp
     if (u_is_halo) {
         color = halo_color;
-        gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
-        buff = (6.0 - halo_width / fontScale) / SDF_PX;
+        gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (font_scale * u_gamma_scale);
+        buff = (6.0 - halo_width / font_scale) / SDF_PX;
     }
 
      let dist: f32 =  textureSample(t_glyphs, s_glyphs, tex).r; // lowp

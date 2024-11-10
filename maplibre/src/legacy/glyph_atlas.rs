@@ -34,6 +34,6 @@ pub struct GlyphAtlas {
 }
 
 /// maplibre/maplibre-native#4add9ea original name: makeGlyphAtlas
-pub fn makeGlyphAtlas(glyphs: &GlyphMap) -> GlyphAtlas {
+pub fn make_glyph_atlas(glyphs: &GlyphMap) -> GlyphAtlas {
     todo!() // Shelfpack library!
 }

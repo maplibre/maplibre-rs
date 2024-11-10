@@ -33,40 +33,40 @@ struct PatternDependency;
 /// maplibre/maplibre-native#4add9ea original name: SymbolVertex
 #[derive(Clone, Debug)]
 pub struct SymbolVertex {
-    pub labelAnchor: Point2D<f64, TileSpace>,
+    pub label_anchor: Point2D<f64, TileSpace>,
     pub o: Point2D<f64, TileSpace>,
-    pub glyphOffsetY: f64,
+    pub glyph_offset_y: f64,
     pub tx: u16,
     pub ty: u16,
-    pub sizeData: Range<f64>,
-    pub isSDF: bool,
-    pub pixelOffset: Point2D<f64, TileSpace>,
-    pub minFontScale: Point2D<f64, TileSpace>,
+    pub size_data: Range<f64>,
+    pub is_sdf: bool,
+    pub pixel_offset: Point2D<f64, TileSpace>,
+    pub min_font_scale: Point2D<f64, TileSpace>,
 }
 
 impl SymbolVertex {
     /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
-        labelAnchor: Point2D<f64, TileSpace>,
+        label_anchor: Point2D<f64, TileSpace>,
         o: Point2D<f64, TileSpace>,
-        glyphOffsetY: f64,
+        glyph_offset_y: f64,
         tx: u16,
         ty: u16,
-        sizeData: Range<f64>,
-        isSDF: bool,
-        pixelOffset: Point2D<f64, TileSpace>,
-        minFontScale: Point2D<f64, TileSpace>,
+        size_data: Range<f64>,
+        is_sdf: bool,
+        pixel_offset: Point2D<f64, TileSpace>,
+        min_font_scale: Point2D<f64, TileSpace>,
     ) -> SymbolVertex {
         Self {
-            labelAnchor,
+            label_anchor,
             o,
-            glyphOffsetY,
+            glyph_offset_y,
             tx,
             ty,
-            sizeData,
-            isSDF,
-            pixelOffset,
-            minFontScale,
+            size_data,
+            is_sdf,
+            pixel_offset,
+            min_font_scale,
         }
     }
 }
@@ -74,8 +74,8 @@ impl SymbolVertex {
 /// maplibre/maplibre-native#4add9ea original name: DynamicVertex
 #[derive(Copy, Clone, Debug)]
 pub struct DynamicVertex {
-    anchorPoint: Point2D<f64, TileSpace>,
-    labelAngle: f64,
+    anchor_point: Point2D<f64, TileSpace>,
+    label_angle: f64,
 }
 /// maplibre/maplibre-native#4add9ea original name: OpacityVertex
 #[derive(Copy, Clone, Debug)]
@@ -86,10 +86,10 @@ pub struct OpacityVertex {
 
 impl DynamicVertex {
     /// maplibre/maplibre-native#4add9ea original name: new
-    pub fn new(anchorPoint: Point2D<f64, TileSpace>, labelAngle: f64) -> Self {
+    pub fn new(anchor_point: Point2D<f64, TileSpace>, label_angle: f64) -> Self {
         Self {
-            anchorPoint,
-            labelAngle,
+            anchor_point,
+            label_angle,
         }
     }
 }
@@ -116,7 +116,7 @@ pub struct SymbolSizeBinder;
 
 impl SymbolSizeBinder {
     /// maplibre/maplibre-native#4add9ea original name: getVertexSizeData
-    pub fn getVertexSizeData(&self, feature: &SymbolGeometryTileFeature) -> Range<f64> {
+    pub fn get_vertex_size_data(&self, feature: &SymbolGeometryTileFeature) -> Range<f64> {
         // TODO ConstantSymbolSizeBinder
         0.0..0.0
     }
@@ -167,10 +167,10 @@ struct RenderTile;
 /// maplibre/maplibre-native#4add9ea original name: Segment
 #[derive(Copy, Clone, Debug)]
 pub struct Segment<T> {
-    pub vertexOffset: usize,
-    pub indexOffset: usize,
-    pub vertexLength: usize,
-    pub indexLength: usize,
+    pub vertex_offset: usize,
+    pub index_offset: usize,
+    pub vertex_length: usize,
+    pub index_length: usize,
 
     // One DrawScope per layer ID. This minimizes rebinding in cases where
     // several layers share buckets but have different sets of active
@@ -180,7 +180,7 @@ pub struct Segment<T> {
     //   * when two fill layers have the same layout properties, but one
     //     uses fill-color and the other uses fill-pattern
     // TODO drawScopes:  BTreeMap<String, gfx::DrawScope>
-    pub sortKey: f64,
+    pub sort_key: f64,
 
     pub _phandom_data: PhantomData<T>,
 }
@@ -188,25 +188,25 @@ pub struct Segment<T> {
 /// maplibre/maplibre-native#4add9ea original name: PlacedSymbol
 #[derive(Default, Clone, Debug)]
 pub struct PlacedSymbol {
-    pub anchorPoint: Point2D<f64, TileSpace>,
+    pub anchor_point: Point2D<f64, TileSpace>,
     pub segment: usize,
-    pub lowerSize: f64,
-    pub upperSize: f64,
-    pub lineOffset: [f64; 2],
-    pub writingModes: WritingModeType,
+    pub lower_size: f64,
+    pub upper_size: f64,
+    pub line_offset: [f64; 2],
+    pub writing_modes: WritingModeType,
     pub line: GeometryCoordinates,
-    pub tileDistances: Vec<f64>,
-    pub glyphOffsets: Vec<f64>,
+    pub tile_distances: Vec<f64>,
+    pub glyph_offsets: Vec<f64>,
     pub hidden: bool,
-    pub vertexStartIndex: usize,
+    pub vertex_start_index: usize,
     /// The crossTileID is only filled/used on the foreground for variable text anchors
-    pub crossTileID: u32,
+    pub cross_tile_id: u32,
     /// The placedOrientation is only used when symbol layer's property is set to
     /// support placement for orientation variants.
-    pub placedOrientation: Option<TextWritingModeType>,
+    pub placed_orientation: Option<TextWritingModeType>,
     pub angle: f64,
     /// Reference to placed icon, only applicable for text symbols.
-    pub placedIconIndex: Option<usize>,
+    pub placed_icon_index: Option<usize>,
 }
 
 /// maplibre/maplibre-native#4add9ea original name: PatternLayerMap
@@ -218,17 +218,17 @@ type SegmentVector<T> = Vec<Segment<T>>;
 /// maplibre/maplibre-native#4add9ea original name: SymbolBucketBuffer
 #[derive(Default, Clone, Debug)]
 pub struct SymbolBucketBuffer {
-    pub sharedVertices: VertexVector,
-    pub sharedDynamicVertices: DynamicVertexVector,
-    pub sharedOpacityVertices: OpacityVertexVector,
+    pub shared_vertices: VertexVector,
+    pub shared_dynamic_vertices: DynamicVertexVector,
+    pub shared_opacity_vertices: OpacityVertexVector,
 
     /// maplibre/maplibre-native#4add9ea original name: TriangleIndexVector
     // type TriangleIndexVector = gfx::IndexVector<gfx::Triangles>,
-    pub sharedTriangles: TriangleIndexVector,
+    pub shared_triangles: TriangleIndexVector,
     pub triangles: TriangleIndexVector,
     //TODO triangles: &TriangleIndexVector = *sharedTriangles,
     pub segments: SegmentVector<SymbolTextAttributes>,
-    pub placedSymbols: Vec<PlacedSymbol>,
+    pub placed_symbols: Vec<PlacedSymbol>,
     //    #if MLN_LEGACY_RENDERER
     //            std::optional<VertexBuffer> vertexBuffer,
     //            std::optional<DynamicVertexBuffer> dynamicVertexBuffer,
@@ -287,29 +287,29 @@ pub struct PaintProperties {
 #[derive(Clone, Debug)]
 pub struct SymbolBucket {
     layout: SymbolLayoutProperties_PossiblyEvaluated,
-    bucketLeaderID: String,
-    sortedAngle: f64,
+    bucket_leader_id: String,
+    sorted_angle: f64,
 
     // Flags
     // TODO what are the initial values?
-    iconsNeedLinear: bool,
-    sortFeaturesByY: bool,
-    staticUploaded: bool,
-    placementChangesUploaded: bool,
-    dynamicUploaded: bool,
-    sortUploaded: bool,
-    iconsInText: bool,
+    icons_need_linear: bool,
+    sort_features_by_y: bool,
+    static_uploaded: bool,
+    placement_changes_uploaded: bool,
+    dynamic_uploaded: bool,
+    sort_uploaded: bool,
+    icons_in_text: bool,
     // Set and used by placement.
-    pub justReloaded: bool,
-    hasVariablePlacement: bool,
-    hasUninitializedSymbols: bool,
+    pub just_reloaded: bool,
+    has_variable_placement: bool,
+    has_uninitialized_symbols: bool,
 
     //pub symbolInstances: Vec<SymbolInstance>,
-    pub sortKeyRanges: Vec<SortKeyRange>,
+    pub sort_key_ranges: Vec<SortKeyRange>,
 
-    pub paintProperties: HashMap<String, PaintProperties>,
+    pub paint_properties: HashMap<String, PaintProperties>,
 
-    pub textSizeBinder: Box<SymbolSizeBinder>,
+    pub text_size_binder: Box<SymbolSizeBinder>,
     /// maplibre/maplibre-native#4add9ea original name: VertexVector
     //type VertexVector = gfx::VertexVector<SymbolLayoutVertex>,
     /// maplibre/maplibre-native#4add9ea original name: VertexBuffer
@@ -324,9 +324,9 @@ pub struct SymbolBucket {
     //type OpacityVertexBuffer = gfx::VertexBuffer<gfx::Vertex<SymbolOpacityAttributes>>,
     pub text: SymbolBucketBuffer,
 
-    pub iconSizeBinder: Box<SymbolSizeBinder>,
+    pub icon_size_binder: Box<SymbolSizeBinder>,
     pub icon: SymbolBucketBuffer,
-    pub sdfIcon: SymbolBucketBuffer,
+    pub sdf_icon: SymbolBucketBuffer,
 
     /// maplibre/maplibre-native#4add9ea original name: CollisionVertexVector
     //type CollisionVertexVector = gfx::VertexVector<gfx::Vertex<CollisionBoxLayoutAttributes>>,
@@ -337,38 +337,38 @@ pub struct SymbolBucket {
     // textCollisionBox:   Box<CollisionBoxBuffer>,
     // iconCollisionCircle:  Box<CollisionCircleBuffer>,
     // textCollisionCircle: Box<CollisionCircleBuffer> ,
-    tilePixelRatio: f64,
-    bucketInstanceId: u32,
-    allowVerticalPlacement: bool,
-    placementModes: Vec<TextWritingModeType>,
-    hasFormatSectionOverrides_: Option<bool>,
+    tile_pixel_ratio: f64,
+    bucket_instance_id: u32,
+    allow_vertical_placement: bool,
+    placement_modes: Vec<TextWritingModeType>,
+    has_format_section_overrides: Option<bool>,
 
-    featureSortOrder: FeatureSortOrder,
+    feature_sort_order: FeatureSortOrder,
 
     uploaded: bool,
 }
 
-static maxBucketInstanceId: u32 = 0;
+static MAX_BUCKET_INSTANCE_ID: u32 = 0;
 
 impl SymbolBucket {
     /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(
         layout_: SymbolLayoutProperties_PossiblyEvaluated,
-        paintProperties_: &BTreeMap<String, LayerProperties>,
-        textSize: &PropertyValue<f64>,
-        iconSize: &PropertyValue<f64>,
+        paint_properties: &BTreeMap<String, LayerProperties>,
+        text_size: &PropertyValue<f64>,
+        icon_size: &PropertyValue<f64>,
         zoom: f64,
-        iconsNeedLinear_: bool,
-        sortFeaturesByY_: bool,
-        bucketName_: String,
-        symbolInstances_: Vec<SymbolInstance>,
-        sortKeyRanges_: Vec<SortKeyRange>,
-        tilePixelRatio_: f64,
-        allowVerticalPlacement_: bool,
-        placementModes_: Vec<TextWritingModeType>,
-        iconsInText_: bool,
+        icons_need_linear: bool,
+        sort_features_by_y: bool,
+        bucket_name: String,
+        symbol_instances: Vec<SymbolInstance>,
+        sort_key_ranges: Vec<SortKeyRange>,
+        tile_pixel_ratio: f64,
+        allow_vertical_placement: bool,
+        placement_modes: Vec<TextWritingModeType>,
+        icons_in_text: bool,
     ) -> Self {
-        // TODO maxBucketInstanceId += 1;
+        // TODO MAX_BUCKET_INSTANCE_ID += 1;
 
         // TODO
         // for pair in paintProperties_ {
@@ -381,34 +381,36 @@ impl SymbolBucket {
         // }
         Self {
             layout: layout_,
-            bucketLeaderID: bucketName_,
-            sortedAngle: f64::MAX,
-            iconsNeedLinear: iconsNeedLinear_ || iconSize.isDataDriven() || !iconSize.isZoomant(),
-            sortFeaturesByY: sortFeaturesByY_,
-            staticUploaded: false,
-            placementChangesUploaded: false,
-            dynamicUploaded: false,
-            sortUploaded: false,
-            iconsInText: false,
-            justReloaded: false,
-            hasVariablePlacement: false,
-            hasUninitializedSymbols: false,
+            bucket_leader_id: bucket_name,
+            sorted_angle: f64::MAX,
+            icons_need_linear: icons_need_linear
+                || icon_size.is_data_driven()
+                || !icon_size.is_zoomant(),
+            sort_features_by_y,
+            static_uploaded: false,
+            placement_changes_uploaded: false,
+            dynamic_uploaded: false,
+            sort_uploaded: false,
+            icons_in_text: false,
+            just_reloaded: false,
+            has_variable_placement: false,
+            has_uninitialized_symbols: false,
             // TODO symbolInstances: symbolInstances_,
-            sortKeyRanges: sortKeyRanges_,
-            paintProperties: Default::default(),
-            textSizeBinder: Default::default(),
+            sort_key_ranges,
+            paint_properties: Default::default(),
+            text_size_binder: Default::default(),
             // TODO textSizeBinder: SymbolSizeBinder::create(zoom, textSize, TextSize::defaultValue()),
             text: SymbolBucketBuffer::default(),
-            iconSizeBinder: Default::default(),
+            icon_size_binder: Default::default(),
             // TODO iconSizeBinder: SymbolSizeBinder::create(zoom, iconSize, IconSize::defaultValue()),
             icon: SymbolBucketBuffer::default(),
-            sdfIcon: SymbolBucketBuffer::default(),
-            tilePixelRatio: tilePixelRatio_,
-            bucketInstanceId: maxBucketInstanceId,
-            allowVerticalPlacement: allowVerticalPlacement_,
-            placementModes: placementModes_,
-            hasFormatSectionOverrides_: None,
-            featureSortOrder: FeatureSortOrder,
+            sdf_icon: SymbolBucketBuffer::default(),
+            tile_pixel_ratio,
+            bucket_instance_id: MAX_BUCKET_INSTANCE_ID,
+            allow_vertical_placement,
+            placement_modes,
+            has_format_section_overrides: None,
+            feature_sort_order: FeatureSortOrder,
             uploaded: false,
         }
     }
@@ -421,59 +423,59 @@ impl SymbolBucket {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: hasData
-    pub fn hasData(&self) -> bool {
+    pub fn has_data(&self) -> bool {
         // todo!()
         true
     }
 
     /// maplibre/maplibre-native#4add9ea original name: hasTextData
-    pub fn hasTextData(&self) -> bool {
+    pub fn has_text_data(&self) -> bool {
         todo!()
     }
-    /// maplibre/maplibre-native#4add9ea original name: hasIconData
-    pub fn hasIconData(&self) -> bool {
+    /// maplibre/maplibre-native#4add9ea original name: has_icon_data
+    pub fn has_icon_data(&self) -> bool {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: hasSdfIconData
-    pub fn hasSdfIconData(&self) -> bool {
+    pub fn has_sdf_icon_data(&self) -> bool {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: hasIconCollisionBoxData
-    pub fn hasIconCollisionBoxData(&self) -> bool {
+    pub fn has_icon_collision_box_data(&self) -> bool {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: hasIconCollisionCircleData
-    pub fn hasIconCollisionCircleData(&self) -> bool {
+    pub fn has_icon_collision_circle_data(&self) -> bool {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: hasTextCollisionBoxData
-    pub fn hasTextCollisionBoxData(&self) -> bool {
+    pub fn has_text_collision_box_data(&self) -> bool {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: hasTextCollisionCircleData
-    pub fn hasTextCollisionCircleData(&self) -> bool {
+    pub fn has_text_collision_circle_data(&self) -> bool {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: hasFormatSectionOverrides
-    pub fn hasFormatSectionOverrides(&self) -> bool {
+    pub fn has_format_section_overrides(&self) -> bool {
         //  todo!()
         false
     }
 
     /// maplibre/maplibre-native#4add9ea original name: sortFeatures
-    pub fn sortFeatures(&self, angle: f64) {
+    pub fn sort_features(&self, angle: f64) {
         todo!()
     }
     // Returns references to the `symbolInstances` items, sorted by viewport Y.
     /// maplibre/maplibre-native#4add9ea original name: getSortedSymbols
-    pub fn getSortedSymbols(&self, angle: f64) -> SymbolInstanceReferences {
+    pub fn get_sorted_symbols(&self, angle: f64) -> SymbolInstanceReferences {
         todo!()
     }
     // Returns references to the `symbolInstances` items, which belong to the
     // `sortKeyRange` range, returns references to all the symbols if
     // |sortKeyRange| is `std::nullopt`.
     /// maplibre/maplibre-native#4add9ea original name: getSymbols
-    pub fn getSymbols(&self, sortKeyRange: &Option<SortKeyRange>) -> SymbolInstanceReferences {
+    pub fn get_symbols(&self, sort_key_range: &Option<SortKeyRange>) -> SymbolInstanceReferences {
         todo!()
     }
 
@@ -507,20 +509,20 @@ impl SymbolBucket {
     //    }
 
     /// maplibre/maplibre-native#4add9ea original name: getQueryRadius
-    pub fn getQueryRadius(&self, layer: RenderLayer) -> f64 {
+    pub fn get_query_radius(&self, layer: RenderLayer) -> f64 {
         0.
     }
 
     /// maplibre/maplibre-native#4add9ea original name: needsUpload
-    pub fn needsUpload(&self) -> bool {
-        self.hasData() && !self.uploaded
+    pub fn needs_upload(&self) -> bool {
+        self.has_data() && !self.uploaded
     }
 
     // Feature geometries are also used to populate the feature index.
     // Obtaining these is a costly operation, so we do it only once, and
     // pass-by--ref the geometries as a second parameter.
     /// maplibre/maplibre-native#4add9ea original name: addFeature
-    pub fn addFeature(
+    pub fn add_feature(
         &self,
         geometry_tile_fature: &SymbolGeometryTileFeature,
         geometry_collection: &GeometryCollection,
@@ -537,7 +539,7 @@ impl SymbolBucket {
     // on success call, `0` otherwise. The second element is `true` if
     // the bucket was originally registered, `false` otherwise.
     /// maplibre/maplibre-native#4add9ea original name: registerAtCrossTileIndex
-    pub fn registerAtCrossTileIndex(
+    pub fn register_at_cross_tile_index(
         &self,
         cross_tile_index: &CrossTileSymbolLayerIndex,
         render_tile: &RenderTile,
@@ -555,9 +557,9 @@ impl SymbolBucket {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: updateVertices
-    pub fn updateVertices(
+    pub fn update_vertices(
         placement: &Placement,
-        updateOpacities: bool,
+        update_opacities: bool,
         transform_state: &TransformState,
         render_tile: &RenderTile,
         values: &BTreeSet<u32>,

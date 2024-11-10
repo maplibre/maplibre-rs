@@ -5,7 +5,7 @@ use widestring::U16String;
 use crate::legacy::bidi::Char16;
 
 /// maplibre/maplibre-native#4add9ea original name: allowsWordBreaking
-pub fn allowsWordBreaking(chr: Char16) -> bool {
+pub fn allows_word_breaking(chr: Char16) -> bool {
     chr == 0x0a      /* newline */
         || chr == 0x20   /* space */
         || chr == 0x26   /* ampersand */
@@ -22,37 +22,37 @@ pub fn allowsWordBreaking(chr: Char16) -> bool {
 }
 
 /// maplibre/maplibre-native#4add9ea original name: charAllowsLetterSpacing
-pub fn charAllowsLetterSpacing(chr: Char16) -> bool {
+pub fn char_allows_letter_spacing(chr: Char16) -> bool {
     return false;
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: allowsLetterSpacing
-pub fn allowsLetterSpacing(string: &U16String) -> bool {
+pub fn allows_letter_spacing(string: &U16String) -> bool {
     return false;
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: allowsIdeographicBreaking_str
-pub fn allowsIdeographicBreaking_str(string: &U16String) -> bool {
+pub fn allows_ideographic_breaking_str(string: &U16String) -> bool {
     return false;
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: allowsIdeographicBreaking
-pub fn allowsIdeographicBreaking(chr: Char16) -> bool {
+pub fn allows_ideographic_breaking(chr: Char16) -> bool {
     return false;
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: allowsFixedWidthGlyphGeneration
-pub fn allowsFixedWidthGlyphGeneration(chr: Char16) -> bool {
+pub fn allows_fixed_width_glyph_generation(chr: Char16) -> bool {
     return false;
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: allowsVerticalWritingMode
-pub fn allowsVerticalWritingMode(string: &U16String) -> bool {
+pub fn allows_vertical_writing_mode(string: &U16String) -> bool {
     return false;
     todo!()
 }
@@ -66,48 +66,48 @@ pub fn allowsVerticalWritingMode(string: &U16String) -> bool {
 // “neutral” characters.
 
 /// maplibre/maplibre-native#4add9ea original name: hasUprightVerticalOrientation
-pub fn hasUprightVerticalOrientation(chr: Char16) -> bool {
+pub fn has_upright_vertical_orientation(chr: Char16) -> bool {
     return false;
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: hasNeutralVerticalOrientation
-pub fn hasNeutralVerticalOrientation(chr: Char16) -> bool {
+pub fn has_neutral_vertical_orientation(chr: Char16) -> bool {
     return false;
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: hasRotatedVerticalOrientation
-pub fn hasRotatedVerticalOrientation(chr: Char16) -> bool {
-    !(hasUprightVerticalOrientation(chr) || hasNeutralVerticalOrientation(chr))
+pub fn has_rotated_vertical_orientation(chr: Char16) -> bool {
+    !(has_upright_vertical_orientation(chr) || has_neutral_vertical_orientation(chr))
 }
 
 // Replaces "horizontal" with "vertical" punctuation in place
 // Does not re-order or change length of string
 // (TaggedString::verticalizePunctuation depends on this behavior)
 /// maplibre/maplibre-native#4add9ea original name: verticalizePunctuation_str
-pub fn verticalizePunctuation_str(input: &U16String) -> U16String {
+pub fn verticalize_punctuation_str(input: &U16String) -> U16String {
     return input.clone();
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: verticalizePunctuation
-pub fn verticalizePunctuation(chr: Char16) -> Char16 {
+pub fn verticalize_punctuation(chr: Char16) -> Char16 {
     return 0;
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: charInSupportedScript
-pub fn charInSupportedScript(chr: Char16) -> bool {
+pub fn char_in_supported_script(chr: Char16) -> bool {
     return true;
     todo!()
 }
 
 /// maplibre/maplibre-native#4add9ea original name: isStringInSupportedScript
-pub fn isStringInSupportedScript(input: &str) -> bool {
+pub fn is_string_in_supported_script(input: &str) -> bool {
     let u16string = U16String::from(input); // TODO: verify if this is correct
     for chr in u16string.as_slice() {
-        if !charInSupportedScript(*chr) {
+        if !char_in_supported_script(*chr) {
             return false;
         }
     }
@@ -115,7 +115,7 @@ pub fn isStringInSupportedScript(input: &str) -> bool {
 }
 
 /// maplibre/maplibre-native#4add9ea original name: isCharInComplexShapingScript
-pub fn isCharInComplexShapingScript(chr: Char16) -> bool {
+pub fn is_char_in_complex_shaping_script(chr: Char16) -> bool {
     false
 }
 
@@ -123,7 +123,7 @@ pub const BACKSLACK_V: Char16 = '\u{000B}' as Char16;
 pub const BACKSLACK_F: Char16 = '\u{000C}' as Char16;
 
 /// maplibre/maplibre-native#4add9ea original name: isWhitespace
-pub fn isWhitespace(chr: Char16) -> bool {
+pub fn is_whitespace(chr: Char16) -> bool {
     // TODO verify that his is correct \v and \f where not available
     chr == ' ' as Char16
         || chr == '\t' as Char16
