@@ -2,23 +2,17 @@
 
 use crate::{
     euclid::{Box2D, Point2D, Vector2D},
-
     legacy::{
-        ScreenSpace, TileSpace,
-        util::math::{
-            convert_point_f64, convert_point_i16,
-        },
+        geometry::{anchor::Anchor, feature_index::IndexedSubfeature},
         geometry_tile_data::{GeometryCoordinate, GeometryCoordinates},
         glyph::Shaping,
         grid_index::Circle,
         shaping::{Padding, PositionedIcon},
         style_types::SymbolPlacementType,
-        util::math::{deg2radf, rotate, MinMax},
-
+        util::math::{convert_point_f64, convert_point_i16, deg2radf, rotate, MinMax},
+        ScreenSpace, TileSpace,
     },
 };
-use crate::legacy::geometry::anchor::Anchor;
-use crate::legacy::geometry::feature_index::IndexedSubfeature;
 
 #[derive(Clone)]
 pub struct CollisionFeature {

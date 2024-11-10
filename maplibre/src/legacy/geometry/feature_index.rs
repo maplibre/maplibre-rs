@@ -1,6 +1,5 @@
 //! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/geometry/feature_index.cpp
 
-
 #[derive(Clone)]
 pub struct IndexedSubfeature {
     pub ref_: RefIndexedSubfeature,

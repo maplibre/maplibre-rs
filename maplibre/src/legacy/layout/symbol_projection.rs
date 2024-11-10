@@ -1,6 +1,5 @@
 //! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/layout/symbol_projection.cpp
 
-
 use std::f64::consts::PI;
 
 use cgmath::{Matrix4, Vector4};
@@ -9,10 +8,11 @@ use crate::{
     euclid::Point2D,
     legacy::{
         buckets::symbol_bucket::PlacedSymbol,
-        geometry_tile_data::GeometryCoordinates, util::math::perp, TileSpace,
+        geometry_tile_data::GeometryCoordinates,
+        util::math::{convert_point_f64, perp},
+        TileSpace,
     },
 };
-use crate::legacy::util::math::convert_point_f64;
 
 type PointAndCameraDistance = (Point2D<f64, TileSpace>, f64); // TODO is the Unit correct?
 

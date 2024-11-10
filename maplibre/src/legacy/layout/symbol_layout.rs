@@ -19,6 +19,7 @@ use crate::{
             SymbolVertex,
         },
         geometry::{
+            anchor::{Anchor, Anchors},
             feature_index::{IndexedSubfeature, RefIndexedSubfeature},
         },
         geometry_tile_data::{FeatureType, GeometryCoordinates, SymbolGeometryTileLayer},
@@ -41,7 +42,6 @@ use crate::{
         CanonicalTileID, MapMode,
     },
 };
-use crate::legacy::geometry::anchor::{Anchor, Anchors};
 
 // TODO
 #[derive(Clone, Debug)]

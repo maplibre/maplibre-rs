@@ -6,23 +6,21 @@ use crate::{
     context::MapContext,
     coords::{EXTENT, TILE_SIZE},
     euclid::Point2D,
-    render::{
-        eventually::{Eventually, Eventually::Initialized},
-        shaders::SDFShaderFeatureMetadata,
-        tile_view_pattern::WgpuTileViewPattern,
-        Renderer,
-    },
     legacy::{
         buckets::symbol_bucket::PlacedSymbol,
         collision_feature::{CollisionBox, CollisionFeature},
         collision_index::CollisionIndex,
         geometry::feature_index::{IndexedSubfeature, RefIndexedSubfeature},
         geometry_tile_data::GeometryCoordinates,
-        MapMode
+        MapMode,
     },
-    sdf::{
-         SymbolBufferPool, SymbolLayersDataComponent,
+    render::{
+        eventually::{Eventually, Eventually::Initialized},
+        shaders::SDFShaderFeatureMetadata,
+        tile_view_pattern::WgpuTileViewPattern,
+        Renderer,
     },
+    sdf::{SymbolBufferPool, SymbolLayersDataComponent},
     tcs::system::{System, SystemError, SystemResult},
 };
 

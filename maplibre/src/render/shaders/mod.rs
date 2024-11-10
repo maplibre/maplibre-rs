@@ -5,8 +5,8 @@ use cgmath::SquareMatrix;
 
 use crate::{
     coords::WorldCoords,
-    render::resource::{FragmentState, VertexBufferLayout, VertexState},
     legacy::buckets::symbol_bucket::SymbolVertex,
+    render::resource::{FragmentState, VertexBufferLayout, VertexState},
 };
 
 pub type Vec2f32 = [f32; 2];

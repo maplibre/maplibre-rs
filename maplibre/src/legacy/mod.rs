@@ -3,6 +3,7 @@ pub mod buckets;
 pub mod collision_feature;
 pub mod collision_index;
 pub mod font_stack;
+pub mod geometry;
 pub mod geometry_tile_data;
 pub mod glyph;
 pub mod glyph_atlas;
@@ -16,7 +17,6 @@ pub mod shaping;
 pub mod style_types;
 pub mod tagged_string;
 pub mod util;
-pub mod geometry;
 
 // TODO where should this live?
 pub struct TileSpace; // The unit in which geometries or symbols are on a tile (0-EXTENT)

@@ -1,6 +1,5 @@
 //! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/text/collision_index.cpp
 
-
 use std::collections::HashMap;
 
 use bitflags::bitflags;
@@ -9,18 +8,16 @@ use cgmath::{Matrix4, Vector4};
 use crate::{
     coords::EXTENT,
     euclid::{Box2D, Point2D},
-    render::{camera::ModelViewProjection, view_state::ViewState},
     legacy::{
-        TileSpace,
-        MapMode, ScreenSpace,
         buckets::symbol_bucket::PlacedSymbol,
         collision_feature::{CollisionBox, CollisionFeature, ProjectedCollisionBox},
         geometry::feature_index::IndexedSubfeature,
         grid_index::{Circle, GridIndex},
         layout::symbol_projection::{placeFirstAndLastGlyph, project, TileDistance},
         util::geo::ScreenLineString,
-
+        MapMode, ScreenSpace, TileSpace,
     },
+    render::{camera::ModelViewProjection, view_state::ViewState},
 };
 
 type TransformState = ViewState;

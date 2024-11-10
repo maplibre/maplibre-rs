@@ -10,12 +10,12 @@ use maplibre::{
         apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
+    legacy::SymbolLayerData,
     raster::{
         AvailableRasterLayerData, LayerRaster, LayerRasterMissing, MissingRasterLayerData,
         RasterTransferables,
     },
     render::{shaders::ShaderSymbolVertex, ShaderVertex},
-    legacy::SymbolLayerData,
     tile::Layer,
     vector::{
         AvailableVectorLayerBucket, LayerIndexed, LayerMissing, LayerTessellated,

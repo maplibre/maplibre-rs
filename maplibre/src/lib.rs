@@ -58,5 +58,5 @@ pub mod debug;
 pub mod raster;
 pub mod vector;
 
-pub mod sdf;
 mod legacy;
+pub mod sdf;

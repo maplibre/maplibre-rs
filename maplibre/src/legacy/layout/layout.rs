@@ -1,9 +1,10 @@
 //! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/layout/layout.hpp
 
-
 use std::collections::BTreeSet;
 
-use crate::legacy::{glyph::GlyphDependencies, image::ImageDependencies, MapMode, OverscaledTileID};
+use crate::legacy::{
+    glyph::GlyphDependencies, image::ImageDependencies, MapMode, OverscaledTileID,
+};
 
 #[derive(Clone)]
 pub struct LayerTypeInfo;

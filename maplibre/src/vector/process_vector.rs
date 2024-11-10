@@ -18,17 +18,7 @@ use crate::{
         apc::{Context, SendError},
         geometry_index::{IndexProcessor, IndexedGeometry, TileIndex},
     },
-    render::{
-        shaders::{ShaderSymbolVertex, ShaderSymbolVertexNew},
-        ShaderVertex,
-    },
-    sdf::{
-        tessellation::TextTessellator,
-        text::GlyphSet,
-        Feature
-    },
     legacy::{
-        CanonicalTileID, MapMode, OverscaledTileID,
         bidi::Char16,
         buckets::symbol_bucket::SymbolBucketBuffer,
         font_stack::FontStackHasher,
@@ -44,8 +34,13 @@ use crate::{
         },
         style_types::SymbolLayoutProperties_Unevaluated,
         tagged_string::SectionOptions,
-
+        CanonicalTileID, MapMode, OverscaledTileID,
     },
+    render::{
+        shaders::{ShaderSymbolVertex, ShaderSymbolVertexNew},
+        ShaderVertex,
+    },
+    sdf::{tessellation::TextTessellator, text::GlyphSet, Feature},
     style::layer::{LayerPaint, StyleLayer},
     vector::{
         tessellation::{IndexDataType, OverAlignedVertexBuffer, ZeroTessellator},

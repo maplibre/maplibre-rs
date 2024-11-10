@@ -10,13 +10,13 @@ use lyon::{
 };
 
 use crate::{
+    legacy::TileSpace,
     render::shaders::ShaderSymbolVertex,
     sdf::{
         text::{Anchor, Glyph, GlyphSet, SymbolVertexBuilder},
         Feature,
     },
 };
-use crate::legacy::TileSpace;
 
 const DEFAULT_TOLERANCE: f32 = 0.02;
 

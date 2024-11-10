@@ -9,6 +9,7 @@ use crate::{
     environment::Environment,
     euclid::{Box2D, Point2D},
     kernel::Kernel,
+    legacy::TileSpace,
     plugin::Plugin,
     render::{
         eventually::Eventually,
@@ -28,15 +29,14 @@ use crate::{
         VectorTransferables,
     },
 };
-use crate::legacy::TileSpace;
 
+pub mod collision_system;
 mod populate_world_system;
 mod queue_system;
 mod render_commands;
 mod resource;
 mod resource_system;
 mod upload_system;
-pub mod collision_system;
 
 pub mod tessellation;
 mod tessellation_new;

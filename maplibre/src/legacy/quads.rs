@@ -1,6 +1,5 @@
 //! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/text/quads.cpp
 
-
 use std::f64::consts::PI;
 
 use crate::{

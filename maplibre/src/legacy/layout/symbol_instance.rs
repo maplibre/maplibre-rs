@@ -1,6 +1,5 @@
 //! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/layout/symbol_instance.cpp
 
-
 use std::rc::Rc;
 
 use bitflags::bitflags;
@@ -8,7 +7,7 @@ use widestring::U16String;
 
 use crate::legacy::{
     collision_feature::CollisionFeature,
-    geometry::{feature_index::IndexedSubfeature},
+    geometry::{anchor::Anchor, feature_index::IndexedSubfeature},
     geometry_tile_data::GeometryCoordinates,
     glyph::{Shaping, WritingModeType},
     image::ImageMap,
@@ -16,7 +15,6 @@ use crate::legacy::{
     shaping::PositionedIcon,
     style_types::{SymbolLayoutProperties_Evaluated, SymbolPlacementType},
 };
-use crate::legacy::geometry::anchor::Anchor;
 
 fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
     if shapedTextOrientations.right().isAnyLineNotEmpty() {

@@ -1,6 +1,5 @@
 //! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/util/i18n.cpp
 
-
 use widestring::U16String;
 
 use crate::legacy::bidi::Char16;

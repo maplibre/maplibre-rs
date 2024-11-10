@@ -13,12 +13,7 @@ use lyon::{
 
 use crate::{
     euclid::{Rect, Size2D},
-    render::shaders::ShaderSymbolVertexNew,
-    sdf::{
-        Feature,
-    },
     legacy::{
-        CanonicalTileID, MapMode, OverscaledTileID, TileSpace,
         bidi::Char16,
         font_stack::FontStackHasher,
         geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer},
@@ -32,9 +27,10 @@ use crate::{
             symbol_layout::{FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout},
         },
         style_types::SymbolLayoutProperties_Unevaluated,
-
+        CanonicalTileID, MapMode, OverscaledTileID, TileSpace,
     },
-
+    render::shaders::ShaderSymbolVertexNew,
+    sdf::Feature,
 };
 
 /// Vertex buffers index data type.
