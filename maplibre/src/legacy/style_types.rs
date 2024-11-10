@@ -139,20 +139,19 @@ impl<T> PossiblyEvaluatedPropertyValue<T> {
 pub trait LayoutProperty {
     /// maplibre/maplibre-native#4add9ea original name: TransitionableType
     // type TransitionableType = std::nullptr_t;
-    
+
     type UnevaluatedType;
     /// maplibre/maplibre-native#4add9ea original name: EvaluatorType
     // type EvaluatorType = PropertyEvaluator<T>;
 
     type PossiblyEvaluatedType;
-    
+
     type Type;
     const IsDataDriven: bool = false;
     const IsOverridable: bool = false;
 
-    
     fn name() -> &'static str;
-    
+
     fn defaultValue() -> Self::Type;
 }
 
@@ -165,14 +164,13 @@ pub trait DataDrivenLayoutProperty {
     //type EvaluatorType = DataDrivenPropertyEvaluator<T>;
 
     type PossiblyEvaluatedTyp: Default;
-    
+
     type Type;
     const IsDataDriven: bool = true;
     const IsOverridable: bool = false;
 
-    
     fn name() -> &'static str;
-    
+
     fn defaultValue() -> Self::Type;
 }
 
@@ -181,19 +179,16 @@ pub trait DataDrivenLayoutProperty {
 pub struct IconAllowOverlap {}
 
 impl LayoutProperty for IconAllowOverlap {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = bool;
 
-    
     fn name() -> &'static str {
         return "icon-allow-overlap";
     }
 
-    
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return false;
     }
@@ -203,18 +198,16 @@ impl LayoutProperty for IconAllowOverlap {
 pub struct IconAnchor {}
 
 impl DataDrivenLayoutProperty for IconAnchor {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = SymbolAnchorType;
 
-    
     fn name() -> &'static str {
         return "icon-anchor";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return SymbolAnchorType::Center;
     }
@@ -224,18 +217,16 @@ impl DataDrivenLayoutProperty for IconAnchor {
 pub struct IconIgnorePlacement {}
 
 impl LayoutProperty for IconIgnorePlacement {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = bool;
 
-    
     fn name() -> &'static str {
         return "icon-ignore-placement";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return false;
     }
@@ -245,18 +236,16 @@ impl LayoutProperty for IconIgnorePlacement {
 pub struct IconImage {}
 
 impl DataDrivenLayoutProperty for IconImage {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = expression::Image;
 
-    
     fn name() -> &'static str {
         return "icon-image";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return expression::Image::default();
     }
@@ -266,18 +255,16 @@ impl DataDrivenLayoutProperty for IconImage {
 pub struct IconKeepUpright {}
 
 impl LayoutProperty for IconKeepUpright {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = bool;
 
-    
     fn name() -> &'static str {
         return "icon-keep-upright";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return false;
     }
@@ -287,18 +274,16 @@ impl LayoutProperty for IconKeepUpright {
 pub struct IconOffset {}
 
 impl DataDrivenLayoutProperty for IconOffset {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = [f64; 2];
 
-    
     fn name() -> &'static str {
         return "icon-offset";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return [0.0, 0.0];
     }
@@ -308,18 +293,16 @@ impl DataDrivenLayoutProperty for IconOffset {
 pub struct IconOptional {}
 
 impl LayoutProperty for IconOptional {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = bool;
 
-    
     fn name() -> &'static str {
         return "icon-optional";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return false;
     }
@@ -329,18 +312,16 @@ impl LayoutProperty for IconOptional {
 pub struct IconPadding {}
 
 impl LayoutProperty for IconPadding {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "icon-padding";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return 2.0;
     }
@@ -350,18 +331,16 @@ impl LayoutProperty for IconPadding {
 pub struct IconPitchAlignment {}
 
 impl LayoutProperty for IconPitchAlignment {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = AlignmentType;
 
-    
     fn name() -> &'static str {
         return "icon-pitch-alignment";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return AlignmentType::Auto;
     }
@@ -371,18 +350,16 @@ impl LayoutProperty for IconPitchAlignment {
 pub struct IconRotate {}
 
 impl DataDrivenLayoutProperty for IconRotate {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "icon-rotate";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return 0.0;
     }
@@ -392,18 +369,16 @@ impl DataDrivenLayoutProperty for IconRotate {
 pub struct IconRotationAlignment {}
 
 impl LayoutProperty for IconRotationAlignment {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = AlignmentType;
 
-    
     fn name() -> &'static str {
         return "icon-rotation-alignment";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return AlignmentType::Auto;
     }
@@ -412,18 +387,16 @@ impl LayoutProperty for IconRotationAlignment {
 pub struct IconSize {}
 
 impl DataDrivenLayoutProperty for IconSize {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "icon-size";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return 1.0;
     }
@@ -433,18 +406,16 @@ impl DataDrivenLayoutProperty for IconSize {
 pub struct IconTextFit {}
 
 impl LayoutProperty for IconTextFit {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = IconTextFitType;
 
-    
     fn name() -> &'static str {
         return "icon-text-fit";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return IconTextFitType::None;
     }
@@ -452,18 +423,16 @@ impl LayoutProperty for IconTextFit {
 /// maplibre/maplibre-native#4add9ea original name: IconTextFitPadding
 pub struct IconTextFitPadding {}
 impl LayoutProperty for IconTextFitPadding {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = [f64; 4];
 
-    
     fn name() -> &'static str {
         return "icon-text-fit-padding";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return [0.0, 0.0, 0.0, 0.0];
     }
@@ -473,18 +442,16 @@ impl LayoutProperty for IconTextFitPadding {
 pub struct SymbolAvoidEdges {}
 
 impl LayoutProperty for SymbolAvoidEdges {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = bool;
 
-    
     fn name() -> &'static str {
         return "symbol-avoid-edges";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return false;
     }
@@ -494,18 +461,16 @@ impl LayoutProperty for SymbolAvoidEdges {
 pub struct SymbolPlacement {}
 
 impl LayoutProperty for SymbolPlacement {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = SymbolPlacementType;
 
-    
     fn name() -> &'static str {
         return "symbol-placement";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return SymbolPlacementType::Point;
     }
@@ -515,18 +480,16 @@ impl LayoutProperty for SymbolPlacement {
 pub struct SymbolSortKey {}
 
 impl DataDrivenLayoutProperty for SymbolSortKey {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "symbol-sort-key";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return 0.0;
     }
@@ -536,18 +499,16 @@ impl DataDrivenLayoutProperty for SymbolSortKey {
 pub struct SymbolSpacing {}
 
 impl LayoutProperty for SymbolSpacing {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "symbol-spacing";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return 250.0;
     }
@@ -557,18 +518,16 @@ impl LayoutProperty for SymbolSpacing {
 pub struct SymbolZOrder {}
 
 impl LayoutProperty for SymbolZOrder {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = SymbolZOrderType;
 
-    
     fn name() -> &'static str {
         return "symbol-z-order";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return SymbolZOrderType::Auto;
     }
@@ -577,18 +536,16 @@ impl LayoutProperty for SymbolZOrder {
 pub struct TextAllowOverlap {}
 
 impl LayoutProperty for TextAllowOverlap {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = bool;
 
-    
     fn name() -> &'static str {
         return "text-allow-overlap";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return false;
     }
@@ -598,18 +555,16 @@ impl LayoutProperty for TextAllowOverlap {
 pub struct TextAnchor {}
 
 impl DataDrivenLayoutProperty for TextAnchor {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = SymbolAnchorType;
 
-    
     fn name() -> &'static str {
         return "text-anchor";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return SymbolAnchorType::Center;
     }
@@ -618,18 +573,16 @@ impl DataDrivenLayoutProperty for TextAnchor {
 /// maplibre/maplibre-native#4add9ea original name: TextField
 pub struct TextField {}
 impl DataDrivenLayoutProperty for TextField {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = expression::Formatted;
 
-    
     fn name() -> &'static str {
         return "text-field";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return expression::Formatted::default();
     }
@@ -639,18 +592,16 @@ impl DataDrivenLayoutProperty for TextField {
 pub struct TextFont {}
 
 impl DataDrivenLayoutProperty for TextFont {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = Vec<String>;
 
-    
     fn name() -> &'static str {
         return "text-font";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return vec![
             "Open Sans Regular".to_string(),
@@ -663,18 +614,16 @@ impl DataDrivenLayoutProperty for TextFont {
 pub struct TextIgnorePlacement {}
 
 impl LayoutProperty for TextIgnorePlacement {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = bool;
 
-    
     fn name() -> &'static str {
         return "text-ignore-placement";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return false;
     }
@@ -684,18 +633,16 @@ impl LayoutProperty for TextIgnorePlacement {
 pub struct TextJustify {}
 
 impl DataDrivenLayoutProperty for TextJustify {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = TextJustifyType;
 
-    
     fn name() -> &'static str {
         return "text-justify";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return TextJustifyType::Center;
     }
@@ -706,18 +653,16 @@ pub struct TextKeepUpright {}
 
 impl TextKeepUpright {}
 impl LayoutProperty for TextKeepUpright {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = bool;
 
-    
     fn name() -> &'static str {
         return "text-keep-upright";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return true;
     }
@@ -728,17 +673,16 @@ pub struct TextLetterSpacing {}
 
 impl TextLetterSpacing {}
 impl DataDrivenLayoutProperty for TextLetterSpacing {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = f64;
-    
+
     fn name() -> &'static str {
         return "text-letter-spacing";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return 0.0;
     }
@@ -749,18 +693,16 @@ pub struct TextLineHeight {}
 
 impl TextLineHeight {}
 impl LayoutProperty for TextLineHeight {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "text-line-height";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return 1.2;
     }
@@ -770,18 +712,16 @@ impl LayoutProperty for TextLineHeight {
 pub struct TextMaxAngle {}
 
 impl LayoutProperty for TextMaxAngle {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "text-max-angle";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return 45.0;
     }
@@ -791,18 +731,16 @@ impl LayoutProperty for TextMaxAngle {
 pub struct TextMaxWidth {}
 
 impl DataDrivenLayoutProperty for TextMaxWidth {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "text-max-width";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return 10.0;
     }
@@ -812,18 +750,16 @@ impl DataDrivenLayoutProperty for TextMaxWidth {
 pub struct TextOffset {}
 
 impl DataDrivenLayoutProperty for TextOffset {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = [f64; 2];
 
-    
     fn name() -> &'static str {
         return "text-offset";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return [0.0, 0.0];
     }
@@ -833,18 +769,16 @@ impl DataDrivenLayoutProperty for TextOffset {
 pub struct TextOptional {}
 
 impl LayoutProperty for TextOptional {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = bool;
 
-    
     fn name() -> &'static str {
         return "text-optional";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return false;
     }
@@ -854,18 +788,16 @@ impl LayoutProperty for TextOptional {
 pub struct TextPadding {}
 
 impl LayoutProperty for TextPadding {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "text-padding";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return 2.0;
     }
@@ -876,18 +808,16 @@ pub struct TextPitchAlignment {}
 
 impl TextPitchAlignment {}
 impl LayoutProperty for TextPitchAlignment {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = AlignmentType;
 
-    
     fn name() -> &'static str {
         return "text-pitch-alignment";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return AlignmentType::Auto;
     }
@@ -897,18 +827,16 @@ impl LayoutProperty for TextPitchAlignment {
 pub struct TextRadialOffset {}
 
 impl DataDrivenLayoutProperty for TextRadialOffset {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "text-radial-offset";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return 0.0;
     }
@@ -918,18 +846,16 @@ impl DataDrivenLayoutProperty for TextRadialOffset {
 pub struct TextRotate {}
 
 impl DataDrivenLayoutProperty for TextRotate {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "text-rotate";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return 0.0;
     }
@@ -939,17 +865,15 @@ impl DataDrivenLayoutProperty for TextRotate {
 pub struct TextRotationAlignment {}
 
 impl LayoutProperty for TextRotationAlignment {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = AlignmentType;
 
-    
     fn name() -> &'static str {
         return "text-rotation-alignment";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return AlignmentType::Auto;
     }
@@ -959,18 +883,16 @@ impl LayoutProperty for TextRotationAlignment {
 pub struct TextSize {}
 
 impl DataDrivenLayoutProperty for TextSize {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = f64;
 
-    
     fn name() -> &'static str {
         return "text-size";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return 16.0;
     }
@@ -980,18 +902,16 @@ impl DataDrivenLayoutProperty for TextSize {
 pub struct TextTransform {}
 
 impl DataDrivenLayoutProperty for TextTransform {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
-    
+
     type PossiblyEvaluatedTyp = PossiblyEvaluatedPropertyValue<Self::Type>;
-    
+
     type Type = TextTransformType;
 
-    
     fn name() -> &'static str {
         return "text-transform";
     }
-    
+
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
         return TextTransformType::None;
     }
@@ -1002,17 +922,15 @@ pub struct TextVariableAnchor {}
 
 impl TextVariableAnchor {}
 impl LayoutProperty for TextVariableAnchor {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = Vec<TextVariableAnchorType>;
 
-    
     fn name() -> &'static str {
         return "text-variable-anchor";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return Vec::new();
     }
@@ -1022,18 +940,16 @@ impl LayoutProperty for TextVariableAnchor {
 pub struct TextWritingMode {}
 
 impl LayoutProperty for TextWritingMode {
-    
     type UnevaluatedType = PropertyValue<Self::Type>;
 
     type PossiblyEvaluatedType = Self::Type;
-    
+
     type Type = Vec<TextWritingModeType>;
 
-    
     fn name() -> &'static str {
         return "text-writing-mode";
     }
-    
+
     fn defaultValue() -> <Self as LayoutProperty>::Type {
         return Vec::new();
     }
@@ -1074,7 +990,7 @@ pub mod expression {
     };
 
     /// maplibre/maplibre-native#4add9ea original name: Value
-#[derive(Clone, PartialEq)]
+    #[derive(Clone, PartialEq)]
     pub enum Value {
         Color(Color),
         f64(f64),
