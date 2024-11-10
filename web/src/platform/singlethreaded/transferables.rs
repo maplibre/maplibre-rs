@@ -10,7 +10,7 @@ use maplibre::{
         apc::{IntoMessage, Message, MessageTag},
         geometry_index::TileIndex,
     },
-    legacy::SymbolLayerData,
+    sdf::SymbolLayerData,
     raster::{
         AvailableRasterLayerData, LayerRaster, LayerRasterMissing, MissingRasterLayerData,
         RasterTransferables,
@@ -22,7 +22,8 @@ use maplibre::{
         MissingVectorLayerBucket, SymbolLayerTessellated, TileTessellated, VectorTransferables,
     },
 };
-
+use maplibre::render::shaders::ShaderSymbolVertexNew;
+use maplibre::sdf::Feature;
 use crate::platform::singlethreaded::{
     apc::WebMessageTag,
     transferables::{
@@ -399,7 +400,8 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
-        feature_indices: Vec<u32>,
+        new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
+        features: Vec<Feature>,
         layer_data: Layer,
     ) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
@@ -421,7 +423,7 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
                 .collect::<Vec<_>>(),
         );
         let indices = inner_builder.create_vector(&buffer.buffer.indices);
-        let feature_indices = inner_builder.create_vector(&feature_indices);
+        // FIXME symbol let feature_indices = inner_builder.create_vector(&feature_indices);
         let layer_name = inner_builder.create_string(&layer_data.name);
 
         let mut builder = FlatSymbolLayerTessellatedBuilder::new(&mut inner_builder);
@@ -434,7 +436,7 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
         builder.add_layer_name(layer_name);
         builder.add_vertices(vertices);
         builder.add_indices(indices);
-        builder.add_feature_indices(feature_indices);
+        // FIXME symbol builder.add_feature_indices(feature_indices);
         builder.add_usable_indices(buffer.usable_indices);
         let root = builder.finish();
 
@@ -478,7 +480,8 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
             coords: LayerTessellated::coords(&self),
             source_layer: data.layer_name().unwrap().to_owned(),
             buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
-            feature_indices,
+            new_buffer: OverAlignedVertexBuffer::empty(), // FIXME symbol
+            features: vec![], // previously: feature_indices FIXME symbol
         }
     }
 }
