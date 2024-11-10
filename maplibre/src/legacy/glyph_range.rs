@@ -2,7 +2,7 @@
 
 use std::ops::Range;
 
-use crate::sdf::util::hash;
+use crate::legacy::util::hash;
 
 pub type GlyphRange = Range<u16>;
 

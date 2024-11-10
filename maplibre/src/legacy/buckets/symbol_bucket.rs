@@ -11,7 +11,7 @@ use geo_types::GeometryCollection;
 use crate::{
     euclid::Point2D,
     render::view_state::ViewState,
-    sdf::{
+    legacy::{
         geometry_tile_data::GeometryCoordinates,
         glyph::WritingModeType,
         image_atlas::ImagePositions,

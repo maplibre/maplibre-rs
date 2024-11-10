@@ -6,7 +6,7 @@ use std::ops::Index;
 
 use crate::{
     euclid::Point2D,
-    sdf::{layout::symbol_feature::SymbolGeometryTileFeature, TileSpace},
+    legacy::{layout::symbol_feature::SymbolGeometryTileFeature, TileSpace},
 };
 
 pub type GeometryCoordinate = Point2D<i16, TileSpace>;

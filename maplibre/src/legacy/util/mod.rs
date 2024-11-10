@@ -51,7 +51,7 @@ pub fn lower_bound<T: PartialOrd>(v: &[T], elt: &T) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use crate::sdf::util::lower_bound;
+    use crate::legacy::util::lower_bound;
 
     #[test]
     fn lower_bound_test() {

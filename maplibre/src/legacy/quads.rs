@@ -5,7 +5,7 @@ use std::f64::consts::PI;
 
 use crate::{
     euclid::{Point2D, Rect, Size2D, Vector2D},
-    sdf::{
+    legacy::{
         glyph::{Shaping, WritingModeType},
         image::{ImageMap, ImageStretches},
         image_atlas::ImagePosition,
@@ -489,7 +489,7 @@ mod tests {
 
     use crate::{
         euclid::{Point2D, Rect, Size2D},
-        sdf::{
+        legacy::{
             geometry::Anchor,
             geometry_tile_data::GeometryCoordinates,
             glyph::{PositionedGlyph, PositionedLine, Shaping, WritingModeType},

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::{
     euclid::Rect,
-    sdf::{
+    legacy::{
         image::{
             Image, ImageContent, ImageManager, ImageMap, ImageStretches, ImageVersionMap,
             PremultipliedImage,

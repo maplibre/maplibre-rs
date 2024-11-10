@@ -6,7 +6,7 @@ use bitflags::bitflags;
 
 use crate::{
     euclid::Rect,
-    sdf::{
+    legacy::{
         bidi::Char16,
         font_stack::{FontStack, FontStackHash},
         glyph_range::GlyphRange,

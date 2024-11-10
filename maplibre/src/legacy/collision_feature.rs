@@ -2,7 +2,7 @@
 
 use crate::{
     euclid::{Box2D, Point2D, Vector2D},
-    sdf::{
+    legacy::{
         util::math::{
             convert_point_f64, convert_point_i16,
         },
@@ -15,8 +15,8 @@ use crate::{
         ScreenSpace, TileSpace,
     },
 };
-use crate::sdf::geometry::anchor::Anchor;
-use crate::sdf::geometry::feature_index::IndexedSubfeature;
+use crate::legacy::geometry::anchor::Anchor;
+use crate::legacy::geometry::feature_index::IndexedSubfeature;
 
 #[derive(Clone)]
 pub struct CollisionFeature {

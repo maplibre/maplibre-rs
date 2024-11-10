@@ -4,7 +4,7 @@ use std::{collections::HashSet, f64};
 
 use crate::{
     euclid::{Box2D, Point2D},
-    sdf::ScreenSpace,
+    legacy::ScreenSpace,
 };
 
 #[derive(Default, Clone, Copy, Debug)]

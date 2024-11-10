@@ -3,7 +3,7 @@
 
 use std::cmp::Ordering;
 
-use crate::sdf::{
+use crate::legacy::{
     geometry_tile_data::{FeatureType, GeometryCollection, Identifier, Value},
     style_types::expression,
     tagged_string::TaggedString,

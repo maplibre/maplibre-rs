@@ -6,7 +6,7 @@ use std::rc::Rc;
 use bitflags::bitflags;
 use widestring::U16String;
 
-use crate::sdf::{
+use crate::legacy::{
     collision_feature::CollisionFeature,
     geometry::{feature_index::IndexedSubfeature},
     geometry_tile_data::GeometryCoordinates,
@@ -16,7 +16,7 @@ use crate::sdf::{
     shaping::PositionedIcon,
     style_types::{SymbolLayoutProperties_Evaluated, SymbolPlacementType},
 };
-use crate::sdf::geometry::anchor::Anchor;
+use crate::legacy::geometry::anchor::Anchor;
 
 fn getAnyShaping(shapedTextOrientations: &ShapedTextOrientations) -> &Shaping {
     if shapedTextOrientations.right().isAnyLineNotEmpty() {

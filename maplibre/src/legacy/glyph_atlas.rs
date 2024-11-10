@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use crate::{
     euclid::Rect,
-    sdf::{
+    legacy::{
         font_stack::FontStackHash,
         glyph::{GlyphID, GlyphMap, GlyphMetrics},
         TileSpace,

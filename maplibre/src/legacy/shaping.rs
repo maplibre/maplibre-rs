@@ -6,7 +6,7 @@ use cgmath::num_traits::Pow;
 
 use crate::{
     euclid::Rect,
-    sdf::{
+    legacy::{
         bidi::{BiDi, Char16},
         glyph::{
             Glyph, GlyphMap, GlyphMetrics, PositionedGlyph, PositionedLine, Shaping,
@@ -773,7 +773,7 @@ fn shapeLines(
 
 #[cfg(test)]
 mod test {
-    use crate::sdf::{
+    use crate::legacy::{
         bidi::{BiDi, Char16},
         font_stack::FontStackHasher,
         glyph::{Glyph, GlyphMap, Glyphs, WritingModeType},

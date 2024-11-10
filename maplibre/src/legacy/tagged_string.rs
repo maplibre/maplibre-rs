@@ -3,7 +3,7 @@
 use csscolorparser::Color;
 use widestring::{U16Str, U16String};
 
-use crate::sdf::{
+use crate::legacy::{
     bidi::{Char16, StyledText},
     font_stack::{FontStack, FontStackHash, FontStackHasher},
     util::{
@@ -253,7 +253,7 @@ impl TaggedString {
 mod tests {
     use widestring::U16String;
 
-    use crate::sdf::{
+    use crate::legacy::{
         bidi::Char16,
         tagged_string::{SectionOptions, TaggedString},
         util::i18n::BACKSLACK_V,

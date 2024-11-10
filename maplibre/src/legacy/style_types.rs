@@ -3,7 +3,7 @@
 
 use std::{any::TypeId, collections::BTreeSet, marker::PhantomData};
 
-use crate::sdf::{layout::symbol_feature::SymbolGeometryTileFeature, CanonicalTileID};
+use crate::legacy::{layout::symbol_feature::SymbolGeometryTileFeature, CanonicalTileID};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum SymbolPlacementType {
@@ -790,7 +790,7 @@ pub mod expression {
 
     use csscolorparser::Color;
 
-    use crate::sdf::{
+    use crate::legacy::{
         font_stack::FontStack, layout::symbol_feature::SymbolGeometryTileFeature, CanonicalTileID,
     };
 

@@ -10,7 +10,7 @@ use crate::{
     coords::EXTENT,
     euclid::{Box2D, Point2D},
     render::{camera::ModelViewProjection, view_state::ViewState},
-    sdf::{
+    legacy::{
         buckets::symbol_bucket::PlacedSymbol,
         collision_feature::{CollisionBox, CollisionFeature, ProjectedCollisionBox},
         geometry::feature_index::IndexedSubfeature,

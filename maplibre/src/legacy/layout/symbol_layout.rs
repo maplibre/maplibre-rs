@@ -12,7 +12,7 @@ use widestring::U16String;
 
 use crate::{
     coords::{EXTENT, TILE_SIZE},
-    sdf::{
+    legacy::{
         bidi::{applyArabicShaping, BiDi, Char16},
         buckets::symbol_bucket::{
             DynamicVertex, OpacityVertex, PlacedSymbol, Segment, SymbolBucket, SymbolBucketBuffer,
@@ -41,7 +41,7 @@ use crate::{
         CanonicalTileID, MapMode,
     },
 };
-use crate::sdf::geometry::anchor::{Anchor, Anchors};
+use crate::legacy::geometry::anchor::{Anchor, Anchors};
 
 // TODO
 #[derive(Clone, Debug)]
@@ -1723,7 +1723,7 @@ mod tests {
 
     use crate::{
         euclid::{Point2D, Rect, Size2D},
-        sdf::{
+        legacy::{
             bidi::Char16,
             font_stack::FontStackHasher,
             geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer},
