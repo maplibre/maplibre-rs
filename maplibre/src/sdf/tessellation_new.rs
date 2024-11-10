@@ -33,9 +33,6 @@ use crate::{
     sdf::Feature,
 };
 
-/// Vertex buffers index data type.
-pub type IndexDataType = u32; // Must match INDEX_FORMAT
-
 type GeoResult<T> = geozero::error::Result<T>;
 
 /// Build tessellations with vectors.
@@ -54,7 +51,7 @@ pub struct TextTessellatorNew<I> {
 
 impl<I> TextTessellatorNew<I> {
     pub fn finish() {
-        let fontStack = vec![
+        let font_stack = vec![
             "Open Sans Regular".to_string(),
             "Arial Unicode MS Regular".to_string(),
         ];
@@ -63,7 +60,7 @@ impl<I> TextTessellatorNew<I> {
 
         let image_positions = ImagePositions::new();
 
-        let glyphPosition = GlyphPosition {
+        let glyph_position = GlyphPosition {
             rect: Rect::new(Point2D::new(0, 0), Size2D::new(10, 10)),
             metrics: GlyphMetrics {
                 width: 18,
@@ -73,17 +70,17 @@ impl<I> TextTessellatorNew<I> {
                 advance: 21,
             },
         };
-        let glyphPositions: GlyphPositions = GlyphPositions::from([(
-            FontStackHasher::new(&fontStack),
-            GlyphPositionMap::from([('中' as Char16, glyphPosition)]),
+        let glyph_positions: GlyphPositions = GlyphPositions::from([(
+            FontStackHasher::new(&font_stack),
+            GlyphPositionMap::from([('中' as Char16, glyph_position)]),
         )]);
 
         let mut glyph = Glyph::default();
         glyph.id = '中' as Char16;
-        glyph.metrics = glyphPosition.metrics;
+        glyph.metrics = glyph_position.metrics;
 
         let glyphs: GlyphMap = GlyphMap::from([(
-            FontStackHasher::new(&fontStack),
+            FontStackHasher::new(&font_stack),
             Glyphs::from([('中' as Char16, Some(glyph))]),
         )]);
 
@@ -91,11 +88,11 @@ impl<I> TextTessellatorNew<I> {
 
         // layouting
 
-        let mut glyphDependencies = GlyphDependencies::new();
+        let mut glyph_dependencies = GlyphDependencies::new();
 
         let tile_id = OverscaledTileID {
             canonical: CanonicalTileID { x: 0, y: 0, z: 0 },
-            overscaledZ: 0,
+            overscaled_z: 0,
         };
         let parameters = BucketParameters {
             tile_id: tile_id,
@@ -121,17 +118,22 @@ impl<I> TextTessellatorNew<I> {
             }),
             &mut LayoutParameters {
                 bucket_parameters: &mut parameters.clone(),
-                glyph_dependencies: &mut glyphDependencies,
+                glyph_dependencies: &mut glyph_dependencies,
                 image_dependencies: &mut Default::default(),
                 available_images: &mut Default::default(),
             },
         )
         .unwrap();
 
-        layout.prepareSymbols(&glyphs, &glyphPositions, &empty_image_map, &image_positions);
+        layout.prepare_symbols(
+            &glyphs,
+            &glyph_positions,
+            &empty_image_map,
+            &image_positions,
+        );
 
         let mut output = HashMap::new();
-        layout.createBucket(
+        layout.create_bucket(
             image_positions,
             Box::new(FeatureIndex),
             &mut output,
@@ -223,9 +225,9 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
         let geometry = self.geo_writer.take_geometry();
 
         match geometry {
-            Some(Geometry::Point(point)) => {}
-            Some(Geometry::Polygon(polygon)) => {}
-            Some(Geometry::LineString(linestring)) => {}
+            Some(Geometry::Point(_point)) => {}
+            Some(Geometry::Polygon(_polygon)) => {}
+            Some(Geometry::LineString(_linestring)) => {}
             Some(Geometry::Line(_))
             | Some(Geometry::MultiPoint(_))
             | Some(Geometry::MultiLineString(_))

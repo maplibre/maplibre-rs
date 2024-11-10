@@ -419,10 +419,11 @@ const MAX_PACKED_SIZE: u32 = MAX_GLYPH_ICON_SIZE * SIZE_PACK_FACTOR;
 
 impl ShaderSymbolVertexNew {
     pub fn new(vertex: &SymbolVertex) -> Self {
-        let aSizeMin =
+        let a_size_min =
             (MAX_PACKED_SIZE.min((vertex.size_data.start * SIZE_PACK_FACTOR as f64) as u32) << 1)
                 + vertex.is_sdf as u32;
-        let aSizeMax = MAX_PACKED_SIZE.min((vertex.size_data.end * SIZE_PACK_FACTOR as f64) as u32);
+        let a_size_max =
+            MAX_PACKED_SIZE.min((vertex.size_data.end * SIZE_PACK_FACTOR as f64) as u32);
 
         ShaderSymbolVertexNew {
             a_pos_offset: [
@@ -431,7 +432,7 @@ impl ShaderSymbolVertexNew {
                 (vertex.o.x * 32.).round() as i32,
                 ((vertex.o.y + vertex.glyph_offset_y) * 32.) as i32,
             ],
-            a_data: [vertex.tx as u32, vertex.ty as u32, aSizeMin, aSizeMax],
+            a_data: [vertex.tx as u32, vertex.ty as u32, a_size_min, a_size_max],
             a_pixeloffset: [
                 (vertex.pixel_offset.x * 16.) as i32,
                 (vertex.pixel_offset.y * 16.) as i32,

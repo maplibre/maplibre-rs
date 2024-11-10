@@ -54,11 +54,11 @@ impl CollisionFeature {
         let mut x1 = left * box_scale - padding;
         let mut x2 = right * box_scale + padding;
 
-        if let Some(collisionPadding) = collision_padding {
-            x1 -= collisionPadding.left * box_scale;
-            y1 -= collisionPadding.top * box_scale;
-            x2 += collisionPadding.right * box_scale;
-            y2 += collisionPadding.bottom * box_scale;
+        if let Some(collision_padding) = collision_padding {
+            x1 -= collision_padding.left * box_scale;
+            y1 -= collision_padding.top * box_scale;
+            x2 += collision_padding.right * box_scale;
+            y2 += collision_padding.bottom * box_scale;
         }
 
         if self_.along_line {
@@ -170,23 +170,23 @@ impl CollisionFeature {
         Self::new(
             line,
             anchor,
-            if let Some(shapedIcon) = &shaped_icon {
-                shapedIcon.top
+            if let Some(shaped_icon) = &shaped_icon {
+                shaped_icon.top
             } else {
                 0.
             },
-            if let Some(shapedIcon) = &shaped_icon {
-                shapedIcon.bottom
+            if let Some(shaped_icon) = &shaped_icon {
+                shaped_icon.bottom
             } else {
                 0.
             },
-            if let Some(shapedIcon) = &shaped_icon {
-                shapedIcon.left
+            if let Some(shaped_icon) = &shaped_icon {
+                shaped_icon.left
             } else {
                 0.
             },
-            if let Some(shapedIcon) = &shaped_icon {
-                shapedIcon.right
+            if let Some(shaped_icon) = &shaped_icon {
+                shaped_icon.right
             } else {
                 0.
             },

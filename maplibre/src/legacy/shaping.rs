@@ -288,9 +288,9 @@ fn align(
     };
 
     for line in &mut shaping.positioned_lines {
-        for positionedGlyph in &mut line.positioned_glyphs {
-            positionedGlyph.x += shift_x;
-            positionedGlyph.y += shift_y;
+        for positioned_glyph in &mut line.positioned_glyphs {
+            positioned_glyph.x += shift_x;
+            positioned_glyph.y += shift_y;
         }
     }
 }
@@ -305,9 +305,9 @@ fn justify_line(positioned_glyphs: &mut Vec<PositionedGlyph>, justify: f64, line
     let last_glyph = positioned_glyphs.last().unwrap();
     let last_advance: f64 = last_glyph.metrics.advance as f64 * last_glyph.scale;
     let line_indent = last_glyph.x + last_advance * justify;
-    for positionedGlyph in positioned_glyphs {
-        positionedGlyph.x -= line_indent;
-        positionedGlyph.y += line_offset;
+    for positioned_glyph in positioned_glyphs {
+        positioned_glyph.x -= line_indent;
+        positioned_glyph.y += line_offset;
     }
 }
 
@@ -320,8 +320,8 @@ fn get_glyph_advance(
     layout_text_size: f64,
     spacing: f64,
 ) -> f64 {
-    if let Some(imageID) = &section.image_id {
-        let image = image_positions.get(imageID);
+    if let Some(image_id) = &section.image_id {
+        let image = image_positions.get(image_id);
         if image.is_none() {
             return 0.0;
         }
@@ -456,12 +456,12 @@ fn evaluate_break(
     let mut best_prior_break: Option<Box<PotentialBreak>> = None;
     let mut best_break_badness: f64 =
         calculate_badness(break_x, target_width, penalty, is_last_break);
-    for potentialBreak in potential_breaks {
-        let line_width = break_x - potentialBreak.x;
+    for potential_break in potential_breaks {
+        let line_width = break_x - potential_break.x;
         let break_badness = calculate_badness(line_width, target_width, penalty, is_last_break)
-            + potentialBreak.badness;
+            + potential_break.badness;
         if break_badness <= best_break_badness {
-            best_prior_break = Some(Box::new(potentialBreak.clone()));
+            best_prior_break = Some(Box::new(potential_break.clone()));
             best_break_badness = break_badness;
         }
     }
@@ -479,9 +479,9 @@ fn least_bad_breaks(last_line_break: &PotentialBreak) -> BTreeSet<usize> {
     let mut least_bad_breaks: BTreeSet<usize> = BTreeSet::from([last_line_break.index]);
     let mut prior_break = &last_line_break.prior_break;
 
-    while let Some(priorBreak_) = prior_break {
-        least_bad_breaks.insert(priorBreak_.index);
-        prior_break = &priorBreak_.prior_break;
+    while let Some(prior_break_) = prior_break {
+        least_bad_breaks.insert(prior_break_.index);
+        prior_break = &prior_break_.prior_break;
     }
     least_bad_breaks
 }
@@ -644,8 +644,8 @@ fn shape_lines(
                 (allow_vertical_placement &&
                  (i18n::is_whitespace(code_point) || i18n::is_char_in_complex_shaping_script(code_point))));
 
-            if let Some(imageID) = &section.image_id {
-                let image = image_positions.get(imageID);
+            if let Some(image_id) = &section.image_id {
+                let image = image_positions.get(image_id);
                 if image.is_none() {
                     continue;
                 }
@@ -697,9 +697,9 @@ fn shape_lines(
                 let glyph_position_map = glyph_position_map.expect("cant be none");
 
                 let glyph_position = glyph_position_map.get(&code_point);
-                if let Some(glyphPosition) = glyph_position {
-                    rect = glyphPosition.rect;
-                    metrics = glyphPosition.metrics;
+                if let Some(glyph_position) = glyph_position {
+                    rect = glyph_position.rect;
+                    metrics = glyph_position.metrics;
                 } else {
                     // TODO why would a glyph position not be available but a glyph? Maybe if a glyph bitmap is empty?
                     unreachable!();

@@ -62,13 +62,13 @@ pub struct LayerProperties {
 pub type SymbolLayerProperties = LayerProperties;
 impl LayerProperties {
     /// maplibre/maplibre-native#4add9ea original name: layerImpl
-    pub fn layerImpl(&self) -> &SymbolLayer_Impl {
+    pub fn layer_impl(&self) -> &SymbolLayer_Impl {
         // TODO
         &self.layer
     }
 
     /// maplibre/maplibre-native#4add9ea original name: baseImpl
-    pub fn baseImpl(&self) -> &Self {
+    pub fn base_impl(&self) -> &Self {
         self
     }
 }
@@ -92,7 +92,7 @@ pub struct SortKeyRange {
 
 impl SortKeyRange {
     /// maplibre/maplibre-native#4add9ea original name: isFirstRange
-    pub fn isFirstRange(&self) -> bool {
+    pub fn is_first_range(&self) -> bool {
         self.start == 0
     }
 }
@@ -109,10 +109,10 @@ fn section_options_to_value(options: &SectionOptions) -> expression::Value {
     // TextHaloColor
     // TextHaloWidth
     // TextHaloBlur
-    if let Some(textColor) = &(options.text_color) {
+    if let Some(text_color) = &(options.text_color) {
         result.insert(
             expression::K_FORMATTED_SECTION_TEXT_COLOR.to_string(),
-            expression::Value::Color(textColor.clone()),
+            expression::Value::Color(text_color.clone()),
         );
     }
     expression::Value::Object(result)
@@ -164,7 +164,7 @@ fn create_layout(
 // But in the vertical direction, the glyphs appear to "start" at the baseline
 // We don't actually load baseline data, but we assume an offset of ONE_EM - 17
 // (see "yOffset" in shaping.js)
-const baselineOffset: f64 = 7.0;
+const BASELINE_OFFSET: f64 = 7.0;
 
 // We don't care which shaping we get because this is used for collision
 // purposes and all the justifications have the same collision box.
@@ -218,17 +218,17 @@ fn evaluate_radial_offset(anchor: SymbolAnchorType, mut radial_offset: f64) -> [
 
     match anchor {
         SymbolAnchorType::TopRight | SymbolAnchorType::TopLeft => {
-            result[1] = hypotenuse - baselineOffset;
+            result[1] = hypotenuse - BASELINE_OFFSET;
         }
 
         SymbolAnchorType::BottomRight | SymbolAnchorType::BottomLeft => {
-            result[1] = -hypotenuse + baselineOffset;
+            result[1] = -hypotenuse + BASELINE_OFFSET;
         }
         SymbolAnchorType::Bottom => {
-            result[1] = -radial_offset + baselineOffset;
+            result[1] = -radial_offset + BASELINE_OFFSET;
         }
         SymbolAnchorType::Top => {
-            result[1] = radial_offset - baselineOffset;
+            result[1] = radial_offset - BASELINE_OFFSET;
         }
 
         _ => {}
@@ -300,15 +300,15 @@ impl SymbolLayout {
         source_layer: Box<SymbolGeometryTileLayer>,
         layout_parameters: &mut LayoutParameters, // TODO is this output?
     ) -> Option<Self> {
-        let overscaling = parameters.tile_id.overscaleFactor() as f64;
-        let zoom = parameters.tile_id.overscaledZ as f64;
+        let overscaling = parameters.tile_id.overscale_factor() as f64;
+        let zoom = parameters.tile_id.overscaled_z as f64;
         let tile_size = (TILE_SIZE * overscaling) as u32;
 
         let leader: &SymbolLayer_Impl =
-            to_symbol_layer_properties(layers.first().unwrap()).layerImpl();
+            to_symbol_layer_properties(layers.first().unwrap()).layer_impl();
 
         let mut self_ = Self {
-            bucket_leader_id: layers.first().unwrap().baseImpl().id.clone(),
+            bucket_leader_id: layers.first().unwrap().base_impl().id.clone(),
 
             source_layer,
             overscaling,
@@ -320,7 +320,7 @@ impl SymbolLayout {
             tile_pixel_ratio: EXTENT / tile_size as f64,
             layout: create_layout(
                 &to_symbol_layer_properties(layers.first().unwrap())
-                    .layerImpl()
+                    .layer_impl()
                     .layout,
                 zoom,
             ),
@@ -383,7 +383,7 @@ impl SymbolLayout {
         for layer in layers {
             self_
                 .layer_paint_properties
-                .insert(layer.baseImpl().id.clone(), layer.clone());
+                .insert(layer.base_impl().id.clone(), layer.clone());
         }
 
         // Determine glyph dependencies
@@ -416,8 +416,8 @@ impl SymbolLayout {
                         .layout
                         .evaluate::<TextFont>(self_.zoom, &ft, self_.canonical_id);
 
-                ft.formattedText = Some(TaggedString::default());
-                let ft_formatted_text = ft.formattedText.as_mut().unwrap();
+                ft.formatted_text = Some(TaggedString::default());
+                let ft_formatted_text = ft.formatted_text.as_mut().unwrap();
                 for section in &formatted.sections {
                     if let Some(image) = &section.image {
                         layout_parameters
@@ -435,13 +435,13 @@ impl SymbolLayout {
                         // TODO seems like invalid UTF-8 can not be in a tile? if let Err(e) =
                         ft_formatted_text.add_text_section(
                             &apply_arabic_shaping(&U16String::from(u8string.as_str())),
-                            if let Some(fontScale) = section.font_scale {
-                                fontScale
+                            if let Some(font_scale) = section.font_scale {
+                                font_scale
                             } else {
                                 1.0
                             },
-                            if let Some(fontStack) = &section.font_stack {
-                                fontStack.clone()
+                            if let Some(font_stack) = &section.font_stack {
+                                font_stack.clone()
                             } else {
                                 base_font_stack.clone()
                             },
@@ -470,8 +470,8 @@ impl SymbolLayout {
                     let section_font_stack = &section.font_stack;
                     let dependencies: &mut GlyphIDs = layout_parameters
                         .glyph_dependencies
-                        .entry(if let Some(sectionFontStack) = section_font_stack {
-                            sectionFontStack.clone()
+                        .entry(if let Some(section_font_stack) = section_font_stack {
+                            section_font_stack.clone()
                         } else {
                             base_font_stack.clone()
                         })
@@ -502,9 +502,9 @@ impl SymbolLayout {
                     .insert(ft.icon.as_ref().unwrap().image_id.clone(), ImageType::Icon);
             }
 
-            if ft.formattedText.is_some() || ft.icon.is_some() {
+            if ft.formatted_text.is_some() || ft.icon.is_some() {
                 if self_.sort_features_by_key {
-                    ft.sortKey =
+                    ft.sort_key =
                         self_
                             .layout
                             .evaluate::<SymbolSortKey>(self_.zoom, &ft, self_.canonical_id);
@@ -525,7 +525,7 @@ impl SymbolLayout {
         Some(self_)
     }
     /// maplibre/maplibre-native#4add9ea original name: prepareSymbols
-    pub fn prepareSymbols(
+    pub fn prepare_symbols(
         &mut self,
         glyph_map: &GlyphMap,
         glyph_positions: &GlyphPositions,
@@ -560,11 +560,11 @@ impl SymbolLayout {
                     .evaluate::<IconSize>(self.zoom + 1., feature, self.canonical_id);
 
             // if feature has text, shape the text
-            if let Some(mut feature_formattedText) = feature.formattedText.clone() {
+            if let Some(mut feature_formatted_text) = feature.formatted_text.clone() {
                 if layout_text_size > 0.0 {
                     let line_height: f64 = self.layout.get::<TextLineHeight>() * ONE_EM;
                     let spacing: f64 =
-                        if i18n::allows_letter_spacing(feature_formattedText.raw_text()) {
+                        if i18n::allows_letter_spacing(feature_formatted_text.raw_text()) {
                             self.layout.evaluate::<TextLetterSpacing>(
                                 self.zoom,
                                 feature,
@@ -700,7 +700,7 @@ impl SymbolLayout {
                             // center anchor for all shapings and apply the offsets for
                             // the anchor in the placement step.
                             let shaping = apply_shaping(
-                                &feature_formattedText,
+                                &feature_formatted_text,
                                 WritingModeType::Horizontal,
                                 SymbolAnchorType::Center,
                                 justification,
@@ -718,7 +718,7 @@ impl SymbolLayout {
                         // Vertical point label shaping if allowVerticalPlacement is enabled.
                         add_vertical_shaping_for_point_label_if_needed(
                             &mut shaped_text_orientations,
-                            &mut feature_formattedText,
+                            &mut feature_formatted_text,
                         );
                     } else {
                         if text_justify == TextJustifyType::Auto {
@@ -727,7 +727,7 @@ impl SymbolLayout {
 
                         // Horizontal point or line label.
                         let shaping = apply_shaping(
-                            &feature_formattedText,
+                            &feature_formatted_text,
                             WritingModeType::Horizontal,
                             text_anchor,
                             text_justify,
@@ -740,14 +740,15 @@ impl SymbolLayout {
                         // Vertical point label shaping if allowVerticalPlacement is enabled.
                         add_vertical_shaping_for_point_label_if_needed(
                             &mut shaped_text_orientations,
-                            &mut feature_formattedText,
+                            &mut feature_formatted_text,
                         );
 
                         // Verticalized line label.
-                        if text_along_line && feature_formattedText.allows_vertical_writing_mode() {
-                            feature_formattedText.verticalize_punctuation();
+                        if text_along_line && feature_formatted_text.allows_vertical_writing_mode()
+                        {
+                            feature_formatted_text.verticalize_punctuation();
                             shaped_text_orientations.set_vertical(apply_shaping(
-                                &feature_formattedText,
+                                &feature_formatted_text,
                                 WritingModeType::Vertical,
                                 text_anchor,
                                 text_justify,
@@ -757,7 +758,7 @@ impl SymbolLayout {
                     }
                 }
 
-                feature.formattedText = Some(feature_formattedText);
+                feature.formatted_text = Some(feature_formatted_text);
             }
 
             // if feature has icon, get sprite atlas position
@@ -809,25 +810,25 @@ impl SymbolLayout {
 
         for (
             feature_index,
-            shapedTextOrientations,
-            shapedIcon,
+            shaped_text_orientations,
+            shaped_icon,
             imageMap,
-            textOffset,
-            layoutTextSize,
-            layoutIconSize,
-            iconType,
+            text_offset,
+            layout_text_size,
+            layout_icon_size,
+            icon_type,
         ) in to_process_features
         {
-            self.addFeature(
+            self.add_feature(
                 feature_index,
                 &self.features[feature_index].clone(), // TODO likely wrong clone
-                &shapedTextOrientations,
-                shapedIcon,
+                &shaped_text_orientations,
+                shaped_icon,
                 imageMap,
-                textOffset,
-                layoutTextSize,
-                layoutIconSize,
-                iconType,
+                text_offset,
+                layout_text_size,
+                layout_icon_size,
+                icon_type,
             );
 
             self.features[feature_index].geometry.clear();
@@ -837,7 +838,7 @@ impl SymbolLayout {
     }
 
     /// maplibre/maplibre-native#4add9ea original name: createBucket
-    pub fn createBucket(
+    pub fn create_bucket(
         &self,
         _image_positions: ImagePositions,
         _feature_index: Box<FeatureIndex>,
@@ -864,14 +865,14 @@ impl SymbolLayout {
             self.icons_in_text,
         );
 
-        for symbolInstance in &mut symbol_instances {
-            let has_text = symbolInstance.has_text();
-            let has_icon = symbolInstance.has_icon();
-            let single_line = symbolInstance.single_line;
+        for symbol_instance in &mut symbol_instances {
+            let has_text = symbol_instance.has_text();
+            let has_icon = symbol_instance.has_icon();
+            let single_line = symbol_instance.single_line;
 
             let feature = self
                 .features
-                .get(symbolInstance.layout_feature_index)
+                .get(symbol_instance.layout_feature_index)
                 .unwrap();
 
             // Insert final placement into collision tree and add glyphs/icons to buffers
@@ -881,7 +882,7 @@ impl SymbolLayout {
             // have to be updated.
             if has_icon {
                 let size_data: Range<f64> = bucket.icon_size_binder.get_vertex_size_data(feature); // TODO verify usage of range
-                let icon_buffer = if symbolInstance.has_sdf_icon() {
+                let icon_buffer = if symbol_instance.has_sdf_icon() {
                     &mut bucket.sdf_icon
                 } else {
                     &mut bucket.icon
@@ -889,13 +890,13 @@ impl SymbolLayout {
                 let mut place_icon =
                     |icon_quads: &SymbolQuads, mut index: usize, writing_mode: WritingModeType| {
                         let mut icon_symbol = PlacedSymbol {
-                            anchor_point: symbolInstance.anchor.point,
-                            segment: symbolInstance.anchor.segment.unwrap_or(0),
+                            anchor_point: symbol_instance.anchor.point,
+                            segment: symbol_instance.anchor.segment.unwrap_or(0),
                             lower_size: size_data.start,
                             upper_size: size_data.end,
-                            line_offset: symbolInstance.icon_offset,
+                            line_offset: symbol_instance.icon_offset,
                             writing_modes: writing_mode,
-                            line: symbolInstance.line().clone(),
+                            line: symbol_instance.line().clone(),
                             tile_distances: Vec::new(),
                             glyph_offsets: vec![],
                             hidden: false,
@@ -912,13 +913,13 @@ impl SymbolLayout {
                             placed_icon_index: None,
                         };
 
-                        icon_symbol.vertex_start_index = self.addSymbols(
+                        icon_symbol.vertex_start_index = self.add_symbols(
                             icon_buffer,
                             size_data.clone(),
                             icon_quads,
-                            &symbolInstance.anchor,
+                            &symbol_instance.anchor,
                             &mut icon_symbol,
-                            feature.sortKey,
+                            feature.sort_key,
                         );
 
                         icon_buffer.placed_symbols.push(icon_symbol);
@@ -926,14 +927,14 @@ impl SymbolLayout {
                     };
 
                 place_icon(
-                    symbolInstance.icon_quads().as_ref().unwrap(),
-                    symbolInstance.placed_icon_index.unwrap(),
+                    symbol_instance.icon_quads().as_ref().unwrap(),
+                    symbol_instance.placed_icon_index.unwrap(),
                     WritingModeType::None,
                 );
-                if let Some(verticalIconQuads) = symbolInstance.vertical_icon_quads() {
+                if let Some(vertical_icon_quads) = symbol_instance.vertical_icon_quads() {
                     place_icon(
-                        verticalIconQuads,
-                        symbolInstance.placed_vertical_icon_index.unwrap(),
+                        vertical_icon_quads,
+                        symbol_instance.placed_vertical_icon_index.unwrap(),
                         WritingModeType::Vertical,
                     );
                 }
@@ -952,87 +953,90 @@ impl SymbolLayout {
                 //}
             }
 
-            if has_text && feature.formattedText.is_some() {
+            if has_text && feature.formatted_text.is_some() {
                 let mut last_added_section: Option<usize> = None;
                 if single_line {
                     let mut placed_text_index: Option<usize> = None;
-                    let (new_last_added_section, new_placed_index) = self.addSymbolGlyphQuads(
+                    let (new_last_added_section, new_placed_index) = self.add_symbol_glyph_quads(
                         &mut bucket,
-                        symbolInstance,
+                        symbol_instance,
                         feature,
-                        symbolInstance.writing_modes,
+                        symbol_instance.writing_modes,
                         placed_text_index,
-                        symbolInstance.right_justified_glyph_quads(),
+                        symbol_instance.right_justified_glyph_quads(),
                         canonical,
                         last_added_section,
                     );
                     last_added_section = Some(new_last_added_section);
                     placed_text_index = new_placed_index;
-                    symbolInstance.placed_right_text_index = placed_text_index;
-                    symbolInstance.placed_center_text_index = placed_text_index;
-                    symbolInstance.placed_left_text_index = placed_text_index;
+                    symbol_instance.placed_right_text_index = placed_text_index;
+                    symbol_instance.placed_center_text_index = placed_text_index;
+                    symbol_instance.placed_left_text_index = placed_text_index;
                 } else {
-                    if symbolInstance.right_justified_glyph_quads_size != 0 {
-                        let (new_last_added_section, new_placed_index) = self.addSymbolGlyphQuads(
-                            &mut bucket,
-                            symbolInstance,
-                            feature,
-                            symbolInstance.writing_modes,
-                            symbolInstance.placed_right_text_index,
-                            symbolInstance.right_justified_glyph_quads(),
-                            canonical,
-                            last_added_section,
-                        );
+                    if symbol_instance.right_justified_glyph_quads_size != 0 {
+                        let (new_last_added_section, new_placed_index) = self
+                            .add_symbol_glyph_quads(
+                                &mut bucket,
+                                symbol_instance,
+                                feature,
+                                symbol_instance.writing_modes,
+                                symbol_instance.placed_right_text_index,
+                                symbol_instance.right_justified_glyph_quads(),
+                                canonical,
+                                last_added_section,
+                            );
                         last_added_section = Some(new_last_added_section);
-                        symbolInstance.placed_right_text_index = new_placed_index
+                        symbol_instance.placed_right_text_index = new_placed_index
                     }
-                    if symbolInstance.center_justified_glyph_quads_size != 0 {
-                        let (new_last_added_section, new_placed_index) = self.addSymbolGlyphQuads(
-                            &mut bucket,
-                            symbolInstance,
-                            feature,
-                            symbolInstance.writing_modes,
-                            symbolInstance.placed_center_text_index,
-                            symbolInstance.center_justified_glyph_quads(),
-                            canonical,
-                            last_added_section,
-                        );
+                    if symbol_instance.center_justified_glyph_quads_size != 0 {
+                        let (new_last_added_section, new_placed_index) = self
+                            .add_symbol_glyph_quads(
+                                &mut bucket,
+                                symbol_instance,
+                                feature,
+                                symbol_instance.writing_modes,
+                                symbol_instance.placed_center_text_index,
+                                symbol_instance.center_justified_glyph_quads(),
+                                canonical,
+                                last_added_section,
+                            );
                         last_added_section = Some(new_last_added_section);
-                        symbolInstance.placed_center_text_index = new_placed_index
+                        symbol_instance.placed_center_text_index = new_placed_index
                     }
-                    if symbolInstance.left_justified_glyph_quads_size != 0 {
-                        let (new_last_added_section, new_placed_index) = self.addSymbolGlyphQuads(
-                            &mut bucket,
-                            symbolInstance,
-                            feature,
-                            symbolInstance.writing_modes,
-                            symbolInstance.placed_left_text_index,
-                            symbolInstance.left_justified_glyph_quads(),
-                            canonical,
-                            last_added_section,
-                        );
+                    if symbol_instance.left_justified_glyph_quads_size != 0 {
+                        let (new_last_added_section, new_placed_index) = self
+                            .add_symbol_glyph_quads(
+                                &mut bucket,
+                                symbol_instance,
+                                feature,
+                                symbol_instance.writing_modes,
+                                symbol_instance.placed_left_text_index,
+                                symbol_instance.left_justified_glyph_quads(),
+                                canonical,
+                                last_added_section,
+                            );
                         last_added_section = Some(new_last_added_section);
-                        symbolInstance.placed_left_text_index = new_placed_index
+                        symbol_instance.placed_left_text_index = new_placed_index
                     }
                 }
-                if symbolInstance.writing_modes.contains(WritingModeType::Vertical) // TODO is bitset op correct?
-                    && symbolInstance.vertical_glyph_quads_size != 0
+                if symbol_instance.writing_modes.contains(WritingModeType::Vertical) // TODO is bitset op correct?
+                    && symbol_instance.vertical_glyph_quads_size != 0
                 {
-                    let (new_last_added_section, new_placed_index) = self.addSymbolGlyphQuads(
+                    let (new_last_added_section, new_placed_index) = self.add_symbol_glyph_quads(
                         &mut bucket,
-                        symbolInstance,
+                        symbol_instance,
                         feature,
                         WritingModeType::Vertical,
-                        symbolInstance.placed_vertical_text_index,
-                        symbolInstance.vertical_glyph_quads(),
+                        symbol_instance.placed_vertical_text_index,
+                        symbol_instance.vertical_glyph_quads(),
                         canonical,
                         last_added_section,
                     );
                     last_added_section = Some(new_last_added_section);
-                    symbolInstance.placed_vertical_text_index = new_placed_index
+                    symbol_instance.placed_vertical_text_index = new_placed_index
                 }
                 assert!(last_added_section.is_some()); // True, as hasText == true;
-                self.updatePaintPropertiesForSection(
+                self.update_paint_properties_for_section(
                     &mut bucket,
                     feature,
                     last_added_section.unwrap(),
@@ -1040,11 +1044,11 @@ impl SymbolLayout {
                 );
             }
 
-            symbolInstance.release_shared_data();
+            symbol_instance.release_shared_data();
         }
 
         if show_collision_boxes {
-            self.addToDebugBuffers(&mut bucket);
+            self.add_to_debug_buffers(&mut bucket);
         }
         if bucket.has_data() {
             for pair in &self.layer_paint_properties {
@@ -1063,11 +1067,11 @@ impl SymbolLayout {
     }
 
     /// maplibre/maplibre-native#4add9ea original name: hasSymbolInstances
-    fn hasSymbolInstances(&self) -> bool {
+    fn has_symbol_instances(&self) -> bool {
         !self.symbol_instances.is_empty()
     }
     /// maplibre/maplibre-native#4add9ea original name: hasDependencies
-    fn hasDependencies(&self) -> bool {
+    fn has_dependencies(&self) -> bool {
         !self.features.is_empty()
     }
 
@@ -1081,7 +1085,7 @@ impl SymbolLayout {
      * @return std::array<f64, 2> offset along x- and y- axis correspondingly.
      */
     /// maplibre/maplibre-native#4add9ea original name: evaluateVariableOffset
-    pub fn evaluateVariableOffset(anchor: SymbolAnchorType, mut offset: [f64; 2]) -> [f64; 2] {
+    pub fn evaluate_variable_offset(anchor: SymbolAnchorType, mut offset: [f64; 2]) -> [f64; 2] {
         if offset[1] == Self::INVALID_OFFSET_VALUE {
             return evaluate_radial_offset(anchor, offset[0]);
         }
@@ -1091,13 +1095,13 @@ impl SymbolLayout {
 
         match anchor {
             SymbolAnchorType::TopRight | SymbolAnchorType::TopLeft | SymbolAnchorType::Top => {
-                result[1] = offset[1] - baselineOffset;
+                result[1] = offset[1] - BASELINE_OFFSET;
             }
 
             SymbolAnchorType::BottomRight
             | SymbolAnchorType::BottomLeft
             | SymbolAnchorType::Bottom => {
-                result[1] = -offset[1] + baselineOffset;
+                result[1] = -offset[1] + BASELINE_OFFSET;
             }
 
             SymbolAnchorType::Center | SymbolAnchorType::Left | SymbolAnchorType::Right => {}
@@ -1122,7 +1126,7 @@ impl SymbolLayout {
     // a line array like the JS version does, but it uses the same logic to
     // calculate tile distances.
     /// maplibre/maplibre-native#4add9ea original name: calculateTileDistances
-    pub fn calculateTileDistances(line: &GeometryCoordinates, anchor: &Anchor) -> Vec<f64> {
+    pub fn calculate_tile_distances(line: &GeometryCoordinates, anchor: &Anchor) -> Vec<f64> {
         let mut tile_distances: Vec<f64> = vec![0.0; line.len()];
         if let Some(segment) = anchor.segment {
             assert!(segment < line.len());
@@ -1158,7 +1162,7 @@ impl SymbolLayout {
 
 impl SymbolLayout {
     /// maplibre/maplibre-native#4add9ea original name: addFeature
-    fn addFeature(
+    fn add_feature(
         &mut self,
         layout_feature_index: usize,
         feature: &SymbolGeometryTileFeature,
@@ -1246,13 +1250,13 @@ impl SymbolLayout {
         // Adjust shaped icon size when icon-text-fit is used.
         let mut vertically_shaped_icon: Option<PositionedIcon> = None;
 
-        if let Some(shapedIcon) = &mut shaped_icon {
+        if let Some(shaped_icon) = &mut shaped_icon {
             if has_icon_text_fit {
                 // Create vertically shaped icon for vertical writing mode if needed.
                 if self.allow_vertical_placement
                     && shaped_text_orientations.vertical().is_any_line_not_empty()
                 {
-                    vertically_shaped_icon = Some(shapedIcon.clone());
+                    vertically_shaped_icon = Some(shaped_icon.clone());
                     vertically_shaped_icon.as_mut().unwrap().fit_icon_to_text(
                         shaped_text_orientations.vertical(),
                         icon_text_fit,
@@ -1263,7 +1267,7 @@ impl SymbolLayout {
                 }
                 let shaped_text = get_default_horizontal_shaping(shaped_text_orientations);
                 if shaped_text.is_any_line_not_empty() {
-                    shapedIcon.fit_icon_to_text(
+                    shaped_icon.fit_icon_to_text(
                         shaped_text,
                         icon_text_fit,
                         &self.layout.get::<IconTextFitPadding>(),
@@ -1304,8 +1308,8 @@ impl SymbolLayout {
                         indexed_feature.clone(),
                         layout_feature_index,
                         feature.index,
-                        if let Some(formattedText) = &feature.formattedText {
-                            formattedText.raw_text().clone()
+                        if let Some(formatted_text) = &feature.formatted_text {
+                            formatted_text.raw_text().clone()
                         } else {
                             U16String::new()
                         },
@@ -1319,13 +1323,13 @@ impl SymbolLayout {
 
                     if self.sort_features_by_key {
                         if !self.sort_key_ranges.is_empty()
-                            && self.sort_key_ranges.last().unwrap().sort_key == feature.sortKey
+                            && self.sort_key_ranges.last().unwrap().sort_key == feature.sort_key
                         {
                             self.sort_key_ranges.last_mut().unwrap().end =
                                 self.symbol_instances.len();
                         } else {
                             self.sort_key_ranges.push(SortKeyRange {
-                                sort_key: feature.sortKey,
+                                sort_key: feature.sort_key,
                                 start: self.symbol_instances.len() - 1,
                                 end: self.symbol_instances.len(),
                             });
@@ -1473,15 +1477,15 @@ impl SymbolLayout {
     }
 
     /// maplibre/maplibre-native#4add9ea original name: anchorIsTooClose
-    fn anchorIsTooClose(
+    fn anchor_is_too_close(
         &mut self,
         text: &U16String,
         repeat_distance: f64,
         anchor: &Anchor,
     ) -> bool {
-        if let Some(otherAnchors) = self.compare_text.get(text) {
-            for otherAnchor in otherAnchors {
-                if anchor.point.distance_to(otherAnchor.point) < repeat_distance {
+        if let Some(other_anchors) = self.compare_text.get(text) {
+            for other_anchor in other_anchors {
+                if anchor.point.distance_to(other_anchor.point) < repeat_distance {
                     return true;
                 }
             }
@@ -1495,13 +1499,13 @@ impl SymbolLayout {
     }
 
     /// maplibre/maplibre-native#4add9ea original name: addToDebugBuffers
-    fn addToDebugBuffers(&self, bucket: &mut SymbolBucket) {
+    fn add_to_debug_buffers(&self, bucket: &mut SymbolBucket) {
         todo!()
     }
 
     // Adds placed items to the buffer.
     /// maplibre/maplibre-native#4add9ea original name: addSymbol
-    fn addSymbol(
+    fn add_symbol(
         &self,
         buffer: &mut SymbolBucketBuffer,
         size_data: Range<f64>,
@@ -1613,7 +1617,7 @@ impl SymbolLayout {
         index as usize
     }
     /// maplibre/maplibre-native#4add9ea original name: addSymbols
-    fn addSymbols(
+    fn add_symbols(
         &self,
         buffer: &mut SymbolBucketBuffer,
         size_data: Range<f64>,
@@ -1625,7 +1629,7 @@ impl SymbolLayout {
         let mut first_symbol = true;
         let mut first_index = 0;
         for symbol in symbols {
-            let index = self.addSymbol(buffer, size_data.clone(), symbol, label_anchor, sort_key);
+            let index = self.add_symbol(buffer, size_data.clone(), symbol, label_anchor, sort_key);
             placed_symbol.glyph_offsets.push(symbol.glyph_offset.x);
             if first_symbol {
                 first_index = index;
@@ -1638,7 +1642,7 @@ impl SymbolLayout {
     // Adds symbol quads to bucket and returns formatted section index of last
     // added quad.
     /// maplibre/maplibre-native#4add9ea original name: addSymbolGlyphQuads
-    fn addSymbolGlyphQuads(
+    fn add_symbol_glyph_quads(
         &self,
         bucket: &mut SymbolBucket,
         symbol_instance: &SymbolInstance,
@@ -1667,7 +1671,7 @@ impl SymbolLayout {
             line_offset: symbol_instance.text_offset,
             writing_modes: writing_mode,
             line: symbol_instance.line().clone(),
-            tile_distances: Self::calculateTileDistances(
+            tile_distances: Self::calculate_tile_distances(
                 symbol_instance.line(),
                 &symbol_instance.anchor,
             ),
@@ -1686,32 +1690,32 @@ impl SymbolLayout {
         };
 
         let mut first_symbol = true;
-        for symbolQuad in glyph_quads {
+        for symbol_quad in glyph_quads {
             if has_format_section_overrides {
-                if let Some(lastAddedSection) = last_added_section {
-                    if lastAddedSection != symbolQuad.section_index {
-                        self.updatePaintPropertiesForSection(
+                if let Some(last_added_section) = last_added_section {
+                    if last_added_section != symbol_quad.section_index {
+                        self.update_paint_properties_for_section(
                             bucket,
                             feature,
-                            lastAddedSection,
+                            last_added_section,
                             canonical,
                         );
                     }
                 }
 
-                last_added_section = Some(symbolQuad.section_index);
+                last_added_section = Some(symbol_quad.section_index);
             }
-            let index = self.addSymbol(
+            let index = self.add_symbol(
                 &mut bucket.text,
                 size_data.clone(),
-                symbolQuad,
+                symbol_quad,
                 &symbol_instance.anchor,
-                feature.sortKey,
+                feature.sort_key,
             );
 
             newly_placed_symbol
                 .glyph_offsets
-                .push(symbolQuad.glyph_offset.x);
+                .push(symbol_quad.glyph_offset.x);
 
             if first_symbol {
                 newly_placed_symbol.vertex_start_index = index;
@@ -1722,15 +1726,15 @@ impl SymbolLayout {
         bucket.text.placed_symbols.push(newly_placed_symbol);
         output_placed_index = Some(bucket.text.placed_symbols.len() - 1);
 
-        if let Some(lastAddedSection) = last_added_section {
-            (lastAddedSection, output_placed_index)
+        if let Some(last_added_section) = last_added_section {
+            (last_added_section, output_placed_index)
         } else {
             (0, output_placed_index)
         }
     }
 
     /// maplibre/maplibre-native#4add9ea original name: updatePaintPropertiesForSection
-    fn updatePaintPropertiesForSection(
+    fn update_paint_properties_for_section(
         &self,
         bucket: &SymbolBucket,
         feature: &SymbolGeometryTileFeature,
@@ -1739,7 +1743,7 @@ impl SymbolLayout {
     ) -> usize {
         let formatted_section = section_options_to_value(
             feature
-                .formattedText
+                .formatted_text
                 .as_ref()
                 .unwrap()
                 .section_at(section_index),
@@ -1799,7 +1803,7 @@ mod tests {
 
         let tile_id = OverscaledTileID {
             canonical: CanonicalTileID { x: 0, y: 0, z: 0 },
-            overscaledZ: 0,
+            overscaled_z: 0,
         };
         let mut parameters = BucketParameters {
             tile_id: tile_id,
@@ -1864,7 +1868,7 @@ mod tests {
         assert_eq!(glyph_dependencies.len(), 1);
 
         let empty_image_map = ImageMap::new();
-        layout.prepareSymbols(
+        layout.prepare_symbols(
             &glyphs,
             &glyph_positions,
             &empty_image_map,
@@ -1872,7 +1876,7 @@ mod tests {
         );
 
         let mut output = HashMap::new();
-        layout.createBucket(
+        layout.create_bucket(
             image_positions,
             Box::new(FeatureIndex),
             &mut output,

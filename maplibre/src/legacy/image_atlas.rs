@@ -62,7 +62,7 @@ impl ImagePosition {
 pub type ImagePositions = HashMap<String, ImagePosition>;
 
 /// maplibre/maplibre-native#4add9ea original name: ImagePatch
-struct ImagePatch {
+pub struct ImagePatch {
     image: Image,
     padded_rect: Rect<u16, TileSpace>,
 }
@@ -70,7 +70,7 @@ struct ImagePatch {
 impl ImagePatch {}
 
 /// maplibre/maplibre-native#4add9ea original name: ImageAtlas
-struct ImageAtlas {
+pub struct ImageAtlas {
     image: PremultipliedImage,
     icon_positions: ImagePositions,
     pattern_positions: ImagePositions,

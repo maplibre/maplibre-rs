@@ -162,10 +162,10 @@ impl TaggedString {
     pub fn add_image_section(&mut self, image_id: String) {
         let next_image_section_char_code = self.get_next_image_section_char_code();
 
-        if let Some(nextImageSectionCharCode) = next_image_section_char_code {
+        if let Some(next_image_section_char_code) = next_image_section_char_code {
             self.styled_text
                 .0
-                .push(U16Str::from_slice(&[nextImageSectionCharCode])); // TODO is this correct?
+                .push(U16Str::from_slice(&[next_image_section_char_code])); // TODO is this correct?
             self.sections.push(SectionOptions::from_image_id(image_id));
             self.styled_text
                 .1
@@ -217,7 +217,7 @@ impl TaggedString {
             .iter()
             .position(|c| !Self::WHITESPACE_CHARS.contains(c));
 
-        if let Some(beginningWhitespace) = beginning_whitespace {
+        if let Some(beginning_whitespace) = beginning_whitespace {
             let trailing_whitespace: usize = self
                 .styled_text
                 .0
@@ -228,9 +228,9 @@ impl TaggedString {
                 + 1;
 
             self.styled_text.0 =
-                U16String::from(&self.styled_text.0[beginningWhitespace..trailing_whitespace]); // TODO write test for this
+                U16String::from(&self.styled_text.0[beginning_whitespace..trailing_whitespace]); // TODO write test for this
             self.styled_text.1 =
-                Vec::from(&self.styled_text.1[beginningWhitespace..trailing_whitespace]);
+                Vec::from(&self.styled_text.1[beginning_whitespace..trailing_whitespace]);
         } else {
             // Entirely whitespace
             self.styled_text.0.clear();

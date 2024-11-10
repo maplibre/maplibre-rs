@@ -37,9 +37,9 @@ impl BiDi {
 
         let mut transformed_lines = Vec::new();
         let mut start = 0;
-        for lineBreakPoint in line_break_points {
-            transformed_lines.push(U16String::from(&input[start..lineBreakPoint])); // TODO verify if this is correct
-            start = lineBreakPoint;
+        for line_break_point in line_break_points {
+            transformed_lines.push(U16String::from(&input[start..line_break_point])); // TODO verify if this is correct
+            start = line_break_point;
         }
 
         transformed_lines
@@ -56,13 +56,13 @@ impl BiDi {
 
         let mut transformed_lines = Vec::new();
         let mut start = 0;
-        for lineBreakPoint in line_break_points {
-            if lineBreakPoint <= input.1.len() {
+        for line_break_point in line_break_points {
+            if line_break_point <= input.1.len() {
                 transformed_lines.push((
-                    U16String::from(&input.0[start..lineBreakPoint]),
-                    Vec::from(&input.1[start..lineBreakPoint]),
+                    U16String::from(&input.0[start..line_break_point]),
+                    Vec::from(&input.1[start..line_break_point]),
                 )); // TODO verify if this is correct
-                start = lineBreakPoint;
+                start = line_break_point;
             }
         }
 

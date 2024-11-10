@@ -15,9 +15,9 @@ pub struct FontStackHasher;
 
 impl FontStackHasher {
     /// maplibre/maplibre-native#4add9ea original name: new
-    pub fn new(fontStack: &FontStack) -> u64 {
+    pub fn new(font_stack: &FontStack) -> u64 {
         let mut seed = 0;
-        for font in fontStack {
+        for font in font_stack {
             hash_combine(&mut seed, font);
         }
         seed
@@ -25,8 +25,8 @@ impl FontStackHasher {
 }
 
 /// maplibre/maplibre-native#4add9ea original name: fontStackToString
-pub fn font_stack_to_string(fontStack: &FontStack) -> String {
-    fontStack.join(",")
+pub fn font_stack_to_string(font_stack: &FontStack) -> String {
+    font_stack.join(",")
 }
 
 /// Statically evaluate layer properties to determine what font stacks are used.

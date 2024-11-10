@@ -159,7 +159,7 @@ mod tests {
 
         let tile_id = OverscaledTileID {
             canonical: CanonicalTileID { x: 0, y: 0, z: 0 },
-            overscaledZ: 0,
+            overscaled_z: 0,
         };
         let mut parameters = BucketParameters {
             tile_id: tile_id,
@@ -223,10 +223,10 @@ mod tests {
         )]);
 
         let empty_image_map = ImageMap::new();
-        layout.prepareSymbols(&glyphs, &glyphPositions, &empty_image_map, &image_positions);
+        layout.prepare_symbols(&glyphs, &glyphPositions, &empty_image_map, &image_positions);
 
         let mut output = HashMap::new();
-        layout.createBucket(
+        layout.create_bucket(
             image_positions,
             Box::new(FeatureIndex),
             &mut output,

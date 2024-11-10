@@ -65,7 +65,7 @@ const VIEWPORT_PADDING_DEFAULT: f64 = 100.;
 const VIEWPORT_PADDING_FOR_STATIC_TILES: f64 = 1024.;
 
 /// maplibre/maplibre-native#4add9ea original name: findViewportPadding
-fn findViewportPadding(transform_state: &TransformState, map_mode: MapMode) -> f64 {
+fn find_viewport_padding(transform_state: &TransformState, map_mode: MapMode) -> f64 {
     if map_mode == MapMode::Tile {
         return VIEWPORT_PADDING_FOR_STATIC_TILES;
     }
@@ -94,7 +94,7 @@ pub struct CollisionIndex {
 impl CollisionIndex {
     /// maplibre/maplibre-native#4add9ea original name: new
     pub fn new(transform_state: &TransformState, map_mode: MapMode) -> Self {
-        let viewport_padding = findViewportPadding(transform_state, map_mode);
+        let viewport_padding = find_viewport_padding(transform_state, map_mode);
         Self {
             transform_state: transform_state.clone(),
             viewport_padding,
@@ -190,8 +190,8 @@ impl CollisionIndex {
                 self.get_projected_collision_boundaries(pos_matrix, shift, text_pixel_ratio, box_);
             projected_boxes.push(ProjectedCollisionBox::Box(collision_boundaries));
 
-            if let Some(avoidEdges) = avoid_edges {
-                if !self.is_inside_tile(&collision_boundaries, &avoidEdges) {
+            if let Some(avoid_edges) = avoid_edges {
+                if !self.is_inside_tile(&collision_boundaries, &avoid_edges) {
                     return (false, false);
                 }
             }
@@ -412,17 +412,17 @@ impl CollisionIndex {
 
         let mut first_tile_distance = 0.;
         let mut last_tile_distance = 0.;
-        if let Some(firstAndLastGlyph) = &first_and_last_glyph {
+        if let Some(first_and_last_glyph) = &first_and_last_glyph {
             first_tile_distance = self.approximate_tile_distance(
-                firstAndLastGlyph.0.tileDistance.as_ref().unwrap(),
-                firstAndLastGlyph.0.angle,
+                first_and_last_glyph.0.tile_distance.as_ref().unwrap(),
+                first_and_last_glyph.0.angle,
                 pixels_to_tile_units,
                 projected_anchor.1,
                 pitch_with_map,
             );
             last_tile_distance = self.approximate_tile_distance(
-                firstAndLastGlyph.1.tileDistance.as_ref().unwrap(),
-                firstAndLastGlyph.1.angle,
+                first_and_last_glyph.1.tile_distance.as_ref().unwrap(),
+                first_and_last_glyph.1.angle,
                 pixels_to_tile_units,
                 projected_anchor.1,
                 pitch_with_map,
@@ -498,8 +498,8 @@ impl CollisionIndex {
             entirely_offscreen &= self.is_offscreen(&collision_boundaries);
             in_grid |= self.is_inside_grid(&collision_boundaries);
 
-            if let Some(avoidEdges) = avoid_edges {
-                if !self.is_inside_tile(&collision_boundaries, &avoidEdges) {
+            if let Some(avoid_edges) = avoid_edges {
+                if !self.is_inside_tile(&collision_boundaries, &avoid_edges) {
                     if !collision_debug {
                         return (false, false);
                     } else {
@@ -561,8 +561,8 @@ impl CollisionIndex {
         } else {
             camera_to_anchor_distance / self.pitch_factor
         };
-        let last_segment_tile = tile_distance.lastSegmentViewportDistance * pixels_to_tile_units;
-        tile_distance.prevTileDistance
+        let last_segment_tile = tile_distance.last_segment_viewport_distance * pixels_to_tile_units;
+        tile_distance.prev_tile_distance
             + last_segment_tile
             + (incidence_stretch - 1.) * last_segment_tile * last_segment_angle.sin().abs()
     }

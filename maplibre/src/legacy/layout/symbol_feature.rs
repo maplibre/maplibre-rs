@@ -20,23 +20,23 @@ pub struct VectorGeometryTileFeature {
 pub struct SymbolGeometryTileFeature {
     feature: Box<VectorGeometryTileFeature>,
     pub geometry: GeometryCollection, // we need a mutable copy of the geometry for mergeLines()
-    pub formattedText: Option<TaggedString>,
+    pub formatted_text: Option<TaggedString>,
     pub icon: Option<expression::Image>,
-    pub sortKey: f64,
+    pub sort_key: f64,
     pub index: usize,
 }
 
 impl PartialEq<Self> for SymbolGeometryTileFeature {
     /// maplibre/maplibre-native#4add9ea original name: eq
     fn eq(&self, other: &Self) -> bool {
-        self.sortKey.eq(&other.sortKey) // TODO is this correct?
+        self.sort_key.eq(&other.sort_key) // TODO is this correct?
     }
 }
 
 impl PartialOrd for SymbolGeometryTileFeature {
     /// maplibre/maplibre-native#4add9ea original name: partial_cmp
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.sortKey.partial_cmp(&other.sortKey)
+        self.sort_key.partial_cmp(&other.sort_key)
     }
 }
 
@@ -70,9 +70,9 @@ impl SymbolGeometryTileFeature {
         Self {
             geometry: feature.geometry.clone(), // we need a mutable copy of the geometry for mergeLines()
             feature,
-            formattedText: None,
+            formatted_text: None,
             icon: None,
-            sortKey: 0.0,
+            sort_key: 0.0,
             index: 0,
         }
     }

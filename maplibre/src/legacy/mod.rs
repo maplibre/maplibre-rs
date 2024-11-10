@@ -1,3 +1,7 @@
+#![allow(dead_code)]
+#![allow(unused)]
+#![allow(unused_variables)]
+
 pub mod bidi;
 pub mod buckets;
 pub mod collision_feature;
@@ -48,12 +52,12 @@ pub struct CanonicalTileID {
 #[derive(Copy, Clone)]
 pub struct OverscaledTileID {
     pub canonical: CanonicalTileID,
-    pub overscaledZ: u8,
+    pub overscaled_z: u8,
 }
 
 impl OverscaledTileID {
     /// maplibre/maplibre-native#4add9ea original name: overscaleFactor
-    pub fn overscaleFactor(&self) -> u32 {
-        1 << (self.overscaledZ - self.canonical.z)
+    pub fn overscale_factor(&self) -> u32 {
+        1 << (self.overscaled_z - self.canonical.z)
     }
 }

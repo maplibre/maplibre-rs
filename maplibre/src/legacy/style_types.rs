@@ -1143,7 +1143,7 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
         &self,
         p0: f64,
         p1: &SymbolGeometryTileFeature,
-        availableImages: &BTreeSet<String>,
+        available_images: &BTreeSet<String>,
         p2: CanonicalTileID,
     ) -> T::Type {
         //todo!()

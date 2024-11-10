@@ -18,8 +18,6 @@ use crate::{
     },
 };
 
-const DEFAULT_TOLERANCE: f32 = 0.02;
-
 /// Vertex buffers index data type.
 pub type IndexDataType = u32; // Must match INDEX_FORMAT
 

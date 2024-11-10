@@ -19,8 +19,8 @@ type PointAndCameraDistance = (Point2D<f64, TileSpace>, f64); // TODO is the Uni
 
 /// maplibre/maplibre-native#4add9ea original name: TileDistance
 pub struct TileDistance {
-    pub prevTileDistance: f64,
-    pub lastSegmentViewportDistance: f64,
+    pub prev_tile_distance: f64,
+    pub last_segment_viewport_distance: f64,
 }
 
 /// maplibre/maplibre-native#4add9ea original name: project
@@ -34,7 +34,7 @@ pub fn project(point: Point2D<f64, TileSpace>, matrix: &Matrix4<f64>) -> PointAn
 pub struct PlacedGlyph {
     pub point: Point2D<f64, TileSpace>,
     pub angle: f64,
-    pub tileDistance: Option<TileDistance>,
+    pub tile_distance: Option<TileDistance>,
 }
 
 /// maplibre/maplibre-native#4add9ea original name: placeFirstAndLastGlyph
@@ -57,7 +57,7 @@ pub fn place_first_and_last_glyph(
     let first_glyph_offset = *symbol.glyph_offsets.first().unwrap();
     let last_glyph_offset = *symbol.glyph_offsets.last().unwrap();
 
-    if let (Some(firstPlacedGlyph), Some(lastPlacedGlyph)) = (
+    if let (Some(first_placed_glyph), Some(last_placed_glyph)) = (
         place_glyph_along_line(
             font_scale * first_glyph_offset,
             line_offset_x,
@@ -85,7 +85,7 @@ pub fn place_first_and_last_glyph(
             return_tile_distance,
         ),
     ) {
-        return Some((firstPlacedGlyph, lastPlacedGlyph));
+        return Some((first_placed_glyph, last_placed_glyph));
     }
 
     None
@@ -189,15 +189,15 @@ fn place_glyph_along_line(
     Some(PlacedGlyph {
         point: p,
         angle: segment_angle,
-        tileDistance: if return_tile_distance {
+        tile_distance: if return_tile_distance {
             Some(TileDistance {
                 // TODO are these the right fields assigned?
-                prevTileDistance: if (current_index - dir) == initial_index {
+                prev_tile_distance: if (current_index - dir) == initial_index {
                     0.
                 } else {
                     tile_distances[(current_index - dir) as usize]
                 },
-                lastSegmentViewportDistance: abs_offset_x - distance_to_prev,
+                last_segment_viewport_distance: abs_offset_x - distance_to_prev,
             })
         } else {
             None
@@ -207,7 +207,7 @@ fn place_glyph_along_line(
 
 /// maplibre/maplibre-native#4add9ea original name: projectTruncatedLineSegment
 fn project_truncated_line_segment(
-    &previousTilePoint: &Point2D<f64, TileSpace>,
+    &previous_tile_point: &Point2D<f64, TileSpace>,
     current_tile_point: &Point2D<f64, TileSpace>,
     previous_projected_point: &Point2D<f64, TileSpace>,
     minimum_length: f64,
@@ -218,9 +218,9 @@ fn project_truncated_line_segment(
     // all the way out from within the viewport to a (very distant) point near
     // the plane of the camera. We wouldn't be able to render the label anyway
     // once it crossed the plane of the camera.
-    let vec = previousTilePoint - *current_tile_point;
+    let vec = previous_tile_point - *current_tile_point;
     let projected_unit_vertex = project(
-        previousTilePoint + vec.try_normalize().unwrap_or(vec),
+        previous_tile_point + vec.try_normalize().unwrap_or(vec),
         projection_matrix,
     )
     .0;

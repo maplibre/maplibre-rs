@@ -139,16 +139,16 @@ impl SymbolInstanceSharedData {
             ..Self::default()
         };
         // Create the quads used for rendering the icon and glyphs.
-        if let Some(shapedIcon) = &shaped_icon {
+        if let Some(shaped_icon) = &shaped_icon {
             self_.icon_quads = Some(get_icon_quads(
-                shapedIcon,
+                shaped_icon,
                 icon_rotation,
                 icon_type,
                 has_icon_text_fit,
             ));
-            if let Some(verticallyShapedIcon) = &vertically_shaped_icon {
+            if let Some(vertically_shaped_icon) = &vertically_shaped_icon {
                 self_.vertical_icon_quads = Some(get_icon_quads(
-                    verticallyShapedIcon,
+                    vertically_shaped_icon,
                     icon_rotation,
                     icon_type,
                     has_icon_text_fit,
@@ -390,8 +390,8 @@ impl SymbolInstance {
         self_.left_justified_glyph_quads_size = self_.shared_data.left_justified_glyph_quads.len();
         self_.vertical_glyph_quads_size = self_.shared_data.vertical_glyph_quads.len();
 
-        self_.icon_quads_size = if let Some(iconQuads) = &self_.shared_data.icon_quads {
-            iconQuads.len()
+        self_.icon_quads_size = if let Some(icon_quads) = &self_.shared_data.icon_quads {
+            icon_quads.len()
         } else {
             0
         };

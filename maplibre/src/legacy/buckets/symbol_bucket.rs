@@ -148,21 +148,21 @@ impl TriangleIndexVector {
     }
 }
 /// maplibre/maplibre-native#4add9ea original name: UploadPass
-struct UploadPass;
+pub struct UploadPass;
 /// maplibre/maplibre-native#4add9ea original name: SymbolInstanceReferences
-struct SymbolInstanceReferences;
+pub struct SymbolInstanceReferences;
 /// maplibre/maplibre-native#4add9ea original name: RenderLayer
-struct RenderLayer;
+pub struct RenderLayer;
 /// maplibre/maplibre-native#4add9ea original name: CrossTileSymbolLayerIndex
-struct CrossTileSymbolLayerIndex;
+pub struct CrossTileSymbolLayerIndex;
 /// maplibre/maplibre-native#4add9ea original name: BucketPlacementData
-struct BucketPlacementData;
+pub struct BucketPlacementData;
 /// maplibre/maplibre-native#4add9ea original name: Placement
-struct Placement;
+pub struct Placement;
 /// maplibre/maplibre-native#4add9ea original name: TransformState
-type TransformState = ViewState;
+pub type TransformState = ViewState;
 /// maplibre/maplibre-native#4add9ea original name: RenderTile
-struct RenderTile;
+pub struct RenderTile;
 
 /// maplibre/maplibre-native#4add9ea original name: Segment
 #[derive(Copy, Clone, Debug)]

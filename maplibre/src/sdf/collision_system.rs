@@ -86,7 +86,7 @@ impl System for CollisionSystem {
 
                         let transform = coords.transform_for_zoom(view_state.zoom());
 
-                        let posMatrix = view_state
+                        let pos_matrix = view_state
                             .view_projection()
                             .to_model_view_projection(transform);
 
@@ -110,17 +110,17 @@ impl System for CollisionSystem {
                             0.0f64,
                         );
 
-                        let shader = posMatrix.get()
+                        let shader = pos_matrix.get()
                             * (scaling * (vec3 - text_anchor) + text_anchor).extend(1.0);
                         let window = view_state.clip_to_window(&shader);
 
                         //println!("{:?}", window);
 
-                        let anchorPoint =
+                        let anchor_point =
                             Point2D::new(feature.bbox.min.x as f64, feature.bbox.min.y as f64); // TODO
 
                         let boxes = vec![CollisionBox {
-                            anchor: anchorPoint,
+                            anchor: anchor_point,
                             x1: 0.0 * (EXTENT / TILE_SIZE),
                             y1: 0. * (EXTENT / TILE_SIZE),
                             x2: (feature.bbox.max.x - feature.bbox.min.x) as f64, //* (EXTENT / TILE_SIZE),
@@ -148,20 +148,20 @@ impl System for CollisionSystem {
                         let (placed_text, is_offscreen) = collision_index.place_feature(
                             &collision_feature,
                             Point2D::zero(), // shift
-                            &posMatrix,
-                            &posMatrix.get(), // TODO
+                            &pos_matrix,
+                            &pos_matrix.get(), // TODO
                             //TILE_SIZE / EXTENT,
                             1.0,
                             &PlacedSymbol {
-                                anchor_point: anchorPoint,
+                                anchor_point,
                                 segment: 0,
                                 lower_size: 0.0,
                                 upper_size: 0.0,
                                 line_offset: [0., 0.],
                                 writing_modes: Default::default(),
-                                line: GeometryCoordinates(vec![anchorPoint.cast()]), // TODO can be linestring or just a single point
-                                tile_distances: vec![],                              // TODO
-                                glyph_offsets: vec![0., 0.],                         // TODO
+                                line: GeometryCoordinates(vec![anchor_point.cast()]), // TODO can be linestring or just a single point
+                                tile_distances: vec![],                               // TODO
+                                glyph_offsets: vec![0., 0.],                          // TODO
                                 hidden: false,
                                 vertex_start_index: 0,
                                 cross_tile_id: 0,

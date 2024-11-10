@@ -109,20 +109,20 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                         let data = include_bytes!("../../../data/0-255.pbf");
                         let glyphs = GlyphSet::try_from(data.as_slice()).unwrap();
 
-                        let fontStack = vec![
+                        let font_stack = vec![
                             "Open Sans Regular".to_string(),
                             "Arial Unicode MS Regular".to_string(),
                         ];
 
                         let layer_name = "layer".to_string();
 
-                        let sectionOptions = SectionOptions::new(1.0, fontStack.clone(), None);
+                        let section_options = SectionOptions::new(1.0, font_stack.clone(), None);
 
-                        let mut glyphDependencies = GlyphDependencies::new();
+                        let mut glyph_dependencies = GlyphDependencies::new();
 
                         let tile_id = OverscaledTileID {
                             canonical: CanonicalTileID { x: 0, y: 0, z: 0 },
-                            overscaledZ: 0,
+                            overscaled_z: 0,
                         };
                         let mut parameters = BucketParameters {
                             tile_id: tile_id,
@@ -149,7 +149,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
 
                         let image_positions = ImagePositions::new();
 
-                        let map = GlyphPositionMap::from_iter(glyphs.glyphs.iter().map(
+                        let glyph_map = GlyphPositionMap::from_iter(glyphs.glyphs.iter().map(
                             |(unicode_point, glyph)| {
                                 (
                                     *unicode_point as Char16,
@@ -175,13 +175,12 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                                 )
                             },
                         ));
-                        let option = map.get(&('H' as Char16)).unwrap();
 
-                        let glyphPositions: GlyphPositions =
-                            GlyphPositions::from([(FontStackHasher::new(&fontStack), map)]);
+                        let glyph_positions: GlyphPositions =
+                            GlyphPositions::from([(FontStackHasher::new(&font_stack), glyph_map)]);
 
                         let glyphs: GlyphMap = GlyphMap::from([(
-                            FontStackHasher::new(&fontStack),
+                            FontStackHasher::new(&font_stack),
                             Glyphs::from_iter(glyphs.glyphs.iter().map(
                                 |(unicode_point, glyph)| {
                                     (
@@ -208,25 +207,25 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                             Box::new(layer_data),
                             &mut LayoutParameters {
                                 bucket_parameters: &mut parameters.clone(),
-                                glyph_dependencies: &mut glyphDependencies,
+                                glyph_dependencies: &mut glyph_dependencies,
                                 image_dependencies: &mut Default::default(),
                                 available_images: &mut Default::default(),
                             },
                         )
                         .unwrap();
 
-                        assert_eq!(glyphDependencies.len(), 1);
+                        assert_eq!(glyph_dependencies.len(), 1);
 
                         let empty_image_map = ImageMap::new();
-                        layout.prepareSymbols(
+                        layout.prepare_symbols(
                             &glyphs,
-                            &glyphPositions,
+                            &glyph_positions,
                             &empty_image_map,
                             &image_positions,
                         );
 
                         let mut output = HashMap::new();
-                        layout.createBucket(
+                        layout.create_bucket(
                             image_positions,
                             Box::new(FeatureIndex),
                             &mut output,
@@ -240,11 +239,11 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                         let mut buffer = VertexBuffers::new();
                         let text_buffer = new_buffer.bucket.text;
                         let SymbolBucketBuffer {
-                            shared_vertices: sharedVertices,
+                            shared_vertices,
                             triangles,
                             ..
                         } = text_buffer;
-                        buffer.vertices = sharedVertices
+                        buffer.vertices = shared_vertices
                             .iter()
                             .map(|v| ShaderSymbolVertexNew::new(v))
                             .collect();

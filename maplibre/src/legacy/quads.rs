@@ -343,8 +343,8 @@ pub fn get_glyph_quads(
     let mut quads = Vec::new();
 
     for line in &shaped_text.positioned_lines {
-        for positionedGlyph in &line.positioned_glyphs {
-            if positionedGlyph.rect.is_empty() {
+        for positioned_glyph in &line.positioned_glyphs {
+            if positioned_glyph.rect.is_empty() {
                 continue;
             }
 
@@ -354,26 +354,27 @@ pub fn get_glyph_quads(
             let mut pixel_ratio = 1.0;
             let mut line_offset = 0.0;
             let rotate_vertical_glyph =
-                (along_line || allow_vertical_placement) && positionedGlyph.vertical;
-            let half_advance = positionedGlyph.metrics.advance as f64 * positionedGlyph.scale / 2.0;
-            let rect = positionedGlyph.rect;
+                (along_line || allow_vertical_placement) && positioned_glyph.vertical;
+            let half_advance =
+                positioned_glyph.metrics.advance as f64 * positioned_glyph.scale / 2.0;
+            let rect = positioned_glyph.rect;
             let mut is_sdf = true;
 
             // Align images and scaled glyphs in the middle of a vertical line.
             if allow_vertical_placement && shaped_text.verticalizable {
-                let scaled_glyph_offset = (positionedGlyph.scale - 1.) * ONE_EM;
+                let scaled_glyph_offset = (positioned_glyph.scale - 1.) * ONE_EM;
                 let image_offset =
-                    (ONE_EM - positionedGlyph.metrics.width as f64 * positionedGlyph.scale) / 2.0;
+                    (ONE_EM - positioned_glyph.metrics.width as f64 * positioned_glyph.scale) / 2.0;
                 line_offset = line.line_offset / 2.0
-                    - (if positionedGlyph.image_id.is_some() {
+                    - (if positioned_glyph.image_id.is_some() {
                         -image_offset
                     } else {
                         scaled_glyph_offset
                     });
             }
 
-            if let Some(imageID) = &positionedGlyph.image_id {
-                let image = image_map.get(imageID);
+            if let Some(image_id) = &positioned_glyph.image_id {
+                let image = image_map.get(image_id);
                 if let Some(image) = image {
                     pixel_ratio = image.pixel_ratio;
                     rect_buffer = ImagePosition::PADDING as f64 / pixel_ratio;
@@ -382,7 +383,7 @@ pub fn get_glyph_quads(
             }
 
             let glyph_offset = if along_line {
-                Point2D::new(positionedGlyph.x + half_advance, positionedGlyph.y)
+                Point2D::new(positioned_glyph.x + half_advance, positioned_glyph.y)
             } else {
                 Point2D::new(0.0, 0.0)
             };
@@ -391,8 +392,8 @@ pub fn get_glyph_quads(
                 Vector2D::new(0.0, 0.0)
             } else {
                 Vector2D::new(
-                    positionedGlyph.x + half_advance + text_offset[0],
-                    positionedGlyph.y + text_offset[1] - line_offset,
+                    positioned_glyph.x + half_advance + text_offset[0],
+                    positioned_glyph.y + text_offset[1] - line_offset,
                 )
             };
 
@@ -406,13 +407,13 @@ pub fn get_glyph_quads(
                 built_in_offset = Vector2D::new(0.0, 0.0);
             }
 
-            let x1 = (positionedGlyph.metrics.left as f64 - rect_buffer) * positionedGlyph.scale
+            let x1 = (positioned_glyph.metrics.left as f64 - rect_buffer) * positioned_glyph.scale
                 - half_advance
                 + built_in_offset.x;
-            let y1 = (-positionedGlyph.metrics.top as f64 - rect_buffer) * positionedGlyph.scale
+            let y1 = (-positioned_glyph.metrics.top as f64 - rect_buffer) * positioned_glyph.scale
                 + built_in_offset.y;
-            let x2 = x1 + rect.width() as f64 * positionedGlyph.scale / pixel_ratio;
-            let y2 = y1 + rect.height() as f64 * positionedGlyph.scale / pixel_ratio;
+            let x2 = x1 + rect.width() as f64 * positioned_glyph.scale / pixel_ratio;
+            let y2 = y1 + rect.height() as f64 * positioned_glyph.scale / pixel_ratio;
 
             let mut tl: Point2D<f64, TileSpace> = Point2D::new(x1, y1);
             let mut tr: Point2D<f64, TileSpace> = Point2D::new(x2, y1);
@@ -439,7 +440,7 @@ pub fn get_glyph_quads(
                 // and half-width advance, should be 0 for full-width glyphs and
                 // will pull up half-width glyphs.
                 let x_half_widht_offsetcorrection = ONE_EM / 2. - half_advance;
-                let y_image_offset_correction = if positionedGlyph.image_id.is_some() {
+                let y_image_offset_correction = if positioned_glyph.image_id.is_some() {
                     x_half_widht_offsetcorrection
                 } else {
                     0.0
@@ -496,7 +497,7 @@ pub fn get_glyph_quads(
                 glyph_offset,
                 writing_mode: shaped_text.writing_mode,
                 is_sdf,
-                section_index: positionedGlyph.section_index,
+                section_index: positioned_glyph.section_index,
                 min_font_scale,
             });
         }
