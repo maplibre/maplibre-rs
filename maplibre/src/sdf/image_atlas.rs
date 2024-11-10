@@ -1,3 +1,5 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/renderer/image_atlas.cpp
+
 use std::collections::HashMap;
 
 use crate::{

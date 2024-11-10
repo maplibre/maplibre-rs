@@ -1,3 +1,5 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/layout/symbol_layout.cpp
+
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     f64::consts::PI,
@@ -18,7 +20,6 @@ use crate::{
         },
         geometry::{
             feature_index::{IndexedSubfeature, RefIndexedSubfeature},
-            Anchor, Anchors,
         },
         geometry_tile_data::{FeatureType, GeometryCoordinates, SymbolGeometryTileLayer},
         glyph::{GlyphIDs, GlyphMap, Shaping, WritingModeType},
@@ -40,6 +41,7 @@ use crate::{
         CanonicalTileID, MapMode,
     },
 };
+use crate::sdf::geometry::anchor::{Anchor, Anchors};
 
 // TODO
 #[derive(Clone, Debug)]

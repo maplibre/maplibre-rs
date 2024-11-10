@@ -1,12 +1,13 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/tile/geometry_tile_data.cpp
+//! In maplibre-native GeometryTileFeature are traits/classes and there are impls for symbol, fill, line features etc.
+//! The same is true for the data objects which might be backed by geojson
+
 use std::ops::Index;
 
 use crate::{
     euclid::Point2D,
     sdf::{layout::symbol_feature::SymbolGeometryTileFeature, TileSpace},
 };
-
-// In maplibre-native GeometryTileFeature are traits/classes and there are impls for symbol, fill, line features etc.
-// The same is true for the data objects which might be backed by geojson
 
 pub type GeometryCoordinate = Point2D<i16, TileSpace>;
 

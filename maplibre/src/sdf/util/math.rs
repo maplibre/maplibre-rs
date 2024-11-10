@@ -1,6 +1,10 @@
+//! Translated functions from https://github.com/maplibre/maplibre-native/blob/4add9ea/
+//! Likely to be replaced by more generic functions.
+
+
 use std::f64::consts::PI;
 
-use crate::euclid::Vector2D;
+use crate::euclid::{Point2D, Vector2D};
 
 pub fn rotate<U>(a: &Vector2D<f64, U>, angle: f64) -> Vector2D<f64, U> {
     let cos = angle.cos();
@@ -44,3 +48,13 @@ impl MinMax<f64> for [f64; 4] {
             .expect("array is not empty")
     }
 }
+
+
+pub fn convert_point_f64<U>(point: &Point2D<i16, U>) -> Point2D<f64, U> {
+    Point2D::new(point.x as f64, point.y as f64)
+}
+
+pub fn convert_point_i16<U>(point: &Point2D<f64, U>) -> Point2D<i16, U> {
+    Point2D::new(point.x as i16, point.y as i16)
+}
+

@@ -1,3 +1,5 @@
+//! Translated from the QT BIDI implementation https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/bidi.cpp
+
 use std::collections::BTreeSet;
 
 use widestring::U16String;
@@ -5,7 +7,7 @@ use widestring::U16String;
 pub type Char16 = u16; // was char16_t
 
 pub fn applyArabicShaping(str: &U16String) -> U16String {
-    // todo!();
+    // TODO: Add real implementation
     str.clone()
 }
 

@@ -1,4 +1,4 @@
-// Except for to-do comments this file was fully translated
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/text/glyph.cpp
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 

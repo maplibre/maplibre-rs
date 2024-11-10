@@ -1,4 +1,5 @@
-// File fully translated except for to-do comments
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/text/collision_index.cpp
+
 
 use std::collections::HashMap;
 

@@ -1,3 +1,5 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/util/font_stack.cpp
+
 use std::collections::BTreeSet;
 
 use crate::{sdf::util::hash_combine, style::layer::StyleLayer};

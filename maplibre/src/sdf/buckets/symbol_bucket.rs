@@ -1,3 +1,5 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/renderer/buckets/symbol_bucket.cpp
+
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     marker::PhantomData,

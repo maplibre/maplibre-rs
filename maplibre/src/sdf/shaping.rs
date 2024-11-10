@@ -1,3 +1,5 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/text/shaping.cpp
+
 use std::collections::BTreeSet;
 
 use cgmath::num_traits::Pow;

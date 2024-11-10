@@ -1,3 +1,5 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/text/tagged_string.cpp
+
 use csscolorparser::Color;
 use widestring::{U16Str, U16String};
 

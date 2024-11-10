@@ -1,3 +1,5 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/style/image.cpp
+
 use std::{cmp::Ordering, collections::HashMap};
 
 // TODO

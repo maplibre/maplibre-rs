@@ -1,3 +1,5 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/include/mbgl/text/glyph_range.hpp
+
 use std::ops::Range;
 
 use crate::sdf::util::hash;

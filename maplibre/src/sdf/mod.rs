@@ -43,7 +43,6 @@ pub mod collision_feature;
 pub mod collision_index;
 pub mod collision_system;
 pub mod font_stack;
-pub mod geometry;
 pub mod geometry_tile_data;
 pub mod glyph;
 pub mod glyph_atlas;
@@ -59,7 +58,8 @@ pub mod tagged_string;
 pub mod tessellation;
 mod tessellation_new;
 pub mod text;
-mod util;
+pub mod util;
+pub mod geometry;
 
 struct SymbolPipeline(wgpu::RenderPipeline);
 

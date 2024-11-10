@@ -1,10 +1,10 @@
-// This file was fully translated
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/text/collision_feature.cpp
 
 use crate::{
     euclid::{Box2D, Point2D, Vector2D},
     sdf::{
-        geometry::{
-            convert_point_f64, convert_point_i16, feature_index::IndexedSubfeature, Anchor,
+        util::math::{
+            convert_point_f64, convert_point_i16,
         },
         geometry_tile_data::{GeometryCoordinate, GeometryCoordinates},
         glyph::Shaping,
@@ -15,6 +15,8 @@ use crate::{
         ScreenSpace, TileSpace,
     },
 };
+use crate::sdf::geometry::anchor::Anchor;
+use crate::sdf::geometry::feature_index::IndexedSubfeature;
 
 #[derive(Clone)]
 pub struct CollisionFeature {

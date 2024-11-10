@@ -1,3 +1,5 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/util/grid_index.hpp
+
 use std::{collections::HashSet, f64};
 
 use crate::{

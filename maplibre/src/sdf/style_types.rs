@@ -1,8 +1,9 @@
+//! Translated from https://github.com/maplibre/maplibre-native/blob/4add9ea/include/mbgl/style/types.hpp
+//! and https://github.com/maplibre/maplibre-native/blob/4add9ea/src/mbgl/style/layers/symbol_layer_properties.hpp
+
 use std::{any::TypeId, collections::BTreeSet, marker::PhantomData};
 
 use crate::sdf::{layout::symbol_feature::SymbolGeometryTileFeature, CanonicalTileID};
-
-/// Types belonging to style
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum SymbolPlacementType {
