@@ -30,10 +30,10 @@ pub struct Padding {
     pub bottom: f64,
 }
 
-impl Into<bool> for Padding {
+impl From<Padding> for bool {
     /// maplibre/maplibre-native#4add9ea original name: into
-    fn into(self) -> bool {
-        self.left != 0. || self.top != 0. || self.right != 0. || self.bottom != 0.
+    fn from(val: Padding) -> Self {
+        val.left != 0. || val.top != 0. || val.right != 0. || val.bottom != 0.
     }
 }
 
@@ -50,7 +50,7 @@ impl AnchorAlignment {
             verticalAlign: 0.5,
         };
 
-        match (anchor) {
+        match anchor {
             SymbolAnchorType::Right
             | SymbolAnchorType::TopRight
             | SymbolAnchorType::BottomRight => {
@@ -63,7 +63,7 @@ impl AnchorAlignment {
             _ => {}
         }
 
-        match (anchor) {
+        match anchor {
             SymbolAnchorType::Bottom
             | SymbolAnchorType::BottomLeft
             | SymbolAnchorType::BottomRight => {
@@ -77,14 +77,14 @@ impl AnchorAlignment {
             _ => {}
         }
 
-        return result;
+        result
     }
 }
 
 // Choose the justification that matches the direction of the TextAnchor
 /// maplibre/maplibre-native#4add9ea original name: getAnchorJustification
 pub fn getAnchorJustification(anchor: &SymbolAnchorType) -> TextJustifyType {
-    match (anchor) {
+    match anchor {
         SymbolAnchorType::Right | SymbolAnchorType::TopRight | SymbolAnchorType::BottomRight => {
             TextJustifyType::Right
         }
@@ -122,7 +122,7 @@ impl PositionedIcon {
         let bottom = top + image.displaySize()[1];
 
         let mut collisionPadding: Padding = Padding::default();
-        if let Some(content) = (&image.content) {
+        if let Some(content) = &image.content {
             let content = content;
             let pixelRatio = image.pixelRatio;
             collisionPadding.left = content.left / pixelRatio;
@@ -131,14 +131,14 @@ impl PositionedIcon {
             collisionPadding.bottom = image.displaySize()[1] - content.bottom / pixelRatio;
         }
 
-        return PositionedIcon {
+        PositionedIcon {
             image,
             top,
             bottom,
             left,
             right,
             collisionPadding,
-        };
+        }
     }
 
     // Updates shaped icon's bounds based on shaped text's bounds and provided
@@ -162,7 +162,7 @@ impl PositionedIcon {
         let textLeft = shapedText.left * fontScale;
         let textRight = shapedText.right * fontScale;
 
-        if (textFit == IconTextFitType::Width || textFit == IconTextFitType::Both) {
+        if textFit == IconTextFitType::Width || textFit == IconTextFitType::Both {
             // Stretched horizontally to the text width
             self.left = iconOffset[0] + textLeft - padding[3];
             self.right = iconOffset[0] + textRight + padding[1];
@@ -174,7 +174,7 @@ impl PositionedIcon {
 
         let textTop = shapedText.top * fontScale;
         let textBottom = shapedText.bottom * fontScale;
-        if (textFit == IconTextFitType::Height || textFit == IconTextFitType::Both) {
+        if textFit == IconTextFitType::Height || textFit == IconTextFitType::Both {
             // Stretched vertically to the text height
             self.top = iconOffset[1] + textTop - padding[0];
             self.bottom = iconOffset[1] + textBottom + padding[2];
@@ -207,7 +207,7 @@ pub fn getShaping(
 ) -> Shaping {
     assert!(layoutTextSize != 0.);
     let mut reorderedLines: Vec<TaggedString> = Vec::new();
-    if (formattedString.sectionCount() == 1) {
+    if formattedString.sectionCount() == 1 {
         let untaggedLines = bidi.processText(
             formattedString.rawText(),
             determineLineBreaks(
@@ -254,13 +254,13 @@ pub fn getShaping(
         textJustify,
         writingMode,
         glyphMap,
-        &glyphPositions,
+        glyphPositions,
         imagePositions,
         layoutTextSizeAtBucketZoomLevel,
         allowVerticalPlacement,
     );
 
-    return shaping;
+    shaping
 }
 
 // Zero width space that is used to suggest break points for Japanese labels.
@@ -279,7 +279,7 @@ fn align(
     lineCount: usize,
 ) {
     let shiftX = (justify - horizontalAlign) * maxLineLength;
-    let shiftY = if (maxLineHeight != lineHeight) {
+    let shiftY = if maxLineHeight != lineHeight {
         -blockHeight * verticalAlign - Shaping::yOffset as f64
     } else {
         (-verticalAlign * (lineCount) as f64 + 0.5) * lineHeight
@@ -296,13 +296,13 @@ fn align(
 // justify left = 0, right = 1, center = .5
 /// maplibre/maplibre-native#4add9ea original name: justifyLine
 fn justifyLine(positionedGlyphs: &mut Vec<PositionedGlyph>, justify: f64, lineOffset: f64) {
-    if (justify == 0.0 && lineOffset == 0.0) {
+    if justify == 0.0 && lineOffset == 0.0 {
         return;
     }
 
     let lastGlyph = positionedGlyphs.last().unwrap();
     let lastAdvance: f64 = lastGlyph.metrics.advance as f64 * lastGlyph.scale;
-    let lineIndent = lastGlyph.x + lastAdvance as f64 * justify;
+    let lineIndent = lastGlyph.x + lastAdvance * justify;
     for positionedGlyph in positionedGlyphs {
         positionedGlyph.x -= lineIndent;
         positionedGlyph.y += lineOffset;
@@ -320,20 +320,20 @@ fn getGlyphAdvance(
 ) -> f64 {
     if let Some(imageID) = &section.imageID {
         let image = imagePositions.get(imageID);
-        if (image.is_none()) {
+        if image.is_none() {
             return 0.0;
         }
         let image = image.unwrap();
-        return image.displaySize()[0] * section.scale as f64 * ONE_EM / layoutTextSize + spacing;
+        image.displaySize()[0] * section.scale * ONE_EM / layoutTextSize + spacing
     } else {
         let glyphs = glyphMap.get(&section.fontStackHash);
-        if (glyphs.is_none()) {
+        if glyphs.is_none() {
             return 0.0;
         }
         let glyphs = glyphs.unwrap();
         let it = glyphs.get(&codePoint);
 
-        if (it.is_none()) {
+        if it.is_none() {
             return 0.0;
         }
 
@@ -347,7 +347,7 @@ fn getGlyphAdvance(
             .expect("cant be none")
             .metrics
             .advance as f64
-            * section.scale) as f64
+            * section.scale)
             + spacing;
     }
 }
@@ -377,24 +377,24 @@ fn determineAverageLineWidth(
     }
 
     let targetLineCount = (1.0f64).max((totalWidth / maxWidth).ceil()) as i32;
-    return totalWidth / targetLineCount as f64;
+    totalWidth / targetLineCount as f64
 }
 
 /// maplibre/maplibre-native#4add9ea original name: calculateBadness
 fn calculateBadness(lineWidth: f64, targetWidth: f64, penalty: f64, isLastBreak: bool) -> f64 {
-    let raggedness = (lineWidth - targetWidth).pow(2) as f64;
-    if (isLastBreak) {
+    let raggedness = (lineWidth - targetWidth).pow(2);
+    if isLastBreak {
         // Favor finals lines shorter than average over longer than average
-        if (lineWidth < targetWidth) {
+        if lineWidth < targetWidth {
             return raggedness / 2.;
         } else {
             return raggedness * 2.;
         }
     }
-    if (penalty < 0.) {
+    if penalty < 0. {
         return raggedness - penalty * penalty;
     }
-    return raggedness + penalty * penalty;
+    raggedness + penalty * penalty
 }
 
 /// maplibre/maplibre-native#4add9ea original name: calculatePenalty
@@ -405,27 +405,27 @@ fn calculatePenalty(
 ) -> f64 {
     let mut penalty = 0.;
     // Force break on newline
-    if (codePoint == 0x0au16) {
+    if codePoint == 0x0au16 {
         penalty -= 10000.;
     }
 
     // Penalize open parenthesis at end of line
-    if (codePoint == 0x28u16 || codePoint == 0xff08u16) {
+    if codePoint == 0x28u16 || codePoint == 0xff08u16 {
         penalty += 50.;
     }
 
     // Penalize close parenthesis at beginning of line
-    if (nextCodePoint == 0x29u16 || nextCodePoint == 0xff09u16) {
+    if nextCodePoint == 0x29u16 || nextCodePoint == 0xff09u16 {
         penalty += 50.;
     }
 
     // Penalize breaks between characters that allow ideographic breaking because
     // they are less preferable than breaks at spaces (or zero width spaces)
-    if (penalizableIdeographicBreak) {
+    if penalizableIdeographicBreak {
         penalty += 150.;
     }
 
-    return penalty;
+    penalty
 }
 
 /// maplibre/maplibre-native#4add9ea original name: PotentialBreak
@@ -457,18 +457,18 @@ fn evaluateBreak(
         let lineWidth = breakX - potentialBreak.x;
         let breakBadness =
             calculateBadness(lineWidth, targetWidth, penalty, isLastBreak) + potentialBreak.badness;
-        if (breakBadness <= bestBreakBadness) {
+        if breakBadness <= bestBreakBadness {
             bestPriorBreak = Some(Box::new(potentialBreak.clone()));
             bestBreakBadness = breakBadness;
         }
     }
 
-    return PotentialBreak {
+    PotentialBreak {
         index: breakIndex,
         x: breakX,
         priorBreak: bestPriorBreak,
         badness: bestBreakBadness,
-    };
+    }
 }
 
 /// maplibre/maplibre-native#4add9ea original name: leastBadBreaks
@@ -480,7 +480,7 @@ fn leastBadBreaks(lastLineBreak: &PotentialBreak) -> BTreeSet<usize> {
         leastBadBreaks.insert(priorBreak_.index);
         priorBreak = &priorBreak_.priorBreak;
     }
-    return leastBadBreaks;
+    leastBadBreaks
 }
 
 // We determine line breaks based on shaped text in logical order. Working in visual order would be
@@ -494,11 +494,11 @@ fn determineLineBreaks(
     imagePositions: &ImagePositions,
     layoutTextSize: f64,
 ) -> BTreeSet<usize> {
-    if (maxWidth == 0.0) {
+    if maxWidth == 0.0 {
         return BTreeSet::default();
     }
 
-    if (logicalInput.empty()) {
+    if logicalInput.empty() {
         return BTreeSet::default();
     }
 
@@ -519,7 +519,7 @@ fn determineLineBreaks(
     for i in 0..logicalInput.length() {
         let section = logicalInput.getSection(i);
         let codePoint: Char16 = logicalInput.getCharCodeAt(i);
-        if (!i18n::isWhitespace(codePoint)) {
+        if !i18n::isWhitespace(codePoint) {
             currentX += getGlyphAdvance(
                 codePoint,
                 section,
@@ -532,11 +532,11 @@ fn determineLineBreaks(
 
         // Ideographic characters, spaces, and word-breaking punctuation that
         // often appear without surrounding spaces.
-        if (i < logicalInput.length() - 1) {
+        if i < logicalInput.length() - 1 {
             let allowsIdeographicBreak = i18n::allowsIdeographicBreaking(codePoint);
-            if (section.imageID.is_some()
+            if section.imageID.is_some()
                 || allowsIdeographicBreak
-                || i18n::allowsWordBreaking(codePoint))
+                || i18n::allowsWordBreaking(codePoint)
             {
                 let penalizableIdeographicBreak =
                     allowsIdeographicBreak && hasServerSuggestedBreaks;
@@ -558,14 +558,14 @@ fn determineLineBreaks(
         }
     }
 
-    return leastBadBreaks(&evaluateBreak(
+    leastBadBreaks(&evaluateBreak(
         logicalInput.length(),
         currentX,
         targetWidth,
         &potentialBreaks,
         0.,
         true,
-    ));
+    ))
 }
 
 /// maplibre/maplibre-native#4add9ea original name: shapeLines
@@ -592,12 +592,10 @@ fn shapeLines(
     // TODO was this translated correctly?
     let justify = if textJustify == TextJustifyType::Right {
         1.0
+    } else if textJustify == TextJustifyType::Left {
+        0.0
     } else {
-        if textJustify == TextJustifyType::Left {
-            0.0
-        } else {
-            0.5
-        }
+        0.5
     };
 
     let n_lines = lines.len();
@@ -613,7 +611,7 @@ fn shapeLines(
         let positionedLine = shaping.positionedLines.last_mut().unwrap();
         let positionedGlyphs = &mut positionedLine.positionedGlyphs;
 
-        if (line.empty()) {
+        if line.empty() {
             y += lineHeight; // Still need a line feed after empty line
             continue;
         }
@@ -641,7 +639,7 @@ fn shapeLines(
 
             if let Some(imageID) = &section.imageID {
                 let image = imagePositions.get(imageID);
-                if (image.is_none()) {
+                if image.is_none() {
                     continue;
                 }
                 let image = image.expect("is some");
@@ -666,7 +664,7 @@ fn shapeLines(
 
                 // Difference between one EM and an image size.
                 // Aligns bottom of an image to a baseline level.
-                let imageOffset = ONE_EM - displaySize[1] * sectionScale as f64;
+                let imageOffset = ONE_EM - displaySize[1] * sectionScale;
                 baselineOffset = maxLineOffset + imageOffset;
 
                 verticalAdvance = metrics.advance as f64;
@@ -680,12 +678,12 @@ fn shapeLines(
                     displaySize[1]
                 }) * sectionScale
                     - ONE_EM * lineMaxScale;
-                if (offset > 0.0 && offset > lineOffset) {
+                if offset > 0.0 && offset > lineOffset {
                     lineOffset = offset;
                 }
             } else {
                 let glyphPositionMap = glyphPositions.get(&section.fontStackHash); // TODO was .find
-                if (glyphPositionMap.is_none()) {
+                if glyphPositionMap.is_none() {
                     continue;
                 }
 
@@ -694,19 +692,19 @@ fn shapeLines(
                 let glyphPosition = glyphPositionMap.get(&codePoint);
                 if let Some(glyphPosition) = glyphPosition {
                     rect = glyphPosition.rect;
-                    metrics = glyphPosition.metrics.clone();
+                    metrics = glyphPosition.metrics;
                 } else {
                     // TODO why would a glyph position not be available but a glyph? Maybe if a glyph bitmap is empty?
                     unreachable!();
                     let glyphs = glyphMap.get(&section.fontStackHash);
-                    if (glyphs.is_none()) {
+                    if glyphs.is_none() {
                         continue;
                     }
                     let glyphs = glyphs.expect("cant be none");
 
                     let glyph = glyphs.get(&codePoint);
 
-                    if (glyph.is_none()) {
+                    if glyph.is_none() {
                         continue;
                     }
 
@@ -724,49 +722,49 @@ fn shapeLines(
                 baselineOffset = (lineMaxScale - sectionScale) * ONE_EM;
             }
 
-            if (!vertical) {
+            if !vertical {
                 positionedGlyphs.push(PositionedGlyph {
                     glyph: codePoint,
                     x,
-                    y: y + baselineOffset as f64,
+                    y: y + baselineOffset,
                     vertical,
                     font: section.fontStackHash,
-                    scale: sectionScale as f64,
+                    scale: sectionScale,
                     rect,
                     metrics,
                     imageID: section.imageID.clone(),
                     sectionIndex,
                 });
-                x += advance * sectionScale as f64 + spacing;
+                x += advance * sectionScale + spacing;
             } else {
                 positionedGlyphs.push(PositionedGlyph {
                     glyph: codePoint,
                     x,
-                    y: y + baselineOffset as f64,
+                    y: y + baselineOffset,
                     vertical,
                     font: section.fontStackHash,
-                    scale: sectionScale as f64,
+                    scale: sectionScale,
                     rect,
                     metrics,
                     imageID: section.imageID.clone(),
                     sectionIndex,
                 });
-                x += verticalAdvance * sectionScale as f64 + spacing;
+                x += verticalAdvance * sectionScale + spacing;
                 shaping.verticalizable |= true;
             }
         }
 
         // Only justify if we placed at least one glyph
-        if (!positionedGlyphs.is_empty()) {
+        if !positionedGlyphs.is_empty() {
             let lineLength = x - spacing; // Don't count trailing spacing
             maxLineLength = (lineLength).max(maxLineLength);
-            justifyLine(positionedGlyphs, justify, (lineOffset) as f64);
+            justifyLine(positionedGlyphs, justify, lineOffset);
         }
 
-        let currentLineHeight = (lineHeight * lineMaxScale + lineOffset) as f64;
+        let currentLineHeight = lineHeight * lineMaxScale + lineOffset;
         x = 0.0;
         y += currentLineHeight;
-        positionedLine.lineOffset = ((lineOffset).max(maxLineOffset)) as f64;
+        positionedLine.lineOffset = (lineOffset).max(maxLineOffset);
         maxLineHeight = (currentLineHeight).max(maxLineHeight);
     }
 

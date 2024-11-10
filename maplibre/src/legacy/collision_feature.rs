@@ -45,7 +45,7 @@ impl CollisionFeature {
             alongLine: placement != SymbolPlacementType::Point,
         };
 
-        if (top == 0. && bottom == 0. && left == 0. && right == 0.) {
+        if top == 0. && bottom == 0. && left == 0. && right == 0. {
             return self_;
         }
 
@@ -61,11 +61,11 @@ impl CollisionFeature {
             y2 += collisionPadding.bottom * boxScale;
         }
 
-        if (self_.alongLine) {
+        if self_.alongLine {
             let mut height = y2 - y1;
             let length = x2 - x1;
 
-            if (height <= 0.0) {
+            if height <= 0.0 {
                 return self_;
             }
 
@@ -80,43 +80,41 @@ impl CollisionFeature {
                 height,
                 overscaling,
             );
+        } else if rotate_ != 0. {
+            // Account for *-rotate in point collision boxes
+            // Doesn't account for icon-text-fit
+            let rotateRadians = deg2radf(rotate_);
+
+            let tl = rotate(&Vector2D::<_, TileSpace>::new(x1, y1), rotateRadians);
+            let tr = rotate(&Vector2D::<_, TileSpace>::new(x2, y1), rotateRadians);
+            let bl = rotate(&Vector2D::<_, TileSpace>::new(x1, y2), rotateRadians);
+            let br = rotate(&Vector2D::<_, TileSpace>::new(x2, y2), rotateRadians);
+
+            // Collision features require an "on-axis" geometry,
+            // so take the envelope of the rotated geometry
+            // (may be quite large for wide labels rotated 45 degrees)
+            let xMin = [tl.x, tr.x, bl.x, br.x].min_value();
+            let xMax = [tl.x, tr.x, bl.x, br.x].max_value();
+            let yMin = [tl.y, tr.y, bl.y, br.y].min_value();
+            let yMax = [tl.y, tr.y, bl.y, br.y].max_value();
+
+            self_.boxes.push(CollisionBox {
+                anchor: anchor.point,
+                x1: xMin,
+                y1: yMin,
+                x2: xMax,
+                y2: yMax,
+                signedDistanceFromAnchor: 0.0,
+            });
         } else {
-            if (rotate_ != 0.) {
-                // Account for *-rotate in point collision boxes
-                // Doesn't account for icon-text-fit
-                let rotateRadians = deg2radf(rotate_);
-
-                let tl = rotate(&Vector2D::<_, TileSpace>::new(x1, y1), rotateRadians);
-                let tr = rotate(&Vector2D::<_, TileSpace>::new(x2, y1), rotateRadians);
-                let bl = rotate(&Vector2D::<_, TileSpace>::new(x1, y2), rotateRadians);
-                let br = rotate(&Vector2D::<_, TileSpace>::new(x2, y2), rotateRadians);
-
-                // Collision features require an "on-axis" geometry,
-                // so take the envelope of the rotated geometry
-                // (may be quite large for wide labels rotated 45 degrees)
-                let xMin = [tl.x, tr.x, bl.x, br.x].min_value();
-                let xMax = [tl.x, tr.x, bl.x, br.x].max_value();
-                let yMin = [tl.y, tr.y, bl.y, br.y].min_value();
-                let yMax = [tl.y, tr.y, bl.y, br.y].max_value();
-
-                self_.boxes.push(CollisionBox {
-                    anchor: anchor.point,
-                    x1: xMin,
-                    y1: yMin,
-                    x2: xMax,
-                    y2: yMax,
-                    signedDistanceFromAnchor: 0.0,
-                });
-            } else {
-                self_.boxes.push(CollisionBox {
-                    anchor: anchor.point,
-                    x1,
-                    y1,
-                    x2,
-                    y2,
-                    signedDistanceFromAnchor: 0.0,
-                });
-            }
+            self_.boxes.push(CollisionBox {
+                anchor: anchor.point,
+                x1,
+                y1,
+                x2,
+                y2,
+                signedDistanceFromAnchor: 0.0,
+            });
         }
         self_
     }
@@ -192,11 +190,9 @@ impl CollisionFeature {
             } else {
                 0.
             },
-            if let Some(shapedIcon) = &shapedIcon {
-                Some(shapedIcon.collisionPadding)
-            } else {
-                None
-            },
+            shapedIcon
+                .as_ref()
+                .map(|shapedIcon| shapedIcon.collisionPadding),
             boxScale,
             padding,
             SymbolPlacementType::Point,
@@ -226,7 +222,7 @@ impl CollisionFeature {
         // overscaled tiles where the pitch 0-based symbol spacing will put labels
         // very close together in a pitched map. To reduce the cost of adding extra
         // collision circles, we slowly increase them for overscaled tiles.
-        let overscalingPaddingFactor = 1. + 0.4 * (overscaling as f64).log2();
+        let overscalingPaddingFactor = 1. + 0.4 * overscaling.log2();
         let nPitchPaddingBoxes = ((nBoxes as f64 * overscalingPaddingFactor / 2.).floor()) as i32;
 
         // offset the center of the first box by half a box so that the edge of the
@@ -241,8 +237,8 @@ impl CollisionFeature {
 
         // move backwards along the line to the first segment the label appears on
         loop {
-            if (index == 0) {
-                if (anchorDistance > labelStartDistance) {
+            if index == 0 {
+                if anchorDistance > labelStartDistance {
                     // there isn't enough room for the label after the beginning of
                     // the line checkMaxAngle should have already caught this
                     return;
@@ -269,29 +265,29 @@ impl CollisionFeature {
         for i in -nPitchPaddingBoxes..nBoxes + nPitchPaddingBoxes {
             // the distance the box will be from the anchor
             let boxOffset = i as f64 * step;
-            let mut boxDistanceToAnchor = labelStartDistance + boxOffset as f64;
+            let mut boxDistanceToAnchor = labelStartDistance + boxOffset;
 
             // make the distance between pitch padding boxes bigger
-            if (boxOffset < 0.) {
+            if boxOffset < 0. {
                 boxDistanceToAnchor += boxOffset;
             }
-            if (boxOffset > labelLength) {
+            if boxOffset > labelLength {
                 boxDistanceToAnchor += boxOffset - labelLength;
             }
 
-            if (boxDistanceToAnchor < anchorDistance) {
+            if boxDistanceToAnchor < anchorDistance {
                 // The line doesn't extend far enough back for this box, skip it
                 // (This could allow for line collisions on distant tiles)
                 continue;
             }
 
             // the box is not on the current segment. Move to the next segment.
-            while (anchorDistance + segmentLength < boxDistanceToAnchor) {
+            while anchorDistance + segmentLength < boxDistanceToAnchor {
                 anchorDistance += segmentLength;
                 index += 1;
 
                 // There isn't enough room before the end of the line.
-                if (index + 1 >= line.len()) {
+                if index + 1 >= line.len() {
                     return;
                 }
 
@@ -361,7 +357,7 @@ pub enum ProjectedCollisionBox {
 impl Default for ProjectedCollisionBox {
     /// maplibre/maplibre-native#4add9ea original name: default
     fn default() -> Self {
-        return Self::Box(Box2D::zero());
+        Self::Box(Box2D::zero())
     }
 }
 

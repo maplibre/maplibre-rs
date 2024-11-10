@@ -28,33 +28,33 @@ impl ImagePosition {
 
     /// maplibre/maplibre-native#4add9ea original name: tl
     pub fn tl(&self) -> [u16; 2] {
-        return [
-            (self.paddedRect.min().x + Self::padding) as u16,
-            (self.paddedRect.min().y + Self::padding) as u16,
-        ];
+        [
+            (self.paddedRect.min().x + Self::padding),
+            (self.paddedRect.min().y + Self::padding),
+        ]
     }
 
     /// maplibre/maplibre-native#4add9ea original name: br
     pub fn br(&self) -> [u16; 2] {
-        return [
-            (self.paddedRect.min().x + self.paddedRect.width() - Self::padding) as u16,
-            (self.paddedRect.min().y + self.paddedRect.height() - Self::padding) as u16,
-        ];
+        [
+            (self.paddedRect.min().x + self.paddedRect.width() - Self::padding),
+            (self.paddedRect.min().y + self.paddedRect.height() - Self::padding),
+        ]
     }
 
     /// maplibre/maplibre-native#4add9ea original name: tlbr
     pub fn tlbr(&self) -> [u16; 4] {
         let _tl = self.tl();
         let _br = self.br();
-        return [_tl[0], _tl[1], _br[0], _br[1]];
+        [_tl[0], _tl[1], _br[0], _br[1]]
     }
 
     /// maplibre/maplibre-native#4add9ea original name: displaySize
     pub fn displaySize(&self) -> [f64; 2] {
-        return [
+        [
             (self.paddedRect.width() - Self::padding * 2) as f64 / self.pixelRatio,
             (self.paddedRect.height() - Self::padding * 2) as f64 / self.pixelRatio,
-        ];
+        ]
     }
 }
 

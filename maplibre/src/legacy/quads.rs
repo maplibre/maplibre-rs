@@ -49,7 +49,7 @@ fn computeStretchSum(stretches: &ImageStretches) -> f64 {
     for stretch in stretches {
         sum += stretch.1 - stretch.0;
     }
-    return sum;
+    sum
 }
 
 /// maplibre/maplibre-native#4add9ea original name: sumWithinRange
@@ -58,17 +58,17 @@ fn sumWithinRange(stretches: &ImageStretches, min: f64, max: f64) -> f64 {
     for stretch in stretches {
         sum += min.max(max.min(stretch.1)) - min.max(max.min(stretch.0));
     }
-    return sum;
+    sum
 }
 
 /// maplibre/maplibre-native#4add9ea original name: getEmOffset
 fn getEmOffset(stretchOffset: f64, stretchSize: f64, iconSize: f64, iconOffset: f64) -> f64 {
-    return iconOffset + iconSize * stretchOffset / stretchSize;
+    iconOffset + iconSize * stretchOffset / stretchSize
 }
 
 /// maplibre/maplibre-native#4add9ea original name: getPxOffset
 fn getPxOffset(fixedOffset: f64, fixedSize: f64, stretchOffset: f64, stretchSize: f64) -> f64 {
-    return fixedOffset - fixedSize * stretchOffset / stretchSize;
+    fixedOffset - fixedSize * stretchOffset / stretchSize
 }
 
 /// maplibre/maplibre-native#4add9ea original name: Cut
@@ -104,12 +104,12 @@ fn stretchZonesToCuts(stretchZones: &ImageStretches, fixedSize: f64, stretchSize
         fixed: fixedSize + border as f64,
         stretch: stretchSize,
     });
-    return cuts;
+    cuts
 }
 
 /// maplibre/maplibre-native#4add9ea original name: matrixMultiply
 fn matrixMultiply<U>(m: &[f64; 4], p: Point2D<f64, U>) -> Point2D<f64, U> {
-    return Point2D::<f64, U>::new(m[0] * p.x + m[1] * p.y, m[2] * p.x + m[3] * p.y);
+    Point2D::<f64, U>::new(m[0] * p.x + m[1] * p.y, m[2] * p.x + m[3] * p.y)
 }
 
 /// maplibre/maplibre-native#4add9ea original name: getIconQuads
@@ -156,7 +156,7 @@ pub fn getIconQuads(
     let mut fixedOffsetY = 0.;
     let mut fixedContentHeight = fixedHeight;
 
-    if (hasIconTextFit) {
+    if hasIconTextFit {
         if let Some(content) = &image.content {
             stretchOffsetX = sumWithinRange(stretchX, 0., content.left);
             stretchOffsetY = sumWithinRange(stretchY, 0., content.top);
@@ -170,11 +170,11 @@ pub fn getIconQuads(
     }
 
     let mut matrix: Option<[f64; 4]> = None;
-    if (iconRotate != 0.0) {
+    if iconRotate != 0.0 {
         // TODO is this correct?
         let angle = deg2radf(iconRotate);
-        let angle_sin = (angle.sin());
-        let angle_cos = (angle.cos());
+        let angle_sin = angle.sin();
+        let angle_cos = angle.cos();
         matrix = Some([angle_cos, -angle_sin, angle_sin, angle_cos]);
     }
 
@@ -280,7 +280,7 @@ pub fn getIconQuads(
         });
     };
 
-    if (!hasIconTextFit || (image.stretchX.is_empty() && image.stretchY.is_empty())) {
+    if !hasIconTextFit || (image.stretchX.is_empty() && image.stretchY.is_empty()) {
         makeBox(
             &Cut {
                 fixed: 0.,
@@ -314,7 +314,7 @@ pub fn getIconQuads(
         }
     }
 
-    return quads;
+    quads
 }
 
 /// maplibre/maplibre-native#4add9ea original name: getGlyphQuads
@@ -334,7 +334,7 @@ pub fn getGlyphQuads(
 
     for line in &shapedText.positionedLines {
         for positionedGlyph in &line.positionedGlyphs {
-            if (positionedGlyph.rect.is_empty()) {
+            if positionedGlyph.rect.is_empty() {
                 continue;
             }
 
@@ -350,7 +350,7 @@ pub fn getGlyphQuads(
             let mut isSDF = true;
 
             // Align images and scaled glyphs in the middle of a vertical line.
-            if (allowVerticalPlacement && shapedText.verticalizable) {
+            if allowVerticalPlacement && shapedText.verticalizable {
                 let scaledGlyphOffset = (positionedGlyph.scale - 1.) * ONE_EM;
                 let imageOffset =
                     (ONE_EM - positionedGlyph.metrics.width as f64 * positionedGlyph.scale) / 2.0;
@@ -362,7 +362,7 @@ pub fn getGlyphQuads(
                     });
             }
 
-            if let Some(imageID) = (&positionedGlyph.imageID) {
+            if let Some(imageID) = &positionedGlyph.imageID {
                 let image = imageMap.get(imageID);
                 if let Some(image) = image {
                     pixelRatio = image.pixelRatio;
@@ -387,7 +387,7 @@ pub fn getGlyphQuads(
             };
 
             let mut verticalizedLabelOffset = Vector2D::<f64, TileSpace>::new(0.0, 0.0);
-            if (rotateVerticalGlyph) {
+            if rotateVerticalGlyph {
                 // Vertical POI labels, that are rotated 90deg CW and whose
                 // glyphs must preserve upright orientation need to be rotated
                 // 90deg CCW. After quad is rotated, it is translated to the
@@ -409,7 +409,7 @@ pub fn getGlyphQuads(
             let mut bl: Point2D<f64, TileSpace> = Point2D::new(x1, y2);
             let mut br: Point2D<f64, TileSpace> = Point2D::new(x2, y2);
 
-            if (rotateVerticalGlyph) {
+            if rotateVerticalGlyph {
                 // Vertical-supporting glyphs are laid out in 24x24 point boxes
                 // (1 square em) In horizontal orientation, the y values for
                 // glyphs are below the midline and we use a "yOffset" of -17 to
@@ -458,7 +458,7 @@ pub fn getGlyphQuads(
                     + verticalizedLabelOffset;
             }
 
-            if (textRotate != 0.0) {
+            if textRotate != 0.0 {
                 // TODO is this correct?
                 // Compute the transformation matrix.
                 let angle_sin = textRotate.sin();
@@ -483,16 +483,16 @@ pub fn getGlyphQuads(
                 tex: rect,
                 pixelOffsetTL,
                 pixelOffsetBR,
-                glyphOffset: glyphOffset,
+                glyphOffset,
                 writingMode: shapedText.writingMode,
-                isSDF: isSDF,
+                isSDF,
                 sectionIndex: positionedGlyph.sectionIndex,
-                minFontScale: minFontScale,
+                minFontScale,
             });
         }
     }
 
-    return quads;
+    quads
 }
 #[cfg(test)]
 mod tests {

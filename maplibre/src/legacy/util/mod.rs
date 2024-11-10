@@ -16,9 +16,9 @@ pub fn hash_combine<T: Hash>(seed: &mut u64, v: &T) {
         .finish()
         .overflowing_add(0x9e3779b9)
         .0
-        .overflowing_add((*seed << 6))
+        .overflowing_add(*seed << 6)
         .0
-        .overflowing_add((*seed >> 2))
+        .overflowing_add(*seed >> 2)
         .0;
 }
 
@@ -29,7 +29,7 @@ pub fn hash<T: Hash>(args: &[T]) -> u64 {
     for arg in args {
         hash_combine(&mut seed, arg);
     }
-    return seed;
+    seed
 }
 
 /// maplibre/maplibre-native#4add9ea original name: split_in_half

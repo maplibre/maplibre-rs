@@ -69,7 +69,7 @@ impl SymbolGeometryTileFeature {
     pub fn new(feature: Box<VectorGeometryTileFeature>) -> Self {
         Self {
             geometry: feature.geometry.clone(), // we need a mutable copy of the geometry for mergeLines()
-            feature: feature,
+            feature,
             formattedText: None,
             icon: None,
             sortKey: 0.0,

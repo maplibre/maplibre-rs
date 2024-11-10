@@ -186,11 +186,11 @@ impl LayoutProperty for IconAllowOverlap {
     type Type = bool;
 
     fn name() -> &'static str {
-        return "icon-allow-overlap";
+        "icon-allow-overlap"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return false;
+        false
     }
 }
 
@@ -205,11 +205,11 @@ impl DataDrivenLayoutProperty for IconAnchor {
     type Type = SymbolAnchorType;
 
     fn name() -> &'static str {
-        return "icon-anchor";
+        "icon-anchor"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return SymbolAnchorType::Center;
+        SymbolAnchorType::Center
     }
 }
 
@@ -224,11 +224,11 @@ impl LayoutProperty for IconIgnorePlacement {
     type Type = bool;
 
     fn name() -> &'static str {
-        return "icon-ignore-placement";
+        "icon-ignore-placement"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return false;
+        false
     }
 }
 
@@ -243,11 +243,11 @@ impl DataDrivenLayoutProperty for IconImage {
     type Type = expression::Image;
 
     fn name() -> &'static str {
-        return "icon-image";
+        "icon-image"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return expression::Image::default();
+        expression::Image::default()
     }
 }
 
@@ -262,11 +262,11 @@ impl LayoutProperty for IconKeepUpright {
     type Type = bool;
 
     fn name() -> &'static str {
-        return "icon-keep-upright";
+        "icon-keep-upright"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return false;
+        false
     }
 }
 
@@ -281,11 +281,11 @@ impl DataDrivenLayoutProperty for IconOffset {
     type Type = [f64; 2];
 
     fn name() -> &'static str {
-        return "icon-offset";
+        "icon-offset"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return [0.0, 0.0];
+        [0.0, 0.0]
     }
 }
 
@@ -300,11 +300,11 @@ impl LayoutProperty for IconOptional {
     type Type = bool;
 
     fn name() -> &'static str {
-        return "icon-optional";
+        "icon-optional"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return false;
+        false
     }
 }
 
@@ -319,11 +319,11 @@ impl LayoutProperty for IconPadding {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "icon-padding";
+        "icon-padding"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return 2.0;
+        2.0
     }
 }
 
@@ -338,11 +338,11 @@ impl LayoutProperty for IconPitchAlignment {
     type Type = AlignmentType;
 
     fn name() -> &'static str {
-        return "icon-pitch-alignment";
+        "icon-pitch-alignment"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return AlignmentType::Auto;
+        AlignmentType::Auto
     }
 }
 
@@ -357,11 +357,11 @@ impl DataDrivenLayoutProperty for IconRotate {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "icon-rotate";
+        "icon-rotate"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return 0.0;
+        0.0
     }
 }
 
@@ -376,11 +376,11 @@ impl LayoutProperty for IconRotationAlignment {
     type Type = AlignmentType;
 
     fn name() -> &'static str {
-        return "icon-rotation-alignment";
+        "icon-rotation-alignment"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return AlignmentType::Auto;
+        AlignmentType::Auto
     }
 }
 /// maplibre/maplibre-native#4add9ea original name: IconSize
@@ -394,11 +394,11 @@ impl DataDrivenLayoutProperty for IconSize {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "icon-size";
+        "icon-size"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return 1.0;
+        1.0
     }
 }
 
@@ -413,11 +413,11 @@ impl LayoutProperty for IconTextFit {
     type Type = IconTextFitType;
 
     fn name() -> &'static str {
-        return "icon-text-fit";
+        "icon-text-fit"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return IconTextFitType::None;
+        IconTextFitType::None
     }
 }
 /// maplibre/maplibre-native#4add9ea original name: IconTextFitPadding
@@ -430,11 +430,11 @@ impl LayoutProperty for IconTextFitPadding {
     type Type = [f64; 4];
 
     fn name() -> &'static str {
-        return "icon-text-fit-padding";
+        "icon-text-fit-padding"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return [0.0, 0.0, 0.0, 0.0];
+        [0.0, 0.0, 0.0, 0.0]
     }
 }
 
@@ -449,11 +449,11 @@ impl LayoutProperty for SymbolAvoidEdges {
     type Type = bool;
 
     fn name() -> &'static str {
-        return "symbol-avoid-edges";
+        "symbol-avoid-edges"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return false;
+        false
     }
 }
 
@@ -468,11 +468,11 @@ impl LayoutProperty for SymbolPlacement {
     type Type = SymbolPlacementType;
 
     fn name() -> &'static str {
-        return "symbol-placement";
+        "symbol-placement"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return SymbolPlacementType::Point;
+        SymbolPlacementType::Point
     }
 }
 
@@ -487,11 +487,11 @@ impl DataDrivenLayoutProperty for SymbolSortKey {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "symbol-sort-key";
+        "symbol-sort-key"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return 0.0;
+        0.0
     }
 }
 
@@ -506,11 +506,11 @@ impl LayoutProperty for SymbolSpacing {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "symbol-spacing";
+        "symbol-spacing"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return 250.0;
+        250.0
     }
 }
 
@@ -525,11 +525,11 @@ impl LayoutProperty for SymbolZOrder {
     type Type = SymbolZOrderType;
 
     fn name() -> &'static str {
-        return "symbol-z-order";
+        "symbol-z-order"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return SymbolZOrderType::Auto;
+        SymbolZOrderType::Auto
     }
 }
 /// maplibre/maplibre-native#4add9ea original name: TextAllowOverlap
@@ -543,11 +543,11 @@ impl LayoutProperty for TextAllowOverlap {
     type Type = bool;
 
     fn name() -> &'static str {
-        return "text-allow-overlap";
+        "text-allow-overlap"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return false;
+        false
     }
 }
 
@@ -562,11 +562,11 @@ impl DataDrivenLayoutProperty for TextAnchor {
     type Type = SymbolAnchorType;
 
     fn name() -> &'static str {
-        return "text-anchor";
+        "text-anchor"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return SymbolAnchorType::Center;
+        SymbolAnchorType::Center
     }
 }
 
@@ -580,11 +580,11 @@ impl DataDrivenLayoutProperty for TextField {
     type Type = expression::Formatted;
 
     fn name() -> &'static str {
-        return "text-field";
+        "text-field"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return expression::Formatted::default();
+        expression::Formatted::default()
     }
 }
 
@@ -599,14 +599,14 @@ impl DataDrivenLayoutProperty for TextFont {
     type Type = Vec<String>;
 
     fn name() -> &'static str {
-        return "text-font";
+        "text-font"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return vec![
+        vec![
             "Open Sans Regular".to_string(),
             "Arial Unicode MS Regular".to_string(),
-        ];
+        ]
     }
 }
 
@@ -621,11 +621,11 @@ impl LayoutProperty for TextIgnorePlacement {
     type Type = bool;
 
     fn name() -> &'static str {
-        return "text-ignore-placement";
+        "text-ignore-placement"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return false;
+        false
     }
 }
 
@@ -640,11 +640,11 @@ impl DataDrivenLayoutProperty for TextJustify {
     type Type = TextJustifyType;
 
     fn name() -> &'static str {
-        return "text-justify";
+        "text-justify"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return TextJustifyType::Center;
+        TextJustifyType::Center
     }
 }
 
@@ -660,11 +660,11 @@ impl LayoutProperty for TextKeepUpright {
     type Type = bool;
 
     fn name() -> &'static str {
-        return "text-keep-upright";
+        "text-keep-upright"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return true;
+        true
     }
 }
 
@@ -680,11 +680,11 @@ impl DataDrivenLayoutProperty for TextLetterSpacing {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "text-letter-spacing";
+        "text-letter-spacing"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return 0.0;
+        0.0
     }
 }
 
@@ -700,11 +700,11 @@ impl LayoutProperty for TextLineHeight {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "text-line-height";
+        "text-line-height"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return 1.2;
+        1.2
     }
 }
 
@@ -719,11 +719,11 @@ impl LayoutProperty for TextMaxAngle {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "text-max-angle";
+        "text-max-angle"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return 45.0;
+        45.0
     }
 }
 
@@ -738,11 +738,11 @@ impl DataDrivenLayoutProperty for TextMaxWidth {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "text-max-width";
+        "text-max-width"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return 10.0;
+        10.0
     }
 }
 
@@ -757,11 +757,11 @@ impl DataDrivenLayoutProperty for TextOffset {
     type Type = [f64; 2];
 
     fn name() -> &'static str {
-        return "text-offset";
+        "text-offset"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return [0.0, 0.0];
+        [0.0, 0.0]
     }
 }
 
@@ -776,11 +776,11 @@ impl LayoutProperty for TextOptional {
     type Type = bool;
 
     fn name() -> &'static str {
-        return "text-optional";
+        "text-optional"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return false;
+        false
     }
 }
 
@@ -795,11 +795,11 @@ impl LayoutProperty for TextPadding {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "text-padding";
+        "text-padding"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return 2.0;
+        2.0
     }
 }
 
@@ -815,11 +815,11 @@ impl LayoutProperty for TextPitchAlignment {
     type Type = AlignmentType;
 
     fn name() -> &'static str {
-        return "text-pitch-alignment";
+        "text-pitch-alignment"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return AlignmentType::Auto;
+        AlignmentType::Auto
     }
 }
 
@@ -834,11 +834,11 @@ impl DataDrivenLayoutProperty for TextRadialOffset {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "text-radial-offset";
+        "text-radial-offset"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return 0.0;
+        0.0
     }
 }
 
@@ -853,11 +853,11 @@ impl DataDrivenLayoutProperty for TextRotate {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "text-rotate";
+        "text-rotate"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return 0.0;
+        0.0
     }
 }
 
@@ -871,11 +871,11 @@ impl LayoutProperty for TextRotationAlignment {
     type Type = AlignmentType;
 
     fn name() -> &'static str {
-        return "text-rotation-alignment";
+        "text-rotation-alignment"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return AlignmentType::Auto;
+        AlignmentType::Auto
     }
 }
 
@@ -890,11 +890,11 @@ impl DataDrivenLayoutProperty for TextSize {
     type Type = f64;
 
     fn name() -> &'static str {
-        return "text-size";
+        "text-size"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return 16.0;
+        16.0
     }
 }
 
@@ -909,11 +909,11 @@ impl DataDrivenLayoutProperty for TextTransform {
     type Type = TextTransformType;
 
     fn name() -> &'static str {
-        return "text-transform";
+        "text-transform"
     }
 
     fn defaultValue() -> <Self as DataDrivenLayoutProperty>::Type {
-        return TextTransformType::None;
+        TextTransformType::None
     }
 }
 
@@ -928,11 +928,11 @@ impl LayoutProperty for TextVariableAnchor {
     type Type = Vec<TextVariableAnchorType>;
 
     fn name() -> &'static str {
-        return "text-variable-anchor";
+        "text-variable-anchor"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return Vec::new();
+        Vec::new()
     }
 }
 
@@ -947,11 +947,11 @@ impl LayoutProperty for TextWritingMode {
     type Type = Vec<TextWritingModeType>;
 
     fn name() -> &'static str {
-        return "text-writing-mode";
+        "text-writing-mode"
     }
 
     fn defaultValue() -> <Self as LayoutProperty>::Type {
-        return Vec::new();
+        Vec::new()
     }
 }
 
@@ -1058,9 +1058,9 @@ pub mod expression {
         pub textColor: Option<Color>,
     }
 
-    pub const kFormattedSectionFontScale: &'static str = "font-scale";
-    pub const kFormattedSectionTextFont: &'static str = "text-font";
-    pub const kFormattedSectionTextColor: &'static str = "text-color";
+    pub const kFormattedSectionFontScale: &str = "font-scale";
+    pub const kFormattedSectionTextFont: &str = "text-font";
+    pub const kFormattedSectionTextColor: &str = "text-color";
 
     // TODO
     /// maplibre/maplibre-native#4add9ea original name: FeatureState

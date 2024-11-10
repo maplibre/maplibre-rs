@@ -125,9 +125,9 @@ impl<T: Clone> GridIndex<T> {
         let mut result = Vec::new();
         self.query_internal(query_box, |t, bbox| -> bool {
             result.push(t);
-            return false;
+            false
         });
-        return result;
+        result
     }
 
     /// maplibre/maplibre-native#4add9ea original name: query_with_boxes
@@ -138,9 +138,9 @@ impl<T: Clone> GridIndex<T> {
         let mut result = Vec::new();
         self.query_internal(query_box, |t, bbox| -> bool {
             result.push((t, bbox));
-            return false;
+            false
         });
-        return result;
+        result
     }
 
     /// maplibre/maplibre-native#4add9ea original name: hit_test
@@ -153,16 +153,16 @@ impl<T: Clone> GridIndex<T> {
             if let Some(predicate) = &predicate {
                 if predicate(&t) {
                     hit = true;
-                    return true;
+                    true
                 } else {
-                    return false;
+                    false
                 }
             } else {
                 hit = true;
-                return true;
+                true
             }
         });
-        return hit;
+        hit
     }
 
     /// maplibre/maplibre-native#4add9ea original name: hit_test_circle
@@ -175,44 +175,44 @@ impl<T: Clone> GridIndex<T> {
             if let Some(predicate) = &predicate {
                 if predicate(&t) {
                     hit = true;
-                    return true;
+                    true
                 } else {
-                    return false;
+                    false
                 }
             } else {
                 hit = true;
-                return true;
+                true
             }
         });
-        return hit;
+        hit
     }
 
     /// maplibre/maplibre-native#4add9ea original name: empty
     pub fn empty(&self) -> bool {
-        return self.box_elements.is_empty() && self.circle_elements.is_empty();
+        self.box_elements.is_empty() && self.circle_elements.is_empty()
     }
 }
 
 impl<T: Clone> GridIndex<T> {
     /// maplibre/maplibre-native#4add9ea original name: no_intersection
     fn no_intersection(&self, query_box: &Box2D<f64, ScreenSpace>) -> bool {
-        return query_box.max.x < 0.0
+        query_box.max.x < 0.0
             || query_box.min.x >= self.width
             || query_box.max.y < 0.0
-            || query_box.min.y >= self.height;
+            || query_box.min.y >= self.height
     }
 
     /// maplibre/maplibre-native#4add9ea original name: complete_intersection
     fn complete_intersection(&self, query_box: &Box2D<f64, ScreenSpace>) -> bool {
-        return query_box.min.x <= 0.0
+        query_box.min.x <= 0.0
             && query_box.min.y <= 0.0
             && self.width <= query_box.max.x
-            && self.height <= query_box.max.y;
+            && self.height <= query_box.max.y
     }
 
     /// maplibre/maplibre-native#4add9ea original name: convert_to_box
     fn convert_to_box(circle: &Circle<f64>) -> Box2D<f64, ScreenSpace> {
-        return Box2D::new(
+        Box2D::new(
             Point2D::new(
                 circle.center.x - circle.radius,
                 circle.center.y - circle.radius,
@@ -221,7 +221,7 @@ impl<T: Clone> GridIndex<T> {
                 circle.center.x + circle.radius,
                 circle.center.y + circle.radius,
             ),
-        );
+        )
     }
 
     /// maplibre/maplibre-native#4add9ea original name: query_internal
@@ -264,10 +264,9 @@ impl<T: Clone> GridIndex<T> {
 
                         let pair = &self.box_elements[*uid as usize];
                         let bbox = pair.1;
-                        if Self::boxes_collide(query_bbox, &bbox) {
-                            if result_fn(pair.0.clone(), bbox) {
-                                return;
-                            }
+                        if Self::boxes_collide(query_bbox, &bbox) && result_fn(pair.0.clone(), bbox)
+                        {
+                            return;
                         }
                     }
                 }
@@ -279,10 +278,10 @@ impl<T: Clone> GridIndex<T> {
 
                         let pair = &self.circle_elements[*uid as usize];
                         let bcircle = &pair.1;
-                        if Self::circle_and_box_collide(&bcircle, query_bbox) {
-                            if result_fn(pair.0.clone(), Self::convert_to_box(&bcircle)) {
-                                return;
-                            }
+                        if Self::circle_and_box_collide(bcircle, query_bbox)
+                            && result_fn(pair.0.clone(), Self::convert_to_box(bcircle))
+                        {
+                            return;
                         }
                     }
                 }
@@ -330,10 +329,10 @@ impl<T: Clone> GridIndex<T> {
 
                         let pair = &self.box_elements[*uid as usize];
                         let bbox = pair.1;
-                        if Self::circle_and_box_collide(query_bcircle, &bbox) {
-                            if result_fn(pair.0.clone(), bbox) {
-                                return;
-                            }
+                        if Self::circle_and_box_collide(query_bcircle, &bbox)
+                            && result_fn(pair.0.clone(), bbox)
+                        {
+                            return;
                         }
                     }
                 }
@@ -345,10 +344,10 @@ impl<T: Clone> GridIndex<T> {
 
                         let pair = &self.circle_elements[*uid as usize];
                         let bcircle = &pair.1;
-                        if Self::circles_collide(query_bcircle, &bcircle) {
-                            if result_fn(pair.0.clone(), Self::convert_to_box(&bcircle)) {
-                                return;
-                            }
+                        if Self::circles_collide(query_bcircle, bcircle)
+                            && result_fn(pair.0.clone(), Self::convert_to_box(bcircle))
+                        {
+                            return;
                         }
                     }
                 }
@@ -358,26 +357,26 @@ impl<T: Clone> GridIndex<T> {
 
     /// maplibre/maplibre-native#4add9ea original name: convert_to_x_cell_coord
     fn convert_to_x_cell_coord(&self, x: f64) -> usize {
-        return f64::max(
+        f64::max(
             0.0,
             f64::min((self.x_cell_count - 1) as f64, f64::floor(x * self.x_scale)),
-        ) as usize;
+        ) as usize
     }
 
     /// maplibre/maplibre-native#4add9ea original name: convert_to_y_cell_coord
     fn convert_to_y_cell_coord(&self, y: f64) -> usize {
-        return f64::max(
+        f64::max(
             0.0,
             f64::min((self.y_cell_count - 1) as f64, f64::floor(y * self.y_scale)),
-        ) as usize;
+        ) as usize
     }
 
     /// maplibre/maplibre-native#4add9ea original name: boxes_collide
     fn boxes_collide(first: &Box2D<f64, ScreenSpace>, second: &Box2D<f64, ScreenSpace>) -> bool {
-        return first.min.x <= second.max.x
+        first.min.x <= second.max.x
             && first.min.y <= second.max.y
             && first.max.x >= second.min.x
-            && first.max.y >= second.min.y;
+            && first.max.y >= second.min.y
     }
 
     /// maplibre/maplibre-native#4add9ea original name: circles_collide
@@ -385,7 +384,7 @@ impl<T: Clone> GridIndex<T> {
         let dx = second.center.x - first.center.x;
         let dy = second.center.y - first.center.y;
         let both_radii = first.radius + second.radius;
-        return (both_radii * both_radii) > (dx * dx + dy * dy);
+        (both_radii * both_radii) > (dx * dx + dy * dy)
     }
 
     /// maplibre/maplibre-native#4add9ea original name: circle_and_box_collide
@@ -408,7 +407,7 @@ impl<T: Clone> GridIndex<T> {
 
         let dx = dist_x - half_rect_width;
         let dy = dist_y - half_rect_height;
-        return (dx * dx + dy * dy) <= (circle.radius * circle.radius);
+        (dx * dx + dy * dy) <= (circle.radius * circle.radius)
     }
 }
 

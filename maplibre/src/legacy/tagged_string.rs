@@ -108,22 +108,22 @@ impl TaggedString {
 
     /// maplibre/maplibre-native#4add9ea original name: length
     pub fn length(&self) -> usize {
-        return self.styledText.0.len();
+        self.styledText.0.len()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: sectionCount
     pub fn sectionCount(&self) -> usize {
-        return self.sections.len();
+        self.sections.len()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: empty
     pub fn empty(&self) -> bool {
-        return self.styledText.0.is_empty();
+        self.styledText.0.is_empty()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getSection
     pub fn getSection(&self, index: usize) -> &SectionOptions {
-        return &self.sections[self.styledText.1[index] as usize]; // TODO Index does not honor encoding, fine? previously it was .at()
+        &self.sections[self.styledText.1[index] as usize] // TODO Index does not honor encoding, fine? previously it was .at()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getCharCodeAt
@@ -133,12 +133,12 @@ impl TaggedString {
 
     /// maplibre/maplibre-native#4add9ea original name: rawText
     pub fn rawText(&self) -> &U16String {
-        return &self.styledText.0;
+        &self.styledText.0
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getStyledText
     pub fn getStyledText(&self) -> &StyledText {
-        return &self.styledText;
+        &self.styledText
     }
 
     /// maplibre/maplibre-native#4add9ea original name: addTextSection
@@ -177,17 +177,17 @@ impl TaggedString {
 
     /// maplibre/maplibre-native#4add9ea original name: sectionAt
     pub fn sectionAt(&self, index: usize) -> &SectionOptions {
-        return &self.sections[index];
+        &self.sections[index]
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getSections
     pub fn getSections(&self) -> &Vec<SectionOptions> {
-        return &self.sections;
+        &self.sections
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getSectionIndex
     pub fn getSectionIndex(&self, characterIndex: usize) -> u8 {
-        return self.styledText.1[characterIndex]; // TODO Index does not honor encoding, fine? previously it was .at()
+        self.styledText.1[characterIndex] // TODO Index does not honor encoding, fine? previously it was .at()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getMaxScale
@@ -196,7 +196,7 @@ impl TaggedString {
         for i in 0..self.styledText.0.len() {
             maxScale = maxScale.max(self.getSection(i).scale)
         }
-        return maxScale;
+        maxScale
     }
 
     const WHITESPACE_CHARS: &'static [Char16] = &[
@@ -245,31 +245,30 @@ impl TaggedString {
     }
     /// maplibre/maplibre-native#4add9ea original name: allowsVerticalWritingMode
     pub fn allowsVerticalWritingMode(&mut self) -> bool {
-        if (self.supportsVerticalWritingMode.is_none()) {
+        if self.supportsVerticalWritingMode.is_none() {
             let new_value = i18n::allowsVerticalWritingMode(self.rawText());
             self.supportsVerticalWritingMode = Some(new_value);
             return new_value;
         }
-        return self
-            .supportsVerticalWritingMode
-            .expect("supportsVerticalWritingMode mut be set");
+        self.supportsVerticalWritingMode
+            .expect("supportsVerticalWritingMode mut be set")
     }
 }
 
 impl TaggedString {
     /// maplibre/maplibre-native#4add9ea original name: getNextImageSectionCharCode
     fn getNextImageSectionCharCode(&mut self) -> Option<Char16> {
-        if (self.imageSectionID == 0) {
+        if self.imageSectionID == 0 {
             self.imageSectionID = PUAbegin;
             return Some(self.imageSectionID);
         }
 
         self.imageSectionID += 1;
-        if (self.imageSectionID > PUAend) {
+        if self.imageSectionID > PUAend {
             return None;
         }
 
-        return Some(self.imageSectionID);
+        Some(self.imageSectionID)
     }
 }
 

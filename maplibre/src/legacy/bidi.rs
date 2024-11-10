@@ -42,7 +42,7 @@ impl BiDi {
             start = lineBreakPoint;
         }
 
-        return transformedLines;
+        transformedLines
     }
 
     /// Same as processText but preserves per-code-point formatting information
@@ -57,7 +57,7 @@ impl BiDi {
         let mut transformedLines = Vec::new();
         let mut start = 0;
         for lineBreakPoint in lineBreakPoints {
-            if (lineBreakPoint <= input.1.len()) {
+            if lineBreakPoint <= input.1.len() {
                 transformedLines.push((
                     U16String::from(&input.0[start..lineBreakPoint]),
                     Vec::from(&input.1[start..lineBreakPoint]),
@@ -66,6 +66,6 @@ impl BiDi {
             }
         }
 
-        return transformedLines;
+        transformedLines
     }
 }

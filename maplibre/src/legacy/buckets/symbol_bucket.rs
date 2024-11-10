@@ -118,7 +118,7 @@ impl SymbolSizeBinder {
     /// maplibre/maplibre-native#4add9ea original name: getVertexSizeData
     pub fn getVertexSizeData(&self, feature: &SymbolGeometryTileFeature) -> Range<f64> {
         // TODO ConstantSymbolSizeBinder
-        return 0.0..0.0;
+        0.0..0.0
     }
 }
 
@@ -369,7 +369,17 @@ impl SymbolBucket {
         iconsInText_: bool,
     ) -> Self {
         // TODO maxBucketInstanceId += 1;
-        let mut self_ = Self {
+
+        // TODO
+        // for pair in paintProperties_ {
+        //      let evaluated = getEvaluated::<SymbolLayerProperties>(pair.second);
+        //     self_.paintProperties.emplace(
+        //         std::piecewise_ruct,
+        //         std::forward_as_tuple(pair.first),
+        //         std::forward_as_tuple(PaintProperties{{RenderSymbolLayer::iconPaintProperties(evaluated), zoom},
+        //                                               {RenderSymbolLayer::textPaintProperties(evaluated), zoom}}));
+        // }
+        Self {
             layout: layout_,
             bucketLeaderID: bucketName_,
             sortedAngle: f64::MAX,
@@ -398,20 +408,9 @@ impl SymbolBucket {
             allowVerticalPlacement: allowVerticalPlacement_,
             placementModes: placementModes_,
             hasFormatSectionOverrides_: None,
-            featureSortOrder: FeatureSortOrder::default(),
+            featureSortOrder: FeatureSortOrder,
             uploaded: false,
-        };
-
-        // TODO
-        // for pair in paintProperties_ {
-        //      let evaluated = getEvaluated::<SymbolLayerProperties>(pair.second);
-        //     self_.paintProperties.emplace(
-        //         std::piecewise_ruct,
-        //         std::forward_as_tuple(pair.first),
-        //         std::forward_as_tuple(PaintProperties{{RenderSymbolLayer::iconPaintProperties(evaluated), zoom},
-        //                                               {RenderSymbolLayer::textPaintProperties(evaluated), zoom}}));
-        // }
-        self_
+        }
     }
 
     // As long as this bucket has a Prepare render pass, this function is
@@ -509,12 +508,12 @@ impl SymbolBucket {
 
     /// maplibre/maplibre-native#4add9ea original name: getQueryRadius
     pub fn getQueryRadius(&self, layer: RenderLayer) -> f64 {
-        return 0.;
+        0.
     }
 
     /// maplibre/maplibre-native#4add9ea original name: needsUpload
     pub fn needsUpload(&self) -> bool {
-        return self.hasData() && !self.uploaded;
+        self.hasData() && !self.uploaded
     }
 
     // Feature geometries are also used to populate the feature index.

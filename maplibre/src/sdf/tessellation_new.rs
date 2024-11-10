@@ -63,7 +63,7 @@ impl<I> TextTessellatorNew<I> {
 
         let image_positions = ImagePositions::new();
 
-        let mut glyphPosition = GlyphPosition {
+        let glyphPosition = GlyphPosition {
             rect: Rect::new(Point2D::new(0, 0), Size2D::new(10, 10)),
             metrics: GlyphMetrics {
                 width: 18,
@@ -97,7 +97,7 @@ impl<I> TextTessellatorNew<I> {
             canonical: CanonicalTileID { x: 0, y: 0, z: 0 },
             overscaledZ: 0,
         };
-        let mut parameters = BucketParameters {
+        let parameters = BucketParameters {
             tileID: tile_id,
             mode: MapMode::Continuous,
             pixelRatio: 1.0,

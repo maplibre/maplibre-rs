@@ -26,6 +26,12 @@ use crate::{
 
 pub struct CollisionSystem {}
 
+impl Default for CollisionSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CollisionSystem {
     pub fn new() -> Self {
         Self {}
@@ -173,7 +179,7 @@ impl System for CollisionSystem {
                             Some(|f: &IndexedSubfeature| true), // collisionGroupPredicate
                             &mut projected_boxes,               // output
                         );
-                        if (feature.str.starts_with("Ette")) {
+                        if feature.str.starts_with("Ette") {
                             //println!("{}", feature.str);
                             //println!("{:?}", &collision_feature.boxes);
                             //println!("proj {:?}", &projected_boxes.get(0));

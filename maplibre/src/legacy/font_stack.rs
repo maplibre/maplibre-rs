@@ -20,13 +20,13 @@ impl FontStackHasher {
         for font in fontStack {
             hash_combine(&mut seed, font);
         }
-        return seed;
+        seed
     }
 }
 
 /// maplibre/maplibre-native#4add9ea original name: fontStackToString
 pub fn fontStackToString(fontStack: &FontStack) -> String {
-    return fontStack.join(",");
+    fontStack.join(",")
 }
 
 /// Statically evaluate layer properties to determine what font stacks are used.
@@ -37,7 +37,7 @@ pub fn fontStacks(layers: &Vec<StyleLayer>) -> BTreeSet<FontStack> {
         populateFontStack(layer, &mut result);
     }
 
-    return result;
+    result
 }
 
 /// maplibre/maplibre-native#4add9ea original name: populateFontStack

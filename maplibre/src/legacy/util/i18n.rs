@@ -6,7 +6,7 @@ use crate::legacy::bidi::Char16;
 
 /// maplibre/maplibre-native#4add9ea original name: allowsWordBreaking
 pub fn allowsWordBreaking(chr: Char16) -> bool {
-    return (chr == 0x0a      /* newline */
+    chr == 0x0a      /* newline */
         || chr == 0x20   /* space */
         || chr == 0x26   /* ampersand */
         || chr == 0x28   /* open parenthesis */
@@ -18,7 +18,7 @@ pub fn allowsWordBreaking(chr: Char16) -> bool {
         || chr == 0xb7   /* middle dot */
         || chr == 0x200b /* zero-width space */
         || chr == 0x2010 /* hyphen */
-        || chr == 0x2013/* en dash */);
+        || chr == 0x2013
 }
 
 /// maplibre/maplibre-native#4add9ea original name: charAllowsLetterSpacing
@@ -79,7 +79,7 @@ pub fn hasNeutralVerticalOrientation(chr: Char16) -> bool {
 
 /// maplibre/maplibre-native#4add9ea original name: hasRotatedVerticalOrientation
 pub fn hasRotatedVerticalOrientation(chr: Char16) -> bool {
-    return !(hasUprightVerticalOrientation(chr) || hasNeutralVerticalOrientation(chr));
+    !(hasUprightVerticalOrientation(chr) || hasNeutralVerticalOrientation(chr))
 }
 
 // Replaces "horizontal" with "vertical" punctuation in place
@@ -107,16 +107,16 @@ pub fn charInSupportedScript(chr: Char16) -> bool {
 pub fn isStringInSupportedScript(input: &str) -> bool {
     let u16string = U16String::from(input); // TODO: verify if this is correct
     for chr in u16string.as_slice() {
-        if (!charInSupportedScript(*chr)) {
+        if !charInSupportedScript(*chr) {
             return false;
         }
     }
-    return true;
+    true
 }
 
 /// maplibre/maplibre-native#4add9ea original name: isCharInComplexShapingScript
 pub fn isCharInComplexShapingScript(chr: Char16) -> bool {
-    return false;
+    false
 }
 
 pub const BACKSLACK_V: Char16 = '\u{000B}' as Char16;
@@ -125,10 +125,10 @@ pub const BACKSLACK_F: Char16 = '\u{000C}' as Char16;
 /// maplibre/maplibre-native#4add9ea original name: isWhitespace
 pub fn isWhitespace(chr: Char16) -> bool {
     // TODO verify that his is correct \v and \f where not available
-    return chr == ' ' as Char16
+    chr == ' ' as Char16
         || chr == '\t' as Char16
         || chr == '\n' as Char16
         || chr == BACKSLACK_V
         || chr == BACKSLACK_F
-        || chr == '\r' as Char16;
+        || chr == '\r' as Char16
 }

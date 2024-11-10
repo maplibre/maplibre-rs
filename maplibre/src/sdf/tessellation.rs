@@ -83,7 +83,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> TextTesse
                 self.glyphs
                     .glyphs
                     .get(&c)
-                    .map(|glyph| StringGlyph::Glyph(glyph))
+                    .map(StringGlyph::Glyph)
                     .unwrap_or_else(|| StringGlyph::Char(c))
             })
             .collect::<Vec<_>>()
@@ -155,7 +155,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> GeomProce
     for TextTessellator<I>
 {
     fn xy(&mut self, x: f64, y: f64, _idx: usize) -> GeoResult<()> {
-        if let Some(_) = self.current_origin {
+        if self.current_origin.is_some() {
             //FIXME
             unreachable!("Text labels have only a single origin point")
         } else {

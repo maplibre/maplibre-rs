@@ -74,7 +74,7 @@ pub fn resource_system(
             let (width, height) = glyphs.get_texture_dimensions();
 
             let texture = device.create_texture_with_data(
-                &queue,
+                queue,
                 &wgpu::TextureDescriptor {
                     label: Some("Glyph Texture"),
                     size: wgpu::Extent3d {

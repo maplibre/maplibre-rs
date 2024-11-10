@@ -66,14 +66,14 @@ const viewportPaddingForStaticTiles: f64 = 1024.;
 
 /// maplibre/maplibre-native#4add9ea original name: findViewportPadding
 fn findViewportPadding(transformState: &TransformState, mapMode: MapMode) -> f64 {
-    if (mapMode == MapMode::Tile) {
+    if mapMode == MapMode::Tile {
         return viewportPaddingForStaticTiles;
     }
-    return if (transformState.camera().get_pitch().0 != 0.0) {
+    if transformState.camera().get_pitch().0 != 0.0 {
         viewportPaddingDefault * 2.
     } else {
         viewportPaddingDefault
-    };
+    }
 }
 
 /// maplibre/maplibre-native#4add9ea original name: CollisionGrid
@@ -97,7 +97,7 @@ impl CollisionIndex {
         let viewportPadding = findViewportPadding(transformState, mapMode);
         Self {
             transformState: transformState.clone(),
-            viewportPadding: viewportPadding,
+            viewportPadding,
             collisionGrid: CollisionGrid::new(
                 transformState.width() + 2. * viewportPadding,
                 transformState.height() + 2. * viewportPadding,
@@ -141,25 +141,25 @@ impl CollisionIndex {
 
         // Check left border
         let mut minSectionLength = ((tileX1 - x1).min(x2 - tileX1)) as i32;
-        if (minSectionLength <= 0) {
+        if minSectionLength <= 0 {
             // Check right border
             minSectionLength = ((tileX2 - x1).min(x2 - tileX2)) as i32;
         }
-        if (minSectionLength > 0) {
+        if minSectionLength > 0 {
             result.flags |= IntersectStatusFlags::VerticalBorders;
             result.minSectionLength = minSectionLength;
         }
         // Check top border
         minSectionLength = ((tileY1 - y1).min(y2 - tileY1)) as i32;
-        if (minSectionLength <= 0) {
+        if minSectionLength <= 0 {
             // Check bottom border
             minSectionLength = ((tileY2 - y1).min(y2 - tileY2)) as i32;
         }
-        if (minSectionLength > 0) {
+        if minSectionLength > 0 {
             result.flags |= IntersectStatusFlags::HorizontalBorders;
             result.minSectionLength = (result.minSectionLength).min(minSectionLength);
         }
-        return result;
+        result
     }
 
     /// maplibre/maplibre-native#4add9ea original name: placeFeature
@@ -184,7 +184,7 @@ impl CollisionIndex {
         F: Fn(&IndexedSubfeature) -> bool,
     {
         assert!(projectedBoxes.is_empty());
-        if (!feature.alongLine) {
+        if !feature.alongLine {
             let box_ = feature.boxes.first().unwrap();
             let collisionBoundaries =
                 self.getProjectedCollisionBoundaries(posMatrix, shift, textPixelRatio, box_);
@@ -206,9 +206,9 @@ impl CollisionIndex {
                 return (false, false);
             }
 
-            return (true, self.isOffscreen(&collisionBoundaries));
+            (true, self.isOffscreen(&collisionBoundaries))
         } else {
-            return self.placeLineFeature(
+            self.placeLineFeature(
                 feature,
                 posMatrix,
                 labelPlaneMatrix,
@@ -222,7 +222,7 @@ impl CollisionIndex {
                 avoidEdges,
                 collisionGroupPredicate,
                 projectedBoxes,
-            );
+            )
         }
     }
 
@@ -235,13 +235,13 @@ impl CollisionIndex {
         bucketInstanceId: u32,
         collisionGroupId: u16,
     ) {
-        if (feature.alongLine) {
+        if feature.alongLine {
             for circle in projectedBoxes {
-                if (!circle.isCircle()) {
+                if !circle.isCircle() {
                     continue;
                 }
 
-                if (ignorePlacement) {
+                if ignorePlacement {
                     self.ignoredGrid.insert_circle(
                         IndexedSubfeature::new(
                             feature.indexedFeature.clone(),
@@ -261,11 +261,11 @@ impl CollisionIndex {
                     );
                 }
             }
-        } else if (!projectedBoxes.is_empty()) {
+        } else if !projectedBoxes.is_empty() {
             assert!(projectedBoxes.len() == 1);
             let box_ = projectedBoxes[0];
             // TODO assert!(box_.isBox());
-            if (ignorePlacement) {
+            if ignorePlacement {
                 self.ignoredGrid.insert(
                     IndexedSubfeature::new(
                         feature.indexedFeature,
@@ -300,37 +300,37 @@ impl CollisionIndex {
         let topLeft = self.projectPoint(posMatrix, &Point2D::zero());
         let bottomRight = self.projectPoint(posMatrix, &Point2D::new(EXTENT, EXTENT)); // FIXME: maplibre-native uses here 8192 for extent
 
-        return CollisionBoundaries::new(
+        CollisionBoundaries::new(
             Point2D::new(topLeft.x, topLeft.y),
             Point2D::new(bottomRight.x, bottomRight.y),
-        );
+        )
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getTransformState
     pub fn getTransformState(&self) -> &TransformState {
-        return &self.transformState;
+        &self.transformState
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getViewportPadding
     pub fn getViewportPadding(&self) -> f64 {
-        return self.viewportPadding;
+        self.viewportPadding
     }
 }
 
 impl CollisionIndex {
     /// maplibre/maplibre-native#4add9ea original name: isOffscreen
     fn isOffscreen(&self, boundaries: &CollisionBoundaries) -> bool {
-        return boundaries.max.x < self.viewportPadding
+        boundaries.max.x < self.viewportPadding
             || boundaries.min.x >= self.screenRightBoundary
             || boundaries.max.y < self.viewportPadding
-            || boundaries.min.y >= self.screenBottomBoundary;
+            || boundaries.min.y >= self.screenBottomBoundary
     }
     /// maplibre/maplibre-native#4add9ea original name: isInsideGrid
     fn isInsideGrid(&self, boundaries: &CollisionBoundaries) -> bool {
-        return boundaries.max.x >= 0.
+        boundaries.max.x >= 0.
             && boundaries.min.x < self.gridRightBoundary
             && boundaries.max.y >= 0.
-            && boundaries.min.y < self.gridBottomBoundary;
+            && boundaries.min.y < self.gridBottomBoundary
     }
 
     /// maplibre/maplibre-native#4add9ea original name: isInsideTile
@@ -339,10 +339,10 @@ impl CollisionIndex {
         boundaries: &CollisionBoundaries,
         tileBoundaries: &CollisionBoundaries,
     ) -> bool {
-        return boundaries.min.x >= tileBoundaries.min.x
+        boundaries.min.x >= tileBoundaries.min.x
             && boundaries.min.y >= tileBoundaries.min.y
             && boundaries.max.x < tileBoundaries.max.x
-            && boundaries.max.y < tileBoundaries.max.y;
+            && boundaries.max.y < tileBoundaries.max.y
     }
 
     /// maplibre/maplibre-native#4add9ea original name: overlapsTile
@@ -351,10 +351,10 @@ impl CollisionIndex {
         boundaries: &CollisionBoundaries,
         tileBoundaries: &CollisionBoundaries,
     ) -> bool {
-        return boundaries.min.x < tileBoundaries.max.x
+        boundaries.min.x < tileBoundaries.max.x
             && boundaries.max.x > tileBoundaries.min.x
             && boundaries.min.y < tileBoundaries.max.y
-            && boundaries.max.y > tileBoundaries.min.y;
+            && boundaries.max.y > tileBoundaries.min.y
     }
 
     /// maplibre/maplibre-native#4add9ea original name: placeLineFeature
@@ -434,9 +434,9 @@ impl CollisionIndex {
         for i in 0..feature.boxes.len() {
             let circle = feature.boxes[i];
             let boxSignedDistanceFromAnchor = circle.signedDistanceFromAnchor;
-            if (firstAndLastGlyph.is_none()
+            if firstAndLastGlyph.is_none()
                 || (boxSignedDistanceFromAnchor < -firstTileDistance)
-                || (boxSignedDistanceFromAnchor > lastTileDistance))
+                || (boxSignedDistanceFromAnchor > lastTileDistance)
             {
                 // The label either doesn't fit on its line or we
                 // don't need to use this circle because the label
@@ -449,7 +449,7 @@ impl CollisionIndex {
             let tileUnitRadius = (circle.x2 - circle.x1) / 2.;
             let radius = tileUnitRadius * tileToViewport;
 
-            if (previousCirclePlaced) {
+            if previousCirclePlaced {
                 let previousCircle = &projectedBoxes[i - 1];
                 assert!(previousCircle.isCircle());
                 let previousCenter = previousCircle.circle().center;
@@ -464,13 +464,13 @@ impl CollisionIndex {
                 //  performance win, and the small gaps introduced don't make a very
                 //  noticeable difference.
                 let placedTooDensely = radius * radius * 2. > dx * dx + dy * dy;
-                if (placedTooDensely) {
+                if placedTooDensely {
                     let atLeastOneMoreCircle = (i + 1) < feature.boxes.len();
-                    if (atLeastOneMoreCircle) {
+                    if atLeastOneMoreCircle {
                         let nextCircle = feature.boxes[i + 1];
                         let nextBoxDistanceFromAnchor = nextCircle.signedDistanceFromAnchor;
-                        if ((nextBoxDistanceFromAnchor > -firstTileDistance)
-                            && (nextBoxDistanceFromAnchor < lastTileDistance))
+                        if (nextBoxDistanceFromAnchor > -firstTileDistance)
+                            && (nextBoxDistanceFromAnchor < lastTileDistance)
                         {
                             // Hide significantly overlapping circles, unless this
                             // is the last one we can use, in which case we want to
@@ -499,8 +499,8 @@ impl CollisionIndex {
             inGrid |= self.isInsideGrid(&collisionBoundaries);
 
             if let Some(avoidEdges) = avoidEdges {
-                if (!self.isInsideTile(&collisionBoundaries, &avoidEdges)) {
-                    if (!collisionDebug) {
+                if !self.isInsideTile(&collisionBoundaries, &avoidEdges) {
+                    if !collisionDebug {
                         return (false, false);
                     } else {
                         // Don't early exit if we're showing the debug circles because
@@ -510,12 +510,12 @@ impl CollisionIndex {
                 }
             }
 
-            if (!allowOverlap
+            if !allowOverlap
                 && self
                     .collisionGrid
-                    .hit_test_circle(projectedBoxes[i].circle(), collisionGroupPredicate.as_ref()))
+                    .hit_test_circle(projectedBoxes[i].circle(), collisionGroupPredicate.as_ref())
             {
-                if (!collisionDebug) {
+                if !collisionDebug {
                     return (false, false);
                 } else {
                     // Don't early exit if we're showing the debug circles because
@@ -525,10 +525,10 @@ impl CollisionIndex {
             }
         }
 
-        return (
+        (
             !collisionDetected && firstAndLastGlyph.is_some() && inGrid,
             entirelyOffscreen,
-        );
+        )
     }
 
     /// maplibre/maplibre-native#4add9ea original name: approximateTileDistance
@@ -561,9 +561,9 @@ impl CollisionIndex {
             cameraToAnchorDistance / self.pitchFactor
         };
         let lastSegmentTile = tileDistance.lastSegmentViewportDistance * pixelsToTileUnits;
-        return tileDistance.prevTileDistance
+        tileDistance.prevTileDistance
             + lastSegmentTile
-            + (incidenceStretch - 1.) * lastSegmentTile * lastSegmentAngle.sin().abs();
+            + (incidenceStretch - 1.) * lastSegmentTile * lastSegmentAngle.sin().abs()
     }
 
     /// maplibre/maplibre-native#4add9ea original name: projectAnchor
@@ -574,10 +574,10 @@ impl CollisionIndex {
     ) -> (f64, f64) {
         let p = Vector4::new(point.x, point.y, 0., 1.);
         let p = posMatrix.project(p); // TODO verify multiplication
-        return (
+        (
             0.5 + 0.5 * (self.transformState.camera_to_center_distance() / p[3]),
             p[3],
-        );
+        )
     }
     /// maplibre/maplibre-native#4add9ea original name: projectAndGetPerspectiveRatio
     fn projectAndGetPerspectiveRatio(
@@ -590,7 +590,7 @@ impl CollisionIndex {
         let width = self.transformState.width();
         let height = self.transformState.height();
         let ccd = self.transformState.camera_to_center_distance();
-        return (
+        (
             Point2D::new(
                 ((p[0] / p[3] + 1.) / 2.) * width + self.viewportPadding,
                 ((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding,
@@ -599,7 +599,7 @@ impl CollisionIndex {
             // We're doing collision detection in viewport space so we need
             // to scale down boxes in the distance
             0.5 + 0.5 * ccd / p[3],
-        );
+        )
     }
     /// maplibre/maplibre-native#4add9ea original name: projectPoint
     fn projectPoint(
@@ -611,10 +611,10 @@ impl CollisionIndex {
         let p = posMatrix.project(p); // TODO verify multiplication
         let width = self.transformState.width();
         let height = self.transformState.height();
-        return Point2D::new(
-            (((p[0] / p[3] + 1.) / 2.) * width + self.viewportPadding),
-            (((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding),
-        );
+        Point2D::new(
+            ((p[0] / p[3] + 1.) / 2.) * width + self.viewportPadding,
+            ((-p[1] / p[3] + 1.) / 2.) * height + self.viewportPadding,
+        )
     }
 
     /// maplibre/maplibre-native#4add9ea original name: getProjectedCollisionBoundaries
@@ -629,7 +629,7 @@ impl CollisionIndex {
             self.projectAndGetPerspectiveRatio(posMatrix, &box_.anchor);
         let tileToViewport = textPixelRatio * tileToViewport;
         let tileToViewport = 1.; // TODO
-        return CollisionBoundaries::new(
+        CollisionBoundaries::new(
             Point2D::new(
                 (box_.x1 + shift.x) * tileToViewport + projectedPoint.x,
                 (box_.y1 + shift.y) * tileToViewport + projectedPoint.y,
@@ -638,6 +638,6 @@ impl CollisionIndex {
                 (box_.x2 + shift.x) * tileToViewport + projectedPoint.x,
                 (box_.y2 + shift.y) * tileToViewport + projectedPoint.y,
             ),
-        );
+        )
     }
 }

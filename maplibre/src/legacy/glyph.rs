@@ -28,14 +28,14 @@ pub type GlyphIDs = BTreeSet<GlyphID>;
 /// maplibre/maplibre-native#4add9ea original name: getGlyphRange
 pub fn getGlyphRange(glyph: GlyphID) -> GlyphRange {
     let mut start: u16 = (glyph / 256) * 256;
-    let mut end = (start + 255);
-    if (start > 65280) {
+    let mut end = start + 255;
+    if start > 65280 {
         start = 65280;
     }
-    if (end > 65535) {
+    if end > 65535 {
         end = 65535;
     }
-    return start..end;
+    start..end
 }
 
 /// maplibre/maplibre-native#4add9ea original name: GlyphMetrics

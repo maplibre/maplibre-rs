@@ -54,6 +54,6 @@ pub struct OverscaledTileID {
 impl OverscaledTileID {
     /// maplibre/maplibre-native#4add9ea original name: overscaleFactor
     pub fn overscaleFactor(&self) -> u32 {
-        return 1 << (self.overscaledZ - self.canonical.z);
+        1 << (self.overscaledZ - self.canonical.z)
     }
 }
