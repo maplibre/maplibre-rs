@@ -1,8 +1,4 @@
-use std::{
-    borrow::Cow,
-    collections::{HashSet},
-    marker::PhantomData,
-};
+use std::{borrow::Cow, collections::HashSet, marker::PhantomData};
 
 use geozero::{
     mvt::{tile, Message},
@@ -20,7 +16,7 @@ use crate::{
         shaders::{ShaderSymbolVertex, ShaderSymbolVertexNew},
         ShaderVertex,
     },
-    sdf::{tessellation::TextTessellator, Feature},
+    sdf::{tessellation::TextTessellator, tessellation_new::TextTessellatorNew, Feature},
     style::layer::{LayerPaint, StyleLayer},
     vector::{
         tessellation::{IndexDataType, OverAlignedVertexBuffer, ZeroTessellator},
@@ -30,7 +26,6 @@ use crate::{
         },
     },
 };
-use crate::sdf::tessellation_new::TextTessellatorNew;
 
 #[derive(Error, Debug)]
 pub enum ProcessVectorError {
@@ -214,7 +209,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
         layer_data: tile::Layer,
     ) -> Result<(), ProcessVectorError> {
         self.context
-            .send(T::SymbolLayerTessellated::build_from(
+            .send_back(T::SymbolLayerTessellated::build_from(
                 *coords, buffer, new_buffer, features, layer_data,
             ))
             .map_err(|e| ProcessVectorError::SendError(e))

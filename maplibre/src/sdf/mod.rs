@@ -38,9 +38,9 @@ mod resource;
 mod resource_system;
 mod upload_system;
 
-pub mod text;
 pub mod tessellation;
 pub mod tessellation_new;
+pub mod text;
 
 struct SymbolPipeline(wgpu::RenderPipeline);
 

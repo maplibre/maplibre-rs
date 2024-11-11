@@ -8,13 +8,14 @@ use geozero::{
 };
 use lyon::{
     geom::euclid::{Box2D, Point2D},
-    tessellation::{VertexBuffers},
+    tessellation::VertexBuffers,
 };
 
 use crate::{
     euclid::{Rect, Size2D},
     legacy::{
         bidi::Char16,
+        buckets::symbol_bucket::SymbolBucketBuffer,
         font_stack::FontStackHasher,
         geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer},
         glyph::{Glyph, GlyphDependencies, GlyphMap, GlyphMetrics, Glyphs},
@@ -27,15 +28,12 @@ use crate::{
             symbol_layout::{FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout},
         },
         style_types::SymbolLayoutProperties_Unevaluated,
+        tagged_string::SectionOptions,
         CanonicalTileID, MapMode, OverscaledTileID, TileSpace,
     },
     render::shaders::ShaderSymbolVertexNew,
-    sdf::Feature,
+    sdf::{tessellation::IndexDataType, text::GlyphSet, Feature},
 };
-use crate::legacy::buckets::symbol_bucket::SymbolBucketBuffer;
-use crate::legacy::tagged_string::SectionOptions;
-use crate::sdf::tessellation::IndexDataType;
-use crate::sdf::text::GlyphSet;
 
 type GeoResult<T> = geozero::error::Result<T>;
 
@@ -83,9 +81,7 @@ impl TextTessellatorNew {
             name: layer_name.clone(),
             features: vec![SymbolGeometryTileFeature::new(Box::new(
                 VectorGeometryTileFeature {
-                    geometry: vec![GeometryCoordinates(vec![Point2D::new(
-                        512, 512,
-                    )])],
+                    geometry: vec![GeometryCoordinates(vec![Point2D::new(512, 512)])],
                 },
             ))],
         };
@@ -98,8 +94,8 @@ impl TextTessellatorNew {
 
         let image_positions = ImagePositions::new();
 
-        let glyph_map = GlyphPositionMap::from_iter(glyphs.glyphs.iter().map(
-            |(unicode_point, glyph)| {
+        let glyph_map =
+            GlyphPositionMap::from_iter(glyphs.glyphs.iter().map(|(unicode_point, glyph)| {
                 (
                     *unicode_point as Char16,
                     GlyphPosition {
@@ -122,32 +118,29 @@ impl TextTessellatorNew {
                         },
                     },
                 )
-            },
-        ));
+            }));
 
         let glyph_positions: GlyphPositions =
             GlyphPositions::from([(FontStackHasher::new(&font_stack), glyph_map)]);
 
         let glyphs: GlyphMap = GlyphMap::from([(
             FontStackHasher::new(&font_stack),
-            Glyphs::from_iter(glyphs.glyphs.iter().map(
-                |(unicode_point, glyph)| {
-                    (
-                        *unicode_point as Char16,
-                        Some(Glyph {
-                            id: *unicode_point as Char16,
-                            bitmap: Default::default(),
-                            metrics: GlyphMetrics {
-                                width: glyph.width,
-                                height: glyph.height,
-                                left: glyph.left_bearing,
-                                top: glyph.top_bearing,
-                                advance: glyph.h_advance,
-                            },
-                        }),
-                    )
-                },
-            )),
+            Glyphs::from_iter(glyphs.glyphs.iter().map(|(unicode_point, glyph)| {
+                (
+                    *unicode_point as Char16,
+                    Some(Glyph {
+                        id: *unicode_point as Char16,
+                        bitmap: Default::default(),
+                        metrics: GlyphMetrics {
+                            width: glyph.width,
+                            height: glyph.height,
+                            left: glyph.left_bearing,
+                            top: glyph.top_bearing,
+                            advance: glyph.h_advance,
+                        },
+                    }),
+                )
+            })),
         )]);
 
         let mut layout = SymbolLayout::new(
@@ -161,7 +154,7 @@ impl TextTessellatorNew {
                 available_images: &mut Default::default(),
             },
         )
-            .unwrap();
+        .unwrap();
 
         assert_eq!(glyph_dependencies.len(), 1);
 
@@ -254,9 +247,7 @@ impl GeomProcessor for TextTessellatorNew {
     }
 }
 
-impl PropertyProcessor
-    for TextTessellatorNew
-{
+impl PropertyProcessor for TextTessellatorNew {
     fn property(
         &mut self,
         _idx: usize,
@@ -276,9 +267,7 @@ impl PropertyProcessor
     }
 }
 
-impl FeatureProcessor
-    for TextTessellatorNew
-{
+impl FeatureProcessor for TextTessellatorNew {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         let geometry = self.geo_writer.take_geometry();
 
