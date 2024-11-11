@@ -1,5 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run demo (debug)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="buildProfileId" value="dev" />
     <option name="command" value="run -p maplibre-demo -- headed" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs>

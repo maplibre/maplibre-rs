@@ -47,7 +47,7 @@ impl SymbolGeometryTileFeature {
         FeatureType::Point
     }
     /// maplibre/maplibre-native#4add9ea original name: getValue
-    pub fn get_value(&self, key: &String) -> Option<&Value> {
+    pub fn get_value(&self, key: &str) -> Option<&Value> {
         todo!()
     }
     /// maplibre/maplibre-native#4add9ea original name: getProperties

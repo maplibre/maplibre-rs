@@ -8,7 +8,7 @@ use geozero::{
 };
 use lyon::{
     geom::euclid::{Box2D, Point2D},
-    tessellation::{geometry_builder::MaxIndex, VertexBuffers},
+    tessellation::{VertexBuffers},
 };
 
 use crate::{
@@ -32,15 +32,19 @@ use crate::{
     render::shaders::ShaderSymbolVertexNew,
     sdf::Feature,
 };
+use crate::legacy::buckets::symbol_bucket::SymbolBucketBuffer;
+use crate::legacy::tagged_string::SectionOptions;
+use crate::sdf::tessellation::IndexDataType;
+use crate::sdf::text::GlyphSet;
 
 type GeoResult<T> = geozero::error::Result<T>;
 
 /// Build tessellations with vectors.
-pub struct TextTessellatorNew<I> {
+pub struct TextTessellatorNew {
     geo_writer: GeoWriter,
 
     // output
-    pub quad_buffer: VertexBuffers<ShaderSymbolVertexNew, I>,
+    pub quad_buffer: VertexBuffers<ShaderSymbolVertexNew, IndexDataType>,
     pub features: Vec<Feature>,
 
     // iteration variables
@@ -49,44 +53,19 @@ pub struct TextTessellatorNew<I> {
     current_origin: Option<Box2D<f32, TileSpace>>,
 }
 
-impl<I> TextTessellatorNew<I> {
-    pub fn finish() {
+impl TextTessellatorNew {
+    pub fn finish(&mut self) {
+        let data = include_bytes!("../../../data/0-255.pbf");
+        let glyphs = GlyphSet::try_from(data.as_slice()).unwrap();
+
         let font_stack = vec![
             "Open Sans Regular".to_string(),
             "Arial Unicode MS Regular".to_string(),
         ];
 
-        // load glyph/image data
+        let layer_name = "layer".to_string();
 
-        let image_positions = ImagePositions::new();
-
-        let glyph_position = GlyphPosition {
-            rect: Rect::new(Point2D::new(0, 0), Size2D::new(10, 10)),
-            metrics: GlyphMetrics {
-                width: 18,
-                height: 18,
-                left: 2,
-                top: -8,
-                advance: 21,
-            },
-        };
-        let glyph_positions: GlyphPositions = GlyphPositions::from([(
-            FontStackHasher::new(&font_stack),
-            GlyphPositionMap::from([('中' as Char16, glyph_position)]),
-        )]);
-
-        let mut glyph = Glyph::default();
-        glyph.id = '中' as Char16;
-        glyph.metrics = glyph_position.metrics;
-
-        let glyphs: GlyphMap = GlyphMap::from([(
-            FontStackHasher::new(&font_stack),
-            Glyphs::from([('中' as Char16, Some(glyph))]),
-        )]);
-
-        let empty_image_map = ImageMap::new();
-
-        // layouting
+        let section_options = SectionOptions::new(1.0, font_stack.clone(), None);
 
         let mut glyph_dependencies = GlyphDependencies::new();
 
@@ -94,28 +73,87 @@ impl<I> TextTessellatorNew<I> {
             canonical: CanonicalTileID { x: 0, y: 0, z: 0 },
             overscaled_z: 0,
         };
-        let parameters = BucketParameters {
+        let mut parameters = BucketParameters {
             tile_id: tile_id,
             mode: MapMode::Continuous,
             pixel_ratio: 1.0,
             layer_type: LayerTypeInfo,
         };
+        let layer_data = SymbolGeometryTileLayer {
+            name: layer_name.clone(),
+            features: vec![SymbolGeometryTileFeature::new(Box::new(
+                VectorGeometryTileFeature {
+                    geometry: vec![GeometryCoordinates(vec![Point2D::new(
+                        512, 512,
+                    )])],
+                },
+            ))],
+        };
+        let layer_properties = vec![LayerProperties {
+            id: layer_name.clone(),
+            layer: SymbolLayer {
+                layout: SymbolLayoutProperties_Unevaluated,
+            },
+        }];
+
+        let image_positions = ImagePositions::new();
+
+        let glyph_map = GlyphPositionMap::from_iter(glyphs.glyphs.iter().map(
+            |(unicode_point, glyph)| {
+                (
+                    *unicode_point as Char16,
+                    GlyphPosition {
+                        rect: Rect::new(
+                            Point2D::new(
+                                glyph.tex_origin_x as u16 + 3,
+                                glyph.tex_origin_y as u16 + 3,
+                            ),
+                            Size2D::new(
+                                glyph.buffered_dimensions().0 as u16,
+                                glyph.buffered_dimensions().1 as u16,
+                            ),
+                        ), // FIXME: verify if this mapping is correct
+                        metrics: GlyphMetrics {
+                            width: glyph.width,
+                            height: glyph.height,
+                            left: glyph.left_bearing,
+                            top: glyph.top_bearing,
+                            advance: glyph.h_advance,
+                        },
+                    },
+                )
+            },
+        ));
+
+        let glyph_positions: GlyphPositions =
+            GlyphPositions::from([(FontStackHasher::new(&font_stack), glyph_map)]);
+
+        let glyphs: GlyphMap = GlyphMap::from([(
+            FontStackHasher::new(&font_stack),
+            Glyphs::from_iter(glyphs.glyphs.iter().map(
+                |(unicode_point, glyph)| {
+                    (
+                        *unicode_point as Char16,
+                        Some(Glyph {
+                            id: *unicode_point as Char16,
+                            bitmap: Default::default(),
+                            metrics: GlyphMetrics {
+                                width: glyph.width,
+                                height: glyph.height,
+                                left: glyph.left_bearing,
+                                top: glyph.top_bearing,
+                                advance: glyph.h_advance,
+                            },
+                        }),
+                    )
+                },
+            )),
+        )]);
+
         let mut layout = SymbolLayout::new(
             &parameters,
-            &vec![LayerProperties {
-                id: "layer".to_string(),
-                layer: SymbolLayer {
-                    layout: SymbolLayoutProperties_Unevaluated,
-                },
-            }],
-            Box::new(SymbolGeometryTileLayer {
-                name: "layer".to_string(),
-                features: vec![SymbolGeometryTileFeature::new(Box::new(
-                    VectorGeometryTileFeature {
-                        geometry: vec![GeometryCoordinates(vec![Point2D::new(1024, 1024)])],
-                    },
-                ))],
-            }),
+            &layer_properties,
+            Box::new(layer_data),
             &mut LayoutParameters {
                 bucket_parameters: &mut parameters.clone(),
                 glyph_dependencies: &mut glyph_dependencies,
@@ -123,8 +161,11 @@ impl<I> TextTessellatorNew<I> {
                 available_images: &mut Default::default(),
             },
         )
-        .unwrap();
+            .unwrap();
 
+        assert_eq!(glyph_dependencies.len(), 1);
+
+        let empty_image_map = ImageMap::new();
         layout.prepare_symbols(
             &glyphs,
             &glyph_positions,
@@ -141,10 +182,27 @@ impl<I> TextTessellatorNew<I> {
             false,
             &tile_id.canonical,
         );
+
+        let new_buffer = output.remove(&layer_name).unwrap();
+
+        let mut buffer = VertexBuffers::new();
+        let text_buffer = new_buffer.bucket.text;
+        let SymbolBucketBuffer {
+            shared_vertices,
+            triangles,
+            ..
+        } = text_buffer;
+        buffer.vertices = shared_vertices
+            .iter()
+            .map(|v| ShaderSymbolVertexNew::new(v))
+            .collect();
+        buffer.indices = triangles.indices.iter().map(|i| *i as u32).collect();
+
+        self.quad_buffer = buffer;
     }
 }
 
-impl<I> Default for TextTessellatorNew<I> {
+impl Default for TextTessellatorNew {
     fn default() -> Self {
         Self {
             geo_writer: Default::default(),
@@ -157,7 +215,7 @@ impl<I> Default for TextTessellatorNew<I> {
     }
 }
 
-impl<I> GeomProcessor for TextTessellatorNew<I> {
+impl GeomProcessor for TextTessellatorNew {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> GeoResult<()> {
         self.geo_writer.xy(x, y, idx)
     }
@@ -196,8 +254,8 @@ impl<I> GeomProcessor for TextTessellatorNew<I> {
     }
 }
 
-impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyProcessor
-    for TextTessellatorNew<I>
+impl PropertyProcessor
+    for TextTessellatorNew
 {
     fn property(
         &mut self,
@@ -218,8 +276,8 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> PropertyP
     }
 }
 
-impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeatureProcessor
-    for TextTessellatorNew<I>
+impl FeatureProcessor
+    for TextTessellatorNew
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         let geometry = self.geo_writer.take_geometry();

@@ -701,8 +701,6 @@ fn shape_lines(
                     rect = glyph_position.rect;
                     metrics = glyph_position.metrics;
                 } else {
-                    // TODO why would a glyph position not be available but a glyph? Maybe if a glyph bitmap is empty?
-                    unreachable!();
                     let glyphs = glyph_map.get(&section.font_stack_hash);
                     if glyphs.is_none() {
                         continue;

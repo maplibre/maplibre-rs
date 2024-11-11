@@ -1015,7 +1015,7 @@ pub mod expression {
             // TODO remove
             Formatted {
                 sections: vec![FormattedSection {
-                    text: "AllerAnfangistschwer".to_string(),
+                    text: "Aller Anfang ist schwer".to_string(),
                     image: None,
                     font_scale: None,
                     font_stack: None,
@@ -1147,6 +1147,9 @@ impl SymbolLayoutProperties_PossiblyEvaluated {
         p2: CanonicalTileID,
     ) -> T::Type {
         //todo!()
+
+        //p1.get_value(&T::name());
+
         T::default_value()
     }
 
