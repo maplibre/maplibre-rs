@@ -33,8 +33,8 @@
     <a href="https://maplibre.org/maplibre-rs/docs/api/maplibre/">
       API
     </a> |
-    <a href="https://matrix.to/#/#maplibre:matrix.org">
-      Chat in Matrix Space
+    <a href="https://slack.openstreetmap.us/">
+      Chat (#maplibre-rs)
     </a>
   </h3>
 </div>
