@@ -7,7 +7,7 @@ use std::{
 };
 
 use bytemuck_derive::{Pod, Zeroable};
-use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3};
+use cgmath::{AbsDiffEq, Matrix4, Point3, Vector3, Vector4};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -21,6 +21,9 @@ use crate::{
 pub const EXTENT_UINT: u32 = 4096;
 pub const EXTENT_SINT: i32 = EXTENT_UINT as i32;
 pub const EXTENT: f64 = EXTENT_UINT as f64;
+const TOP_LEFT_EXTENT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
+const BOTTOM_RIGHT_EXTENT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
+
 pub const TILE_SIZE: f64 = 512.0;
 pub const MAX_ZOOM: usize = 32;
 
@@ -723,24 +726,22 @@ impl Display for WorldCoords {
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{Point2, Vector4};
+    use cgmath::Point2;
 
     use crate::{
         coords::{
-            Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel, EXTENT,
+            Quadkey, TileCoords, ViewRegion, WorldCoords, WorldTileCoords, Zoom, ZoomLevel,
+            BOTTOM_RIGHT_EXTENT, TOP_LEFT_EXTENT,
         },
         render::tile_view_pattern::DEFAULT_TILE_SIZE,
         style::source::TileAddressingScheme,
         util::math::Aabb2,
     };
 
-    const TOP_LEFT: Vector4<f64> = Vector4::new(0.0, 0.0, 0.0, 1.0);
-    const BOTTOM_RIGHT: Vector4<f64> = Vector4::new(EXTENT, EXTENT, 0.0, 1.0);
-
     fn to_from_world(tile: (i32, i32, ZoomLevel), zoom: Zoom) {
         let tile = WorldTileCoords::from(tile);
-        let p1 = tile.transform_for_zoom(zoom) * TOP_LEFT;
-        let p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT;
+        let p1 = tile.transform_for_zoom(zoom) * TOP_LEFT_EXTENT;
+        let p2 = tile.transform_for_zoom(zoom) * BOTTOM_RIGHT_EXTENT;
         println!("{p1:?}\n{p2:?}");
 
         assert_eq!(
