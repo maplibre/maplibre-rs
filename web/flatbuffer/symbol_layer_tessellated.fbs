@@ -1,0 +1,21 @@
+include "basic.fbs";
+
+struct FlatSymbolVertex {
+    position: [float:3];
+    text_anchor: [float:3];
+    tex_coords: [float:2];
+    color: [ubyte:4];
+    is_glyph: uint;
+}
+
+table FlatSymbolLayerTessellated {
+    coords: FlatWorldTileCoords;
+    layer_name: string;
+    vertices: [FlatSymbolVertex];
+    indices: [uint];
+    usable_indices: uint;
+    // Holds for each feature the count of indices.
+    feature_indices: [uint];
+}
+
+root_type FlatSymbolLayerTessellated;

@@ -164,7 +164,7 @@ impl<ET: 'static + PartialEq + Debug> EventLoop<ET> for WinitEventLoop<ET> {
                                         }
                                     }
                                 }
-                                WindowEvent::ScaleFactorChanged { inner_size_writer, scale_factor: new_scale_factor } => {
+                                WindowEvent::ScaleFactorChanged { inner_size_writer: _, scale_factor: new_scale_factor } => {
                                     if let Ok(map_context) =  map.context_mut() {
                                         log::info!("New scaling factor: {}", new_scale_factor);
                                         scale_factor = *new_scale_factor;
