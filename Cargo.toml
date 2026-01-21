@@ -49,6 +49,7 @@ geozero = { version = "0.13.0", default-features = false, features = ["with-mvt"
 image = { version = "0.25.2", default-features = false, features = ["jpeg", "webp", "png"] }
 include_dir = "0.7.3"
 instant = { version = "0.1.12", features = ["wasm-bindgen"] }  # TODO: Untrusted dependency
+morton-encoding = "2.0.1"
 jni = "0.21.1"
 js-sys = "0.3"
 log = "0.4.20"
