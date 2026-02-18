@@ -3,6 +3,7 @@
 #   like a script, with `./justfile test`, for example.
 
 set shell := ["bash", "--noprofile", "--norc", "-c"]
+set windows-shell := ["cmd.exe", "/c"]
 
 # Keep this in sync with `android/gradle/lib/build.gradle`
 
@@ -16,33 +17,33 @@ export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
 
 stable-toolchain:
-    rustup toolchain install $STABLE_TOOLCHAIN
+    rustup toolchain install {{ STABLE_TOOLCHAIN }}
 
 stable-override-toolchain: stable-toolchain
-    rustup override set $STABLE_TOOLCHAIN
+    rustup override set {{ STABLE_TOOLCHAIN }}
 
 stable-targets *FLAGS: stable-toolchain
-    rustup target add --toolchain $STABLE_TOOLCHAIN {{ FLAGS }}
+    rustup target add --toolchain {{ STABLE_TOOLCHAIN }} {{ FLAGS }}
 
 stable-install-clippy: stable-toolchain
-    rustup component add clippy --toolchain $STABLE_TOOLCHAIN
+    rustup component add clippy --toolchain {{ STABLE_TOOLCHAIN }}
 
 nightly-toolchain:
-    rustup toolchain install $NIGHTLY_TOOLCHAIN
+    rustup toolchain install {{ NIGHTLY_TOOLCHAIN }}
 
 nightly-override-toolchain: nightly-toolchain
-    rustup override set $NIGHTLY_TOOLCHAIN
+    rustup override set {{ NIGHTLY_TOOLCHAIN }}
 
 nightly-targets *FLAGS: nightly-toolchain
-    rustup target add --toolchain $NIGHTLY_TOOLCHAIN {{ FLAGS }}
+    rustup target add --toolchain {{ NIGHTLY_TOOLCHAIN }} {{ FLAGS }}
     # We sometimes build the stdlib with nightly
-    rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
+    rustup component add rust-src --toolchain {{ NIGHTLY_TOOLCHAIN }}
 
 nightly-install-rustfmt: nightly-toolchain
-    rustup component add rustfmt --toolchain $NIGHTLY_TOOLCHAIN
+    rustup component add rustfmt --toolchain {{ NIGHTLY_TOOLCHAIN }}
 
 nightly-install-clippy: stable-toolchain
-    rustup component add clippy --toolchain $NIGHTLY_TOOLCHAIN
+    rustup component add clippy --toolchain {{ NIGHTLY_TOOLCHAIN }}
 
 fixup: nightly-toolchain
     cargo clippy --allow-dirty --no-deps -p maplibre --fix
