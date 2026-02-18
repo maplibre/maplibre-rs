@@ -9,6 +9,7 @@ use crate::{
         shaders::Shader,
         RenderResources, Renderer,
     },
+    tcs::system::{SystemError, SystemResult},
 };
 
 pub fn resource_system(
@@ -23,12 +24,12 @@ pub fn resource_system(
             },
         ..
     }: &mut MapContext,
-) {
+) -> SystemResult {
     let Some(debug_pipeline) = world
         .resources
         .query_mut::<&mut Eventually<DebugPipeline>>()
     else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     debug_pipeline.initialize(|| {
@@ -49,9 +50,12 @@ pub fn resource_system(
             false,
             false,
             false,
+            false,
         )
         .describe_render_pipeline()
         .initialize(device);
         DebugPipeline(pipeline)
     });
+
+    Ok(())
 }

@@ -5,7 +5,7 @@ use maplibre::{
     benchmarking::io::static_tile_fetcher::StaticTileFetcher,
     coords::{TileCoords, ZoomLevel},
     io::apc::{Context, IntoMessage, SendError},
-    style::source::TileAddressingScheme,
+    style::{source::TileAddressingScheme, Style},
     vector::{
         process_vector_tile, DefaultVectorTransferables, ProcessVectorContext, VectorTileRequest,
     },
@@ -42,11 +42,7 @@ fn bench_process_vector_tile(c: &mut Criterion) {
                     coords: MUNICH_COORDS
                         .into_world_tile(TileAddressingScheme::XYZ)
                         .unwrap(),
-                    layers: HashSet::from([
-                        "transportation".to_owned(),
-                        "water".to_owned(),
-                        "building".to_owned(),
-                    ]),
+                    layers: Style::default().layers.iter().cloned().collect(),
                 },
                 &mut ProcessVectorContext::<DefaultVectorTransferables, _>::new(DummyContext),
             );

@@ -52,7 +52,8 @@ mod systems;
 // Rendering internals
 mod graph_runner;
 mod main_pass;
-pub mod shaders; // TODO: Make private
+pub mod shaders;
+mod translucent_pass; // TODO: Make private
 
 // Public API
 pub mod builder;
@@ -69,9 +70,10 @@ pub use shaders::ShaderVertex;
 
 use crate::{
     render::{
-        render_phase::{LayerItem, RenderPhase, TileMaskItem},
+        render_phase::{LayerItem, RenderPhase, TileMaskItem, TranslucentItem},
         systems::{graph_runner_system::GraphRunnerSystem, upload_system::upload_system},
         tile_view_pattern::{ViewTileSources, WgpuTileViewPattern},
+        translucent_pass::TranslucentPassNode,
     },
     window::PhysicalSize,
 };
@@ -544,6 +546,7 @@ mod draw_graph {
     // Labels for non-input nodes
     pub mod node {
         pub const MAIN_PASS: &str = "main_pass";
+        pub const TRANSLUCENT_PASS: &str = "translucent_pass";
     }
 }
 
@@ -573,11 +576,22 @@ impl<E: Environment> Plugin<E> for RenderPlugin {
         let mut draw_graph = RenderGraph::default();
         // Draw nodes
         draw_graph.add_node(draw_graph::node::MAIN_PASS, MainPassNode::new());
+        // Draw nodes
+        draw_graph.add_node(
+            draw_graph::node::TRANSLUCENT_PASS,
+            TranslucentPassNode::new(),
+        );
         // Input node
         let input_node_id = draw_graph.set_input(vec![]);
         // Edges
         draw_graph
             .add_node_edge(input_node_id, draw_graph::node::MAIN_PASS)
+            .expect("main pass or draw node does not exist");
+        draw_graph
+            .add_node_edge(
+                draw_graph::node::MAIN_PASS,
+                draw_graph::node::TRANSLUCENT_PASS,
+            )
             .expect("main pass or draw node does not exist");
 
         graph.add_sub_graph(draw_graph::NAME, draw_graph);
@@ -593,6 +607,7 @@ impl<E: Environment> Plugin<E> for RenderPlugin {
         // render graph dependency
         resources.init::<RenderPhase<LayerItem>>();
         resources.init::<RenderPhase<TileMaskItem>>();
+        resources.init::<RenderPhase<TranslucentItem>>();
         // tile_view_pattern:
         resources.insert(Eventually::<WgpuTileViewPattern>::Uninitialized);
         resources.init::<ViewTileSources>();

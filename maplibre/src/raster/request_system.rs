@@ -15,9 +15,9 @@ use crate::{
         transferables::{LayerRasterMissing, RasterTransferables},
         RasterLayersDataComponent,
     },
-    render::tile_view_pattern::DEFAULT_TILE_SIZE,
+    render::{tile_view_pattern::DEFAULT_TILE_SIZE, view_state::ViewStatePadding},
     style::layer::LayerPaint,
-    tcs::system::System,
+    tcs::system::{System, SystemResult},
 };
 
 pub struct RequestSystem<E: Environment, T: RasterTransferables> {
@@ -47,9 +47,11 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
             world,
             ..
         }: &mut MapContext,
-    ) {
-        let view_region =
-            view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
+    ) -> SystemResult {
+        let view_region = view_state.create_view_region(
+            view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
+            ViewStatePadding::Loose,
+        );
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
@@ -72,7 +74,7 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
                     world
                         .tiles
                         .spawn_mut(coords)
-                        .unwrap()
+                        .expect("unable to spawn a raster tile")
                         .insert(RasterLayersDataComponent::default());
 
                     tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
@@ -93,12 +95,14 @@ impl<E: Environment, T: RasterTransferables> System for RequestSystem<E, T> {
                                 >>::Context,
                             >,
                         )
-                        .unwrap(); // TODO: Remove unwrap
+                        .expect("unable to call APC"); // TODO: Remove unwrap
                 }
             }
         }
 
         view_state.update_references();
+
+        Ok(())
     }
 }
 pub fn fetch_raster_apc<K: OffscreenKernel, T: RasterTransferables, C: Context + Clone + Send>(

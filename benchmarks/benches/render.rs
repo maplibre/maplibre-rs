@@ -21,14 +21,19 @@ fn headless_render(c: &mut Criterion) {
                 Box::new(HeadlessPlugin::new(false)),
             ];
 
-            let map = HeadlessMap::new(style, renderer, kernel, plugins).unwrap();
+            let map = HeadlessMap::new(style.clone(), renderer, kernel, plugins).unwrap();
 
             let tile = map
                 .fetch_tile(WorldTileCoords::from((0, 0, ZoomLevel::default())))
                 .await
                 .expect("Failed to fetch!");
 
-            let tile = map.process_tile(tile, &["water"]).await;
+            let water_layer = style
+                .layers
+                .iter()
+                .find(|layer| layer.source_layer == Some("water".to_string()))
+                .expect("water layer must exist");
+            let tile = map.process_tile(tile, water_layer).await;
 
             (map, tile)
         });

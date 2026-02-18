@@ -13,7 +13,7 @@ use crate::{
         tile_view_pattern::{TileViewPattern, WgpuTileViewPattern, DEFAULT_TILE_VIEW_PATTERN_SIZE},
         MaskPipeline, Renderer,
     },
-    tcs::system::System,
+    tcs::system::{System, SystemError, SystemResult},
 };
 
 #[derive(Default)]
@@ -37,12 +37,12 @@ impl System for ResourceSystem {
             world,
             ..
         }: &mut MapContext,
-    ) {
+    ) -> SystemResult {
         let Some((tile_view_pattern, mask_pipeline)) = world.resources.query_mut::<(
             &mut Eventually<WgpuTileViewPattern>,
             &mut Eventually<MaskPipeline>,
         )>() else {
-            return;
+            return Err(SystemError::Dependencies);
         };
 
         let surface = &mut state.surface;
@@ -128,10 +128,13 @@ impl System for ResourceSystem {
                 false,
                 surface.is_multisampling_supported(settings.msaa),
                 false,
+                false,
             )
             .describe_render_pipeline()
             .initialize(device);
             MaskPipeline(pipeline)
         });
+
+        Ok(())
     }
 }

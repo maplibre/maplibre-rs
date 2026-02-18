@@ -18,7 +18,7 @@ use crate::{
     },
     style::layer::StyleLayer,
     tcs::world::World,
-    tessellation::OverAlignedVertexBuffer,
+    vector::tessellation::OverAlignedVertexBuffer,
 };
 
 // TODO: Too low values can cause a back-and-forth between unloading and loading layers

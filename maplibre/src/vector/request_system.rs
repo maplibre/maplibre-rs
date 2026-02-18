@@ -10,13 +10,14 @@ use crate::{
         source_type::{SourceType, TessellateSource},
     },
     kernel::Kernel,
-    render::tile_view_pattern::DEFAULT_TILE_SIZE,
-    style::layer::LayerPaint,
-    tcs::system::System,
+    render::{tile_view_pattern::DEFAULT_TILE_SIZE, view_state::ViewStatePadding},
+    sdf::SymbolLayersDataComponent,
+    style::layer::StyleLayer,
+    tcs::system::{System, SystemResult},
     vector::{
         process_vector::{process_vector_tile, ProcessVectorContext, VectorTileRequest},
         transferables::{LayerMissing, VectorTransferables},
-        VectorLayersDataComponent,
+        VectorLayerBucketComponent,
     },
 };
 
@@ -47,10 +48,12 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
             world,
             ..
         }: &mut MapContext,
-    ) {
+    ) -> SystemResult {
         let _tiles = &mut world.tiles;
-        let view_region =
-            view_state.create_view_region(view_state.zoom().zoom_level(DEFAULT_TILE_SIZE));
+        let view_region = view_state.create_view_region(
+            view_state.zoom().zoom_level(DEFAULT_TILE_SIZE),
+            ViewStatePadding::Loose,
+        );
 
         if view_state.did_camera_change() || view_state.did_zoom_change() {
             if let Some(view_region) = &view_region {
@@ -64,7 +67,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                     // TODO: Make tesselation depend on style? So maybe we need to request even if it exists
                     if world
                         .tiles
-                        .query::<&VectorLayersDataComponent>(coords)
+                        .query::<&VectorLayerBucketComponent>(coords)
                         .is_some()
                     {
                         continue;
@@ -74,7 +77,8 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                         .tiles
                         .spawn_mut(coords)
                         .unwrap()
-                        .insert(VectorLayersDataComponent::default());
+                        .insert(VectorLayerBucketComponent::default())
+                        .insert(SymbolLayersDataComponent::default());
 
                     tracing::event!(tracing::Level::ERROR, %coords, "tile request started: {coords}");
                     log::info!("tile request started: {coords}");
@@ -98,8 +102,7 @@ impl<E: Environment, T: VectorTransferables> System for RequestSystem<E, T> {
                 }
             }
         }
-
-        view_state.update_references();
+        Ok(())
     }
 }
 
@@ -113,23 +116,11 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
             return Err(ProcedureError::IncompatibleInput);
         };
 
-        let fill_layers: HashSet<String> = style
-            .layers
-            .iter()
-            .filter_map(|layer| {
-                if matches!(layer.paint, Some(LayerPaint::Fill(_)))
-                    || matches!(layer.paint, Some(LayerPaint::Line(_)))
-                {
-                    layer.source_layer.clone()
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let requested_layers: HashSet<StyleLayer> = style.layers.iter().cloned().collect();
 
         let client = kernel.source_client();
 
-        if !fill_layers.is_empty() {
+        if !style.layers.is_empty() {
             let context = context.clone();
             let source = SourceType::Tessellate(TessellateSource::default());
             match client.fetch(&coords, &source).await {
@@ -141,7 +132,7 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
                         &data,
                         VectorTileRequest {
                             coords,
-                            layers: fill_layers,
+                            layers: requested_layers,
                         },
                         &mut pipeline_context,
                     )
@@ -149,11 +140,11 @@ pub fn fetch_vector_apc<K: OffscreenKernel, T: VectorTransferables, C: Context +
                 }
                 Err(e) => {
                     log::error!("{e:?}");
-                    for to_load in &fill_layers {
+                    for to_load in &requested_layers {
                         context
                             .send_back(<T as VectorTransferables>::LayerMissing::build_from(
                                 coords,
-                                to_load.to_string(),
+                                to_load.id.clone(),
                             ))
                             .map_err(ProcedureError::Send)?;
                     }

@@ -2,8 +2,8 @@ use std::{ops::Deref, rc::Rc};
 
 use crate::{
     debug::{
-        cleanup_system::cleanup_system, debug_pass::DebugPassNode, queue_system::queue_system,
-        resource_system::resource_system,
+        cleanup_system::cleanup_system, debug_pass::DebugPassNode, fps_system::fps_system,
+        queue_system::queue_system, resource_system::resource_system,
     },
     environment::Environment,
     kernel::Kernel,
@@ -17,10 +17,12 @@ use crate::{
     },
     schedule::Schedule,
     tcs::world::World,
+    util::FPSMeter,
 };
 
 mod cleanup_system;
 mod debug_pass;
+mod fps_system;
 mod queue_system;
 mod render_commands;
 mod resource_system;
@@ -79,8 +81,9 @@ impl<E: Environment> Plugin<E> for DebugPlugin {
         let draw_graph = graph.get_sub_graph_mut(draw_graph::NAME).unwrap();
         draw_graph.add_node(draw_graph::node::DEBUG_PASS, DebugPassNode::new());
 
+        // FIXME: remove this dependency to translucent pass
         draw_graph
-            .add_node_edge(draw_graph::node::MAIN_PASS, draw_graph::node::DEBUG_PASS)
+            .add_node_edge("translucent_pass", draw_graph::node::DEBUG_PASS)
             .unwrap();
 
         resources.init::<RenderPhase<TileDebugItem>>();
@@ -89,5 +92,8 @@ impl<E: Environment> Plugin<E> for DebugPlugin {
         schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system);
         schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system);
         schedule.add_system_to_stage(RenderStageLabel::Cleanup, cleanup_system);
+
+        resources.insert(FPSMeter::new());
+        schedule.add_system_to_stage(RenderStageLabel::Cleanup, fps_system);
     }
 }

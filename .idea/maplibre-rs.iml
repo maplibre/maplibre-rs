@@ -1,21 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module type="CPP_MODULE" version="4">
+<module type="EMPTY_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/examples" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/libs/mbtiles/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/maplibre-build-tools/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/maplibre-style/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/maplibre-tilejson/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/maplibre/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/maplibre/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/android/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/apple/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/benchmarks/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/benchmarks/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/maplibre-build-tools/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-demo/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-winit/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/maplibre/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/web/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/docs/book" />

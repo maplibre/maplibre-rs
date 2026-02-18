@@ -8,6 +8,7 @@ use crate::{
         shaders::Shader,
         RenderResources, Renderer,
     },
+    tcs::system::{SystemError, SystemResult},
     vector::{resource::BufferPool, VectorBufferPool, VectorPipeline},
 };
 
@@ -23,18 +24,18 @@ pub fn resource_system(
             },
         ..
     }: &mut MapContext,
-) {
+) -> SystemResult {
     let Some((buffer_pool, vector_pipeline)) = world.resources.query_mut::<(
         &mut Eventually<VectorBufferPool>,
         &mut Eventually<VectorPipeline>,
     )>() else {
-        return;
+        return Err(SystemError::Dependencies);
     };
 
     buffer_pool.initialize(|| BufferPool::from_device(device));
 
     vector_pipeline.initialize(|| {
-        let tile_shader = shaders::VectorTileShader {
+        let tile_shader = shaders::FillShader {
             format: surface.surface_format(),
         };
 
@@ -49,10 +50,13 @@ pub fn resource_system(
             false,
             surface.is_multisampling_supported(settings.msaa),
             false,
+            false,
         )
         .describe_render_pipeline()
         .initialize(device);
 
         VectorPipeline(pipeline)
     });
+
+    Ok(())
 }
