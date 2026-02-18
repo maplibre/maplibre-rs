@@ -4,7 +4,7 @@ set -e
 
 printf -- '- [RFCs](rfc/0001-rfc-process.md)\n\n' > src/SUMMARY-rfc.md
 
-find ./src/rfc ! -type d -name '*.md' -print0 \
+find ./src/rfc ! -type d -name '*.md' ! -name '0001-rfc-process.md' -print0 \
   | sort -z \
   | while read -r -d '' file;
 do
