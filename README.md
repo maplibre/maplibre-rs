@@ -1,10 +1,3 @@
-> [!IMPORTANT]
-> This project is currently archived.
-> `maplibre/maplibre-rs` explored cross-platform vector map rendering in Rust using WebGPU. We’re thankful for the work and ideas that went into it.
-> If you find it useful or would like to continue or revive the project, we’d be very happy to see it live on.
->
-> => Otherwise, for a maintained Rust mapping library, consider [`maplibre/maplibre-native-rs`](https://docs.rs/maplibre_native/latest/maplibre_native/)
-
 <h1 style="text-align:center">
   <img width="350px" alt="maplibre-rs" src="./docs/logo/maplibre-rs-with-text.svg">
 </h1>
