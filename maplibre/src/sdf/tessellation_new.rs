@@ -87,10 +87,13 @@ impl TextTessellatorNew {
             .collected_features
             .iter()
             .map(|(text, x, y)| {
-                let geometry = vec![GeometryCoordinates(vec![Point2D::new(*x as i16, *y as i16)])];
-                let mut feature = SymbolGeometryTileFeature::new(Box::new(
-                    VectorGeometryTileFeature { geometry },
-                ));
+                let geometry = vec![GeometryCoordinates(vec![Point2D::new(
+                    *x as i16, *y as i16,
+                )])];
+                let mut feature =
+                    SymbolGeometryTileFeature::new(Box::new(VectorGeometryTileFeature {
+                        geometry,
+                    }));
                 let mut tagged_string = TaggedString::default();
                 tagged_string.add_text_section(
                     &apply_arabic_shaping(&U16String::from(text.as_str())),
