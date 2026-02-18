@@ -401,59 +401,66 @@ impl SymbolLayout {
             ft.index = i;
 
             if has_text {
-                let formatted = self_.layout.evaluate4::<TextField>(
-                    self_.zoom,
-                    &ft,
-                    layout_parameters.available_images,
-                    self_.canonical_id,
-                );
-                let text_transform =
-                    self_
-                        .layout
-                        .evaluate::<TextTransform>(self_.zoom, &ft, self_.canonical_id);
-                let base_font_stack =
-                    self_
-                        .layout
-                        .evaluate::<TextFont>(self_.zoom, &ft, self_.canonical_id);
+                // If formatted_text is not pre-populated (e.g. from feature data),
+                // evaluate the text expression (currently a stub returning a default value).
+                if ft.formatted_text.is_none() {
+                    let formatted = self_.layout.evaluate4::<TextField>(
+                        self_.zoom,
+                        &ft,
+                        layout_parameters.available_images,
+                        self_.canonical_id,
+                    );
+                    let text_transform =
+                        self_
+                            .layout
+                            .evaluate::<TextTransform>(self_.zoom, &ft, self_.canonical_id);
+                    let base_font_stack =
+                        self_
+                            .layout
+                            .evaluate::<TextFont>(self_.zoom, &ft, self_.canonical_id);
 
-                ft.formatted_text = Some(TaggedString::default());
-                let ft_formatted_text = ft.formatted_text.as_mut().unwrap();
-                for section in &formatted.sections {
-                    if let Some(image) = &section.image {
-                        layout_parameters
-                            .image_dependencies
-                            .insert(image.image_id.clone(), ImageType::Icon);
-                        ft_formatted_text.add_image_section(image.image_id.clone());
-                    } else {
-                        let mut u8string = section.text.clone();
-                        if text_transform == TextTransformType::Uppercase {
-                            u8string = u8string.to_uppercase();
-                        } else if text_transform == TextTransformType::Lowercase {
-                            u8string = u8string.to_lowercase();
+                    ft.formatted_text = Some(TaggedString::default());
+                    let ft_formatted_text = ft.formatted_text.as_mut().unwrap();
+                    for section in &formatted.sections {
+                        if let Some(image) = &section.image {
+                            layout_parameters
+                                .image_dependencies
+                                .insert(image.image_id.clone(), ImageType::Icon);
+                            ft_formatted_text.add_image_section(image.image_id.clone());
+                        } else {
+                            let mut u8string = section.text.clone();
+                            if text_transform == TextTransformType::Uppercase {
+                                u8string = u8string.to_uppercase();
+                            } else if text_transform == TextTransformType::Lowercase {
+                                u8string = u8string.to_lowercase();
+                            }
+
+                            // TODO seems like invalid UTF-8 can not be in a tile? if let Err(e) =
+                            ft_formatted_text.add_text_section(
+                                &apply_arabic_shaping(&U16String::from(u8string.as_str())),
+                                if let Some(font_scale) = section.font_scale {
+                                    font_scale
+                                } else {
+                                    1.0
+                                },
+                                if let Some(font_stack) = &section.font_stack {
+                                    font_stack.clone()
+                                } else {
+                                    base_font_stack.clone()
+                                },
+                                section.text_color.clone(),
+                            )
+                            //{
+                            //    log::error!("Encountered section with invalid UTF-8 in tile, source: {} z: {} x: {} y: {}", self_.sourceLayer.getName(), self_.canonicalID.z, self_.canonicalID.x, self_.canonicalID.y);
+                            //    continue; // skip section
+                            //}
                         }
-
-                        // TODO seems like invalid UTF-8 can not be in a tile? if let Err(e) =
-                        ft_formatted_text.add_text_section(
-                            &apply_arabic_shaping(&U16String::from(u8string.as_str())),
-                            if let Some(font_scale) = section.font_scale {
-                                font_scale
-                            } else {
-                                1.0
-                            },
-                            if let Some(font_stack) = &section.font_stack {
-                                font_stack.clone()
-                            } else {
-                                base_font_stack.clone()
-                            },
-                            section.text_color.clone(),
-                        )
-                        //{
-                        //    log::error!("Encountered section with invalid UTF-8 in tile, source: {} z: {} x: {} y: {}", self_.sourceLayer.getName(), self_.canonicalID.z, self_.canonicalID.x, self_.canonicalID.y);
-                        //    continue; // skip section
-                        //}
                     }
                 }
 
+                // Collect glyph dependencies using the TaggedString sections directly.
+                // Works for both pre-populated text and expression-evaluated text.
+                let ft_formatted_text = ft.formatted_text.as_mut().unwrap();
                 let can_verticalize_text = self_.layout.get::<TextRotationAlignment>()
                     == AlignmentType::Map
                     && self_.layout.get::<SymbolPlacement>() != SymbolPlacementType::Point
@@ -461,21 +468,16 @@ impl SymbolLayout {
 
                 // Loop through all characters of this text and collect unique codepoints.
                 for j in 0..ft_formatted_text.length() {
-                    let section =
-                        &formatted.sections[ft_formatted_text.get_section_index(j) as usize];
-                    if section.image.is_some() {
+                    let section_idx = ft_formatted_text.get_section_index(j) as usize;
+                    let section = ft_formatted_text.section_at(section_idx);
+                    if section.image_id.is_some() {
                         continue;
                     }
 
-                    let section_font_stack = &section.font_stack;
                     let dependencies: &mut GlyphIDs = layout_parameters
                         .glyph_dependencies
-                        .entry(if let Some(section_font_stack) = section_font_stack {
-                            section_font_stack.clone()
-                        } else {
-                            base_font_stack.clone()
-                        })
-                        .or_default(); // TODO this is different in C++, as C++ always creates the default apparently
+                        .entry(section.font_stack.clone())
+                        .or_default();
                     let code_point: Char16 = ft_formatted_text.get_char_code_at(j);
                     dependencies.insert(code_point);
                     if can_verticalize_text

@@ -10,11 +10,12 @@ use lyon::{
     geom::euclid::{Box2D, Point2D},
     tessellation::VertexBuffers,
 };
+use widestring::U16String;
 
 use crate::{
     euclid::{Rect, Size2D},
     legacy::{
-        bidi::Char16,
+        bidi::{apply_arabic_shaping, Char16},
         buckets::symbol_bucket::SymbolBucketBuffer,
         font_stack::FontStackHasher,
         geometry_tile_data::{GeometryCoordinates, SymbolGeometryTileLayer},
@@ -28,7 +29,7 @@ use crate::{
             symbol_layout::{FeatureIndex, LayerProperties, SymbolLayer, SymbolLayout},
         },
         style_types::SymbolLayoutProperties_Unevaluated,
-        tagged_string::SectionOptions,
+        tagged_string::TaggedString,
         CanonicalTileID, MapMode, OverscaledTileID, TileSpace,
     },
     render::shaders::ShaderSymbolVertexNew,
@@ -45,10 +46,14 @@ pub struct TextTessellatorNew {
     pub quad_buffer: VertexBuffers<ShaderSymbolVertexNew, IndexDataType>,
     pub features: Vec<Feature>,
 
+    // collected feature data from tile processing
+    collected_features: Vec<(String, f64, f64)>,
+
     // iteration variables
     current_index: usize,
     current_text: Option<String>,
     current_origin: Option<Box2D<f32, TileSpace>>,
+    current_point: Option<(f64, f64)>,
 }
 
 impl TextTessellatorNew {
@@ -63,8 +68,6 @@ impl TextTessellatorNew {
 
         let layer_name = "layer".to_string();
 
-        let section_options = SectionOptions::new(1.0, font_stack.clone(), None);
-
         let mut glyph_dependencies = GlyphDependencies::new();
 
         let tile_id = OverscaledTileID {
@@ -77,13 +80,36 @@ impl TextTessellatorNew {
             pixel_ratio: 1.0,
             layer_type: LayerTypeInfo,
         };
+
+        // Build SymbolGeometryTileFeatures from the tile data collected during processing.
+        // Pre-populate formatted_text so symbol_layout uses actual names instead of defaults.
+        let features: Vec<SymbolGeometryTileFeature> = self
+            .collected_features
+            .iter()
+            .map(|(text, x, y)| {
+                let geometry = vec![GeometryCoordinates(vec![Point2D::new(*x as i16, *y as i16)])];
+                let mut feature = SymbolGeometryTileFeature::new(Box::new(
+                    VectorGeometryTileFeature { geometry },
+                ));
+                let mut tagged_string = TaggedString::default();
+                tagged_string.add_text_section(
+                    &apply_arabic_shaping(&U16String::from(text.as_str())),
+                    1.0,
+                    font_stack.clone(),
+                    None,
+                );
+                feature.formatted_text = Some(tagged_string);
+                feature
+            })
+            .collect();
+
+        if features.is_empty() {
+            return;
+        }
+
         let layer_data = SymbolGeometryTileLayer {
             name: layer_name.clone(),
-            features: vec![SymbolGeometryTileFeature::new(Box::new(
-                VectorGeometryTileFeature {
-                    geometry: vec![GeometryCoordinates(vec![Point2D::new(512, 512)])],
-                },
-            ))],
+            features,
         };
         let layer_properties = vec![LayerProperties {
             id: layer_name.clone(),
@@ -156,8 +182,6 @@ impl TextTessellatorNew {
         )
         .unwrap();
 
-        assert_eq!(glyph_dependencies.len(), 1);
-
         let empty_image_map = ImageMap::new();
         layout.prepare_symbols(
             &glyphs,
@@ -201,15 +225,18 @@ impl Default for TextTessellatorNew {
             geo_writer: Default::default(),
             quad_buffer: VertexBuffers::new(),
             features: vec![],
+            collected_features: vec![],
             current_index: 0,
             current_text: None,
             current_origin: None,
+            current_point: None,
         }
     }
 }
 
 impl GeomProcessor for TextTessellatorNew {
     fn xy(&mut self, x: f64, y: f64, idx: usize) -> GeoResult<()> {
+        self.current_point = Some((x, y));
         self.geo_writer.xy(x, y, idx)
     }
     fn point_begin(&mut self, idx: usize) -> GeoResult<()> {
@@ -270,6 +297,14 @@ impl PropertyProcessor for TextTessellatorNew {
 impl FeatureProcessor for TextTessellatorNew {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
         let geometry = self.geo_writer.take_geometry();
+
+        // Collect features that have both a name and a point geometry
+        if let (Some(text), Some((x, y))) = (self.current_text.take(), self.current_point.take()) {
+            self.collected_features.push((text, x, y));
+        } else {
+            self.current_text = None;
+            self.current_point = None;
+        }
 
         match geometry {
             Some(Geometry::Point(_point)) => {}
