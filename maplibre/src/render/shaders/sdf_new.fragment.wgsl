@@ -20,8 +20,8 @@ var s_glyphs: sampler;
 fn main(in: VertexOutput) -> Output {
 let SDF_PX:f32 =  8.0;
 
-    let   fill_color: vec4<f32> = vec4<f32>(1.0, 0.0, 0.0, 1.0);  // highp
-    let  halo_color: vec4<f32>= vec4<f32>(0.0, 1.0, 0.0, 1.0);   // highp
+    let   fill_color: vec4<f32> = vec4<f32>(0.2, 0.2, 0.2, 1.0);  // highp
+    let  halo_color: vec4<f32>= vec4<f32>(1.0, 1.0, 1.0, 1.0);   // highp
     let   opacity: f32 = 1.0; // lowp
     let   halo_width: f32 = 1.0; // lowp
     let   halo_blur: f32 = 1.0; // lowp
