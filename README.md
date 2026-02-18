@@ -1,3 +1,14 @@
+> [!IMPORTANT]
+> This project is currently archived.
+> `maplibre/maplibre-rs` explored cross-platform vector map rendering in Rust using WebGPU. We’re thankful for the work and ideas that went into it.
+> If you find it useful or would like to continue or revive the project, we’d be very happy to see it live on.
+>
+> => Otherwise, for a maintained Rust mapping library, consider [`maplibre/maplibre-native-rs`](https://docs.rs/maplibre_native/latest/maplibre_native/)
+
+<h1 style="text-align:center">
+  <img width="350px" alt="maplibre-rs" src="./docs/logo/maplibre-rs-with-text.svg">
+</h1>
+
 <div style="text-align:center">
   <strong>Native Maps for Web, Mobile and Linux</strong>
 </div>
@@ -8,8 +19,8 @@
 <div style="text-align:center">
   <img src="https://img.shields.io/badge/stability-experimental-orange.svg?style=flat-square"
       alt="Stability" />
-  <a href="https://github.com/maxammann/maprs/actions/workflows/on_main_push.yml">
-    <img src="https://github.com/maxammann/maprs/actions/workflows/on_main_push.yml/badge.svg"
+  <a href="https://github.com/maplibre/maplibre-rs/actions/workflows/on_main_push.yml">
+    <img src="https://github.com/maplibre/maplibre-rs/actions/workflows/on_main_push.yml/badge.svg"
         alt="Build status" />
   </a>
   <a href="https://matrix.to/#/#maplibre:matrix.org">
@@ -20,17 +31,17 @@
 
 <div style="text-align:center">
   <h3>
-    <a href="https://webgl.demo.maprs.maxammann.github.io">
+    <a href="https://webgl.demo.maplibre-rs.maplibre.org">
       WebGL Demo
     </a> |
-    <a href="https://maxammann.github.io/maprs/docs/book/">
+    <a href="https://maplibre.org/maplibre-rs/docs/book/">
       Book
     </a> |
-    <a href="https://maxammann.github.io/maprs/docs/api/maplibre/">
+    <a href="https://maplibre.org/maplibre-rs/docs/api/maplibre/">
       API
     </a> |
     <a href="https://slack.openstreetmap.us/">
-      Chat (#maprs)
+      Chat (#maplibre-rs)
     </a>
   </h3>
 </div>
@@ -43,33 +54,33 @@ The Rust ecosystem is suited very well for this project.
 In the future, this project could be adopted and supported by [Maplibre](https://github.com/maplibre) to implement a
 next-gen mapping solution.
 
-📰 We recently released a paper about maprs called [maprs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
+📰 We recently released a paper about maplibre-rs called [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
 
 ## Description
 
-maprs is a portable and performant vector maps renderer. We aim to support web, mobile and desktop applications. This
+maplibre-rs is a portable and performant vector maps renderer. We aim to support web, mobile and desktop applications. This
 is achieved by the novel [WebGPU](https://www.w3.org/TR/webgpu/) specification. Plenty of native implementations are
 already implementing this specification. On the web, it is implemented by Firefox, Chrome and Safari. There are also
-standalone implementations that directly use Vulkan, OpenGL or Metal as a backend. Those backends allow maprs to run on
+standalone implementations that directly use Vulkan, OpenGL or Metal as a backend. Those backends allow maplibre-rs to run on
 mobile and desktop applications.
 
 Rust is used as a Lingua franca on all platforms. This is made possible by WebAssembly, which allows us to use Rust for
 web development.
 
-The goal of maprs is to render maps to visualize data. Right now the goal of maprs is not to replace existing
+The goal of maplibre-rs is to render maps to visualize data. Right now the goal of maplibre-rs is not to replace existing
 vector map renderers like Google Maps, Apple Maps or MapLibre. The current implementation serves as a proof-of-concept
 of the used technology stack. It is unclear whether the high-performance requirements of rendering maps using vector
 graphics are achievable using the current stack.
 
 ## Demos
 
-- [WebGL](https://webgl.demo.maprs.maxammann.github.io)
-- [WebGL with multithreading](https://webgl-multithreaded.demo.maprs.maxammann.github.io) - Does not work on Safari right now
-- [WebGPU](https://webgpu.demo.maprs.maxammann.github.io) - Only works with development versions of Safari TP, Firefox and Chrome
+- [WebGL](https://webgl.demo.maplibre-rs.maplibre.org)
+- [WebGL with multithreading](https://webgl-multithreaded.demo.maplibre-rs.maplibre.org) - Does not work on Safari right now
+- [WebGPU](https://webgpu.demo.maplibre-rs.maplibre.org) - Only works with development versions of Safari TP, Firefox and Chrome
 
 ## Current Features
 
-* Runs on Linux, Android, iOS, macOS, Firefox, Safari (>=v16 due to (#166)[https://github.com/maxammann/maprs/issues/166]) and Chrome
+* Runs on Linux, Android, iOS, macOS, Firefox, Safari (>=v16 due to (#166)[https://github.com/maplibre/maplibre-rs/issues/166]) and Chrome
 * Render a vector tile dataset
 * Simple navigation powered by winit
 * Multithreaded on all platforms
@@ -98,7 +109,7 @@ graphics are achievable using the current stack.
 Clone the project
 
 ```bash
-git clone https://github.com/maxammann/maprs.git
+git clone https://github.com/maplibre/maplibre-rs.git
 ```
 
 Build and run it on a desktop
@@ -108,7 +119,7 @@ cargo run -p maplibre-demo
 ```
 
 More information about running the demos on different platforms can be
-found [here](https://maxammann.github.io/maprs/docs/book/development-guide/how-to-run.html).
+found [here](https://maplibre.org/maplibre-rs/docs/book/development-guide/how-to-run.html).
 
 ## Rust Setup
 
@@ -126,16 +137,16 @@ dependency.
 cargo doc --open
 ```
 
-You can also view the up-to-date documentation [here](https://maxammann.github.io/maprs/docs/api/maplibre/).
+You can also view the up-to-date documentation [here](https://maplibre.org/maplibre-rs/docs/api/maplibre/).
 
 ## Book
 
-The maprs [book](https://maxammann.github.io/maprs/docs/book/) features a high-level overview over the project from a user and development perspective.
+The maplibre-rs [book](https://maplibre.org/maplibre-rs/docs/book/) features a high-level overview over the project from a user and development perspective.
 
 ## RFCs
 
-We established an RFC process which must be used to describe major changes to maprs.
-Current RFCs can be browsed in the [book](https://maxammann.github.io/maprs/docs/book/rfc/0001-rfc-process.html).
+We established an RFC process which must be used to describe major changes to maplibre-rs.
+Current RFCs can be browsed in the [book](https://maplibre.org/maplibre-rs/docs/book/rfc/0001-rfc-process.html).
 
 
 ## Citing
@@ -144,7 +155,7 @@ If you wish to cite this project in a scientific publication use the following f
 
 ```bibtex
 @article{maplibre_rs,
-	title        = {maprs: toward portable map renderers},
+	title        = {maplibre-rs: toward portable map renderers},
 	author       = {Ammann, M. and Drabble, A. and Ingensand, J. and Chapuis, B.},
 	year         = 2022,
 	journal      = {The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
@@ -157,5 +168,5 @@ If you wish to cite this project in a scientific publication use the following f
 
 ## Acknowledgements
 
-The renderer of maprs is heavily based on the renderer of [bevy](https://bevyengine.org/). Bevy's renderer was 
+The renderer of maplibre-rs is heavily based on the renderer of [bevy](https://bevyengine.org/). Bevy's renderer was 
 forked into this project in order to have a solid and generic base.
