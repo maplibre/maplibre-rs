@@ -43,7 +43,7 @@ The Rust ecosystem is suited very well for this project.
 In the future, this project could be adopted and supported by [Maplibre](https://github.com/maplibre) to implement a
 next-gen mapping solution.
 
-📰 We recently released a paper about maprs called [maprs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
+📰 We recently released a paper about maprs called [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
 
 ## Description
 
