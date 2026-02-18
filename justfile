@@ -6,12 +6,12 @@ set shell := ["bash", "--noprofile", "--norc", "-c"]
 
 # Keep this in sync with `android/gradle/lib/build.gradle`
 
-export NIGHTLY_TOOLCHAIN := "nightly-2025-03-01"
+export NIGHTLY_TOOLCHAIN := "nightly-2025-07-01"
 
 # Keep this in sync with `rust-toolchain.toml` and `Cargo.toml`.
 # Make sure the above is newer than this.
 
-export STABLE_TOOLCHAIN := "1.85"
+export STABLE_TOOLCHAIN := "1.88"
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
 
