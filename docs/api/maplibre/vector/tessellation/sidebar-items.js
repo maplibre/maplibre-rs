@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_TOLERANCE"],"struct":["OverAlignedVertexBuffer","VertexConstructor","ZeroTessellator"],"trait":["Align"],"type":["GeoResult","IndexDataType"]};

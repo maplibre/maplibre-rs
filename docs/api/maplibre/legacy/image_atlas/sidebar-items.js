@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["make_image_atlas"],"struct":["ImageAtlas","ImagePatch","ImagePosition"],"type":["ImagePositions"]};

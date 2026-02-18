@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["MAX_N_TILES","VIEW_REGION_PADDING"],"struct":["ViewState"]};
+window.SIDEBAR_ITEMS = {"constant":["MAX_N_TILES","VIEW_REGION_PADDING"],"enum":["ViewStatePadding"],"struct":["ViewState"]};

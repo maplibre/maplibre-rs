@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["convert_point_f64","convert_point_i16","deg2radf","perp","rotate"],"trait":["MinMax"]};

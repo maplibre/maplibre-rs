@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ZWSP"],"fn":["align","calculate_badness","calculate_penalty","determine_average_line_width","determine_line_breaks","evaluate_break","get_anchor_justification","get_glyph_advance","get_shaping","justify_line","least_bad_breaks","shape_lines"],"struct":["AnchorAlignment","Padding","PositionedIcon","PotentialBreak"]};

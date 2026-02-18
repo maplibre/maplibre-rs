@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"type":["Box2D","Box3D","HomogeneousVector","Length","Point2D","Point3D","Rect","RigidTransform3D","Rotation2D","Rotation3D","Scale","ScaleOffset2D","SideOffsets2D","Size2D","Size3D","Transform2D","Transform3D","Translation2D","Translation3D","Vector2D","Vector3D"]};

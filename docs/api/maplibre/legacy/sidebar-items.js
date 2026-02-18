@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MapMode"],"mod":["bidi","buckets","collision_feature","collision_index","font_stack","geometry","geometry_tile_data","glyph","glyph_atlas","glyph_range","grid_index","image","image_atlas","layout","quads","shaping","style_types","tagged_string","util"],"struct":["CanonicalTileID","OverscaledTileID","ScreenSpace","TileSpace"]};

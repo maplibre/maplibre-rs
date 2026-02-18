@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["anchor","feature_index"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["GLYPHS_PER_GLYPH_RANGE","GLYPH_RANGES_PER_FONT_STACK","NON_IDEOGRAPH_GLYPH_RANGES_PER_FONT_STACK"],"fn":["hash_glyphrange"],"type":["GlyphRange"]};

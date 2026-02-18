@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["BORDER"],"fn":["compute_stretch_sum","get_em_offset","get_glyph_quads","get_icon_quads","get_px_offset","matrix_multiply","stretch_zones_to_cuts","sum_within_range"],"struct":["Cut","SymbolQuad"],"type":["Cuts","SymbolQuads"]};

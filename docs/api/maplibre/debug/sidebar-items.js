@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["cleanup_system","debug_pass","draw_graph","queue_system","render_commands","resource_system"],"struct":["DebugPipeline","DebugPlugin","TileDebugItem"]};
+window.SIDEBAR_ITEMS = {"mod":["cleanup_system","debug_pass","draw_graph","fps_system","queue_system","render_commands","resource_system"],"struct":["DebugPipeline","DebugPlugin","TileDebugItem"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Anchor"],"mod":["sdf_glyphs"],"struct":["Glyph","GlyphSet","SymbolVertexBuilder"],"type":["UnicodePoint"]};

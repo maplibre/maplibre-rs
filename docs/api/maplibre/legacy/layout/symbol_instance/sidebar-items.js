@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_any_shaping"],"struct":["ShapedTextOrientations","SymbolContent","SymbolInstance","SymbolInstanceSharedData"],"type":["SymbolInstanceReferences"]};

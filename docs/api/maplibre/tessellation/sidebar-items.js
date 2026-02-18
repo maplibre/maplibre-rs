@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["DEFAULT_TOLERANCE"],"mod":["zero_tessellator"],"struct":["OverAlignedVertexBuffer","VertexConstructor"],"trait":["Align"],"type":["IndexDataType"]};

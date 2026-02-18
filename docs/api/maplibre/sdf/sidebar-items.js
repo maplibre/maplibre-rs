@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["collision_system","populate_world_system","queue_system","render_commands","resource","resource_system","tessellation","tessellation_new","text","upload_system"],"struct":["Feature","SdfPlugin","SymbolLayerData","SymbolLayersDataComponent","SymbolPipeline"],"type":["SymbolBufferPool"]};

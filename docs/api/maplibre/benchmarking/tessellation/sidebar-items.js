@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["zero_tessellator"],"struct":["OverAlignedVertexBuffer","VertexConstructor"],"type":["IndexDataType"]};
+window.SIDEBAR_ITEMS = {};

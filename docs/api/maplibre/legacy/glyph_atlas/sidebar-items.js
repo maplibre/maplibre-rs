@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["make_glyph_atlas"],"struct":["AlphaImage","GlyphAtlas","GlyphPosition"],"type":["GlyphPositionMap","GlyphPositions"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["function","stage"],"struct":["SystemContainer"],"trait":["IntoSystemContainer","System"],"type":["BoxedSystem"]};
+window.SIDEBAR_ITEMS = {"enum":["SystemError"],"mod":["function","stage"],"struct":["SystemContainer"],"trait":["IntoSystemContainer","System"],"type":["BoxedSystem","SystemResult"]};

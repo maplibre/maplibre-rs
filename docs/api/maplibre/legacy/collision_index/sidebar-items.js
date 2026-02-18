@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["VIEWPORT_PADDING_DEFAULT","VIEWPORT_PADDING_FOR_STATIC_TILES"],"fn":["find_viewport_padding"],"struct":["CollisionIndex","IntersectStatus","IntersectStatusFlags"],"type":["CollisionBoundaries","CollisionGrid","TransformState"]};
