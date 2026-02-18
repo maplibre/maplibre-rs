@@ -2,16 +2,16 @@
 # ^ A shebang isn't required, but allows a justfile to be executed
 #   like a script, with `./justfile test`, for example.
 
-set shell := ["bash", "-c"]
+set shell := ["bash", "--noprofile", "--norc", "-c"]
 
 # Keep this in sync with `android/gradle/lib/build.gradle`
 
-export NIGHTLY_TOOLCHAIN := "nightly-2024-07-22"
+export NIGHTLY_TOOLCHAIN := "nightly-2025-03-01"
 
 # Keep this in sync with `rust-toolchain.toml` and `Cargo.toml`.
 # Make sure the above is newer than this.
 
-export STABLE_TOOLCHAIN := "1.82"
+export STABLE_TOOLCHAIN := "1.85"
 export CARGO_TERM_COLOR := "always"
 export RUST_BACKTRACE := "1"
 
@@ -22,7 +22,7 @@ stable-override-toolchain: stable-toolchain
     rustup override set $STABLE_TOOLCHAIN
 
 stable-targets *FLAGS: stable-toolchain
-    rustup toolchain install $STABLE_TOOLCHAIN --target {{ FLAGS }}
+    rustup target add --toolchain $STABLE_TOOLCHAIN {{ FLAGS }}
 
 stable-install-clippy: stable-toolchain
     rustup component add clippy --toolchain $STABLE_TOOLCHAIN
@@ -34,7 +34,7 @@ nightly-override-toolchain: nightly-toolchain
     rustup override set $NIGHTLY_TOOLCHAIN
 
 nightly-targets *FLAGS: nightly-toolchain
-    rustup toolchain install $NIGHTLY_TOOLCHAIN --target {{ FLAGS }}
+    rustup target add --toolchain $NIGHTLY_TOOLCHAIN {{ FLAGS }}
     # We sometimes build the stdlib with nightly
     rustup component add rust-src --toolchain $NIGHTLY_TOOLCHAIN
 
