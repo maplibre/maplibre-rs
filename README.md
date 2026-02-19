@@ -39,15 +39,9 @@
   </h3>
 </div>
 
-## Project State
+## Project
 
-This project is in a proof-of-concept state. The proof of concept is done except for text rendering.
-The Rust ecosystem is suited very well for this project.
-
-In the future, this project could be adopted and supported by [Maplibre](https://github.com/maplibre) to implement a
-next-gen mapping solution.
-
-📰 We recently released a paper about maplibre-rs called [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
+This project aims to develop a MapLibre Style Spec compliant renderer in Rust, using WebGPU for cross-platform support.
 
 ## Description
 
@@ -146,3 +140,6 @@ Current RFCs can be browsed in the [book](https://maplibre.org/maplibre-rs/docs/
 
 The renderer of maplibre-rs is heavily based on the renderer of [bevy](https://bevyengine.org/). Bevy's renderer was 
 forked into this project in order to have a solid and generic base.
+
+## Articles about maplibre-rs
+📰 We recently released a paper about maplibre-rs called [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
