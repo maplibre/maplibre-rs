@@ -22,7 +22,7 @@ rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 keywords = ["graphics", "maps", "webgl", "tiles"]
 categories = ["graphics", "science::geo"]
-authors = ["Maximilian Ammann <max@maxammann.org>"]
+authors = ["MapLibre"]
 
 [workspace.dependencies]
 rand = { version = "0.8.5" }

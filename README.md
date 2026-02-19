@@ -142,23 +142,6 @@ We established an RFC process which must be used to describe major changes to ma
 Current RFCs can be browsed in the [book](https://maplibre.org/maplibre-rs/docs/book/rfc/0001-rfc-process.html).
 
 
-## Citing
-
-If you wish to cite this project in a scientific publication use the following format:
-
-```bibtex
-@article{maplibre_rs,
-	title        = {maplibre-rs: toward portable map renderers},
-	author       = {Ammann, M. and Drabble, A. and Ingensand, J. and Chapuis, B.},
-	year         = 2022,
-	journal      = {The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
-	volume       = {XLVIII-4/W1-2022},
-	pages        = {35--42},
-	doi          = {10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022},
-	url          = {https://www.int-arch-photogramm-remote-sens-spatial-inf-sci.net/XLVIII-4-W1-2022/35/2022/}
-}
-```
-
 ## Acknowledgements
 
 The renderer of maplibre-rs is heavily based on the renderer of [bevy](https://bevyengine.org/). Bevy's renderer was 
