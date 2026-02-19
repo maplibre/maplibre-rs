@@ -81,10 +81,8 @@ impl System for CollisionSystem {
                             .map(|feature| feature.indices.end)
                             .unwrap_or_default()
                     };
-                    let mut feature_metadata = vec![
-                        SDFShaderFeatureMetadata { opacity: 1.0 };
-                        metadata_count
-                    ];
+                    let mut feature_metadata =
+                        vec![SDFShaderFeatureMetadata { opacity: 1.0 }; metadata_count];
 
                     for feature in &layer.features {
                         // calculate where tile is
