@@ -151,7 +151,9 @@ impl Default for Style {
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Symbol(SymbolPaint {})),
+                    paint: Some(LayerPaint::Symbol(SymbolPaint {
+                        text_field: Some("name".to_string()),
+                    })),
                     source: None,
                     source_layer: Some("place".to_string()),
                 },
@@ -161,7 +163,9 @@ impl Default for Style {
                     maxzoom: None,
                     minzoom: None,
                     metadata: None,
-                    paint: Some(LayerPaint::Symbol(SymbolPaint {})),
+                    paint: Some(LayerPaint::Symbol(SymbolPaint {
+                        text_field: Some("name".to_string()),
+                    })),
                     source: None,
                     source_layer: Some("transportation_name-disabled".to_string()),
                 },

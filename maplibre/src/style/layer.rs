@@ -86,6 +86,9 @@ impl Default for RasterPaint {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SymbolPaint {
+    #[serde(rename = "text-field")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_field: Option<String>,
     // TODO a lot
 }
 
