@@ -72,13 +72,18 @@ impl System for CollisionSystem {
             let coords = view_tile.coords();
             if let Some(component) = world.tiles.query::<&SymbolLayersDataComponent>(coords) {
                 for layer in &component.layers {
-                    let mut feature_metadata = vec![
-                        SDFShaderFeatureMetadata::default();
+                    let metadata_count = if layer.features.is_empty() {
+                        layer.new_buffer.buffer.vertices.len()
+                    } else {
                         layer
                             .features
                             .last()
                             .map(|feature| feature.indices.end)
                             .unwrap_or_default()
+                    };
+                    let mut feature_metadata = vec![
+                        SDFShaderFeatureMetadata { opacity: 1.0 };
+                        metadata_count
                     ];
 
                     for feature in &layer.features {
@@ -195,12 +200,12 @@ impl System for CollisionSystem {
                             );
 
                             for index in feature.indices.clone() {
-                                let index = layer.buffer.buffer.indices[index] as usize;
+                                let index = layer.new_buffer.buffer.indices[index] as usize;
                                 feature_metadata[index].opacity = 1.0;
                             }
                         } else {
                             for index in feature.indices.clone() {
-                                let index = layer.buffer.buffer.indices[index] as usize;
+                                let index = layer.new_buffer.buffer.indices[index] as usize;
                                 feature_metadata[index].opacity = 0.0;
                             }
 

@@ -425,7 +425,23 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
                 .collect::<Vec<_>>(),
         );
         let indices = inner_builder.create_vector(&buffer.buffer.indices);
-        // FIXME symbol let feature_indices = inner_builder.create_vector(&feature_indices);
+
+        let new_vertices = inner_builder.create_vector(
+            &new_buffer
+                .buffer
+                .vertices
+                .iter()
+                .map(|vertex| {
+                    FlatSymbolVertexNew::new(
+                        &vertex.a_pos_offset,
+                        &vertex.a_data,
+                        &vertex.a_pixeloffset,
+                    )
+                })
+                .collect::<Vec<_>>(),
+        );
+        let new_indices = inner_builder.create_vector(&new_buffer.buffer.indices);
+
         let layer_name = inner_builder.create_string(&layer_data.name);
 
         let mut builder = FlatSymbolLayerTessellatedBuilder::new(&mut inner_builder);
@@ -438,8 +454,10 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
         builder.add_layer_name(layer_name);
         builder.add_vertices(vertices);
         builder.add_indices(indices);
-        // FIXME symbol builder.add_feature_indices(feature_indices);
         builder.add_usable_indices(buffer.usable_indices);
+        builder.add_new_vertices(new_vertices);
+        builder.add_new_indices(new_indices);
+        builder.add_new_usable_indices(new_buffer.usable_indices);
         let root = builder.finish();
 
         inner_builder.finish(root, None);
@@ -458,7 +476,7 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
 
     fn is_empty(&self) -> bool {
         let data = root_as_flat_symbol_layer_tessellated(&self.data[self.start..]).unwrap();
-        data.usable_indices() == 0
+        data.new_usable_indices() == 0
     }
 
     fn to_bucket(self) -> SymbolLayerData {
@@ -477,12 +495,36 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
 
         let indices = data.indices().unwrap();
         let usable_indices = data.usable_indices();
+
+        let new_vertices = data
+            .new_vertices()
+            .map(|v| {
+                v.iter()
+                    .map(|vertex| ShaderSymbolVertexNew {
+                        a_pos_offset: vertex.a_pos_offset().into(),
+                        a_data: vertex.a_data().into(),
+                        a_pixeloffset: vertex.a_pixeloffset().into(),
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+
+        let new_indices: Vec<u32> = data
+            .new_indices()
+            .map(|i| i.iter().collect())
+            .unwrap_or_default();
+        let new_usable_indices = data.new_usable_indices();
+
         SymbolLayerData {
             coords: LayerTessellated::coords(&self),
             source_layer: data.layer_name().unwrap().to_owned(),
             buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
-            new_buffer: OverAlignedVertexBuffer::empty(), // FIXME symbol
-            features: vec![], // previously: feature_indices FIXME symbol
+            new_buffer: OverAlignedVertexBuffer::from_iters(
+                new_vertices.into_iter(),
+                new_indices.into_iter(),
+                new_usable_indices,
+            ),
+            features: vec![],
         }
     }
 }

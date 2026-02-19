@@ -99,7 +99,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                                 coords,
                                 tessellator.quad_buffer.into(),
                                 tessellator_new.quad_buffer.into(),
-                                tessellator.features,
+                                tessellator_new.features,
                                 original_layer,
                             )?;
                         }
