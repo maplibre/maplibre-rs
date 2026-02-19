@@ -141,5 +141,5 @@ Current RFCs can be browsed in the [book](https://maplibre.org/maplibre-rs/docs/
 The renderer of maplibre-rs is heavily based on the renderer of [bevy](https://bevyengine.org/). Bevy's renderer was 
 forked into this project in order to have a solid and generic base.
 
-## Articles about maplibre-rs
-📰 We recently released a paper about maplibre-rs called [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)!
+## Articles and talks about maplibre-rs
+📰 [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)
