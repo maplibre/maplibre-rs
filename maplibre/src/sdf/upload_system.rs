@@ -101,14 +101,18 @@ fn upload_symbol_layer(
                 continue;
             };
 
-            // Assign every feature in the layer the color from the style
-            let feature_metadata = iter::repeat(SDFShaderFeatureMetadata { opacity: 0.0 })
-                .take(
-                    features
-                        .last()
-                        .map(|feature| feature.indices.end)
-                        .unwrap_or_default(),
-                )
+            // Per-vertex opacity metadata. Default to 1.0 (visible) so text renders
+            // even when collision detection features are not yet populated.
+            let metadata_count = if features.is_empty() {
+                buffer.buffer.vertices.len()
+            } else {
+                features
+                    .last()
+                    .map(|feature| feature.indices.end)
+                    .unwrap_or_default()
+            };
+            let feature_metadata = iter::repeat(SDFShaderFeatureMetadata { opacity: 1.0 })
+                .take(metadata_count)
                 .collect::<Vec<_>>();
 
             // FIXME avoid uploading empty indices

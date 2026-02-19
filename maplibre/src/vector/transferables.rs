@@ -285,7 +285,7 @@ impl SymbolLayerTessellated for crate::vector::transferables::DefaultSymbolLayer
     }
 
     fn is_empty(&self) -> bool {
-        self.buffer.usable_indices == 0
+        self.new_buffer.usable_indices == 0
     }
 
     fn to_bucket(self) -> SymbolLayerData {
