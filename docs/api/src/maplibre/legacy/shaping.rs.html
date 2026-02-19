@@ -304,7 +304,7 @@
 <a href=#304 id=304 data-nosnippet>304</a>
 <a href=#305 id=305 data-nosnippet>305</a>    <span class="kw">let </span>last_glyph = positioned_glyphs.last().unwrap();
 <a href=#306 id=306 data-nosnippet>306</a>    <span class="kw">let </span>last_advance: f64 = last_glyph.metrics.advance <span class="kw">as </span>f64 * last_glyph.scale;
-<a href=#307 id=307 data-nosnippet>307</a>    <span class="kw">let </span>line_indent = last_glyph.x + last_advance * justify;
+<a href=#307 id=307 data-nosnippet>307</a>    <span class="kw">let </span>line_indent = (last_glyph.x + last_advance) * justify;
 <a href=#308 id=308 data-nosnippet>308</a>    <span class="kw">for </span>positioned_glyph <span class="kw">in </span>positioned_glyphs {
 <a href=#309 id=309 data-nosnippet>309</a>        positioned_glyph.x -= line_indent;
 <a href=#310 id=310 data-nosnippet>310</a>        positioned_glyph.y += line_offset;
