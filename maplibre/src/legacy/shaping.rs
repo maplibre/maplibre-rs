@@ -304,7 +304,7 @@ fn justify_line(positioned_glyphs: &mut Vec<PositionedGlyph>, justify: f64, line
 
     let last_glyph = positioned_glyphs.last().unwrap();
     let last_advance: f64 = last_glyph.metrics.advance as f64 * last_glyph.scale;
-    let line_indent = last_glyph.x + last_advance * justify;
+    let line_indent = (last_glyph.x + last_advance) * justify;
     for positioned_glyph in positioned_glyphs {
         positioned_glyph.x -= line_indent;
         positioned_glyph.y += line_offset;
