@@ -8,6 +8,9 @@
       <sourceFolder url="file://$MODULE_DIR$/benchmarks/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-build-tools/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-demo/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/experiments/wgpu_for_fontrendering/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/experiments/wgpu_for_fontrendering/tests" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/experiments/wgpu_for_fontrendering/target" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre-winit/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/maplibre/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/web/src" isTestSource="false" />
