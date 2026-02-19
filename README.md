@@ -142,4 +142,4 @@ The renderer of maplibre-rs is heavily based on the renderer of [bevy](https://b
 forked into this project in order to have a solid and generic base.
 
 ## Articles and talks about maplibre-rs
-📰 [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)
+- Aug. 2022 - [maplibre-rs: toward portable map renderers](https://doi.org/10.5194/isprs-archives-XLVIII-4-W1-2022-35-2022)
