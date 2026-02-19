@@ -476,7 +476,6 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
             });
 
         let indices = data.indices().unwrap();
-        let feature_indices: Vec<u32> = data.feature_indices().unwrap().iter().collect();
         let usable_indices = data.usable_indices();
         SymbolLayerData {
             coords: LayerTessellated::coords(&self),
