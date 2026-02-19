@@ -27,9 +27,9 @@ in
     unstable.nodejs
     unstable.mdbook
     (pkgs.wasm-bindgen-cli.override {
-      version = "0.2.92"; # This needs to match the wasm-bindgen version of the web module
-      hash = "sha256-1VwY8vQy7soKEgbki4LD+v259751kKxSxmo/gqE6yV0=";
-      cargoHash = "sha256-aACJ+lYNEU8FFBs158G1/JG8sc6Rq080PeKCMnwdpH0=";
+      version = "0.2.108"; # This needs to match the wasm-bindgen version of the web module
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Run nix-shell to get correct hash
+      cargoHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Run nix-shell to get correct hash
     })
     pkgs.cargo-criterion
     unstable.nixpkgs-fmt # To format this file: nixpkgs-fmt *.nix
