@@ -42,6 +42,9 @@ type GeoResult<T> = geozero::error::Result<T>;
 pub struct TextTessellatorNew {
     geo_writer: GeoWriter,
 
+    // configuration
+    text_field: String,
+
     // output
     pub quad_buffer: VertexBuffers<ShaderSymbolVertexNew, IndexDataType>,
     pub features: Vec<Feature>,
@@ -222,10 +225,20 @@ impl TextTessellatorNew {
     }
 }
 
+impl TextTessellatorNew {
+    pub fn new(text_field: String) -> Self {
+        Self {
+            text_field,
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for TextTessellatorNew {
     fn default() -> Self {
         Self {
             geo_writer: Default::default(),
+            text_field: "name".to_string(),
             quad_buffer: VertexBuffers::new(),
             features: vec![],
             collected_features: vec![],
@@ -284,8 +297,7 @@ impl PropertyProcessor for TextTessellatorNew {
         name: &str,
         value: &ColumnValue,
     ) -> geozero::error::Result<bool> {
-        // TODO: Support different tags
-        if name == "name" {
+        if name == self.text_field {
             match value {
                 ColumnValue::String(str) => {
                     self.current_text = Some(str.to_string());

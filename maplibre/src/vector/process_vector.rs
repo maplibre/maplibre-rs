@@ -81,10 +81,13 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                             )?;
                         }
                     }
-                    LayerPaint::Symbol(_) => {
-                        // TODO
+                    LayerPaint::Symbol(symbol_paint) => {
                         let mut tessellator = TextTessellator::<IndexDataType>::default();
-                        let mut tessellator_new = TextTessellatorNew::default();
+                        let text_field = symbol_paint
+                            .text_field
+                            .clone()
+                            .unwrap_or_else(|| "name".to_string());
+                        let mut tessellator_new = TextTessellatorNew::new(text_field);
 
                         if let Err(e) = layer.process(&mut tessellator_new) {
                             context.layer_missing(coords, &source_layer)?;
