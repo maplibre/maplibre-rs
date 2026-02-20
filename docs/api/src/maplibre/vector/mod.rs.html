@@ -53,93 +53,105 @@
 <a href=#53 id=53 data-nosnippet>53</a>    </span>}
 <a href=#54 id=54 data-nosnippet>54</a>}
 <a href=#55 id=55 data-nosnippet>55</a>
-<a href=#56 id=56 data-nosnippet>56</a><span class="kw">pub type </span>VectorBufferPool = BufferPool&lt;
-<a href=#57 id=57 data-nosnippet>57</a>    wgpu::Queue,
-<a href=#58 id=58 data-nosnippet>58</a>    wgpu::Buffer,
-<a href=#59 id=59 data-nosnippet>59</a>    ShaderVertex,
-<a href=#60 id=60 data-nosnippet>60</a>    IndexDataType,
-<a href=#61 id=61 data-nosnippet>61</a>    ShaderLayerMetadata,
-<a href=#62 id=62 data-nosnippet>62</a>    FillShaderFeatureMetadata,
-<a href=#63 id=63 data-nosnippet>63</a>&gt;;
+<a href=#56 id=56 data-nosnippet>56</a><span class="kw">struct </span>LinePipeline(wgpu::RenderPipeline);
+<a href=#57 id=57 data-nosnippet>57</a><span class="kw">impl </span>Deref <span class="kw">for </span>LinePipeline {
+<a href=#58 id=58 data-nosnippet>58</a>    <span class="kw">type </span>Target = wgpu::RenderPipeline;
+<a href=#59 id=59 data-nosnippet>59</a>
+<a href=#60 id=60 data-nosnippet>60</a>    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+<a href=#61 id=61 data-nosnippet>61</a>        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
+<a href=#62 id=62 data-nosnippet>62</a>    </span>}
+<a href=#63 id=63 data-nosnippet>63</a>}
 <a href=#64 id=64 data-nosnippet>64</a>
-<a href=#65 id=65 data-nosnippet>65</a><span class="kw">pub struct </span>VectorPlugin&lt;T&gt;(PhantomData&lt;T&gt;);
-<a href=#66 id=66 data-nosnippet>66</a>
-<a href=#67 id=67 data-nosnippet>67</a><span class="kw">impl</span>&lt;T: VectorTransferables&gt; Default <span class="kw">for </span>VectorPlugin&lt;T&gt; {
-<a href=#68 id=68 data-nosnippet>68</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-<a href=#69 id=69 data-nosnippet>69</a>        <span class="self">Self</span>(Default::default())
-<a href=#70 id=70 data-nosnippet>70</a>    }
-<a href=#71 id=71 data-nosnippet>71</a>}
-<a href=#72 id=72 data-nosnippet>72</a>
-<a href=#73 id=73 data-nosnippet>73</a><span class="comment">// FIXME: Is this the correct way to do this? Ideally we want to wait until all layers are uploaded to the gpu?
-<a href=#74 id=74 data-nosnippet>74</a></span><span class="attr">#[derive(Default)]
-<a href=#75 id=75 data-nosnippet>75</a></span><span class="kw">struct </span>VectorTilesDone;
-<a href=#76 id=76 data-nosnippet>76</a>
-<a href=#77 id=77 data-nosnippet>77</a><span class="kw">impl </span>HasTile <span class="kw">for </span>VectorTilesDone {
-<a href=#78 id=78 data-nosnippet>78</a>    <span class="kw">fn </span>has_tile(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: WorldTileCoords, world: <span class="kw-2">&amp;</span>World) -&gt; bool {
-<a href=#79 id=79 data-nosnippet>79</a>        <span class="kw">let </span><span class="prelude-val">Some</span>(vector_layers_indices) = world.tiles.query::&lt;<span class="kw-2">&amp;</span>VectorLayerBucketComponent&gt;(coords)
-<a href=#80 id=80 data-nosnippet>80</a>        <span class="kw">else </span>{
-<a href=#81 id=81 data-nosnippet>81</a>            <span class="kw">return </span><span class="bool-val">false</span>;
-<a href=#82 id=82 data-nosnippet>82</a>        };
-<a href=#83 id=83 data-nosnippet>83</a>
-<a href=#84 id=84 data-nosnippet>84</a>        vector_layers_indices.done
-<a href=#85 id=85 data-nosnippet>85</a>    }
-<a href=#86 id=86 data-nosnippet>86</a>}
-<a href=#87 id=87 data-nosnippet>87</a>
-<a href=#88 id=88 data-nosnippet>88</a><span class="kw">impl</span>&lt;E: Environment, T: VectorTransferables&gt; Plugin&lt;E&gt; <span class="kw">for </span>VectorPlugin&lt;T&gt; {
-<a href=#89 id=89 data-nosnippet>89</a>    <span class="kw">fn </span>build(
-<a href=#90 id=90 data-nosnippet>90</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#91 id=91 data-nosnippet>91</a>        schedule: <span class="kw-2">&amp;mut </span>Schedule,
-<a href=#92 id=92 data-nosnippet>92</a>        kernel: Rc&lt;Kernel&lt;E&gt;&gt;,
-<a href=#93 id=93 data-nosnippet>93</a>        world: <span class="kw-2">&amp;mut </span>World,
-<a href=#94 id=94 data-nosnippet>94</a>        _graph: <span class="kw-2">&amp;mut </span>RenderGraph,
-<a href=#95 id=95 data-nosnippet>95</a>    ) {
-<a href=#96 id=96 data-nosnippet>96</a>        <span class="kw">let </span>resources = <span class="kw-2">&amp;mut </span>world.resources;
-<a href=#97 id=97 data-nosnippet>97</a>
-<a href=#98 id=98 data-nosnippet>98</a>        resources.insert(Eventually::&lt;VectorBufferPool&gt;::Uninitialized);
-<a href=#99 id=99 data-nosnippet>99</a>        resources.insert(Eventually::&lt;VectorPipeline&gt;::Uninitialized);
-<a href=#100 id=100 data-nosnippet>100</a>
-<a href=#101 id=101 data-nosnippet>101</a>        resources
-<a href=#102 id=102 data-nosnippet>102</a>            .get_or_init_mut::&lt;ViewTileSources&gt;()
-<a href=#103 id=103 data-nosnippet>103</a>            .add_resource_query::&lt;<span class="kw-2">&amp;</span>Eventually&lt;VectorBufferPool&gt;&gt;()
-<a href=#104 id=104 data-nosnippet>104</a>            .add::&lt;VectorTilesDone&gt;();
-<a href=#105 id=105 data-nosnippet>105</a>
-<a href=#106 id=106 data-nosnippet>106</a>        schedule.add_system_to_stage(
-<a href=#107 id=107 data-nosnippet>107</a>            RenderStageLabel::Extract,
-<a href=#108 id=108 data-nosnippet>108</a>            SystemContainer::new(RequestSystem::&lt;E, T&gt;::new(<span class="kw-2">&amp;</span>kernel)),
-<a href=#109 id=109 data-nosnippet>109</a>        );
-<a href=#110 id=110 data-nosnippet>110</a>        schedule.add_system_to_stage(
-<a href=#111 id=111 data-nosnippet>111</a>            RenderStageLabel::Extract,
-<a href=#112 id=112 data-nosnippet>112</a>            SystemContainer::new(PopulateWorldSystem::&lt;E, T&gt;::new(<span class="kw-2">&amp;</span>kernel)),
-<a href=#113 id=113 data-nosnippet>113</a>        );
-<a href=#114 id=114 data-nosnippet>114</a>
-<a href=#115 id=115 data-nosnippet>115</a>        schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system);
-<a href=#116 id=116 data-nosnippet>116</a>        schedule.add_system_to_stage(RenderStageLabel::Queue, upload_system); <span class="comment">// FIXME tcs: Upload updates the TileView in tileviewpattern -&gt; upload most run before prepare
-<a href=#117 id=117 data-nosnippet>117</a>        </span>schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system);
-<a href=#118 id=118 data-nosnippet>118</a>    }
-<a href=#119 id=119 data-nosnippet>119</a>}
-<a href=#120 id=120 data-nosnippet>120</a>
-<a href=#121 id=121 data-nosnippet>121</a><span class="kw">pub struct </span>AvailableVectorLayerBucket {
-<a href=#122 id=122 data-nosnippet>122</a>    <span class="kw">pub </span>coords: WorldTileCoords,
-<a href=#123 id=123 data-nosnippet>123</a>    <span class="kw">pub </span>source_layer: String,
-<a href=#124 id=124 data-nosnippet>124</a>    <span class="kw">pub </span>buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
-<a href=#125 id=125 data-nosnippet>125</a>    <span class="doccomment">/// Holds for each feature the count of indices.
-<a href=#126 id=126 data-nosnippet>126</a>    </span><span class="kw">pub </span>feature_indices: Vec&lt;u32&gt;,
-<a href=#127 id=127 data-nosnippet>127</a>}
-<a href=#128 id=128 data-nosnippet>128</a>
-<a href=#129 id=129 data-nosnippet>129</a><span class="kw">pub struct </span>MissingVectorLayerBucket {
-<a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">pub </span>coords: WorldTileCoords,
-<a href=#131 id=131 data-nosnippet>131</a>    <span class="kw">pub </span>source_layer: String,
-<a href=#132 id=132 data-nosnippet>132</a>}
-<a href=#133 id=133 data-nosnippet>133</a>
-<a href=#134 id=134 data-nosnippet>134</a><span class="kw">pub enum </span>VectorLayerBucket {
-<a href=#135 id=135 data-nosnippet>135</a>    AvailableLayer(AvailableVectorLayerBucket),
-<a href=#136 id=136 data-nosnippet>136</a>    Missing(MissingVectorLayerBucket),
-<a href=#137 id=137 data-nosnippet>137</a>}
-<a href=#138 id=138 data-nosnippet>138</a>
-<a href=#139 id=139 data-nosnippet>139</a><span class="attr">#[derive(Default)]
-<a href=#140 id=140 data-nosnippet>140</a></span><span class="kw">pub struct </span>VectorLayerBucketComponent {
-<a href=#141 id=141 data-nosnippet>141</a>    <span class="kw">pub </span>done: bool,
-<a href=#142 id=142 data-nosnippet>142</a>    <span class="kw">pub </span>layers: Vec&lt;VectorLayerBucket&gt;,
-<a href=#143 id=143 data-nosnippet>143</a>}
-<a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a><span class="kw">impl </span>TileComponent <span class="kw">for </span>VectorLayerBucketComponent {}</code></pre></div></section></main></body></html>
+<a href=#65 id=65 data-nosnippet>65</a><span class="kw">pub type </span>VectorBufferPool = BufferPool&lt;
+<a href=#66 id=66 data-nosnippet>66</a>    wgpu::Queue,
+<a href=#67 id=67 data-nosnippet>67</a>    wgpu::Buffer,
+<a href=#68 id=68 data-nosnippet>68</a>    ShaderVertex,
+<a href=#69 id=69 data-nosnippet>69</a>    IndexDataType,
+<a href=#70 id=70 data-nosnippet>70</a>    ShaderLayerMetadata,
+<a href=#71 id=71 data-nosnippet>71</a>    FillShaderFeatureMetadata,
+<a href=#72 id=72 data-nosnippet>72</a>&gt;;
+<a href=#73 id=73 data-nosnippet>73</a>
+<a href=#74 id=74 data-nosnippet>74</a><span class="kw">pub struct </span>VectorPlugin&lt;T&gt;(PhantomData&lt;T&gt;);
+<a href=#75 id=75 data-nosnippet>75</a>
+<a href=#76 id=76 data-nosnippet>76</a><span class="kw">impl</span>&lt;T: VectorTransferables&gt; Default <span class="kw">for </span>VectorPlugin&lt;T&gt; {
+<a href=#77 id=77 data-nosnippet>77</a>    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+<a href=#78 id=78 data-nosnippet>78</a>        <span class="self">Self</span>(Default::default())
+<a href=#79 id=79 data-nosnippet>79</a>    }
+<a href=#80 id=80 data-nosnippet>80</a>}
+<a href=#81 id=81 data-nosnippet>81</a>
+<a href=#82 id=82 data-nosnippet>82</a><span class="comment">// FIXME: Is this the correct way to do this? Ideally we want to wait until all layers are uploaded to the gpu?
+<a href=#83 id=83 data-nosnippet>83</a></span><span class="attr">#[derive(Default)]
+<a href=#84 id=84 data-nosnippet>84</a></span><span class="kw">struct </span>VectorTilesDone;
+<a href=#85 id=85 data-nosnippet>85</a>
+<a href=#86 id=86 data-nosnippet>86</a><span class="kw">impl </span>HasTile <span class="kw">for </span>VectorTilesDone {
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="kw">fn </span>has_tile(<span class="kw-2">&amp;</span><span class="self">self</span>, coords: WorldTileCoords, world: <span class="kw-2">&amp;</span>World) -&gt; bool {
+<a href=#88 id=88 data-nosnippet>88</a>        <span class="kw">let </span><span class="prelude-val">Some</span>(vector_layers_indices) = world.tiles.query::&lt;<span class="kw-2">&amp;</span>VectorLayerBucketComponent&gt;(coords)
+<a href=#89 id=89 data-nosnippet>89</a>        <span class="kw">else </span>{
+<a href=#90 id=90 data-nosnippet>90</a>            <span class="kw">return </span><span class="bool-val">false</span>;
+<a href=#91 id=91 data-nosnippet>91</a>        };
+<a href=#92 id=92 data-nosnippet>92</a>
+<a href=#93 id=93 data-nosnippet>93</a>        vector_layers_indices.done
+<a href=#94 id=94 data-nosnippet>94</a>    }
+<a href=#95 id=95 data-nosnippet>95</a>}
+<a href=#96 id=96 data-nosnippet>96</a>
+<a href=#97 id=97 data-nosnippet>97</a><span class="kw">impl</span>&lt;E: Environment, T: VectorTransferables&gt; Plugin&lt;E&gt; <span class="kw">for </span>VectorPlugin&lt;T&gt; {
+<a href=#98 id=98 data-nosnippet>98</a>    <span class="kw">fn </span>build(
+<a href=#99 id=99 data-nosnippet>99</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#100 id=100 data-nosnippet>100</a>        schedule: <span class="kw-2">&amp;mut </span>Schedule,
+<a href=#101 id=101 data-nosnippet>101</a>        kernel: Rc&lt;Kernel&lt;E&gt;&gt;,
+<a href=#102 id=102 data-nosnippet>102</a>        world: <span class="kw-2">&amp;mut </span>World,
+<a href=#103 id=103 data-nosnippet>103</a>        _graph: <span class="kw-2">&amp;mut </span>RenderGraph,
+<a href=#104 id=104 data-nosnippet>104</a>    ) {
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="kw">let </span>resources = <span class="kw-2">&amp;mut </span>world.resources;
+<a href=#106 id=106 data-nosnippet>106</a>
+<a href=#107 id=107 data-nosnippet>107</a>        resources.insert(Eventually::&lt;VectorBufferPool&gt;::Uninitialized);
+<a href=#108 id=108 data-nosnippet>108</a>        resources.insert(Eventually::&lt;VectorPipeline&gt;::Uninitialized);
+<a href=#109 id=109 data-nosnippet>109</a>        resources.insert(Eventually::&lt;LinePipeline&gt;::Uninitialized);
+<a href=#110 id=110 data-nosnippet>110</a>
+<a href=#111 id=111 data-nosnippet>111</a>        resources
+<a href=#112 id=112 data-nosnippet>112</a>            .get_or_init_mut::&lt;ViewTileSources&gt;()
+<a href=#113 id=113 data-nosnippet>113</a>            .add_resource_query::&lt;<span class="kw-2">&amp;</span>Eventually&lt;VectorBufferPool&gt;&gt;()
+<a href=#114 id=114 data-nosnippet>114</a>            .add::&lt;VectorTilesDone&gt;();
+<a href=#115 id=115 data-nosnippet>115</a>
+<a href=#116 id=116 data-nosnippet>116</a>        schedule.add_system_to_stage(
+<a href=#117 id=117 data-nosnippet>117</a>            RenderStageLabel::Extract,
+<a href=#118 id=118 data-nosnippet>118</a>            SystemContainer::new(RequestSystem::&lt;E, T&gt;::new(<span class="kw-2">&amp;</span>kernel)),
+<a href=#119 id=119 data-nosnippet>119</a>        );
+<a href=#120 id=120 data-nosnippet>120</a>        schedule.add_system_to_stage(
+<a href=#121 id=121 data-nosnippet>121</a>            RenderStageLabel::Extract,
+<a href=#122 id=122 data-nosnippet>122</a>            SystemContainer::new(PopulateWorldSystem::&lt;E, T&gt;::new(<span class="kw-2">&amp;</span>kernel)),
+<a href=#123 id=123 data-nosnippet>123</a>        );
+<a href=#124 id=124 data-nosnippet>124</a>
+<a href=#125 id=125 data-nosnippet>125</a>        schedule.add_system_to_stage(RenderStageLabel::Prepare, resource_system);
+<a href=#126 id=126 data-nosnippet>126</a>        schedule.add_system_to_stage(RenderStageLabel::Queue, upload_system); <span class="comment">// FIXME tcs: Upload updates the TileView in tileviewpattern -&gt; upload most run before prepare
+<a href=#127 id=127 data-nosnippet>127</a>        </span>schedule.add_system_to_stage(RenderStageLabel::Queue, queue_system);
+<a href=#128 id=128 data-nosnippet>128</a>    }
+<a href=#129 id=129 data-nosnippet>129</a>}
+<a href=#130 id=130 data-nosnippet>130</a>
+<a href=#131 id=131 data-nosnippet>131</a><span class="kw">pub struct </span>AvailableVectorLayerBucket {
+<a href=#132 id=132 data-nosnippet>132</a>    <span class="kw">pub </span>coords: WorldTileCoords,
+<a href=#133 id=133 data-nosnippet>133</a>    <span class="kw">pub </span>source_layer: String,
+<a href=#134 id=134 data-nosnippet>134</a>    <span class="kw">pub </span>style_layer_id: String,
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="kw">pub </span>buffer: OverAlignedVertexBuffer&lt;ShaderVertex, IndexDataType&gt;,
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="doccomment">/// Holds for each feature the count of indices.
+<a href=#137 id=137 data-nosnippet>137</a>    </span><span class="kw">pub </span>feature_indices: Vec&lt;u32&gt;,
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">pub </span>feature_colors: Vec&lt;[f32; <span class="number">4</span>]&gt;,
+<a href=#139 id=139 data-nosnippet>139</a>}
+<a href=#140 id=140 data-nosnippet>140</a>
+<a href=#141 id=141 data-nosnippet>141</a><span class="kw">pub struct </span>MissingVectorLayerBucket {
+<a href=#142 id=142 data-nosnippet>142</a>    <span class="kw">pub </span>coords: WorldTileCoords,
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="kw">pub </span>source_layer: String,
+<a href=#144 id=144 data-nosnippet>144</a>}
+<a href=#145 id=145 data-nosnippet>145</a>
+<a href=#146 id=146 data-nosnippet>146</a><span class="kw">pub enum </span>VectorLayerBucket {
+<a href=#147 id=147 data-nosnippet>147</a>    AvailableLayer(AvailableVectorLayerBucket),
+<a href=#148 id=148 data-nosnippet>148</a>    Missing(MissingVectorLayerBucket),
+<a href=#149 id=149 data-nosnippet>149</a>}
+<a href=#150 id=150 data-nosnippet>150</a>
+<a href=#151 id=151 data-nosnippet>151</a><span class="attr">#[derive(Default)]
+<a href=#152 id=152 data-nosnippet>152</a></span><span class="kw">pub struct </span>VectorLayerBucketComponent {
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="kw">pub </span>done: bool,
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">pub </span>layers: Vec&lt;VectorLayerBucket&gt;,
+<a href=#155 id=155 data-nosnippet>155</a>}
+<a href=#156 id=156 data-nosnippet>156</a>
+<a href=#157 id=157 data-nosnippet>157</a><span class="kw">impl </span>TileComponent <span class="kw">for </span>VectorLayerBucketComponent {}</code></pre></div></section></main></body></html>

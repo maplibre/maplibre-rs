@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ProcessVectorError"],"fn":["process_vector_tile"],"struct":["ProcessVectorContext","VectorTileRequest"]};
+window.SIDEBAR_ITEMS = {"enum":["ProcessVectorError"],"fn":["apply_filter_to_layer","evaluate_filter","process_vector_tile","resolve_feature_properties"],"struct":["ProcessVectorContext","VectorTileRequest"]};

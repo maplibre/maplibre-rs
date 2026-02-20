@@ -142,26 +142,28 @@
 <a href=#142 id=142 data-nosnippet>142</a>            </span>} <span class="kw">else </span>{
 <a href=#143 id=143 data-nosnippet>143</a>                <span class="prelude-val">Some</span>(wgpu::DepthStencilState {
 <a href=#144 id=144 data-nosnippet>144</a>                    format: <span class="self">self</span>.settings.depth_texture_format,
-<a href=#145 id=145 data-nosnippet>145</a>                    depth_write_enabled: !<span class="self">self</span>.update_stencil,
-<a href=#146 id=146 data-nosnippet>146</a>                    depth_compare: wgpu::CompareFunction::Greater,
-<a href=#147 id=147 data-nosnippet>147</a>                    stencil: wgpu::StencilState {
-<a href=#148 id=148 data-nosnippet>148</a>                        front: stencil_state,
-<a href=#149 id=149 data-nosnippet>149</a>                        back: stencil_state,
-<a href=#150 id=150 data-nosnippet>150</a>                        read_mask: <span class="number">0xff</span>, <span class="comment">// Applied to stencil values being read from the stencil buffer
-<a href=#151 id=151 data-nosnippet>151</a>                        </span>write_mask: <span class="number">0xff</span>, <span class="comment">// Applied to fragment stencil values before being written to  the stencil buffer
-<a href=#152 id=152 data-nosnippet>152</a>                    </span>},
-<a href=#153 id=153 data-nosnippet>153</a>                    bias: wgpu::DepthBiasState::default(),
-<a href=#154 id=154 data-nosnippet>154</a>                })
-<a href=#155 id=155 data-nosnippet>155</a>            },
-<a href=#156 id=156 data-nosnippet>156</a>            multisample: wgpu::MultisampleState {
-<a href=#157 id=157 data-nosnippet>157</a>                count: <span class="kw">if </span><span class="self">self</span>.msaa {
-<a href=#158 id=158 data-nosnippet>158</a>                    <span class="self">self</span>.settings.msaa.samples
-<a href=#159 id=159 data-nosnippet>159</a>                } <span class="kw">else </span>{
-<a href=#160 id=160 data-nosnippet>160</a>                    <span class="number">1
-<a href=#161 id=161 data-nosnippet>161</a>                </span>},
-<a href=#162 id=162 data-nosnippet>162</a>                mask: !<span class="number">0</span>,
-<a href=#163 id=163 data-nosnippet>163</a>                alpha_to_coverage_enabled: <span class="bool-val">false</span>,
-<a href=#164 id=164 data-nosnippet>164</a>            },
-<a href=#165 id=165 data-nosnippet>165</a>        }
-<a href=#166 id=166 data-nosnippet>166</a>    }
-<a href=#167 id=167 data-nosnippet>167</a>}</code></pre></div></section></main></body></html>
+<a href=#145 id=145 data-nosnippet>145</a>                    <span class="comment">// Depth writes disabled: layers use painter's algorithm (draw order),
+<a href=#146 id=146 data-nosnippet>146</a>                    // matching MapLibre GL behavior. Stencil handles tile masking.
+<a href=#147 id=147 data-nosnippet>147</a>                    </span>depth_write_enabled: <span class="bool-val">false</span>,
+<a href=#148 id=148 data-nosnippet>148</a>                    depth_compare: wgpu::CompareFunction::Always,
+<a href=#149 id=149 data-nosnippet>149</a>                    stencil: wgpu::StencilState {
+<a href=#150 id=150 data-nosnippet>150</a>                        front: stencil_state,
+<a href=#151 id=151 data-nosnippet>151</a>                        back: stencil_state,
+<a href=#152 id=152 data-nosnippet>152</a>                        read_mask: <span class="number">0xff</span>, <span class="comment">// Applied to stencil values being read from the stencil buffer
+<a href=#153 id=153 data-nosnippet>153</a>                        </span>write_mask: <span class="number">0xff</span>, <span class="comment">// Applied to fragment stencil values before being written to  the stencil buffer
+<a href=#154 id=154 data-nosnippet>154</a>                    </span>},
+<a href=#155 id=155 data-nosnippet>155</a>                    bias: wgpu::DepthBiasState::default(),
+<a href=#156 id=156 data-nosnippet>156</a>                })
+<a href=#157 id=157 data-nosnippet>157</a>            },
+<a href=#158 id=158 data-nosnippet>158</a>            multisample: wgpu::MultisampleState {
+<a href=#159 id=159 data-nosnippet>159</a>                count: <span class="kw">if </span><span class="self">self</span>.msaa {
+<a href=#160 id=160 data-nosnippet>160</a>                    <span class="self">self</span>.settings.msaa.samples
+<a href=#161 id=161 data-nosnippet>161</a>                } <span class="kw">else </span>{
+<a href=#162 id=162 data-nosnippet>162</a>                    <span class="number">1
+<a href=#163 id=163 data-nosnippet>163</a>                </span>},
+<a href=#164 id=164 data-nosnippet>164</a>                mask: !<span class="number">0</span>,
+<a href=#165 id=165 data-nosnippet>165</a>                alpha_to_coverage_enabled: <span class="bool-val">false</span>,
+<a href=#166 id=166 data-nosnippet>166</a>            },
+<a href=#167 id=167 data-nosnippet>167</a>        }
+<a href=#168 id=168 data-nosnippet>168</a>    }
+<a href=#169 id=169 data-nosnippet>169</a>}</code></pre></div></section></main></body></html>

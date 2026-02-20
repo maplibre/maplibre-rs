@@ -62,7 +62,7 @@
 <a href=#62 id=62 data-nosnippet>62</a>    </span><span class="kw">pub </span>scheme: <span class="prelude-ty">Option</span>&lt;TileAddressingScheme&gt;,
 <a href=#63 id=63 data-nosnippet>63</a>    <span class="doccomment">/// Array of URLs which can contain place holders like {x}, {y}, {z}.
 <a href=#64 id=64 data-nosnippet>64</a>    </span><span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#65 id=65 data-nosnippet>65</a>    </span><span class="kw">pub </span>tiles: <span class="prelude-ty">Option</span>&lt;TileUrl&gt;,
+<a href=#65 id=65 data-nosnippet>65</a>    </span><span class="kw">pub </span>tiles: <span class="prelude-ty">Option</span>&lt;Vec&lt;TileUrl&gt;&gt;,
 <a href=#66 id=66 data-nosnippet>66</a>    <span class="comment">// url: Option&lt;TileJSONUrl&gt;,
 <a href=#67 id=67 data-nosnippet>67</a>    // TODO volatile
 <a href=#68 id=68 data-nosnippet>68</a></span>}
