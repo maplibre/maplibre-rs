@@ -191,8 +191,6 @@ tests/field-of-view/default
 tests/field-of-view/field-of-view-10
 tests/field-of-view/field-of-view-150
 tests/field-of-view/field-of-view-90
-tests/fill-antialias/false
-tests/fill-color/default
 tests/fill-color/function
 tests/fill-color/global-state
 tests/fill-color/global-state-with-get
@@ -244,7 +242,6 @@ tests/fill-opacity/function
 tests/fill-opacity/literal
 tests/fill-opacity/opaque-fill-over-symbol-layer
 tests/fill-opacity/overlapping
-tests/fill-opacity/property-function
 tests/fill-opacity/property-function-pattern
 tests/fill-opacity/zoom-and-property-function
 tests/fill-opacity/zoom-and-property-function-pattern
@@ -252,6 +249,7 @@ tests/fill-outline-color/property-function
 tests/fill-outline-color/zoom-and-property-function
 tests/fill-pattern/case-data-expression
 tests/fill-pattern/global-state
+tests/fill-pattern/invalid-feature-expression
 tests/fill-pattern/literal
 tests/fill-pattern/missing
 tests/fill-pattern/opacity
@@ -260,7 +258,6 @@ tests/fill-pattern/uneven-pattern
 tests/fill-pattern/wrapping-with-interpolation
 tests/fill-pattern/zoomed
 tests/fill-sort-key/literal
-tests/fill-translate/default
 tests/fill-translate/function
 tests/fill-translate/literal
 tests/fill-translate-anchor/map
@@ -399,6 +396,7 @@ tests/line-color/global-state-with-get
 tests/line-color/literal
 tests/line-color/property-function
 tests/line-color/property-function-identity
+tests/literal/line-width-composite-function
 tests/line-dasharray/long-segment
 tests/property-function/cap-round
 tests/round/segments
@@ -536,7 +534,6 @@ tests/regressions/mapbox-gl-js#5642
 tests/regressions/mapbox-gl-js#5740
 tests/regressions/mapbox-gl-js#5911
 tests/regressions/mapbox-gl-js#5911a
-tests/regressions/mapbox-gl-js#5953
 tests/regressions/mapbox-gl-js#5978
 tests/regressions/mapbox-gl-js#5982
 tests/regressions/mapbox-gl-js#6160
@@ -565,6 +562,7 @@ tests/regressions/mapbox-gl-native#8460
 tests/regressions/mapbox-gl-native#8871
 tests/regressions/mapbox-gl-native#9792
 tests/regressions/mapbox-gl-native#9976
+tests/regressions/mapbox-gl-shaders#37
 tests/remove-feature-state/vector-source
 tests/runtime-styling/filter-default-to-true
 tests/runtime-styling/filter-false-to-default
@@ -614,7 +612,6 @@ tests/runtime-styling/paint-property-overriden-expression-to-literal
 tests/runtime-styling/paint-property-property-expression-to-property-expression
 tests/runtime-styling/paint-property-zoom-and-property-expression-to-property-expression
 tests/runtime-styling/paint-property-zoom-and-property-expression-to-zoom-and-property-expression
-tests/runtime-styling/paint-property-zoom-expression-to-default
 tests/runtime-styling/paint-property-zoom-expression-to-literal
 tests/runtime-styling/paint-property-zoom-expression-to-property-expression
 tests/runtime-styling/paint-property-zoom-expression-to-zoom-and-property-expression
@@ -650,7 +647,6 @@ tests/runtime-styling/set-style-paint-property-literal-to-expression
 tests/runtime-styling/set-style-paint-property-literal-to-function
 tests/runtime-styling/set-style-paint-property-literal-to-property-expression
 tests/runtime-styling/set-style-paint-property-literal-to-property-function
-tests/runtime-styling/set-style-paint-property-zoom-expression-to-default
 tests/runtime-styling/set-style-paint-property-zoom-expression-to-literal
 tests/runtime-styling/set-style-paint-property-zoom-function-to-literal
 tests/runtime-styling/set-style-source-add-raster-inline
