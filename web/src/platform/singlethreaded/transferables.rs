@@ -195,11 +195,18 @@ impl LayerTessellated for FlatBufferTransferable {
         &WebMessageTag::LayerTessellated
     }
 
+    fn style_layer_id(&self) -> &str {
+        let data = root_as_flat_layer_tessellated(&self.data[self.start..]).unwrap();
+        data.layer_name().unwrap_or("")
+    }
+
     fn build_from(
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
         feature_indices: Vec<u32>,
+        _feature_colors: Vec<[f32; 4]>,
         layer_data: Layer,
+        _style_layer_id: String,
     ) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
 
@@ -262,8 +269,10 @@ impl LayerTessellated for FlatBufferTransferable {
         AvailableVectorLayerBucket {
             coords: LayerTessellated::coords(&self),
             source_layer: data.layer_name().unwrap().to_owned(),
+            style_layer_id: data.layer_name().unwrap().to_owned(),
             buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
             feature_indices,
+            feature_colors: vec![],
         }
     }
 }
@@ -403,8 +412,9 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
         coords: WorldTileCoords,
         buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
         new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
-        features: Vec<Feature>,
+        _features: Vec<Feature>,
         layer_data: Layer,
+        _style_layer_id: String,
     ) -> Self {
         let mut inner_builder = FlatBufferBuilder::with_capacity(1024);
 
@@ -518,6 +528,7 @@ impl SymbolLayerTessellated for FlatBufferTransferable {
         SymbolLayerData {
             coords: LayerTessellated::coords(&self),
             source_layer: data.layer_name().unwrap().to_owned(),
+            style_layer_id: data.layer_name().unwrap().to_owned(),
             buffer: OverAlignedVertexBuffer::from_iters(vertices, indices, usable_indices),
             new_buffer: OverAlignedVertexBuffer::from_iters(
                 new_vertices.into_iter(),
