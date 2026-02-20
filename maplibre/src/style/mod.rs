@@ -331,7 +331,11 @@ mod tests {
         assert_eq!(style.layers.len(), roundtripped.layers.len());
         for (orig, rt) in style.layers.iter().zip(roundtripped.layers.iter()) {
             assert_eq!(orig.id, rt.id, "layer ids must match after round-trip");
-            assert_eq!(orig.type_, rt.type_, "layer types must match after round-trip for {}", orig.id);
+            assert_eq!(
+                orig.type_, rt.type_,
+                "layer types must match after round-trip for {}",
+                orig.id
+            );
         }
     }
 }

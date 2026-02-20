@@ -224,7 +224,10 @@ impl LayerTessellated for FlatBufferTransferable {
         let layer_name = inner_builder.create_string(&layer_data.name);
         let style_layer_id_fb = inner_builder.create_string(&style_layer_id);
         // Flatten Vec<[f32; 4]> into Vec<f32> for FlatBuffer storage
-        let flat_colors: Vec<f32> = feature_colors.iter().flat_map(|c| c.iter().copied()).collect();
+        let flat_colors: Vec<f32> = feature_colors
+            .iter()
+            .flat_map(|c| c.iter().copied())
+            .collect();
         let feature_colors_fb = inner_builder.create_vector(&flat_colors);
 
         let mut builder = FlatLayerTessellatedBuilder::new(&mut inner_builder);
