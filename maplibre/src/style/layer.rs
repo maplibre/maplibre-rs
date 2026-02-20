@@ -360,7 +360,8 @@ pub struct StyleLayer {
     pub id: String, // todo make sure that ids are unique. Styles with non-unique layer ids must not exist
     #[serde(rename = "type")]
     pub type_: String,
-    // TODO filter
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<serde_json::Value>,
     // TODO layout
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maxzoom: Option<u8>,
@@ -382,6 +383,7 @@ struct StyleLayerDef {
     id: String,
     #[serde(rename = "type")]
     type_: String,
+    filter: Option<serde_json::Value>,
     maxzoom: Option<u8>,
     minzoom: Option<u8>,
     metadata: Option<HashMap<String, String>>,
@@ -442,6 +444,7 @@ impl<'de> serde::Deserialize<'de> for StyleLayer {
             index: 0,
             id: def.id,
             type_: def.type_,
+            filter: def.filter,
             maxzoom: def.maxzoom,
             minzoom: def.minzoom,
             metadata: def.metadata,
@@ -471,6 +474,7 @@ impl Default for StyleLayer {
             index: 0,
             id: "id".to_string(),
             type_: "background".to_string(),
+            filter: None,
             maxzoom: None,
             minzoom: None,
             metadata: None,
