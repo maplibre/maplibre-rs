@@ -327,15 +327,12 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
     for ZeroTessellator<I>
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
-        println!("*** feature_end called!");
         self.update_feature_indices();
         let color = if let Some(style) = &self.style_property {
             if let Some(c) = style.evaluate(&self.feature_properties) {
-                let color_arr = [c.r as f32, c.g as f32, c.b as f32, c.a as f32];
-                println!("*** Evaluation success: {:?}", color_arr);
-                color_arr
+                [c.r as f32, c.g as f32, c.b as f32, c.a as f32]
             } else {
-                println!(
+                tracing::debug!(
                     "Style evaluation failed for feature properties: {:?}, style: {:?}",
                     self.feature_properties, style
                 );

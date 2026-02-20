@@ -260,6 +260,20 @@ impl Shader for LineShader {
                             format: wgpu::VertexFormat::Float32,
                             shader_location: 9,
                         },
+                        // viewport_width
+                        wgpu::VertexAttribute {
+                            offset: 4 * wgpu::VertexFormat::Float32x4.size()
+                                + wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 11,
+                        },
+                        // viewport_height
+                        wgpu::VertexAttribute {
+                            offset: 4 * wgpu::VertexFormat::Float32x4.size()
+                                + 2 * wgpu::VertexFormat::Float32.size(),
+                            format: wgpu::VertexFormat::Float32,
+                            shader_location: 12,
+                        },
                     ],
                 },
                 // layer metadata
@@ -397,6 +411,8 @@ pub struct ShaderLayerMetadata {
 pub struct ShaderTileMetadata {
     pub transform: Mat4x4f32,
     pub zoom_factor: f32,
+    pub viewport_width: f32,
+    pub viewport_height: f32,
 }
 
 impl ShaderTileMetadata {
@@ -404,6 +420,8 @@ impl ShaderTileMetadata {
         Self {
             transform,
             zoom_factor,
+            viewport_width: 512.0,
+            viewport_height: 512.0,
         }
     }
 }

@@ -28,46 +28,44 @@ fn main(
     @location(8) color: vec4<f32>,
     @location(9) zoom_factor: f32,
     @location(10) z_index: f32,
+    @location(11) viewport_width: f32,
+    @location(12) viewport_height: f32,
 ) -> VertexOutput {
-    let z = -z_index;
-    
     let line_width_px = 2.0;
-    let width = line_width_px * 8.0 * max(zoom_factor, 0.001);
     let blur = 0.0;
     let gapwidth = 0.0;
-    
-    let halfwidth = width * 0.5;
-    let pixel_ratio = 1.0; 
+
+    let halfwidth = line_width_px * 0.5;
+    let pixel_ratio = 1.0;
     let antialiasing = (1.0 / pixel_ratio) * 0.5;
-    
+
     let inset = gapwidth + select(0.0, antialiasing, gapwidth > 0.0);
     let outset = gapwidth + halfwidth * select(1.0, 2.0, gapwidth > 0.0) +
                  select(0.0, antialiasing, halfwidth != 0.0);
 
     let transform = mat4x4<f32>(translate1, translate2, translate3, translate4);
-    
-    // Extrude based on normal (from CPU tessellator) and width
-    let dist = normal * outset;
-    
-    // The following code moves all "invisible" vertices to (0, 0, 0)
-    // if (color.w == 0.0) {
-    //   return VertexOutput(color, vec4<f32>(0.0, 0.0, 0.0, 1.0));
-    // }
 
-    var final_position = transform * vec4<f32>(position + dist, z, 1.0);
-    final_position.z = z_index;
+    // Transform center position to clip space
+    var center = transform * vec4<f32>(position, 0.0, 1.0);
 
-    // Approximating gamma scale for anti-aliasing calculation in fragment
-    // Same as native, length without perspective / length with perspective
-    let extrude_length_without_perspective = length(dist);
-    let extrude_length_with_perspective = length(dist); // simplified until perspective matrix
-    let gamma_denom = max(extrude_length_with_perspective, 1e-6);
+    // Transform the normal direction to clip space (w=0 for direction vectors)
+    let normal_clip = transform * vec4<f32>(normal, 0.0, 0.0);
+    let dir = normalize(normal_clip.xy);
+
+    // Apply pixel-width offset in clip space.
+    // NDC spans 2 units across the viewport, so 1 pixel = 2/viewport_px in NDC.
+    // Multiply by center.w to compensate for the perspective divide.
+    // Use per-axis conversion to handle non-square viewports correctly.
+    let px_to_clip_x = (2.0 / viewport_width) * center.w;
+    let px_to_clip_y = (2.0 / viewport_height) * center.w;
+    let clip_offset = vec2<f32>(dir.x * outset * px_to_clip_x, dir.y * outset * px_to_clip_y);
+    center = vec4<f32>(center.x + clip_offset.x, center.y + clip_offset.y, z_index, center.w);
 
     return VertexOutput(
-        final_position,
+        center,
         color,
-        normal,       // raw direction
+        normal,
         vec2<f32>(outset, inset),
-        extrude_length_without_perspective / gamma_denom
+        1.0
     );
 }

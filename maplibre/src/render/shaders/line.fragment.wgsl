@@ -22,5 +22,7 @@ fn main(in: FragmentInput) -> Output {
     let denom = max(blur2, 1e-6);
     let alpha = clamp(min(dist - (in.v_width2.y - blur2), in.v_width2.x - dist) / denom, 0.0, 1.0);
 
-    return Output(in.v_color * alpha);
+    // Output non-premultiplied alpha: the blend state (SrcAlpha, OneMinusSrcAlpha)
+    // handles the premultiplication. Using v_color * alpha here would double-apply alpha.
+    return Output(vec4<f32>(in.v_color.rgb, in.v_color.a * alpha));
 }
