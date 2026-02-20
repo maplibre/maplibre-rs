@@ -22,6 +22,7 @@ thread-safe-futures = []
 embed-static-tiles = ["maplibre-build-tools/sqlite"]
 headless = ["png"]
 raster = ["image"]
+geojson = []
 
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows"))'.dependencies]
@@ -51,7 +52,7 @@ cgmath.workspace = true
 geo.workspace = true
 geo-types.workspace = true
 rstar.workspace = true
-geozero.workspace = true
+geozero = { workspace = true, features = ["with-geojson"] }
 tile-grid.workspace = true
 
 # Rendering

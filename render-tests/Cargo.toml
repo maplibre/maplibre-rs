@@ -1,0 +1,25 @@
+[package]
+name = "render-tests"
+version = "0.1.0"
+publish = false
+
+description.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "render-tests"
+path = "src/main.rs"
+
+[dependencies]
+maplibre = { path = "../maplibre", features = ["headless", "geojson", "thread-safe-futures"] }
+serde_json.workspace = true
+image.workspace = true
+log.workspace = true
+env_logger.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+walkdir.workspace = true

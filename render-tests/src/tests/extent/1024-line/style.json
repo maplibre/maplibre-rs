@@ -1,0 +1,41 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "allowed": 0.0005
+    }
+  },
+  "center": [
+    0,
+    0
+  ],
+  "zoom": 0,
+  "sources": {
+    "maplibre": {
+      "type": "vector",
+      "maxzoom": 14,
+      "tiles": [
+        "local://tiles/extent1024-14-8802-5374.mvt"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "maplibre",
+      "type": "line",
+      "source": "maplibre",
+      "source-layer": "road",
+      "paint": {
+        "line-color": "black",
+        "line-width": 1
+      }
+    }
+  ]
+}

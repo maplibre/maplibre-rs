@@ -55,7 +55,12 @@ impl Node for MainPassNode {
             wgpu::RenderPassColorAttachment {
                 view: &texture.view,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: 0.0,
+                        g: 0.0,
+                        b: 0.0,
+                        a: 0.0,
+                    }),
                     store: StoreOp::Store,
                 },
                 resolve_target: Some(render_target.deref()),
@@ -64,7 +69,12 @@ impl Node for MainPassNode {
             wgpu::RenderPassColorAttachment {
                 view: render_target.deref(),
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                    load: wgpu::LoadOp::Clear(wgpu::Color {
+                        r: 0.0,
+                        g: 0.0,
+                        b: 0.0,
+                        a: 0.0,
+                    }),
                     store: StoreOp::Store,
                 },
                 resolve_target: None,

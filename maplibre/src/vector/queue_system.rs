@@ -58,6 +58,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
                         source_shape: source_shape.clone(),
                     });
                 }
+            } else {
             };
         });
     }

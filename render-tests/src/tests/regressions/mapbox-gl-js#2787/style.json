@@ -1,0 +1,14 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "operations": [
+        ["addLayer", {"id": "maplibre", "type": "background"}],
+        ["removeLayer", "maplibre"],
+        ["wait"]
+      ]
+    }
+  },
+  "sources": {},
+  "layers": []
+}

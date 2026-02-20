@@ -3,6 +3,7 @@ use std::{cell::RefCell, ops::Deref, rc::Rc};
 use crate::{
     context::MapContext,
     coords::{WorldCoords, WorldTileCoords, Zoom, ZoomLevel, TILE_SIZE},
+    geojson::{process_geojson_features, GeoJsonTileRequest},
     headless::environment::HeadlessEnvironment,
     io::{
         apc::{Context, IntoMessage, Message, SendError},
@@ -43,7 +44,7 @@ impl HeadlessMap {
             WorldCoords::from((TILE_SIZE / 2., TILE_SIZE / 2.)),
             Zoom::default(),
             cgmath::Deg(0.0),
-            cgmath::Rad(0.6435011087932844),
+            cgmath::Rad(std::f64::consts::PI / 4.0),
         );
 
         let mut world = World::default();
@@ -150,6 +151,46 @@ impl HeadlessMap {
             .collect::<Vec<_>>();
 
         layers
+    }
+
+    /// Process inline GeoJSON data for the given style layers and tile coordinates.
+    ///
+    /// Returns tessellated layers ready to be passed to [`Self::render_tile`].
+    pub fn process_geojson(
+        &mut self,
+        geojson_value: &serde_json::Value,
+        source_name: &str,
+        matching_layers: Vec<StyleLayer>,
+        target_coords: WorldTileCoords,
+        project: bool,
+    ) -> Vec<Box<<DefaultVectorTransferables as VectorTransferables>::LayerTessellated>> {
+        let context = HeadlessContext::default();
+
+        process_geojson_features::<DefaultVectorTransferables, HeadlessContext>(
+            geojson_value,
+            GeoJsonTileRequest {
+                coords: target_coords,
+                layers: matching_layers,
+                source_name: source_name.to_owned(),
+                project,
+            },
+            &context,
+        )
+        .expect("Failed to process GeoJSON");
+
+        let messages = context.messages.deref().take();
+        messages
+            .into_iter()
+            .filter(|message| {
+                message.tag()
+                    == <DefaultVectorTransferables as VectorTransferables>::LayerTessellated::message_tag()
+            })
+            .map(|message| {
+                message.into_transferable::<
+                    <DefaultVectorTransferables as VectorTransferables>::LayerTessellated,
+                >()
+            })
+            .collect()
     }
 }
 

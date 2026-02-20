@@ -11,6 +11,7 @@ members = [
     "apple",
     "web",
     "benchmarks",
+    "render-tests",
 ]
 
 [workspace.package]
