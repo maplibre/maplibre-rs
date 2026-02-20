@@ -1,1 +1,0 @@
-tests/fill-color/default

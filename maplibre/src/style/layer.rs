@@ -124,7 +124,7 @@ impl LayerPaint {
 }
 
 /// Stores all the styles for a specific layer.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct StyleLayer {
     #[serde(skip)]
     pub index: u32, // FIXME: How is this initialized?
@@ -146,6 +146,53 @@ pub struct StyleLayer {
     pub source: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_layer: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct StyleLayerDef {
+    id: String,
+    #[serde(rename = "type")]
+    type_: String,
+    maxzoom: Option<u8>,
+    minzoom: Option<u8>,
+    metadata: Option<HashMap<String, String>>,
+    source: Option<String>,
+    source_layer: Option<String>,
+    paint: Option<serde_json::Value>,
+}
+
+impl<'de> serde::Deserialize<'de> for StyleLayer {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let def = StyleLayerDef::deserialize(deserializer)?;
+
+        let paint = if let Some(p) = def.paint {
+            match def.type_.as_str() {
+                "background" => serde_json::from_value(p).map(LayerPaint::Background).ok(),
+                "line" => serde_json::from_value(p).map(LayerPaint::Line).ok(),
+                "fill" => serde_json::from_value(p).map(LayerPaint::Fill).ok(),
+                "raster" => serde_json::from_value(p).map(LayerPaint::Raster).ok(),
+                "symbol" => serde_json::from_value(p).map(LayerPaint::Symbol).ok(),
+                _ => None,
+            }
+        } else {
+            None
+        };
+
+        Ok(StyleLayer {
+            index: 0,
+            id: def.id,
+            type_: def.type_,
+            maxzoom: def.maxzoom,
+            minzoom: def.minzoom,
+            metadata: def.metadata,
+            paint,
+            source: def.source,
+            source_layer: def.source_layer,
+        })
+    }
 }
 
 impl Eq for StyleLayer {}
