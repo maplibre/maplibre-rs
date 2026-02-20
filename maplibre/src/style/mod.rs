@@ -1,35 +1,39 @@
 //! Vector tile format styling.
 
-use std::collections::HashMap;
+// ----------------------
+// Demotiles
+// ----------------------
 
-pub use cint::*;
-use serde::{Deserialize, Serialize};
+// use std::collections::HashMap;
 
-use crate::style::{layer::StyleLayer, source::Source};
+// pub use cint::*;
+// use serde::{Deserialize, Serialize};
 
-pub mod layer;
-pub mod source;
+// use crate::style::{layer::StyleLayer, source::Source};
+
+// pub mod layer;
+// pub mod source;
 
 // ----------------------
 // Use manual styel
 // ----------------------
 
-// use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
 
-// pub use cint::*;
-// use csscolorparser::Color;
-// use serde::{Deserialize, Serialize};
+pub use cint::*;
+use csscolorparser::Color;
+use serde::{Deserialize, Serialize};
 
-// pub mod layer;
-// pub mod source;
+pub mod layer;
+pub mod source;
 
-// use crate::style::{
-//     layer::{
-//         BackgroundPaint, FillPaint, LayerPaint, LinePaint, RasterPaint, StyleLayer, StyleProperty,
-//         SymbolPaint,
-//     },
-//     source::Source,
-// };
+use crate::style::{
+    layer::{
+        BackgroundPaint, FillPaint, LayerPaint, LinePaint, RasterPaint, StyleLayer, StyleProperty,
+        SymbolPaint,
+    },
+    source::Source,
+};
 
 /// Stores the style for a multi-layered map.
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -50,215 +54,224 @@ pub struct Style {
 /// Default style for https://openmaptiles.org/schema/
 impl Default for Style {
     fn default() -> Self {
-        let mut style: Style = serde_json::from_str(include_str!("../../res/demotiles.json"))
-            .expect("Failed to parse default demotiles.json style");
 
-        // Ensure layers have sequential Z-indices
-        for (i, layer) in style.layers.iter_mut().enumerate() {
-            layer.index = i as u32;
-        }
+				// ----------------------
+				// Demotiles
+				// ----------------------
 
-        style
+        // let mut style: Style = serde_json::from_str(include_str!("../../res/demotiles.json"))
+        //     .expect("Failed to parse default demotiles.json style");
 
-        // Style {
-        //     version: 8,
-        //     name: Some("Default Style".to_string()),
-        //     metadata: Default::default(),
-        //     sources: Default::default(),
-        //     center: Some([50.85045, 4.34878]),
-        //     pitch: Some(0.0),
-        //     zoom: Some(13.0),
-        //     layers: vec![
-        //         StyleLayer {
-        //             index: 0,
-        //             id: "background".to_string(),
-        //             type_: "background".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Background(BackgroundPaint {
-        //                 background_color: Some(StyleProperty::Constant(
-        //                     Color::from_str("#ffffff").unwrap(),
-        //                 )),
-        //             })),
-        //             source: None,
-        //             source_layer: None,
-        //         },
-        //         StyleLayer {
-        //             index: 1,
-        //             id: "park".to_string(),
-        //             type_: "fill".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Fill(FillPaint {
-        //                 fill_color: Some(StyleProperty::Constant(
-        //                     Color::from_str("#c8facc").unwrap(),
-        //                 )),
-        //             })),
-        //             source: None,
-        //             source_layer: Some("park".to_string()),
-        //         },
-        //         StyleLayer {
-        //             index: 2,
-        //             id: "landuse".to_string(),
-        //             type_: "fill".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Fill(FillPaint {
-        //                 fill_color: Some(StyleProperty::Constant(
-        //                     Color::from_str("#e0dfdf").unwrap(),
-        //                 )),
-        //             })),
-        //             source: None,
-        //             source_layer: Some("landuse".to_string()),
-        //         },
-        //         StyleLayer {
-        //             index: 3,
-        //             id: "landcover".to_string(),
-        //             type_: "fill".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Fill(FillPaint {
-        //                 fill_color: Some(StyleProperty::Constant(
-        //                     Color::from_str("#aedfa3").unwrap(),
-        //                 )),
-        //             })),
-        //             source: None,
-        //             source_layer: Some("landcover".to_string()),
-        //         },
-        //         StyleLayer {
-        //             index: 4,
-        //             id: "transportation".to_string(),
-        //             type_: "line".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Line(LinePaint {
-        //                 line_color: Some(StyleProperty::Constant(
-        //                     Color::from_str("#ffffff").unwrap(),
-        //                 )),
-        //                 line_width: None,
-        //             })),
-        //             source: None,
-        //             source_layer: Some("transportation".to_string()),
-        //         },
-        //         StyleLayer {
-        //             index: 5,
-        //             id: "building".to_string(),
-        //             type_: "fill".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Fill(FillPaint {
-        //                 fill_color: Some(StyleProperty::Constant(
-        //                     Color::from_str("#d9d0c9").unwrap(),
-        //                 )),
-        //             })),
-        //             source: None,
-        //             source_layer: Some("building".to_string()),
-        //         },
-        //         StyleLayer {
-        //             index: 6,
-        //             id: "water".to_string(),
-        //             type_: "fill".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Fill(FillPaint {
-        //                 fill_color: Some(StyleProperty::Constant(
-        //                     Color::from_str("#aad3df").unwrap(),
-        //                 )),
-        //             })),
-        //             source: None,
-        //             source_layer: Some("water".to_string()),
-        //         },
-        //         StyleLayer {
-        //             index: 7,
-        //             id: "waterway".to_string(),
-        //             type_: "fill".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Fill(FillPaint {
-        //                 fill_color: Some(StyleProperty::Constant(
-        //                     Color::from_str("#aad3df").unwrap(),
-        //                 )),
-        //             })),
-        //             source: None,
-        //             source_layer: Some("waterway".to_string()),
-        //         },
-        //         StyleLayer {
-        //             index: 8,
-        //             id: "boundary".to_string(),
-        //             type_: "line".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Line(LinePaint {
-        //                 line_color: Some(StyleProperty::Constant(
-        //                     Color::from_str("black").unwrap(),
-        //                 )),
-        //                 line_width: None,
-        //             })),
-        //             source: None,
-        //             source_layer: Some("boundary".to_string()),
-        //         },
-        //         StyleLayer {
-        //             index: 9,
-        //             id: "raster".to_string(),
-        //             type_: "raster".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Raster(RasterPaint::default())),
-        //             source: None,
-        //             source_layer: None,
-        //         },
-        //         StyleLayer {
-        //             index: 10,
-        //             id: "text".to_string(),
-        //             type_: "symbol".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Symbol(SymbolPaint {
-        //                 text_field: Some("name".to_string()),
-        //                 text_size: None,
-        //             })),
-        //             source: None,
-        //             source_layer: Some("place".to_string()),
-        //         },
-        //         StyleLayer {
-        //             index: 11,
-        //             id: "transportation_name".to_string(),
-        //             type_: "symbol".to_string(),
-        //             filter: None,
-        //             maxzoom: None,
-        //             minzoom: None,
-        //             metadata: None,
-        //             paint: Some(LayerPaint::Symbol(SymbolPaint {
-        //                 text_field: Some("name".to_string()),
-        //                 text_size: None,
-        //             })),
-        //             source: None,
-        //             source_layer: Some("transportation_name-disabled".to_string()),
-        //         },
-        //     ],
+        // // Ensure layers have sequential Z-indices
+        // for (i, layer) in style.layers.iter_mut().enumerate() {
+        //     layer.index = i as u32;
         // }
+
+        // style
+
+				// ----------------------
+				// Use manual styel
+				// ----------------------
+
+        Style {
+            version: 8,
+            name: Some("Default Style".to_string()),
+            metadata: Default::default(),
+            sources: Default::default(),
+            center: Some([50.85045, 4.34878]),
+            pitch: Some(0.0),
+            zoom: Some(13.0),
+            layers: vec![
+                StyleLayer {
+                    index: 0,
+                    id: "background".to_string(),
+                    type_: "background".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Background(BackgroundPaint {
+                        background_color: Some(StyleProperty::Constant(
+                            Color::from_str("#ffffff").unwrap(),
+                        )),
+                    })),
+                    source: None,
+                    source_layer: None,
+                },
+                StyleLayer {
+                    index: 1,
+                    id: "park".to_string(),
+                    type_: "fill".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(StyleProperty::Constant(
+                            Color::from_str("#c8facc").unwrap(),
+                        )),
+                    })),
+                    source: None,
+                    source_layer: Some("park".to_string()),
+                },
+                StyleLayer {
+                    index: 2,
+                    id: "landuse".to_string(),
+                    type_: "fill".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(StyleProperty::Constant(
+                            Color::from_str("#e0dfdf").unwrap(),
+                        )),
+                    })),
+                    source: None,
+                    source_layer: Some("landuse".to_string()),
+                },
+                StyleLayer {
+                    index: 3,
+                    id: "landcover".to_string(),
+                    type_: "fill".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(StyleProperty::Constant(
+                            Color::from_str("#aedfa3").unwrap(),
+                        )),
+                    })),
+                    source: None,
+                    source_layer: Some("landcover".to_string()),
+                },
+                StyleLayer {
+                    index: 4,
+                    id: "transportation".to_string(),
+                    type_: "line".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(StyleProperty::Constant(
+                            Color::from_str("#ffffff").unwrap(),
+                        )),
+                        line_width: None,
+                    })),
+                    source: None,
+                    source_layer: Some("transportation".to_string()),
+                },
+                StyleLayer {
+                    index: 5,
+                    id: "building".to_string(),
+                    type_: "fill".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(StyleProperty::Constant(
+                            Color::from_str("#d9d0c9").unwrap(),
+                        )),
+                    })),
+                    source: None,
+                    source_layer: Some("building".to_string()),
+                },
+                StyleLayer {
+                    index: 6,
+                    id: "water".to_string(),
+                    type_: "fill".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(StyleProperty::Constant(
+                            Color::from_str("#aad3df").unwrap(),
+                        )),
+                    })),
+                    source: None,
+                    source_layer: Some("water".to_string()),
+                },
+                StyleLayer {
+                    index: 7,
+                    id: "waterway".to_string(),
+                    type_: "fill".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Fill(FillPaint {
+                        fill_color: Some(StyleProperty::Constant(
+                            Color::from_str("#aad3df").unwrap(),
+                        )),
+                    })),
+                    source: None,
+                    source_layer: Some("waterway".to_string()),
+                },
+                StyleLayer {
+                    index: 8,
+                    id: "boundary".to_string(),
+                    type_: "line".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Line(LinePaint {
+                        line_color: Some(StyleProperty::Constant(
+                            Color::from_str("black").unwrap(),
+                        )),
+                        line_width: None,
+                    })),
+                    source: None,
+                    source_layer: Some("boundary".to_string()),
+                },
+                StyleLayer {
+                    index: 9,
+                    id: "raster".to_string(),
+                    type_: "raster".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Raster(RasterPaint::default())),
+                    source: None,
+                    source_layer: None,
+                },
+                StyleLayer {
+                    index: 10,
+                    id: "text".to_string(),
+                    type_: "symbol".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Symbol(SymbolPaint {
+                        text_field: Some("name".to_string()),
+                        text_size: None,
+                    })),
+                    source: None,
+                    source_layer: Some("place".to_string()),
+                },
+                StyleLayer {
+                    index: 11,
+                    id: "transportation_name".to_string(),
+                    type_: "symbol".to_string(),
+                    filter: None,
+                    maxzoom: None,
+                    minzoom: None,
+                    metadata: None,
+                    paint: Some(LayerPaint::Symbol(SymbolPaint {
+                        text_field: Some("name".to_string()),
+                        text_size: None,
+                    })),
+                    source: None,
+                    source_layer: Some("transportation_name-disabled".to_string()),
+                },
+            ],
+        }
     }
 }
 
