@@ -334,7 +334,8 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
             } else {
                 tracing::debug!(
                     "Style evaluation failed for feature properties: {:?}, style: {:?}",
-                    self.feature_properties, style
+                    self.feature_properties,
+                    style
                 );
                 self.fallback_color
             }

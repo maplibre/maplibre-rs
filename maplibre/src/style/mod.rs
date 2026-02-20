@@ -1,6 +1,5 @@
 //! Vector tile format styling.
 
-
 use std::collections::HashMap;
 
 pub use cint::*;
@@ -51,9 +50,8 @@ pub struct Style {
 /// Default style for https://openmaptiles.org/schema/
 impl Default for Style {
     fn default() -> Self {
-
-				let mut style: Style = serde_json::from_str(include_str!("../../res/demotiles.json"))
-						.expect("Failed to parse default demotiles.json style");
+        let mut style: Style = serde_json::from_str(include_str!("../../res/demotiles.json"))
+            .expect("Failed to parse default demotiles.json style");
 
         // Ensure layers have sequential Z-indices
         for (i, layer) in style.layers.iter_mut().enumerate() {

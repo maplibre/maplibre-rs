@@ -440,10 +440,9 @@ impl<'de> serde::Deserialize<'de> for StyleLayer {
                     .map(LayerPaint::Raster)
                     .ok(),
                 "symbol" => {
-                    let mut paint: Option<SymbolPaint> =
-                        serde_json::from_value(p.clone())
-                            .map_err(|e| log::error!("symbol paint failed {}: {:?}", def.id, e))
-                            .ok();
+                    let mut paint: Option<SymbolPaint> = serde_json::from_value(p.clone())
+                        .map_err(|e| log::error!("symbol paint failed {}: {:?}", def.id, e))
+                        .ok();
                     // text-field and text-size live in layout, not paint — merge them in
                     if let (Some(sp), Some(layout)) = (paint.as_mut(), def.layout.as_ref()) {
                         if sp.text_field.is_none() {

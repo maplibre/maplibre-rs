@@ -98,21 +98,16 @@ fn evaluate_filter(filter: &serde_json::Value, props: &HashMap<String, String>) 
             let key = arr[1].as_str().unwrap_or("");
             let expected = arr[2].as_str().map(|s| s.to_string()).unwrap_or_else(|| {
                 // Handle numeric comparisons
-                arr[2]
-                    .as_f64()
-                    .map(|n| n.to_string())
-                    .unwrap_or_default()
+                arr[2].as_f64().map(|n| n.to_string()).unwrap_or_default()
             });
             props.get(key).map(|v| v == &expected).unwrap_or(false)
         }
         "!=" if arr.len() >= 3 => {
             let key = arr[1].as_str().unwrap_or("");
-            let expected = arr[2].as_str().map(|s| s.to_string()).unwrap_or_else(|| {
-                arr[2]
-                    .as_f64()
-                    .map(|n| n.to_string())
-                    .unwrap_or_default()
-            });
+            let expected = arr[2]
+                .as_str()
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| arr[2].as_f64().map(|n| n.to_string()).unwrap_or_default());
             props.get(key).map(|v| v != &expected).unwrap_or(true)
         }
         "has" if arr.len() >= 2 => {
@@ -128,22 +123,18 @@ fn evaluate_filter(filter: &serde_json::Value, props: &HashMap<String, String>) 
             let Some(val) = props.get(key) else {
                 return false;
             };
-            arr[2..].iter().any(|v| {
-                v.as_str()
-                    .map(|s| s == val)
-                    .unwrap_or(false)
-            })
+            arr[2..]
+                .iter()
+                .any(|v| v.as_str().map(|s| s == val).unwrap_or(false))
         }
         "!in" if arr.len() >= 3 => {
             let key = arr[1].as_str().unwrap_or("");
             let Some(val) = props.get(key) else {
                 return true;
             };
-            !arr[2..].iter().any(|v| {
-                v.as_str()
-                    .map(|s| s == val)
-                    .unwrap_or(false)
-            })
+            !arr[2..]
+                .iter()
+                .any(|v| v.as_str().map(|s| s == val).unwrap_or(false))
         }
         _ => {
             log::warn!("unsupported filter operator: {op}");

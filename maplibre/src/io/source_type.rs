@@ -30,7 +30,7 @@ impl TessellateSource {
 
 impl Default for TessellateSource {
     fn default() -> Self {
-				// Self::new("https://maps.tuerantuer.org/europe_germany", "pbf")
+        // Self::new("https://maps.tuerantuer.org/europe_germany", "pbf")
         Self::new("https://demotiles.maplibre.org/tiles", "pbf")
     }
 }
