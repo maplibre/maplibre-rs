@@ -112,6 +112,7 @@ pub struct Feature {
 pub struct SymbolLayerData {
     pub coords: WorldTileCoords,
     pub source_layer: String,
+    pub style_layer_id: String,
     pub buffer: OverAlignedVertexBuffer<ShaderSymbolVertex, IndexDataType>,
     pub new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>, // TODO
     pub features: Vec<Feature>,

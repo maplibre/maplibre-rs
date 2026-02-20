@@ -69,7 +69,7 @@ fn upload_symbol_layer(
         };
 
         let loaded_layers = symbol_buffer_pool
-            .get_loaded_source_layers_at(coords)
+            .get_loaded_style_layers_at(coords)
             .unwrap_or_default();
 
         let available_layers = vector_layers

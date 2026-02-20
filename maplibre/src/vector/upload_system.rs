@@ -70,7 +70,7 @@ fn upload_tessellated_layer(
         };
 
         let loaded_layers = buffer_pool
-            .get_loaded_source_layers_at(coords)
+            .get_loaded_style_layers_at(coords)
             .unwrap_or_default();
 
         let available_layers = vector_layers
@@ -80,7 +80,7 @@ fn upload_tessellated_layer(
                 VectorLayerBucket::AvailableLayer(data) => Some(data),
                 VectorLayerBucket::Missing(_) => None,
             })
-            .filter(|data| !loaded_layers.contains(data.source_layer.as_str()))
+            .filter(|data| !loaded_layers.contains(data.style_layer_id.as_str()))
             .collect::<Vec<_>>();
 
         for style_layer in &style.layers {
@@ -103,7 +103,7 @@ fn upload_tessellated_layer(
                 ..
             }) = available_layers
                 .iter()
-                .find(|layer| source_layer == layer.source_layer)
+                .find(|layer| style_layer.id.as_str() == layer.style_layer_id.as_str())
             else {
                 continue;
             };

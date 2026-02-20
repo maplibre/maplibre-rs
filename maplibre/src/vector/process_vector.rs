@@ -91,6 +91,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                                 tessellator.feature_indices,
                                 tessellator.feature_colors,
                                 original_layer,
+                                id.clone(),
                             )?;
                         }
                     }
@@ -114,6 +115,7 @@ pub fn process_vector_tile<T: VectorTransferables, C: Context>(
                                 tessellator_new.quad_buffer.into(),
                                 tessellator_new.features,
                                 original_layer,
+                                id.clone(),
                             )?;
                         }
                     }
@@ -206,6 +208,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
         feature_indices: Vec<u32>,
         feature_colors: Vec<[f32; 4]>,
         layer_data: tile::Layer,
+        style_layer_id: String,
     ) -> Result<(), ProcessVectorError> {
         self.context
             .send_back(T::LayerTessellated::build_from(
@@ -214,6 +217,7 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
                 feature_indices,
                 feature_colors,
                 layer_data,
+                style_layer_id,
             ))
             .map_err(|e| ProcessVectorError::SendError(e))
     }
@@ -225,10 +229,16 @@ impl<T: VectorTransferables, C: Context> ProcessVectorContext<T, C> {
         new_buffer: OverAlignedVertexBuffer<ShaderSymbolVertexNew, IndexDataType>,
         features: Vec<Feature>,
         layer_data: tile::Layer,
+        style_layer_id: String,
     ) -> Result<(), ProcessVectorError> {
         self.context
             .send_back(T::SymbolLayerTessellated::build_from(
-                *coords, buffer, new_buffer, features, layer_data,
+                *coords,
+                buffer,
+                new_buffer,
+                features,
+                layer_data,
+                style_layer_id,
             ))
             .map_err(|e| ProcessVectorError::SendError(e))
     }

@@ -270,6 +270,7 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
                         inner.feature_indices,
                         inner.feature_colors,
                         synthetic_layer,
+                        style_layer.id.clone(),
                     ))
                     .map_err(ProcessGeoJsonError::SendError)?;
             }
@@ -311,6 +312,7 @@ pub fn process_geojson_features<T: VectorTransferables, C: Context>(
                         inner.quad_buffer.into(),
                         inner.features,
                         synthetic_layer,
+                        style_layer.id.clone(),
                     ))
                     .map_err(ProcessGeoJsonError::SendError)?;
             }

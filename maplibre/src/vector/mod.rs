@@ -53,6 +53,15 @@ impl Deref for VectorPipeline {
     }
 }
 
+struct LinePipeline(wgpu::RenderPipeline);
+impl Deref for LinePipeline {
+    type Target = wgpu::RenderPipeline;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 pub type VectorBufferPool = BufferPool<
     wgpu::Queue,
     wgpu::Buffer,
@@ -97,6 +106,7 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
 
         resources.insert(Eventually::<VectorBufferPool>::Uninitialized);
         resources.insert(Eventually::<VectorPipeline>::Uninitialized);
+        resources.insert(Eventually::<LinePipeline>::Uninitialized);
 
         resources
             .get_or_init_mut::<ViewTileSources>()
@@ -121,6 +131,7 @@ impl<E: Environment, T: VectorTransferables> Plugin<E> for VectorPlugin<T> {
 pub struct AvailableVectorLayerBucket {
     pub coords: WorldTileCoords,
     pub source_layer: String,
+    pub style_layer_id: String,
     pub buffer: OverAlignedVertexBuffer<ShaderVertex, IndexDataType>,
     /// Holds for each feature the count of indices.
     pub feature_indices: Vec<u32>,

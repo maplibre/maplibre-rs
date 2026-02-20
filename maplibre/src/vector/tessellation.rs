@@ -147,7 +147,7 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> Default
             feature_indices: Vec::new(),
             feature_properties: HashMap::new(),
             feature_colors: Vec::new(),
-            fallback_color: [1.0, 1.0, 1.0, 1.0],
+            fallback_color: [0.0, 0.0, 0.0, 1.0],
             style_property: None,
             current_index: 0,
             path_open: false,
@@ -315,11 +315,18 @@ impl<I: std::ops::Add + From<lyon::tessellation::VertexId> + MaxIndex> FeaturePr
     for ZeroTessellator<I>
 {
     fn feature_end(&mut self, _idx: u64) -> geozero::error::Result<()> {
+        println!("*** feature_end called!");
         self.update_feature_indices();
         let color = if let Some(style) = &self.style_property {
             if let Some(c) = style.evaluate(&self.feature_properties) {
-                [c.r as f32, c.g as f32, c.b as f32, c.a as f32]
+                let color_arr = [c.r as f32, c.g as f32, c.b as f32, c.a as f32];
+                println!("*** Evaluation success: {:?}", color_arr);
+                color_arr
             } else {
+                println!(
+                    "Style evaluation failed for feature properties: {:?}, style: {:?}",
+                    self.feature_properties, style
+                );
                 self.fallback_color
             }
         } else {

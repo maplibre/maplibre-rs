@@ -11,7 +11,10 @@ use crate::{
         system::{SystemError, SystemResult},
         tiles::Tile,
     },
-    vector::{render_commands::DrawVectorTiles, VectorBufferPool},
+    vector::{
+        render_commands::{DrawLineTiles, DrawVectorTiles},
+        VectorBufferPool,
+    },
 };
 
 pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
@@ -46,10 +49,17 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
 
             if let Some(layer_entries) = buffer_pool_index.get_layers(source_shape.coords()) {
                 for layer_entry in layer_entries {
-                    // continue;
-                    // Draw tile
+                    // Choose fill vs line pipeline based on layer type
+                    let is_line = layer_entry.style_layer.type_ == "line";
+                    let draw_function: Box<dyn crate::render::render_phase::Draw<LayerItem>> =
+                        if is_line {
+                            Box::new(DrawState::<LayerItem, DrawLineTiles>::new())
+                        } else {
+                            Box::new(DrawState::<LayerItem, DrawVectorTiles>::new())
+                        };
+
                     layer_item_phase.add(LayerItem {
-                        draw_function: Box::new(DrawState::<LayerItem, DrawVectorTiles>::new()),
+                        draw_function,
                         index: layer_entry.style_layer.index,
                         style_layer: layer_entry.style_layer.id.clone(),
                         tile: Tile {
@@ -58,8 +68,7 @@ pub fn queue_system(MapContext { world, .. }: &mut MapContext) -> SystemResult {
                         source_shape: source_shape.clone(),
                     });
                 }
-            } else {
-            };
+            }
         });
     }
 

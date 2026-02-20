@@ -24,41 +24,51 @@ impl<T: std::str::FromStr + Clone> StyleProperty<T> {
                 if let Some(arr) = expr.as_array() {
                     if let Some(op) = arr.get(0).and_then(|v| v.as_str()) {
                         if op == "match" && arr.len() > 3 {
-                            // Extract the getter ["get", "ADM0_A3"]
+                            // Extract the getter e.g. ["get", "ADM0_A3"]
                             if let Some(get_arr) = arr.get(1).and_then(|v| v.as_array()) {
                                 if get_arr.get(0).and_then(|v| v.as_str()) == Some("get") {
                                     if let Some(prop_name) = get_arr.get(1).and_then(|v| v.as_str())
                                     {
-                                        // Retrieve from feature context
-                                        if let Some(feature_val) = feature_properties.get(prop_name)
-                                        {
-                                            // Search the match array pairs
-                                            let mut i = 2;
-                                            while i < arr.len() - 1 {
-                                                if let Some(match_keys) =
-                                                    arr.get(i).and_then(|v| v.as_array())
-                                                {
-                                                    // Does this feature_val exist in the match keys?
-                                                    let matches = match_keys.iter().any(|k| {
-                                                        k.as_str() == Some(feature_val.as_str())
-                                                    });
-                                                    if matches {
-                                                        if let Some(color_str) =
-                                                            arr.get(i + 1).and_then(|v| v.as_str())
-                                                        {
-                                                            return color_str.parse::<T>().ok();
-                                                        }
+                                        let feature_val_opt = feature_properties.get(prop_name);
+
+                                        // If property is missing, skip match pairs and return fallback
+                                        if feature_val_opt.is_none() {
+                                            if let Some(fallback) =
+                                                arr.last().and_then(|v| v.as_str())
+                                            {
+                                                return fallback.parse::<T>().ok();
+                                            }
+                                            return None;
+                                        }
+
+                                        let feature_val = feature_val_opt.unwrap();
+
+                                        // Search the match array pairs
+                                        let mut i = 2;
+                                        while i < arr.len() - 1 {
+                                            if let Some(match_keys) =
+                                                arr.get(i).and_then(|v| v.as_array())
+                                            {
+                                                // Does this feature_val exist in the match keys?
+                                                let matches = match_keys.iter().any(|k| {
+                                                    k.as_str() == Some(feature_val.as_str())
+                                                });
+                                                if matches {
+                                                    if let Some(color_str) =
+                                                        arr.get(i + 1).and_then(|v| v.as_str())
+                                                    {
+                                                        return color_str.parse::<T>().ok();
                                                     }
                                                 }
-                                                i += 2;
                                             }
-                                            // Fallback default index
-                                            if i == arr.len() - 1 {
-                                                if let Some(fallback_clor) =
-                                                    arr.get(i).and_then(|v| v.as_str())
-                                                {
-                                                    return fallback_clor.parse::<T>().ok();
-                                                }
+                                            i += 2;
+                                        }
+                                        // Fallback (last element)
+                                        if i == arr.len() - 1 {
+                                            if let Some(fallback) =
+                                                arr.get(i).and_then(|v| v.as_str())
+                                            {
+                                                return fallback.parse::<T>().ok();
                                             }
                                         }
                                     }
@@ -233,25 +243,25 @@ pub enum LayerPaint {
 impl LayerPaint {
     pub fn get_color(&self) -> Option<Alpha<EncodedSrgb<f32>>> {
         match self {
-            LayerPaint::Background(paint) => paint.background_color.as_ref().map(|property| {
+            LayerPaint::Background(paint) => paint.background_color.as_ref().and_then(|property| {
                 if let StyleProperty::Constant(color) = property {
-                    color.clone().into()
+                    Some(color.clone().into())
                 } else {
-                    Color::new(1., 1., 1., 1.).into()
+                    None // Expression types have no single static color
                 }
             }),
-            LayerPaint::Line(paint) => paint.line_color.as_ref().map(|property| {
+            LayerPaint::Line(paint) => paint.line_color.as_ref().and_then(|property| {
                 if let StyleProperty::Constant(color) = property {
-                    color.clone().into()
+                    Some(color.clone().into())
                 } else {
-                    Color::new(1., 1., 1., 1.).into()
+                    None
                 }
             }),
-            LayerPaint::Fill(paint) => paint.fill_color.as_ref().map(|property| {
+            LayerPaint::Fill(paint) => paint.fill_color.as_ref().and_then(|property| {
                 if let StyleProperty::Constant(color) = property {
-                    color.clone().into()
+                    Some(color.clone().into())
                 } else {
-                    Color::new(1., 1., 1., 1.).into()
+                    None
                 }
             }),
             LayerPaint::Raster(_) => None,
@@ -372,5 +382,51 @@ impl Default for StyleLayer {
             source: None,
             source_layer: Some("does not exist".to_string()),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_evaluate_match_missing_property_returns_fallback() {
+        let json = r#"
+        [
+            "match",
+            ["get", "ADM0_A3"],
+            ["ARM", "ATG"],
+            "rgba(1, 2, 3, 1)",
+            "rgba(9, 9, 9, 1)"
+        ]
+        "#;
+        let expr: serde_json::Value = serde_json::from_str(json).unwrap();
+        let prop: StyleProperty<csscolorparser::Color> = StyleProperty::Expression(expr);
+
+        // Feature that does NOT have the property → should return the JSON fallback color
+        let empty_props = HashMap::new();
+        let color = prop.evaluate(&empty_props).unwrap();
+        assert_eq!(color.to_rgba8(), [9, 9, 9, 255]);
+    }
+
+    #[test]
+    fn test_evaluate_match() {
+        let json = r#"
+        [
+            "match",
+            ["get", "ADM0_A3"],
+            ["ARM", "ATG"],
+            "rgba(1, 2, 3, 1)",
+            "rgba(0, 0, 0, 1)"
+        ]
+        "#;
+        let expr: serde_json::Value = serde_json::from_str(json).unwrap();
+        let prop: StyleProperty<csscolorparser::Color> = StyleProperty::Expression(expr);
+
+        let mut feature_properties = HashMap::new();
+        feature_properties.insert("ADM0_A3".to_string(), "ARM".to_string());
+
+        let color = prop.evaluate(&feature_properties).unwrap();
+        assert_eq!(color.to_rgba8(), [1, 2, 3, 255]);
     }
 }

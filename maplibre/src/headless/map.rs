@@ -90,6 +90,7 @@ impl HeadlessMap {
                         VectorLayerBucket::AvailableLayer(AvailableVectorLayerBucket {
                             coords: layer.coords,
                             source_layer: layer.layer_data.name,
+                            style_layer_id: layer.style_layer_id,
                             buffer: layer.buffer,
                             feature_indices: layer.feature_indices,
                             feature_colors: layer.feature_colors,
