@@ -1,29 +1,26 @@
 use image::GenericImageView;
+use std::collections::HashMap;
 use std::collections::HashSet;
+use std::env;
+
+fn count_colors(img: &image::DynamicImage) {
+    let mut counts: std::collections::HashMap<_, usize> = std::collections::HashMap::new();
+    for pixel in img.pixels() {
+        *counts.entry(pixel.2 .0).or_default() += 1;
+    }
+    for (color, count) in counts {
+        println!("Color {:?}: {} pixels", color, count);
+    }
+}
 
 fn main() {
-    let actual_path = "render-tests/src/tests/fill-color/default/actual.png";
-    let expected_path = "render-tests/src/tests/fill-color/default/expected.png";
+    let args: Vec<String> = env::args().collect();
+    let actual = image::open(&args[1]).unwrap();
+    let expected = image::open(&args[2]).unwrap();
 
-    if let Ok(actual) = image::open(actual_path) {
-        let mut actual_colors = HashSet::new();
-        for p in actual.pixels() {
-            actual_colors.insert(p.2 .0);
-        }
-        println!("Actual unique colors: {:?}", actual_colors);
-        println!("Actual dimensions: {:?}", actual.dimensions());
-    } else {
-        println!("Could not open actual.png");
-    }
+    println!("Actual:");
+    count_colors(&actual);
 
-    if let Ok(expected) = image::open(expected_path) {
-        let mut expected_colors = HashSet::new();
-        for p in expected.pixels() {
-            expected_colors.insert(p.2 .0);
-        }
-        println!("Expected unique colors: {:?}", expected_colors);
-        println!("Expected dimensions: {:?}", expected.dimensions());
-    } else {
-        println!("Could not open expected.png");
-    }
+    println!("Expected:");
+    count_colors(&expected);
 }

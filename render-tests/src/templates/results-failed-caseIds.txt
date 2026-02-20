@@ -1,1 +1,1 @@
-tests/circle-geometry/point
+tests/background-color/default
