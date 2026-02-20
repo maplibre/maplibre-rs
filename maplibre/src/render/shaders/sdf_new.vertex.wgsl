@@ -41,7 +41,7 @@ fn main(
 let  u_is_size_zoom_constant: bool = true;
 let  u_is_size_feature_constant: bool= true;
 let   u_size_t: f32 = 0.0; // highp // used to interpolate between zoom stops when size is a composite function
-let   u_size: f32 = 30.0; // highp // used when size is both zoom and feature constant
+let   u_size: f32 = 16.0; // highp // used when size is both zoom and feature constant (MapLibre default)
 let u_matrix: mat4x4<f32> = mat4x4<f32>(translate1, translate2, translate3, translate4);
 let u_label_plane_matrix: mat4x4<f32> = unit;
 let u_coord_matrix: mat4x4<f32> = unit;
